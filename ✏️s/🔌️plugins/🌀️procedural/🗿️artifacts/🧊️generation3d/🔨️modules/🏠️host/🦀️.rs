@@ -517,7 +517,8 @@ fn generation3d_retire_displaced(value: Generation3dReplayDisplaced) -> Box<dyn 
 
 /// 🧮️ Replays a relative gesture into addressed operators and retains only displaced widget owners.
 fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, &'static str> {
-    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_targets_invariant, generation3d_with_params};
+    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_targets_invariant,generation3d_with_params};
+
     generation3d_targets_invariant(targets)?;
     if targets.len() > GENERATION3D_MAXIMUM_DOMAIN_ITEMS { return Err("generation3d-replay.target-limit"); }
     let mut updates = Vec::new();
@@ -646,7 +647,8 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next))))
         }
         Generation3dMutation::DragTransforms(payload) => {
-            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_vector_literal, GENERATION3D_TRANSLATE_KINDS};
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_vector_literal,GENERATION3D_TRANSLATE_KINDS};
+
             let delta = [payload.dx, payload.dy, payload.dz];
             if delta.iter().any(|value| !value.is_finite()) { return Err("generation3d-replay.drag-nonfinite"); }
             generation3d_replay_transforms(snapshot, &payload.targets, &GENERATION3D_TRANSLATE_KINDS, delta == [0.0; 3], |params| {
@@ -656,7 +658,8 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             })?
         }
         Generation3dMutation::RotateTransforms(payload) => {
-            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_param_number, generation3d_vector_literal, generation3d_number_literal, GENERATION3D_ROTATE_KINDS};
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_param_number,generation3d_vector_literal,generation3d_number_literal,GENERATION3D_ROTATE_KINDS};
+
             use crate::standards::v1::subsets::any::schema::transforms::AxisAngle;
             let axis = [payload.ax, payload.ay, payload.az];
             if axis == [0.0; 3] || axis.iter().chain([&payload.angle]).any(|value| !value.is_finite()) { return Err("generation3d-replay.rotation-invariant"); }
@@ -668,7 +671,8 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             })?
         }
         Generation3dMutation::ScaleTransforms(payload) => {
-            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_vector_literal, GENERATION3D_SCALE_KINDS};
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_vector_literal,GENERATION3D_SCALE_KINDS};
+
             use crate::standards::v1::subsets::any::schema::transforms::compose_scale;
             let factors = [payload.sx, payload.sy, payload.sz];
             if factors.iter().any(|value| !value.is_finite() || *value <= 0.0) { return Err("generation3d-replay.scale-invariant"); }
@@ -2933,11 +2937,12 @@ impl Drop for Generation3dSnapshotCopyCursor {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Generation3dStoreInitializationPhase {
+    BindGenesis,
     ValidateEnvelope,
     ValidateEdit { index: usize },
     CensusHistory { edit: usize, mutation: usize },
     CopyInitial,
-    BuildRuntime,
+    AdoptWorkspace,
     SeedHistory { edit: usize, lane: u8, index: usize },
     FoldSupersessions { transition: usize },
     FindApplied { position: usize },
@@ -2954,6 +2959,7 @@ enum Generation3dStoreInitializationPhase {
 }
 
 struct Generation3dStoreInitializationAuthority {
+    actor: protocol::ActorId,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     base_revision: u64,
@@ -2969,18 +2975,20 @@ struct Generation3dStoreInitializationAuthority {
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: Generation3dStoreInitializationPhase,
+    resume_phase: Option<Generation3dStoreInitializationPhase>,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
     terminal_handoff: bool,
 }
 
 impl Generation3dStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
+    fn new(envelope: store::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
         if generation3d_validate_publication_authority(operation, generation).is_err() {
             let _ = generation3d_admit_app_publication_authority(operation, generation);
         }
         let (base_revision, parent_revision) = generation3d_validate_publication_authority(operation, generation).unwrap_or((u64::MAX, u64::MAX));
         Self {
+            actor,
             operation,
             generation,
             base_revision,
@@ -2995,6 +3003,7 @@ impl Generation3dStoreInitializationAuthority {
             candidate_disposer: std::mem::ManuallyDrop::new(None),
             envelope_retirement: std::mem::ManuallyDrop::new(None),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
+            resume_phase: None,
             phase: Generation3dStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
             fault: None,
@@ -3130,7 +3139,23 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 self.phase = Generation3dStoreInitializationPhase::RetireFault;
             }
         }
+        if !matches!(self.phase, Generation3dStoreInitializationPhase::RetireCancelled | Generation3dStoreInitializationPhase::RetireFault | Generation3dStoreInitializationPhase::Cancelled | Generation3dStoreInitializationPhase::Fault | Generation3dStoreInitializationPhase::Complete) {
+            if let Some(runtime) = self.runtime.as_mut() {
+                match runtime.settle_current_retirement_step(1, GENERATION3D_OWNER_BYTES) {
+                    Ok(store::SnapshotRetirementStep::Complete) => {}
+                    Ok(_) => { cx.consume_fuel(1); return semio_framework_job::StepOutcome::Yield; }
+                    Err(error) => { self.fault = Some(error.into_message().into_bytes()); self.phase = Generation3dStoreInitializationPhase::RetireFault; }
+                }
+            }
+        }
         match self.phase {
+            Generation3dStoreInitializationPhase::BindGenesis => {
+                let envelope = self.envelope.as_ref().expect("retained initializer genesis");
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                self.phase = Generation3dStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                cx.consume_fuel(1);
+                return semio_framework_job::StepOutcome::Yield;
+            }
             Generation3dStoreInitializationPhase::ValidateEnvelope => {
                 let valid = self.envelope.as_ref().is_some_and(|envelope| envelope.schema == crate::GENERATION_3D_SCHEMA && !envelope.id.is_empty() && envelope.id.len() <= GENERATION3D_OWNER_BYTES);
                 if valid {
@@ -3150,13 +3175,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
             Generation3dStoreInitializationPhase::CensusHistory { edit, mutation } => {
                 let envelope = self.envelope.as_ref().expect("P3 envelope retained");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    match Generation3dSnapshotCopyCursor::new(&envelope.vcs.initial_snapshot) {
-                        Ok(copy) => {
-                            *self.copy = Some(copy);
-                            self.phase = Generation3dStoreInitializationPhase::CopyInitial;
-                        }
-                        Err(code) => self.fail(code.as_bytes()),
-                    }
+                    self.phase = Generation3dStoreInitializationPhase::BindGenesis;
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if entry.forwards.get(mutation).is_some() {
@@ -3173,20 +3192,23 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 }
             }
             Generation3dStoreInitializationPhase::CopyInitial => {
-                let source = &self.envelope.as_ref().expect("P3 initializer envelope").vcs.initial_snapshot;
+                let source = &self.envelope.as_ref().expect("P3 initializer envelope").vcs.genesis.snapshot();
                 match self.copy.as_mut().expect("P3 copy retained").step(source) {
-                    Ok(true) => self.phase = Generation3dStoreInitializationPhase::BuildRuntime,
+                    Ok(true) => self.phase = Generation3dStoreInitializationPhase::AdoptWorkspace,
                     Ok(false) => {}
                     Err(code) => self.fail(code.as_bytes()),
                 }
             }
-            Generation3dStoreInitializationPhase::BuildRuntime => {
+            Generation3dStoreInitializationPhase::AdoptWorkspace => {
                 let initial = self.copy.as_mut().expect("P3 copy retained").take().expect("P3 copy handoff");
                 drop(self.copy.take());
-                let digest = store::artifact_initial_digest(&initial);
-                let envelope = self.envelope.as_ref().expect("P3 initializer envelope");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, digest));
-                self.phase = Generation3dStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(Generation3dRetainedSnapshotRetirementFactory)) {
+                    Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
+                    Err(initial) => {
+                        *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&Generation3dRetainedSnapshotRetirementFactory, initial));
+                        self.fail(b"initializer-owned-workspace-adoption");
+                    }
+                }
             }
             Generation3dStoreInitializationPhase::SeedHistory { edit, lane, index } => {
                 let envelope = self.envelope.as_ref().expect("P3 history retained");
@@ -3260,6 +3282,18 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 }
             }
             Generation3dStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
+                let needs_workspace = {
+                    let envelope = self.envelope.as_ref().expect("retained initializer envelope");
+                    let runtime = self.runtime.as_ref().expect("retained initializer runtime");
+                    envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
+                };
+                if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
+                    self.resume_phase = Some(self.phase);
+                    match Generation3dSnapshotCopyCursor::new(self.envelope.as_ref().expect("retained genesis").vcs.genesis.snapshot()) { Ok(copy) => *self.copy = Some(copy), Err(code) => { self.fail(code.as_bytes()); return semio_framework_job::StepOutcome::Yield; } }
+                    self.phase = Generation3dStoreInitializationPhase::CopyInitial;
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
                 let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
                 let Some(operation) = operation else {
                     self.phase = Generation3dStoreInitializationPhase::CommitApplied { position, edit };
@@ -3268,6 +3302,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 let envelope = self.envelope.as_ref().expect("P3 envelope remains retained while its forwards fold");
                 let entry = envelope.vcs.edits.get(edit).expect("P3 applied edit remains retained");
                 let effective = self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema)).expect("P3 applied forward remains retained");
+                if effective.operation().is_none() {
+                    drop(effective);
+                    self.phase = Generation3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+                    return semio_framework_job::StepOutcome::Yield;
+                }
                 let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("P3 runtime current retained");
                 let applied = effective.operation().map(|operation| generation3d_apply_initialization_mutation(current, operation));
                 drop(effective);
@@ -3282,12 +3321,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
             }
             Generation3dStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("P3 applied edit retained");
-                let actor = entry.actor.as_deref().and_then(|value| generation3d_copy_string(value).ok());
                 let runtime = self.runtime.as_mut().expect("P3 runtime retained");
-                match runtime.push_applied_edit(entry) {
+                match runtime.push_applied_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
                     Ok(()) => {
                         runtime.observe_sequence(entry.sequence_number);
-                        runtime.set_local_actor_id(actor);
+
                         self.phase = Generation3dStoreInitializationPhase::FindApplied { position: position + 1 };
                     }
                     Err(_) => self.fail(b"generation3d-store.initializer-applied-capacity"),
@@ -3311,7 +3349,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
             }
             Generation3dStoreInitializationPhase::CommitRedo { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("P3 redo edit retained");
-                match self.runtime.as_mut().expect("P3 runtime retained").push_redo_edit(entry) {
+                match self.runtime.as_mut().expect("P3 runtime retained").push_redo_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
                     Ok(()) => self.phase = Generation3dStoreInitializationPhase::FindRedo { position: position + 1 },
                     Err(_) => self.fail(b"generation3d-store.initializer-redo-capacity"),
                 }
@@ -3423,8 +3461,9 @@ pub fn generation3d_document_store_initialization_job(
     envelope: store::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
+    actor: protocol::ActorId,
 ) -> semio_framework_plugin::ArtifactStoreInitializationJob<Generation3dSnapshot, Generation3dMutation> {
-    semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(Generation3dStoreInitializationAuthority::new(envelope, operation, generation)))
+    semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(Generation3dStoreInitializationAuthority::new(envelope, operation, generation, actor)))
 }
 //#endregion 🔖️RetainedStoreInitialization
 

@@ -294,6 +294,10 @@ struct Mp4SamplesDiffRecord {
     added: Vec<Mp4SampleAddedRecord>,
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for Mp4SamplesDiff {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = <Mp4SamplesDiffRecord as semio_framework_dsl_record::BorrowedDslField>::SHAPE;
+}
+
 impl semio_framework_dsl_record::DslField for Mp4SamplesDiff {
     fn shape() -> semio_framework_dsl_record::Shape {
         <Mp4SamplesDiffRecord as semio_framework_dsl_record::DslField>::shape()
@@ -419,6 +423,10 @@ struct Mp4TracksDiffRecord {
     removed: Vec<usize>,
     modified: Vec<Mp4TrackModifiedRecord>,
     added: Vec<Mp4TrackAddedRecord>,
+}
+
+impl semio_framework_dsl_record::BorrowedDslField for Mp4TracksDiff {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = <Mp4TracksDiffRecord as semio_framework_dsl_record::BorrowedDslField>::SHAPE;
 }
 
 impl semio_framework_dsl_record::DslField for Mp4TracksDiff {

@@ -1,4 +1,8 @@
 //! 📝️ Direct set-snapshot text codec.
+use crate::standards::v6_0::subsets::document::schema::mutations::*;
+use crate::standards::v6_0::subsets::document::schema::mutations::set_snapshot::SetSnapshot;
+use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+use crate::standards::v6_0::subsets::document::io::text::diff::*;
 
 use crate::standards::v6_0::subsets::document::io::text::mutations::*;
 use crate::standards::v6_0::subsets::document::io::text::mutations::Entry;

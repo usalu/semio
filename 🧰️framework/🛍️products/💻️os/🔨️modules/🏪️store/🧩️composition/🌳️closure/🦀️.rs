@@ -1,6 +1,6 @@
 //! 🌳️ Retained admission of one complete recursively owned document closure.
 use super::{CHILD_RESTORE_MAXIMUM_FIELD_BYTES, ChildRestoreProjection, ChildRestoreProjectionError, OwnerRef};
-use crate::os_io::ArtifactRef;
+use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::hash::{Hash, Hasher};
 
@@ -254,7 +254,7 @@ fn valid_text(value: &str) -> bool {
     !value.is_empty() && value.len() <= CHILD_RESTORE_MAXIMUM_FIELD_BYTES && !value.chars().any(char::is_control)
 }
 fn valid_reference(value: &ArtifactRef) -> bool {
-    [&value.artifact_id, &value.dialect.artifact_kind, &value.dialect.standard, &value.dialect.subset].into_iter().all(|field| valid_text(field)) && crate::os_io::is_canonical_artifact_kind(&value.dialect.artifact_kind)
+    [&value.artifact_id, &value.dialect.artifact_kind, &value.dialect.standard, &value.dialect.subset].into_iter().all(|field| valid_text(field)) && semio_framework_artifact_reference::is_canonical_artifact_kind(&value.dialect.artifact_kind)
 }
 fn bucket(id: &str) -> usize {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();

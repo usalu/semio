@@ -1,0 +1,9 @@
+# PNG and BMP Decoded Ownership Design
+
+The existing PNG and BMP snapshot schemas own exact serialized bytes. Semantic diff validation, dimensions and native paint currently decode these bytes through generic I/O facades. This violates the requested direction even though the helper names previously evaded the representation-specific gate. No PNG/BMP production edits were made during this audit.
+
+Replace the persisted byte owner with first-party typed native image owners. PNG must preserve bit depth and exact sample words (including 16-bit grayscale/RGB, indexed palette and transparency), authored dimensions, interlace choice, gamma/chromaticities/physical dimensions/time/text plus opaque unknown ancillary chunk records. `PngProjection` currently exposes RGBA8 and is unsuitable as the sole precise semantic owner. Physical decompression, filter/Adam7 interpretation, chunk ordering/CRC and encoding belong in I/O; semantics validate dimensions/sample cardinality and paint owned samples. Revision identity must derive structural values, not reserialized bytes.
+
+BMP must preserve precise native indexed samples or direct component words with channel masks, width/height and orientation, bit depth/compression choice, palette, resolution plus opaque extra header fields/gap/trailer as owned values. Native row padding, packed bit lanes and header offsets belong in I/O. Existing `BmpLayout` describes physical offsets and must not become a hidden schema parser. Semantic paint and dimensions consume typed native values.
+
+Manually update the Rust/TypeScript/JSON/GraphQL/protobuf schemas, diff and mutation payloads, every neutral fixture and physical binder. Keep exact byte source fixtures in I/O tests to verify retention independently; use first-party sample contracts for semantic replay. No facade aliases, compatibility snapshot or cached serialized mutation output.

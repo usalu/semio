@@ -2,7 +2,6 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
 import Parser from "web-tree-sitter";
 
@@ -24,8 +23,7 @@ const root = resolve(import.meta.dir, "../../../../../../../.."), owner = "🧰�
 
 /** 🏛️ Admits public neutral ownership, declared bounds, dependency authority and native law mounts. */
 export async function inspectPagedCommandIngressOwnership(repository: string, read: Reader = path => readFileSync(join(repository, path), "utf8")): Promise<{ types: number; constants: number; laws: number; closure: number }> {
-  const fixture = JSON.parse(read(`${owner}/🧫️fixtures/🔣️.json`)) as Fixture, schema = JSON.parse(read(`${owner}/🧬️schema/🔣️.json`)), validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  const fixture = JSON.parse(read(`${owner}/🧫️fixtures/🔣️.json`)) as Fixture;
   await Parser.init();
   const parser = new Parser();
   parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", repository)), "out/tree-sitter-rust.wasm")));

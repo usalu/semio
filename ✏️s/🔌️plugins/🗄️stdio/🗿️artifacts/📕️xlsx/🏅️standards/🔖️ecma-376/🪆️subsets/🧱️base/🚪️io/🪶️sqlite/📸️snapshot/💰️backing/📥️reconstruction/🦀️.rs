@@ -23,7 +23,7 @@ fn retire(snapshot: XlsxSnapshot) {
     snapshot.retire_sqlite_snapshot();
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::backing::super) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<XlsxSnapshot, ValueError> {
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     control.check_database(database, PHASE)?;
     validate_sqlite_database_schema_controlled(database, XlsxSnapshot::SQLITE_SCHEMA, PHASE, control)?;
     let root = database.table("xlsx_document")?.single_row()?;

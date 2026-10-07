@@ -2271,7 +2271,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         if entry.finalize.as_ref().is_some_and(|finalize| finalize.publication.is_none()) {
             let transaction = tool_run_transaction(self.app.instance_id().await, &entry.tool_id, &entry.actor, run);
-            self.store.set_local_actor_id(Some(entry.actor.clone())).map_err(|error| error.into_fault())?;
+            if entry.actor != self.store.local_actor_id().0 {
+                return self.reject_tool_run_publication(run, generation);
+            }
             match self.store.begin_outbound_apply_batch(
                 semio_framework_job::allocate_operation_id(),
                 entry.base_generation,

@@ -23,13 +23,36 @@ async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor()
     assert_eq!(pack.task_restarts().await[1].instance, 6);
 }
 
-/// 🧬️ `#[serde(default)]` on `task_restarts` — an older pack (or a hand-built JSON blob
-/// missing the field entirely) must not fail to restore just because this wave added a
-/// field to the envelope (greenfield repo, no migration script, but a checkpoint taken
-/// moments before an actor upgrade is a real same-process scenario, not legacy support).
 #[semio_framework_async_macros::async_test]
-async fn a_checkpoint_pack_encoded_before_task_restarts_existed_still_decodes() {
-    let legacy_json = r#"{"instances":[],"timers":[],"pending_requests":[]}"#;
-    let pack: CheckpointPack = serde_json::from_str(legacy_json).expect("a pack missing task_restarts must still decode");
-    assert!(pack.task_restarts().await.is_empty());
+async fn checkpoint_requires_its_complete_declared_authority() {
+    let incomplete = r#"{"instances":[],"timers":[],"pending_requests":[]}"#;
+    assert!(serde_json::from_str::<CheckpointPack>(incomplete).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<CheckpointPack>(incomplete, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+}
+
+#[test]
+fn checkpoint_actor_contract_matches_independent_json_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral checkpoint fixture");
+    for case in fixture["cases"].as_array().expect("checkpoint cases") {
+        let source = serde_json::to_string(&case["pack"]).expect("neutral checkpoint JSON");
+        let independent = serde_json::from_str::<CheckpointPack>(&source);
+        let actual = semio_framework_pack_json::from_json_str::<CheckpointPack>(&source, semio_framework_pack_json::JsonMemberPolicy::Reject);
+        let expected = case["expected"].as_bool().expect("checkpoint verdict");
+        assert_eq!(independent.is_ok(), expected, "independent: {}", case["id"]);
+        assert_eq!(actual.is_ok(), expected, "first-party: {}", case["id"]);
+        if let Ok(pack) = actual {
+            let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pack)).expect("first-party checkpoint JSON");
+            assert_eq!(encoded, case["pack"], "actor and document authority survive: {}", case["id"]);
+        }
+    }
+}
+
+#[test]
+fn checkpoint_preserves_explicit_instance_actor_in_authored_json() {
+    let source = include_str!("📸️actor.json");
+    let pack: CheckpointPack = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored checkpoint must decode");
+    assert_eq!(pack.instances[0].actor, "checkpoint-owner");
+    let expected: serde_json::Value = serde_json::from_str(source).expect("independent checkpoint oracle must decode");
+    let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pack)).expect("first-party checkpoint must encode JSON");
+    assert_eq!(actual, expected);
 }

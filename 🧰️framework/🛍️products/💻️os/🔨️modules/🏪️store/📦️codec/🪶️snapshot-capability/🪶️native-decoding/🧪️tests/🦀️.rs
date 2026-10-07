@@ -36,7 +36,7 @@ fn sqlite_snapshot_erased_export_dispatches_only_the_declared_controlled_native_
     let case = &fixture["erasedDispatch"];
     let snapshot = DecodedBuffers { buffers: vec![vec![1; case["bufferBytes"].as_u64().unwrap() as usize]] };
     let bytes = snapshot.encode_pack();
-    let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
     ORDINARY_DECODER_CALLS.with(|count| count.set(0));
     CONTROLLED_DECODER_CALLS.with(|count| count.set(0));
     let outcome = (DecodedBuffers::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
@@ -159,7 +159,7 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
     };
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     
-    let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot =
             DecodedBuffers { buffers: case["bufferBytes"].as_array().unwrap().iter().map(|value| vec![0; value.as_u64().unwrap() as usize]).chain(std::iter::repeat_with(Vec::new).take(case["emptyBuffers"].as_u64().unwrap() as usize)).collect() };
@@ -218,7 +218,7 @@ fn sqlite_snapshot_metadata_admits_final_file_before_mutating_domain_database() 
     let file_rows = fixture["metadataAdmission"]["fileRows"].as_u64().unwrap() as usize;
     let snapshot = DecodedBuffers { buffers: std::iter::repeat_with(Vec::new).take(rows).collect() };
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_rows: rows, ..Default::default() })).unwrap();
-    let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
     for limits in [
         SqliteDatabaseLimits { max_rows: rows, ..Default::default() },
         SqliteDatabaseLimits { max_value_bytes: 1, ..Default::default() },

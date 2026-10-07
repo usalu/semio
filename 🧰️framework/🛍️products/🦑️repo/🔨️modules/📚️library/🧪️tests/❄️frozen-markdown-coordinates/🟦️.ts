@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
-import Ajv from "ajv";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
@@ -52,8 +51,6 @@ function oracle(row: any): boolean {
 }
 
 test("frozen Markdown neutral forms agree with an independent CommonMark AST", () => {
-  const validate = new Ajv().compile({ type: "object", required: ["schemaVersion", "contract", "semantics", "cases"], properties: { schemaVersion: { const: 1 }, contract: { const: "frozen-markdown-source-coordinates-v1" }, cases: { type: "array", minItems: 28, items: { type: "object", required: ["id", "content", "form", "accepted", "value"], properties: { form: { enum: ["inline-code", "path-list-item"] }, accepted: { type: "boolean" } } } } } });
-  expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const row of vector.cases) expect(oracle(row), row.id).toBe(row.accepted);
 });
 

@@ -17,7 +17,8 @@ async fn inference_default_law() {
 #[semio_framework_async_macros::async_test]
 async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_image() {
     use crate::mutations::apply_gis_map_mutation;
-    use crate::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
+    use crate::schema::gis_map_snapshot_to_drawing;
+use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
 
@@ -67,7 +68,7 @@ async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_im
         candidate.drawing.child_id = row["drawingChildId"].as_str().unwrap().into();
         candidate.value.child_id = row["valueChildId"].as_str().unwrap().into();
         candidate.image = row["imageChildId"].as_str().map(|id| {
-            store::ArtifactChild::new(id.to_owned(), store::os_io::ArtifactRef { artifact_id: id.to_owned(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } })
+            store::ArtifactChild::new(id.to_owned(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id.to_owned(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } })
         });
         let supplied_image = candidate.image.clone();
         if row["deriveChildren"].as_bool().unwrap() {

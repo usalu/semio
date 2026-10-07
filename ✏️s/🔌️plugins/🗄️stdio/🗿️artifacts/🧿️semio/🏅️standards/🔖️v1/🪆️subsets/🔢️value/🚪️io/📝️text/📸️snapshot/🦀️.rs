@@ -22,15 +22,15 @@ use framework_schema::ArtifactSchema;
 /// functions directly rather than keeping its own second copy.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
-    let nodes = s.nodes.iter().map(crate::value::io::text::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
-    format!("[{},{},[{}]]", crate::value::io::text::diff::enc_str(&s.schema), crate::value::io::text::diff::enc_semio_value(&s.root), nodes)
+    let nodes = s.nodes.iter().map(crate::standards::v1::subsets::value::io::text::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
+    format!("[{},{},[{}]]", crate::standards::v1::subsets::value::io::text::diff::enc_str(&s.schema), crate::standards::v1::subsets::value::io::text::diff::enc_semio_value(&s.root), nodes)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
-    use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-    use crate::value::io::text::diff::{dec_semio_value_node};
-    use crate::value::io::text::diff::{dec_semio_value};
+    use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+    use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value_node};
+    use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
     use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');

@@ -1,6 +1,6 @@
 //! 🔤️ Direct text codec for `embed-font-file`.
 
-use super::EmbedFontFile;
+use crate::standards::v1_7::subsets::x::schema::mutations::EmbedFontFile;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "embed-font-file";

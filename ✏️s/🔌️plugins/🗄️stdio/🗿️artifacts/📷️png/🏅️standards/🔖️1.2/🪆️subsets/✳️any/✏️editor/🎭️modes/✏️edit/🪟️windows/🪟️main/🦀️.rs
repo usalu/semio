@@ -1,6 +1,7 @@
 //! ✏️ PNG window with an explicit bounded RGBA8 preview projection.
 
-use crate::standards::v1_2::subsets::any::io::{png_layout, png_preview, PngNativeProfile};
+use crate::standards::v1_2::subsets::any::io::png_preview;
+use crate::schema::snapshot::PngNativeProfile;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{Buildable, BuiltNode, HasBase, WindowKindDefinition, WindowKit};
@@ -26,7 +27,8 @@ pub fn render(snapshot: &PngSnapshot, locale: Locale) -> semio_framework_plugin:
 }
 
 fn native_profile_accessory(snapshot: &PngSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let layout = png_layout(snapshot).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.png.native-profile", message))?;
+    snapshot.validate().map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.png.native-profile", message))?;
+    let layout = &snapshot.image;
     let profile = match layout.color_type {
         crate::schema::snapshot::PngColorType::Palette => PngNativeProfile::Indexed,
         crate::schema::snapshot::PngColorType::Grayscale => PngNativeProfile::Grayscale,
@@ -51,7 +53,7 @@ fn native_profile_accessory(snapshot: &PngSnapshot, locale: Locale) -> semio_fra
     };
     let maximum = if layout.bit_depth == 16 { u16::MAX } else { ((1u32 << layout.bit_depth) - 1) as u16 };
     let range = if profile == PngNativeProfile::Indexed {
-        let entries = layout.chunks.iter().find(|chunk| chunk.kind == *b"PLTE").map_or(0, |chunk| (chunk.data_end - chunk.data_start) / 3);
+        let entries = layout.palette.as_ref().map_or(0,Vec::len);
         match locale {
             Locale::En => format!(", valid indices 0–{}", entries.saturating_sub(1)),
             Locale::De => format!(", gültige Indizes 0–{}", entries.saturating_sub(1)),

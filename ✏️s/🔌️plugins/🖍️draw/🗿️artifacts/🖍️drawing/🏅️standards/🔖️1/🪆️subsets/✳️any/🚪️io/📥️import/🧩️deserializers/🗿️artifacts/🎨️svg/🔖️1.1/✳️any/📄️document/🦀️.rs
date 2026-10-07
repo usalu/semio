@@ -169,7 +169,7 @@ impl SvgImportJob {
         if local(name)!="svg"{return Err("Invalid SVG document".into());}
         let (width,height,_)=viewport(attrs)?;
         let title=children.iter().find_map(|child|match child{XmlNode::Element {name,children,..} if local(name)=="title"=>Some(children.iter().filter_map(|child|match child{XmlNode::Text {text}|XmlNode::CData {text}=>Some(text.as_str()),_=>None}).collect::<String>()),_=>None}).filter(|value|!value.trim().is_empty()).unwrap_or_else(||"SVG".into());
-        let document=DrawingSnapshot {id:id.into(),title:Some(title.trim().into()),layers:Vec::new(),artboard:Some(crate::schema::DrawingArtboard {width,height}),..Default::default()};
+        let document=DrawingSnapshot {id:id.into(),title:Some(title.trim().into()),layers:Vec::new().into(),artboard:Some(crate::schema::DrawingArtboard {width,height}),..Default::default()};
         let user_viewport=if let Some(source)=attr(attrs,"viewBox"){let values=source.split(|ch:char|ch==','||ch.is_ascii_whitespace()).filter(|value|!value.is_empty()).map(scalar).collect::<Result<Vec<_>,_>>()?;[values[2],values[3]]}else{[width,height]};
         let mut gradients=BTreeMap::new();let mut nodes=vec![&root];
         while let Some(node)=nodes.pop(){if let XmlNode::Element {name,attrs,children}=node{
@@ -204,10 +204,10 @@ impl SvgImportJob {
         let mut transform=super::transform::parse_editable_svg_transform(attr(&attrs,"transform").unwrap_or(""))?;
         if id=="svg"{transform=crate::schema::drawing_matrix_to_transform(crate::schema::geometry::multiply(crate::schema::drawing_transform_to_matrix(&transform),viewport(&attrs)?.2));}
         let mut solid_style=style.clone();if value("fill").is_some_and(|paint|paint.starts_with("url(")){solid_style.insert("fill".into(),"none".into());}
-        let mut base=DrawingLayerBase {id:id.clone(),name,visible:value("display")!=Some("none")&&(["g","svg"].contains(&tag)||!matches!(value("visibility"),Some("hidden"|"collapse"))),locked:false,opacity:fraction(value("opacity"))?,blend_mode:blend_mode(value("mix-blend-mode"))?,transform,attributes:attributes(&solid_style)?};
+        let mut base=DrawingLayerBase {id:id.clone(),name,visible:value("display")!=Some("none")&&(["g","svg"].contains(&tag)||!matches!(value("visibility"),Some("hidden"|"collapse"))),locked:false,opacity:fraction(value("opacity"))?,blend_mode:blend_mode(value("mix-blend-mode"))?.into(),transform,attributes:attributes(&solid_style)?};
         let isolated=isolation(value("isolation"))?;
         if tag=="g"||id=="svg" {
-            self.groups.push(DrawingGroupBody {isolation:isolated,base,children:Vec::new()});self.pending.push(Work::FinishGroup);
+            self.groups.push(DrawingGroupBody {isolation:isolated,base,children:Vec::new().into()});self.pending.push(Work::FinishGroup);
             let children=children.into_iter().filter(|node|matches!(node,XmlNode::Element {..})).collect::<Vec<_>>();
             for (index,node) in children.into_iter().enumerate().rev(){self.pending.push(Work::Element {node,style:style.clone(),id:format!("{id}.{index}")});}
         }else if tag=="text" {

@@ -8,7 +8,7 @@
 //! `🪣️fill-region`. Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
 use crate::diff::{RasterAssetsDelta, RasterDiff, RasterLayerPatchEntry, RasterLayersDelta};
-use crate::standards::v1::subsets::any::io::{raster_image_pack_asset, semio_image_from_rgba8};
+use crate::standards::v1::subsets::any::schema::semio_image_from_rgba8;
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, layer_protection};
 use crate::{RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterMaskContent, RasterMutation, RasterPixelContent, RasterSnapshot, RasterTransform, SemioImageSnapshot};
 use semio_framework_pixels::editing::{paint_stroke_in_place, validate_extent, PixelAlphaBrush, PixelBrush, PixelOperation};
@@ -233,7 +233,7 @@ pub(crate) fn canvas(layer_id: &str, target: &str, base: &RasterSnapshot) -> Res
 /// 🎨️ What one repaint did: the canvas it painted, the painted image as an asset, and the key it is filed under.
 pub(crate) struct Painted {
     canvas: Canvas,
-    asset: crate::RasterImageAsset,
+    asset: SemioImageSnapshot,
     key: String,
 }
 
@@ -251,8 +251,8 @@ pub(crate) fn reshaped(canvas: Canvas, image: RasterImage, layer_id: &str) -> Pa
 }
 
 fn filed(canvas: Canvas, image: SemioImageSnapshot, layer_id: &str) -> Painted {
-    let asset = raster_image_pack_asset(&image);
-    let key = store::content_id(&format!("{}-{layer_id}", canvas.prefix), &asset.data);
+    let key = crate::raster_image_content_id(&format!("{}-{layer_id}", canvas.prefix), &image);
+    let asset = image;
     Painted { canvas, asset, key }
 }
 
@@ -361,7 +361,7 @@ pub(crate) fn painted_inverse(painted: Painted, base: &RasterSnapshot, layer_id:
     let mut steps = Vec::new();
     if let Some(previous) = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, layer_id, target)) {
         let Ok(image) = asset_image(base, previous) else { return Vec::new() };
-        steps.push(RasterMutation::AddLayerAsset(AddLayerAsset { asset_id: previous.to_string(), asset: raster_image_pack_asset(&image) }));
+        steps.push(RasterMutation::AddLayerAsset(AddLayerAsset { asset_id: previous.to_string(), asset: image }));
     }
     match &painted.canvas.mask {
         Some(mask) => steps.push(RasterMutation::ChangeLayerMask(ChangeLayerMask { layer_id: layer_id.to_string(), expected: Some(RasterLayerMask { image_key: Some(painted.key.clone()), ..mask.clone() }), mask: Some(mask.clone()) })),

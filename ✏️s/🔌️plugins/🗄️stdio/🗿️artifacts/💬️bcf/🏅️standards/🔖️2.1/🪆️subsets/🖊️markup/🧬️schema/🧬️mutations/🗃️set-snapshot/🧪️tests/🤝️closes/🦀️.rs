@@ -16,7 +16,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v2_1::subsets::any::schema::diff::BcfDiff;
-use crate::standards::v2_1::subsets::any::schema::mutations::{apply_bcf_mutation, BcfMutation};
+use crate::standards::v2_1::subsets::any::schema::mutations::{apply_bcf_mutation,BcfMutation};
+
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗃️set-snapshot/🤝️closes/📸️snapshot/⬅️before/🔣️.json");

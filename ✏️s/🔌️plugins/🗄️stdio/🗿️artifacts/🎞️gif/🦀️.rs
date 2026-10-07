@@ -14,7 +14,7 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_
 #[cfg(feature = "component-app-assembly")]
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::GifDiff;
 pub use schema::mutations::GifMutation;
@@ -82,10 +82,10 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .schemas([standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor()])
         .formats(formats)
         .inferences([standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor(), standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor()])
-        .composers(standards::v87a::engine::io_registry::entries())
-        .composers(standards::v89a::engine::io_registry::entries())
-        .document_codec_bare::<standards::v87a::subsets::any::schema::snapshot::GifSnapshot, standards::v87a::subsets::any::schema::mutations::GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_plugin::StandardId("87a"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_plugin::StandardId("89a"), subset: semio_framework_plugin::SubsetId("*") })
+        .composers(standards::v87a::subsets::any::io::io_registry::entries())
+        .composers(standards::v89a::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<standards::v87a::subsets::any::schema::snapshot::GifSnapshot, standards::v87a::subsets::any::schema::mutations::GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_artifact_reference::StandardId("87a"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_artifact_reference::StandardId("89a"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
 }
 
@@ -109,9 +109,9 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::subsets::any::io::io_registry as v87a;
-    use crate::subsets::any::io::io_registry as v89a;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use crate::standards::v87a::subsets::any::io::io_registry as v87a;
+    use crate::standards::v89a::subsets::any::io::io_registry as v89a;
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -144,14 +144,6 @@ pub mod io_registry {
 pub mod standards {
     #[path = "."]
     pub mod v87a {
-        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-        // real code now lives in `subsets::any::io` (codec/register/io_registry — `register`
-        // stays reachable since gif is one of stdio's 10 deliberate imperative
-        // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
-        // helpers); this stays an inline barrel so every existing
-        // `standards::v87a::engine::*`/`gif::engine::*` path still resolves — including
-        // 89a's own `standards::v87a::engine as codec` cross-standard reuse import.
-
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -246,14 +238,6 @@ pub mod standards {
 
     #[path = "."]
     pub mod v89a {
-        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-        // real code now lives in `subsets::any::io` (codec/register/io_registry — `register`
-        // stays reachable since gif is one of stdio's 10 deliberate imperative
-        // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
-        // helpers); this stays an inline barrel so every existing
-        // `standards::v89a::engine::*`/`gif::engine::*` path still resolves — including
-        // `📚️examples/💃️dancing`'s own `standards::v89a::engine::decode_gif` call.
-
         #[path = "🏅️standards/9️⃣89a/🧬️migrations/🦀️.rs"]
         pub mod migrations;
         #[path = "."]
@@ -355,17 +339,6 @@ pub mod standards {
 // stays reachable under its own explicit `standards::v87a::` path for callers that need it.
 pub mod schema {
     pub use super::standards::v89a::subsets::any::schema::*;
-}
-pub mod engine {
-    pub use super::standards::v89a::engine::*;
-    /// 📎 Registers BOTH standards' engines (89a canonical + 87a legacy) — a flat glob
-    /// re-export can't do this (two `register` fns of the same name would collide), so this
-    /// local definition shadows the glob-imported 89a one and calls both explicitly.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        super::standards::v87a::engine::register();
-        super::standards::v89a::engine::register();
-    }
 }
 
 
@@ -534,6 +507,5 @@ pub mod viewer {
     }
 }
 
-pub use crate::standards::v87a::subsets::any::io::{GifBuilderConstruction, GifParts, GifAnalyzerAnalysis, GifBuilderFacets, GifBuilder, GifAnalyzer, GifComposer};
 
 pub use crate::standards::v89a::subsets::any::io::{GifBuilderConstruction, GifParts, GifAnalyzerAnalysis, GifBuilderFacets, GifBuilder, GifAnalyzer, GifComposer};

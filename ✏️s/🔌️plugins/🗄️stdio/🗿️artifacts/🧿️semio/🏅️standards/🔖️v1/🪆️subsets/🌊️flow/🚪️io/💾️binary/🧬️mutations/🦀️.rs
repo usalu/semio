@@ -7,7 +7,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::flow::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::flow::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label, diff_set_node_param, diff_set_node_position, diff_set_snapshot, SemioFlowDiff};
 use crate::standards::v1::subsets::flow::io::text::snapshot::{dec_edge};
 use crate::standards::v1::subsets::flow::io::text::snapshot::{enc_edge};
@@ -109,3 +109,6 @@ const TAG_SET_EDGE_ENDPOINTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "
 const TAG_SET_EDGE_KIND: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-edge-kind");
 const TAG_DRAG_NODES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "drag-nodes");
 //#endregion 🏷️WireTags
+
+#[path = "📦️codec/🫳️borrowed/🦀️.rs"]
+mod borrowed_operation_source;

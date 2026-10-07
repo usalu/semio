@@ -58,7 +58,7 @@ fn property_rows(values: &[PropertyDef], total: &mut usize, c: &mut SqliteSnapsh
     }
     Ok(())
 }
-pub(super) fn forecast(value: &JackSnapshot, c: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<usize, ValueError> {
+pub(crate) fn forecast(value: &JackSnapshot, c: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<usize, ValueError> {
     c.checkpoint(phase, 0, 0)?;
     let limits = c.limits();
     if limits.max_tables < 13 || limits.max_columns < 11 {
@@ -85,7 +85,7 @@ pub(super) fn forecast(value: &JackSnapshot, c: &mut SqliteSnapshotControl<'_>, 
     c.checkpoint(phase, total, total)?;
     Ok(total)
 }
-pub(super) fn variant(value: &ValueType) -> &'static str {
+pub(crate) fn variant(value: &ValueType) -> &'static str {
     match value {
         ValueType::Boolean => "boolean",
         ValueType::Integer => "integer",
@@ -141,7 +141,7 @@ fn project_properties(values: &[PropertyDef], table: &str, parent: i64, out: &mu
     }
     Ok(())
 }
-pub(super) fn project(value: &JackSnapshot, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+pub(crate) fn project(value: &JackSnapshot, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
     let total = forecast(value, c, SqliteSnapshotPhase::ProjectSnapshot)?;
     let mut out = Projection::new(SQL, c)?;
     let doc = out.insert("jack_document", &[Cell::Text(&value.schema), Cell::Text(&value.name), optional(&value.manifest_id), optional(&value.root_node_id), Cell::Text(&value.query)])?;
@@ -178,31 +178,31 @@ pub(super) fn project(value: &JackSnapshot, c: &mut SqliteSnapshotControl<'_>) -
     out.checkpoint_total(total)?;
     out.finish()
 }
-pub(super) fn retire_type(value: ValueType) {
+pub(crate) fn retire_type(value: ValueType) {
     <ValueType as semio_framework_value::FromValue>::retire_decoded(value)
 }
 
-pub(super) fn retire_properties(values: Vec<PropertyDef>) {
+pub(crate) fn retire_properties(values: Vec<PropertyDef>) {
     for value in values {
         retire_type(value.value_type)
     }
 }
-pub(super) fn retire_nodes(values: Vec<NodeKindDef>) {
+pub(crate) fn retire_nodes(values: Vec<NodeKindDef>) {
     for value in values {
         retire_properties(value.properties)
     }
 }
-pub(super) fn retire_edges(values: Vec<EdgeKindDef>) {
+pub(crate) fn retire_edges(values: Vec<EdgeKindDef>) {
     for value in values {
         retire_properties(value.properties)
     }
 }
-pub(super) fn retire_ports(values: Vec<PortKindDef>) {
+pub(crate) fn retire_ports(values: Vec<PortKindDef>) {
     for value in values {
         retire_properties(value.properties)
     }
 }
-pub(super) fn retire_manifest(value: Manifest) {
+pub(crate) fn retire_manifest(value: Manifest) {
     retire_nodes(value.node_kinds);
     retire_edges(value.edge_kinds);
     retire_ports(value.port_kinds)
@@ -341,7 +341,7 @@ fn reconstruct_properties(index: usize, parent: i64, rows: &mut Rows<'_>, c: &mu
     }
     Ok(result.take())
 }
-pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<JackSnapshot, ValueError> {
+pub(crate) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<JackSnapshot, ValueError> {
     let mut rows = Rows::new(database, c)?;
     let document = rows.singleton(0, c)?;
     let schema = text(document, 1, c)?;
@@ -388,7 +388,7 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
     let manifest = semio_framework_value::DecodedValue::new(Manifest { node_kinds: nodes.take(), edge_kinds: edges.take(), port_kinds: ports.take() }, retire_manifest);
     let content = JackContentChild::new(
         text(child, 2, c)?,
-        store::io_schema::ArtifactRef { artifact_id: text(child, 3, c)?, dialect: store::io_schema::ArtifactDialect { artifact_kind: text(child, 4, c)?, standard: text(child, 5, c)?, subset: text(child, 6, c)? } },
+        semio_framework_artifact_reference::ArtifactRef { artifact_id: text(child, 3, c)?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: text(child, 4, c)?, standard: text(child, 5, c)?, subset: text(child, 6, c)? } },
     );
     let value = semio_framework_value::DecodedValue::new(JackSnapshot { schema, name, manifest_id, manifest: manifest.take(), camera, content, root_node_id, query }, retire_snapshot);
     rows.finish()?;
@@ -397,7 +397,7 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
     Ok(value.take())
 }
 
-pub(super) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
+pub(crate) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
     value.validate_schema().map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()))?;
     let dialect = &value.content.target.dialect;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {
@@ -405,7 +405,7 @@ pub(super) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
     }
     Ok(())
 }
-pub(super) fn retire_snapshot(value: JackSnapshot) {
+pub(crate) fn retire_snapshot(value: JackSnapshot) {
     let mut cursor = store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::JackSnapshotRetirementFactory, value);
     loop {
         match cursor.close_step(256, usize::MAX).expect("Jack explicit retirement") {
@@ -431,9 +431,9 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
         let value = store::decode_sqlite_snapshot_record_native(
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
-            crate::standards::v1::subsets::any::schema::snapshot::text::JackPackRecord::__dsl_spec_producer(),
+            crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
             |record, native| {
-                let flat = crate::standards::v1::subsets::any::schema::snapshot::text::JackPackRecord::__dsl_from_record_controlled(record, native)?;
+                let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_from_record_controlled(record, native)?;
                 flat.admit_rows(max_rows, native)?;
                 flat.into_snapshot_controlled(native)
             },
@@ -449,9 +449,9 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
         store::encode_sqlite_snapshot_record_native(
             encoding,
             <Self as store::ArtifactDsl>::envelope_id(),
-            crate::standards::v1::subsets::any::schema::snapshot::text::JackPackRecord::__dsl_spec_producer(),
+            crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
             |native| {
-                let flat = crate::standards::v1::subsets::any::schema::snapshot::text::JackPackRecord::from_snapshot_controlled(self, native)?;
+                let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::from_snapshot_controlled(self, native)?;
                 flat.__dsl_to_record_controlled(native)
             },
             c,
@@ -460,7 +460,7 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
     fn retire_sqlite_snapshot(self) {
         retire_snapshot(self)
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         (|| -> Result<_, ValueError> {
             c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
             if dialect.artifact_kind != "s.trinity.jack" || dialect.standard != "1" || dialect.subset != "*" {

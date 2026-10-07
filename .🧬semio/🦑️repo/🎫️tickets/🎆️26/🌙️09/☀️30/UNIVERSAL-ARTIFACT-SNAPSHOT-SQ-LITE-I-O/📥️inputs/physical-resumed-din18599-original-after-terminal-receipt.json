@@ -1,0 +1,13 @@
+{
+  "session": 58654,
+  "exitCode": 0,
+  "command": "original DIN18599 test-snapshot-sqlite-native, unchanged controls",
+  "compile": "3m35s",
+  "run": 14,
+  "passed": 14,
+  "failed": 0,
+  "skipped": 126,
+  "durationSeconds": 0.35,
+  "nextestId": "8d532561-a7b2-409d-9283-127d4023b271",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-din18599-original-native-after-eight-and-shared-result-current-glue.log"
+}

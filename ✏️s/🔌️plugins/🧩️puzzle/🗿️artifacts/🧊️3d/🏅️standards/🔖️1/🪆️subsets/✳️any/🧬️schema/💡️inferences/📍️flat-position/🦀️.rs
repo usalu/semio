@@ -20,11 +20,8 @@ pub(crate) fn assignment_for(snapshot: &Puzzle3dSnapshot) -> HashMap<String, Fla
     flatten_objects_with_assignment(&snapshot.objects, &snapshot.attractions, None).2
 }
 
-fn push_numbers(bytes: &mut Vec<u8>, values: impl IntoIterator<Item = f64>) {
-    for value in values {
-        bytes.extend(semio_framework_hash::format_number_for_hash(value).as_bytes());
-        bytes.push(0x1f);
-    }
+fn push_numbers(values: &mut Vec<semio_framework_value::DslValue>, numbers: impl IntoIterator<Item = f64>) {
+    values.extend(numbers.into_iter().map(semio_framework_value::DslValue::float));
 }
 
 /// 🎛️ `flatPosition.plane` — root dep = fixed plane (anchor + origin + orientation); chain dep =
@@ -33,6 +30,7 @@ fn push_numbers(bytes: &mut Vec<u8>, values: impl IntoIterator<Item = f64>) {
 pub struct Puzzle3dFlatPlane;
 
 impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = FlattenPlane;
     const FIELD_ID: &'static str = "s.puzzle.puzzle3d.inference.flatPosition.plane";
@@ -56,9 +54,9 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
             .collect()
     }
 
-    fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         let assignment = assignment_for(snapshot);
-        let mut bytes = Vec::new();
+        let mut values = Vec::new();
         match assignment.get(key) {
             Some(FlattenParent::Child { parent_id, attraction_index, parent_vortex_id, child_vortex_id }) => {
                 let parent_object = snapshot.objects.iter().find(|o| &o.id == parent_id);
@@ -67,24 +65,24 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
                 if let Some(((parent_vortex, child_vortex), attraction)) = edge {
                     let (pp, pd, _) = vortex_geom(parent_vortex);
                     let (cp, cd, _) = vortex_geom(child_vortex);
-                    push_numbers(&mut bytes, pp);
-                    push_numbers(&mut bytes, pd);
-                    push_numbers(&mut bytes, cp);
-                    push_numbers(&mut bytes, cd);
-                    push_numbers(&mut bytes, [attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt]);
+                    push_numbers(&mut values, pp);
+                    push_numbers(&mut values, pd);
+                    push_numbers(&mut values, cp);
+                    push_numbers(&mut values, cd);
+                    push_numbers(&mut values, [attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt]);
                 }
             }
             _ => {
                 if let Some(object) = snapshot.objects.iter().find(|o| &o.id == key) {
-                    bytes.push(matches!(object.anchor, Puzzle3dObjectAnchor::Fixed) as u8);
-                    push_numbers(&mut bytes, object.origin);
+                    values.push(semio_framework_value::DslValue::Bool(matches!(object.anchor, Puzzle3dObjectAnchor::Fixed)));
+                    push_numbers(&mut values, object.origin);
                     if let Some(orientation) = object.orientation {
-                        push_numbers(&mut bytes, orientation);
+                        push_numbers(&mut values, orientation);
                     }
                 }
             }
         }
-        bytes
+        semio_framework_value::DslValue::Array(values)
     }
 
     fn compute(snapshot: &Puzzle3dSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
@@ -119,6 +117,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
 pub struct Puzzle3dFlatCenter;
 
 impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatCenter {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = [f64; 2];
     const FIELD_ID: &'static str = "s.puzzle.puzzle3d.inference.flatPosition.center";
@@ -132,22 +131,22 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatCenter {
         Puzzle3dFlatPlane::plan(snapshot)
     }
 
-    fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         let assignment = assignment_for(snapshot);
-        let mut bytes = Vec::new();
+        let mut values = Vec::new();
         match assignment.get(key) {
             Some(FlattenParent::Child { parent_id, attraction_index, parent_vortex_id, .. }) => {
                 let parent_object = snapshot.objects.iter().find(|o| &o.id == parent_id);
                 let edge = parent_object.and_then(|p| find_vortex(p, parent_vortex_id)).zip(snapshot.attractions.get(*attraction_index));
                 if let Some((parent_vortex, attraction)) = edge {
                     let (_, pd, pt) = vortex_geom(parent_vortex);
-                    push_numbers(&mut bytes, pd);
-                    push_numbers(&mut bytes, [pt, attraction.x, attraction.y]);
+                    push_numbers(&mut values, pd);
+                    push_numbers(&mut values, [pt, attraction.x, attraction.y]);
                 }
             }
-            _ => bytes.push(0),
+            _ => values.push(semio_framework_value::DslValue::Null),
         }
-        bytes
+        semio_framework_value::DslValue::Array(values)
     }
 
     fn compute(snapshot: &Puzzle3dSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {

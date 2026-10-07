@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
 
 /// 🪪️ One canonical terrain identity shared by definition, composer and both app roles.
-pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.gis.gisterrain", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const GISTERRAIN_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.gis.gisterrain", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 //#endregion 🔹Constants
 
 //#region 🔹Types
@@ -62,8 +62,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `cad_model_child_handle` (same `store::ArtifactChild::new` + `ArtifactDialect` shape).
 pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
     let child_id = store::content_id("gisterrain-mesh", content_key.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 

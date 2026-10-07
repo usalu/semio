@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::standards::v1_1::subsets::tiny::io::SvgTinyBuilder;
-    use crate::standards::v1_1::subsets::tiny::schema::{CODE_ATTRIBUTE, CODE_ELEMENT};
+    use crate::standards::v1_1::subsets::tiny::schema::conformance::{CODE_ATTRIBUTE, CODE_ELEMENT};
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 
@@ -12,9 +12,9 @@ mod tests {
         let composed = SvgTinyComposerComposition::compose(&sources).expect("clean document must compose to tiny");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         match &composed.snapshot.doc.root {
-            Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. }) => {
-                assert!(attrs.iter().any(|a| a.name == "baseProfile" && a.value == "tiny"));
-                assert!(attrs.iter().any(|a| a.name == "version" && a.value == "1.1"));
+            Some(crate::schema::snapshot::SvgNode::Element { attrs, .. }) => {
+                assert!(attrs.iter().any(|a| a.name == "baseProfile" && a.value.text() == Some("tiny")));
+                assert!(attrs.iter().any(|a| a.name == "version" && a.value.text() == Some("1.1")));
             }
             other => panic!("expected element root, got {other:?}"),
         }

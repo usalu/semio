@@ -1,4 +1,8 @@
 //! 💾️ Direct compact TIFF snapshot-patch binary codec.
+use crate::standards::v6_0::subsets::document::schema::mutations::*;
+use crate::standards::v6_0::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot;
+use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+use crate::standards::v6_0::subsets::document::io::binary::diff::*;
 
 use crate::standards::v6_0::subsets::document::io::binary::mutations::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::Entry;
@@ -11,5 +15,5 @@ pub fn encode(value: &TiffMutation) -> Option<Result<Vec<u8>, protocol::Protocol
     Some(patch.encode_op())
 }
 pub fn decode(bytes: &[u8]) -> Result<TiffMutation, protocol::ProtocolError> {
-    editing::SnapshotPatch::decode_op(bytes).map(|patch| TiffMutation::PatchSnapshot(PatchSnapshot { patch }))
+    semio_s_artifact_stdio_contract::editing::SnapshotPatch::decode_op(bytes).map(|patch| TiffMutation::PatchSnapshot(PatchSnapshot { patch }))
 }

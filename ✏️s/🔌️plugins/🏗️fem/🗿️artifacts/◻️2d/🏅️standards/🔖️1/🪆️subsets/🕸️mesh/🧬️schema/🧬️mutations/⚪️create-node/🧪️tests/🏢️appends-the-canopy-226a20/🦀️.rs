@@ -13,7 +13,8 @@
 //! 🏢️ The canopy strut head is appended at the tail of the node table — `create-node` never inserts.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚪️create-node/🏢️appends-the-canopy-226a20/📸️snapshot/⬅️before/🔣️.json");

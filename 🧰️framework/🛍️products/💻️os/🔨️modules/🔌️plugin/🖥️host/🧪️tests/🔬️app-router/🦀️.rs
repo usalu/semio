@@ -17,7 +17,7 @@ async fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {
     }
 }
 
-pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> semio_framework::AppDefinition {
+pub(super) async fn fixture_app(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::AppRole) -> semio_framework::AppDefinition {
     semio_framework::AppDefinition {
         id: id.into(),
         role,
@@ -95,8 +95,8 @@ async fn fixture_manifest(plugin_id: &str, dependency_ids: Vec<&str>, artifact_k
     }
 }
 
-pub(super) async fn dialect(subset: &str) -> semio_framework::ArtifactDialect {
-    semio_framework::ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: subset.into() }
+pub(super) async fn dialect(subset: &str) -> semio_framework_artifact_reference::ArtifactDialect {
+    semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: subset.into() }
 }
 
 async fn register(router: &AppRouter, plugin_id: &str, dependencies: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> Result<(), semio_framework::Fault> {
@@ -179,9 +179,11 @@ async fn unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim() {
 /// orders are compared (the two messages are written in each language's own voice).
 #[semio_framework_async_macros::async_test]
 async fn plugin_fault_isolation_matches_the_shared_fixture() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json")).expect("app router plugin fault fixture");
     let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect("fixture string").to_string();
-    let fixture_dialect = |value: &serde_json::Value| semio_framework::ArtifactDialect { artifact_kind: text(value, "artifactKind"), standard: text(value, "standard"), subset: text(value, "subset") };
+    let fixture_dialect = |value: &serde_json::Value| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: text(value, "artifactKind"), standard: text(value, "standard"), subset: text(value, "subset") };
     let router = AppRouter::new();
     let mut manifests = Vec::new();
     for row in fixture["manifests"].as_array().expect("fixture manifests") {

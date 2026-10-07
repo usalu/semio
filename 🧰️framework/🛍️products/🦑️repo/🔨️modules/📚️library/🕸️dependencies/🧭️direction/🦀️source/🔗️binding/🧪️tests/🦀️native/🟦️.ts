@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
 
 const owner=resolve(import.meta.dir,"../.."), output=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!output) throw Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");
@@ -14,10 +13,7 @@ const invoke=(args:string[])=>{const result=Bun.spawnSync(args,{cwd:root,stdout:
 const compiled=invoke(["rustc","--edition=2021","--crate-name=different_library","--crate-type=rlib",provider,"-o",library]);
 writeFileSync(join(root,"provider.stderr"),compiled.stderr);
 if(compiled.exitCode!==0) throw Error("Native provider compilation failed: "+compiled.stderr.toString());
-test("closed native binding corpus",()=>{
- expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")))(corpus)).toBe(true);
- expect(new Set(corpus.nativeCases.map(row=>row.id)).size).toBe(corpus.nativeCases.length);
-});
+
 for(const row of corpus.nativeCases) test(row.id,()=>{
  const source=join(root,row.id+".rs"), binary=join(root,row.id+(process.platform==="win32"?".exe":""));
  writeFileSync(source,row.source);

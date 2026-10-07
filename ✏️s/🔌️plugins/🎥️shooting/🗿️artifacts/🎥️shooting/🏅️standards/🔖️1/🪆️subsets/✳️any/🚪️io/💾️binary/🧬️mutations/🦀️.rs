@@ -33,3 +33,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<ShootingMutation, protocol::ProtocolErr
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod native_codec {
+use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
+const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
+impl protocol::OpBinary for ShootingMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
+    }
+}
+}

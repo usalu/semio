@@ -1,0 +1,23 @@
+{
+  "type": "array",
+  "prefixItems": [
+    {
+      "const": "r"
+    },
+    {
+      "type": "number"
+    },
+    {
+      "type": "number"
+    },
+    {
+      "type": "number"
+    },
+    {
+      "type": "number"
+    }
+  ],
+  "items": false,
+  "minItems": 5,
+  "maxItems": 5
+}

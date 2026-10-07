@@ -46,3 +46,5 @@ pub fn encode_iso16757_pack(snapshot: &Iso16757Snapshot) -> Vec<u8> {
 }
 }
 pub use native_snapshot_codec::*;
+
+crate::impl_norm_artifact_record!(@binary crate::Iso16757Snapshot, extension="iso16757", envelope_id="norm.iso16757", sqlite=crate::snapshot::sqlite::codec);

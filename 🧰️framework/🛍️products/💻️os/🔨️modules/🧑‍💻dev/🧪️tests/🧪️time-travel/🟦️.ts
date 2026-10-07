@@ -85,7 +85,7 @@
  * pointer and keyboard on the canvas at the positions `semioWgpuIntrospection.dumpBoard2d` publishes (region `🔖️Wgpu`).
  *
  * Run: `verify time-travel [--serve <url>] [--renderer react|wgpu] [--locales en,de] [--chords en,de] [--only 1,2,3]
- * [--folder-at 1|5] [--long-history <mutations>] [--out <dir>] [--explore]` — the serve is reused when it answers, else
+ * [--folder-at 1|5] [--long-history <mutations>] [--out <dir>] [--universal] [--variant <declared variant>] [--explore]` — the serve is reused when it answers, else
  * started for the run and stopped after it ({@link ensureDevServe}). `--only` selects steps (each selection boots its own
  * document, so a later step needs the earlier ones it builds on: 3–7 and 11 build on 2, 6 and 7 on 4–5); `reload` selects the
  * reload check (it needs step 5's overwrite or step 13's warning), which runs on its own only when named. `--chords <locales>` drives Accept/Discard/Exit through
@@ -101,10 +101,13 @@
 import { appendFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, BrowserContext, ConsoleMessage, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER, playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+
+import { timeTravelServeVariantV1 } from "./🚀️boot/🟦️.ts";
+import { universalMirrorControlsV1, universalMirrorVerbsV1, type UniversalControlV1, type UniversalVerbV1 } from "./🪞️inventory/🟦️.ts";
 
 //#region 🔖️Arguments
 type Locale = "en" | "de";
@@ -562,7 +565,7 @@ const onFreshPages = async (body: (open: (device: Device, label: string) => Prom
  * `semioWgpuIntrospection.dumpBoard2d(windowId)`, the wgpu twin of React's `data-board-*` vitals.
  * @see ../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts
  * @see ../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs */
-type MirrorNode = { key: string; window: string; role: string; inputType: string | null; label: string; description: string; disabled: boolean; expanded: string | null; pressed: string | null; selected: string | null; value: string | null; valueNow: string | null; valueMin: string | null; valueMax: string | null; valueText: string | null; actionable: boolean; focused: boolean; live: string | null; busy: boolean; shortcut: string | null; tag: string; invalid: boolean; setSize: number | null; posInSet: number | null; step: string | null; min: string | null; max: string | null; tone: string | null };
+type MirrorNode = { key: string; window: string; role: string; inputType: string | null; label: string; description: string; disabled: boolean; expanded: string | null; pressed: string | null; selected: string | null; value: string | null; valueNow: string | null; valueMin: string | null; valueMax: string | null; valueText: string | null; actionable: boolean; focused: boolean; live: string | null; busy: boolean; shortcut: string | null; tag: string; invalid: boolean; setSize: number | null; posInSet: number | null; step: string | null; min: string | null; max: string | null; tone: string | null; checked: string | null; readonly: boolean };
 type Board2dSurface = { surfaceId: string; windowId: string; rect: [number, number, number, number]; camera: { x: number; y: number; zoom: number } | null; positions: Positions; selection: string[]; highlighted?: string[]; nodes: number; edges: number; handles: number; parsed: boolean };
 
 /** 🪞️ Every mirrored node in reading order, with the ARIA state the mirror stamps. */
@@ -600,6 +603,8 @@ const mirror = () =>
           min: el.getAttribute("min"),
           max: el.getAttribute("max"),
           tone: el.getAttribute("data-tone"),
+          checked: el.getAttribute("aria-checked"),
+          readonly: el.getAttribute("aria-readonly") === "true" || (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && el.readOnly,
         };
       }),
     [] as MirrorNode[],
@@ -5842,14 +5847,14 @@ const step23 = async (ctx: Ctx) => {
   await closePanels();
 };
 
-type UniversalControl = { index: number; pointer: string; role: string; name: string; value: string | null; min: string | null; max: string | null; step: string | null; options: number | null; disabled: boolean };
-type UniversalVerb = { id: string; verb: string; category: string; label: string; disabled: boolean };
+type UniversalControl = UniversalControlV1;
+type UniversalVerb = UniversalVerbV1;
 
 /** 🧭 The input controls of the open history editor, read without knowing the editor: every `framework.history.editor.input.<pointer>.row`
  * with the contract role of the control it holds (slider, spinbutton, radiogroup, listbox, combobox, switch, textbox, or a
  * reference list when the row has Use selection / chips), its accessible name, value and min / max / step where the DOM
  * carries them. Each control is stamped `data-probe-u=<index>` so it can be operated. */
-const universalControls = (): Promise<UniversalControl[]> =>
+const universalControls = async (): Promise<UniversalControl[]> => renderer === "wgpu" ? universalMirrorControlsV1(await mirror()) :
   evalSafe(
     () => {
       const all = Array.from(document.querySelectorAll<HTMLElement>("[id]"));
@@ -5900,7 +5905,7 @@ const universalControls = (): Promise<UniversalControl[]> =>
   );
 
 /** 🧑‍🚀 The verbs the open Actions rail lists (`action.<verb>` rows under their `action.category.<name>` groups), in order. */
-const universalVerbs = (): Promise<UniversalVerb[]> =>
+const universalVerbs = async (): Promise<UniversalVerb[]> => renderer === "wgpu" ? universalMirrorVerbsV1(await mirror()) :
   evalSafe(
     () => {
       const pane = Array.from(document.querySelectorAll<HTMLElement>('[data-slot="window-action-pane"]')).find((el) => el.offsetParent !== null);
@@ -5924,7 +5929,8 @@ const universalVerbs = (): Promise<UniversalVerb[]> =>
 /** 🛰 Changes one editor control by the smallest step its role offers: ArrowRight on a slider, ArrowUp on a spinbutton, the
  * next radio / option, a click on a switch, one appended character (committed by Tab) in a textbox. Answers what it did. */
 const universalChange = async (control: UniversalControl) => {
-  const target = page.locator(`[data-probe-u="${control.index}"]`).first();
+  const target = renderer === "wgpu" && control.key ? await mirrorLocator(control.key) : page.locator(`[data-probe-u="${control.index}"]`).first();
+  if (!target) return "the control left the retained mirror";
   await target.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
   if (control.role === "reference list") {
     const chips = Number(control.value ?? "0");
@@ -5949,8 +5955,16 @@ const universalChange = async (control: UniversalControl) => {
     return 'typed "x", committed by Tab';
   }
   if (control.role === "switch") {
+    if (renderer === "wgpu" && control.key) return await mirrorActivate(control.key) ? "accessibility activation" : "activation absent";
     await target.click({ timeout: 3000 }).catch(() => {});
     return "click";
+  }
+  if (renderer === "wgpu" && control.key && ["radiogroup", "listbox", "combobox"].includes(control.role)) {
+    if (control.role === "combobox") { await mirrorActivate(control.key); await sleep(500); }
+    const option = (await mirror()).find(node => (node.key.startsWith(`${control.key}::`) || node.key.startsWith(`${control.key}.`)) && ["radio", "option"].includes(node.role) && node.checked !== "true" && node.selected !== "true" && !node.disabled);
+    if (option) return await mirrorActivate(option.key, option.window) ? "the first other accessible option" : "option activation absent";
+    await page.keyboard.press("Escape");
+    return "no other accessible option offered";
   }
   if (control.role === "radiogroup") {
     await target.locator('[role="radio"][aria-checked="false"]').first().click({ timeout: 3000 }).catch(() => {});
@@ -5981,6 +5995,29 @@ const universalChange = async (control: UniversalControl) => {
   return "not operated";
 };
 
+/** 🌱 Changes one clean history input through its published control and confirms the settled draft. */
+const universalChangeOneInput = async () => {
+  const attempts: Record<string, unknown>[] = [];
+  let changed: string | null = null;
+  const clean = (await waitUntil(universalControls, (list) => list.length > 0, 6000, 400)).value;
+  for (const control of clean.filter((row) => !row.disabled && row.role !== "reference list").slice(0, 6)) {
+    await dismissNotices();
+    const how = await universalChange(control);
+    const after = await waitUntil(universalControls, (list) => {
+      const now = list.find((row) => row.pointer === control.pointer);
+      return now !== undefined && now.value !== control.value;
+    }, 5000, 300);
+    const settled = await settledControl(control.pointer);
+    const refusedWith = (await visibleNoticeCodes()).filter((code) => /^(timeTravel|app\.command)\./u.test(code));
+    attempts.push({ control: `${control.role} "${control.name}"`, how, before: control.value, after: settled?.value ?? null, ...(refusedWith.length ? { refusedWith } : {}) });
+    if (after.ok && settled !== null && settled.value !== control.value && refusedWith.length === 0) {
+      changed = `${control.role} "${control.name}": ${control.value} → ${settled.value} (${how})`;
+      break;
+    }
+  }
+  return { changed, attempts };
+};
+
 /** 🌐 Step 24 — design §23.3, the UNIVERSAL LIVE JOURNEY (batch U): the history-edit journey on whatever editor the serve
  * boots, with framework selectors only (Actions rail, History panel, time-travel band, history editor, finalize prompt).
  * u1 boot + rail verbs + History; u2 TWO mutation rows without editor knowledge (rail actions run with their declared
@@ -5989,30 +6026,33 @@ const universalChange = async (control: UniversalControl) => {
  * `<out>/<editor>-controls.json`); `u-control-<role>` one control of every inventoried role operated, each on a clean draft;
  * u4 one control changed → the draft is acknowledged, the later row reads "not applied"; u5 Accept → replay (stage + progress
  * when a frame shows it) → review, blockers resolved through Next problem → Withdraw; `u-conflict-…` the blocked → resolved
- * path (taken in u5, else by withdrawing the older row); u6 Finalize → Overwrite AND New alternative offered → Overwrite;
+ * path (taken in u5, else by withdrawing the older row); u6 Finalize → Overwrite, then a second input edit → Finalize → named New alternative;
  * u7 Withdraw → Restore on a row, Exit, zero trace; u8 no faults, labels in the locale, none a raw key. What an editor does not offer is a
  * NOTE named `u<n>-NOT-OFFERED-…` with its evidence — never a PASS. */
 const stepU = async (_ctx: Ctx) => {
   const copy = COPY[currentLocale];
-  if (renderer === "wgpu") {
-    note("u-NOT-PROBED-on-this-renderer", { reading: "the journey's readers are the React shell's DOM ids and slots; the wgpu arm needs the same through the ARIA mirror" });
-    return;
-  }
   const started = Date.now();
-  const shell = await evalSafe(() => ({ url: location.href, title: document.title, windows: Array.from(document.querySelectorAll<HTMLElement>('[data-slot="window"]')).map((el) => el.id).slice(0, 8), canvases: document.querySelectorAll("canvas").length }), { url: "", title: "", windows: [] as string[], canvases: 0 });
+  const shell = await evalSafe((wgpu) => ({ url: location.href, title: document.title, windows: wgpu ? [...new Set(Array.from(document.querySelectorAll<HTMLElement>("#semio-wgpu-accessibility [data-window]")).map(el => el.dataset.window ?? "").filter(Boolean))].slice(0, 8) : Array.from(document.querySelectorAll<HTMLElement>('[data-slot="window"]')).map((el) => el.id).slice(0, 8), canvases: document.querySelectorAll("canvas").length }), { url: "", title: "", windows: [] as string[], canvases: 0 }, renderer === "wgpu");
   const editor = universalEditor ?? (shell.title.toLowerCase().replace(/semio/gu, "").replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "") || "editor");
   await closePanels();
   const pane = page.locator('[data-slot="window"]').filter({ has: page.locator('[id$=".engagement.toggle"]') }).first();
-  const hasRail = (await pane.count().catch(() => 0)) > 0;
+  const retainedToggle = renderer === "wgpu" ? (await mirror()).find(node => node.key.endsWith(".engagement.toggle"))?.key ?? null : null;
+  const hasRail = renderer === "wgpu" ? retainedToggle !== null : (await pane.count().catch(() => 0)) > 0;
   const toggle = pane.locator('[id$=".engagement.toggle"]').first();
   const rail = pane.locator('[data-slot="window-action-pane"]').first();
+  const retainedRailVisible = async () => (await mirror()).some(node => /(?:^|[\/␟\u001f])action\.(?:category\.)?[A-Za-z0-9_-]+$/u.test(node.key));
   const openRail = async () => {
+    if (renderer === "wgpu") {
+      if (retainedToggle && !await retainedRailVisible()) { await wgpuPress(retainedToggle); await waitUntil(retainedRailVisible, Boolean, 8000, 200); }
+      return;
+    }
     if (!hasRail || (await rail.isVisible().catch(() => false))) return;
     await toggle.click({ timeout: 4000 }).catch(() => {});
     await waitUntil(() => rail.isVisible().catch(() => false), Boolean, 6000, 200);
     await sleep(500);
   };
   const closeRail = async () => {
+    if (renderer === "wgpu") { if (retainedToggle && await retainedRailVisible()) await wgpuPress(retainedToggle); return; }
     if (hasRail && (await rail.isVisible().catch(() => false))) await toggle.click({ timeout: 4000 }).catch(() => {});
   };
   const stableDocumentLabels = async () => {
@@ -6037,9 +6077,10 @@ const stepU = async (_ctx: Ctx) => {
     }, 6000, 350);
     return read.value.find((row) => row.pointer === pointer) ?? null;
   };
-  const visibleNoticeCodes = () => evalSafe(() => Array.from(document.querySelectorAll<HTMLElement>("[data-notice-code]")).filter((el) => el.offsetParent !== null).map((el) => el.getAttribute("data-notice-code") ?? ""), [] as string[]);
-  const visibleNoticeTexts = () => evalSafe(() => Array.from(document.querySelectorAll<HTMLElement>("[data-notice-code]")).filter((el) => el.offsetParent !== null).map((el) => (el.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120)), [] as string[]);
+  const visibleNoticeCodes = async () => renderer === "wgpu" ? (await mirror()).filter(node => node.key === "shell.notice").map(node => node.description) : evalSafe(() => Array.from(document.querySelectorAll<HTMLElement>("[data-notice-code]")).filter((el) => el.offsetParent !== null).map((el) => el.getAttribute("data-notice-code") ?? ""), [] as string[]);
+  const visibleNoticeTexts = async () => renderer === "wgpu" ? (await mirror()).filter(node => node.key === "shell.notice").map(node => node.label) : evalSafe(() => Array.from(document.querySelectorAll<HTMLElement>("[data-notice-code]")).filter((el) => el.offsetParent !== null).map((el) => (el.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120)), [] as string[]);
   const dismissNotices = async () => {
+    if (renderer === "wgpu") { const dismiss = (await mirror()).find(node => /^shell\.notice\.(?:dismiss|close)$/u.test(node.key)); if (dismiss) await mirrorActivate(dismiss.key); return; }
     await evalSafe(() => document.querySelectorAll<HTMLElement>("[data-notice-code] button").forEach((button) => button.click()), undefined);
     await sleep(250);
   };
@@ -6082,6 +6123,21 @@ const stepU = async (_ctx: Ctx) => {
   const tried: Record<string, unknown>[] = [];
   const runVerb = async (candidate: Candidate, phase: string) => {
     await openRail();
+    if (renderer === "wgpu") {
+      const item = mirrorFind(await mirror(), candidate.id);
+      if (!item) { tried.push({ phase, verb: candidate.verb, outcome: "its row left the rail" }); return null; }
+      await mirrorActivate(item.key, item.window);
+      const execute = await waitUntil(async () => (await mirror()).find(node => node.key.endsWith(`.action.${candidate.verb}.execute`)) ?? null, node => node !== null, 4000, 200);
+      const executeDisabled = execute.value?.disabled ?? false;
+      if (execute.ok && execute.value && !executeDisabled) await mirrorActivate(execute.value.key, execute.value.window);
+      const made = executeDisabled ? null : await documentRowsSince(seq, 1, execute.ok ? 8000 : 5000);
+      if ((await mirror()).some(node => node.role === "dialog")) { await page.keyboard.press("Escape"); await sleep(400); }
+      const row = made?.documents[0] ?? null;
+      tried.push({ phase, verb: candidate.verb, label: candidate.label, category: candidate.category, form: execute.ok, executeDisabled, row: row ? `${row.label} [${row.count} mutation(s)]` : null });
+      if (made) seq = made.newest;
+      if (!row && execute.ok) await mirrorActivate(item.key, item.window);
+      return row ? { id: row.id, label: row.label, form: execute.ok } : null;
+    }
     const item = pane.locator(`[id="${candidate.id}"]`).first();
     if (!(await item.count().catch(() => 0))) {
       tried.push({ phase, verb: candidate.verb, outcome: "its row left the rail" });
@@ -6136,9 +6192,12 @@ const stepU = async (_ctx: Ctx) => {
     const selectAll = verbs.find((row) => row.verb === "selectAll" && !row.disabled) ?? null;
     if (!second && selectAll && invalidatedBy === null) {
       await openRail();
-      const item = pane.locator(`[id="${selectAll.id}"]`).first();
-      const label = item.locator('[data-slot="tree-label"]').first();
-      await ((await label.count().catch(() => 0)) ? label : item).click({ timeout: 3000 }).catch(() => {});
+      if (renderer === "wgpu") await wgpuPress(selectAll.id);
+      else {
+        const item = pane.locator(`[id="${selectAll.id}"]`).first();
+        const label = item.locator('[data-slot="tree-label"]').first();
+        await ((await label.count().catch(() => 0)) ? label : item).click({ timeout: 3000 }).catch(() => {});
+      }
       await sleep(1200);
       for (const candidate of others.filter((row) => rank(row.category) === 1).slice(0, 3)) {
         if (second !== null || Date.now() - started > 260000) break;
@@ -6242,24 +6301,7 @@ const stepU = async (_ctx: Ctx) => {
       }
     }
     if (open) {
-      const attempts: Record<string, unknown>[] = [];
-      let changed: string | null = null;
-      const clean = (await waitUntil(universalControls, (list) => list.length > 0, 6000, 400)).value;
-      for (const control of clean.filter((row) => !row.disabled && row.role !== "reference list").slice(0, 6)) {
-        await dismissNotices();
-        const how = await universalChange(control);
-        const after = await waitUntil(universalControls, (list) => {
-          const now = list.find((row) => row.pointer === control.pointer);
-          return now !== undefined && now.value !== control.value;
-        }, 5000, 300);
-        const settled = await settledControl(control.pointer);
-        const refusedWith = (await visibleNoticeCodes()).filter((code) => /^(timeTravel|app\.command)\./u.test(code));
-        attempts.push({ control: `${control.role} "${control.name}"`, how, before: control.value, after: settled?.value ?? null, ...(refusedWith.length ? { refusedWith } : {}) });
-        if (after.ok && settled !== null && settled.value !== control.value && refusedWith.length === 0) {
-          changed = `${control.role} "${control.name}": ${control.value} → ${settled.value} (${how})`;
-          break;
-        }
-      }
+      const { changed, attempts } = await universalChangeOneInput();
       const bandDrafted = await band();
       let whileEditing = await allHistoryRows();
       const downstream = whileEditing.filter((row) => row.kind === "entry" && Number(row.key) > target!.entry && documentEntries([row]).length > 0);
@@ -6298,6 +6340,43 @@ const stepU = async (_ctx: Ctx) => {
   }
   if (await band()) await exitSession();
   await sleep(800);
+  if (target && reviewReady) {
+    const labelsBeforeAlternative = await stableDocumentLabels();
+    const alternativesBefore = await readAlternatives();
+    const seqBeforeAlternative = newestEntrySeq(await allHistoryRows());
+    const begun = await beginEditOf(target.key);
+    const draft = begun.band?.stage === "editing" ? await universalChangeOneInput() : { changed: null, attempts: [] };
+    const name = `probe ${editor} ${currentLocale} ${stamp.slice(11, 19)}`;
+    const path: string[] = [];
+    let ready: Awaited<ReturnType<typeof band>> = null;
+    if (draft.changed) {
+      const via = await pressBand("accept");
+      const review = await reviewed();
+      path.push(`Accept (${via}) → ${review.value?.review ?? "no review"}`);
+      ready = await resolveBlockers(review.value, path);
+    }
+    if (ready?.review === "ready") {
+      const viaFinalize = await pressBand("finalize");
+      const dialog = await waitUntil(finalizeDialog, value => value !== null, 15000);
+      const nameValue = dialog.ok ? await dialogFillName(name) : null;
+      const submitted = nameValue === name && await dialogChoose("submit");
+      const gone = await waitUntil(band, state => state === null, 30000);
+      const edited = await waitUntil(async () => documentEntries(await allHistoryRows()).find(row => Number(row.key) > seqBeforeAlternative && isHistoryEdit(row) && row.label.includes(name)) ?? null, row => row !== null, 20000, 800);
+      const listed = await waitUntil(readAlternatives, rows => rows.some(row => row.text.includes(name) && isCurrentAlternative(row)) && rows.some(row => !row.text.includes(name)), 15000, 800);
+      verdict("u6-second-edit-finalizes-as-a-named-new-alternative", dialog.ok && nameValue === name && submitted && gone.ok && edited.ok && listed.ok, { changed: draft.changed, attempts: draft.attempts, path, via: viaFinalize, name, nameValue, submitted, sessionClosed: gone.ok, row: edited.value?.label ?? null, alternatives: listed.value.map(row => ({ key: row.key, text: row.text, current: isCurrentAlternative(row) })), reading: "a second clean edit is accepted and finalized through New alternative; History records its name, the named alternative is current, and the previous head remains offered" });
+      const previous = listed.value.find(row => !row.text.includes(name) && (alternativesBefore.some(before => before.key === row.key && isCurrentAlternative(before)) || alternativesBefore.length === 0));
+      const mine = listed.value.find(row => row.text.includes(name));
+      if (previous && mine) {
+        const viaPrevious = await switchAlternative(previous);
+        const restored = await waitUntil(stableDocumentLabels, labels => JSON.stringify(labels) === JSON.stringify(labelsBeforeAlternative), 15000, 800);
+        const viaMine = await switchAlternative(mine);
+        const current = await waitUntil(readAlternatives, rows => rows.some(row => row.key === mine.key && isCurrentAlternative(row)), 15000, 800);
+        verdict("u6-new-alternative-preserves-and-switches-the-previous-head", restored.ok && current.ok, { viaPrevious, viaMine, restoredRows: restored.value.length, expectedRows: labelsBeforeAlternative.length, current: current.value.filter(isCurrentAlternative).map(row => row.text), reading: "switching to the prior head restores its exact history, then switching back selects the new named alternative" });
+      }
+    } else verdict("u6-second-edit-reaches-review-for-new-alternative", false, { begun: begun.band?.stage ?? null, changed: draft.changed, attempts: draft.attempts, path, review: ready?.review ?? null, reading: "after Overwrite the same mutation must remain editable so its second clean change can finalize as a named alternative" });
+    if (await band()) await exitSession();
+    await sleep(800);
+  }
   if (conflict === null) {
     const journeyRows = documentEntries(await allHistoryRows()).filter((row) => !isHistoryEdit(row) && Number(row.key) > seqAtBoot).sort((left, right) => Number(left.key) - Number(right.key));
     const upstream = journeyRows[0] ?? null;
@@ -6624,8 +6703,8 @@ const runProbe = async (): Promise<RunSummary> => {
 };
 
 /** 🚦️ `verify time-travel [--serve <url>] [--renderer react|wgpu] [--locales en,de] [--chords en,de] [--only 1,2,…]
- * [--folder-at 1|5] [--long-history <mutations>] [--out <dir>] [--explore]` — reuses the serve answering at `--serve` (default
- * :6012 React, :6112 wgpu) or starts the puzzle 2d serve of `--renderer` there for the run ({@link ensureDevServe}; stopped
+ * [--folder-at 1|5] [--long-history <mutations>] [--out <dir>] [--universal] [--variant <declared variant>] [--explore]` — reuses the serve answering at `--serve` (default
+ * :6012 React, :6112 wgpu) or starts the catalog-admitted universal variant (puzzle 2d for specialized steps) there for the run ({@link ensureDevServe}; stopped
  * after it), drives every locale, writes the report under `--out`, publishes the `time-travel` acceptance record (pass only
  * when every verdict passes with no uncaught page error and no hard guest fault) and exits non-zero otherwise. Ctrl-C stops
  * after the running step and still writes the report. */
@@ -6641,10 +6720,21 @@ export async function runTimeTravelCli(repoRoot: string, defaultOutDir: string, 
     repoRoot,
     CHECK_ID,
     async () => {
-      const serve = await ensureDevServe({ repoRoot, port: devServePortV1(serveUrl), variant: PLUGIN_VARIANT, renderer, signal: controller.signal, onProgress: (_status, line) => console.log(line) }).catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
+      let variant: string | null = null;
+      const startServe = async () => {
+        const selectedVariant = timeTravelServeVariantV1({ universal: universalRoute !== null, url: routeUrl(), renderer, explicit: flagValue(segments, "--variant") }, playgroundCatalog);
+        variant = selectedVariant;
+        if (universalRoute !== null) {
+          const route = new URL(universalRoute);
+          route.searchParams.set("plugin", variant);
+          universalRoute = route.href;
+        }
+        return ensureDevServe({ repoRoot, port: devServePortV1(serveUrl), variant, renderer, signal: controller.signal, logPath: join(OUT, `${base}-serve.log`), beforeSpawn: async () => (await import("../../♻️activation/🏃️execution/🟦️.ts")).activatePlaygroundRuntime(selectedVariant, "dev", renderer, { signal: controller.signal }), onProgress: (_status, line) => console.log(line) });
+      };
+      const serve = await startServe().catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
       if (serve instanceof Error) {
         const reason = serve.message.split("\n")[0]!.slice(0, 200);
-        publishAcceptanceCheckResult(repoRoot, acceptanceCheckResult({ check: CHECK_ID, status: "blocked", startedAt, measured: { serve: serveUrl, renderer, cancelled: controller.signal.aborted }, summary: { en: `no ${renderer} puzzle 2d serve at ${serveUrl}: ${reason}`, de: `kein ${renderer}-Puzzle-2D-Server unter ${serveUrl}: ${reason}` } }));
+        publishAcceptanceCheckResult(repoRoot, acceptanceCheckResult({ check: CHECK_ID, status: "blocked", startedAt, measured: { serve: serveUrl, renderer, variant, cancelled: controller.signal.aborted }, summary: { en: `no ${renderer} ${variant ?? "declared playground"} serve at ${serveUrl}: ${reason}`, de: `kein ${renderer}-Server für ${variant ?? "den deklarierten Playground"} unter ${serveUrl}: ${reason}` } }));
         process.exitCode = 1;
         return;
       }
@@ -6658,7 +6748,7 @@ export async function runTimeTravelCli(repoRoot: string, defaultOutDir: string, 
             check: CHECK_ID,
             status,
             startedAt,
-            measured: { renderer, serve: serveUrl, locales: locales.join(","), chords: [...chordLocales].join(","), verdicts: run.verdicts, passed: run.passed, failed: run.failed, uncaught: run.uncaught, hard: run.hard, cancelled: controller.signal.aborted },
+            measured: { renderer, variant, serve: routeUrl(), locales: locales.join(","), chords: [...chordLocales].join(","), verdicts: run.verdicts, passed: run.passed, failed: run.failed, uncaught: run.uncaught, hard: run.hard, cancelled: controller.signal.aborted },
             summary: {
               en: `${run.passed}/${run.verdicts} time-travel verdicts pass on ${renderer} (${locales.join(", ")}); ${run.uncaught} uncaught page errors, ${run.hard} hard faults${failing ? `; failing: ${failing}` : ""}`.slice(0, 1900),
               de: `${run.passed}/${run.verdicts} Zeitreise-Prüfungen bestehen auf ${renderer} (${locales.join(", ")}); ${run.uncaught} unbehandelte Seitenfehler, ${run.hard} harte Fehler${failing ? `; fehlgeschlagen: ${failing}` : ""}`.slice(0, 1900),

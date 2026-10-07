@@ -86,9 +86,9 @@ fn sqlite_snapshot_txt_surrogate_ids_and_literal_metadata_are_not_native_headers
         database.table_mut("text_document").unwrap().rows[0].values[0] = SqliteValue::Integer(key);
         for row in &mut database.table_mut("text_line").unwrap().rows { row.values[1] = SqliteValue::Integer(key); }
         assert_eq!(TxtSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(), snapshot);
-        let valid = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.txt".into(), standard: "utf-8".into(), subset: "*".into() };
+        let valid = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.txt".into(), standard: "utf-8".into(), subset: "*".into() };
         assert!(snapshot.validate_sqlite_snapshot_subset(&valid, &database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_ok());
-        for invalid in [store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.csv".into(), ..valid.clone() }, store::io_schema::ArtifactDialect { standard: "other".into(), ..valid.clone() }, store::io_schema::ArtifactDialect { subset: "other".into(), ..valid.clone() }] {
+        for invalid in [semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.csv".into(), ..valid.clone() }, semio_framework_artifact_reference::ArtifactDialect { standard: "other".into(), ..valid.clone() }, semio_framework_artifact_reference::ArtifactDialect { subset: "other".into(), ..valid.clone() }] {
             assert!(snapshot.validate_sqlite_snapshot_subset(&invalid, &database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err());
         }
         for corruption in 0..6 {
@@ -106,7 +106,7 @@ async fn sqlite_snapshot_txt_actual_typed_io_preserves_fields_without_native_pha
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("TXT SQLite Test").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let fixture = native_fixture();
     let source = TxtSnapshot { schema: fixture["literalSchemas"][2].as_str().unwrap().into(), lines: vec!["任意\0\ninside one entity".into(), String::new(), "tail".into()], trailing_newline: true, line_ending: LineEnding::CrLf };
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.txt".into(), standard: "utf-8".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.txt".into(), standard: "utf-8".into(), subset: "*".into() };
     let limits = SqliteDatabaseLimits { max_rows: fixture["controls"]["finalRows"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let mut phases = Vec::new();
@@ -124,7 +124,7 @@ fn sqlite_snapshot_txt_actual_bare_factory_transfers_native_carriers() {
     use store::sqlite_snapshot::SnapshotEncoding;
     let codec = store::ArtifactCodec::bare::<TxtSnapshot, crate::standards::v_utf_8::subsets::any::schema::mutations::TxtMutation>(crate::STDIO_TXT_DOCUMENT_SCHEMA);
     let capability = codec.snapshot_sqlite.expect("TXT bare owner publishes its semantic SQLite capability");
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.txt".into(), standard: "utf-8".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.txt".into(), standard: "utf-8".into(), subset: "*".into() };
     for case in native_fixture()["nativeCases"].as_array().unwrap() {
         let snapshot = native_case(case);
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {

@@ -1,0 +1,75 @@
+[
+  {
+    "id": "exact",
+    "input": {
+      "path": "tests/law.rs",
+      "before": "include_str!(\"../../fixture.json\")",
+      "after": "include_str!(\"../fixture.json\")",
+      "from": "../../fixture.json",
+      "to": "../fixture.json"
+    },
+    "accepted": true,
+    "schemaAccepted": true
+  },
+  {
+    "id": "repeated",
+    "input": {
+      "path": "tests/law.rs",
+      "before": "aa",
+      "after": "bb",
+      "from": "a",
+      "to": "b"
+    },
+    "accepted": true,
+    "schemaAccepted": true
+  },
+  {
+    "id": "wrong-after",
+    "input": {
+      "path": "tests/law.rs",
+      "before": "include_str!(\"../../fixture.json\")",
+      "after": "other",
+      "from": "../../fixture.json",
+      "to": "../fixture.json"
+    },
+    "accepted": false,
+    "schemaAccepted": true
+  },
+  {
+    "id": "absent-literal",
+    "input": {
+      "path": "tests/law.rs",
+      "before": "include_str!(\"../../fixture.json\")",
+      "after": "include_str!(\"../fixture.json\")",
+      "from": "absent",
+      "to": "../fixture.json"
+    },
+    "accepted": false,
+    "schemaAccepted": true
+  },
+  {
+    "id": "empty-literal",
+    "input": {
+      "path": "tests/law.rs",
+      "before": "include_str!(\"../../fixture.json\")",
+      "after": "include_str!(\"../fixture.json\")",
+      "from": "",
+      "to": "../fixture.json"
+    },
+    "accepted": false,
+    "schemaAccepted": false
+  },
+  {
+    "id": "foreign-field",
+    "input": {
+      "path": "tests/law.rs",
+      "before": "include_str!(\"../../fixture.json\")",
+      "after": "include_str!(\"../fixture.json\")",
+      "from": "../../fixture.json",
+      "to": "../fixture.json",
+      "extra": true
+    },
+    "accepted": false,
+    "schemaAccepted": false
+  }
+]

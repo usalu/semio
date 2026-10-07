@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-06T13:22:36.461Z",
+  "session": 26385,
+  "status": "Original replay active; not terminal",
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-after-shared-derive-native-artifacts' bun run nx run @semio-tech/stdio-pdf-rs:test '--args=--lib --features component-app-assembly --no-fail-fast --status-level all --final-status-level all' --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-current-test-includes.log' 2>&1",
+  "originalExecutionBudgetMs": 300000,
+  "controls": "Original quick whole owner --lib component-app-assembly --no-fail-fast --status-level all --final-status-level all; exact compiler include repair only"
+}

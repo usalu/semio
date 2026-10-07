@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::equation::modes::edit::windows::graph::config::mutations::*;
 use crate::editor::equation::modes::edit::windows::graph::config::{EquationCamera, EquationGraphWindowConfig};
-use set_camera::SetCamera;
 
 impl protocol::OpText for EquationGraphWindowConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -34,7 +33,6 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::equation::modes::edit::windows::graph::config::mutations::*;
 use crate::editor::equation::modes::edit::windows::graph::config::{EquationCamera, EquationGraphWindowConfig};
-use set_camera::SetCamera;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `EquationGraphWindowConfig`.

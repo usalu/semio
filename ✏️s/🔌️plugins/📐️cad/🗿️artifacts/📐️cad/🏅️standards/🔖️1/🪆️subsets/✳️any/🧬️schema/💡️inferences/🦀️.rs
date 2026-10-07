@@ -74,9 +74,9 @@ mod tests;
 // classification/reclassification (rule 2: pure fn snapshot/objects -> derived objects), not
 // stateful app behaviour.
 mod derive_transformation {
-    use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
+    use crate::standards::v1::subsets::any::schema::geometry::CadObject;
     #[cfg(test)]
-    use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
+    use crate::standards::v1::subsets::any::schema::geometry::CadPrimitiveSlot;
 
     use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
     #[cfg(test)]
@@ -420,7 +420,7 @@ pub use derive_transformation::*;
 // Jack `QueryableGraph` adapter over one `CadGeometry` pane (rule 2/CAD-map: query -> D4
 // inference-shaped derived compute).
 mod construct_query {
-    use crate::standards::v1::subsets::any::io::geometry_import::CadGeometry;
+    use crate::standards::v1::subsets::any::schema::geometry::CadGeometry;
     use graph::dsl::{QueryableEdge, QueryableGraph};
     use graph::manifest::PropertyValue;
     use std::collections::BTreeSet;
@@ -570,7 +570,7 @@ pub use construct_query::*;
 // moved to `🚪️io/🦀️.rs` instead; the interaction statechart moved to the app's own
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
-    use crate::standards::v1::subsets::any::io::geometry_import::{
+    use crate::standards::v1::subsets::any::schema::geometry::{
         centroid_from_host_snapshot_primitives, import_geometry_handles, objects_from_host_snapshot_model, parse_geometry, resolve_primitive_handle, tessellate_geometry_handle, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject,
         CadPrimitiveSlot,
     };
@@ -586,15 +586,15 @@ mod scene_compute {
     pub const CAD_DEFAULT_TYPOLOGY_EXTENT: [f64; 3] = [1.0, 1.0, 1.0];
 
     /// 🗂️ Indices into the quad play fixture's `models[]` array — one model definition per pane.
-    const CAD_MODEL_INDEX_SHAPE: usize = 0;
 
-    const CAD_MODEL_INDEX_BUILDING: usize = 1;
 
-    const CAD_MODEL_INDEX_ENERGY: usize = 2;
 
-    const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 
-    const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+
+
+
+
+
 
     pub const CAD_MODEL_DEFINITION_SHAPE: &str = "spatial.shape";
 
@@ -627,7 +627,7 @@ mod scene_compute {
     /// exact ambient-reach anti-pattern the ticket exists to remove even though it was write-once).
     /// Every call site already builds, uses and drops its handles within the one call that owns
     /// this kernel, so no cross-call registry was ever load-bearing.
-    pub fn cad_brep_kernel() -> Brep {
+    pub pub(crate) fn cad_brep_kernel() -> Brep {
         Brep::new()
     }
 
@@ -768,34 +768,13 @@ mod scene_compute {
     }
 
     /// 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
-    pub(crate) fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
-        let Ok(root) = semio_framework_pack_json::parse(source_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            return (Vec::new(), CadGeometry::default());
-        };
-        let geometry_value = root.pointer(&format!("/models/{model_index}/model/geometry")).map(semio_framework_pack_json::to_dsl_value);
-        let geometry = parse_geometry(geometry_value.as_ref());
-        let Some(objects_value) = root.pointer(&format!("/models/{model_index}/model/objects")).and_then(|value| value.as_array()) else {
-            return (Vec::new(), geometry);
-        };
-        let objects_value: Vec<semio_framework_value::DslValue> = objects_value.iter().map(semio_framework_pack_json::to_dsl_value).collect();
-        let mut kernel = cad_brep_kernel();
-        let objects = objects_from_host_snapshot_model(&mut kernel, &objects_value, &geometry);
-        (objects, geometry)
-    }
+
 
     /// 🌲️ `cad_document_pane_bundle`, scoped to the Concrete Forest Left fixture and keyed by
     /// `CadPaneId` rather than a raw fixture index — the real, non-stub object+geometry source
     /// `crate::editor::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
     /// fixture) builds each pane from.
-    pub(crate) fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
-        let model_index = match pane {
-            CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
-            CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
-            CadPaneId::Energy => CAD_MODEL_INDEX_ENERGY,
-            CadPaneId::StructureClassic => CAD_MODEL_INDEX_STRUCTURE_CLASSIC,
-        };
-        cad_document_pane_bundle(FOREST_LEFT_MODEL_JSON, model_index)
-    }
+
 
     fn forest_references_for_model_definitions(reference_z: f64) -> crate::CadReferenceIndex {
         let mut output = crate::CadReferenceIndex::new();
@@ -842,23 +821,7 @@ mod scene_compute {
     /// `CadGeometry` (which `SemioModelSnapshot` has no field for), imported once through the real importer
     /// (`cad_document_pane_bundle`) and shared by the example document and the genesis catalogue
     /// (`crate::cad_bundled_pane_scene`).
-    pub(crate) fn forest_pane_scene(pane: CadPaneId) -> Arc<CadWorkingScene> {
-        static FOREST_PANE_SCENES: OnceLock<[Arc<CadWorkingScene>; 4]> = OnceLock::new();
-        FOREST_PANE_SCENES
-            .get_or_init(|| {
-                CadPaneId::all().map(|pane| {
-                    let (objects, geometry) = forest_pane_bundle(pane);
-                    let geometry = Some(geometry);
-                    Arc::new(match pane {
-                        CadPaneId::Shape => CadWorkingScene { objects, geometry, ..Default::default() },
-                        CadPaneId::Building => CadWorkingScene { building_objects: objects, building_geometry: geometry, ..Default::default() },
-                        CadPaneId::Energy => CadWorkingScene { energy_objects: objects, energy_geometry: geometry, ..Default::default() },
-                        CadPaneId::StructureClassic => CadWorkingScene { structure_classic_objects: objects, structure_classic_geometry: geometry, ..Default::default() },
-                    })
-                })
-            })[pane.index()]
-        .clone()
-    }
+
 
     /// 📟️ Builds the quad play document: every pane composes its STABLE named model child
     /// (`crate::cad_named_pane_child`), whose content is born from the genesis catalogue its id names — the Concrete

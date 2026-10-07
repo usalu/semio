@@ -1,6 +1,7 @@
+use crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
 use super::*;
 use quick_xml::{events::Event, reader::Reader, XmlVersion};
-use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use std::io::{Cursor, Read};
 
 fn literal_export_fixture() -> serde_json::Value {

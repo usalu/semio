@@ -425,3 +425,15 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 pub use diff_codec::*;
+
+impl crate::schema::diff::XmlChildrenDiff {
+    pub fn encode_binary(&self, output: &mut Vec<u8>) {
+        enc_children_diff_bin(self, output);
+    }
+}
+
+impl crate::schema::diff::XmlChildrenDiff {
+    pub fn decode_binary(reader: &mut store::ByteReader<'_>) -> Result<Self, String> {
+        dec_children_diff_bin(reader)
+    }
+}

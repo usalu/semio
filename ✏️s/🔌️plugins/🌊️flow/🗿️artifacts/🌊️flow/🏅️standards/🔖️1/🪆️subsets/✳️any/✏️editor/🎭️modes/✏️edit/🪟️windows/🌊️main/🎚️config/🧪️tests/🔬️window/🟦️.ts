@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -43,7 +44,7 @@ const target = (instances: WindowInstance[], id: string, expectedKind: string): 
 };
 
 export function testFlowWindowOwnershipOracle(): void {
-  const ajv = new Ajv({ strict: true, allErrors: true });
+  const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(artifactReferenceSchema);
   for (const keyword of ["x-semio-state", "x-semio-child-kind", "x-semio-child-standard", "x-semio-child-subset", "x-semio-formats", "x-semio-ui"]) ajv.addKeyword(keyword);
   ajv.addFormat("double", true);
   ajv.addSchema(ioSchema);

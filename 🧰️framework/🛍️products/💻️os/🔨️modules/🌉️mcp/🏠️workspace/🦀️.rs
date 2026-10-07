@@ -3027,7 +3027,7 @@ pub(crate) fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
 /// instantiable by the runtime that produced it.
 #[cfg(not(target_arch = "wasm32"))]
 struct GuestCodecRoute {
-    dialect: semio_framework::io_schema::ArtifactDialect,
+    dialect: semio_framework_artifact_reference::ArtifactDialect,
     artifact_schema: String,
     plugin_id: String,
     runtime: Arc<GuestRuntimes>,
@@ -3160,12 +3160,16 @@ fn guest_sqlite_turn_error(error: semio_framework_plugin_host::TurnFault) -> sem
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_route(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect) -> Result<Arc<GuestCodecRoute>, semio_framework::io_schema::IoError> {
+fn guest_sqlite_route(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect) -> Result<Arc<GuestCodecRoute>, semio_framework::io_schema::IoError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().find(|route| route.artifact_schema == schema && &route.dialect == dialect).cloned().ok_or_else(|| semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("no guest SQLite provider for {schema} at {}", dialect.to_coordinate()))))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_export(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
+fn guest_sqlite_export(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
     use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
     control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
@@ -3184,7 +3188,9 @@ fn guest_sqlite_export(schema: &str, dialect: &semio_framework::io_schema::Artif
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_import(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SqliteSnapshotPhase}};
     use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
     control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
@@ -3218,7 +3224,9 @@ fn guest_sqlite_import(schema: &str, dialect: &semio_framework::io_schema::Artif
 /// 📦️ The generic pack container extension. A guest-backed codec never reaches the folder
 /// text lane (see [`guest_compile_dsl`]), which is the only place this is read.
 #[cfg(not(target_arch = "wasm32"))]
-fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, dialect: semio_framework::io_schema::ArtifactDialect, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
+fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let runtime = shared_plugin_runtime()?;
     let compiled = shared_compiled_component(runtime.as_ref(), plugin_id, component)?;
     let pack_schema_hash = semio_framework_async::block_on(runtime.codec_pack_schema_hash(&compiled, artifact_schema, &headless_codec_budget()))
@@ -4957,7 +4965,7 @@ impl HeadlessWorkspace {
             return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "a hub workspace with no authorized component source cannot resolve a document kind's codec").retryable());
         };
         let (component, _) = components.resolve(&lease.package.plugin_id)?;
-        register_guest_document_codec(&lease.package.plugin_id, &lease.artifact.schema, semio_framework::io_schema::ArtifactDialect { artifact_kind: lease.parent_dialect.artifact_kind.clone(), standard: lease.parent_dialect.standard.clone(), subset: lease.parent_dialect.subset.clone() }, &component, &lease.artifact.pack_schema_hash)?;
+        register_guest_document_codec(&lease.package.plugin_id, &lease.artifact.schema, semio_framework_artifact_reference::ArtifactDialect { artifact_kind: lease.parent_dialect.artifact_kind.clone(), standard: lease.parent_dialect.standard.clone(), subset: lease.parent_dialect.subset.clone() }, &component, &lease.artifact.pack_schema_hash)?;
         Ok(())
     }
 

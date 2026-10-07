@@ -3,7 +3,8 @@
 
 use super::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
 use super::lexer::{dict_get, dict_i64, dict_name};
-use super::xref::{ObjectSink, ObjectSource};
+use super::xref::ObjectSink;
+use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfImage, PdfImageCodec, PdfImageMask, PdfObject, PdfStreamFilter};
 
 /// 📋 The image dictionary keys the typed model owns; everything else is `extra`.

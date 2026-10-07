@@ -129,7 +129,6 @@ import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.
 import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import automaticCheckinCorpus from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️automatic-checkin/🔣️.json";
-import automaticCheckinSchema from "../../🧱️elements/🛠️ShellHelpers/🧬️schema/🔣️automatic-checkin/🔣️.json";
 import deepEqual from "fast-deep-equal";
 import viewport2dSchema from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
 import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json";
@@ -9533,8 +9532,6 @@ describe("s workflow flow routing", () => {
     });
 
     it("an automatic check-in waits while its document cannot take it and is asked for again, per the shared corpus (live finding O4)", () => {
-      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(automaticCheckinSchema);
-      expect(validate(automaticCheckinCorpus), JSON.stringify(validate.errors)).toBe(true);
       for (const row of automaticCheckinCorpus.waits) expect(automaticCheckinWaitsV1(row.document), row.id).toBe(row.waits);
       for (const timeline of automaticCheckinCorpus.timelines) {
         vi.useFakeTimers();

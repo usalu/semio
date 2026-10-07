@@ -27,7 +27,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     // 🔐️ Owner-installing guard — a bare `ArtifactStore::new` refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.
-    let mut store = crate::standards::v1::subsets::any::io::binary::snapshot::new_equation_store(create_document_envelope("semio.equation/v1", "math-demo", EquationSnapshot::default(), None)).await.expect("valid artifact store fixture");
+    let mut store = crate::host::owned::new_equation_store(create_document_envelope("semio.equation/v1", "math-demo", EquationSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None })], transaction: None }).await.expect("apply");
     let edit: &Edit<EquationMutation> = store.envelope().vcs.edits.last().expect("edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<EquationSnapshot, EquationMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

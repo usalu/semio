@@ -3,9 +3,10 @@ import{ArtifactSqliteProjection,type ArtifactSqliteOptions}from"../../../../../.
 import {encodeIeee754Cells} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import {type Binary64} from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type{SqliteDatabase,SqliteValue}from"../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import{compareProceduralText as compare,validateProceduralSnapshotForProjection}from"./🛡️validation/🟦️.ts";
-import type{ProceduralSnapshot,NeuralDictionary,GenerationValue,FlowTree,FlowUi}from"./🧬️model/🟦️.ts";
-export type{ProceduralSnapshot,NeuralDictionary,NeuralValue,GenerationValue,CameraJson,WidgetLayout,SynapseSpec,FlowTree,FlowNeuron,NodeChrome,FlowNodeGui,FlowChannelRef,FlowPreviewGui,FlowUi,Widget,FlowHostSnapshot,FormGeneration,GenerationPlayState}from"./🧬️model/🟦️.ts";
+import{validateProceduralSnapshotForProjection}from"./🛡️validation/🟦️.ts";
+import {compareProceduralText as compare} from "../🧬️schema/📸️snapshot/🛡️admission/🟦️.ts";
+import type{ProceduralSnapshot,NeuralDictionary,GenerationValue,FlowTree,FlowUi}from"../🧬️schema/📸️snapshot/🟦️.ts";
+
 export{reconstructProceduralSnapshot}from"./📥️reconstruction/🟦️.ts";
 function columns(t:string):readonly{index:number;width:64}[]{switch(t){case"generation_host":return[{index:2,width:64},{index:3,width:64},{index:4,width:64}];case"generation_slider_widget":case"generation_gui_slider":return[{index:2,width:64},{index:3,width:64},{index:4,width:64},{index:5,width:64}];case"generation_host_layout":case"generation_gui_node":return[{index:4,width:64},{index:5,width:64}];case"generation_neural_value":return[{index:4,width:64}];case"generation_gui":return[{index:1,width:64},{index:2,width:64},{index:3,width:64}];case"generation_gui_preview":return[{index:8,width:64},{index:9,width:64}];case"generation_value":return[{index:5,width:64}];default:return[];}}
 function boolean(v:boolean):bigint{if(typeof v!=="boolean")throw Error("procedural boolean differs");return v?1n:0n;}

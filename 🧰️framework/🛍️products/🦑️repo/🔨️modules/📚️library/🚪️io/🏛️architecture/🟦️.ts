@@ -13,6 +13,22 @@ function artifactIoCheckpoint(options: ArtifactIoArchitectureOptions, phase: "in
 }
 
 const codecTraits = new Set(["ArtifactDsl", "ArtifactPack", "ArtifactSqliteSnapshot", "OpText", "OpBinary", "DiffText", "DiffBinary", "DiffCodec", "PayloadCodec", "ArtifactCodec"]);
+const codecRepresentations = new Map([["ArtifactDsl","📝️text"],["OpText","📝️text"],["DiffText","📝️text"],["diff_text","📝️text"],["ArtifactPack","💾️binary"],["OpBinary","💾️binary"],["DiffBinary","💾️binary"],["diff_binary","💾️binary"],["ArtifactSqliteSnapshot","🪶️sqlite"]]);
+
+/** 🗂️ Requires each concrete wire codec implementation in its physical representation owner. */
+function misplacedWireImplementations(source: string, representation: string): string[] {
+  const code = rustTokens(source).filter(token => token.kind !== "string").map(token => token.text).join(" "), names = new Set<string>();
+  for (const match of code.matchAll(/\bimpl\b[^{};]*?\b(ArtifactDsl|ArtifactPack|ArtifactSqliteSnapshot|OpText|OpBinary|DiffText|DiffBinary)\b[^{};]*\bfor\b|\b(diff_text|diff_binary)\s*!/gu)) {
+    const name = match[1] ?? match[2]!;
+    if (codecRepresentations.get(name) !== representation) names.add(name);
+  }
+  return [...names].sort();
+}
+
+/** 🏠️ Keeps document-store and publication authorities in the host owner. */
+function nativeHostAuthorities(source:string):string[]{
+  return [...new Set(rustTokens(source).filter(token=>token.kind!=="string"&&/^(?:ArtifactStore|DocumentStoreOwners|\w*PublicationLease)$/u.test(token.text)).map(token=>token.text))].sort();
+}
 
 /** 🧠️ Identifies semantic mutation and diff declarations misplaced in a physical representation. */
 export function semanticArtifactIoItems(source: string): string[] {
@@ -24,14 +40,50 @@ export function semanticArtifactIoItems(source: string): string[] {
   return [...names].sort();
 }
 
+/** 🛡️ Finds schema dependencies on physical carriers, excluding cfg(test) items. */
+export function schemaRustWireDependencies(source: string): string[] {
+  const tokens = rustTokens(source), owned: typeof tokens = [];
+  for (let at = 0; at < tokens.length; at++) {
+    if (tokens[at]?.text === "#" && tokens.slice(at,at+7).map(token=>token.text).join("") === "#[cfg(test)]") {
+      at += 6; let brackets=0;
+      for (at++; at < tokens.length; at++) {
+        const text=tokens[at]!.text;
+        if (text === "[") brackets++; else if (text === "]") brackets--;
+        else if (!brackets && text === ";") break;
+        else if (!brackets && text === "{") {
+          let depth=1;
+          while (++at < tokens.length) { if(tokens[at]!.text === "{") depth++; else if(tokens[at]!.text === "}") depth--; if(!depth) break; }
+          break;
+        }
+      }
+      continue;
+    }
+    owned.push(tokens[at]!);
+  }
+  const words = new Set(owned.filter(token=>token.kind!=="string").map(token=>token.text));
+  const code = owned.filter(token=>token.kind!=="string").map(token=>token.text).join("");
+  const names = new Set<string>();
+  for(const name of["to_uri","parse_uri","parse_uri_controlled","to_coordinate","parse_coordinate"])if(words.has(name))names.add(name);
+  if(code.includes("semio_framework_io_schema"))names.add("semio_framework_io_schema");
+  for(let at=0;at<owned.length;at++)if(["serialize_controlled_with","deserialize_controlled_with","retire_with"].includes(owned[at]!.text)&&owned[at+1]?.text==="="&&owned[at+2]?.kind==="string"){
+    const path=rustStringValue(owned[at+2]!)??"";
+    for(const owner of["io::text","io::binary","io::sqlite","io::import","io::export"])if(path.includes(owner))names.add(owner);
+    if(/\bio::(?!text\b|binary\b|sqlite\b|import\b|export\b)/u.test(path))names.add("io::");
+  }
+  for(const name of ["OpText","OpBinary","ArtifactDsl","ArtifactPack","ArtifactSqliteSnapshot","DiffText","DiffBinary","SqliteSnapshotControl","SqliteDatabase","SqliteSnapshotPhase","xml_document_from_text","xml_document_to_text","xml_document_to_text_checked","xml_document_to_opc_text","encode_op","decode_op","print_op","parse_op","encode_diff","decode_diff","print_diff","parse_diff"]) if(words.has(name)) names.add(name);
+  for(const name of ["semio_framework_pack_json","pack_rt::encode_wire_value","pack_rt::decode_wire_value","pack_rt::encode_pack","pack_rt::decode_pack","io::text","io::binary","io::sqlite","io::import","io::export"]) if(code.includes(name)) names.add(name);
+  if(/\bio::(?!text\b|binary\b|sqlite\b|import\b|export\b)/u.test(code))names.add("io::");
+  return [...names].sort();
+}
+
 /** 🧵️ Finds physical TypeScript APIs through the platform parser without interpreting comments or literals. */
 export function schemaTypeScriptWireSymbols(source: string): string[] {
-  return new Bun.Transpiler({loader: "ts"}).scan(source).exports.filter(name => /Json(?:Text|Value|Projection)?$|^decode.*Protobuf$|^write(?:Value|Record)Json$|^floatLexeme$|^jsonGeometry$|^TxtProtobuf|^txtProtobuf(?:Key|String)$|^decodeRemodeling(?:Snapshot|Diff|Mutation|Artifact)$/u.test(name)).sort();
+  return new Bun.Transpiler({loader: "ts"}).scan(source).exports.filter(name => /(?:To|From)(?:Native)?Json(?:Text|Value|Projection)?$|Json(?:Text|Projection)$|^(?:decode|encode|write).*Json(?:Value)?$|^decode.*Protobuf$|^floatLexeme$|^jsonGeometry$|^TxtProtobuf|^txtProtobuf(?:Key|String)$|^decodeRemodeling(?:Snapshot|Diff|Mutation|Artifact)$|^(?:render|infer).*Tikz(?:Plan)?$/u.test(name)).sort();
 }
 
 /** 🧭️ Reads actual TypeScript module dependencies, including type-only declarations. */
 function schemaTypeScriptModules(source:string):string[]{
-  const admitted=source.replace(/\b(import|export)(\s+)type\s+/gu,"$1$2").replace(/\b(?:import|export)\s*\{[^}]*\}\s*from(?=\s*["'])/gu,declaration=>declaration.replace(/\btype\s+(?=\w)/gu,""));
+  const admitted=source.replace(/\bimport(\s+)type(?=\s*[{*]|\s+\w)/gu,"import$1").replace(/\bexport\s+type(?=\s*[{*])/gu,"export").replace(/\b(?:import|export)\s*\{[^}]*\}\s*from(?=\s*["'])/gu,declaration=>declaration.replace(/\btype\s+(?=\w)/gu,""));
   const modules=new Bun.Transpiler({loader:"ts"}).scan(admitted).imports.map(row=>{
     if([...row.path].some(scalar=>scalar.charCodeAt(0)>255))return row.path;
     try{return new TextDecoder("utf-8",{fatal:true}).decode(Uint8Array.from(row.path,scalar=>scalar.charCodeAt(0)));}catch{return row.path;}
@@ -56,17 +108,21 @@ export function missingArtifactDiffWireTypes(semantic: string, text: string, bin
 
 /** 🗿️ Finds framework artifact owners without treating fixtures or external packages as production. */
 function frameworkArtifactRoots(repoRoot: string, options: ArtifactIoArchitectureOptions): string[] {
-  const roots: string[] = [];
+  const roots = new Set<string>();
   const walk = (path: string): void => {
     artifactIoCheckpoint(options, "inventory", path);
-    for (const entry of policyReaddirSafe(repoRoot, path).filter(entry => entry.isDirectory && !["🧪️tests", "🧫️fixtures", "📚️examples", "📦️packages", "🔮️oracles"].includes(entry.name))) {
+    const directories = policyReaddirSafe(repoRoot, path).filter(entry => entry.isDirectory && !["🧪️tests", "🧫️fixtures", "📚️examples", "📦️packages", "🔮️oracles"].includes(entry.name));
+    const paired = directories.some(entry => entry.name === "🧬️schema") && directories.some(entry => entry.name === "🚪️io") && policyReaddirSafe(repoRoot, `${path}/🧬️schema`).some(entry => entry.isDirectory && entry.name === "📸️snapshot");
+    if (paired) roots.add(path);
+    for (const entry of directories) {
+      if (paired && ["🧬️schema", "🚪️io"].includes(entry.name)) continue;
       const child = `${path}/${entry.name}`;
-      if (entry.name === "🗿️artifacts") roots.push(...policyReaddirSafe(repoRoot, child).filter(entry => entry.isDirectory).map(entry => `${child}/${entry.name}`));
+      if (entry.name === "🗿️artifacts") for (const artifact of policyReaddirSafe(repoRoot, child).filter(entry => entry.isDirectory)) roots.add(`${child}/${artifact.name}`);
       else walk(child);
     }
   };
   walk("🧰️framework");
-  return roots;
+  return [...roots];
 }
 
 /** 🚪️ Checks native wire ownership without following symbolic links or scanning unrelated runtime owners. */
@@ -90,17 +146,19 @@ export function artifactIoArchitectureBreaches(repoRoot: string, roots: readonly
       } catch (error) { add(path, "schema-source", `Semantic TypeScript source is invalid: ${String(error)}.`); }
       for (const module of modules) {
         const target = posix.normalize(posix.join(posix.dirname(path), module)), parts = target.split("/"), at = parts.lastIndexOf("🚪️io");
-        if (at >= 0 && [...taxonomy.representationDirs, "🪶️sqlite-snapshot"].includes(parts[at + 1] ?? "")) add(path, "schema-codec-dependency", "Canonical schema must depend on semantic value interfaces; physical decoding belongs to I/O.");
+        if (at >= 0) add(path, "schema-codec-dependency", "Canonical schema must depend on semantic value interfaces; physical decoding belongs to I/O.");
       }
       for (const match of source.matchAll(/^\s*export\s*(?!type\b)(?:\*|\{[^}]*\})\s*from\s*["']([^"']+)["']/gm)) {
         if(!modules.includes(match[1]!))continue;
         const target = posix.normalize(posix.join(posix.dirname(path), match[1]!));
         const parts = target.split("/"), at = parts.lastIndexOf("🚪️io");
-        if (at >= 0 && taxonomy.representationDirs.includes(parts[at + 1] ?? "")) add(path, "schema-codec-alias", "Semantic TypeScript barrels must not publish native wire codec APIs.");
+        if (at >= 0) add(path, "schema-codec-alias", "Semantic TypeScript barrels must not publish native wire codec APIs.");
       }
       return;
     }
     if (!path.endsWith(".rs")) return;
+    const dependencies = schemaRustWireDependencies(source);
+    if (dependencies.length) add(path,"schema-codec-dependency",`Semantic Rust source depends on physical codecs: ${dependencies.join(", ")}.`);
     const tokens = rustTokens(source);
     const code = tokens.filter(token => token.kind !== "string").map(token => token.text).join(" ");
     if (/\bimpl\b[^{};]*\b(?:ArtifactDsl|ArtifactPack|ArtifactSqliteSnapshot|OpText|OpBinary|DiffText|DiffBinary|DiffCodec|PayloadCodec|ArtifactCodec)\b[^{};]*\bfor\b/u.test(code) || /\bdiff_(?:text|binary)\s*!/u.test(code)) add(path, "schema-codec", "Wire codec implementations must be owned by artifact I/O.");
@@ -122,7 +180,7 @@ export function artifactIoArchitectureBreaches(repoRoot: string, roots: readonly
   const walkFacet = (root: string, facetPath: string, coverage: DiffOwnership): void => {
     artifactIoCheckpoint(options, "checking", root);
     for (const entry of policyReaddirSafe(repoRoot, root)) {
-      if (["🧪️tests", "🧫️fixtures", "📚️examples", "🔮️oracles"].includes(entry.name)) continue;
+      if (["🧪️tests", "🧫️fixtures", "📚️examples", "🔮️oracles", "🔬️probes"].includes(entry.name)) continue;
       const path = `${root}/${entry.name}`;
       if (entry.isDirectory) {
         const nested = `${facetPath}/${entry.name}`;
@@ -137,6 +195,10 @@ export function artifactIoArchitectureBreaches(repoRoot: string, roots: readonly
         if (entry.name.endsWith(".rs")) coverage.semantic.push(policyReadFileSafe(repoRoot, path));
       } else if (entry.name.endsWith(".rs") && taxonomy.representationDirs.includes(facetPath.split("/")[1] ?? "")) {
         const source = policyReadFileSafe(repoRoot, path), semantic = semanticArtifactIoItems(source);
+        const misplaced = misplacedWireImplementations(source, facetPath.split("/")[1]!);
+        if (misplaced.length) add(path,"representation-codec",`Native codec implementations belong to their matching physical representation: ${misplaced.join(", ")}.`);
+        const host = nativeHostAuthorities(source);
+        if (host.length) add(path,"io-host-authority",`Document-store and publication authorities belong to host modules: ${host.join(", ")}.`);
         if (facetPath.split("/")[1] === "📝️text") coverage.text.push(source);
         if (facetPath.split("/")[1] === "💾️binary") coverage.binary.push(source);
         if (semantic.length) add(path, "io-semantic-implementation", `Mutation application and diff construction belong to schema: ${semantic.join(", ")}.`);

@@ -1,7 +1,7 @@
-use crate::flow::io::text::diff::dec_edge;
-use crate::flow::io::text::diff::enc_edge;
-use crate::flow::io::text::diff::dec_node;
-use crate::flow::io::text::diff::enc_node;
+use crate::standards::v1::subsets::flow::io::text::diff::dec_edge;
+use crate::standards::v1::subsets::flow::io::text::diff::enc_edge;
+use crate::standards::v1::subsets::flow::io::text::diff::dec_node;
+use crate::standards::v1::subsets::flow::io::text::diff::enc_node;
 use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 

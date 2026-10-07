@@ -7,7 +7,8 @@
 //! deliberately changed.
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::Puzzle5dPart;
-use crate::standards::v1::subsets::any::schema::mutations::{change_description, change_domain, connect_grips, create_part, delete_part, disconnect_grips};
+use crate::standards::v1::subsets::any::schema::mutations::{change_description,change_domain,connect_grips,create_part,delete_part,disconnect_grips};
+
 use protocol::OpText;
 
 fn ops() -> Vec<Puzzle5dMutation> {

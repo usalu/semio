@@ -8,7 +8,8 @@
 //! board spells it `20`.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖋️edit-target-region-label/🖋️renames/📸️snapshot/⬅️before/🔣️.json");
@@ -35,7 +36,7 @@ fn applies_to_committed_after() {
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("edit-target-region-label applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "edit-target-region-label/renames-region-1: applied state differs from committed after-snapshot");
     let region = snapshot.target_regions.iter().find(|region| region.id == "region-1").expect("region-1 survives its own rename");
-    assert_eq!(region.label.as_deref(), Some("Tower Footprint"), "edit-target-region-label/renames-region-1: region-1 did not take the committed label");
+    assert_eq!(region.label.as_ref().map(|text| text.eq_str("Tower Footprint")), Some(true), "edit-target-region-label/renames-region-1: region-1 did not take the committed label");
     assert_eq!(before().target_regions[0].label, None, "edit-target-region-label/renames-region-1: the committed before-snapshot must start unnamed, or this vector proves nothing");
 }
 

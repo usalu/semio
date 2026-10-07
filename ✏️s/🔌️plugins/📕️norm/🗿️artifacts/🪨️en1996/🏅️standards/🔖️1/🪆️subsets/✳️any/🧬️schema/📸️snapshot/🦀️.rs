@@ -27,7 +27,7 @@ pub struct En1996Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-crate::impl_norm_artifact_record!(En1996Snapshot, extension = "en1996", envelope_id = "norm.en1996", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+
 
 impl Default for En1996Snapshot {
     fn default() -> Self {

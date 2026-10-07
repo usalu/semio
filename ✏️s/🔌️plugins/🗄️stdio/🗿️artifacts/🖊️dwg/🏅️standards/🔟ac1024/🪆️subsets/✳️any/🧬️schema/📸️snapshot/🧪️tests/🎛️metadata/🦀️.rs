@@ -173,3 +173,21 @@ fn dwg_controlled_metadata_producer_retains_actual_depth_refusal() {
     let mut accepted = |_: NativeEncodeProgress| true; let mut encode = NativeEncodeControl::new(1_000_000, &mut accepted);
     assert_eq!(nested_encode(&mut encode, 64).unwrap_err().kind, ValueRefusalKind::DepthLimit); assert_eq!(encode.owned_bytes(), 0);
 }
+
+#[test]
+fn dwg_controlled_metadata_borrowed_manual_carriers_match_the_authored_json() {
+    use semio_framework_dsl_record::{BorrowedDslField,BorrowedShape};
+    let corpus=fixture();
+    for (index,shape) in [(0,DwgXRecordValue::SHAPE),(1,DwgTableControlEntry::SHAPE),(2,DwgTableControlBody::SHAPE),(3,DwgComplexColorValue::SHAPE),(4,DwgTableRecordBody::SHAPE),(5,DwgEvaluationVariant::SHAPE),(6,DwgEvaluationExpressionValue::SHAPE),(7,DwgVisualStyleProperty::<u32>::SHAPE),(8,DwgConstraintNode::SHAPE),(9,DwgEntityBody::SHAPE),(10,DwgLogicalObjectBody::SHAPE)] {
+        let BorrowedShape::Record(producer)=shape else {panic!("manual record")};
+        let spec=producer();
+        let fields=spec.fields.iter().map(|field| {
+            let labels=match field.shape {BorrowedShape::Enum(labels)=>labels.iter().map(|(label,ordinal)|json!({"label":label,"ordinal":ordinal})).collect::<Vec<_>>(),_=>Vec::new()};
+            json!({"id":field.id,"key":field.key,"optional":field.optional,"labels":labels})
+        }).collect::<Vec<_>>();
+        assert_eq!(json!(fields),corpus["cases"][index]["fields"]);
+        assert_eq!(spec.layout,semio_framework_dsl_record::RecordLayout::Inline);
+    }
+    let BorrowedShape::Record(producer)=DwgVisualStyleProperty::<DwgTableControlEntry>::SHAPE else {panic!("generic record")};
+    assert!(matches!(producer().fields[0].shape,BorrowedShape::Record(_)));
+}

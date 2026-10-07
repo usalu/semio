@@ -14,8 +14,8 @@ use crate::standards::energyplus::subsets::any::schema::diff::{diff_set_snapshot
 
 
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
+
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "📥insert-record/🦀️.rs"]
@@ -206,3 +206,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

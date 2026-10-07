@@ -13,7 +13,7 @@ pub enum ExtensionSurface<'a> {
 pub fn render_payload(question: &FormQuestion, values: &Object, controller_id: &str, surface: ExtensionSurface<'_>, interactive: bool) -> Value {
     let mut payload = Object::new();
     if let Some(fixture) = &question.example_id { payload.insert("exampleId", Value::from(fixture.clone())); }
-    payload.insert("params", values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::schema::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new())));
+    payload.insert("params", values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::standards::v1::subsets::any::io::text::snapshot::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new())));
     payload.insert("questionId", Value::from(question.id.clone()));
     payload.insert("controllerId", Value::from(controller_id));
     match surface {

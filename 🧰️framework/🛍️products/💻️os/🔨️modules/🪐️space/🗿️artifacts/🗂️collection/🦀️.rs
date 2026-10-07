@@ -48,6 +48,21 @@ pub enum ArtifactBody {
     Blob { blob: store::BlobRef },
 }
 
+fn artifact_body_document_borrowed()->semio_framework_dsl_record::BorrowedRecordSpec{
+ use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as H};
+ const FIELDS:&[F]=&[F::new(0,"schema",H::Text),F::new(1,"document-id",H::Text)];
+ semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some("document"),layout:semio_framework_dsl_record::RecordLayout::Inline,fields:FIELDS}
+}
+fn artifact_body_blob_borrowed()->semio_framework_dsl_record::BorrowedRecordSpec{
+ use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as H};
+ const FIELDS:&[F]=&[F::new(0,"hash",H::Text),F::new(1,"size",H::UInt),F::new(2,"media-type",H::Text)];
+ semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some("blob"),layout:semio_framework_dsl_record::RecordLayout::Inline,fields:FIELDS}
+}
+impl semio_framework_dsl_record::BorrowedDslVariants for ArtifactBody{
+ const VARIANTS:&'static[(&'static str,fn()->semio_framework_dsl_record::BorrowedRecordSpec)]=&[("document",artifact_body_document_borrowed),("blob",artifact_body_blob_borrowed)];
+ fn projected_borrowed_variant_identity(&self)->(&'static str,usize,semio_framework_dsl_record::BorrowedRecordSpec){match self{Self::Document{..}=>("document",0,artifact_body_document_borrowed()),Self::Blob{..}=>("blob",1,artifact_body_blob_borrowed())}}
+}
+
 fn artifact_body_document_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(Some("document"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "schema", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(1, "document-id", semio_framework_dsl_record::Shape::Text)])
 }

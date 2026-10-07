@@ -8,22 +8,60 @@
           "kind": "element",
           "name": "svg",
           "attrs": [
-            { "name": "xmlns", "value": "http://www.w3.org/2000/svg" },
-            { "name": "viewBox", "value": "0 0 24 24" }
+            {
+              "name": "xmlns",
+              "value": {
+                "kind": "text",
+                "value": "http://www.w3.org/2000/svg"
+              }
+            },
+            {
+              "name": "viewBox",
+              "value": {
+                "kind": "viewBox",
+                "value": {
+                  "minX": 0,
+                  "minY": 0,
+                  "width": 24,
+                  "height": 24
+                }
+              }
+            }
           ],
           "children": [
             {
               "kind": "element",
               "name": "rect",
               "attrs": [
-                { "name": "width", "value": "24" },
-                { "name": "height", "value": "24" }
+                {
+                  "name": "width",
+                  "value": {
+                    "kind": "length",
+                    "value": {
+                      "magnitude": 24,
+                      "unit": ""
+                    }
+                  }
+                },
+                {
+                  "name": "height",
+                  "value": {
+                    "kind": "length",
+                    "value": {
+                      "magnitude": 24,
+                      "unit": ""
+                    }
+                  }
+                }
               ],
               "children": []
             }
           ]
         },
-        "declaration": { "version": "1.0", "encoding": "UTF-8" }
+        "declaration": {
+          "version": "1.0",
+          "encoding": "UTF-8"
+        }
       }
     }
   }

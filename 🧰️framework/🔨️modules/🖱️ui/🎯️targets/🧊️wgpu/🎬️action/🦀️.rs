@@ -241,9 +241,17 @@ impl FlatNode {
     }
 }
 
+/// 🧾️ Selects the renderer-local owner that settles an admitted action receipt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ActionQueueReceiptSource {
+    CanvasTextEditor,
+    RetainedInput,
+}
+
 /// 🧾️ Identifies one member of an admitted renderer emission without changing its wire payload.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ActionQueueReceipt {
+    pub source: ActionQueueReceiptSource,
     pub token: std::num::NonZeroU64,
     pub member: u8,
     pub abort_correlation_on_error: bool,

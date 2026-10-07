@@ -1,0 +1,5 @@
+# Fresh Current-Origin Interface Plan
+
+The fresh sequence uses actual current production preimages and surviving authored controlled Cargo bodies and closed canonical selector fixtures. Historical ledgers are also absent; no historical inspection, acceptance or missing body is used. New schema is cargo-inputs/📥️current-origin/🧬️schema/🔣️authority.json. Exact stage, red and model GUI rows are cargo-inputs/📥️current-origin/gui-additions-1.json and use a newly authored ticket-owned Nx fixture.
+
+Fresh stage seals full actual production before bodies, exact authored after bodies, all current Cargo and normalization callers, and the original current law path roster. The staged selector keeps mandatory owned operations and unchanged 8,388,608 unit / 67,108,864 byte / 64 depth controls. Red removes only the selector function from that same staged controlled body; model uses it. Original whole scope remains held pending current caller closure, fresh full source authority, exact whole GUI registration and Low admission. Long level and 60,000 millisecond Bun test timeout stay fixed. No current or historical source is published.

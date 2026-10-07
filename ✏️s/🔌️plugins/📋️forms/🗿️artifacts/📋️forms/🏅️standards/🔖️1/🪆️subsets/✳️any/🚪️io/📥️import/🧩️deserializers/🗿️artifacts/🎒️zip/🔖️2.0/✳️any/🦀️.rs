@@ -2,8 +2,8 @@
 //! artifact's own DSL, the inverse of the sibling export (`IoFidelity::Exact`).
 use crate::FormsSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
-use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{StandardId, SubsetId};
+use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
+use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::document_archive_member;
 use semio_s_artifact_stdio_zip::ZipSnapshot;
 

@@ -6,7 +6,7 @@ use super::{
     mass_distribution::GltfMassInference, orientation::GltfOrientationInference, proportion::GltfProportionInference, roughness::GltfRoughnessInference, size::GltfSizeInference, symmetry::GltfSymmetryInference, thickness::GltfThicknessInference,
     topology::GltfTopologyInference, GltfEntityIndicators, GltfGeometricInference, GltfInferenceCounts, GltfPairInference, GltfPartInference,
 };
-use crate::schema::snapshot::GltfSnapshot;
+use crate::schema::snapshot::GltfDecodedSnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn empty_indicators(diagnostic_ids: &[String]) -> GltfEntityIndicators {
@@ -56,7 +56,7 @@ fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAna
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference {
+pub fn compute_gltf_inference(snapshot: &GltfDecodedSnapshot<'_>) -> GltfGeometricInference {
     let policy = policy();
     let mut diagnostics = Vec::new();
     let (raw_parts, node_instances) = collect_parts(snapshot, &mut diagnostics);
@@ -132,6 +132,6 @@ pub fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference
     quality.coverage = if counts.valid_part_count + counts.invalid_part_count == 0 { u8::from(snapshot.document.meshes.is_empty()) as f64 } else { counts.valid_part_count as f64 / (counts.valid_part_count + counts.invalid_part_count) as f64 };
     let mut inference_provenance = provenance(GltfCoordinateSpace::SceneWorld);
     inference_provenance.dependency_fingerprints.push(format!("canonical:{}", fingerprint(&all_points, &all_triangles)));
-    inference_provenance.dependency_fingerprints.extend(snapshot.buffers.iter().enumerate().map(|(index, bytes)| format!("buffer:{index}:{}", byte_fingerprint(bytes))));
+    inference_provenance.dependency_fingerprints.extend(snapshot.buffer_fingerprints.iter().cloned());
     GltfGeometricInference { schema: "s.stdio.gltf.inference".into(), schema_version: 2, policy, counts, overall, parts, pairs, diagnostics, validity, quality, provenance: inference_provenance }
 }

@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-06T13:20:15.224Z",
+  "status": "Prepared, not launched; serial after PDF and VDI original Before/After",
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-five-native-after-current-glue-artifacts' bun run nx run-many --target=test-snapshot-sqlite-native --projects='@semio-tech/norm-en1990-rs,@semio-tech/norm-en1994-rs,@semio-tech/norm-din18599-rs,@semio-tech/norm-en1996-rs,@semio-tech/norm-en1997-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-five-original-native-after-current-glue.log' 2>&1",
+  "projects": [
+    "@semio-tech/norm-en1990-rs",
+    "@semio-tech/norm-en1994-rs",
+    "@semio-tech/norm-din18599-rs",
+    "@semio-tech/norm-en1996-rs",
+    "@semio-tech/norm-en1997-rs"
+  ],
+  "controls": "Original registered quick Native route, unchanged original law bodies/fixtures/limits/grants; parallel1",
+  "statusHistory": [
+    {
+      "at": "2026-10-06T13:49:49.140Z",
+      "previous": "Prepared not launched; serial after original PDF then VDI Before/After; no duplicate root owners",
+      "status": "Prepared, not launched; serial after PDF and VDI original Before/After"
+    }
+  ],
+  "latestStatusAt": "2026-10-06T13:49:49.140Z"
+}

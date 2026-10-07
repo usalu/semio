@@ -2083,8 +2083,10 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// the schema facet's own `MutationDiff` impl defines (contract §4: "never a mutable map") — never
     /// a direct field write onto `self.opening_preferences`.
     pub async fn set_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<(), semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let role = opening_role_from_wire(role_wire)?;
-        let dialect = semio_framework::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
         let app = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app_id.to_string() };
         if !self.app_router.surfaces_for(&dialect, role).await.contains(&app) {
             return Err(semio_framework::Fault::new(
@@ -2104,7 +2106,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// event-sourced apply path as `set_default_app`.
     pub fn clear_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8) -> Result<(), semio_framework::Fault> {
         let role = opening_role_from_wire(role_wire)?;
-        let dialect = semio_framework::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
         let mutation = semio_framework_plugin_host::opening_config::mutations::clear_default_app::clear_default_app(dialect, role);
         semio_framework_plugin_host::opening_config::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
         Ok(())

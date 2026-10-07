@@ -27,7 +27,7 @@ use crate::standards::v1::subsets::text::schema::{diff::SemioTextDiff, snapshot:
 use crate::standards::v1::subsets::value::schema::{diff::SemioValueTreeDiff, snapshot::SemioValueSnapshot};
 use crate::standards::v1::subsets::video::schema::{diff::SemioVideoDiff, snapshot::SemioVideoSnapshot};
 use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::MutationApplyError;
 use protocol::MutationDiff;
 
@@ -298,35 +298,7 @@ pub fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> Semi
 
 
 
-/// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=18` = the 18 wrapped subset
-/// kinds (same enum declaration order as [`crate::standards::v1::subsets::base::schema::snapshot::subset_ordinal`],
-/// offset by one to make room for `NoChange`), `19` = `Replace`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_tag(d: &SemioDiff) -> u8 {
-    match d {
-        SemioDiff::NoChange => 0,
-        SemioDiff::Rejected(_) => 20,
-        SemioDiff::Brep(_) => 1,
-        SemioDiff::Mesh(_) => 2,
-        SemioDiff::Model(_) => 3,
-        SemioDiff::Value(_) => 4,
-        SemioDiff::Document(_) => 5,
-        SemioDiff::Cad(_) => 6,
-        SemioDiff::Drawing(_) => 7,
-        SemioDiff::Image(_) => 8,
-        SemioDiff::Video(_) => 9,
-        SemioDiff::Audio(_) => 10,
-        SemioDiff::Animation(_) => 11,
-        SemioDiff::Presentation(_) => 12,
-        SemioDiff::Flow(_) => 13,
-        SemioDiff::Text(_) => 14,
-        SemioDiff::Table(_) => 15,
-        SemioDiff::Graph(_) => 16,
-        SemioDiff::Object(_) => 17,
-        SemioDiff::Kit(_) => 18,
-        SemioDiff::Replace(_) => 19,
-    }
-}
+
 
 
 
@@ -378,3 +350,6 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

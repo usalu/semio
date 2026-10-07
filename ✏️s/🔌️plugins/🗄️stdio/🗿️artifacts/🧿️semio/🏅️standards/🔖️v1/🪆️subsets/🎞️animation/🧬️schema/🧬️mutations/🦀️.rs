@@ -19,7 +19,7 @@ use protocol::Mutation;
 /// via method syntax on `SemioAnimationDiff`, which needs `MutationDiff` in scope (W2b closer fix).
 #[cfg(test)]
 use protocol::MutationDiff;
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutation
 #[path = "📻insert-channel/🦀️.rs"]
@@ -229,24 +229,10 @@ pub(crate) fn agg_inverse(this: &SemioAnimationMutation, base: &SemioAnimationSn
 
 
 
-/// 🧾️ Each record kind's text-grammar tag, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 12] = [
-    ("set-snapshot", "S"),
-    ("insert-timeline", "IT"),
-    ("remove-timeline", "RT"),
-    ("set-timeline-name", "TN"),
-    ("insert-channel", "IC"),
-    ("remove-channel", "RC"),
-    ("set-channel-target", "CT"),
-    ("set-channel-interpolation", "CI"),
-    ("insert-keyframe", "IK"),
-    ("remove-keyframe", "RK"),
-    ("set-keyframe-time", "KT"),
-    ("set-keyframe-value", "KV"),
-];
 
 
-const OP_BINARY_FORMAT: u8 = 1;
+
+
 
 
 //#endregion OpCodecs
@@ -306,3 +292,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/🌀️steps/🦀️.rs"]
 mod set_snapshot_steps_the_spin_channel_and_appends_a_keyframe;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

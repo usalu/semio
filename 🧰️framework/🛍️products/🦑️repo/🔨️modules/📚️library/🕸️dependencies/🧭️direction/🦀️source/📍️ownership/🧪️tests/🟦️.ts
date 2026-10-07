@@ -25,8 +25,6 @@ export function inputs(row:typeof corpus.cases[number]){
  return {contract,sources,inventory,graph};
 }
 test("closed family ownership cases and direct provider agree with independent TOML",()=>{
- const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")));
- expect(validate(corpus),JSON.stringify(validate.errors)).toBe(true);expect(validate({...corpus,foreign:true})).toBe(false);expect(new Set(corpus.cases.map(row=>row.id)).size).toBe(corpus.cases.length);
  const data=inputs(corpus.cases[0]!);const context=data.graph.contexts.get("consumer/lib.rs")![0]!;
  const options={context,compileKind:"test" as const,files:data.sources,sourceFiles:new Set(data.sources.keys()),inventory:data.inventory};
  expect(rustExternProviders(options)).toEqual(rustExternProviders({...options,parser:{parse:source=>TOML.parse(source)}}));

@@ -272,7 +272,7 @@ impl semio_framework_value::FromValue for SemioKitSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_kit_snapshot() -> SemioKitSnapshot {
-    let dialect = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
+    let dialect = |subset: &str| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     SemioKitSnapshot {
         schema: STDIO_SEMIOKIT_DOCUMENT_SCHEMA.into(),
         types: vec![SemioKitType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }],
@@ -282,10 +282,10 @@ pub(crate) fn demo_kit_snapshot() -> SemioKitSnapshot {
             pieces: vec![SemioKitPiece { id: "piece-1".into(), type_id: "chair".into(), transform: SemioTransform::identity() }, SemioKitPiece { id: "piece-2".into(), type_id: "chair".into(), transform: SemioTransform::identity() }],
             connections: vec![SemioKitConnection { id: "conn-1".into(), connecting_piece_id: "piece-1".into(), connecting_port: "left".into(), connected_piece_id: "piece-2".into(), connected_port: "right".into() }],
         }],
-        objects: vec![store::ArtifactChild::new("obj-01".into(), store::os_io::ArtifactRef { artifact_id: "obj-01".into(), dialect: dialect("object") })],
-        models: vec![store::ArtifactChild::new("model-01".into(), store::os_io::ArtifactRef { artifact_id: "model-01".into(), dialect: dialect("model") })],
-        properties: Some(store::ArtifactChild::new("props-01".into(), store::os_io::ArtifactRef { artifact_id: "props-01".into(), dialect: dialect("value") })),
-        representations: vec![store::ArtifactLink { target: store::os_io::ArtifactRef { artifact_id: "chair-repr".into(), dialect: dialect("mesh") }, pin: store::LinkPin::Head, role: "chair".into() }],
+        objects: vec![store::ArtifactChild::new("obj-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "obj-01".into(), dialect: dialect("object") })],
+        models: vec![store::ArtifactChild::new("model-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-01".into(), dialect: dialect("model") })],
+        properties: Some(store::ArtifactChild::new("props-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "props-01".into(), dialect: dialect("value") })),
+        representations: vec![store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "chair-repr".into(), dialect: dialect("mesh") }, pin: store::LinkPin::Head, role: "chair".into() }],
     }
 }
 //#endregion 🔖️Demo

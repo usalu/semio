@@ -160,10 +160,12 @@ function timeTravelTargetText(session: HistoryTimeTravel, axes: { readonly termi
 export function timeTravelBandTextV1(session: HistoryTimeTravel, axes: { readonly terminology: string; readonly locale: string }): TimeTravelBandTextV1 {
   const target = timeTravelTargetText(session, axes);
   const fault = session.fault === undefined ? null : historyRefusalCodeV1(session.fault);
+  const running = session.stage === "editing" || session.stage === "replaying";
+  const progress = running && session.total !== undefined ? String(shellLabel(session.stage === "editing" ? "ui.timeTravel.preparationProgress" : "ui.timeTravel.progress", { done: session.done ?? 0, total: session.total })) : null;
   return {
     stage: String(shellLabel(STAGE_LABEL_KEYS[session.stage])),
     target: target === "" ? null : String(shellLabel("ui.timeTravel.target", { target })),
-    progress: session.stage === "replaying" && session.total !== undefined ? String(shellLabel("ui.timeTravel.progress", { done: session.done ?? 0, total: session.total })) : null,
+    progress: progress !== null && session.processed !== undefined ? `${progress} · ${shellLabel("ui.timeTravel.processed", { processed: session.processed })}` : progress,
     review: session.stage === "reviewing" && session.review !== undefined ? String(shellLabel(REVIEW_LABEL_KEYS[session.review])) : null,
     outcome: session.worst === undefined ? null : String(shellLabel("ui.timeTravel.worst", { level: shellLabel(`ui.mutation.level.${session.worst}`) })),
     fault: session.fault === undefined ? null : String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[fault ?? "timeTravel.replay-faulted"])),

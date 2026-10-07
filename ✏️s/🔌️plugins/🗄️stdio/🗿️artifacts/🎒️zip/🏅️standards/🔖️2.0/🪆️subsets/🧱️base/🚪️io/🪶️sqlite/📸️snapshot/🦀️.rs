@@ -59,13 +59,15 @@ impl ArtifactSqliteSnapshot for ZipSnapshot {
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control)}
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
 
-    fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         (|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
         if dialect.artifact_kind!="s.stdio.zip"||dialect.standard!="2.0"||!matches!(dialect.subset.as_str(),"*"|"iso21320"){return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("ZIP does not own semantic subset {}",dialect.to_coordinate())));}
         let archive=database.table("zip_archive")?.single_row()?;if archive.rowid!=1||archive.integer(0)?!=1||archive.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "ZIP semantic subset document identity disagrees with its snapshot"));}
         let entries=&database.table("zip_entry")?.rows;for(index,row)in entries.iter().enumerate(){if index%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,index,entries.len())?;}word(row,4)?;}
-        let diagnostics=if dialect.subset=="iso21320"{crate::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance_controlled(self,control)?}else{Vec::new()};
+        let diagnostics=if dialect.subset=="iso21320"{crate::standards::v2_0::subsets::iso21320::io::check_iso21320_conformance_controlled(self,control)?}else{Vec::new()};
         Ok(store::io_schema::IoOutcome{value:(),diagnostics})
     
         })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)

@@ -35,8 +35,8 @@ use crate::schema::diff::{diff_set_snapshot, StepArgAdded, StepArgModified, Step
 
 use crate::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
 use crate::StepSnapshot;
-use protocol::OpBinary;
-use protocol::{Mutation, MutationDiff, OpText};
+
+use protocol::{Mutation, MutationDiff};
 
 //#region 🔖️Mutations
 #[path = "🧩insert-entity/🦀️.rs"]
@@ -283,3 +283,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

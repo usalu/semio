@@ -1,6 +1,6 @@
 //! 📜️ Direct binary codec for `insert-javascript-action`.
 
-use super::InsertJavascriptAction;
+use crate::standards::v1_7::subsets::vt::schema::mutations::InsertJavascriptAction;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 8;

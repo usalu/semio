@@ -10,7 +10,47 @@
       {
         "id": "blk-table",
         "patch": {
-          "blockJson": "{\"kind\":\"table\",\"id\":\"blk-table\",\"name\":\"Samples\",\"x\":0.0,\"y\":220.0,\"width\":320.0,\"height\":160.0,\"rotation\":0.0,\"visible\":true,\"locked\":false,\"columns\":[\"A\",\"B\",\"C\"],\"rows\":[[{\"content\":\"Alpha\"},{\"content\":\"\"},{\"content\":\"\"}],[{\"content\":\"\"},{\"content\":\"\"},{\"content\":\"\"}]]}"
+          "block": {
+            "kind": "table",
+            "id": "blk-table",
+            "name": "Samples",
+            "x": 0.0,
+            "y": 220.0,
+            "width": 320.0,
+            "height": 160.0,
+            "rotation": 0.0,
+            "visible": true,
+            "locked": false,
+            "columns": [
+              "A",
+              "B",
+              "C"
+            ],
+            "rows": [
+              [
+                {
+                  "content": "Alpha"
+                },
+                {
+                  "content": ""
+                },
+                {
+                  "content": ""
+                }
+              ],
+              [
+                {
+                  "content": ""
+                },
+                {
+                  "content": ""
+                },
+                {
+                  "content": ""
+                }
+              ]
+            ]
+          }
         }
       }
     ],

@@ -145,10 +145,7 @@ fn sqlite_snapshot_xlsx_partial_part_reconstruction_retires_deep_completed_docum
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_xlsx_actual_declaration_exposes_complete_typed_snapshot() {
-    use semio_framework_os_kernel::io::{
-        io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot},
-        ArtifactDialect,
-    };
+    use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("XLSX SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let snapshot = fixture();
@@ -163,7 +160,7 @@ async fn sqlite_snapshot_xlsx_actual_declaration_exposes_complete_typed_snapshot
 fn sqlite_snapshot_xlsx_actual_erased_native_boundaries_retain_all_owned_fields() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let codec = <XlsxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
@@ -198,7 +195,7 @@ fn sqlite_snapshot_xlsx_deep_erased_native_input_output_are_interior_cancellable
             snapshot.xml_parts[1].content_type = "z".repeat(plan["lateTextBytes"].as_u64().unwrap() as usize);
             let snapshot = Owner(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
-            let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
+            let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
             let codec = <XlsxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
@@ -370,14 +367,14 @@ async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_a
         .unwrap();
     let limits = SqliteDatabaseLimits::default();
     for subset in ["strict", "transitional"] {
-        let base = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
+        let base = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook::default());
         let mut snapshot = if subset == "strict" { crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace(base) } else { crate::standards::v_ecma_376::subsets::transitional::schema::stamp_transitional_namespace(base) };
         snapshot.schema = "literal retained schema".into();
         let main = snapshot.workbook_part_path().unwrap();
         if snapshot.opc.relationships.relationships(&main).is_none() { snapshot.opc.relationships.replace_owner(main.clone(), Vec::new()); }
         snapshot.opc.relationships.relationships_mut(&main).unwrap().push(semio_s_artifact_stdio_zip::opc::OpcRelationship {
             id: "literal unresolved worksheet".into(),
-            rel_type: crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_WORKSHEET.into(),
+            rel_type: crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_WORKSHEET.into(),
             target: "missing.xml".into(),
             target_mode: semio_s_artifact_stdio_zip::opc::OpcTargetMode::Internal,
         });
@@ -385,7 +382,7 @@ async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_a
             if subset == "strict" { crate::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance(&snapshot) } else { crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance(&snapshot) };
         assert_eq!(expected.len(), 1);
         assert_eq!(expected[0].severity, semio_framework_diagnostic::Severity::Warning);
-        let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: subset.into() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: subset.into() };
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
             let outcome = io_export_sqlite_snapshot(&dialect, &snapshot, encoding, limits, &mut |_| true).await.unwrap();
             assert_eq!(format!("{:?}", outcome.diagnostics), format!("{:?}", expected));
@@ -393,7 +390,7 @@ async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_a
             assert_eq!(format!("{:?}", restored.diagnostics), format!("{:?}", expected));
             assert_eq!(restored.value, snapshot);
             restored.value.retire_sqlite_snapshot();
-            let foreign = store::io_schema::ArtifactDialect { subset: if subset == "strict" { "transitional".into() } else { "strict".into() }, ..dialect.clone() };
+            let foreign = semio_framework_artifact_reference::ArtifactDialect { subset: if subset == "strict" { "transitional".into() } else { "strict".into() }, ..dialect.clone() };
             assert!(io_import_sqlite_snapshot::<XlsxSnapshot>(&foreign, &outcome.value, limits, &mut |_| true).await.is_err());
         }
         let part = snapshot.xml_part_mut(&main).unwrap();
@@ -406,7 +403,7 @@ async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_a
 
 #[test]
 fn sqlite_snapshot_xlsx_profile_diagnostics_are_interior_cancellable_and_admitted_before_copy() {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace(crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default()));
+    let mut snapshot = crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace(crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook::default()));
     let main = snapshot.workbook_part_path().unwrap();
     let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. } = snapshot.xml_part_mut(&main).unwrap().document.root.as_mut().unwrap() else { panic!("workbook root") };
     attrs.iter_mut().find(|attr| attr.name == "xmlns").unwrap().value = "invalid世界".repeat(10000);
@@ -434,7 +431,7 @@ fn sqlite_snapshot_xlsx_exact_profile_neutral_cases_preserve_native_policy_diagn
     let limits = SqliteDatabaseLimits::default();
     for plan in fixture["cases"].as_array().unwrap() {
         let subset = plan["subset"].as_str().unwrap();
-        let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
+        let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook::default());
         let main = snapshot.workbook_part_path().unwrap();
         let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. } = snapshot.xml_part_mut(&main).unwrap().document.root.as_mut().unwrap() else { panic!("workbook root") };
         attrs.retain(|attr| !matches!(attr.name.as_str(), "xmlns" | "xmlns:r" | "conformance"));
@@ -450,7 +447,7 @@ fn sqlite_snapshot_xlsx_exact_profile_neutral_cases_preserve_native_policy_diagn
             if snapshot.opc.relationships.relationships(&main).is_none() { snapshot.opc.relationships.replace_owner(main.clone(), Vec::new()); }
             snapshot.opc.relationships.relationships_mut(&main).unwrap().push(semio_s_artifact_stdio_zip::opc::OpcRelationship {
                 id: "sheet".into(),
-                rel_type: crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_WORKSHEET.into(),
+                rel_type: crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_WORKSHEET.into(),
                 target: "../../../../🧬️schema/📸️snapshot/🧪️tests/missing.xml".into(),
                 target_mode: semio_s_artifact_stdio_zip::opc::OpcTargetMode::Internal,
             });

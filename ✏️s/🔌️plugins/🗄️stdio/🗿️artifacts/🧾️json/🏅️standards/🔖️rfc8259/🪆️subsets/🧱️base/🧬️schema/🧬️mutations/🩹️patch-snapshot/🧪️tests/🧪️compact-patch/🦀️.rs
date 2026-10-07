@@ -32,5 +32,5 @@ fn compact_snapshot_patch_matches_neutral_large_field_oracle() {
 
 #[test]
 fn malformed_unicode_hex_is_rejected_without_panicking() {
-    assert!(text::parse("patch-snapshot patch=€0").is_err());
+    assert!(crate::standards::v_rfc8259::subsets::base::io::text::mutations::patch_snapshot::parse("patch-snapshot patch=€0").is_err());
 }

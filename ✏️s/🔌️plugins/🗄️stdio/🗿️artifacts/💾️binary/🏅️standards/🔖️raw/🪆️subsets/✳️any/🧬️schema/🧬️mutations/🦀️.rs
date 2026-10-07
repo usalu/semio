@@ -4,7 +4,7 @@
 use crate::schema::diff::{diff_set_snapshot, BinaryDiff, ByteSplice};
 use crate::BinarySnapshot;
 use protocol::Mutation;
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutations
 #[path = "➕️append-bytes/🦀️.rs"]
@@ -154,3 +154,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

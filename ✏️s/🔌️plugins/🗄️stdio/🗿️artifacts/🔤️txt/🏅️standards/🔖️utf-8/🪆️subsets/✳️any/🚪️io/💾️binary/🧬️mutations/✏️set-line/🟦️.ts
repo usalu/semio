@@ -1,5 +1,5 @@
 import {failTxtProtobufDecode} from "../🔣️protobuf/🟦️.ts";
-import {TxtProtobufReader,txtProtobufKey,txtProtobufString} from "../🔣️protobuf/🟦️.ts";
+import {TxtProtobufReader, txtProtobufKey, txtProtobufString} from "../🔣️protobuf/🟦️.ts";
 import {SetLinePayload} from "../../../../🧬️schema/🧬️mutations/✏️set-line/🟦️.ts";
 
 export const decodeSetLineProtobuf = (bytes: Uint8Array): SetLinePayload => {

@@ -21,13 +21,13 @@ fn map() -> GisMapSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn chain(feature: &MapFeature) -> Vec<[f64; 2]> {
-    let value = crate::standards::v1::subsets::any::schema::dsl_to_value(&feature.data);
+    let value = crate::standards::v1::subsets::any::io::text::snapshot::dsl_to_value(&feature.data);
     value["points"].as_array().expect("points").iter().map(|p| [p[0].as_f64().expect("x"), p[1].as_f64().expect("y")]).collect()
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn lon_lat(feature: &MapFeature) -> [f64; 2] {
-    let value = crate::standards::v1::subsets::any::schema::dsl_to_value(&feature.data);
+    let value = crate::standards::v1::subsets::any::io::text::snapshot::dsl_to_value(&feature.data);
     [value["lon"].as_f64().expect("lon"), value["lat"].as_f64().expect("lat")]
 }
 
@@ -87,7 +87,7 @@ mod geojson_io {
     use super::feature;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::geojson as geojson_out;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::geojson as geojson_in;
-    use crate::standards::v1::subsets::any::schema::dsl_to_value;
+    use crate::standards::v1::subsets::any::io::text::snapshot::dsl_to_value;
     use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
     use serde_json::Value;
     use std::str::FromStr;
@@ -177,4 +177,18 @@ mod geojson_io {
         let area = |ring: &[geojson::Position]| super::geo_area(&ring.iter().map(|position| [position[0], position[1]]).collect::<Vec<_>>());
         assert_eq!((area(&coordinates[0]), area(&coordinates[1])), (12.0, 1.0), "exterior and hole areas survive the round trip");
     }
+}
+
+#[test]
+fn gis_diff_native_round_trip_matches_owned_json_oracle() {
+    use protocol::{DiffBinary,DiffText};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🚪️diff-native-ownership/🔣️.json")).expect("authored fixture");
+    let diff:crate::GisMapDiff=semio_framework_pack_json::from_json_str(&fixture["diff"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned diff");
+    let text=diff.print_diff();
+    let oracle:serde_json::Value=serde_json::from_str(&text).expect("independent JSON parser");
+    assert_eq!(oracle,fixture["diff"]);
+    assert_eq!(crate::GisMapDiff::parse_diff(&text).expect("text diff"),diff);
+    let binary=diff.encode_diff().expect("binary diff");
+    assert_eq!(crate::GisMapDiff::decode_diff(&binary).expect("binary diff"),diff);
+    eprintln!("[DEBUG] GIS owned edit matches the authored JSON oracle and native text/binary round trips");
 }

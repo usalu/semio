@@ -31,7 +31,7 @@ pub fn begin_artifact_assembly() -> Result<ArtifactAssemblyTransaction, Artifact
 /// 🧷️ All writable store registries held before an artifact assembly can publish anything.
 pub struct ArtifactAssemblyStoreRegistryGuards {
     document_codecs: std::sync::RwLockWriteGuard<'static, BTreeMap<String, ArtifactCodec>>,
-    dialect_migrations: std::sync::RwLockWriteGuard<'static, BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>,
+    dialect_migrations: std::sync::RwLockWriteGuard<'static, BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>>,
 }
 
 /// 🚫️ A staged store registry assembly cannot be preflighted or committed.

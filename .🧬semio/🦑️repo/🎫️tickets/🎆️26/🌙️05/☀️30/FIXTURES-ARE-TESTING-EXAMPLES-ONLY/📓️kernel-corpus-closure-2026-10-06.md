@@ -275,3 +275,7 @@ Removed 16 stale corpus identity markers/documentation references. Actual isolat
 Final actual isolated Nx behavior batch: 15/15 commands passed. Runtime logs confirm CRC/hash-chain recovery prefixes, SQLite ownership/publication interleavings, 6decisioncases+6witnesscases+4recoveries, clone2MiB/cancellation9/map71/growth49/preparation6/list513/text5440/bytes6145/map70, and11bootstraporderingchecks. Before success, corrected real current WALpoll-close/source-test ownership and the static durable journal digest to match canonical declared bytes; all original semantic predicates remained and writer release terminal ownership gained an explicit assertion.
 
 Five-language host parity also completed through correctly project-scoped Nx:25passed/0failed/0errored,50of50paritycomparisons. Initial shared native kernel build failed18canonical I/O import errors; no native kernel success claimed until focused rerun completes.
+
+## Actual Native Kernel Gate
+
+The registered kernel-native task exited0 after42minutes35seconds. The real Cargo-captured executable ran all four exact named Rust laws: portable paged-history traversal, required branch provenance wire, canonical Edit digest chains, and Unicode retirement under single-byte grants. Native receipt records four assertions and the actual captured binary hash14c3b4b72d3d3e1be33ba7a6ad0a5c1e9a8851a15819b0213c944f78cbe80774. Its three neutral vectors also passed independent Array/Ajv comparison. No native result is inferred from source inspection.

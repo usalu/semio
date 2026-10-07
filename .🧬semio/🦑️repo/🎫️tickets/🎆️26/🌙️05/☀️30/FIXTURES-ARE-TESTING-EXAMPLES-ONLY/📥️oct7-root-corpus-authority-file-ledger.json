@@ -1,0 +1,116 @@
+[
+  {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+    "kind": "updated",
+    "beforeSha256": "be35f5d50eb733dc61852162d74e85449a3d94847198cee02055f6857afd4513",
+    "currentSha256": "3e28591a1257633461036d75b0f1d40540965ac62a7c7b114d24ac25cc287fb8"
+  },
+  {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    "kind": "updated",
+    "beforeSha256": "9db5d63a85681d4aff6f4fd9662270550014347f9b9b72cf0080bae2c85ad9ff",
+    "currentSha256": "d77edbdfda6a3fafefe6d98f6e9812405d11192bb7bd011721a3e66f81c81735"
+  },
+  {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️verification-registration/📜️script.ts",
+    "kind": "updated",
+    "beforeSha256": "7b3cd6f5a089d8853c3504877a18fa11be7b6d81b45f8cb05b6ed4098a1a74e6",
+    "currentSha256": "ff57080bcd9bdbf0f32bf02a9bf775336619ef1312f208a3ae95432a6b89eff3"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "a3b1a664095f04c832cfc71c17ca5cc338a0cb86d6b5d48696009d8bd5d2df11",
+    "currentSha256": "c737a67eb521ef60874776ae063a2ebde0c1cdd6ce3579a2f4f8fdd7c8bf2d74"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧬️schema/📋️native-owner/🔣️.json",
+    "kind": "removed",
+    "beforeSha256": "785df280f7fcb22f051f00c1302cf51cb8cddad58bc33566f268303afe8b4347",
+    "currentSha256": null
+  },
+  {
+    "path": "📋️project.json",
+    "kind": "updated",
+    "beforeSha256": "44d89aa529b1cdb5813e026bab79e25c4641c051a2f8c3fb4382716ea6fe01b2",
+    "currentSha256": "a75bfb0d6f1ed469c331bd5a0b516f0cc08fcf7b59a584c6c53bb93a9e3e5300"
+  },
+  {
+    "path": "📜️script.ts",
+    "kind": "updated",
+    "beforeSha256": "38cef1a52ac95adfcb7ec7d55e1a2be8f5a6cfcaa26f1a109290c58f2915764e",
+    "currentSha256": "77e4e2eb09dba7c5db2c05d28171598d2fc23bb8380374144cfb62c1f3ab0ab3"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🧬️schema/🎮️native-owner/🔣️.json",
+    "kind": "removed",
+    "beforeSha256": "281bd4bf1cd2a3944e796e33456af591c2e14a5142d7ae21e0cc66b70dd2cfde",
+    "currentSha256": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "b58b255db5a1c3b1ffdcd22fcfd7cf11f8c5dcfc4c3a3d5cc77e89a022a5e792",
+    "currentSha256": "4b36367ff6c903b04edc96baf5f443f0486cd33283abafe93c8bab73f77040cc"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️schema/🧷️borrow-authority/🔣️.json",
+    "kind": "removed",
+    "beforeSha256": "60101165f700e37b93a97a56dcc5d96c75d3c714aa7189f5c962c43cfd3131bf",
+    "currentSha256": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧪️tests/🧩️conformance/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "4f97679d349d013492a890ef053baf44fc5b844ac91658605a2c9cb361ccd654",
+    "currentSha256": "424cc5febec45463d4c0a173803520fbec7ac0d32d76d4f948466f87a54d1a24"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧬️schema/🔣️.json",
+    "kind": "updated",
+    "beforeSha256": "e67ad3a21ad102f3ff4929cf42fe8d16548234b9867dac93274c07707453883b",
+    "currentSha256": "89b53e7abf425c47eb18dcdcef4f92ef5faed174b439834d0d4b7c50f5f39c6a"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/✂️clamp/🧪️tests/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "60a9ab04cfc588bc6e5b4cdc2b17d64af08a60d522a32a01ee44aaf2d6df7025",
+    "currentSha256": "be4f401189e3ccc87fc13e1de815fd43685bcd1b4aa3730ff8af03d16135f7a4"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/✂️clamp/🧬️schema/🔣️.json",
+    "kind": "removed",
+    "beforeSha256": "6b0c85fbcad8104bbfb537ab043211af6b7a7adfc83e0d9d60fcf76f8c5b38c4",
+    "currentSha256": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📨️messages/🧬️schema/🔣️.json",
+    "kind": "removed",
+    "beforeSha256": "be42dd5ce72d4f547f38239b70f33d15c0490a31f2c69906b2059d141296adb5",
+    "currentSha256": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️schema/🔣️.json",
+    "kind": "removed",
+    "beforeSha256": "ae91d7c1d32c9c93c08e545286cbd9b4bf26ef34f4a678f282ccfbbebe8b0be2",
+    "currentSha256": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "cc96515ac6d1a2718327f878c3abf40363d4f576d37b63bfad1677a122fc23f0",
+    "currentSha256": "df06d9090c002b4091a892d69efc2b9ba0eb92e7f6866a74aea072a8f97180f0"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "6403ff2d4ab7e05f6df76db417db47a9919a66cbbcd52e6d81758557bce0ce73",
+    "currentSha256": "0c05dd9e4ae831da3b2cbaa2db9f6e6ca792000e5188c59838ae975224b897ab"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+    "kind": "updated",
+    "beforeSha256": "9d3f17ad91ed9a253a1b862b0b520397c1621a20f2d04201287e464f62197461",
+    "currentSha256": "1e19218f376c557610a334bbd4740820a82eb8edf9c45c68cb5afe5bf59e2cf4"
+  }
+]

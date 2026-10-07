@@ -2,8 +2,8 @@
 
 use crate::DrawingSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
-use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{StandardId, SubsetId};
+use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
+use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
 
@@ -21,7 +21,8 @@ impl Serializer<DrawingSnapshot> for DrawingIntoSvg {
 use crate::schema::{DrawingSceneNode, flatten_drawing_document_to_scene_nodes};
 use crate::{FillStyle, GradientStop, PathSegment};
 use crate::schema::fill::sampling::PreparedFill;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox, typed_to_svg_document};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::typed_to_svg_document;
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{write_svg_xml};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 

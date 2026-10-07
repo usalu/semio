@@ -1,7 +1,7 @@
 /** 📋️ Thirty authored Forms entities preserve questions, submissions, condition trees and intrinsic values. */
 import type{FormsSnapshot}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type{FormExpr,DslValue,FormQuestion}from"../../../🧬️schema/🧬️mutations/🟦️.ts";
-import type{ArtifactDialect}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type{ ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import{sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint as checkpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteValueBudget as budget,artifactSqliteValueByteLengthControlled as measured,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";

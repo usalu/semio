@@ -6,7 +6,8 @@ use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{artifact, inspection};
 use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_snapshot, puzzle2d_push_target_region, puzzle2d_relocate_target_region, puzzle2d_selection_write, Puzzle2dActionCtx, Puzzle2dScene, Puzzle2dSelectionRecord};
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle2d_document_delta_operations, Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle2d_document_delta_operations,Puzzle2dMutation};
+
 use machine::Command;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolYield};

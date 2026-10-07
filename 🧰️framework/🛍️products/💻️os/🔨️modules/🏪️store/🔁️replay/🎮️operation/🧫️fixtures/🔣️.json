@@ -1,0 +1,91 @@
+{
+  "schema": "semio.history.operation-preparation/v1",
+  "grants": [
+    64,
+    128,
+    4096
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    7,
+    17
+  ],
+  "capacityRelease": {
+    "bodyBytes": 4096,
+    "emptySlots": 8192,
+    "slotBytes": 1,
+    "ordinaryGrantAccepted": false,
+    "exactGrantAccepted": true
+  },
+  "laws": {
+    "boundedCopy": true,
+    "deadlineBeforeWork": true,
+    "noWorkAfterCancel": true,
+    "terminalEmpty": true,
+    "reportContinuesAfterInverseRefusal": true
+  },
+  "cases": [
+    {
+      "name": "unicode replacement",
+      "base": "Original 😀 Grundstück Aé",
+      "input": "Änderung 🪆 Grundstück B",
+      "inverseRefused": false,
+      "applyRefused": false,
+      "expected": {
+        "state": "Änderung 🪆 Grundstück B",
+        "inverse": "Original 😀 Grundstück Aé",
+        "fatalCodes": []
+      }
+    },
+    {
+      "name": "inverse refusal keeps forward",
+      "base": "Original 😀 Grundstück Aé",
+      "input": "Änderung 🪆 Grundstück B",
+      "inverseRefused": true,
+      "applyRefused": false,
+      "expected": {
+        "state": "Änderung 🪆 Grundstück B",
+        "inverse": null,
+        "fatalCodes": [
+          "mutation.inverse-refused"
+        ]
+      }
+    },
+    {
+      "name": "apply refusal remains no-op",
+      "base": "Original 😀 Grundstück Aé",
+      "input": "Änderung 🪆 Grundstück B",
+      "inverseRefused": false,
+      "applyRefused": true,
+      "expected": {
+        "state": "Original 😀 Grundstück Aé",
+        "inverse": null,
+        "fatalCodes": [
+          "mutation.apply.refused"
+        ]
+      }
+    },
+    {
+      "name": "both refusals remain visible",
+      "base": "Original 😀 Grundstück Aé",
+      "input": "Änderung 🪆 Grundstück B",
+      "inverseRefused": true,
+      "applyRefused": true,
+      "expected": {
+        "state": "Original 😀 Grundstück Aé",
+        "inverse": null,
+        "fatalCodes": [
+          "mutation.inverse-refused",
+          "mutation.apply.refused"
+        ]
+      }
+    }
+  ],
+  "pagedInverse": {
+    "rows": 8192,
+    "maximumTurnBytes": 4096,
+    "minimumBackingReleases": 2
+  }
+}

@@ -1,4 +1,7 @@
 //! 💾️ Direct paint-region binary codec.
+use crate::standards::v6_0::subsets::document::schema::mutations::*;
+use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+use crate::standards::v6_0::subsets::document::io::binary::diff::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::Entry;
 

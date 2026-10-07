@@ -82,7 +82,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, P
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v_utf_8::subsets::any::schema::txt_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.txt", standard: semio_framework_plugin::StandardId("utf-8"), subset: semio_framework_plugin::SubsetId("*") }).try_build()
+    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v_utf_8::subsets::any::schema::txt_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.txt", standard: semio_framework_artifact_reference::StandardId("utf-8"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
 }
 
 //#region 🔖️ArtifactDeclaration
@@ -94,7 +94,7 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<semio_framework_plu
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact() -> declarations::ArtifactDeclaration<TxtApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").expect("canonical stdio.txt kind"), localization: &[], standards: vec![standards::v_utf_8::standard()] }
 }
 //#endregion 🔖️ArtifactDeclaration
@@ -120,7 +120,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_utf_8::subsets::any::io::io_registry as v_utf_8;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

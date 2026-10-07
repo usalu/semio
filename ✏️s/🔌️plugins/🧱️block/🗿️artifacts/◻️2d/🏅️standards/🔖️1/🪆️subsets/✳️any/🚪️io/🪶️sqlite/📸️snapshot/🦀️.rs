@@ -412,7 +412,7 @@ impl ArtifactSqliteSnapshot for Block2dSnapshot {
         rows.finish(c)?;
         Ok(Self { schema, node_kind, presentation, handle_kinds, handles, compatibility: rules, attributes, authors, camera2d, meta })
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.block.block2d" || dialect.standard != "1" || dialect.subset != "*" {
             return Err(store::io_schema::IoError::from_value_error(invalid("Block2d declared dialect differs")));

@@ -9,7 +9,7 @@
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
 
@@ -539,3 +539,6 @@ mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
 
 const _: () = assert!(EPW_RECORD_FIELD_COUNT == 35, "EpwRecordDiff field-index table must match EPW_RECORD_FIELD_COUNT");
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

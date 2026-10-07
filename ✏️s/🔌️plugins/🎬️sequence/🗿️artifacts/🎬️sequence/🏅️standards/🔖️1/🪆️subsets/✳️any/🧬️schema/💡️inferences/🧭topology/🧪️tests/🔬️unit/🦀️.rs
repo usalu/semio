@@ -18,7 +18,7 @@ fn topology_of(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceTo
 /// topology instead of trapping; the genesis document infers its derivable two-step chain.
 #[semio_framework_async_macros::async_test]
 async fn a_non_derivable_parent_infers_the_empty_topology_and_genesis_its_chain() {
-    let wire_only = SequenceSnapshot { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), content: store::ArtifactChild::new("foreign-content".into(), store::os_io::ArtifactRef { artifact_id: "foreign-content".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } }) };
+    let wire_only = SequenceSnapshot { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), content: store::ArtifactChild::new("foreign-content".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "foreign-content".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } }) };
     let empty = compute_sequence_topology(&wire_only);
     assert_eq!((empty.node_count, empty.cycle_free, empty.topo_order.len()), (0, true, 0));
     let genesis = crate::snapshot::schema::default_persisted_snapshot();

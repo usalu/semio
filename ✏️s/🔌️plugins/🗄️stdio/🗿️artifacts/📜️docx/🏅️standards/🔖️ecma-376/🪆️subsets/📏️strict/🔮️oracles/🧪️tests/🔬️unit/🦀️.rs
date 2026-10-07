@@ -16,7 +16,7 @@ fn params_for(kind: &str) -> Json {
         "set-relationship-base" => json_object(vec![("base", Json::String("http://purl.oclc.org/ooxml/officeDocument/relationships".to_string()))]),
         "set-conformance-attribute" => json_object(vec![("value", Json::String("strict".to_string()))]),
         "remove-conformance-attribute" => json_object(vec![]),
-        "insert-vml-part" => json_object(vec![("path", Json::String("word/vmlDrawing1.vml".to_string())), ("markup", Json::String(semio_s_plugin_stdio_document_test_oracle::ooxml::VML_MARKUP.to_string()))]),
+        "insert-vml-part" => json_object(vec![("path", Json::String("word/vmlDrawing1.vml".to_string())), ("document", semio_s_plugin_stdio_document_test_oracle::ooxml::vml_document())]),
         "remove-vml-part" => json_object(vec![("path", Json::String("word/vmlDrawing1.vml".to_string()))]),
         "insert-alternate-content" => json_object(vec![("path", Json::String("word/document.xml".to_string()))]),
         "remove-alternate-content" => json_object(vec![("path", Json::String("word/document.xml".to_string()))]),

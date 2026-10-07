@@ -8,7 +8,7 @@ use crate::{Puzzle2dNode, Puzzle2dSnapshot, Puzzle2dTargetRegion};
 //#region 🔖️Diff
 pub fn diff(payload: &super::ScaleSelection, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if !(payload.pivot_x.is_finite() && payload.pivot_y.is_finite() && payload.factor.is_finite() && payload.factor > 0.0) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "a scale pivot must be finite and its factor finite and positive", payload.targets.clone());
+        return protocol::MutationOutcome::fatal("mutation.invariant", "a scale pivot must be finite and its factor finite and positive", payload.targets.iter().map(|id| id.to_string_owner()).collect::<Vec<_>>());
     }
     let (cx, cy, factor) = (payload.pivot_x, payload.pivot_y, payload.factor);
     let region: &dyn Fn(&Puzzle2dTargetRegion) -> Puzzle2dTargetRegion = &|entry| Puzzle2dTargetRegion { x: cx + (entry.x - cx) * factor, y: cy + (entry.y - cy) * factor, width: entry.width * factor, height: entry.height * factor, ..entry.clone() };

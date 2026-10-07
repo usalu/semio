@@ -12,7 +12,7 @@ use crate::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
@@ -61,7 +61,7 @@ impl ArtifactViewer for JpgAnyViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_JPG_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> Self::Snapshot {
-        crate::standards::v_jfif_1_01::subsets::document::schema::blank_jpg_snapshot()
+        crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot()
     }
 
     fn handle(

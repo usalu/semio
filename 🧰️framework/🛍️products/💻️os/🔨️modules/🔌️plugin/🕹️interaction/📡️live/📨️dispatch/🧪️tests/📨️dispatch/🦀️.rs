@@ -470,7 +470,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let mut state = row["expected"].clone(); state["hover"] = serde_json::json!({});
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
-    let mut interaction = store::ArtifactStore::new(envelope).await.unwrap();
+    let mut interaction = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
     interaction.install_document_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
     let mut app = interaction_app_raw().await;
     let mut previous = std::mem::replace(&mut app.interaction_store, interaction);

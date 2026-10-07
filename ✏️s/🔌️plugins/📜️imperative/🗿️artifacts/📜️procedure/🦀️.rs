@@ -181,16 +181,16 @@ pub fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BTreeMap
 pub fn procedure_flow_child_handle(path: &Path) -> ProcedureFlowChild {
     use store::ArtifactPack;
     let child_id = store::content_id("imperative-flow", &flow_content_snapshot_from_path(path).encode_pack());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    store::ArtifactChild::new(child_id.clone(), store::os_io::ArtifactRef { artifact_id: child_id, dialect })
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    store::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
 
 /// 🕸️ The content-addressed `text` CHILD handle of a seed.
 pub fn procedure_text_child_handle(seed: &BTreeMap<String, Value>) -> ProcedureTextChild {
     use store::ArtifactPack;
     let child_id = store::content_id("imperative-text", &text_content_snapshot_from_seed(seed).encode_pack());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
-    store::ArtifactChild::new(child_id.clone(), store::os_io::ArtifactRef { artifact_id: child_id, dialect })
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
+    store::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
 
 /// 🏗️ The parent document naming the content-addressed children of a program and seed (their content lives in the member

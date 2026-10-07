@@ -332,10 +332,8 @@ async fn an_open_transaction_refuses_every_other_command_and_retires_its_operati
 /// under it, onto one state and one applied order.
 #[semio_framework_async_macros::async_test]
 async fn a_committed_transaction_converges_with_the_replicas_that_edited_under_it() {
-    let mut author = store_named("demo", Some(0)).await;
-    author.set_local_actor_id(Some("author".into())).expect("author actor");
-    let mut peer = store_named("demo", Some(0)).await;
-    peer.set_local_actor_id(Some("peer".into())).expect("peer actor");
+    let mut author = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None), ActorId("author".into())).await;
+    let mut peer = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None), ActorId("peer".into())).await;
     author.dispatch(ArtifactCommand::Apply { mutations: vec![set(1)], transaction: None }).await.expect("a shared edit");
     for event in author.event_log().expect("log") {
         peer.ingest_remote(event).await.expect("the peer takes the shared edit");

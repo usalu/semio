@@ -13,14 +13,13 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<TiffMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v6_0::subsets::document::schema::mutations::patch_snapshot::CODEC,
-    crate::standards::v6_0::subsets::document::schema::mutations::set_snapshot::CODEC,
-    crate::standards::v6_0::subsets::document::schema::mutations::change_byte_order::CODEC,
-    crate::standards::v6_0::subsets::document::schema::mutations::insert_ifd::CODEC,
-    crate::standards::v6_0::subsets::document::schema::mutations::remove_ifd::CODEC,
-    crate::standards::v6_0::subsets::document::schema::mutations::replace_tag::CODEC,
-    crate::standards::v6_0::subsets::document::schema::mutations::remove_tag::CODEC,
-    crate::standards::v6_0::subsets::document::schema::mutations::paint_region::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::patch_snapshot::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::set_snapshot::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::insert_ifd::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::remove_ifd::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::replace_tag::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::remove_tag::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::paint_region::CODEC,
 ];
 //#endregion Registry
 
@@ -42,8 +41,6 @@ impl protocol::OpBinary for TiffMutation {
 }
 //#endregion Framing
 
-#[path = "🧭️change-byte-order/🦀️.rs"]
-pub mod change_byte_order;
 
 #[path = "🩹️patch-snapshot/🦀️.rs"]
 pub mod patch_snapshot;

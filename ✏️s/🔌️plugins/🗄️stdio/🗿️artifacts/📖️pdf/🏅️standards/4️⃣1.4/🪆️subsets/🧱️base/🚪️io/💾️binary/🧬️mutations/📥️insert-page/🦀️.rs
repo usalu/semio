@@ -1,9 +1,7 @@
 //! 💾️ insert-page native binary payload owner.
 
-use crate::standards::v1_4::subsets::base::schema::mutations::{
-    binary::{put_index, put_text, Reader},
-    PdfMutation,
-};
+use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
+use crate::standards::v1_4::subsets::base::io::binary::mutations::{put_index, put_text, Reader};
 use crate::standards::v1_4::subsets::base::schema::mutations::InsertPage;
 
 //#region 🔖️Codec

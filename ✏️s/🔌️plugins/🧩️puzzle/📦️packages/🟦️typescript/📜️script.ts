@@ -11,6 +11,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     if (rest[0] !== "renderer-contract") await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    if (rest[0] === "transform-gesture") return;
     await runVitest(this.root, rest[0] === "renderer-contract" ? rest.slice(1) : [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
   }
 }

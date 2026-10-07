@@ -29,6 +29,7 @@ pub enum BcfCamera {
     Perspective { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, field_of_view: f64 },
     Orthogonal { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, view_to_world_scale: f64 },
 }
+impl semio_framework_dsl_record::BorrowedDslField for BcfCamera{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Statements(<Self as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);}
 impl semio_framework_dsl_record::DslField for BcfCamera {
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.step()?;let mut statements=control.allocate_vec(1)?;statements.push(<Self as semio_framework_dsl_record::DslVariants>::to_named_record_controlled(self,control)?);Ok(semio_framework_dsl_record::FieldValue::Statements(statements))}
 

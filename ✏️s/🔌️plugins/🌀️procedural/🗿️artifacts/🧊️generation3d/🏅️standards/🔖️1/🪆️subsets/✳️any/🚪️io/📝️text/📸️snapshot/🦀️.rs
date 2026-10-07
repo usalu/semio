@@ -250,7 +250,7 @@ pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "procedural.generation3d", layout = "lines")]
-struct Generation3dSnapshotDsl {
+pub(crate) struct Generation3dSnapshotDsl {
     schema: String,
     #[dsl(block)]
     camera: CameraJsonDsl,
@@ -289,27 +289,10 @@ impl store::ArtifactDsl for Generation3dSnapshotDsl {
     }
 }
 
-impl store::ArtifactPack for Generation3dSnapshotDsl {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-fn generation3d_document_to_dsl(document: &Generation3dSnapshot) -> Generation3dSnapshotDsl {
+pub(crate) fn generation3d_document_to_dsl(document: &Generation3dSnapshot) -> Generation3dSnapshotDsl {
     let host_snapshot = &document.host_snapshot;
     let generation = &document.generation;
     Generation3dSnapshotDsl {
@@ -422,7 +405,7 @@ impl FieldProjectionSource for Generation3dSnapshot {
 }
 //#endregion 🔎️OriginalTextSource
 
-fn generation3d_document_from_dsl(parsed: Generation3dSnapshotDsl) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
+pub(crate) fn generation3d_document_from_dsl(parsed: Generation3dSnapshotDsl) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
@@ -445,21 +428,7 @@ impl store::ArtifactDsl for Generation3dSnapshot {
     }
 }
 
-impl store::ArtifactPack for Generation3dSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <Generation3dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&generation3d_document_to_dsl(self), options)
-    }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <Generation3dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
-        generation3d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
-    }
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Generation3dSnapshotDsl as store::ArtifactPack>::record_spec()
-    }
-}
 //#endregion 🔖️DslMirror
 
 /// 📖️ Parses `.generation3d` DSL text into a `Generation3dSnapshot`.

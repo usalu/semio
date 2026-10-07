@@ -68,7 +68,7 @@ fn duplicate_capability_id_is_rejected() {
 }
 
 /// 💬️ The `CapabilityDescription` law cases (`🧫️fixtures/💬️capability-description.json`, schema
-/// `🛂️manifest` `CapabilityDescriptionFixture`) replay row for row: `description_problems` reports
+/// the actual `CapabilityDescription` domain law) replay row for row: `description_problems` reports
 /// exactly the declared `(verb, problem)` list — the TypeScript twin replays the same file with AJV.
 #[test]
 fn description_problems_match_the_language_agnostic_fixture() {

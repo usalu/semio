@@ -1,12 +1,14 @@
 use super::*;
+use crate::schema::refusal::XlsxError;
 use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
+use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+use crate::schema::construction::build_minimal_xlsx;
 use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx, sniff_xlsx_bytes};
-use crate::standards::v_ecma_376::subsets::base::io::{
-    column_index, column_letter, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART,
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{
+    column_index, column_letter, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART,
     WORKSHEET_CONTENT_TYPE,
 };
-use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -251,6 +253,7 @@ async fn decode_recognizes_strict_office_document_and_shared_strings_relationshi
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
     use super::*;
+use crate::schema::refusal::XlsxError;
     use crate::schema::{diff, mutations, snapshot};
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
@@ -352,3 +355,87 @@ mod conformance_laws {
 
 }
 //#endregion 🔖️ConformanceLaws
+
+#[test]
+fn logical_construction_fixture_matches_calamine_and_native_roundtrips() {
+    use calamine::{Data, Reader};
+    const FIXTURE: &str = include_str!("../../../🧫️fixtures/🏗️logical-construction/🔣️.json");
+    let workbook: XlsxWorkbook = semio_framework_pack_json::from_json_str(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let snapshot = build_minimal_xlsx(workbook.clone());
+    snapshot.validate_authority().unwrap();
+    assert!(snapshot.opc.parts.is_empty());
+    assert_eq!(snapshot.project_workbook().unwrap(), workbook);
+    let bytes = encode_xlsx(&snapshot).unwrap();
+    assert_eq!(decode_xlsx(&bytes).unwrap(), snapshot);
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).unwrap();
+    assert_eq!(reference.sheet_names(), workbook.sheets.iter().map(|sheet| sheet.name.clone()).collect::<Vec<_>>());
+    for sheet in &workbook.sheets {
+        let values = reference.worksheet_range(&sheet.name).unwrap();
+        let formulas = reference.worksheet_formula(&sheet.name).unwrap();
+        for cell in &sheet.cells {
+            let expected = match &cell.value {
+                XlsxCellValue::SharedString(index) => Data::String(workbook.shared_strings[*index].clone()),
+                XlsxCellValue::InlineString(text) => Data::String(text.clone()),
+                XlsxCellValue::Number(number) => Data::Float(*number),
+                XlsxCellValue::Boolean(value) => Data::Bool(*value),
+                XlsxCellValue::Formula { expr, cached: Some(value) } => {
+                    assert_eq!(formulas.get_value((cell.row - 1, cell.col)), Some(expr));
+                    let XlsxCellValue::Number(number) = value.as_ref() else { panic!("fixture cache is numeric") };
+                    Data::Float(*number)
+                }
+                _ => panic!("unexpected fixture value"),
+            };
+            let actual = values.get_value((cell.row - 1, cell.col)).unwrap_or(&Data::Empty);
+            assert_eq!(actual.to_string(), expected.to_string(), "{} {}{}", sheet.name, column_letter(cell.col), cell.row);
+        }
+    }
+    let text = <XlsxSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+    assert_eq!(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(), snapshot);
+    assert_eq!(<XlsxSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&snapshot)).unwrap(), snapshot);
+}
+
+/// 🧫️ The committed insertion witness applies on its own document and agrees with an independent XLSX reader.
+#[test]
+fn insert_cell_wire_witness_matches_committed_document_and_calamine() {
+    use calamine::{Data, Reader};
+    use crate::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_vacancy_address, XlsxMutation};
+    const BEFORE: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
+    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/➡️after/🔣️.json");
+    const MUTATION: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
+    let mut snapshot: XlsxSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let after: XlsxSnapshot = semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mutation: XlsxMutation = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let XlsxMutation::InsertCell(leaf) = &mutation else { panic!("insertion witness") };
+    assert_eq!(leaf.address, xlsx_cell_vacancy_address(&snapshot, "Sheet1", 2, 1).unwrap());
+    assert!(apply_xlsx_mutation(&mut snapshot, &mutation).messages().is_empty());
+    assert_eq!(snapshot, after);
+    let bytes = encode_xlsx(&snapshot).unwrap();
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).unwrap();
+    assert_eq!(reference.worksheet_range("Sheet1").unwrap().get_value((1, 1)), Some(&Data::Float(42.0)));
+}
+
+/// 🪪️ History retains the addressed worksheet identity while editing vacancy coordinates and cell content.
+#[test]
+fn insertion_history_inputs_preserve_identity_and_reject_forged_namespace() {
+    use crate::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
+    use semio_framework_value::ToValue;
+    const BEFORE: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
+    const MUTATION: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
+    const ADDRESS_SCHEMA: &str = include_str!("../../🧬️mutations/🧭️cell-vacancy-address/🔣️.json");
+    let mut snapshot: XlsxSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut mutation: XlsxMutation = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let schema = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::input_schema(&mutation).unwrap();
+    let resolver = |id: &str| (id == "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-vacancy-address.json").then(|| {
+        semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(ADDRESS_SCHEMA, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())
+    });
+    let inputs = semio_framework::mutation_input_defs(schema, &resolver).unwrap();
+    let changes = semio_framework_plugin::app::history_edit_acceptance::acceptance_changes(&inputs, &mutation.to_value());
+    assert!(changes.iter().any(|(path, _)| path == "/address/row"));
+    assert!(changes.iter().any(|(path, _)| path == "/address/column"));
+    assert!(changes.iter().all(|(path, _)| !path.starts_with("/address/worksheet")));
+    let unchanged = snapshot.clone();
+    let XlsxMutation::InsertCell(leaf) = &mut mutation else { panic!("insertion witness") };
+    leaf.address.worksheet.namespace_uri = "http://purl.oclc.org/ooxml/spreadsheetml/main".into();
+    assert!(!apply_xlsx_mutation(&mut snapshot, &mutation).messages().is_empty());
+    assert_eq!(snapshot, unchanged);
+}

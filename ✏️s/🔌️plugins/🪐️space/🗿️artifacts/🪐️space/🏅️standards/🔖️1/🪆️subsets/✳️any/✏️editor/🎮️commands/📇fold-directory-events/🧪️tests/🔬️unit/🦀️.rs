@@ -1,7 +1,7 @@
 
 use super::*;
 use semio_framework_os_kernel::os_directory::{ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc};
-use semio_framework_plugin::ArtifactDialect;
+use {semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_plugin::{ArtifactView, HistoryView};
 
 fn event(seq: u64, body: DirectoryEventBody, space_id: Option<&str>) -> DirectoryEvent {

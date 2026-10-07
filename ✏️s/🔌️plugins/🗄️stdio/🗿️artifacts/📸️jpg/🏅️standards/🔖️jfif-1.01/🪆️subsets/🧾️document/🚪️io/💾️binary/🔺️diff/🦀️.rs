@@ -503,44 +503,41 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     if self.pixels.is_some() {
         flags |= 1 << 2;
     }
-    if self.re_encode_quality.is_some() {
+    if self.jfif_version.is_some() {
         flags |= 1 << 3;
     }
-    if self.jfif_version.is_some() {
+    if self.jfif_density_units.is_some() {
         flags |= 1 << 4;
     }
-    if self.jfif_density_units.is_some() {
+    if self.jfif_x_density.is_some() {
         flags |= 1 << 5;
     }
-    if self.jfif_x_density.is_some() {
+    if self.jfif_y_density.is_some() {
         flags |= 1 << 6;
     }
-    if self.jfif_y_density.is_some() {
+    if self.jfif_thumbnail.is_some() {
         flags |= 1 << 7;
     }
-    if self.jfif_thumbnail.is_some() {
+    if self.frame.is_some() {
         flags |= 1 << 8;
     }
-    if self.frame.is_some() {
+    if self.sof_marker.is_some() {
         flags |= 1 << 9;
     }
-    if self.sof_marker.is_some() {
+    if self.arithmetic.is_some() {
         flags |= 1 << 10;
     }
-    if self.arithmetic.is_some() {
+    if self.quant_tables.is_some() {
         flags |= 1 << 11;
     }
-    if self.quant_tables.is_some() {
+    if self.huffman_tables.is_some() {
         flags |= 1 << 12;
     }
-    if self.huffman_tables.is_some() {
+    if self.restart_interval.is_some() {
         flags |= 1 << 13;
     }
-    if self.restart_interval.is_some() {
-        flags |= 1 << 14;
-    }
     if self.other_segments.is_some() {
-        flags |= 1 << 15;
+        flags |= 1 << 14;
     }
 
     let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
@@ -553,9 +550,6 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     }
     if let Some(v) = &self.pixels {
         write_bytes_lp(&mut out, v);
-    }
-    if let Some(v) = &self.re_encode_quality {
-        write_opt(&mut out, v, |q, out| out.push(*q));
     }
     if let Some(v) = self.jfif_version {
         enc_version_bin(&v, &mut out);
@@ -604,21 +598,20 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     let width = if flags & (1 << 0) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff width", reader.position(), e.to_string()))? as u32) } else { None };
     let height = if flags & (1 << 1) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff height", reader.position(), e.to_string()))? as u32) } else { None };
     let pixels = if flags & (1 << 2) != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("diff pixels", reader.position(), e))?) } else { None };
-    let re_encode_quality = if flags & (1 << 3) != 0 { Some(read_opt(&mut reader, |r| r.read_u8().map_err(|e| e.to_string())).map_err(|e| malformed("diff re-encode-quality", reader.position(), e))?) } else { None };
-    let jfif_version = if flags & (1 << 4) != 0 { Some(dec_version_bin(&mut reader).map_err(|e| malformed("diff jfif-version", reader.position(), e))?) } else { None };
-    let jfif_density_units = if flags & (1 << 5) != 0 { Some(dec_density_units_bin(&mut reader).map_err(|e| malformed("diff jfif-density-units", reader.position(), e))?) } else { None };
-    let jfif_x_density = if flags & (1 << 6) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-x-density", reader.position(), e.to_string()))? as u16) } else { None };
-    let jfif_y_density = if flags & (1 << 7) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-y-density", reader.position(), e.to_string()))? as u16) } else { None };
-    let jfif_thumbnail = if flags & (1 << 8) != 0 { Some(read_opt(&mut reader, dec_thumbnail_bin).map_err(|e| malformed("diff jfif-thumbnail", reader.position(), e))?) } else { None };
-    let frame = if flags & (1 << 9) != 0 { Some(dec_frame_change_bin(&mut reader).map_err(|e| malformed("diff frame", reader.position(), e))?) } else { None };
-    let sof_marker = if flags & (1 << 10) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff sof-marker", reader.position(), e.to_string()))?) } else { None };
-    let arithmetic = if flags & (1 << 11) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff arithmetic", reader.position(), e.to_string()))? != 0) } else { None };
-    let quant_tables = if flags & (1 << 12) != 0 { Some(dec_quant_tables_diff_bin(&mut reader).map_err(|e| malformed("diff quant-tables", reader.position(), e))?) } else { None };
-    let huffman_tables = if flags & (1 << 13) != 0 { Some(dec_huffman_tables_diff_bin(&mut reader).map_err(|e| malformed("diff huffman-tables", reader.position(), e))?) } else { None };
-    let restart_interval = if flags & (1 << 14) != 0 { Some(read_opt(&mut reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("diff restart-interval", reader.position(), e))?) } else { None };
-    let other_segments = if flags & (1 << 15) != 0 { Some(dec_other_segments_diff_bin(&mut reader).map_err(|e| malformed("diff other-segments", reader.position(), e))?) } else { None };
+    let jfif_version = if flags & (1 << 3) != 0 { Some(dec_version_bin(&mut reader).map_err(|e| malformed("diff jfif-version", reader.position(), e))?) } else { None };
+    let jfif_density_units = if flags & (1 << 4) != 0 { Some(dec_density_units_bin(&mut reader).map_err(|e| malformed("diff jfif-density-units", reader.position(), e))?) } else { None };
+    let jfif_x_density = if flags & (1 << 5) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-x-density", reader.position(), e.to_string()))? as u16) } else { None };
+    let jfif_y_density = if flags & (1 << 6) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-y-density", reader.position(), e.to_string()))? as u16) } else { None };
+    let jfif_thumbnail = if flags & (1 << 7) != 0 { Some(read_opt(&mut reader, dec_thumbnail_bin).map_err(|e| malformed("diff jfif-thumbnail", reader.position(), e))?) } else { None };
+    let frame = if flags & (1 << 8) != 0 { Some(dec_frame_change_bin(&mut reader).map_err(|e| malformed("diff frame", reader.position(), e))?) } else { None };
+    let sof_marker = if flags & (1 << 9) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff sof-marker", reader.position(), e.to_string()))?) } else { None };
+    let arithmetic = if flags & (1 << 10) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff arithmetic", reader.position(), e.to_string()))? != 0) } else { None };
+    let quant_tables = if flags & (1 << 11) != 0 { Some(dec_quant_tables_diff_bin(&mut reader).map_err(|e| malformed("diff quant-tables", reader.position(), e))?) } else { None };
+    let huffman_tables = if flags & (1 << 12) != 0 { Some(dec_huffman_tables_diff_bin(&mut reader).map_err(|e| malformed("diff huffman-tables", reader.position(), e))?) } else { None };
+    let restart_interval = if flags & (1 << 13) != 0 { Some(read_opt(&mut reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("diff restart-interval", reader.position(), e))?) } else { None };
+    let other_segments = if flags & (1 << 14) != 0 { Some(dec_other_segments_diff_bin(&mut reader).map_err(|e| malformed("diff other-segments", reader.position(), e))?) } else { None };
 
-    Ok(JpgDiff { width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments })
+    Ok(JpgDiff { width, height, pixels, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments })
 }
 }
 

@@ -1,7 +1,7 @@
 use super::*;
 
 fn owner_handle(text: &str) -> FlowContentChild {
-    let target = store::os_io::ArtifactRef { artifact_id: "flow-content-reused".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "flow-content-reused".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
     let scene = FlowWorkingScene { widgets: vec![Widget::InputNote { id: "note".into(), text: text.into() }], synapses: Vec::new(), layout: flow::OrderedMap::new() };
     FlowContentChild::new("flow-content-reused".into(), target).with_local_owner(Arc::new(scene))
 }

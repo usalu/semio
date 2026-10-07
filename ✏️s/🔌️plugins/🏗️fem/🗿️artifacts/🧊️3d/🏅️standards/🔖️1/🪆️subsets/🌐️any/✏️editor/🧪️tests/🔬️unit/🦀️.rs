@@ -48,7 +48,7 @@ pub(crate) mod context {
     /// actually settles into the stores. It boots on whatever `Fem3dPlayApp::initial_snapshot`
     /// boots on (the `concrete-forest` example); [`fem3d_demo_app`] loads the `demo` fixture.
     pub fn fem3d_app() -> Fem3dApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FEM3D_TEST_INSTANCE));
         Fem3dApp(app)
     }

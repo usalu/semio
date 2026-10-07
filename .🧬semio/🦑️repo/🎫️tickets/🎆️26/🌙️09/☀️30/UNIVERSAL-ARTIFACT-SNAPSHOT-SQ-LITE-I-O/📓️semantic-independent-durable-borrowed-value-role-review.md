@@ -1,0 +1,3 @@
+# Durable Borrowed Value Role Review
+
+Read actual durable-group source lines64–91 and exact two-type narrowed guard. Existing handwritten value_field! macro gives both DurableOwnedGroupAnchorV1 and DurableOwnedGroupMemberV1 Shape::Value and serializes/deserializes through framework Value. Mounted BorrowedDslField constants declare BorrowedShape::Value exactly; no guessed record structure, generic fallback or runtime allocation path is introduced. No static role mismatch found. Immutable reported actual producer After56950 1pass/0fail/94skip with zero requests across256 repeats; that receipt applies to its producer owner, not this independent static audit or whole Semio compilation.

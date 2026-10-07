@@ -19,7 +19,7 @@ fn manifest_with_example(body: String) -> PluginManifest {
             label: semio_framework_ui_locale::LocalizedLabel::data("Capsule Dream"),
             icon_id: semio_framework::IconName::from("file"),
             artifact_json: body,
-            dialect: semio_framework::ArtifactDialect { artifact_kind: "s.puzzle.5d".to_string(), standard: "1".to_string(), subset: "*".to_string() },
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.puzzle.5d".to_string(), standard: "1".to_string(), subset: "*".to_string() },
         }],
         capabilities: Vec::new(),
         topic_contributions: Vec::new(),

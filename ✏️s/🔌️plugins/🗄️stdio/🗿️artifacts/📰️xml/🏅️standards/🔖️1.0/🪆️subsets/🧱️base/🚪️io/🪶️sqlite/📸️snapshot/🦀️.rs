@@ -44,25 +44,7 @@ pub const XML_SQLITE_TABLES: XmlSqliteTables = XmlSqliteTables {
     entity: "xml_entity",
 };
 
-/// 🪟️ Borrowed XML component roots for enclosing typed owners.
-#[derive(Clone,Copy)]
-pub struct XmlDocumentView<'a>{pub root:Option<&'a XmlNode>,pub doctype:Option<&'a XmlDoctype>,pub declaration:Option<&'a XmlDeclaration>,pub prolog:&'a[XmlNode],pub epilog:&'a[XmlNode]}
-impl<'a> From<&'a XmlDocument> for XmlDocumentView<'a>{fn from(doc:&'a XmlDocument)->Self{Self{root:doc.root.as_ref(),doctype:doc.doctype.as_ref(),declaration:doc.declaration.as_ref(),prolog:&doc.prolog,epilog:&doc.epilog}}}
-impl<'a> XmlDocumentView<'a>{pub fn node(node:&'a XmlNode)->Self{Self{root:Some(node),doctype:None,declaration:None,prolog:&[],epilog:&[]}}}
-
-fn retire_nodes_with_frontier(nodes: impl IntoIterator<Item = XmlNode>, mut pending: Vec<XmlNode>) {
-    pending.extend(nodes);
-    while let Some(node) = pending.pop() { if let XmlNode::Element { children, .. } = node { pending.extend(children); } }
-}
-pub(super) fn retire_nodes(nodes: impl IntoIterator<Item = XmlNode>) { retire_nodes_with_frontier(nodes, Vec::new()); }
-pub(super) struct XmlNodeList(pub(super) Vec<XmlNode>);
-impl Drop for XmlNodeList { fn drop(&mut self) { retire_nodes(std::mem::take(&mut self.0)); } }
-pub(super) struct XmlDocumentOwner(pub(super) Option<XmlDocument>);
-impl Drop for XmlDocumentOwner { fn drop(&mut self) { if let Some(mut doc) = self.0.take() { let mut nodes = std::mem::take(&mut doc.prolog); nodes.extend(std::mem::take(&mut doc.epilog)); nodes.extend(doc.root.take()); retire_nodes(nodes); } } }
-/// ♻️ Retires an enclosing owner's complete typed XML document iteratively.
-pub fn retire_xml_document(doc:XmlDocument){drop(XmlDocumentOwner(Some(doc)));}
-/// 🧺️ Retires a validated XML document through caller-admitted fixed-capacity backing.
-pub fn retire_xml_document_with_frontier(mut doc:XmlDocument,mut frontier:Vec<XmlNode>){frontier.extend(std::mem::take(&mut doc.prolog));frontier.extend(std::mem::take(&mut doc.epilog));frontier.extend(doc.root.take());retire_nodes_with_frontier(std::iter::empty(),frontier);}
+use crate::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView,retire_xml_document,retire_xml_document_with_frontier,retire_nodes,XmlNodeList,XmlDocumentOwner};
 struct XmlSnapshots(Vec<XmlSnapshot>);
 impl Drop for XmlSnapshots{fn drop(&mut self){for snapshot in self.0.drain(..){drop(XmlDocumentOwner(Some(snapshot.doc)));}}}
 enum Parent { Root, Misc(&'static str, usize), Child(i64, usize) }
@@ -154,11 +136,11 @@ impl ArtifactSqliteSnapshot for XmlSnapshot {
     fn retire_sqlite_snapshot(self) { drop(XmlDocumentOwner(Some(self.doc))); }
     fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_encoding::encode(self, encoding, control) }
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { preflight_xml_document(&self.schema, &self.doc, encoding, control) }
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.xml"||dialect.standard!="1.0"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"owned xml snapshot dialect differs from its semantic standard")));}
         let row=database.table("xml_document").map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.single_row().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?!=self.schema{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"owned xml document identity differs from semantic projection")));}
-        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"valid"=>crate::standards::v1_0::subsets::valid::schema::check_valid_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,_=>return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"named xml subset has no owned semantic validator")))};
+        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"valid"=>crate::standards::v1_0::subsets::valid::io::check_valid_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,_=>return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"named xml subset has no owned semantic validator")))};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
@@ -177,3 +159,7 @@ pub(crate) mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
 pub(crate) mod native_decoding;
+
+/// 🧩️ Typed XML components for enclosing owned native documents.
+pub use native_encoding::{XmlNativeEmission,emit_xml_native_document,emit_xml_native_node,emit_xml_native_snapshot_fields};
+pub use native_decoding::{XmlNativeInput,read_xml_native_document,read_xml_native_node,read_xml_native_snapshot_fields};

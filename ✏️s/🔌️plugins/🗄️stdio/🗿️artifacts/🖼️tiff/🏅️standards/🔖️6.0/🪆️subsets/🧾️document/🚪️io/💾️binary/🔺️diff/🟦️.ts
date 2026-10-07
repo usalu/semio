@@ -1,2 +1,5 @@
-/** 💾️ Tiff representation for `stdio.tiff` (diff). */
-export type TiffDiffTiff = Uint8Array;
+/** 💾️ Owned TIFF diff binary framing. */
+import {parseTiffDiff,type TiffDiff} from "../../../🧬️schema/🔺️diff/🟦️.ts";
+export type TiffDiffTiff=Uint8Array;
+export function encodeTiffDiff(diff:TiffDiff):Uint8Array{const payload=new TextEncoder().encode(JSON.stringify(parseTiffDiff(diff))),prefix=[1];let length=payload.length;do{const byte=length%128;length=Math.floor(length/128);prefix.push(byte|(length?128:0));}while(length);const bytes=new Uint8Array(prefix.length+payload.length);bytes.set(prefix);bytes.set(payload,prefix.length);return bytes;}
+export function decodeTiffDiff(bytes:Uint8Array):TiffDiff{if(bytes[0]!==1)throw Error('tiff: diff version');let at=1,length=0,shift=0,byte=0;do{if(at===bytes.length||shift>49)throw Error('tiff: diff length');byte=bytes[at++]!;length+=(byte&127)*2**shift;shift+=7;}while(byte&128);if(!Number.isSafeInteger(length)||at+length!==bytes.length)throw Error('tiff: diff payload extent');return parseTiffDiff(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes.subarray(at))));}

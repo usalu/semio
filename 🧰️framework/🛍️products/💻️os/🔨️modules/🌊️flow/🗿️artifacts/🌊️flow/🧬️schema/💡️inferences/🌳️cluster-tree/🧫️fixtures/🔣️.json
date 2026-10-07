@@ -1,0 +1,79 @@
+{
+  "neurons": [
+    {
+      "id": "cluster",
+      "kind": "core.cluster",
+      "params": [
+        {
+          "key": "decimal",
+          "value": {
+            "kind": "decimal",
+            "value": 42.0
+          }
+        },
+        {
+          "key": "integer",
+          "value": {
+            "kind": "integer",
+            "value": "9007199254740993"
+          }
+        },
+        {
+          "key": "nested",
+          "value": {
+            "kind": "dictionary",
+            "value": [
+              {
+                "key": "boolean",
+                "value": {
+                  "kind": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "key": "min",
+                "value": {
+                  "kind": "integer",
+                  "value": "-9223372036854775808"
+                }
+              },
+              {
+                "key": "null",
+                "value": {
+                  "kind": "null"
+                }
+              },
+              {
+                "key": "text",
+                "value": {
+                  "kind": "string",
+                  "value": "Grüße 日本"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "tree": {
+        "neurons": [
+          {
+            "id": "empty",
+            "kind": "math.add",
+            "params": [],
+            "tree": null
+          }
+        ],
+        "synapses": []
+      }
+    }
+  ],
+  "synapses": [
+    {
+      "id": "s1",
+      "from": "cluster",
+      "to": "output",
+      "fromPort": "Grüße",
+      "toPort": "in"
+    }
+  ]
+}

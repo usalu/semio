@@ -1,0 +1,5 @@
+# Custom StdIO Static Descriptor Authorities
+
+First bounded tranche records exact actual SnapshotPatch, WavData/WavChunkRef and Mp4SamplesDiff/TracksDiff authorities in inputs/child-paged-complete-family/custom-stdio-patch-wav-mp4-readonly-authority.json with absolute paths. SnapshotPatch is explicitly Shape::Value, not a six-variant tagged DSL schema. WAV data/ref use sparse Inline Records with IDs starting1, not derive ordinal0. MP4 wrappers delegate derived Inline Records with zero-based fields; nested modified/added are ordinary Record lists, not Statements. Static schema descriptor eligibility does not remove their actual clone/materialization conversion seams or qualify retirement/projection/runtime.
+
+WAV original scalar list metadata follows actual Vec primitive DslField; preserve refinement for i16/u8/f32 in a concrete static implementation rather than weakening to unrestricted scalar shape. Nested MP4 entries retain actual Mp4SampleDiff/Mp4TrackDiff and Mp4Sample/Mp4Track producer edges.

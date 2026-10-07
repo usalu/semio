@@ -307,7 +307,7 @@ pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio::st
 /// `s.stdio.semio@v1/table`. Equal climates name the same child on every replica.
 pub fn din18599_climate_table_child(climate: &MonthlyClimate) -> Din18599ClimateChild {
     let child_id = store::content_id("din18599-climate", semio_framework_pack_json::to_json_string(climate).as_bytes());
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } };
     store::ArtifactChild::new(child_id, target)
 }
 

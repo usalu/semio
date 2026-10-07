@@ -1,0 +1,31 @@
+{
+  "nodes": {
+    "ticket-fixed-slots": {
+      "name": "ticket-fixed-slots",
+      "type": "app",
+      "data": {
+        "root": ".",
+        "name": "ticket-fixed-slots",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "ticket-current-root-launch",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {},
+        "implicitDependencies": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "ticket-fixed-slots": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1791329977039
+}

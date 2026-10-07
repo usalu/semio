@@ -37,7 +37,7 @@ pub struct Din4108Snapshot {
     #[state(artifact)]
     pub thermal_bridges: Vec<ThermalBridge>,
 }
-crate::impl_norm_artifact_record!(Din4108Snapshot, extension = "din4108", envelope_id = "norm.din4108", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+
 
 impl Default for Din4108Snapshot {
     fn default() -> Self {

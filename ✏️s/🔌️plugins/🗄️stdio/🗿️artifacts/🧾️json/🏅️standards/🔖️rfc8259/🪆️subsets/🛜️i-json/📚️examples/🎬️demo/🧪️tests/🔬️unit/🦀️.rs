@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
+use crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance;
 use crate::JsonSnapshot;
 use semio_framework_diagnostic::Severity;
 

@@ -39,7 +39,7 @@ use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::CommandDefinition;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DomainTopology;
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;

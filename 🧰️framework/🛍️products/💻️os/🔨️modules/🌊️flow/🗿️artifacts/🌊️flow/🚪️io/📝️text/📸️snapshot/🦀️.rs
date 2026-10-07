@@ -365,6 +365,10 @@ pub(crate) fn flow_host_snapshot_dsl_to_host_snapshot(dsl: FlowHostSnapshotDsl) 
 
 //#endregion 🔖️Dsl
 
+impl semio_framework_dsl_record::BorrowedDslField for Widget {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Statements(<WidgetDsl as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);
+}
+
 /// 🎛️ Actual widget payloads share the intrinsic widget DSL lowering.
 impl semio_framework_dsl_record::DslField for Widget {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<WidgetDsl as semio_framework_dsl_record::DslField>::shape_controlled(control)}
@@ -375,6 +379,10 @@ impl semio_framework_dsl_record::DslField for Widget {
     }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for SynapseSpec {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<SynapseDsl>);
+}
+
 /// 🔌️ Actual synapse payloads reuse the intrinsic wire-literal lowering.
 impl semio_framework_dsl_record::DslField for SynapseSpec {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<SynapseDsl as semio_framework_dsl_record::DslField>::shape_controlled(control)}
@@ -383,6 +391,10 @@ impl semio_framework_dsl_record::DslField for SynapseSpec {
     fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         synapse_from_dsl(<SynapseDsl as semio_framework_dsl_record::DslField>::from_value(value)?)
     }
+}
+
+impl semio_framework_dsl_record::BorrowedDslField for FlowHostSnapshot {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<FlowHostSnapshotDsl>);
 }
 
 /// 📄️ Explicit import payloads share the artifact's intrinsic DSL schema.

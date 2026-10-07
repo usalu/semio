@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.raster.raster.mutation;
+import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🛰️.proto";
 import "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
 message CreateLayer {
@@ -59,8 +60,7 @@ message ChangeLayerAdjustmentKind {
 
 message AddLayerAsset {
   string asset_id = 1;
-  string mime = 2;
-  bytes data = 3;
+  semio.s_stdio_semio_image.snapshot.SemioImageSnapshot asset = 2;
 }
 
 message RemoveLayerAsset {

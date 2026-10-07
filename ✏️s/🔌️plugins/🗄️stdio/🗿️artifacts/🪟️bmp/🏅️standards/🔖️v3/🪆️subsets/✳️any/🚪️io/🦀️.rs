@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v_v3::subsets::any::io::BmpAnalyzer;
     use crate::BmpSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -44,453 +44,126 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-/// 🧭 Checked BMP v3 layout projections and exact byte-preserving edits.
-use crate::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
+/// 🧭 Native BMP v3 physical layout, admission and canonical emission.
+use crate::schema::snapshot::{BmpImage, BmpNativeSample, BmpPaletteEntry, BmpPixels, BmpProfile, BmpRowOrder};
 use crate::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
+use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+fn native_invalid(message:impl Into<String>)->ValueError {ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
 const BMP_MAGIC: [u8; 2] = *b"BM";
 const BITMAPINFOHEADER_SIZE: u32 = 40;
 const BI_RGB: u32 = 0;
 const BI_BITFIELDS: u32 = 3;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
-#[value(rename_all = "camelCase")]
-pub enum BmpProfile {
-    IndexedRgb1,
-    IndexedRgb4,
-    IndexedRgb8,
-    DirectRgb16,
-    DirectRgb24,
-    DirectRgb32,
-    DirectBitfields16,
-    DirectBitfields32,
-}
-
-impl BmpProfile {
-    pub const fn id(self) -> &'static str {
-        match self {
-            Self::IndexedRgb1 => "indexedRgb1",
-            Self::IndexedRgb4 => "indexedRgb4",
-            Self::IndexedRgb8 => "indexedRgb8",
-            Self::DirectRgb16 => "directRgb16",
-            Self::DirectRgb24 => "directRgb24",
-            Self::DirectRgb32 => "directRgb32",
-            Self::DirectBitfields16 => "directBitfields16",
-            Self::DirectBitfields32 => "directBitfields32",
-        }
-    }
-
-    pub fn is_indexed(self) -> bool {
-        matches!(self, Self::IndexedRgb1 | Self::IndexedRgb4 | Self::IndexedRgb8)
-    }
-
-    pub fn is_direct(self) -> bool {
-        !self.is_indexed()
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct BmpRegion {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct BmpColor {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
-    pub alpha: u8,
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BmpPngPreview {
-    pub width: u32,
-    pub height: u32,
-    pub bytes: Vec<u8>,
-}
+pub struct BmpPngPreview { pub width: u32, pub height: u32, pub bytes: Vec<u8> }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BmpLayout {
-    pub profile: BmpProfile,
-    pub file_size: u32,
-    pub reserved_1: u16,
-    pub reserved_2: u16,
-    pub data_offset: usize,
-    pub width: u32,
-    pub height: u32,
-    pub row_order: BmpRowOrder,
-    pub planes: u16,
-    pub bits_per_pixel: u16,
-    pub compression: u32,
-    pub image_size: u32,
-    pub x_pixels_per_meter: i32,
-    pub y_pixels_per_meter: i32,
-    pub colors_used: u32,
-    pub colors_important: u32,
-    pub masks: [u32; 4],
-    pub palette_offset: usize,
-    pub palette_entries: usize,
-    pub metadata_end: usize,
-    pub row_stride: usize,
-    pub row_payload: usize,
-    pub pixel_bytes: usize,
-    pub pixel_end: usize,
-}
-
-pub fn empty_bmp_bytes() -> Vec<u8> {
-    vec![0x42, 0x4d, 0x3a, 0, 0, 0, 0, 0, 0, 0, 0x36, 0, 0, 0, 0x28, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0]
-}
-pub fn demo_bmp_bytes() -> Vec<u8> {
-    let mut bytes = vec![0; 78];
-    bytes[..2].copy_from_slice(&BMP_MAGIC);
-    bytes[2..6].copy_from_slice(&78u32.to_le_bytes());
-    bytes[10..14].copy_from_slice(&54u32.to_le_bytes());
-    bytes[14..18].copy_from_slice(&BITMAPINFOHEADER_SIZE.to_le_bytes());
-    bytes[18..22].copy_from_slice(&4i32.to_le_bytes());
-    bytes[22..26].copy_from_slice(&2i32.to_le_bytes());
-    bytes[26..28].copy_from_slice(&1u16.to_le_bytes());
-    bytes[28..30].copy_from_slice(&24u16.to_le_bytes());
-    bytes[34..38].copy_from_slice(&24u32.to_le_bytes());
-    bytes[38..42].copy_from_slice(&2835i32.to_le_bytes());
-    bytes[42..46].copy_from_slice(&2835i32.to_le_bytes());
-    bytes[54..].copy_from_slice(&[255, 255, 0, 255, 0, 255, 255, 255, 255, 128, 128, 128, 0, 0, 255, 0, 255, 0, 255, 0, 0, 0, 255, 255]);
-    bytes
-}
-
-fn range<'a>(bytes: &'a [u8], offset: usize, len: usize, name: &str) -> Result<&'a [u8], String> {
-    bytes.get(offset..offset.checked_add(len).ok_or_else(|| format!("bmp: {name} range overflow"))?).ok_or_else(|| format!("bmp: truncated {name}"))
-}
-
-fn checked_row_geometry(width: u32, bits_per_pixel: u16) -> Result<(usize, usize), String> {
-    let row_bits = u64::from(width).checked_mul(u64::from(bits_per_pixel)).ok_or_else(|| "bmp: row bit count overflow".to_string())?;
-    let row_stride = row_bits.checked_add(31).ok_or_else(|| "bmp: row alignment overflow".to_string())? / 32 * 4;
-    let row_payload = row_bits.checked_add(7).ok_or_else(|| "bmp: row payload overflow".to_string())? / 8;
-    Ok((usize::try_from(row_stride).map_err(|_| "bmp: row stride exceeds address space")?, usize::try_from(row_payload).map_err(|_| "bmp: row payload exceeds address space")?))
-}
-
-pub(crate) fn row_bytes(width: u32, bits_per_pixel: u16) -> usize {
-    checked_row_geometry(width, bits_per_pixel).expect("bounded BMP row geometry").0
-}
-
-pub fn bmp_layout(snapshot: &BmpSnapshot) -> Result<BmpLayout, String> {
-    if snapshot.schema != STDIO_BMP_DOCUMENT_SCHEMA {
-        return Err(format!("bmp: schema must be {STDIO_BMP_DOCUMENT_SCHEMA}"));
-    }
-    bmp_layout_bytes(&snapshot.bytes)
+    pub profile: BmpProfile, pub file_size: u32, pub reserved_1: u16, pub reserved_2: u16, pub data_offset: usize,
+    pub width: u32, pub height: u32, pub row_order: BmpRowOrder, pub planes: u16, pub bits_per_pixel: u16, pub compression: u32,
+    pub image_size: u32, pub x_pixels_per_meter: i32, pub y_pixels_per_meter: i32, pub colors_used: u32, pub colors_important: u32,
+    pub masks: [u32; 4], pub palette_offset: usize, pub palette_entries: usize, pub metadata_end: usize, pub row_stride: usize,
+    pub row_payload: usize, pub pixel_bytes: usize, pub pixel_end: usize,
 }
 
 #[path = "🧩️layout/🦀️.rs"]
 pub(crate) mod layout;
 
-/// 📐️ Exposes the canonical borrowed layout grammar at the ordinary native message terminal.
-pub fn bmp_layout_bytes(bytes: &[u8]) -> Result<BmpLayout, String> {
-    layout::inspect(bytes).map_err(|failure| failure.to_string())
+fn range<'a>(bytes: &'a [u8], offset: usize, len: usize, name: &str) -> Result<&'a [u8], String> { bytes.get(offset..offset.checked_add(len).ok_or("bmp: native range overflow")?).ok_or_else(|| format!("bmp: truncated {name}")) }
+fn checked_row_geometry(width: u32, bits_per_pixel: u16) -> Result<(usize, usize), String> { let bits = (width as usize).checked_mul(bits_per_pixel as usize).ok_or("bmp: native row extent overflow")?; Ok((bits.div_ceil(32).checked_mul(4).ok_or("bmp: native row stride overflow")?, bits.div_ceil(8))) }
+pub(crate) fn row_bytes(width: u32, bits_per_pixel: u16) -> usize { checked_row_geometry(width, bits_per_pixel).expect("admitted native row").0 }
+pub fn bmp_layout_bytes(bytes: &[u8]) -> Result<BmpLayout, String> { layout::inspect(bytes).map_err(|failure| failure.to_string()) }
+pub fn bmp_layout(snapshot: &BmpSnapshot) -> Result<BmpLayout, String> { bmp_layout_bytes(&encode_bmp(snapshot)?) }
+fn source_row(layout: &BmpLayout, y: usize) -> usize { match layout.row_order { BmpRowOrder::TopDown => y, BmpRowOrder::BottomUp => layout.height as usize - 1 - y } }
+fn packed_index(row: &[u8], x: usize, depth: u16) -> u8 { match depth { 1 => row[x / 8] >> (7 - x % 8) & 1, 4 => row[x / 2] >> (if x % 2 == 0 { 4 } else { 0 }) & 15, _ => row[x] } }
+fn component(word: u32, mask: u32) -> u32 { if mask == 0 { 0 } else { (word & mask) >> mask.trailing_zeros() } }
+
+pub fn decode_bmp(bytes:&[u8])->Result<BmpSnapshot,String> {let mut progress=|_|true;let mut control=NativeDecodeControl::new(512*1024*1024,&mut progress);decode_bmp_controlled(bytes,&mut control).map_err(ValueError::into_message)}
+
+pub fn decode_bmp_controlled(bytes:&[u8],control:&mut NativeDecodeControl<'_>)->Result<BmpSnapshot,ValueError> {
+    let layout = bmp_layout_bytes(bytes).map_err(native_invalid)?;
+    let mut palette=control.allocate_vec(layout.palette_entries)?;control.begin_stage(layout.palette_entries)?;
+    for index in 0..layout.palette_entries {let offset=layout.palette_offset+index*4;let entry=&bytes[offset..offset+4];palette.push(BmpPaletteEntry {b:entry[0],g:entry[1],r:entry[2],reserved:entry[3]});control.step()?;}
+    let masks = if layout.profile == BmpProfile::DirectRgb24 { [0xff0000, 0xff00, 0xff, 0] } else { layout.masks };
+    let count = (layout.width as usize).checked_mul(layout.height as usize).ok_or_else(||native_invalid("bmp: native sample count overflow"))?;
+    let pixels = if layout.profile.is_indexed() {
+        let mut indices=control.allocate_vec(count)?;control.begin_stage(count)?;
+        for y in 0..layout.height as usize { let row = range(bytes, layout.data_offset + source_row(&layout, y) * layout.row_stride, layout.row_payload, "indexed row").map_err(native_invalid)?; for x in 0..layout.width as usize { let index=packed_index(row,x,layout.bits_per_pixel);if usize::from(index)>=palette.len() {return Err(native_invalid("bmp: native palette index is absent"));}indices.push(index);control.step()?; } }
+        BmpPixels::Indexed { indices }
+    } else {
+        let mut samples=control.allocate_vec(count)?;control.begin_stage(count)?;
+        let assigned = masks.iter().fold(0, |assigned, mask| assigned | mask);
+        let size = layout.bits_per_pixel as usize / 8;
+        for y in 0..layout.height as usize { let row = range(bytes, layout.data_offset + source_row(&layout, y) * layout.row_stride, layout.row_payload, "direct row").map_err(native_invalid)?; for x in 0..layout.width as usize {
+            let lane = &row[x * size..(x + 1) * size];
+            let mut word = 0u32; for (index, byte) in lane.iter().enumerate() { word |= u32::from(*byte) << (index * 8); }
+            samples.push(BmpNativeSample { red: component(word, masks[0]), green: component(word, masks[1]), blue: component(word, masks[2]), alpha: component(word, masks[3]), reserved: word & !assigned });control.step()?;
+        } }
+        BmpPixels::Direct { samples }
+    };
+    let snapshot = BmpSnapshot { schema:control.copy_text(STDIO_BMP_DOCUMENT_SCHEMA)?, image: BmpImage { width: layout.width, height: layout.height, row_order: layout.row_order, profile: layout.profile, masks, palette, pixels, x_pixels_per_meter: layout.x_pixels_per_meter, y_pixels_per_meter: layout.y_pixels_per_meter, colors_used: layout.colors_used, colors_important: layout.colors_important, reserved_1: layout.reserved_1, reserved_2: layout.reserved_2, opaque_gap: control.copy_bytes(&bytes[layout.metadata_end..layout.data_offset])?, opaque_trailer: control.copy_bytes(&bytes[layout.pixel_end..])? } };
+    snapshot.image.validate_header().map_err(native_invalid)?;
+    Ok(snapshot)
 }
 
-pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
-    bmp_layout_bytes(bytes)?;
-    Ok(BmpSnapshot { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
-}
+pub fn encode_bmp(snapshot:&BmpSnapshot)->Result<Vec<u8>,String> {let mut progress=|_|true;let mut control=NativeEncodeControl::new(512*1024*1024,&mut progress);encode_bmp_controlled(snapshot,&mut control).map_err(ValueError::into_message)}
 
-pub fn bmp_direct_rgb24_from_rgba8(width: u32, height: u32, rgba8: &[u8], x_pixels_per_meter: i32, y_pixels_per_meter: i32) -> Result<BmpSnapshot, String> {
-    if (width == 0) != (height == 0) {
-        return Err("bmp: empty dimensions must both be zero".into());
-    }
-    if width > i32::MAX as u32 || height > i32::MAX as u32 {
-        return Err("bmp: dimensions exceed the signed BITMAPINFOHEADER range".into());
-    }
-    let pixel_count = usize::try_from(width)
-        .map_err(|_| "bmp: width exceeds address space")?
-        .checked_mul(usize::try_from(height).map_err(|_| "bmp: height exceeds address space")?)
-        .ok_or_else(|| "bmp: pixel count overflow".to_string())?;
-    let expected = pixel_count.checked_mul(4).ok_or_else(|| "bmp: RGBA8 byte count overflow".to_string())?;
-    if rgba8.len() != expected {
-        return Err(format!("bmp: RGBA8 source has {} bytes; expected {expected}", rgba8.len()));
-    }
-    if rgba8.chunks_exact(4).any(|pixel| pixel[3] != 255) {
-        return Err("bmp: Direct RGB24 cannot represent nonopaque RGBA8 pixels".into());
-    }
-    let (row_stride, _) = checked_row_geometry(width, 24)?;
-    let pixel_bytes = row_stride.checked_mul(height as usize).ok_or_else(|| "bmp: pixel storage length overflow".to_string())?;
-    let file_len = 54usize.checked_add(pixel_bytes).ok_or_else(|| "bmp: file length overflow".to_string())?;
-    let file_size = u32::try_from(file_len).map_err(|_| "bmp: file exceeds v3 file-size field")?;
-    let image_size = u32::try_from(pixel_bytes).map_err(|_| "bmp: pixel storage exceeds v3 image-size field")?;
-    let mut bytes = vec![0; file_len];
+pub fn encode_bmp_controlled(snapshot:&BmpSnapshot,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError> {
+    if snapshot.schema!=STDIO_BMP_DOCUMENT_SCHEMA {return Err(native_invalid("bmp: undeclared semantic schema"));}snapshot.image.validate_header().map_err(native_invalid)?;
+    let image = &snapshot.image;
+    let depth = image.profile.bits_per_pixel();
+    let (stride, _) = checked_row_geometry(image.width,depth).map_err(native_invalid)?;
+    let mask_bytes = if image.profile.bitfields() { 12 } else { 0 };
+    let offset = 54usize.checked_add(mask_bytes).and_then(|n| n.checked_add(image.palette.len().checked_mul(4)?)).and_then(|n| n.checked_add(image.opaque_gap.len())).ok_or_else(||native_invalid("bmp: metadata extent overflow"))?;
+    let pixels_extent = stride.checked_mul(image.height as usize).ok_or_else(||native_invalid("bmp: native raster extent overflow"))?;
+    let total = offset.checked_add(pixels_extent).and_then(|n| n.checked_add(image.opaque_trailer.len())).ok_or_else(||native_invalid("bmp: native file extent overflow"))?;
+    let mut bytes=control.allocate_vec(total)?;control.begin_stage(total)?;while bytes.len()<total {let added=(total-bytes.len()).min(256);bytes.resize(bytes.len()+added,0);control.advance(added)?;}
     bytes[..2].copy_from_slice(&BMP_MAGIC);
-    bytes[2..6].copy_from_slice(&file_size.to_le_bytes());
-    bytes[10..14].copy_from_slice(&54u32.to_le_bytes());
-    bytes[14..18].copy_from_slice(&BITMAPINFOHEADER_SIZE.to_le_bytes());
-    bytes[18..22].copy_from_slice(&(width as i32).to_le_bytes());
-    bytes[22..26].copy_from_slice(&(height as i32).to_le_bytes());
-    bytes[26..28].copy_from_slice(&1u16.to_le_bytes());
-    bytes[28..30].copy_from_slice(&24u16.to_le_bytes());
-    bytes[30..34].copy_from_slice(&BI_RGB.to_le_bytes());
-    bytes[34..38].copy_from_slice(&image_size.to_le_bytes());
-    bytes[38..42].copy_from_slice(&x_pixels_per_meter.to_le_bytes());
-    bytes[42..46].copy_from_slice(&y_pixels_per_meter.to_le_bytes());
-    let width = width as usize;
-    for y in 0..height as usize {
-        let source_row = y * width * 4;
-        let destination_row = 54 + (height as usize - 1 - y) * row_stride;
-        for x in 0..width {
-            let source = source_row + x * 4;
-            let destination = destination_row + x * 3;
-            bytes[destination..destination + 3].copy_from_slice(&[rgba8[source + 2], rgba8[source + 1], rgba8[source]]);
-        }
+    bytes[2..6].copy_from_slice(&u32::try_from(total).map_err(|_|native_invalid("bmp: native file exceeds v3 limits"))?.to_le_bytes());
+    bytes[6..8].copy_from_slice(&image.reserved_1.to_le_bytes()); bytes[8..10].copy_from_slice(&image.reserved_2.to_le_bytes());
+    bytes[10..14].copy_from_slice(&u32::try_from(offset).map_err(|_|native_invalid("bmp: native offset exceeds v3 limits"))?.to_le_bytes());
+    bytes[14..18].copy_from_slice(&BITMAPINFOHEADER_SIZE.to_le_bytes()); bytes[18..22].copy_from_slice(&(image.width as i32).to_le_bytes());
+    let height = if image.row_order == BmpRowOrder::TopDown { -(image.height as i32) } else { image.height as i32 };
+    bytes[22..26].copy_from_slice(&height.to_le_bytes()); bytes[26..28].copy_from_slice(&1u16.to_le_bytes()); bytes[28..30].copy_from_slice(&depth.to_le_bytes());
+    bytes[30..34].copy_from_slice(&(if image.profile.bitfields() { BI_BITFIELDS } else { BI_RGB }).to_le_bytes());
+    bytes[34..38].copy_from_slice(&u32::try_from(pixels_extent).map_err(|_|native_invalid("bmp: native raster exceeds v3 limits"))?.to_le_bytes());
+    bytes[38..42].copy_from_slice(&image.x_pixels_per_meter.to_le_bytes()); bytes[42..46].copy_from_slice(&image.y_pixels_per_meter.to_le_bytes());
+    bytes[46..50].copy_from_slice(&image.colors_used.to_le_bytes()); bytes[50..54].copy_from_slice(&image.colors_important.to_le_bytes());
+    let mut cursor = 54;
+    if image.profile.bitfields() { for mask in &image.masks[..3] { bytes[cursor..cursor + 4].copy_from_slice(&mask.to_le_bytes()); cursor += 4; } }
+    control.begin_stage(image.palette.len())?;
+    for entry in &image.palette { bytes[cursor..cursor + 4].copy_from_slice(&[entry.b, entry.g, entry.r, entry.reserved]); cursor += 4;control.step()?; }
+    control.begin_stage(image.opaque_gap.len())?;for (index,piece) in image.opaque_gap.chunks(256).enumerate() {let start=cursor+index*256;bytes[start..start+piece.len()].copy_from_slice(piece);control.advance(piece.len())?;}
+    control.begin_stage(image.width as usize*image.height as usize)?;
+    for y in 0..image.height as usize {
+        let source = y * image.width as usize;
+        let destination = offset + (if image.row_order == BmpRowOrder::TopDown { y } else { image.height as usize - 1 - y }) * stride;
+        for x in 0..image.width as usize {image.validate_sample(source+x).map_err(native_invalid)?;match &image.pixels {
+            BmpPixels::Indexed { indices } => { let index = indices[source + x]; match depth { 1 => bytes[destination + x / 8] |= index << (7 - x % 8), 4 => bytes[destination + x / 2] |= index << (if x % 2 == 0 { 4 } else { 0 }), _ => bytes[destination + x] = index } }
+            BmpPixels::Direct { samples } => { let sample = samples[source + x]; let mut word = sample.reserved; for (value, mask) in [sample.red, sample.green, sample.blue, sample.alpha].into_iter().zip(image.masks) { if mask != 0 { word |= value << mask.trailing_zeros(); } } let size = depth as usize / 8; bytes[destination + x * size..destination + (x + 1) * size].copy_from_slice(&word.to_le_bytes()[..size]); }
+        }control.step()?; }
     }
-    decode_bmp(&bytes)
+    control.begin_stage(image.opaque_trailer.len())?;for (index,piece) in image.opaque_trailer.chunks(256).enumerate() {let start=offset+pixels_extent+index*256;bytes[start..start+piece.len()].copy_from_slice(piece);control.advance(piece.len())?;}
+    Ok(bytes)
 }
 
-pub fn encode_bmp(snapshot: &BmpSnapshot) -> Result<Vec<u8>, String> {
-    bmp_layout(snapshot)?;
-    Ok(snapshot.bytes.clone())
+pub fn empty_bmp_bytes() -> Vec<u8> { encode_bmp(&BmpSnapshot::default()).expect("owned default BMP") }
+pub fn demo_bmp_bytes() -> Vec<u8> { encode_bmp(&crate::schema::demo_bmp_snapshot()).expect("owned demo BMP") }
+pub fn bmp_direct_rgb24_from_rgba8(width: u32, height: u32, rgba8: &[u8], x_pixels_per_meter: i32, y_pixels_per_meter: i32) -> Result<BmpSnapshot, String> {
+    let count = (width as usize).checked_mul(height as usize).and_then(|n| n.checked_mul(4)).ok_or("bmp: RGBA source extent overflow")?;
+    if count != rgba8.len() {return Err(format!("bmp: RGBA source expected {count} bytes"));}if rgba8.chunks_exact(4).any(|sample|sample[3]!=255) {return Err("bmp: RGB24 cannot represent nonopaque samples".into());}
+    let image = BmpImage { width, height, x_pixels_per_meter, y_pixels_per_meter, pixels: BmpPixels::Direct { samples: rgba8.chunks_exact(4).map(|sample| BmpNativeSample { red: sample[0].into(), green: sample[1].into(), blue: sample[2].into(), alpha: 0, reserved: 0 }).collect() }, ..BmpImage::default() };
+    let snapshot = BmpSnapshot { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), image }; snapshot.validate()?; Ok(snapshot)
 }
-
-pub fn bmp_palette(snapshot: &BmpSnapshot) -> Result<Vec<BmpPaletteEntry>, String> {
-    let layout = bmp_layout(snapshot)?;
-    (0..layout.palette_entries)
-        .map(|index| {
-            let offset = layout.palette_offset + index * 4;
-            let entry = range(&snapshot.bytes, offset, 4, "palette entry")?;
-            Ok(BmpPaletteEntry { b: entry[0], g: entry[1], r: entry[2], reserved: entry[3] })
-        })
-        .collect()
-}
-
-fn mask_shift_width(mask: u32) -> (u32, u32) {
-    if mask == 0 {
-        return (0, 0);
-    }
-    (mask.trailing_zeros(), (mask >> mask.trailing_zeros()).trailing_ones())
-}
-
-fn extract_channel(raw: u32, mask: u32) -> u8 {
-    let (shift, width) = mask_shift_width(mask);
-    if width == 0 {
-        return 255;
-    }
-    let value = (raw & mask) >> shift;
-    let maximum = if width == 32 { u32::MAX } else { (1u32 << width) - 1 };
-    ((u64::from(value) * 255 + u64::from(maximum) / 2) / u64::from(maximum)) as u8
-}
-
-fn packed_index(row: &[u8], x: usize, bits_per_pixel: u16) -> usize {
-    match bits_per_pixel {
-        1 => ((row[x / 8] >> (7 - x % 8)) & 1) as usize,
-        4 => {
-            if x.is_multiple_of(2) {
-                (row[x / 2] >> 4) as usize
-            } else {
-                (row[x / 2] & 15) as usize
-            }
-        }
-        8 => row[x] as usize,
-        _ => unreachable!("checked indexed profile"),
-    }
-}
-
-fn source_row(layout: &BmpLayout, y: usize) -> usize {
-    match layout.row_order {
-        BmpRowOrder::TopDown => y,
-        BmpRowOrder::BottomUp => layout.height as usize - 1 - y,
-    }
-}
-
-pub fn bmp_rgba8_preview(snapshot: &BmpSnapshot) -> Result<Vec<u8>, String> {
-    let layout = bmp_layout(snapshot)?;
-    let palette = bmp_palette(snapshot)?;
-    let pixel_count = (layout.width as usize).checked_mul(layout.height as usize).ok_or_else(|| "bmp: preview pixel count overflow".to_string())?;
-    let mut rgba = vec![0; pixel_count.checked_mul(4).ok_or_else(|| "bmp: preview byte count overflow".to_string())?];
-    for y in 0..layout.height as usize {
-        let row_offset = layout.data_offset + source_row(&layout, y) * layout.row_stride;
-        let row = range(&snapshot.bytes, row_offset, layout.row_payload, "pixel row")?;
-        for x in 0..layout.width as usize {
-            let output = (y * layout.width as usize + x) * 4;
-            let color = if layout.profile.is_indexed() {
-                let index = packed_index(row, x, layout.bits_per_pixel);
-                let entry = palette.get(index).ok_or_else(|| format!("bmp: pixel ({x},{y}) references absent palette index {index}"))?;
-                BmpColor { red: entry.r, green: entry.g, blue: entry.b, alpha: 255 }
-            } else {
-                match layout.profile {
-                    BmpProfile::DirectRgb24 => {
-                        let offset = x * 3;
-                        BmpColor { red: row[offset + 2], green: row[offset + 1], blue: row[offset], alpha: 255 }
-                    }
-                    BmpProfile::DirectRgb32 => {
-                        let offset = x * 4;
-                        BmpColor { red: row[offset + 2], green: row[offset + 1], blue: row[offset], alpha: 255 }
-                    }
-                    _ => {
-                        let bytes_per_sample = layout.bits_per_pixel as usize / 8;
-                        let offset = x * bytes_per_sample;
-                        let raw = if bytes_per_sample == 2 { u32::from(u16::from_le_bytes([row[offset], row[offset + 1]])) } else { u32::from_le_bytes([row[offset], row[offset + 1], row[offset + 2], row[offset + 3]]) };
-                        BmpColor {
-                            red: extract_channel(raw, layout.masks[0]),
-                            green: extract_channel(raw, layout.masks[1]),
-                            blue: extract_channel(raw, layout.masks[2]),
-                            alpha: if layout.masks[3] == 0 { 255 } else { extract_channel(raw, layout.masks[3]) },
-                        }
-                    }
-                }
-            };
-            rgba[output..output + 4].copy_from_slice(&[color.red, color.green, color.blue, color.alpha]);
-        }
-    }
-    Ok(rgba)
-}
-
 pub fn bmp_png_preview(snapshot: &BmpSnapshot) -> Result<BmpPngPreview, String> {
-    const MAX_RGBA_BYTES: usize = 64 * 1024 * 1024;
-    let layout = bmp_layout(snapshot)?;
-    let rgba_bytes = usize::try_from(layout.width)
-        .map_err(|_| "bmp: preview width exceeds address space")?
-        .checked_mul(usize::try_from(layout.height).map_err(|_| "bmp: preview height exceeds address space")?)
-        .and_then(|pixels| pixels.checked_mul(4))
-        .ok_or_else(|| "bmp: preview byte count overflow".to_string())?;
-    if rgba_bytes > MAX_RGBA_BYTES {
-        return Err(format!("bmp: preview needs {rgba_bytes} RGBA bytes, above the {MAX_RGBA_BYTES}-byte display limit"));
-    }
-    let pixels = bmp_rgba8_preview(snapshot)?;
-    let bytes = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: layout.width, height: layout.height, pixels }).map_err(|failure| failure.to_string())?;
-    Ok(BmpPngPreview { width: layout.width, height: layout.height, bytes })
+    let pixels = crate::schema::operations::bmp_rgba8_preview(snapshot)?;
+    let width = snapshot.image.width; let height = snapshot.image.height;
+    if pixels.len() > 64 * 1024 * 1024 { return Err("bmp: preview exceeds display ownership limit".into()); }
+    let bytes = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width, height, pixels }).map_err(|failure| failure.to_string())?;
+    Ok(BmpPngPreview { width, height, bytes })
 }
 
-pub fn bmp_revision(snapshot: &BmpSnapshot) -> String {
-    let mut hash = 0xcbf29ce484222325u64;
-    for byte in snapshot.schema.as_bytes().iter().chain(snapshot.bytes.iter()) {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
-    }
-    format!("{hash:016x}")
-}
-
-fn checked_region(layout: &BmpLayout, region: BmpRegion) -> Result<(), String> {
-    if region.width == 0 || region.height == 0 {
-        return Err("bmp: paint region must be nonempty".into());
-    }
-    let end_x = region.x.checked_add(region.width).ok_or_else(|| "bmp: region x overflow".to_string())?;
-    let end_y = region.y.checked_add(region.height).ok_or_else(|| "bmp: region y overflow".to_string())?;
-    if end_x > layout.width || end_y > layout.height {
-        return Err(format!("bmp: paint region {region:?} exceeds {}x{} image", layout.width, layout.height));
-    }
-    Ok(())
-}
-
-fn require_revision(snapshot: &BmpSnapshot, revision: &str) -> Result<(), String> {
-    let actual = bmp_revision(snapshot);
-    if revision != actual {
-        return Err(format!("bmp: stale bitmap revision {revision}; expected {actual}"));
-    }
-    Ok(())
-}
-
-pub fn paint_indexed_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, palette_index: u8, progress: &mut dyn FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
-    require_revision(snapshot, revision)?;
-    let layout = bmp_layout(snapshot)?;
-    if !layout.profile.is_indexed() {
-        return Err("bmp: indexed paint requires a 1-, 4-, or 8-bit indexed profile".into());
-    }
-    if usize::from(palette_index) >= layout.palette_entries || usize::from(palette_index) >= (1usize << layout.bits_per_pixel) {
-        return Err(format!("bmp: palette index {palette_index} is outside the checked palette"));
-    }
-    checked_region(&layout, region)?;
-    let total = region.height as usize;
-    let mut next = snapshot.clone();
-    for local_y in 0..region.height as usize {
-        if !progress(local_y, total) {
-            return Err("bmp: indexed paint cancelled".into());
-        }
-        let y = region.y as usize + local_y;
-        let row_offset = layout.data_offset + source_row(&layout, y) * layout.row_stride;
-        for x in region.x as usize..(region.x + region.width) as usize {
-            match layout.bits_per_pixel {
-                1 => {
-                    let byte = &mut next.bytes[row_offset + x / 8];
-                    let mask = 1 << (7 - x % 8);
-                    *byte = (*byte & !mask) | ((palette_index & 1) << (7 - x % 8));
-                }
-                4 => {
-                    let byte = &mut next.bytes[row_offset + x / 2];
-                    if x.is_multiple_of(2) {
-                        *byte = (*byte & 0x0f) | (palette_index << 4);
-                    } else {
-                        *byte = (*byte & 0xf0) | (palette_index & 0x0f);
-                    }
-                }
-                8 => next.bytes[row_offset + x] = palette_index,
-                _ => unreachable!("checked indexed profile"),
-            }
-        }
-    }
-    if !progress(total, total) {
-        return Err("bmp: indexed paint cancelled".into());
-    }
-    Ok(next)
-}
-
-fn pack_channel(value: u8, mask: u32) -> u32 {
-    let (shift, width) = mask_shift_width(mask);
-    if width == 0 {
-        return 0;
-    }
-    let maximum = if width == 32 { u32::MAX } else { (1u32 << width) - 1 };
-    ((((u64::from(value) * u64::from(maximum)) + 127) / 255) as u32) << shift
-}
-
-pub fn paint_direct_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, color: BmpColor, progress: &mut dyn FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
-    require_revision(snapshot, revision)?;
-    let layout = bmp_layout(snapshot)?;
-    if !layout.profile.is_direct() {
-        return Err("bmp: direct paint requires a direct-color profile".into());
-    }
-    checked_region(&layout, region)?;
-    let total = region.height as usize;
-    let mut next = snapshot.clone();
-    for local_y in 0..region.height as usize {
-        if !progress(local_y, total) {
-            return Err("bmp: direct paint cancelled".into());
-        }
-        let y = region.y as usize + local_y;
-        let row_offset = layout.data_offset + source_row(&layout, y) * layout.row_stride;
-        for x in region.x as usize..(region.x + region.width) as usize {
-            match layout.profile {
-                BmpProfile::DirectRgb24 => {
-                    let offset = row_offset + x * 3;
-                    next.bytes[offset..offset + 3].copy_from_slice(&[color.blue, color.green, color.red]);
-                }
-                BmpProfile::DirectRgb32 => {
-                    let offset = row_offset + x * 4;
-                    next.bytes[offset..offset + 3].copy_from_slice(&[color.blue, color.green, color.red]);
-                }
-                _ => {
-                    let bytes_per_sample = layout.bits_per_pixel as usize / 8;
-                    let offset = row_offset + x * bytes_per_sample;
-                    let mut raw = if bytes_per_sample == 2 { u32::from(u16::from_le_bytes([next.bytes[offset], next.bytes[offset + 1]])) } else { u32::from_le_bytes(next.bytes[offset..offset + 4].try_into().expect("checked sample")) };
-                    let edited_masks = layout.masks[0] | layout.masks[1] | layout.masks[2] | layout.masks[3];
-                    raw = (raw & !edited_masks) | pack_channel(color.red, layout.masks[0]) | pack_channel(color.green, layout.masks[1]) | pack_channel(color.blue, layout.masks[2]) | pack_channel(color.alpha, layout.masks[3]);
-                    if bytes_per_sample == 2 {
-                        next.bytes[offset..offset + 2].copy_from_slice(&(raw as u16).to_le_bytes());
-                    } else {
-                        next.bytes[offset..offset + 4].copy_from_slice(&raw.to_le_bytes());
-                    }
-                }
-            }
-        }
-    }
-    if !progress(total, total) {
-        return Err("bmp: direct paint cancelled".into());
-    }
-    Ok(next)
-}
-
-//#region 🔖️Register
-/// 🗂️ Registers codecs and the artifact schema descriptor.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     crate::io_registry::register();
     register_artifact_schema();
@@ -498,7 +171,7 @@ pub fn register() {
     register_pilot_languages();
     register_schema_specs();
     semio_framework_plugin::io::register_native_snapshot_codec(
-        semio_framework_plugin::Dialect { artifact_kind: "s.stdio.bmp", standard: semio_framework_plugin::StandardId("v3"), subset: semio_framework_plugin::SubsetId("*") },
+        semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.bmp", standard: semio_framework_artifact_reference::StandardId("v3"), subset: semio_framework_artifact_reference::SubsetId("*") },
         store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA),
     )
     .expect("static Stdio registration must be available and conflict-free");
@@ -682,7 +355,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::BmpSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.bmp` parts.
@@ -776,3 +449,7 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: BmpAnalyzer,
     composer: BmpComposer,
 );
+
+#[cfg(test)]
+#[path="🧪️tests/🧬️owned-native-oracle/🦀️.rs"]
+mod owned_native_oracle_tests;

@@ -108,10 +108,13 @@ export type InputDiagnosticV1 = Readonly<{
   params?: Readonly<Record<string, string>>;
 }>;
 
+/** 🧽️ Terminal refusal recovery: discard only the submitted draft, or retain it for correction. */
+export type InputDraftDispositionV1 = "discard" | "retain";
+
 export type InputOutcomeV1 =
   | Readonly<{ kind: "applied"; inputSeq: number; commit?: InputCommitReceiptV1 }>
   | Readonly<{ kind: "superseded"; inputSeq: number; by: number }>
-  | Readonly<{ kind: "refused"; inputSeq: number; reason: InputRefusalReasonV1; retryable: boolean; detail?: string; diagnostic?: InputDiagnosticV1 }>;
+  | Readonly<{ kind: "refused"; inputSeq: number; reason: InputRefusalReasonV1; retryable: boolean; detail?: string; diagnostic?: InputDiagnosticV1; draftDisposition?: InputDraftDispositionV1 }>;
 
 /** 🔁️ Whether a refusal is worth retrying unchanged: a full queue or a stale owner drains; a sealed instance,
  * an undeclared action or a read-only viewer never becomes admissible by waiting. */
@@ -185,7 +188,7 @@ export function inputDiagnosticV1(value: unknown): InputDiagnosticV1 | undefined
   return diagnostic;
 }
 
-export function inputRefusedV1(inputSeq: number, reason: InputRefusalReasonV1, detail?: string, diagnostic?: InputDiagnosticV1): InputOutcomeV1 {
+export function inputRefusedV1(inputSeq: number, reason: InputRefusalReasonV1, detail?: string, diagnostic?: InputDiagnosticV1, draftDisposition?: InputDraftDispositionV1): InputOutcomeV1 {
   return {
     kind: "refused",
     inputSeq,
@@ -193,6 +196,7 @@ export function inputRefusedV1(inputSeq: number, reason: InputRefusalReasonV1, d
     retryable: INPUT_REFUSAL_RETRYABLE_V1[reason],
     ...(detail === undefined ? {} : { detail }),
     ...(diagnostic === undefined ? {} : { diagnostic }),
+    ...(draftDisposition === undefined ? {} : { draftDisposition }),
   };
 }
 

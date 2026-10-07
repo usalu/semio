@@ -48,7 +48,7 @@
       }
     },
     "node": {
-      "$ref": "#/$defs/XmlNode",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json#/$defs/SvgNode",
       "x-semio-ui": {
         "role": "value",
         "label": {
@@ -64,122 +64,5 @@
       }
     }
   },
-  "$defs": {
-    "XmlNode": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "name"
-          ],
-          "properties": {
-            "kind": {
-              "const": "element"
-            },
-            "name": {
-              "type": "string"
-            },
-            "attrs": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/XmlAttr"
-              }
-            },
-            "children": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/XmlNode"
-              }
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "text"
-          ],
-          "properties": {
-            "kind": {
-              "const": "text"
-            },
-            "text": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "text"
-          ],
-          "properties": {
-            "kind": {
-              "const": "cData"
-            },
-            "text": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "text"
-          ],
-          "properties": {
-            "kind": {
-              "const": "comment"
-            },
-            "text": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "target",
-            "data"
-          ],
-          "properties": {
-            "kind": {
-              "const": "processingInstruction"
-            },
-            "target": {
-              "type": "string"
-            },
-            "data": {
-              "type": "string"
-            }
-          }
-        }
-      ]
-    },
-    "XmlAttr": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "value"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    }
-  }
+  "$defs": {}
 }

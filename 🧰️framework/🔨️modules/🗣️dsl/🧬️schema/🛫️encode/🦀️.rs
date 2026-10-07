@@ -179,8 +179,8 @@ impl EncodedRecord{
 impl Drop for EncodedRecord{fn drop(&mut self){if let Some(record)=self.record.take(){for value in record.fields.into_values(){retire_field(value);}}}}
 
 /// 📋️ Projects a borrowed collection with its exact item workload and partial-field retirement.
-pub fn project_list<T:DslField>(values:&[T],control:&mut NativeEncodeControl<'_>)->Result<Vec<FieldValue>,ValueError>{
-    control.scoped_stage(|control|{control.begin_stage(values.len())?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(values.len())?,|items:Vec<FieldValue>|{for item in items{retire_field(item);}});for value in values{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?);control.step()?;}Ok(output.take())})
+pub fn project_list<T:DslField,C:super::DslSequenceView<T>+?Sized>(values:&C,control:&mut NativeEncodeControl<'_>)->Result<Vec<FieldValue>,ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(values.field_items().len())?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(values.field_items().len())?,|items:Vec<FieldValue>|{for item in items{retire_field(item);}});for value in values.field_items(){output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?);control.step()?;}Ok(output.take())})
 }
 
 /// 🗺️ Projects literal map keys and their typed values before materializing the physical map.
@@ -189,8 +189,8 @@ pub fn project_map<T:DslField>(values:&std::collections::BTreeMap<String,T>,cont
 }
 
 /// 🌿️ Projects tagged records with literal owner keywords and known collection progress.
-pub fn project_statements<T:DslVariants>(values:&[T],control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
-    control.scoped_stage(|control|{control.begin_stage(values.len())?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(values.len())?,|items:Vec<(String,RecordValue)>|{for(_,record)in items{for value in record.fields.into_values(){retire_field(value);}}});for value in values{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;value.to_named_record_controlled(control)})?);control.step()?;}Ok(FieldValue::Statements(output.take()))})
+pub fn project_statements<T:DslVariants,C:super::DslSequenceView<T>+?Sized>(values:&C,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(values.field_items().len())?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(values.field_items().len())?,|items:Vec<(String,RecordValue)>|{for(_,record)in items{for value in record.fields.into_values(){retire_field(value);}}});for value in values.field_items(){output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;value.to_named_record_controlled(control)})?);control.step()?;}Ok(FieldValue::Statements(output.take()))})
 }
 
 impl semio_framework_value::retirement::RetireOwned for RecordFields {

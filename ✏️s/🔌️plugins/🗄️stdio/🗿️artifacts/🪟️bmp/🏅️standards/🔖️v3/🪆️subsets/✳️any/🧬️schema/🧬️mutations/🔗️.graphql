@@ -1,4 +1,4 @@
-type PaintIndexedRegion {
+input PaintIndexedRegion {
   revision: String!
   x: Int!
   y: Int!
@@ -7,7 +7,7 @@ type PaintIndexedRegion {
   paletteIndex: Int!
 }
 
-type PaintDirectRegion {
+input PaintDirectRegion {
   revision: String!
   x: Int!
   y: Int!
@@ -18,3 +18,7 @@ type PaintDirectRegion {
   blue: Int!
   alpha: Int!
 }
+
+input SetSnapshotMutation { snapshot: BmpSnapshotInput! }
+input PatchSnapshotMutation { patch: SnapshotPatchInput! }
+input BmpMutation @oneOf { setSnapshot: SetSnapshotMutation patchSnapshot: PatchSnapshotMutation paintIndexedRegion: PaintIndexedRegion paintDirectRegion: PaintDirectRegion }

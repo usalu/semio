@@ -1,0 +1,84 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" verify
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts:
+[0m[32m✓[0m[0m[1m Count complete erased backing has a closed scratch diagnostic and incoming release contract[0m [0m[2m[[1m20.85ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m closed real Count lease contract selects complete native encodings and eight distinct compiled refusal owners[0m [0m[2m[0.46ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m independent SQLite validates every Count row for both encodings and exact dialect metadata[0m [0m[2m[6.05ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m independent UTF8 oracle preserves typed cause and every NUL diagnostic field without prose classification[0m [0m[2m[2.35ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m declared compiled refusal owner closes all i32 fields and eight exact dialect coordinates[0m [0m[2m[[1m244.93ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m published Count snapshot schema admits exactly the complete i32 owner[0m [0m[2m[[1m88.72ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m independent SQLite and closed neutral Count corpus preserve every stored field[0m [0m[2m[6.25ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🗒️note/🧪️tests/🧭️action-cohort/🟦️.ts:
+[0m[32m✓[0m[0m[1m Note source and fixture have one exact hostile census[0m [0m[2m[[1m17.88ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m hostile source rejects global ids, copied digests, and scan-then-monolith shells[0m [0m[2m[[1m13.62ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🟦️.ts:
+[DEBUG] Independent authored history oracle checked five restored-history actor transitions
+[0m[32m✓[0m[0m[1m restored history actor cases preserve authored names and distinguish foreign undo[0m [0m[2m[1.84ms[0m[2m][0m
+
+[0m[32m 10 pass[0m
+[0m[2m 0 fail[0m
+ 282 expect() calls
+Ran 10 tests across 3 files. [0m[2m[[1m715.00ms[0m[2m][0m
+[DEBUG] Plugin15 actual owner [0m[33m2[0m toolJobCooperativeMaintenanceSelfTests [0m[33m6[0m
+[DEBUG] Plugin15 actual owner [0m[33m5[0m canonicalDescriptorPackOracle [0m[33m2[0m
+codec caller source hostiles: 12 exact local omissions; await/global-trait/A/PA/Diff/impl/erased-slot guards; in-memory candidate only
+[0m[1m273 |[0m   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8")) as Fixture;
+[0m[1m274 |[0m   modelOracle(fixture)[0m[2m;[0m
+[0m[1m275 |[0m   [0m[35mconst[0m sources = Object[0m[3m[1m.fromEntries[0m(Object[0m[3m[1m.entries[0m(fixture.native.sources)[0m[3m[1m.map[0m(([name, path]) => [name, readFileSync(resolve(repoRoot, path), [0m[32m"utf8"[0m)])) [0m[34mas[0m Sources[0m[2m;[0m
+[0m[1m276 |[0m   hostileSources(fixture, sources)[0m[2m;[0m
+[0m[1m277 |[0m   [0m[35mconst[0m result = inspect(fixture, sources)[0m[2m;[0m
+[0m[1m278 |[0m   assert[0m[3m[1m.deepEqual[0m(result, { missing: [], problems: [] }, [0m[32m"actual Plugin codec qualification source boundary"[0m)[0m[2m;[0m
+               [31m[1m^[0m
+[0m[31mAssertionError[0m[2m:[0m [1mactual Plugin codec qualification source boundary
+[32m+ actual[39m [31m- expected[39m
+
+[39m  {
+[39m    missing: [],
+[32m+[39m   problems: [
+[32m+[39m     'builder.foreign:unexpected-header',
+[32m+[39m     'declaration.app-async:unexpected-header',
+[32m+[39m     'declaration.app:unexpected-header',
+[32m+[39m     'registration.app:unexpected-header',
+[32m+[39m     'spec.app-thunk:unexpected-header',
+[32m+[39m     'spec.app:unexpected-header',
+[32m+[39m     'spec.foreign-thunk:unexpected-header',
+[32m+[39m     'spec.foreign:unexpected-header'
+[32m+[39m   ]
+[31m-[39m   problems: []
+[39m  }
+[0m
+ generatedMessage[0m[2m:[0m [0m[33mfalse[0m[0m[2m,[0m
+     actual[0m[2m:[0m {
+  [0mmissing[2m:[0m [][0m[2m,[0m
+  [0mproblems[2m:[0m [ [0m[32m"builder.foreign:unexpected-header"[0m[0m[0m[2m,[0m
+    [0m[32m"declaration.app-async:unexpected-header"[0m[0m[0m[2m,[0m
+    [0m[32m"declaration.app:unexpected-header"[0m[0m[0m[2m,[0m [0m[32m"registration.app:unexpected-header"[0m[0m[0m[2m,[0m
+    [0m[32m"spec.app-thunk:unexpected-header"[0m[0m[0m[2m,[0m [0m[32m"spec.app:unexpected-header"[0m[0m[0m[2m,[0m
+    [0m[32m"spec.foreign-thunk:unexpected-header"[0m[0m[0m[2m,[0m [0m[32m"spec.foreign:unexpected-header"[0m[0m
+  ][0m[2m,[0m
+}[0m[2m,[0m
+   expected[0m[2m:[0m {
+  [0mmissing[2m:[0m [][0m[2m,[0m
+  [0mproblems[2m:[0m [][0m[2m,[0m
+}[0m[2m,[0m
+   operator[0m[2m:[0m [0m[32m"deepStrictEqual"[0m[0m[2m,[0m
+       code[0m[2m:[0m [32m"ERR_ASSERTION"[0m
+
+[0m      [2mat [0mtestPluginCodecCallerSource[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔣️codec-caller-source/🟦️.ts[0m[2m:[0m[33m278[0m[2m:[33m10[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" verify" exited with non-zero status code

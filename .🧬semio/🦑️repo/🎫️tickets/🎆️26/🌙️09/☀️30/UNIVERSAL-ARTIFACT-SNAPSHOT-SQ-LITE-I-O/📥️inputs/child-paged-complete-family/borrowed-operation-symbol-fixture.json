@@ -1,0 +1,20 @@
+{
+  "schema":"semio.operation.borrowed-paged-symbol-corpus.v1",
+  "symbols":[
+    {"source":0,"text":"z","repeat":1,"forced":false},
+    {"source":1,"text":"ä","repeat":1,"forced":false},
+    {"source":2,"text":"a","repeat":1,"forced":false},
+    {"source":3,"text":"a","repeat":1,"forced":false},
+    {"source":4,"text":"zero\u0000tail","repeat":1,"forced":false},
+    {"source":5,"text":"a","repeat":128,"forced":false},
+    {"source":6,"text":"b","repeat":129,"forced":false},
+    {"source":7,"text":"c","repeat":129,"forced":true},
+    {"source":8,"text":"d","repeat":129,"forced":false},
+    {"source":9,"text":"d","repeat":129,"forced":false}
+  ],
+  "expectedSourceOrder":[2,5,7,8,0,4,1],
+  "maximumRetirementItems":1,
+  "maximumRetirementBytes":4096,
+  "positiveMaximumAllocationBytes":65536,
+  "activation":false
+}

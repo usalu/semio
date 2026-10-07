@@ -18,7 +18,7 @@ use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ComponentTree;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::FaultCode;

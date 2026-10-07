@@ -7,7 +7,7 @@
 use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::graph::schema::mutations::{
     set_snapshot::SetSnapshot,
     add_node_port::AddNodePort, add_node_property::AddNodeProperty, change_node_kind::ChangeNodeKind, change_node_label::ChangeNodeLabel, create_edge::CreateEdge, create_node::CreateNode, delete_edge::DeleteEdge, delete_node::DeleteNode,
@@ -15,8 +15,8 @@ use crate::standards::v1::subsets::graph::schema::mutations::{
     set_node_property::SetNodeProperty, add_edge_property::AddEdgeProperty, remove_edge_property::RemoveEdgeProperty, set_edge_property::SetEdgeProperty,
 };
 use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort};
-use crate::value::io::text::diff::{dec_semio_value_entry};
-use crate::value::io::text::diff::{enc_semio_value_entry};
+use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value_entry};
+use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value_entry};
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 
 //#region 📖️SemioGrammar

@@ -22,7 +22,7 @@ fn native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio
 }
 fn uint(row:&SqliteRow,index:usize)->Result<u32,ValueError>{u32::try_from(row.integer(index)?).map_err(|e|invalid(e.to_string()))}
 fn literal_catalog(row:&SqliteRow,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot>,ValueError>{
- if row.integer(1)?!=1{return Err(invalid("Curation catalog has the wrong document owner"))}let child_id=native.copy_text(row.text(2)?)?;let artifact_id=native.copy_text(row.text(3)?)?;let artifact_kind=native.copy_text(row.text(4)?)?;let standard=native.copy_text(row.text(5)?)?;let subset=native.copy_text(row.text(6)?)?;Ok(store::ArtifactChild::new(child_id,store::io_schema::ArtifactRef{artifact_id,dialect:store::io_schema::ArtifactDialect{artifact_kind,standard,subset}}))
+ if row.integer(1)?!=1{return Err(invalid("Curation catalog has the wrong document owner"))}let child_id=native.copy_text(row.text(2)?)?;let artifact_id=native.copy_text(row.text(3)?)?;let artifact_kind=native.copy_text(row.text(4)?)?;let standard=native.copy_text(row.text(5)?)?;let subset=native.copy_text(row.text(6)?)?;Ok(store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))
 }
 impl ArtifactSqliteSnapshot for CurationSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");

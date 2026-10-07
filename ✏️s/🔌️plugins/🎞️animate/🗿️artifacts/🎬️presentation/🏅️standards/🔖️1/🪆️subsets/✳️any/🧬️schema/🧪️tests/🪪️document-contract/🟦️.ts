@@ -1,4 +1,5 @@
 /** 🧪️ Presentation document facets compose the shared presentation and animation child identities. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
@@ -15,7 +16,7 @@ import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json
 /** 🪆️ Compares first-party parsers with Ajv and every committed Presentation mutation document. */
 export function testPresentationDocumentContractOracle(): void {
   assertDocumentContractOracle({
-    name: "Presentation", dependencies: [ioSchema, childSchema],
+    name: "Presentation", dependencies: [ioSchema, childSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: parsePresentationArtifact },
     snapshot: { schema: snapshotSchema, parse: parsePresentationSnapshot },
     diff: { schema: diffSchema, parse: parsePresentationDiff },

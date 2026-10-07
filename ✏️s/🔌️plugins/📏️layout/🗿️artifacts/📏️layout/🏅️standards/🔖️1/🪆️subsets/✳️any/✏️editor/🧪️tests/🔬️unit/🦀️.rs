@@ -58,7 +58,7 @@ pub(crate) mod context {
     /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
     /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
     pub async fn layout_app_with_registry() -> LayoutApp {
-        let mut app = new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(INSTANCE).await;
         LayoutApp(app)
     }

@@ -492,10 +492,12 @@ pub enum TimeTravelRefusal {
     Blocked,
     /// 🫙️ `RequestFinalize` or `Rerun` with no accepted draft.
     Empty,
+    /// 🧾️ `Accept` needs a change against the current draft baseline.
+    Unchanged,
 }
 
 impl TimeTravelRefusal {
-    pub const ALL: [Self; 4] = [Self::Illegal, Self::Stale, Self::Blocked, Self::Empty];
+    pub const ALL: [Self; 5] = [Self::Illegal, Self::Stale, Self::Blocked, Self::Empty, Self::Unchanged];
 
     /// 🔖️ Fault code, e.g. `timeTravel.stale`.
     pub fn code(self) -> &'static str {
@@ -504,6 +506,7 @@ impl TimeTravelRefusal {
             Self::Stale => "timeTravel.stale",
             Self::Blocked => "timeTravel.blocked",
             Self::Empty => "timeTravel.empty",
+            Self::Unchanged => "timeTravel.unchanged",
         }
     }
 
@@ -518,6 +521,7 @@ impl TimeTravelRefusal {
             Self::Stale => TimeTravelLabel::RefusalStale,
             Self::Blocked => TimeTravelLabel::RefusalBlocked,
             Self::Empty => TimeTravelLabel::RefusalEmpty,
+            Self::Unchanged => TimeTravelLabel::RefusalUnchanged,
         }
     }
 }
@@ -554,6 +558,9 @@ impl TimeTravelSession {
             (S::Editing, E::Draft { replacement, .. }) => self.redraft(replacement),
             (S::Editing, E::Withdraw { .. }) => self.redraft(InputReplacement::Withdrawn),
             (S::Editing, E::Accept { .. }) => {
+                if let Some(refusal) = self.accept_refusal() {
+                    return Err(refusal);
+                }
                 let pending = self.pending.take().ok_or(TimeTravelRefusal::Illegal)?;
                 Ok(self.accept(pending))
             }
@@ -661,6 +668,15 @@ impl TimeTravelSession {
     /// 🟰️ Whether `pending` still equals the value it started from.
     pub fn unchanged(&self, pending: &TimeTravelPending) -> bool {
         pending.replacement == *self.start_of(pending)
+    }
+
+    /// 🧾️ Why `Accept` would be refused; an unchanged input keeps the draft open.
+    pub fn accept_refusal(&self) -> Option<TimeTravelRefusal> {
+        match (self.stage, self.pending.as_ref()) {
+            (TimeTravelStage::Editing, Some(pending)) if self.unchanged(pending) => Some(TimeTravelRefusal::Unchanged),
+            (TimeTravelStage::Editing, Some(_)) => None,
+            _ => Some(TimeTravelRefusal::Illegal),
+        }
     }
 
     /// 🚧️ Why `RequestFinalize` would be refused, `None` when it would open the prompt.
@@ -785,9 +801,6 @@ impl TimeTravelSession {
     }
 
     fn accept(&mut self, pending: TimeTravelPending) -> Vec<TimeTravelEffect> {
-        if self.unchanged(&pending) {
-            return self.resume(pending.return_stage);
-        }
         self.accepted.retain(|draft| draft.target.mutation != pending.target.mutation);
         if pending.replacement != pending.original {
             let draft = TimeTravelDraft { target: pending.target, replacement: pending.replacement };
@@ -850,12 +863,13 @@ impl TimeTravelSession {
 
 //#region 🔖️Labels
 /// 🗂️ Every `timeTravel.*` code a history-edit verb or driver answers, with the label a host shows for it.
-pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 20] = [
+pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 21] = [
     (TIME_TRAVEL_FROZEN_CODE, TimeTravelLabel::Frozen),
     ("timeTravel.illegal", TimeTravelLabel::RefusalIllegal),
     ("timeTravel.stale", TimeTravelLabel::RefusalStale),
     ("timeTravel.blocked", TimeTravelLabel::RefusalBlocked),
     ("timeTravel.empty", TimeTravelLabel::RefusalEmpty),
+    ("timeTravel.unchanged", TimeTravelLabel::RefusalUnchanged),
     (TIME_TRAVEL_CANCELLED_CODE, TimeTravelLabel::ReplayCancelled),
     (TIME_TRAVEL_BUSY_CODE, TimeTravelLabel::RefusalBusy),
     (TIME_TRAVEL_UNKNOWN_MUTATION_CODE, TimeTravelLabel::RefusalUnknownMutation),
@@ -886,6 +900,7 @@ pub enum TimeTravelLabel {
     RefusalStale,
     RefusalBlocked,
     RefusalEmpty,
+    RefusalUnchanged,
     Frozen,
     ChoiceOverwrite,
     ChoiceOverwriteDescription,
@@ -898,7 +913,10 @@ pub enum TimeTravelLabel {
     ReadyToFinalize,
     ReplayCancelled,
     ActionRerun,
+    PreparationProgress,
+    PreparationProgressValueText,
     ReplayProgressValueText,
+    Processed,
     RefusalBusy,
     RefusalUnknownMutation,
     RefusalNotEditable,
@@ -919,7 +937,7 @@ pub enum TimeTravelLabel {
 }
 
 impl TimeTravelLabel {
-    pub const ALL: [Self; 40] = [
+    pub const ALL: [Self; 44] = [
         Self::StageInactive,
         Self::StageEditing,
         Self::StageReplaying,
@@ -930,6 +948,7 @@ impl TimeTravelLabel {
         Self::RefusalStale,
         Self::RefusalBlocked,
         Self::RefusalEmpty,
+        Self::RefusalUnchanged,
         Self::Frozen,
         Self::ChoiceOverwrite,
         Self::ChoiceOverwriteDescription,
@@ -942,7 +961,10 @@ impl TimeTravelLabel {
         Self::ReadyToFinalize,
         Self::ReplayCancelled,
         Self::ActionRerun,
+        Self::PreparationProgress,
+        Self::PreparationProgressValueText,
         Self::ReplayProgressValueText,
+        Self::Processed,
         Self::RefusalBusy,
         Self::RefusalUnknownMutation,
         Self::RefusalNotEditable,
@@ -975,6 +997,7 @@ impl TimeTravelLabel {
             Self::RefusalStale => ("refusalStale", "Outdated request ignored", "Veraltete Anfrage ignoriert"),
             Self::RefusalBlocked => ("refusalBlocked", "Blocked: resolve the pending change or the errors first", "Blockiert: zuerst die offene Änderung oder die Fehler auflösen"),
             Self::RefusalEmpty => ("refusalEmpty", "Nothing to finalize: no accepted changes", "Nichts abzuschließen: keine übernommenen Änderungen"),
+            Self::RefusalUnchanged => ("refusalUnchanged", "Change an input before accepting", "Vor dem Übernehmen eine Eingabe ändern"),
             Self::Frozen => ("frozen", "Editing is paused while history is being edited", "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird"),
             Self::ChoiceOverwrite => ("choiceOverwrite", "Overwrite history", "Verlauf überschreiben"),
             Self::ChoiceOverwriteDescription => ("choiceOverwriteDescription", "Replaces the inputs in every alternative that contains these mutations", "Ersetzt die Eingaben in jeder Alternative, die diese Mutationen enthält"),
@@ -987,7 +1010,10 @@ impl TimeTravelLabel {
             Self::ReadyToFinalize => ("readyToFinalize", "Ready to finalize", "Bereit zum Abschließen"),
             Self::ReplayCancelled => ("replayCancelled", "Replay cancelled", "Neu anwenden abgebrochen"),
             Self::ActionRerun => ("actionRerun", "Replay again", "Erneut anwenden"),
+            Self::PreparationProgress => ("preparationProgress", "Preparing history preview", "Verlaufsvorschau wird vorbereitet"),
+            Self::PreparationProgressValueText => ("preparationProgressValueText", "Preparing history preview: {done} of {total} steps", "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten"),
             Self::ReplayProgressValueText => ("replayProgressValueText", "Replaying {done} of {total} mutations", "{done} von {total} Mutationen werden neu angewendet"),
+            Self::Processed => ("processed", "Work completed: {processed}", "Arbeitsfortschritt: {processed}"),
             Self::RefusalBusy => ("refusalBusy", "History editing is busy: finish the running tool or the other history edit first", "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"),
             Self::RefusalUnknownMutation => ("refusalUnknownMutation", "This mutation is no longer in the history", "Diese Mutation ist nicht mehr im Verlauf"),
             Self::RefusalNotEditable => ("refusalNotEditable", "The inputs of this mutation cannot be edited", "Die Eingaben dieser Mutation können nicht bearbeitet werden"),

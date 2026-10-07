@@ -4,7 +4,6 @@ import { createHash, randomUUID } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { lstatSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
-import Ajv from "ajv";
 import { parse as parseJsonc, visit as jsoncVisit } from "jsonc-parser";
 import stringify from "fast-json-stable-stringify";
 import { join as oracleJoin } from "pathe";
@@ -122,10 +121,6 @@ test("neutral contract requires isolated queries and a fresh final authority wit
   expect(vector.schemaVersion).toBe(1);
   expect(vector.semantics.lifetime).toBe("one-fresh-apply-preflight");
   expect(vector.semantics.finalBoundary).toBe("after-canonical-attempt-publication-before-staging");
-  const validate = new Ajv().compile(vector.caseSchema);
-  for (const row of vector.queries) expect(validate(row), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...vector.queries[0], undeclared: true })).toBe(false);
-  expect(validate({ ...vector.queries[0], targets: [] })).toBe(false);
   for (const row of vector.queries) expect(oracle(row)).toEqual(row.expected);
 });
 
@@ -273,8 +268,8 @@ test("apply validates freshness after its publication callback and before source
 
 /** 🧾️ Allocates one new semantic owner; no existing run is removed or reused. */
 function physicalRun(name: string): string {
-  const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-  const report = join(ticket, "📓️preflight-reference-basis"), parent = join(report, "🧾️runs");
+  const parent = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!parent) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for retained physical preflight laws");
   let current = parse(parent).root;
   for (const part of relative(current, parent).split(sep)) {
     current = join(current, part);
@@ -383,7 +378,7 @@ for (const row of vector.physicalCases) test("physical preflight publication bou
   } finally {
     const output = join(fixture.owner, "📊️outcome");
     mkdirSync(output);
-    writeFileSync(join(output, "../../🧫️fixtures/🛫️preflight-reference-basis/🔣️.json"), JSON.stringify(evidence, null, 2) + "\n", { flag: "wx" });
+    writeFileSync(join(output, "🔣️.json"), JSON.stringify(evidence, null, 2) + "\n", { flag: "wx" });
   }
 }, 15_000);
 

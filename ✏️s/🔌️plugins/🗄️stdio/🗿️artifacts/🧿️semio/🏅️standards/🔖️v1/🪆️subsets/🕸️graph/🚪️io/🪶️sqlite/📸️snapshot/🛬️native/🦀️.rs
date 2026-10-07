@@ -6,7 +6,17 @@ use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding a
 use crate::standards::v1::subsets::value::io::sqlite::snapshot::native_decoding as values;
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioGraphSnapshot,ValueError>{native::decode(payload,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,control,binary,document)}
+pub(crate) fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioGraphSnapshot,ValueError>{
+ let limits=control.limits();crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_layout(limits)?;
+ let size=match payload{store::os_io::IoPayload::Binary(value)=>value.len(),store::os_io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Graph native input exceeds file limit"))}
+ control.allocation_stage(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+  let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_control=NativeDecodeControl::new(remaining,&mut callback);
+  let result=(||->Result<SemioGraphSnapshot,ValueError>{let result=match payload{
+   store::os_io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,&mut native_control,limits)?},
+   store::os_io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
+  };let result=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();(result,native_control.owned_bytes())
+ })?
+}
 fn invalid(error:impl std::fmt::Display)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())}
 fn kind(tag:u8)->Result<SemioGraphPortKind,ValueError>{Ok(match tag{0=>SemioGraphPortKind::In,1=>SemioGraphPortKind::Out,2=>SemioGraphPortKind::InOut,_=>return Err(invalid("invalid Semio native port kind"))})}
 fn binary_properties(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<Vec<SemioValueEntry>,ValueError>{
@@ -15,6 +25,7 @@ fn binary_properties(reader:&mut store::ByteReader<'_>,control:&mut NativeDecode
 }
 fn binary_optional(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<Option<String>,ValueError>{match reader.read_u8().map_err(invalid)?{0=>Ok(None),1=>Ok(Some(native::text(reader,control)?)),_=>Err(invalid("invalid Semio optional text tag"))}}
 pub(crate) fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioGraphSnapshot,ValueError>{
+ crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_binary(body,control,limits)?;
  let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(invalid)?!=1{return Err(invalid("unsupported Semio graph native format"))}
  let schema=native::text(&mut reader,control)?;let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut nodes=native::Owned::new(control.allocate_vec::<SemioGraphNode>(count)?);
  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{
@@ -34,6 +45,7 @@ fn text_properties(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteD
  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{let(key,value)=item.split_once(':').ok_or_else(||invalid("Semio graph native property requires colon"))?;let key=native::hex_text(key,control)?;let value=values::value_text(value,control,limits,entities)?;properties.get_mut().push(SemioValueEntry{key,value});control.step()?;}Ok::<_,ValueError>(())})?;Ok(properties.take())
 }
 pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioGraphSnapshot,ValueError>{
+ crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_document(body,control,limits)?;
  let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","nodes","edges"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||invalid("Semio graph native schema missing"))?,control)?;
  let mut items=native::Items::new(fields[1].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut nodes=native::Owned::new(control.allocate_vec::<SemioGraphNode>(count)?);
  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{

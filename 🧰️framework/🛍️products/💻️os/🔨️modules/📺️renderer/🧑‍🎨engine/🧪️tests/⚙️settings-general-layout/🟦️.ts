@@ -2,7 +2,6 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 
 import { act, fireEvent, render } from "@testing-library/react";
 import { createElement as h, useState } from "react";
@@ -18,7 +17,6 @@ import { Tree } from "../../../../../../../🔨️modules/🖱️ui/🧱️eleme
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "⚙️settings-general-layout", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "⚙️settings-general-layout", "🔣️.json"), "utf8"));
 const stepperEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧫️fixtures", "⌨️number-stepper-editing", "🔣️.json"), "utf8"));
 const sliderEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧫️fixtures", "⌨️slider-readout-editing", "🔣️.json"), "utf8"));
 
@@ -218,10 +216,6 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
     }
   });
 
-  test("the language-neutral layout fixture satisfies its schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
 
   test("an independent upward-flow oracle reserves bottom tabs outside retained content", () => {
     expect(bottomGeometry(fixture.bottomPanel)).toEqual(fixture.bottomPanel.expected);

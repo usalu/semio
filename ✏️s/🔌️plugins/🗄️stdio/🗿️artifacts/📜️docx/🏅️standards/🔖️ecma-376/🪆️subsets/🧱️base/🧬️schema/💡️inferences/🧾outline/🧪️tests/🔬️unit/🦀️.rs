@@ -3,7 +3,7 @@ use crate::schema::snapshot::{DocxDocument, DocxTable, DocxTableCell, DocxTableR
 
 #[semio_framework_async_macros::async_test]
 async fn counts_paragraphs_tables_and_words_including_nested_cells() {
-    let snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(DocxDocument {
+    let snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![
             DocxBlock::paragraph("hello world"),
             DocxBlock::Table(DocxTable {

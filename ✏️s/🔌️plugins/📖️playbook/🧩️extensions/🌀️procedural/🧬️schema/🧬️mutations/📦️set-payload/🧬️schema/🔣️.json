@@ -25,7 +25,19 @@
             }
           }
         },
-        "params": {},
+        "params": {
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Parameters supplied to the procedural module.",
+              "de": "Parameter für das prozedurale Modul."
+            }
+          }
+        },
         "questionId": {
           "type": "string",
           "x-semio-ui": {

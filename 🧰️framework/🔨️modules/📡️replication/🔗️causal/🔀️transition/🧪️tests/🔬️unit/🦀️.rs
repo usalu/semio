@@ -606,3 +606,128 @@ fn supersession_values_round_trip() {
         assert_eq!(decoded, supersession);
     }
 }
+
+/// ⏳️ Neutral bounded-fold grants reproduce the complete semantic corpus and cancel without further fold work.
+#[test]
+fn bounded_history_fold_obeys_the_neutral_law() {
+    use semio_framework_value::ErasedSnapshotRetirement;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = supersede_fold_fixture();
+    let document = ArtifactId(fixture["documentId"].as_str().unwrap().into());
+    let edits: Vec<FoldEdit> = fixture["edits"].as_array().unwrap().iter().map(|row| FoldEdit { id: row["id"].as_str().unwrap().into(), actor: row["actor"].as_str().map(str::to_owned), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().unwrap(), logical: 0 }, mutation_ids: row["mutationIds"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), line: row["line"].as_str().map(str::to_owned) }).collect();
+    let transitions: Vec<crate::causal::MutationEnvelope> = fixture["steps"].as_array().unwrap().iter().filter(|row| row["kind"] == "transition").map(|row| fixture_step_envelope(&document, row)).collect();
+    let expected = fold_history(&document, &edits, &transitions, &none()).unwrap();
+    let input = std::sync::Arc::new((document, edits, transitions));
+    for bytes in law["byteGrants"].as_array().unwrap() {
+    for grant in law["workGrants"].as_array().unwrap() {
+        let grant = grant.as_u64().unwrap() as usize;
+        let captured = input.clone();
+        let mut job = HistoryFoldJob::new(move |control| async move { fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &none(), &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        let mut done = 0;
+        let mut result = None;
+        for _ in 0..100000 {
+            match job.step(grant, bytes.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                HistoryFoldJobStep::Pending { completed } => { assert!(completed >= done && completed-done <= grant as u64); done = completed; },
+                HistoryFoldJobStep::Ready(fold) => { result = Some(fold); break; },
+                HistoryFoldJobStep::Rejected(error) => panic!("bounded fold: {error:?}"),
+            }
+        }
+        assert_eq!(result.unwrap(), expected);
+        assert!(job.terminal_is_empty());
+    }
+    }
+    for cancelled_at in law["cancelAt"].as_array().unwrap() {
+        let captured = input.clone();
+        let mut job = HistoryFoldJob::new(move |control| async move { fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &none(), &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        for _ in 0..cancelled_at.as_u64().unwrap() { let _ = job.step(1, 7, &mut || false).unwrap(); }
+        let done = job.completed();
+        job.request_cancel();
+        let mut closed = false;
+        for _ in 0..100000 { if job.close_step(1, 7).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { closed = true; break; } }
+        assert!(closed && job.terminal_is_empty());
+        assert_eq!(job.completed(), done);
+    }
+    eprintln!("[DEBUG] Bounded fold preserves the neutral event semantics under grants1/2/7 and cancellation retires without executing more history");
+}
+
+/// 🔤️ Byte grants preserve every transition variant and UTF-8 refusal, including split scalars.
+#[test]
+fn bounded_history_transition_decoding_obeys_the_neutral_law() {
+    use semio_framework_value::ErasedSnapshotRetirement;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
+    let mut cases: Vec<(Vec<u8>, Result<HistoryTransition, crate::ProtocolError>)> = every_transition().into_iter().map(|transition| (encode_history_transition(&transition), Ok(transition))).collect();
+    for row in law["decodeCases"].as_array().unwrap() {
+        let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+        let expected = decode_history_transition(&bytes);
+        assert_eq!(expected.is_ok(), row["valid"].as_bool().unwrap());
+        if let Ok(HistoryTransition::Checkout { checkpoint_id, .. }) = &expected { assert_eq!(checkpoint_id, row["checkpoint"].as_str().unwrap()); }
+        cases.push((bytes, expected));
+    }
+    for (bytes, expected) in cases {
+        let bytes = std::sync::Arc::new(bytes);
+        for grant in law["byteGrants"].as_array().unwrap() {
+            let input = bytes.clone();
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_transition_controlled(&input, &control).await });
+            let mut actual = None;
+            for _ in 0..100000 {
+                match job.step(1, grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                    HistoryFoldJobStep::Pending { .. } => {},
+                    HistoryFoldJobStep::Ready(value) => { actual = Some(Ok(value)); break; },
+                    HistoryFoldJobStep::Rejected(error) => { actual = Some(Err(error)); break; },
+                }
+            }
+            let actual = actual.expect("decoder terminates under bounded grants");
+            assert_eq!(actual.is_ok(), expected.is_ok());
+            if let (Ok(actual), Ok(expected)) = (actual, &expected) { assert_eq!(&actual, expected); }
+            assert!(job.terminal_is_empty());
+        }
+    }
+    eprintln!("[DEBUG] Bounded transition decoder preserves all seven variants and neutral UTF-8/trailing refusals under byte grants1/7/4096");
+}
+
+/// 📦️ Quarantine decoding preserves opaque payloads and rejects flags/trailing bytes under the same granted neutral law.
+#[test]
+fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
+    use semio_framework_value::ErasedSnapshotRetirement;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
+    for row in law["envelopeCases"].as_array().unwrap() {
+        let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+        let mut position = 0;
+        let expected = crate::decode_envelope(&bytes, &mut position);
+        let valid = expected.is_ok() && position == bytes.len();
+        assert_eq!(valid, row["valid"].as_bool().unwrap());
+        if valid {
+            let value = expected.as_ref().unwrap();
+            assert_eq!(value.actor.0, row["actor"].as_str().unwrap());
+            assert_eq!(value.diff.payload.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), row["diffPayloadHex"].as_str().unwrap());
+        }
+        let source = std::sync::Arc::new(bytes);
+        for grant in law["byteGrants"].as_array().unwrap() {
+            let input = source.clone();
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
+            let mut outcome = None;
+            for _ in 0..100000 {
+                match job.step(1, grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                    HistoryFoldJobStep::Pending { .. } => {},
+                    HistoryFoldJobStep::Ready(value) => { outcome = Some(Ok(value)); break; },
+                    HistoryFoldJobStep::Rejected(error) => { outcome = Some(Err(error)); break; },
+                }
+            }
+            let outcome = outcome.expect("quarantine decoder terminates");
+            assert_eq!(outcome.is_ok(), valid);
+            if valid { assert_eq!(outcome.unwrap(), *expected.as_ref().unwrap()); }
+            assert!(job.terminal_is_empty());
+        }
+        for stop in law["cancelAt"].as_array().unwrap() {
+            let input = source.clone();
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
+            for _ in 0..stop.as_u64().unwrap() { let _ = job.step(1, 1, &mut || false).unwrap(); }
+            let completed = job.completed();
+            job.request_cancel();
+            for _ in 0..100000 { if job.close_step(1, 1).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { break; } }
+            assert!(job.terminal_is_empty());
+            assert_eq!(job.completed(), completed);
+        }
+    }
+    eprintln!("[DEBUG] Quarantined envelope decoder preserves exact payload bytes and UTF-8 under bounded grants, with terminal cancellation cleanup");
+}

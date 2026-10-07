@@ -1,6 +1,6 @@
 //! 🚫️ Direct text codec for `remove-display-doc-title`.
 
-use super::RemoveDisplayDocTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveDisplayDocTitle;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-display-doc-title";

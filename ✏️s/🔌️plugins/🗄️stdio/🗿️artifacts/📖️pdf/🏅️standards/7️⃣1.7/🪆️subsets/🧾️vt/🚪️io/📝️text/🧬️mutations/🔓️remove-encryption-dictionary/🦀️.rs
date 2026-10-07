@@ -1,6 +1,6 @@
 //! 🔓️ Direct text codec for `remove-encryption-dictionary`.
 
-use super::RemoveEncryptionDictionary;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveEncryptionDictionary;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-encryption-dictionary";

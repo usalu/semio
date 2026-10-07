@@ -362,7 +362,7 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
 /**
  * Input holds the data fields for a Input record.
  **/
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, onFocus, onBlur, onKeyDown, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const scalarInputValue = (value: string | number | readonly string[] | undefined): string | number => {
     if (typeof value === "number") return value;
@@ -412,7 +412,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (lazy) {
       setIsEditing(true);
     }
-    props.onFocus?.(e);
+    onFocus?.(e);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -422,16 +422,16 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       setIsEditing(false);
       if (skipLazyBlurCommitRef.current) {
         skipLazyBlurCommitRef.current = false;
-        props.onBlur?.(e);
+        onBlur?.(e);
         return;
       }
       onLazyChange?.(localValue);
     }
-    props.onBlur?.(e);
+    onBlur?.(e);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (lazy) {
+    if (lazy && !e.nativeEvent.isComposing) {
       if (e.key === "Enter") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
@@ -439,13 +439,14 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         onLazyChange?.(localValue);
         (e.target as HTMLInputElement).blur();
       } else if (e.key === "Escape") {
+        skipLazyBlurCommitRef.current = true;
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         setLocalValue(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
         (e.target as HTMLInputElement).blur();
       }
     }
-    props.onKeyDown?.(e);
+    onKeyDown?.(e);
   };
 
   const inputValue = lazy ? localValue : scalarInputValue(externalValue);

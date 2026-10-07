@@ -1,5 +1,5 @@
 /** 💬️ Canonical BCF topic and viewpoint domain. */
-import { binary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export interface BcfPoint3{readonly x:Binary64;readonly y:Binary64;readonly z:Binary64}
 export type BcfCamera=Readonly<{kind:"perspective";viewPoint:BcfPoint3;direction:BcfPoint3;upVector:BcfPoint3;fieldOfView:Binary64}>|Readonly<{kind:"orthogonal";viewPoint:BcfPoint3;direction:BcfPoint3;upVector:BcfPoint3;viewToWorldScale:Binary64}>;
@@ -41,8 +41,3 @@ export function parseBcfRawPart(value:unknown):BcfRawPart{const row=object(value
 function snapshot(value:unknown,camera:CameraParser):BcfSnapshot{const row=object(value);return{schema:text(row.schema),version:text(row.version??""),topics:array(row.topics??[],value=>topic(value,camera)),parts:array(row.parts??[],parseBcfRawPart)}}
 /** 🛂️ Validates canonical owned state independently of BCF wire admission. */
 export function parseBcfSnapshot(value:unknown):BcfSnapshot{return snapshot(value,parseBcfCamera)}
-const jsonNumber=(value:unknown):Binary64=>{if(typeof value!=="number"||!Number.isFinite(value))throw Error("BCF JSON requires a finite numeric scalar");return binary64(value)};
-function jsonPoint(value:unknown):BcfPoint3{const row=object(value);return{x:jsonNumber(row.x),y:jsonNumber(row.y),z:jsonNumber(row.z)}}
-function jsonCamera(value:unknown):BcfCamera{const row=object(value);const common={viewPoint:jsonPoint(row.viewPoint),direction:jsonPoint(row.direction),upVector:jsonPoint(row.upVector)};if(row.kind==="perspective")return{kind:"perspective",...common,fieldOfView:jsonNumber(row.fieldOfView)};if(row.kind==="orthogonal")return{kind:"orthogonal",...common,viewToWorldScale:jsonNumber(row.viewToWorldScale)};throw Error("BCF JSON camera kind is unknown")}
-/** 🧾️ Admits native numeric JSON at an explicit binary64 conversion boundary. */
-export function parseBcfSnapshotJson(value:unknown):BcfSnapshot{return snapshot(value,jsonCamera)}

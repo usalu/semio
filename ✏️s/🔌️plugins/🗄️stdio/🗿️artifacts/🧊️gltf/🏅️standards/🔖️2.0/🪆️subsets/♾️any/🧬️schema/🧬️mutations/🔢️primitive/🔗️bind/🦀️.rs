@@ -16,7 +16,7 @@ pub fn validate(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) 
     checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
     checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
     checked_index(payload.accessor, base.document.accessors.len(), "document/accessors")?;
-    if base.document.accessors[payload.accessor].kind != crate::engine::GltfAccessorType::Scalar || base.document.accessors[payload.accessor].component_type == crate::engine::GltfComponentType::Float {
+    if base.document.accessors[payload.accessor].kind != crate::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType::Scalar || base.document.accessors[payload.accessor].component_type == crate::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType::Float {
         return Err(reject("gltf.mutation.invalid-index-accessor", "document/accessors", "indices require a scalar integer accessor"));
     }
     Ok(())

@@ -1,9 +1,21 @@
 syntax = "proto3";
 package semio.s_stdio_svg.snapshot;
-
 import "s_stdio_xml/snapshot.proto";
-
-message SvgSnapshot {
-  string schema = 1;
-  semio.s_stdio_xml.snapshot.XmlDocument doc = 2;
-}
+message SvgSnapshot { string schema = 1; SvgDocument doc = 2; }
+message SvgDocument { optional semio.s_stdio_xml.snapshot.XmlDeclaration declaration = 1; optional semio.s_stdio_xml.snapshot.XmlDoctype doctype = 2; repeated SvgNode prolog = 3; optional SvgNode root = 4; repeated SvgNode epilog = 5; }
+message SvgNode { oneof kind { SvgElementNode element = 1; string text = 2; string cdata = 3; string comment = 4; SvgProcessingInstruction processing_instruction = 5; } }
+message SvgElementNode { string name = 1; repeated SvgAttr attrs = 2; repeated SvgNode children = 3; }
+message SvgProcessingInstruction { string target = 1; string data = 2; }
+message SvgAttr { string name = 1; SvgAttributeValue value = 2; }
+message SvgAttributeValue { oneof kind { string text = 1; double number = 2; SvgLength length = 3; ViewBox view_box = 4; TransformList transform = 5; PointList points = 6; PathData path_data = 7; string local_reference = 8; } }
+message SvgLength { double magnitude = 1; string unit = 2; }
+message ViewBox { double min_x = 1; double min_y = 2; double width = 3; double height = 4; }
+message SvgPoint { double x = 1; double y = 2; }
+message TransformList { repeated TransformOp values = 1; }
+message PointList { repeated SvgPoint values = 1; }
+message PathData { repeated PathCommand values = 1; }
+message TransformOp { oneof op { Matrix matrix = 1; AxisPair translate = 2; AxisPair scale = 3; Rotate rotate = 4; double skew_x = 5; double skew_y = 6; } }
+message Matrix { double a = 1; double b = 2; double c = 3; double d = 4; double e = 5; double f = 6; }
+message AxisPair { double x = 1; optional double y = 2; }
+message Rotate { double angle = 1; optional SvgPoint center = 2; }
+message PathCommand { string cmd = 1; bool relative = 2; optional double x = 3; optional double y = 4; optional double x1 = 5; optional double y1 = 6; optional double x2 = 7; optional double y2 = 8; optional double rx = 9; optional double ry = 10; optional double x_axis_rotation = 11; optional bool large_arc = 12; optional bool sweep = 13; }

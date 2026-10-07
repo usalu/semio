@@ -120,13 +120,13 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
         ],
         styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
     };
-    let mut snap = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
+    let mut snap = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
     snap.xml_parts
         .try_push(
             crate::schema::snapshot::DocxXmlPart::try_from_document(
                 "word/numbering.xml".into(),
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml".into(),
-                semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:numbering/>").expect("valid demo numbering XML"),
+                semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument { root: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "w:numbering".into(), attrs: Vec::new(), children: Vec::new() }), ..Default::default() },
             )
             .expect("valid retained demo numbering XML"),
         )
@@ -155,3 +155,14 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🏷️vocabulary/🦀️.rs"]
+pub mod vocabulary;
+#[path="⚠️refusal/🦀️.rs"]
+pub mod refusal;
+
+#[path="🏷️namespaces/🦀️.rs"]
+pub(crate) mod namespaces;
+
+#[path="🏗️construction/🦀️.rs"]
+pub mod construction;

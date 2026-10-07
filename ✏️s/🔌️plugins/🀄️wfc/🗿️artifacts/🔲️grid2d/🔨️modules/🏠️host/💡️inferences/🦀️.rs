@@ -740,6 +740,7 @@ pub fn solve_with_clock(snapshot: &Grid2dSnapshot, now_us: fn() -> Option<u64>) 
 }
 
 impl store::InferredField<Grid2dSnapshot> for Grid2dSolve {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = Grid2dSolveResult;
 
@@ -764,6 +765,7 @@ impl store::InferredField<Grid2dSnapshot> for Grid2dSolve {
 }
 
 impl store::InferredField<Grid2dSnapshot> for Grid2dContradiction {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = bool;
 
@@ -785,6 +787,7 @@ impl store::InferredField<Grid2dSnapshot> for Grid2dContradiction {
 }
 
 impl store::InferredField<Grid2dSnapshot> for Grid2dEntropy {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = f64;
 

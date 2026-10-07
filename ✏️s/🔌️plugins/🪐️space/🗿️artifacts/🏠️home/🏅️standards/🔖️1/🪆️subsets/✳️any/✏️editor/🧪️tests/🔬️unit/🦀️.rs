@@ -206,7 +206,7 @@ async fn home_render_publishes_signed_out_and_changes_roles_with_the_identity() 
 async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<HomeApp>>::with_registry(Default::default(), semio_framework_plugin::AppActionRegistry::from_definition(&create_home_app().await)).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<HomeApp>>::with_registry(Default::default(), semio_framework_plugin::AppActionRegistry::from_definition(&create_home_app().await), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
     let view = home_view("u1", semio_framework_ui_locale::Locale::En);
     let meta = semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };

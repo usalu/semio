@@ -16,7 +16,7 @@ pub(crate) mod context {
     }
     
     pub async fn app_with_registry() -> Generation2dApp {
-        let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(1).await;
         app
     }
@@ -275,7 +275,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
         "schema": GENERATION_2D_SCHEMA,
         "id": "generation2d-production-mounted-law",
         "vcs": {
-            "initialSnapshot": production_hex(&crate::standards::v1::subsets::any::io::binary::snapshot::encode(&snapshot)),
+            "initialPack": production_hex(&crate::standards::v1::subsets::any::io::binary::snapshot::encode(&snapshot)),
             "edits": [{
                 "id": "generation2d-production-all14-edit",
                 "actor": "generation2d-production-law",
@@ -305,14 +305,14 @@ struct ProductionLease(semio_framework_plugin::ArtifactEnvelopeDecodeOperationHa
 
 impl Drop for ProductionLease {
     fn drop(&mut self) {
-        crate::standards::v1::subsets::any::io::binary::mutations::generation2d_release_publication_authority(self.0.operation, self.0.generation);
+        crate::host::owned::generation2d_release_publication_authority(self.0.operation, self.0.generation);
     }
 }
 
 fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
-    crate::standards::v1::subsets::any::io::binary::mutations::generation2d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::standards::v1::subsets::any::io::binary::mutations::Generation2dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::standards::v1::subsets::any::io::binary::mutations::GENERATION2D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::standards::v1::subsets::any::io::binary::mutations::GENERATION2D_MOUNTED_CONTROL_CREDITS })
+    crate::host::owned::generation2d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::host::owned::Generation2dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::host::owned::GENERATION2D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::host::owned::GENERATION2D_MOUNTED_CONTROL_CREDITS })
     .expect("P2 production publication authority");
     for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
@@ -326,7 +326,7 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 
 fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        crate::standards::v1::subsets::any::io::binary::mutations::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
+        crate::host::owned::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
             .expect("P2 authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P2 production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("P2 production load advancement");
@@ -360,11 +360,11 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     assert!(snapshot.host_snapshot.layout.contains_key("move-target"));
     assert!(!snapshot.host_snapshot.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
     assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P2 terminal ACK"));
-    assert!(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_release_publication_authority(handle.operation, handle.generation));
+    assert!(crate::host::owned::generation2d_release_publication_authority(handle.operation, handle.generation));
     drop(lease);
     close(accepted);
 
-    use crate::standards::v1::subsets::any::io::binary::mutations::Generation2dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+    use crate::host::owned::Generation2dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
     for (hostile, expected_code) in [
         (Missing, "generation2d-publication.authority-missing"),
         (WrongOperation, "generation2d-publication.wrong-operation"),
@@ -380,15 +380,15 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         candidate.retire_cold();
         let handle = admit_production_envelope(&mut app, &wire);
         let lease = ProductionLease(handle);
-        crate::standards::v1::subsets::any::io::binary::mutations::generation2d_arm_publication_hostile(handle.operation, hostile);
+        crate::host::owned::generation2d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
+        assert_eq!(crate::host::owned::generation2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
         assert_eq!(app.artifact_generation_now(), base_generation);
         let retained = production_read(app.snapshot().expect("last-valid P2 snapshot after rejected candidate"));
         assert_eq!(production_semantic_digest(&retained), last_valid_digest);
         assert_eq!(&*retained, &*last_valid);
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P2 terminal ACK after candidate retirement"));
-        assert!(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_release_publication_authority(handle.operation, handle.generation));
+        assert!(crate::host::owned::generation2d_release_publication_authority(handle.operation, handle.generation));
         drop(lease);
         close(app);
     }

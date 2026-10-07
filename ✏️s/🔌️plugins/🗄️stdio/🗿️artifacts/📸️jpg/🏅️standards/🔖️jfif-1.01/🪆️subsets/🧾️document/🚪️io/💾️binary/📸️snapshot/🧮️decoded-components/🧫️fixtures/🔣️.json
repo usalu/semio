@@ -1,0 +1,9 @@
+{
+  "width": 4,
+  "height": 3,
+  "sample": 128,
+  "cases": [
+    { "componentIds": [1], "samplesPerPixel": 1 },
+    { "componentIds": [1, 2, 3], "samplesPerPixel": 3 }
+  ]
+}

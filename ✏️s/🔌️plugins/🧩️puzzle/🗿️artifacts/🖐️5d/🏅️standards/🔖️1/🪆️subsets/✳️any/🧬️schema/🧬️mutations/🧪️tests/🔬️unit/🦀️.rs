@@ -230,7 +230,7 @@ async fn selection_missing_targets_are_errors() {
 #[semio_framework_async_macros::async_test]
 async fn a_board_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::standards::v1::subsets::any::io::binary::mutations::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None)).await.expect("the store opens");
+    let mut store = crate::host::owned::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_selection_2d(vec!["p1".into()], 1.0, 0.0), drag_selection_3d(vec!["p1".into()], [0.0, 0.0, 4.0]), drag_selection_2d(vec!["p1".into()], 0.0, 2.0)];
     for mutation in &log {
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a selection gesture applies");
@@ -254,7 +254,7 @@ async fn a_board_drag_edited_in_history_replays_its_downstream() {
     assert_eq!((fresh.parts[0].part_2d.x, fresh.parts[0].part_2d.y, fresh.parts[0].part_3d.origin), (7.0, 2.0, [0.0, 0.0, 4.0]));
     store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
-    crate::standards::v1::subsets::any::io::binary::mutations::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
+    crate::host::owned::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️SelectionLaws
 

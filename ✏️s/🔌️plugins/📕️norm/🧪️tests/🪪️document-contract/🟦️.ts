@@ -1,4 +1,5 @@
 /** 🧪️ Norm document facets share child identities and reject editor state and whole-document diffs. */
+import artifactReferenceSchema from "../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -27,7 +28,7 @@ export async function testNormDocumentContractOracle(): Promise<void> {
     const facets = await Promise.all(["", "📸️snapshot", "🔺️diff"].map(async (path) => ({ schema: (await import(pathToFileURL(join(root, path, "🔣️.json")).href)).default, module: await import(pathToFileURL(join(root, path, "🟦️.ts")).href) })));
     assertDocumentContractOracle({
       name: owner.name,
-      dependencies: [ioSchema, childSchema],
+      dependencies: [ioSchema, childSchema,artifactReferenceSchema],
       artifact: { schema: facets[0].schema, parse: facets[0].module[`parse${owner.name}Artifact`] },
       snapshot: { schema: facets[1].schema, parse: facets[1].module[`parse${owner.name}Snapshot`] },
       diff: { schema: facets[2].schema, parse: facets[2].module[`parse${owner.name}Diff`] },

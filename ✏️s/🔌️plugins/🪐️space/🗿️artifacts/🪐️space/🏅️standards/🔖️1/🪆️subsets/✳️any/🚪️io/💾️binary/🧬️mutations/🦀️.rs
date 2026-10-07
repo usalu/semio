@@ -43,3 +43,17 @@ pub mod touch_artifact;
 
 #[path = "🌱create-artifact/🦀️.rs"]
 pub mod create_artifact;
+
+mod native_codec {
+use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+
+impl protocol::OpBinary for SSpaceMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

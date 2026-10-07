@@ -238,7 +238,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 let graph_right = all.for_window_instance("architect-graph-right").expect("right Graph");
                 let report_left = all.for_window_instance("architect-report-left").expect("left Report");
                 let report_right = all.for_window_instance("architect-report-right").expect("right Report");
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 app.bind_instance_id(93).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -288,7 +288,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     }
 
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                     reopened.bind_instance_id(94).await;
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;

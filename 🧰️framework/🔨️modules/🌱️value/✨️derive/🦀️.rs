@@ -6,8 +6,18 @@ mod component;
 #[path = "🧬️retained-clone/🦀️.rs"]
 mod retained_clone;
 
+#[path = "🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+mod owned_json;
+
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
+
+/// 📚️ Compiles a package-relative source JSON asset into an owned intrinsic value.
+#[proc_macro]
+pub fn owned_json_file(input: TokenStream) -> TokenStream {
+    let path = parse_macro_input!(input as syn::LitStr);
+    owned_json::expand(&path).unwrap_or_else(|error| error.to_compile_error()).into()
+}
 
 /// 🗃️ Implements `value::ToValue` for a `#[value(...)]`-annotated struct or enum.
 #[proc_macro_derive(ToValue, attributes(value))]

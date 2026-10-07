@@ -2,6 +2,10 @@
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::DslField;
+use semio_framework_dsl_record::{BorrowedDslField,BorrowedShape};
+#[cfg(test)]
+#[path="🧪️tests/🫳️borrowed-carriers/🦀️.rs"]
+mod borrowed_carrier_tests;
 #[path="🛫️encoding/🦀️.rs"]mod encoding;
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub(crate) struct Attribute{semantic:String,accessor:usize}
@@ -17,6 +21,12 @@ fn attributes(value:&[(String,usize)])->Vec<Attribute>{value.iter().map(|(semant
 fn pairs(value:Vec<Attribute>)->Vec<(String,usize)>{value.into_iter().map(|value|(value.semantic,value.accessor)).collect()}
 #[path="🧩️extras/🦀️.rs"]
 mod json;
+impl BorrowedDslField for GltfJson{const SHAPE:BorrowedShape=<json::Json as BorrowedDslField>::SHAPE;}
+impl BorrowedDslField for GltfMorphTarget{const SHAPE:BorrowedShape=<Target as BorrowedDslField>::SHAPE;}
+impl BorrowedDslField for GltfPrimitive{const SHAPE:BorrowedShape=<Primitive as BorrowedDslField>::SHAPE;}
+impl BorrowedDslField for GltfCameraProjection{const SHAPE:BorrowedShape=<Projection as BorrowedDslField>::SHAPE;}
+impl BorrowedDslField for GltfImage{const SHAPE:BorrowedShape=<Image as BorrowedDslField>::SHAPE;}
+impl BorrowedDslField for GltfTexture{const SHAPE:BorrowedShape=<Texture as BorrowedDslField>::SHAPE;}
 fn optional<T:DslField>(value:&Option<T>)->semio_framework_dsl_record::FieldValue{match value{Some(value)=>value.to_value(),None=>semio_framework_dsl_record::FieldValue::Absent}}
 fn retire_json(value:Option<GltfJson>){if let Some(value)=value{json::retire(value);}}
 impl DslField for GltfJson{
@@ -85,7 +95,7 @@ impl DslField for GltfTexture{
 pub(crate) struct ResolvedBuffer{bytes:Vec<u8>}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub(crate) struct Snapshot{schema:String,document:GltfDocument,buffers:Vec<ResolvedBuffer>,source_form:GltfSourceForm}
-fn record(value:&GltfSnapshot)->semio_framework_dsl_record::RecordValue{let buffers=value.buffers.iter().map(|bytes|ResolvedBuffer{bytes:bytes.clone()}).collect::<Vec<_>>();semio_framework_dsl_record::RecordValue{fields:[(0,value.schema.to_value()),(1,value.document.to_value()),(2,buffers.to_value()),(3,value.source_form.to_value())].into_iter().collect()}}
+pub(crate) fn record(value:&GltfSnapshot)->semio_framework_dsl_record::RecordValue{let buffers=value.buffers.iter().map(|bytes|ResolvedBuffer{bytes:bytes.clone()}).collect::<Vec<_>>();semio_framework_dsl_record::RecordValue{fields:[(0,value.schema.to_value()),(1,value.document.to_value()),(2,buffers.to_value()),(3,value.source_form.to_value())].into_iter().collect()}}
 impl From<Snapshot> for GltfSnapshot{fn from(value:Snapshot)->Self{Self{schema:value.schema,document:value.document,buffers:value.buffers.into_iter().map(|buffer|buffer.bytes).collect(),source_form:value.source_form}}}
 
 impl store::ArtifactPack for GltfSnapshot{

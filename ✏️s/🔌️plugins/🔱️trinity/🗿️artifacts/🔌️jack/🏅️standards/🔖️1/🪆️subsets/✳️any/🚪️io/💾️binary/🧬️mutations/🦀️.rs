@@ -1,13 +1,11 @@
 //! 📡️ Trinity graph mutation binary framing and registry surface.
 
 /// 🧾️ Direct-owner binary tags in aggregate declaration order.
-pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[("SetQuery", crate::standards::v1::subsets::any::schema::mutations::set_query::BINARY_TAG)];
+pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[("SetQuery", crate::standards::v1::subsets::any::io::binary::mutations::set_query::BINARY_TAG)];
 
 #[path = "🔎️set-query/🦀️.rs"]
 pub mod set_query;
 
-//! 📡️ `trinity.graph` artifact — state-patch wire codec for the raw document operation
-//! (constitutional: spr, renamed from the old `📡️protocol` — no `📡️protocol` segment survives).
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
@@ -16,7 +14,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::standards::v1::subsets::any::schema::mutations::set_query;
+use crate::standards::v1::subsets::any::schema::mutations::set_query as semantic_set_query;
 use crate::executor::GraphEffect;
 use crate::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyDef, PropertyValue};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
@@ -71,3 +69,10 @@ pub fn decode_op(bytes: &[u8]) -> Result<TrinityGraphMutation, protocol::Protoco
 
 
 use crate::standards::v1::subsets::any::io::text::mutations::{TrinityGraphOperationDsl, trinity_graph_operation_to_dsl, trinity_graph_operation_from_dsl};
+
+use crate::standards::v1::subsets::any::schema::operations::{TrinityGraphEnvelope, TrinityGraphStore, OwnedTrinityGraphStore};
+pub async fn new_trinity_graph_store(envelope: TrinityGraphEnvelope, actor: protocol::ActorId) -> Result<OwnedTrinityGraphStore, store::VcsError> {
+    let mut store = TrinityGraphStore::new(envelope, actor).await?;
+    store.install_document_store_owners_exact(crate::host::jack_document_store_owners());
+    Ok(OwnedTrinityGraphStore(store))
+}

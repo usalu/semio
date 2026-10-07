@@ -1,0 +1,7 @@
+# Current Live Boundary Review
+
+Registered `repo-lib:lint-artifact-io-ownership`, fresh without cache, inspected 30,865 entries in 21.3 seconds. It reported five findings: WFC scene projection outside a logical native facet; Raster native diff admission named as semantic construction; ZIP pure diff native admission; and two PDF semantic sources calling physical helpers. This is progress from the prior 53 generic findings, not an all-green architecture result. Retained known image/content payloads require the separate deeper audits.
+
+WFC owner subsequently moved its scene projection under text/inferences and routed clients directly. Root inspected Raster's flagged function: its input is a physical `RasterDiffDsl`, and it solely admits the exact typed fields with native text errors. It neither computes a semantic diff nor applies one. The private function is renamed `admit_diff_record` to describe that role; the guard's existing strict semantic construction rule remains intact. Runtime agent owns fresh Raster execution. ZIP is awaiting its targeted actual RED test before removal of native encoding admission. PDF's typed retained payload closure remains assigned to the runtime agent.
+
+The separate registered neutral source guard, physical codec and UTF suites actually passed 21 tests after exact semantic-reference catalog dependencies were registered in all affected independent oracles. Log: generated/reference-pure-guard-green-2.log. A new live audit is required after source closure.

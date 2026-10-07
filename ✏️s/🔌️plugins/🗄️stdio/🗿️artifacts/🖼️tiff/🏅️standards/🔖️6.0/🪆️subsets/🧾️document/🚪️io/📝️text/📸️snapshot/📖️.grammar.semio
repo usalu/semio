@@ -4,14 +4,14 @@ extension tiff
 start document
 comment none
 
-document = artifact-mark "schema" "=" text "byteOrder" "=" text "ifds" "=" "[" directory* "]"
+document = artifact-mark "schema" "=" text "ifds" "=" "[" directory* "]"
 artifact-mark = "stdio.tiff"
-directory = "{" "entries" "=" "[" tag* "]" "storage" "=" storage "}"
+directory = "{" "entries" "=" "[" tag* "]" "blocks" "=" "[" block* "]" "}"
 tag = "{" "tag" "=" uint "values" "=" typed-values "}"
-typed-values = "{" "kind" "=" text "value" "=" "[" sample* "]" "}"
-sample = integer / "[" integer integer "]" / "{" "bits" "=" uint "}"
-storage = "{" "byteCountsKind" "=" text "chunks" "=" "[" chunk* "]" "kind" "=" text "offsetsKind" "=" text "}"
-chunk = "[" uint* "]"
+typed-values = "{" "kind" "=" text "value" "=" "[" value* "]" "}"
+value = integer / text / "[" integer integer "]" / "{" "bits" "=" uint "}" / word
+block = "{" "x" "=" uint "y" "=" uint "width" "=" uint "height" "=" uint "channels" "=" uint "samples" "=" "[" word* "]" "}"
+word = "{" "lo" "=" uint "hi" "=" uint "}"
 uint = INT
 integer = INT / "-" INT
 text = STRING / IDENT

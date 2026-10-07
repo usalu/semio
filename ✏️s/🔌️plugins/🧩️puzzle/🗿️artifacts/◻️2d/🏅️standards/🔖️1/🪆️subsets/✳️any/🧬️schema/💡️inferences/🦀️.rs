@@ -78,30 +78,25 @@ fn round_f(v: f64) -> f64 {
     (v * 1_000_000.0).round() / 1_000_000.0
 }
 
-fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
-    endpoint.split_once(':')
-}
-
 /// 🔗 Compose-parity fastened layout: places nodes from edge gap/shift/rise/rotation/turn/tilt + x/y using the diagram-center rule.
 pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
     if snapshot.nodes.is_empty() {
         return;
     }
-    let node_map: HashMap<&str, &Puzzle2dNode> = snapshot.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
-    let mut adjacency: HashMap<String, Vec<(String, usize)>> = HashMap::new();
+    let node_map: HashMap<semio_framework_value::paged::PagedUtf8<{ usize::MAX }>, &Puzzle2dNode> = snapshot.nodes.iter().map(|node| (node.id.clone(), node)).collect();
+    let mut adjacency: HashMap<semio_framework_value::paged::PagedUtf8<{ usize::MAX }>, Vec<(semio_framework_value::paged::PagedUtf8<{ usize::MAX }>, usize)>> = HashMap::new();
     for (index, edge) in snapshot.edges.iter().enumerate() {
-        let Some((_source_id, _)) = parse_endpoint(&edge.source).or(Some((edge.source.as_str(), ""))) else { continue };
-        let Some((_target_id, _)) = parse_endpoint(&edge.target).or(Some((edge.target.as_str(), ""))) else { continue };
-        // Edges may be bare node ids or node:handle.
-        let source_id = edge.source.split(':').next().unwrap_or(edge.source.as_str());
-        let target_id = edge.target.split(':').next().unwrap_or(edge.target.as_str());
-        if node_map.contains_key(source_id) && node_map.contains_key(target_id) {
-            adjacency.entry(source_id.to_string()).or_default().push((target_id.to_string(), index));
-            adjacency.entry(target_id.to_string()).or_default().push((source_id.to_string(), index));
+        let source = edge.source.to_string_owner();
+        let target = edge.target.to_string_owner();
+        let source_id: semio_framework_value::paged::PagedUtf8<{ usize::MAX }> = source.split(':').next().unwrap_or(&source).into();
+        let target_id: semio_framework_value::paged::PagedUtf8<{ usize::MAX }> = target.split(':').next().unwrap_or(&target).into();
+        if node_map.contains_key(&source_id) && node_map.contains_key(&target_id) {
+            adjacency.entry(source_id.clone()).or_default().push((target_id.clone(), index));
+            adjacency.entry(target_id).or_default().push((source_id, index));
         }
     }
-    let mut centers: HashMap<String, [f64; 2]> = HashMap::new();
-    let mut visited: HashSet<String> = HashSet::new();
+    let mut centers: HashMap<semio_framework_value::paged::PagedUtf8<{ usize::MAX }>, [f64; 2]> = HashMap::new();
+    let mut visited: HashSet<semio_framework_value::paged::PagedUtf8<{ usize::MAX }>> = HashSet::new();
     for node in &snapshot.nodes {
         if visited.contains(&node.id) {
             continue;
@@ -119,12 +114,14 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
                 }
                 visited.insert(neighbor_id.clone());
                 let edge = &snapshot.edges[edge_index];
-                let current_node = node_map.get(current_id.as_str()).expect("current");
+                let current_node = node_map.get(&current_id).expect("current");
                 // Parent handle angle → t.
-                let handle_id = if edge.source.starts_with(&format!("{current_id}:")) {
-                    edge.source.split(':').nth(1)
-                } else if edge.target.starts_with(&format!("{current_id}:")) {
-                    edge.target.split(':').nth(1)
+                let source = edge.source.to_string_owner();
+                let target = edge.target.to_string_owner();
+                let handle_id = if source.starts_with(&format!("{current_id}:")) {
+                    source.split(':').nth(1)
+                } else if target.starts_with(&format!("{current_id}:")) {
+                    target.split(':').nth(1)
                 } else {
                     None
                 };

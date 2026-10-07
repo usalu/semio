@@ -1,7 +1,7 @@
 use super::*;
 
 fn fixture() -> XlsxSnapshot {
-    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
     build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Boolean(true) }] }], ..Default::default() })
 }
@@ -42,4 +42,4 @@ fn command_revision(command: &XlsxStrictEditorCommand) -> String {
     revision.clone()
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::XlsxStrictEditor, || semio_framework_plugin::App { definition: super::create_xlsx_strict_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::XlsxStrictEditor, || semio_framework_plugin::App { definition: super::create_xlsx_strict_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base");

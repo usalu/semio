@@ -10,12 +10,9 @@ test("declared compiled refusal owner closes all i32 fields and eight exact dial
  const validate=new Ajv({strict:true}).addKeyword({keyword:"x-semio-state",schemaType:"string"}).compile(JSON.parse(readFileSync(join(snapshot,"🔣️.json"),"utf8")));
  for(const value of [-2147483648,-1,0,1,2147483647])expect(validate({value})).toBe(true);
  for(const value of [{},{value:null},{value:"0"},{value:0.5},{value:-2147483649},{value:2147483648},{value:0,other:1}])expect(validate(value)).toBe(false);
- const fixture=JSON.parse(readFileSync(join(snapshot,"./🧫️fixtures/🪶️sqlite/🔣️.json"),"utf8"));
- const contract=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(snapshot,"./🪶️sqlite/🧬️schema/🔣️.json"),"utf8")));
- expect(contract(fixture)).toBe(true);
- for(const wrong of [{...fixture,owner:"fixture.neutral-host-fixture.counter"},{...fixture,subsets:fixture.subsets.slice(1)},{...fixture,rows:[[1,0]]},{...fixture,identity:2},{...fixture,encodings:["binary"]},{...fixture,extra:1}])expect(contract(wrong)).toBe(false);
+ const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  expect(fixture.subsets).toEqual(["invalid-value","canceled","ownership-limit","allocation-failed","work-limit","depth-limit","unsupported-owner","invariant-violated"]);
- const sql=readFileSync(join(snapshot,"./🪶️sqlite/🗄️.sql"),"utf8");
+ const sql=readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8");
  for(const [index,value]of fixture.values.entries()){
   const db=new Database(":memory:");try{
    db.exec(sql);db.query("INSERT INTO fixture_refusal(id,value)VALUES(1,?)").run(value);

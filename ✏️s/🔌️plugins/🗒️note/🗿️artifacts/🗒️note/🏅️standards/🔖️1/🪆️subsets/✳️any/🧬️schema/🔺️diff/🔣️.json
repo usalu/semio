@@ -213,13 +213,13 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "blockJson": {
+        "block": {
           "anyOf": [
             {
-              "type": "null"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/note/note/artifact.json#/$defs/NoteBlockNode"
             },
             {
-              "type": "string"
+              "type": "null"
             }
           ]
         }

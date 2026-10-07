@@ -1,0 +1,13 @@
+{
+  "instances": [
+    {
+      "id": 5,
+      "app_id": "checkpoint.actor",
+      "actor": "checkpoint-owner",
+      "document_pack": []
+    }
+  ],
+  "timers": [],
+  "pending_requests": [],
+  "task_restarts": []
+}

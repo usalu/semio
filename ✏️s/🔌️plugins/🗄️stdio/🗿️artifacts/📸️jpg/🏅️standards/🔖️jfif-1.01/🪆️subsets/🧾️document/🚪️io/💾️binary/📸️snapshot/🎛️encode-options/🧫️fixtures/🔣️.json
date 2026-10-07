@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "quality": 25,
+      "firstLumaQuantizer": 32
+    },
+    {
+      "quality": 95,
+      "firstLumaQuantizer": 2
+    }
+  ]
+}

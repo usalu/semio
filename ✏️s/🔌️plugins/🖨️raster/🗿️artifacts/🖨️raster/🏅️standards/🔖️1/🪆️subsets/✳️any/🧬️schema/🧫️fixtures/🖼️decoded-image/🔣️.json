@@ -1,0 +1,113 @@
+{
+  "cases": [
+    {
+      "id": "pixels",
+      "image": {
+        "schema": "s.stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 7,
+            "rgba8": [
+              255,
+              0,
+              0,
+              255,
+              0,
+              255,
+              0,
+              127
+            ]
+          }
+        ],
+        "icc": null,
+        "metadata": []
+      },
+      "contentId": "image-d2c9f5a60367e60b"
+    },
+    {
+      "id": "profile-and-metadata",
+      "image": {
+        "schema": "s.stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 7,
+            "rgba8": [
+              255,
+              0,
+              0,
+              255,
+              0,
+              255,
+              0,
+              127
+            ]
+          }
+        ],
+        "icc": [
+          0,
+          1,
+          255
+        ],
+        "metadata": [
+          {
+            "key": "artist",
+            "value": "Ueli"
+          }
+        ]
+      },
+      "contentId": "image-dee6efebf0210c38"
+    },
+    {
+      "id": "changed-pixel",
+      "image": {
+        "schema": "s.stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 7,
+            "rgba8": [
+              0,
+              0,
+              255,
+              255,
+              0,
+              255,
+              0,
+              127
+            ]
+          }
+        ],
+        "icc": null,
+        "metadata": []
+      },
+      "contentId": "image-b716a0dbbc1fbb14"
+    }
+  ],
+  "numericWords": {
+    "binary64": [
+      0,
+      -0.0,
+      0.1,
+      1e-07,
+      1.7976931348623157e+308
+    ],
+    "binary32": [
+      0,
+      -0.0,
+      0.1,
+      1e-07,
+      3.4028234663852886e+38
+    ]
+  }
+}

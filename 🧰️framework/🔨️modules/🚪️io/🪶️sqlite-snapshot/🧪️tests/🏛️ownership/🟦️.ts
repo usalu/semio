@@ -45,3 +45,11 @@ test("the SQLite package has only neutral normal dependencies",()=>{
  expect(Object.keys(manifest.dependencies as Record<string,unknown>)).toEqual(["semio-framework-value"]);
  expect(readFileSync(resolve(owner,"📦️packages/🦀️rust/🦀️.rs"),"utf8")).not.toContain("semio_framework_os_kernel");
 });
+
+
+test("paged native text cells preserve independent SQLite TEXT and borrowed byte authority",async()=>{
+ const f=JSON.parse(readFileSync(resolve(owner,"🧩️artifact/🧫️fixtures/🧵️paged-text/🔣️.json"),"utf8")) as {schemaSql:string;table:string;samples:{text:string;bytes:number}[];large:{unit:string;repeats:number;bytes:number;cancelAfterBytes:number};borrowedAllocationBytes:number;semanticIdentityBytes:number;storageClass:string};
+ const {Database}=await import("bun:sqlite"),database=new Database(":memory:");
+ try{database.exec(f.schemaSql);for(const [index,sample]of f.samples.entries()){expect(Buffer.byteLength(sample.text)).toBe(sample.bytes);database.run("INSERT INTO paged_text VALUES(?,?)",[index+1,sample.text]);}expect(database.query("SELECT value,length(CAST(value AS BLOB)) AS bytes,typeof(value) AS storage FROM paged_text ORDER BY id").all()).toEqual(f.samples.map(sample=>({value:sample.text,bytes:sample.bytes,storage:f.storageClass})));const large=f.large.unit.repeat(f.large.repeats);expect(Buffer.byteLength(large)).toBe(f.large.bytes);expect(f.large.cancelAfterBytes).toBeLessThan(f.large.bytes);expect(f.borrowedAllocationBytes).toBe(0);expect(f.semanticIdentityBytes).toBe(8);}finally{database.close();}
+ const source=readFileSync(resolve(owner,"🧩️artifact/🦀️.rs"),"utf8");expect(source).toContain("PagedText(&'a dyn semio_framework_value::paged::Utf8Text)");expect(source).toContain("Self::PagedText(value) => value.text_bytes()");expect(source).toContain("paged_text::copy_text(value, control");
+});

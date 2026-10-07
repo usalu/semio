@@ -467,24 +467,25 @@ impl FontCodec {
             Some(cid_codec) => cid_codec.split(bytes),
             None => bytes.iter().map(|byte| (*byte as u32, 1)).collect(),
         };
-        codes
-            .into_iter()
-            .map(|(code, code_width)| {
-                let cid = self.cid_codec.as_ref().map_or(code, |c| c.cid(code));
-                let width = if self.composite { self.cid_widths.get(&cid).copied().unwrap_or(self.default_width) } else { self.simple_widths.get(&code).copied().unwrap_or(self.default_width) };
-                let glyph_id = if self.composite {
-                    if self.cid_to_gid_identity {
-                        u16::try_from(cid).ok()
-                    } else {
-                        self.cid_to_gid.get(&cid).copied()
-                    }
-                } else {
-                    self.code_to_gid.get(&code).copied()
-                };
-                let text = self.code_to_text.get(&code).cloned();
-                DecodedGlyph { code, code_width, width, glyph_id, cid, is_space_char: code == 32 && code_width == 1, text }
-            })
-            .collect()
+        self.decode_codes(&codes.into_iter().map(|(code,_)|code).collect::<Vec<_>>())
+    }
+
+    /// 🔢️ Maps already admitted integer character codes through this font binding.
+    pub fn decode_codes(&self,codes:&[u32])->Vec<DecodedGlyph> {
+        codes.iter().copied().map(|code| {
+            let code_width=self.cid_codec.as_ref().map_or(1,|codec|codec.width_of(code));
+            let cid=self.cid_codec.as_ref().map_or(code,|codec|codec.cid(code));
+            let width=if self.composite {self.cid_widths.get(&cid).copied().unwrap_or(self.default_width)} else {self.simple_widths.get(&code).copied().unwrap_or(self.default_width)};
+            let glyph_id=if self.composite {if self.cid_to_gid_identity {u16::try_from(cid).ok()}else{self.cid_to_gid.get(&cid).copied()}}else{self.code_to_gid.get(&code).copied()};
+            DecodedGlyph {code,code_width,width,glyph_id,cid,is_space_char:code==32&&code_width==1,text:self.code_to_text.get(&code).cloned()}
+        }).collect()
+    }
+
+    /// 📦️ Publishes logical codes using the current physical font codespace.
+    pub fn encode_codes(&self,codes:&[u32])->Option<Vec<u8>> {
+        let mut bytes=Vec::new();
+        for code in codes {let width=self.cid_codec.as_ref().map_or(1,|codec|codec.width_of(*code));if !(1..=4).contains(&width)||width<4&&*code>=(1u32<<(width*8)) {return None;}bytes.extend_from_slice(&code.to_be_bytes()[4-width as usize..]);}
+        Some(bytes)
     }
 
     /// 🔤 The Unicode text `bytes` show, when every code is mapped.

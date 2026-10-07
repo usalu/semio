@@ -5,7 +5,8 @@
 
 use crate::editor::mp3::modes::edit;
 use crate::editor::mp3::modes::edit::windows::main;
-use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{patch_snapshot, set_snapshot as snapshot_edit_set_snapshot, Mp3Mutation};
+use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,Mp3Mutation};
+
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use crate::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -20,7 +21,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -285,8 +286,9 @@ impl ArtifactEditor for Mp3Editor {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_MP3_DOCUMENT_SCHEMA, operation, generation))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_MP3_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
         mp3Editor_command_id(command)

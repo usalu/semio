@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "unsigned16-exact-components",
+      "snapshot": {
+        "schema": "stdio.tiff",
+        "ifds": [
+          {
+            "entries": [
+              {
+                "tag": 256,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    2
+                  ]
+                }
+              },
+              {
+                "tag": 257,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 258,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    16
+                  ]
+                }
+              },
+              {
+                "tag": 262,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 277,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 339,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "x": 0,
+                "y": 0,
+                "width": 2,
+                "height": 1,
+                "channels": 1,
+                "samples": [
+                  {
+                    "lo": 32769,
+                    "hi": 0
+                  },
+                  {
+                    "lo": 65535,
+                    "hi": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "native": {
+        "byteOrder": "bigEndian",
+        "compression": "packBits",
+        "layout": {
+          "kind": "strips",
+          "rows": 1
+        }
+      },
+      "expectedSamples": [
+        {
+          "lo": 32769,
+          "hi": 0
+        },
+        {
+          "lo": 65535,
+          "hi": 0
+        }
+      ]
+    },
+    {
+      "name": "ieee64-payload-sign-and-subnormal",
+      "snapshot": {
+        "schema": "stdio.tiff",
+        "ifds": [
+          {
+            "entries": [
+              {
+                "tag": 256,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    3
+                  ]
+                }
+              },
+              {
+                "tag": 257,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 258,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    64
+                  ]
+                }
+              },
+              {
+                "tag": 262,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 277,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 339,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    3
+                  ]
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "x": 0,
+                "y": 0,
+                "width": 3,
+                "height": 1,
+                "channels": 1,
+                "samples": [
+                  {
+                    "lo": 17,
+                    "hi": 2146959360
+                  },
+                  {
+                    "lo": 0,
+                    "hi": 2147483648
+                  },
+                  {
+                    "lo": 1,
+                    "hi": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "native": {
+        "byteOrder": "littleEndian",
+        "compression": "none",
+        "layout": {
+          "kind": "tiles",
+          "width": 16,
+          "height": 16
+        }
+      },
+      "expectedSamples": [
+        {
+          "lo": 17,
+          "hi": 2146959360
+        },
+        {
+          "lo": 0,
+          "hi": 2147483648
+        },
+        {
+          "lo": 1,
+          "hi": 0
+        }
+      ]
+    },
+    {
+      "name": "indexed1-palette-and-text",
+      "snapshot": {
+        "schema": "stdio.tiff",
+        "ifds": [
+          {
+            "entries": [
+              {
+                "tag": 256,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    3
+                  ]
+                }
+              },
+              {
+                "tag": 257,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 258,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 262,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    3
+                  ]
+                }
+              },
+              {
+                "tag": 277,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 315,
+                "values": {
+                  "kind": "ascii",
+                  "value": [
+                    "Owned TIFF",
+                    "Prazise"
+                  ]
+                }
+              },
+              {
+                "tag": 320,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    0,
+                    65535,
+                    0,
+                    0,
+                    65535,
+                    0
+                  ]
+                }
+              },
+              {
+                "tag": 339,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "x": 0,
+                "y": 0,
+                "width": 3,
+                "height": 1,
+                "channels": 1,
+                "samples": [
+                  {
+                    "lo": 1,
+                    "hi": 0
+                  },
+                  {
+                    "lo": 0,
+                    "hi": 0
+                  },
+                  {
+                    "lo": 1,
+                    "hi": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "native": {
+        "byteOrder": "littleEndian",
+        "compression": "none",
+        "layout": {
+          "kind": "strips",
+          "rows": 1
+        }
+      },
+      "expectedSamples": [
+        {
+          "lo": 1,
+          "hi": 0
+        },
+        {
+          "lo": 0,
+          "hi": 0
+        },
+        {
+          "lo": 1,
+          "hi": 0
+        }
+      ]
+    }
+  ],
+  "reject": [
+    {
+      "schema": "stdio.tiff",
+      "byteOrder": "littleEndian",
+      "ifds": []
+    },
+    {
+      "schema": "stdio.tiff",
+      "ifds": [
+        {
+          "entries": [],
+          "storage": {
+            "kind": "strips",
+            "chunks": [
+              [
+                1,
+                2
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

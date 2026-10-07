@@ -59,7 +59,7 @@ pub(crate) mod context {
     /// every retained typed command with `interactive-job.live-instance`, and an app bound to another
     /// id never settles the operations this harness drives.
     pub async fn app_with_registry() -> Block3dAppFixture {
-        let mut app = new_app_with_registry::<EditorApp<Block3dPlayApp>>(block3d_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<Block3dPlayApp>>(block3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Block3dAppFixture(app)
     }

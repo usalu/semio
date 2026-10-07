@@ -3,8 +3,11 @@ use protocol::SemanticMutation;
 
 #[test]
 fn aggregate_descriptor_roster_is_exactly_the_direct_leaf_roster() {
-    assert_eq!(GltfMutation::kinds().len(), 121);
-    assert_eq!(GltfMutation::kinds().iter().map(|descriptor| descriptor.kind).collect::<std::collections::BTreeSet<_>>().len(), 121);
+    let schema: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
+    let expected = schema["oneOf"].as_array().unwrap().iter().map(|leaf| leaf["properties"]["mutation"]["const"].as_str().unwrap().to_owned()).collect::<std::collections::BTreeSet<_>>();
+    let actual = GltfMutation::kinds().iter().map(|descriptor| descriptor.kind.split('-').enumerate().map(|(index, word)| if index == 0 { word.to_owned() } else { word[..1].to_uppercase() + &word[1..] }).collect::<String>()).collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(GltfMutation::kinds().len(), expected.len());
+    assert_eq!(actual, expected);
 }
 
 #[test]

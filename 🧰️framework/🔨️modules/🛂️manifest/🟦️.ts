@@ -1,4 +1,5 @@
-import { dialectCoordinate, parseDialectCoordinate, type ArtifactDialect } from "../🚪️io/🧬️schema/🟦️.ts";
+import { type ArtifactDialect } from "../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { dialectCoordinate, parseDialectCoordinate } from "../🚪️io/🧬️schema/🟦️.ts";
 import type { AppRole, AppRef } from "./🧬️schema/🟦️.ts";
 export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./🧬️schema/🟦️.ts";
 // #region 🛂️Manifest

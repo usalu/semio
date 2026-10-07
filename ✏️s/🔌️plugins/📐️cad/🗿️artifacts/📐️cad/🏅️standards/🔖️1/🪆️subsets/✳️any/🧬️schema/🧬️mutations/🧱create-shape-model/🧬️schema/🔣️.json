@@ -6,8 +6,8 @@
     {
       "id": "child-identity",
       "description": {
-        "en": "A composed child's id equals its target artifact id, and the target uses the s.stdio.semio@v1 dialect of the expected subset.",
-        "de": "Die Id eines eingebetteten Kindes entspricht der Artefakt-Id seines Ziels, und das Ziel verwendet den Dialekt s.stdio.semio@v1 des erwarteten Subsets."
+        "en": "A composed child's local id and target artifact id are independent, and the target uses the s.stdio.semio@v1 dialect of the expected subset.",
+        "de": "Die lokale Kind-Id und die Artefakt-Id seines Ziels sind unabhängig, und das Ziel verwendet den Dialekt s.stdio.semio@v1 des erwarteten Subsets."
       }
     }
   ],
@@ -40,18 +40,16 @@
       }
     },
     "target": {
-      "type": "string",
-      "minLength": 1,
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Target artifact",
           "de": "Zielartefakt"
         },
         "description": {
-          "en": "Reference URI of the child model artifact (id!type@version/subset).",
-          "de": "Referenz-URI des Kind-Modellartefakts (id!typ@version/teilmenge)."
+          "en": "Owned target artifact identity and dialect.",
+          "de": "Eigene Zielartefakt-Identität und Dialekt."
         },
         "group": "identity",
         "order": 20

@@ -5,6 +5,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 #[allow(unused_imports)]
 mod snapshot_codec {
+use super::native;
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
 use crate::STDIO_PPTX_DOCUMENT_SCHEMA;
@@ -31,33 +32,6 @@ impl store::ArtifactPack for PptxSnapshot {
 }
 pub use snapshot_codec::*;
 
-#[allow(unused_imports)]
-mod snapshot_wire_codec {
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::component::native::*;
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::component::{PptxSnapshot, PptxXmlPart};
-use semio_framework_os_kernel::{
-    io_schema::IoPayload,
-    sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl},
-};
-use semio_framework_value::{DecodedValue, ValueError, ValueRefusalKind};
-use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{retire_xml_document, XmlDocumentView};
-use semio_s_artifact_stdio_zip::opc::native::{OpcNativeReader, OpcNativeWriter};
-use crate::standards::v_ecma_376::subsets::base::io::text::snapshot::{input};
-pub(super) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, ValueError> {
-    backing::encode(snapshot, encoding, control)
-}
 
-pub(super) fn decode_binary(bytes: &[u8], control: &mut SqliteSnapshotControl<'_>) -> Result<PptxSnapshot, ValueError> {
-    input(bytes, true, control)
-}
-
-pub(super) fn pack_limits(limits: &store::mounted_pack_rt::PackLimits) -> SqliteDatabaseLimits {
-    SqliteDatabaseLimits {
-        max_file_bytes: usize::try_from(limits.max_file_len).unwrap_or(usize::MAX),
-        max_value_bytes: usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX),
-        max_rows: usize::try_from(limits.max_items).unwrap_or(usize::MAX),
-        ..SqliteDatabaseLimits::default()
-    }
-}
-}
-pub use snapshot_wire_codec::*;
+#[path="🧩️native/🦀️.rs"]
+pub(crate) mod native;

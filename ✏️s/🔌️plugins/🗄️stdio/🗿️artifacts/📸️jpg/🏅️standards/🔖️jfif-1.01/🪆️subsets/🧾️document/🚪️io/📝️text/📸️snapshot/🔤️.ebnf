@@ -1,7 +1,7 @@
 document = "semio stdio.jpg.dsl v1", newline, snapshot ;
 snapshot = "schema=", text, "width=", uint, "height=", uint, "pixels=", text,
  "jfifXDensity=", uint, "jfifYDensity=", uint, "sofMarker=", uint, "arithmetic=", boolean,
- "reEncodeQuality=", optional_uint, "jfifVersion=[", uint, uint, "]", "jfifDensityUnits=", text,
+ "jfifVersion=[", uint, uint, "]", "jfifDensityUnits=", text,
  "jfifThumbnail=", thumbnail, "frame=", frame,
  "quantTables=[", { quantization }, "]", "huffmanTables=[", { huffman }, "]",
  "restartInterval=", optional_uint, "otherSegments=[", { segment }, "]" ;

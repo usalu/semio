@@ -68,6 +68,8 @@ export function discoverCargoWorkspaces(root: string): readonly CargoWorkspaceSc
 
 /** 🦀️ Expands each admitted Cargo-native pattern against current physical manifests and rejects absent exact owners. */
 export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope): readonly CargoWorkspacePackage[] {
+  const documents = new Map<string, Record<string, any>>(), scopes = new Map<string, CargoWorkspaceScope>();
+  const readDocument = (path: string): Record<string, any> => { const current = documents.get(path); if (current) return current; const document = read(root, path); documents.set(path, document); return document; };
   const cwd = resolve(root, owner.directory), paths = new Set<string>();
   const patterns = owner.memberManifests.map(pattern => new Bun.Glob(pattern));
   const leaves = owner.memberManifests.map(pattern => new Bun.Glob(pattern.slice(0, -"/Cargo.toml".length)));
@@ -76,7 +78,7 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
   const opaque = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "🗑️generated"]);
   const walk = (directory: string): void => {
     if (directory && !prefixes.some(prefix => !prefix || directory.startsWith(prefix + "/") || prefix === directory || prefix.startsWith(directory + "/"))) return;
-    if(directory){const manifest=join(cwd,directory,"Cargo.toml");if(existsSync(manifest) && read(root,slash(relative(root,manifest))).workspace!==undefined)return;}
+    if(directory){const manifest=join(cwd,directory,"Cargo.toml");if(existsSync(manifest) && readDocument(slash(relative(root,manifest))).workspace!==undefined)return;}
     if (directory && leaves.some(pattern => pattern.match(directory))) {
       const manifest = join(cwd, directory, "Cargo.toml");
       if (existsSync(manifest)) { physical(root, slash(relative(root,manifest))); paths.add(slash(relative(root,manifest))); return; }
@@ -91,16 +93,16 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
   };
   if (patterns.some(pattern => pattern.match("Cargo.toml")) && !excluded.some(pattern => pattern.match(".") || pattern.match("./") || pattern.match("Cargo.toml"))) {
     const manifest = slash(relative(root, join(cwd, "Cargo.toml")));
-    if (read(root, manifest).package !== undefined) paths.add(manifest);
+    if (readDocument(manifest).package !== undefined) paths.add(manifest);
   }
   walk("");
   if (!paths.size) throw new Error(`Cargo workspace has no current source-bound members: ${owner.manifest}`);
   const names = new Set<string>();
   return [...paths].sort().map(manifest => {
-    const document = read(root, manifest), name = document.package?.name;
+    const document = readDocument(manifest), name = document.package?.name;
     if (typeof name !== "string" || !name || names.has(name)) throw new Error(`Cargo workspace member has a missing or duplicate name: ${manifest}`);
     names.add(name);
-    const selected = cargoWorkspaceForManifest(root, manifest);
+    const selected = selectCargoWorkspace(root, manifest, readDocument, scopes);
     if (selected.directory !== owner.directory) throw new Error(`Cargo member belongs to another workspace: ${manifest}`);
     return { directory: slash(dirname(manifest)), manifest, name, workspace: owner.directory };
   });
@@ -108,16 +110,25 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
 
 /** 🧭️ Selects the actual nearest Cargo workspace for a physical package, including isolated native test workspaces. */
 export function cargoWorkspaceForManifest(root: string, manifest: string): CargoWorkspaceScope {
-  const full = physical(root, manifest), packageRow = read(root, manifest).package;
+  return selectCargoWorkspace(root, manifest, path => read(root, path), new Map());
+}
+
+/** 📇️ Reuses parsed authority only within the caller's current physical membership scan. */
+function selectCargoWorkspace(root: string, manifest: string, readDocument: (path: string) => Record<string, any>, scopes: Map<string, CargoWorkspaceScope>): CargoWorkspaceScope {
+  const full = physical(root, manifest), packageRow = readDocument(manifest).package;
   let directory = packageRow?.workspace ? resolve(dirname(full), packageRow.workspace) : dirname(full);
   while (true) {
     const path = join(directory, "Cargo.toml"), relativePath = slash(relative(root, path));
     if (relativePath.startsWith("../") || isAbsolute(relativePath)) throw new Error(`Cargo workspace escapes repository: ${manifest}`);
     if (existsSync(path)) {
-      const workspace = read(root, relativePath).workspace;
+      const admitted = scopes.get(relativePath);
+      if (admitted) return admitted;
+      const workspace = readDocument(relativePath).workspace;
       if (workspace) {
         const relativeDirectory = slash(relative(root, directory)) || ".", prefix = relativeDirectory === "." ? "" : `${relativeDirectory}/`;
-        return workspace.metadata?.semio?.repository !== undefined ? scope(relativeDirectory, object(workspace)) : { directory: relativeDirectory, manifest: `${prefix}Cargo.toml`, lock: `${prefix}Cargo.lock`, memberManifests: (workspace.members ?? ["."]).map((path: string) => `${path}/Cargo.toml`), contribution: parseCargoWorkspaceContribution({ schemaVersion: 1, members: workspace.members ?? ["."], exclude: workspace.exclude ?? [] }) };
+        const selected = workspace.metadata?.semio?.repository !== undefined ? scope(relativeDirectory, object(workspace)) : { directory: relativeDirectory, manifest: `${prefix}Cargo.toml`, lock: `${prefix}Cargo.lock`, memberManifests: (workspace.members ?? ["."]).map((path: string) => `${path}/Cargo.toml`), contribution: parseCargoWorkspaceContribution({ schemaVersion: 1, members: workspace.members ?? ["."], exclude: workspace.exclude ?? [] }) };
+        scopes.set(relativePath, selected);
+        return selected;
       }
     }
     if (directory === resolve(root)) throw new Error(`Cargo package has no workspace: ${manifest}`);
@@ -131,6 +142,13 @@ export function cargoRepositoryPackages(root: string): readonly CargoWorkspacePa
   const names = new Set<string>();
   for (const row of packages) { if (names.has(row.name)) throw new Error(`Duplicate repository Cargo package: ${row.name}`); names.add(row.name); }
   return packages;
+}
+
+/** 📦️ Binds one current repository inventory to an ordered group of named packages. */
+export function cargoRepositoryPackageSelections(root: string, names: readonly string[]): readonly CargoWorkspacePackage[] {
+  if (!names.length) return [];
+  const packages = new Map(cargoRepositoryPackages(root).map(row => [row.name, row]));
+  return names.map(name => { const row = packages.get(name); if (!row) throw new Error(`Unknown current repository Cargo package: ${name}`); return row; });
 }
 
 /** 🎯️ Binds a named current repository package to its physical manifest and selected native workspace. */
@@ -165,9 +183,20 @@ export function selectedCargoArguments(root: string, args: readonly string[]): s
 
 /** 📣️ Publishes only the admitted current member array, preserving every other Cargo declaration. */
 export function publishCargoWorkspaceMembership(root: string, owner: CargoWorkspaceScope, mode: "check" | "write"): boolean {
+  return publishMembership(root, owner, mode, discoverCargoWorkspaces(root));
+}
+
+/** 📣️ Publishes one freshly admitted repository inventory without rediscovering every child for each owner. */
+export function publishCargoWorkspaceMemberships(root: string, mode: "check" | "write"): readonly Readonly<{ owner: CargoWorkspaceScope; changed: boolean }>[] {
+  const owners = discoverCargoWorkspaces(root);
+  return owners.map(owner => ({ owner, changed: publishMembership(root, owner, mode, owners) }));
+}
+
+/** 📣️ Applies the current admitted native child boundaries to one guarded owner publication. */
+function publishMembership(root: string, owner: CargoWorkspaceScope, mode: "check" | "write", owners: readonly CargoWorkspaceScope[]): boolean {
   const path=physical(root,owner.manifest),source=readFileSync(path,"utf8"),document=object(Bun.TOML.parse(source));
   const members=cargoWorkspaceMembers(root,owner).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))) || ".");
-  const children=discoverCargoWorkspaces(root).filter(row=>row.directory!==owner.directory && (owner.directory==="." || row.directory.startsWith(owner.directory+"/"))).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))));
+  const children=owners.filter(row=>row.directory!==owner.directory && (owner.directory==="." || row.directory.startsWith(owner.directory+"/"))).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))));
   const exclude=[...new Set([...owner.contribution.exclude,...children])].sort();
   if(JSON.stringify(document.workspace.members)===JSON.stringify(members) && JSON.stringify(document.workspace.exclude??[])===JSON.stringify(exclude))return false;
   if(mode==="check")throw Error(`Cargo source membership is stale: ${owner.manifest}`);
@@ -192,15 +221,28 @@ export function parseCargoPreparation(value: unknown): CargoPreparationV1 {
  const row=object(value);if(Object.keys(row).some(k=>!["script","command"].includes(k)) || (typeof row.script!=="string" || !row.script || isAbsolute(row.script) || /^[A-Za-z]:\//.test(row.script) || row.script.includes("\\")) || row.script.split("/").at(-1)!=="📜️script.ts" || !Array.isArray(row.command) || !row.command.length || row.command.some((v:unknown)=>typeof v!=="string" || !v || v.includes("\0")))throw new Error("Invalid Cargo preparation recipe");return {script:row.script,command:[...row.command]};
 }
 /** 🔗️ Selects only native scopes reached by the current workspace's authored local dependency paths. */
-export function prepareCargoOwners(root: string, selected: CargoWorkspaceScope): void {
- const scopes=discoverCargoWorkspaces(root), reachable=new Set([selected.directory]), executed=new Set<string>();
- for(const directory of reachable){const owner=scopes.find(s=>s.directory===directory);if(!owner)throw new Error(`Unknown selected Cargo scope: ${directory}`);const authority=read(root,owner.manifest).workspace;
- for(const pkg of cargoWorkspaceMembers(root,owner)){const document=read(root,pkg.manifest), groups=[document,...Object.values(document.target??{})] as Record<string,any>[];
- for(const group of groups)for(const kind of ["dependencies","dev-dependencies","build-dependencies"])for(const [alias,value] of Object.entries(group[kind]??{})){const entry=value as any;if(!entry || typeof entry!=="object")continue;const dependency=entry.workspace?authority.dependencies?.[alias]:entry;if(!dependency)throw new Error(`Missing inherited Cargo dependency: ${pkg.manifest} ${alias}`);if(typeof dependency.path!=="string")continue;const path=resolve(root,entry.workspace?owner.directory:pkg.directory,dependency.path), local=slash(relative(root,path));if(local.startsWith("../") || isAbsolute(local))throw new Error(`Cargo dependency escapes preparation authority: ${alias}`);const child=scopes.filter(s=>s.directory==="." || local===s.directory || local.startsWith(s.directory+"/")).sort((a,b)=>b.directory.length-a.directory.length)[0];if(child)reachable.add(child.directory);}
- const value=document.package?.metadata?.semio?.preparation;if(value===undefined)continue;const recipe=parseCargoPreparation(value), script=physical(root,slash(relative(root,resolve(root,pkg.directory,recipe.script)))), key=JSON.stringify([script,...recipe.command]);if(slash(relative(resolve(root,owner.directory),script)).startsWith("../"))throw new Error(`Cargo preparation leaves its owner workspace: ${pkg.manifest}`);if(executed.has(key))continue;executed.add(key);
- console.log(`[cargo-preparation] ${pkg.manifest} ${recipe.command.join(" ")}`);
- const result=Bun.spawnSync([process.execPath,script,...recipe.command],{cwd:resolve(root,pkg.directory),env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script},stdout:"pipe",stderr:"inherit",timeout:30_000});if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.exitCode!==0)throw new Error(`Cargo owner preparation failed: ${pkg.manifest} (${result.exitCode})`);
+export function prepareCargoOwners(root: string, selected: CargoWorkspaceScope, names: readonly string[] = []): void {
+ const scopes=discoverCargoWorkspaces(root), inventories=new Map<string,readonly CargoWorkspacePackage[]>(), documents=new Map<string,Record<string,any>>(), executed=new Set<string>();
+ const document=(manifest:string):Record<string,any>=>{let value=documents.get(manifest);if(!value){value=read(root,manifest);documents.set(manifest,value);}return value;};
+ const members=(owner:CargoWorkspaceScope):readonly CargoWorkspacePackage[]=>{let value=inventories.get(owner.directory);if(!value){value=cargoWorkspaceMembers(root,owner);inventories.set(owner.directory,value);}return value;};
+ const initial=members(selected), pending=new Set((names.length?names.map(name=>{const pkg=initial.find(pkg=>pkg.name===name);if(!pkg)throw Error(`Unknown selected Cargo package: ${selected.manifest} ${name}`);return pkg;}):initial).map(pkg=>pkg.manifest));
+ for(const manifest of pending){
+ const owner=scopes.filter(scope=>scope.directory==="." || manifest.startsWith(scope.directory+"/")).sort((a,b)=>b.directory.length-a.directory.length)[0];
+ if(!owner)throw Error(`Unknown selected Cargo scope: ${manifest}`);
+ const pkg=members(owner).find(pkg=>pkg.manifest===manifest);if(!pkg)throw Error(`Cargo dependency lacks authored member authority: ${manifest}`);
+ const current=document(manifest),authority=document(owner.manifest).workspace,groups=[current,...Object.values(current.target??{})] as Record<string,any>[];
+ for(const group of groups)for(const kind of ["dependencies","dev-dependencies","build-dependencies"])for(const [alias,value] of Object.entries(group[kind]??{})){
+ const entry=value as any;if(!entry || typeof entry!=="object")continue;const dependency=entry.workspace?authority.dependencies?.[alias]:entry;
+ if(!dependency)throw Error(`Missing inherited Cargo dependency: ${manifest} ${alias}`);if(typeof dependency.path!=="string")continue;
+ const path=resolve(root,entry.workspace?owner.directory:pkg.directory,dependency.path,"Cargo.toml"),local=slash(relative(root,path));
+ if(local.startsWith("../") || isAbsolute(local))throw Error(`Cargo dependency escapes preparation authority: ${alias}`);physical(root,local);pending.add(local);
  }
+ const value=current.package?.metadata?.semio?.preparation;if(value===undefined)continue;
+ const recipe=parseCargoPreparation(value),script=physical(root,slash(relative(root,resolve(root,pkg.directory,recipe.script)))),key=JSON.stringify([script,...recipe.command]);
+ if(slash(relative(resolve(root,owner.directory),script)).startsWith("../"))throw Error(`Cargo preparation leaves its owner workspace: ${manifest}`);if(executed.has(key))continue;executed.add(key);
+ console.log(`[cargo-preparation] ${manifest} ${recipe.command.join(" ")}`);
+ const result=Bun.spawnSync([process.execPath,script,...recipe.command],{cwd:resolve(root,pkg.directory),env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script},stdout:"pipe",stderr:"inherit",timeout:30_000});
+ if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.exitCode!==0)throw Error(`Cargo owner preparation failed: ${manifest} (${result.exitCode})`);
  }
 }
 
@@ -216,9 +258,12 @@ export function prepareCargoWorkspaceInvocation(root: string, args: readonly str
   const selected = index >= 0 ? args[index+1] : inline?.slice(16);
   const path = selected ? resolve(cwd, selected) : join(cwd, "Cargo.toml");
   if (environment.SEMIO_CARGO_PREPARATION_ACTIVE) throw new Error(`Cargo recursion in owner preparation: ${environment.SEMIO_CARGO_PREPARATION_ACTIVE}`);
-  const owner = cargoWorkspaceForManifest(root, slash(relative(root, path))), source = read(root, owner.manifest);
+  const owner = cargoWorkspaceForManifest(root, slash(relative(root, path))), source = read(root, owner.manifest), names:string[]=[];
+  for(let cursor=1;cursor<args.length && args[cursor]!=="--";cursor++){const arg=args[cursor]!;if(arg==="-p" || arg==="--package"){const name=args[++cursor];if(!name)throw Error("Cargo package selector requires a current name");names.push(name);}else if(arg.startsWith("--package="))names.push(arg.slice(10));else if(arg.startsWith("-p") && arg.length>2)names.push(arg.slice(2));}
+  const selectedPackage=read(root,slash(relative(root,path))).package?.name;
+  if(!names.length && !args.includes("--workspace") && typeof selectedPackage==="string")names.push(selectedPackage);
   if (source.workspace?.metadata?.semio?.repository !== undefined) {
-    const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("./🛠️preparation/📜️script.ts",import.meta.url)),"prepare","--manifest",owner.manifest],{cwd:root,env:{...environment,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"inherit"});
+    const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("./🛠️preparation/📜️script.ts",import.meta.url)),"prepare","--manifest",owner.manifest,...names.flatMap(name=>["--package",name])],{cwd:root,env:{...environment,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"inherit"});
     if (result.stdout.byteLength) process.stderr.write(result.stdout);
     if(result.exitCode!==0)throw new Error(`Selected Cargo preparation failed: ${owner.manifest} (${result.exitCode})`);
   }

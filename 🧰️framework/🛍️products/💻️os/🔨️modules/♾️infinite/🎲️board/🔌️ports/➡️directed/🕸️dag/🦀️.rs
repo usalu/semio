@@ -7127,8 +7127,8 @@ mod wasm_bridge {
     impl DagSnapshotVcs {
         /// 🌐️ Constructs the VCS bridge without synchronously blocking the browser host callback.
         #[wasm_bindgen(js_name = create)]
-        pub async fn create() -> Result<DagSnapshotVcs, JsValue> {
-            let store = create_dag_store("dag", empty_dag_document()).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
+        pub async fn create(actor: String) -> Result<DagSnapshotVcs, JsValue> {
+            let store = create_dag_store("dag", empty_dag_document(), ActorId(actor)).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(store) })
         }
 

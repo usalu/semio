@@ -1849,9 +1849,9 @@ struct EditorSceneHoverField {
 }
 
 /// 🔎️ One `*Json` member of the contract's scene in its typed form: the encoded field expanded
-/// (`store::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read; a JSON `null` is no value.
+/// (`semio_framework_os_kernel::os_store::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read; a JSON `null` is no value.
 fn text_editor_scene_member<T: serde::de::DeserializeOwned>(member: &str, raw: &str) -> Result<Option<T>, String> {
-    let json = store::pack_rt::scene_field_json_text(raw).map_err(|error| format!("{member}: {error}"))?;
+    let json = semio_framework_os_kernel::os_store::pack_rt::scene_field_json_text(raw).map_err(|error| format!("{member}: {error}"))?;
     serde_json::from_str::<Option<T>>(&json).map_err(|error| format!("{member}: {error}"))
 }
 
@@ -7024,7 +7024,7 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
         };
         if include_edit {
             batch.action(&snapshot.controller_id, "textEdit", edit_bytes, |builder| {
-                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 0, abort_correlation_on_error: true })?;
+                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, token, member: 0, abort_correlation_on_error: true })?;
                 builder.begin_object(None)?;
                 builder.string(Some("surfaceId"), &snapshot.surface_id)?;
                 builder.string(Some("text"), &snapshot.text)?;
@@ -7034,7 +7034,7 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
         }
         if include_selection {
             batch.action(&snapshot.controller_id, "textSelect", selection_bytes, |builder| {
-                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 1, abort_correlation_on_error: false })?;
+                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, token, member: 1, abort_correlation_on_error: false })?;
                 builder.begin_object(None)?;
                 builder.string(Some("surfaceId"), &snapshot.surface_id)?;
                 builder.integer(Some("start"), snapshot.start as i64)?;
@@ -7061,6 +7061,7 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
 }
 
 pub(crate) fn settle_text_editor_action_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, outcome: TextEditorActionOutcome<'_>) {
+    if receipt.source != ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor { return; }
     let index = (receipt.token.get() & 0xff) as usize;
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
@@ -7227,7 +7228,7 @@ pub(crate) fn drive_text_editor_retained_action_step() -> Result<TextEditorRetai
             let publication = surface.editor_delivery.publication.take().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
             let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
             registry.next_text_editor_receipt = registry.next_text_editor_receipt.checked_add(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-            let first = publication.action.finish(Some(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 0, abort_correlation_on_error: true }))?;
+            let first = publication.action.finish(Some(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, token, member: 0, abort_correlation_on_error: true }))?;
             let second = publication.include_selection.then(|| ui_wgpu::wgpu::QueuedActionDescriptor {
                 descriptor: ActionDescriptor {
                     controller_id: publication.snapshot.controller_id.clone(),
@@ -7238,7 +7239,7 @@ pub(crate) fn drive_text_editor_retained_action_step() -> Result<TextEditorRetai
                         ("end".into(), semio_framework::DslValue::uint(publication.snapshot.end as u64)),
                     ])),
                 },
-                receipt: Some(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 1, abort_correlation_on_error: false }),
+                receipt: Some(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, token, member: 1, abort_correlation_on_error: false }),
             });
             let slot = &mut registry.slots[index];
             if slot.generation != slot_generation {
@@ -7270,7 +7271,7 @@ pub(crate) fn drive_text_editor_retained_action_step() -> Result<TextEditorRetai
         let publication = surface.editor_delivery.explicit_publication.take().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
         let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
         registry.next_text_editor_receipt = registry.next_text_editor_receipt.checked_add(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-        let receipt = ui_wgpu::wgpu::ActionQueueReceipt { token, member: 2, abort_correlation_on_error: false };
+        let receipt = ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, token, member: 2, abort_correlation_on_error: false };
         let descriptor = publication.action.finish(Some(receipt))?;
         let slot = &mut registry.slots[index];
         if slot.generation != slot_generation {

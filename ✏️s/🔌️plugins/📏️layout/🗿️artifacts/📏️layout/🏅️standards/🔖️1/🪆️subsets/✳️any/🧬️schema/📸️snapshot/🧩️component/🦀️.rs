@@ -17,7 +17,7 @@ pub fn decode(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_f
         let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected inline Drawing record"))};
         let handle=<store::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(0).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Drawing handle"))?,control)?;control.step()?;
         let Some(semio_framework_dsl_record::FieldValue::Value(content))=record.get(1) else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected inline Drawing content"))};
-        let content=DecodedValue::new(<SemioDrawingSnapshot as FromValue>::from_value_controlled(content,control)?,<SemioDrawingSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot);
+        let content=DecodedValue::new(<SemioDrawingSnapshot as FromValue>::from_value_controlled(content,control)?,SemioDrawingSnapshot::retire_owned);
         control.step()?;Ok(LayoutDrawingChild{handle,content:content.take()})
     })
 }
@@ -29,4 +29,4 @@ pub fn encode(value:&LayoutDrawingChild,control:&mut semio_framework_value::Nati
         Ok(semio_framework_dsl_record::FieldValue::Record(output.take()))
     })
 }
-pub fn retire(value:LayoutDrawingChild){<SemioDrawingSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(value.content);}
+pub fn retire(value:LayoutDrawingChild){SemioDrawingSnapshot::retire_owned(value.content);}

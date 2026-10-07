@@ -60,7 +60,7 @@ mod plugin_builder_contract_tests {
     use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::collections::BTreeMap;
-    use store::os_io::ArtifactRef;
+    use {semio_framework_artifact_reference::ArtifactRef};
     use semio_framework_2d::compute::EngineHandles;
     use store::{ArtifactPack, };
     use store::{Backbone, BackboneMessage, MemoryBackbone};
@@ -442,7 +442,17 @@ mod plugin_builder_contract_tests {
         }
 
         fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
-            let crate::retained_command::ArtifactCommandInputs { command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+            let owner = input.snapshot_owner.expect("retained runtime supplies its immutable snapshot capability");
+            assert!(std::ptr::eq(owner.as_ref(), input.snapshot));
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/🔒️immutable-reader.json")).expect("neutral immutable reader fixture");
+            let observed = serde_json::to_value(owner.as_ref()).expect("independent snapshot projection");
+            assert_eq!(observed, fixture["initial"]);
+            let mut replacement = owner.clone();
+            *std::sync::Arc::make_mut(&mut replacement) = serde_json::from_value(fixture["replacement"].clone()).expect("independent replacement snapshot");
+            assert_eq!(serde_json::to_value(owner.as_ref()).unwrap(), fixture["initial"]);
+            assert_eq!(serde_json::to_value(replacement.as_ref()).unwrap(), fixture["replacement"]);
+            eprintln!("[DEBUG] retained runtime preserves the immutable reader during independent replacement");
+            let crate::retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
             self.emit.take().map(crate::retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated"))
         }
     }
@@ -457,7 +467,7 @@ mod plugin_builder_contract_tests {
         }
 
         fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
-            let crate::retained_command::ArtifactCommandInputs { command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+            let crate::retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
             TEST_RETAINED_COMMAND_STEP_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             if self.cursor < 2 {
                 self.cursor += 1;
@@ -1680,7 +1690,7 @@ mod plugin_builder_contract_tests {
         const OPERATIONS: usize = 4;
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         for index in 0..OPERATIONS {
@@ -1743,7 +1753,7 @@ mod plugin_builder_contract_tests {
     async fn a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled() {
         const ROWS: i32 = 4_400;
         let id = 4_103;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(id).await;
         app.dispatch_typed(TestCommand::BulkEdit { rows: ROWS }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.unwrap();
         let runtime = super::PluginRuntime::new();
@@ -1789,7 +1799,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_host_crossing_outranks_every_background_hold_on_the_same_app() {
         let id = 4_101;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(id).await;
         let runtime = super::PluginRuntime::new();
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
@@ -1842,7 +1852,7 @@ mod plugin_builder_contract_tests {
     async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(id).await;
         let value = fixture["command"]["value"].as_i64().unwrap() as i32;
         let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
@@ -1919,8 +1929,10 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
         let id = 41;
-        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(id).await;
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply {
@@ -2427,7 +2439,7 @@ mod plugin_builder_contract_tests {
     /// 🧪️ [`contract_app_under_test`] over an explicit registry — the flat-menu and interaction
     /// fixtures declare their own manifests but need the same mounted, self-closing shape.
     async fn contract_app_with(registry: AppActionRegistry) -> ContractApp {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry)).await;
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
         app.bind_instance_id(meta().instance_id).await;
         ContractApp(app)
     }
@@ -2444,14 +2456,14 @@ mod plugin_builder_contract_tests {
     /// generic surface (a generic bound never applies a `Deref` coercion). Those laws own the close
     /// themselves, exactly as they did before.
     async fn contract_app_raw() -> VcsArtifactApp<TestApp> {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await)).await;
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
         app.bind_instance_id(meta().instance_id).await;
         app
     }
 
     /// 🧩️ [`contract_app_raw`] over the composed member roster.
     async fn contract_composed_app_raw() -> VcsArtifactApp<TestApp, TestMembers> {
-        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await)).await;
+        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -2463,7 +2475,7 @@ mod plugin_builder_contract_tests {
     /// verbs and supplying no proof row cannot be CONSTRUCTED at all (`interactive-job.catalog-incomplete`),
     /// which is the same fail-closed join from the other side.
     async fn unproved_contract_app() -> VcsArtifactApp<TestApp<false, TEST_APP_TOOLS_NONE>> {
-        VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await).await
+        VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await
     }
 
     /// 🧩️ [`ContractApp`] over the composed member roster — same three laws by construction.
@@ -2564,7 +2576,7 @@ mod plugin_builder_contract_tests {
     }
 
     async fn contract_composed_app() -> ContractComposedApp {
-        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await)).await;
+        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
         app.bind_instance_id(meta().instance_id).await;
         ContractComposedApp(app)
     }
@@ -2594,7 +2606,7 @@ mod plugin_builder_contract_tests {
         let registry = contract_registry().await;
         let declared = registry.test_migrated_tool_ids();
         let controller_id = registry.test_controller_id().to_string();
-        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone()).await;
+        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into())).await;
         let registered: std::collections::BTreeSet<String> = app
             .test_registered_tool_keys()
             .into_iter()
@@ -2659,7 +2671,7 @@ mod plugin_builder_contract_tests {
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
         let controller_id = registry.test_controller_id().to_string();
-        let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone()).await;
+        let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into())).await;
         type UnprovedFrameworkOwner = TestApp<false, TEST_APP_TOOLS_NONE>;
         let expected: [(&str, &str, std::any::TypeId, &'static str, usize); 12] = [
             ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), 8_192),
@@ -3497,7 +3509,7 @@ mod plugin_builder_contract_tests {
     /// 🕹️ [`interaction_app_under_test`] without the self-closing wrapper — for the local-interaction
     /// laws that move the app into a `PluginRuntime` cell.
     async fn interaction_app_raw() -> VcsArtifactApp<TestApp> {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await)).await;
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -3997,9 +4009,21 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn plugin_builder_wires_app_factory_for_create_app() {
         let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
-        let mut app = bundle.create_app(TestApp::<false>::APP_ID).expect("registered app");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
+        let actor = protocol::ActorId(fixture["actors"]["opened"].as_str().expect("opened actor").into());
+        let mut app = bundle.create_app(TestApp::<false>::APP_ID, actor.clone()).expect("registered app");
         assert_eq!(app.app_id().await, TestApp::<false>::APP_ID);
-        assert!(bundle.create_app("unknown-app").is_none());
+        let TestRuntimeApps::Test(owner) = &mut app;
+        assert_eq!(owner.store.local_actor_id(), &actor);
+        assert_eq!(owner.config_store.local_actor_id(), &actor);
+        assert_eq!(owner.draft_store.local_actor_id(), &actor);
+        assert_eq!(owner.interaction_store.local_actor_id(), &actor);
+        let roots = [owner.store.local_actor_id(), owner.config_store.local_actor_id(), owner.draft_store.local_actor_id(), owner.interaction_store.local_actor_id()];
+        assert_eq!(serde_json::to_value(roots.map(|actor| actor.0.as_str())).expect("independent actor projection"), serde_json::json!([fixture["actors"]["opened"], fixture["actors"]["opened"], fixture["actors"]["opened"], fixture["actors"]["opened"]]));
+        let pack = owner.document_pack().await.expect("stored document");
+        artifact_app_laws::load_document(owner, &pack).await.expect("production reload");
+        assert_eq!(owner.store.local_actor_id(), &actor, "reload retains the opened actor");
+        assert!(bundle.create_app("unknown-app", actor).is_none());
         artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
@@ -4421,6 +4445,8 @@ mod plugin_builder_contract_tests {
     /// (`declared_child_reference`), so a law that registers a live member declares it first — exactly as a product
     /// parent's own leaf does before its member is opened.
     async fn declare_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
         let mut children: Vec<String> = app.test_snapshot().await.slot.iter().map(|child| child.target.to_uri()).collect();
         children.push(ArtifactRef { artifact_id: child_id.into(), dialect: test_child_dialect().await }.to_uri());
         app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children })], transaction: None }).await.expect("the parent declares the member it is about to own");
@@ -4441,7 +4467,7 @@ mod plugin_builder_contract_tests {
     async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
         let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
         envelope.dialect = Some(test_child_dialect().await);
-        let mut child = store::ArtifactStore::new(envelope).await?;
+        let mut child = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await?;
         child.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
         Ok(TestMembers::Child(Box::new(child)))
     }
@@ -4453,7 +4479,7 @@ mod plugin_builder_contract_tests {
     async fn new_bare_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
         let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
         envelope.dialect = Some(test_child_dialect().await);
-        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new(envelope).await?)))
+        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await?)))
     }
 
     struct TestSnapshotRetirement {
@@ -4623,7 +4649,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member() {
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
@@ -4632,7 +4658,7 @@ mod plugin_builder_contract_tests {
         assert!(app.open_child("slot", "child-1", dialect.clone(), &[]).await.is_err());
         assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
         assert_eq!(app.test_child_admission_state(1).generation, 0);
-        let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
+        let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
         persisted.set_owner(Some(store::OwnerRef { parent, slot: "slot".into(), child_id: "child-1".into() })).await;
         let packed = persisted.envelope_pack_bytes().await.expect("persist exact owned child");
         close_member_admission_fixture(&mut persisted);
@@ -4668,7 +4694,7 @@ mod plugin_builder_contract_tests {
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
-        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
+        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
         let before = member.envelope_pack_bytes().await.unwrap();
         declare_test_child(&mut app, "child-1").await;
         let error = app.register_child("slot", "child-1", dialect, member).await.expect_err("direct transfer must not apply a deferred restore pin");
@@ -4686,16 +4712,16 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner() {
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         let dialect = test_child_dialect().await;
-        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
+        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
         app.register_child("slot", "child-1", dialect.clone(), member).await.expect("pure fresh member is adopted");
         assert_eq!(app.test_child_admission_state(1).generation, 1);
         let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
         let member = app.child_store("slot", "child-1").await.unwrap();
         assert_eq!(member.owner_ref(), Some(owner.clone()));
         let packed = member.envelope_pack_bytes().await.unwrap();
-        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
+        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         restored.open_child("slot", "child-1", dialect, &packed).await.expect("fresh factory restores exact parent owner");
         assert_eq!(restored.test_child_admission_state(1).generation, 1);
         assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));
@@ -4877,6 +4903,8 @@ mod plugin_builder_contract_tests {
     /// its slot, id and dialect: a reader that composes on read decodes the child's live value from it, no history fold.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_documents_child_heads_answer_each_owned_childs_current_head_snapshot() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let mut app = contract_composed_app_raw().await;
         register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
@@ -6324,6 +6352,7 @@ mod plugin_builder_contract_tests {
         let history = history_window_log(rows, false);
 
         let cold = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("a log of any length must assemble");
+        assert_eq!(serde_json::to_value(&cold.layout).expect("the authored history root layout"), fixture["rootLayout"]);
         assert_eq!(cold.children[1].children.len(), default_rows.min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport, clamped by the built-children ceiling");
         assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
         assert_eq!(history_commands_window(&cold), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset: 0 }), "the host sees the whole extent");
@@ -7270,7 +7299,7 @@ mod plugin_builder_contract_tests {
         for classification in [Unclassified, BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted] {
             let mut action_registry = contract_registry().await;
             action_registry.test_set_action_classification("badView", classification);
-            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry).await;
+            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
             assert!(!action_app.test_registered_tool_keys().iter().any(|key| key.1 == "badView"));
             let action_error = action_app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("non-migrated action must be rejected before its handler runs");
             assert_eq!(action_error.code.0, "interactive-job.not-ui-safe");
@@ -7278,7 +7307,7 @@ mod plugin_builder_contract_tests {
 
             let mut command_registry = contract_registry().await;
             command_registry.test_set_app_command_classification("incrementViaCommand", classification);
-            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry).await;
+            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
             assert!(!command_app.test_registered_tool_keys().iter().any(|key| key.1 == "incrementViaCommand"));
             let invocation =
                 CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
@@ -7362,7 +7391,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn registry_less_construction_rejects_before_the_reducer() {
-        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default()).await;
+        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("an empty registry must fail closed");
         assert_eq!(error.code.0, "interactive-job.unknown-key");
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
@@ -7960,7 +7989,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn typed_ladder_never_hands_a_guest_interaction_verb_to_the_host_on_any_turn() {
         let id = 47u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         let outcome: Result<(), String> = async {

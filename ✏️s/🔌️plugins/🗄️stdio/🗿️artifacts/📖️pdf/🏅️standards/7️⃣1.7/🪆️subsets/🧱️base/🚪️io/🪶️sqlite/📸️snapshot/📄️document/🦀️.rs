@@ -1,4 +1,5 @@
 //! 📄️ Complete PDF document ownership and ordered top-level entity collections.
+use crate::standards::v1_7::subsets::base::io::text::snapshot as snapshot_text;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
 use store::ArtifactSqliteSnapshot;
@@ -19,18 +20,18 @@ impl store::ArtifactSqliteSnapshot for PdfSnapshot{
     fn retire_sqlite_snapshot(self){<Self as pack::value::FromValue>::retire_decoded(self)}
     const SQLITE_SCHEMA:&'static str=include_str!("../🗄️.sql");
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<(),ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;Ok(())}
-    fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&Db,control:&mut Control<'_>)->store::io_schema::IoResult<()>{(||->Result<store::io_schema::IoOutcome<()>,ValueError>{
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&Db,control:&mut Control<'_>)->store::io_schema::IoResult<()>{(||->Result<store::io_schema::IoOutcome<()>,ValueError>{
         use crate::standards::v1_7::subsets;
         if dialect.artifact_kind!="s.stdio.pdf"||dialect.standard!="1.7"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.7 snapshot does not own this dialect"));}
         control.checkpoint(Phase::ProjectSnapshot,0,0)?;
         let mut diagnostics=match dialect.subset.as_str(){
             "*"=>return Ok(store::io_schema::IoOutcome::clean(())),
-            "a"=>subsets::a::schema::check_pdf_a_conformance(self),
-            "x"=>subsets::x::schema::check_x_conformance(self),
-            "e"=>subsets::e::schema::check_e_conformance(self),
-            "ua"=>subsets::ua::schema::check_ua_conformance(self),
-            "vt"=>subsets::vt::schema::check_vt_conformance(self),
-            "h"=>subsets::h::schema::check_h_conformance(self),
+            "a"=>subsets::a::io::check_pdf_a_conformance(self),
+            "x"=>subsets::x::io::check_x_conformance(self),
+            "e"=>subsets::e::io::check_e_conformance(self),
+            "ua"=>subsets::ua::io::check_ua_conformance(self),
+            "vt"=>subsets::vt::io::check_vt_conformance(self),
+            "h"=>subsets::h::io::check_h_conformance(self),
             _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.7 snapshot subset has no semantic validator")),
         };
         let action_severity=match dialect.subset.as_str(){"a"|"e"=>Some(semio_framework_diagnostic::Severity::Error),"x"|"vt"|"h"=>Some(semio_framework_diagnostic::Severity::Warning),_=>None};

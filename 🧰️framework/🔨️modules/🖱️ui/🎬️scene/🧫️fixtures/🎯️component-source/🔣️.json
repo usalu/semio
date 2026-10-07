@@ -1,12 +1,471 @@
 {
   "schema": "ui.mesh-component-source.v1",
-  "source": {"handle": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "revision": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"},
-  "references": {"face": ["9007199254740993", "18446744073709551615"], "edge": ["17"], "vertex": ["23"]},
+  "source": {
+    "handle": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "revision": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "references": {
+    "face": [
+      "9007199254740993",
+      "18446744073709551615"
+    ],
+    "edge": [
+      "17"
+    ],
+    "vertex": [
+      "23"
+    ]
+  },
   "cases": [
-    {"kind": "face", "group": 0, "label": "9007199254740993"},
-    {"kind": "face", "group": 1, "label": "18446744073709551615"},
-    {"kind": "edge", "group": 0, "label": "17"},
-    {"kind": "vertex", "group": 0, "label": "23"}
+    {
+      "kind": "face",
+      "group": 0,
+      "label": "9007199254740993"
+    },
+    {
+      "kind": "face",
+      "group": 1,
+      "label": "18446744073709551615"
+    },
+    {
+      "kind": "edge",
+      "group": 0,
+      "label": "17"
+    },
+    {
+      "kind": "vertex",
+      "group": 0,
+      "label": "23"
+    }
   ],
-  "invalidLabels": ["0", "01", "-1", "nan", "18446744073709551616"]
+  "invalidLabels": [
+    "0",
+    "01",
+    "-1",
+    "nan",
+    "18446744073709551616"
+  ],
+  "admission": {
+    "references": {
+      "face": [
+        "17",
+        "17",
+        "18446744073709551615",
+        "18446744073709551616",
+        "-1",
+        "0",
+        "01",
+        "nan"
+      ],
+      "edge": [
+        "17"
+      ],
+      "vertex": [
+        "23"
+      ]
+    },
+    "cases": [
+      {
+        "kind": "face",
+        "group": 0,
+        "label": "17",
+        "eligible": false
+      },
+      {
+        "kind": "face",
+        "group": 1,
+        "label": "17",
+        "eligible": false
+      },
+      {
+        "kind": "face",
+        "group": 2,
+        "label": "18446744073709551615",
+        "eligible": true
+      },
+      {
+        "kind": "face",
+        "group": 3,
+        "label": "18446744073709551616",
+        "eligible": false
+      },
+      {
+        "kind": "face",
+        "group": 4,
+        "label": "-1",
+        "eligible": false
+      },
+      {
+        "kind": "face",
+        "group": 5,
+        "label": "0",
+        "eligible": false
+      },
+      {
+        "kind": "face",
+        "group": 6,
+        "label": "01",
+        "eligible": false
+      },
+      {
+        "kind": "face",
+        "group": 7,
+        "label": "nan",
+        "eligible": false
+      },
+      {
+        "kind": "edge",
+        "group": 0,
+        "label": "17",
+        "eligible": true
+      },
+      {
+        "kind": "vertex",
+        "group": 0,
+        "label": "23",
+        "eligible": true
+      }
+    ],
+    "oversizedSource": {
+      "labelBytes": 16777217,
+      "fault": "byteCapacity"
+    },
+    "grant": {
+      "items": 1,
+      "bytes": 16384
+    },
+    "maximumTurns": 100000,
+    "zeroGrant": {
+      "items": 0,
+      "bytes": 0,
+      "complete": false,
+      "processedItems": 0,
+      "processedBytes": 0,
+      "retiredItems": 0,
+      "retiredBytes": 0
+    },
+    "maximumLabelsPerDomain": 600000,
+    "insufficientGrant": {
+      "items": 1,
+      "bytes": 1,
+      "complete": false,
+      "processedItems": 0,
+      "processedBytes": 0,
+      "retiredItems": 0,
+      "retiredBytes": 0
+    },
+    "scratchEntryBytes": 12,
+    "cancelAfterItems": 2,
+    "authorityBudget": {
+      "filledOwners": 4,
+      "geometryPages": 1023,
+      "pageBytes": 16384,
+      "ceilingPages": 4096,
+      "labelBytes": 50000,
+      "fault": "pageCapacity"
+    }
+  },
+  "zeroIndex": {
+    "accepted": [
+      {
+        "kind": "wire",
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "vertexIds": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "edges": [
+          [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ],
+          [
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ]
+        ],
+        "edgeIds": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ]
+        ]
+      },
+      {
+        "kind": "point",
+        "positions": [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        "vertexIds": [
+          0,
+          1
+        ],
+        "edges": [],
+        "edgeIds": [],
+        "bounds": [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            5,
+            6,
+            7
+          ]
+        ]
+      },
+      {
+        "kind": "edgeOnlyWire",
+        "positions": [
+          [
+            -2,
+            0,
+            1
+          ],
+          [
+            3,
+            0,
+            1
+          ]
+        ],
+        "vertexIds": [],
+        "edges": [
+          [
+            [
+              -2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ]
+          ]
+        ],
+        "edgeIds": [
+          0
+        ],
+        "bounds": [
+          [
+            -2,
+            0,
+            1
+          ],
+          [
+            3,
+            0,
+            1
+          ]
+        ]
+      }
+    ],
+    "refused": [
+      {
+        "vertices": 0,
+        "indices": 0,
+        "vertexIds": 0,
+        "edges": 0,
+        "edgeIds": 0
+      },
+      {
+        "vertices": 3,
+        "indices": 0,
+        "vertexIds": 0,
+        "edges": 0,
+        "edgeIds": 0
+      },
+      {
+        "vertices": 2,
+        "indices": 0,
+        "vertexIds": 1,
+        "edges": 0,
+        "edgeIds": 0
+      },
+      {
+        "vertices": 2,
+        "indices": 1,
+        "vertexIds": 2,
+        "edges": 0,
+        "edgeIds": 0
+      }
+    ],
+    "vertexSentinel": 4294967295,
+    "sentinelCases": [
+      {
+        "kind": "sentinelOnlyPoint",
+        "positions": [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        "vertexIds": [
+          4294967295,
+          4294967295
+        ],
+        "indices": [],
+        "edges": [],
+        "eligible": false
+      },
+      {
+        "kind": "mixedTriangle",
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "vertexIds": [
+          17,
+          4294967295,
+          23
+        ],
+        "indices": [
+          0,
+          1,
+          2
+        ],
+        "edges": [],
+        "eligible": true
+      },
+      {
+        "kind": "mixedEdge",
+        "positions": [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        "vertexIds": [
+          4294967295,
+          23
+        ],
+        "indices": [],
+        "edges": [
+          [
+            [
+              2,
+              3,
+              4
+            ],
+            [
+              5,
+              6,
+              7
+            ]
+          ]
+        ],
+        "eligible": true
+      }
+    ]
+  }
 }

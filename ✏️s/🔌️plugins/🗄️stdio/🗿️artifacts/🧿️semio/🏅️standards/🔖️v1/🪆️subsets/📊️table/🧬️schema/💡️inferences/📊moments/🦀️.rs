@@ -67,6 +67,7 @@ fn column_values(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<f64> {
 pub struct ColumnMoments;
 
 impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = SemioColumnMoments;
     const FIELD_ID: &'static str = "s.stdio.semio.table.inference.moments";
@@ -80,11 +81,11 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
         snapshot.columns.iter().filter(|c| matches!(c.kind, SemioTableCellKind::Int | SemioTableCellKind::Float)).map(|c| store::InferenceStep { key: c.name.clone(), parents: Vec::new() }).collect()
     }
 
-    /// 🔑 Canonical dependency-input bytes — EXACTLY this column's own numeric cell values, nothing
+    /// 🔑 Owned dependency-input values — EXACTLY this column's own numeric cell values, nothing
     /// else (not other columns, not `kind`, which `plan` already gates on) — an unrelated column's
     /// edit must still hit the cache, proven by the incrementality-law test below.
-    fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        semio_framework_pack_json::to_json_string(&column_values(snapshot, key)).into_bytes()
+    fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
+        semio_framework_value::ToValue::to_value(&column_values(snapshot, key))
     }
 
     fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

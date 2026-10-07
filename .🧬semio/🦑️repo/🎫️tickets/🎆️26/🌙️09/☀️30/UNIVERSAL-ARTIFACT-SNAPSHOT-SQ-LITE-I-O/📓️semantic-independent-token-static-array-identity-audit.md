@@ -1,0 +1,5 @@
+# Token Static Array Identity Audit
+
+Read-only bounded audit of actual `🧰️framework/🔨️modules/🗣️dsl/🔤️token/🦀️.rs` found `static UNITS: &[UnitSpec] = &[...]` and const unit_by_symbol returning `&UNITS[index]`. The observed NativeAfter97684 failure was reported by the owning lane: DEGREE versus runtime `&UNITS[11]` pointer equality. No compiler or owning route was run by this audit lane.
+
+Promoting the vocabulary itself to `static UNITS: [UnitSpec; 41] = [...]` is narrowly aligned with the asserted address identity: indexed references point directly into the addressable static array. It leaves all 41 ordered vocabulary values, bytewise const lookup, loop bounds, return type, conversion behavior and assertions intact. Existing index/len uses remain valid for a fixed array. This is an appropriate exact source fix to test against the same owner route; it is not runtime proof. The immutable lane owns the guarded edit and replay. No lookup result, fixture, assertion or threshold should be relaxed.

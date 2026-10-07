@@ -11,8 +11,8 @@ use crate::schema::diff::{diff_set_snapshot, CsvDiff, CsvFieldDiff, CsvRecordAdd
 
 use crate::schema::snapshot::{CsvField, CsvRecord};
 use crate::CsvSnapshot;
-use protocol::OpBinary;
-use protocol::{Mutation, MutationDiff, OpText};
+
+use protocol::{Mutation, MutationDiff};
 
 //#region 🔖️Mutations
 #[path = "📥insert-record/🦀️.rs"]
@@ -170,3 +170,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

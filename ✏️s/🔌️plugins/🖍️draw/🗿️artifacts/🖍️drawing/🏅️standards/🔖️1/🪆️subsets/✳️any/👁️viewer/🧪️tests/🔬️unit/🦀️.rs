@@ -19,9 +19,9 @@ async fn restore_archive(app: &mut impl semio_framework_plugin::PluginApp, opera
 async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
     use crate::editor::drawing::{create_drawing_app, DrawingCommand, DrawingPlayApp, commands::add_layer::AddLayer};
     use semio_framework_plugin::{artifact_app_laws as laws, App, EditorApp, PluginApp};
-    let mut editor = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await);
-    let mut viewer = Box::new(laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(|| App { definition: create_drawing_viewer(), examples: Vec::new() }).await);
-    let mut reopened = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await);
+    let mut editor = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+    let mut viewer = Box::new(laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(|| App { definition: create_drawing_viewer(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+    let mut reopened = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🕰️history/🔣️.json")).unwrap();
     let meta = laws::meta(fixture["author"].as_str().unwrap());
     editor.bind_instance_id(meta.instance_id).await;
@@ -102,7 +102,7 @@ fn drawing_viewer_camera_payload_validation_matches_the_host_shape() {
 /// panic S15 measured on the generation2d viewer (session 11); this viewer had the same gap.
 #[semio_framework_async_macros::async_test]
 async fn the_viewer_opens_and_closes_its_document_through_the_artifacts_owners() {
-    let mut app = semio_framework_plugin::artifact_app_laws::new_viewer::<DrawingViewer>().await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_viewer::<DrawingViewer>(semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let tree = semio_framework_plugin::PluginApp::render(&mut app, canvas::BODY_KEY, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("the viewer renders its default document");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("the canvas projects");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);

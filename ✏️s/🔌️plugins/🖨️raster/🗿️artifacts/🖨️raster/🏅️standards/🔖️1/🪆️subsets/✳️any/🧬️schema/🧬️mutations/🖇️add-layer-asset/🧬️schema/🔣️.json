@@ -31,63 +31,7 @@
       }
     },
     "asset": {
-      "title": "RasterImageAsset",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "data",
-        "mime"
-      ],
-      "properties": {
-        "mime": {
-          "type": "string",
-          "x-semio-ui": {
-            "widget": "text",
-            "role": "value",
-            "label": {
-              "en": "Media type",
-              "de": "Medientyp"
-            },
-            "description": {
-              "en": "For example image/png.",
-              "de": "Zum Beispiel image/png."
-            },
-            "group": "source",
-            "order": 10
-          }
-        },
-        "data": {
-          "type": "string",
-          "contentEncoding": "base64",
-          "x-semio-ui": {
-            "role": "value",
-            "label": {
-              "en": "Bytes",
-              "de": "Bytes"
-            },
-            "description": {
-              "en": "Image bytes, Base64-encoded.",
-              "de": "Bildbytes, Base64-kodiert."
-            },
-            "group": "source",
-            "order": 20,
-            "widget": "multiline"
-          }
-        }
-      },
-      "x-semio-ui": {
-        "role": "value",
-        "label": {
-          "en": "Image",
-          "de": "Bild"
-        },
-        "description": {
-          "en": "The encoded image to store.",
-          "de": "Das zu speichernde kodierte Bild."
-        },
-        "group": "record",
-        "order": 20
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/image/snapshot.json"
     }
   }
 }

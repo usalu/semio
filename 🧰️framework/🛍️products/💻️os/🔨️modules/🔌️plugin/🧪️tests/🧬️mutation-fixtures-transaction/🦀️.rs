@@ -429,7 +429,7 @@ fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let draft = assert_proposes_transaction(&mut app, TxnCommand::IncrementAndNotify).await;
     assert_eq!(draft.local_ops.len(), 1, "the local op must still be encoded for the proposal");
     assert_eq!(draft.foreign.len(), 1, "the foreign step must be reported");
@@ -449,7 +449,7 @@ async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand,
 
 #[semio_framework_async_macros::async_test]
 async fn plain_command_still_applies_normally() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
     assert_eq!(app.snapshot().unwrap().count, 1);
     assert!(app.take_pending_transaction_proposal().await.is_none(), "a plain command must not stash a proposal");
@@ -458,7 +458,7 @@ async fn plain_command_still_applies_normally() {
 
 #[semio_framework_async_macros::async_test]
 async fn command_cache_inputs_share_immutable_arcs() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     app.refresh_cache().await.expect("refresh cache");
     let (_, cached_snapshot, cached_config, cached_history) = app.cache.as_ref().expect("cache");
     let (snapshot, config, history) = app.command_cache_inputs();
@@ -470,7 +470,7 @@ async fn command_cache_inputs_share_immutable_arcs() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_tick_extends_cached_history_in_place() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("first increment");
     let history_ptr = std::sync::Arc::as_ptr(&app.cache.as_ref().expect("first history cache").3);
     dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("second increment");
@@ -485,7 +485,7 @@ async fn a_streamed_tick_extends_cached_history_in_place() {
 
 #[semio_framework_async_macros::async_test]
 async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let origin = protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: "initiator-doc".into(), artifact_kind: "s.testkit.txn".into(), dialect: None } };
     let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![SetTransactionCount { value: 7 }.into()], origin).await;
     assert_eq!(app.snapshot().unwrap().count, 7);
@@ -496,7 +496,7 @@ async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
 
 #[semio_framework_async_macros::async_test]
 async fn rollback_leaves_state_untouched() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
     assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![SetTransactionCount { value: 99 }.into()]).await;
     assert_eq!(app.snapshot().unwrap().count, 1, "rollback must leave the earlier state exactly as it was");
@@ -518,7 +518,7 @@ async fn rollback_leaves_state_untouched() {
 /// retains that channel owner, and its close is `Blocked` until the attachment is released.
 #[semio_framework_async_macros::async_test]
 async fn generation_mismatch_is_rejected_with_the_frozen_code() {
-    let mut sender = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut sender = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId("remote".into())).await;
     let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
     dispatch_settled(&mut sender, TxnCommand::Increment, "remote").await.expect("the peer edits its own copy");
@@ -531,7 +531,7 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     assert!(!envelopes.is_empty(), "the peer's edit must reach the channel");
     let operations = protocol::encode_envelopes(&envelopes);
 
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 5 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(outcome.rejection.is_none());
     app.ingest_operations(&operations).await.expect("a remote edit lands while the transaction is pending");
@@ -546,7 +546,7 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
 
 #[semio_framework_async_macros::async_test]
 async fn second_prepare_while_pending_is_rejected_instance_busy() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(first.rejection.is_none());
     let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 2 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
@@ -560,7 +560,7 @@ async fn second_prepare_while_pending_is_rejected_instance_busy() {
 /// RefreshUi/ReadDocument/ContextMenu/ephemeral lanes.
 #[semio_framework_async_macros::async_test]
 async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(prepared.rejection.is_none());
     let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local").await;
@@ -572,7 +572,7 @@ async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_and_redo_by_group() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![SetTransactionCount { value: 42 }.into()], protocol::MutationOrigin::Owner).await;
     assert_eq!(app.snapshot().unwrap().count, 42);
     app.transaction_undo("txn-6").await.expect("undo the group");

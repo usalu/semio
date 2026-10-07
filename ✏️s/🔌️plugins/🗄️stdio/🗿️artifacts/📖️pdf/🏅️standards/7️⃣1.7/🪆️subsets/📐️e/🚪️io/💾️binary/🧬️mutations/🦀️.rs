@@ -1,23 +1,23 @@
 //! 💾️ Generic binary framing and direct-owner registry for the visible PDF/E mutation aggregate.
 
-use super::PdfEMutation;
+use crate::standards::v1_7::subsets::e::schema::mutations::PdfEMutation;
 use protocol::OpBinary;
 
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner identities and binary tags in aggregate declaration order.
 pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[
-    ("InsertEncryptionDictionary", "insertEncryptionDictionary", super::insert_encryption_dictionary::binary::BINARY_TAG),
-    ("RemoveEncryptionDictionary", "removeEncryptionDictionary", super::remove_encryption_dictionary::binary::BINARY_TAG),
-    ("InsertJavascriptAction", "insertJavascriptAction", super::insert_javascript_action::binary::BINARY_TAG),
-    ("RemoveJavascriptAction", "removeJavascriptAction", super::remove_javascript_action::binary::BINARY_TAG),
-    ("InsertLaunchAction", "insertLaunchAction", super::insert_launch_action::binary::BINARY_TAG),
-    ("RemoveLaunchAction", "removeLaunchAction", super::remove_launch_action::binary::BINARY_TAG),
-    ("InsertMediaAnnotation", "insertMediaAnnotation", super::insert_media_annotation::binary::BINARY_TAG),
-    ("RemoveMediaAnnotation", "removeMediaAnnotation", super::remove_media_annotation::binary::BINARY_TAG),
-    ("SetOutputIntent", "setOutputIntent", super::set_output_intent::binary::BINARY_TAG),
-    ("RemoveOutputIntent", "removeOutputIntent", super::remove_output_intent::binary::BINARY_TAG),
-    ("EmbedFontFile", "embedFontFile", super::embed_font_file::binary::BINARY_TAG),
-    ("RemoveFontFile", "removeFontFile", super::remove_font_file::binary::BINARY_TAG),
+    ("InsertEncryptionDictionary", "insertEncryptionDictionary", self::insert_encryption_dictionary::BINARY_TAG),
+    ("RemoveEncryptionDictionary", "removeEncryptionDictionary", self::remove_encryption_dictionary::BINARY_TAG),
+    ("InsertJavascriptAction", "insertJavascriptAction", self::insert_javascript_action::BINARY_TAG),
+    ("RemoveJavascriptAction", "removeJavascriptAction", self::remove_javascript_action::BINARY_TAG),
+    ("InsertLaunchAction", "insertLaunchAction", self::insert_launch_action::BINARY_TAG),
+    ("RemoveLaunchAction", "removeLaunchAction", self::remove_launch_action::BINARY_TAG),
+    ("InsertMediaAnnotation", "insertMediaAnnotation", self::insert_media_annotation::BINARY_TAG),
+    ("RemoveMediaAnnotation", "removeMediaAnnotation", self::remove_media_annotation::BINARY_TAG),
+    ("SetOutputIntent", "setOutputIntent", self::set_output_intent::BINARY_TAG),
+    ("RemoveOutputIntent", "removeOutputIntent", self::remove_output_intent::BINARY_TAG),
+    ("EmbedFontFile", "embedFontFile", self::embed_font_file::BINARY_TAG),
+    ("RemoveFontFile", "removeFontFile", self::remove_font_file::BINARY_TAG),
 ];
 //#endregion 🧾️DerivedRegistry
 

@@ -8,7 +8,8 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::cad::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::cad::schema::diff::{diff_set_snapshot, wrap_block_diff, wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff};
 use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_entity_record};
 use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_entity_record};

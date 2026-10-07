@@ -65,7 +65,7 @@ async fn dep_hash_is_deterministic_across_repeated_calls() {
 }
 
 /// 🧪️ The whole point of a real `DepHash` chain: an edit that changes a coefficient must
-/// change `dep_input`'s bytes for every root, proving the chain is actually wired to
+/// change `dep_input`'s values for every root, proving the chain is actually wired to
 /// `equation`, not a constant.
 #[semio_framework_async_macros::async_test]
 async fn dep_input_changes_when_a_coefficient_changes() {
@@ -76,4 +76,17 @@ async fn dep_input_changes_when_a_coefficient_changes() {
     let before_bytes = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::dep_input(&before, &0, &[]);
     let after_bytes = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::dep_input(&after, &0, &[]);
     assert_ne!(before_bytes, after_bytes, "changing a coefficient must change the DepHash input");
+}
+
+/// 🧪️ Native serde independently checks the neutral logical dependency projection.
+#[semio_framework_async_macros::async_test]
+async fn typed_dependency_matches_neutral_serde_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔑️dependency/🔣.json")).unwrap();
+    let mut snapshot = EquationSnapshot::default();
+    snapshot.equation = quadratic_with_roots_one_and_two();
+    let dependency = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::dep_input(&snapshot, &usize::MAX, &[]);
+    let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&dependency).to_string()).unwrap();
+    let independent = serde_json::json!({"coefficients":["2","-3","1"],"interval":null});
+    assert_eq!(actual, fixture);
+    assert_eq!(actual, independent);
 }

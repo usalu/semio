@@ -32,7 +32,6 @@ mod tests {
             width: 4,
             height: 4,
             pixels: vec![0u8; 4 * 4 * 4],
-            re_encode_quality: None,
             jfif_version: (1, 1),
             jfif_density_units: JfifDensityUnits::Aspect,
             jfif_x_density: 1,
@@ -67,7 +66,6 @@ mod tests {
             width: 10,
             height: 20,
             pixels: vec![0u8, 0, 0, 255, 255, 255, 255, 255],
-            re_encode_quality: Some(80),
             jfif_version: (1, 1),
             jfif_density_units: JfifDensityUnits::PixelsPerInch,
             jfif_x_density: 72,
@@ -94,7 +92,6 @@ mod tests {
             width: 11,
             height: 21,
             pixels: vec![1u8, 1, 1, 255],
-            re_encode_quality: None,
             jfif_version: (1, 2),
             jfif_density_units: JfifDensityUnits::Aspect,
             jfif_x_density: 1,
@@ -134,8 +131,6 @@ mod tests {
             JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE2, vec![7, 8]) }),
             JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 0 }),
             JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
-            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(50) }),
-            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }),
             // Out-of-range/nonexistent targets: graceful no-ops, still law-compliant.
             JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 99 }),
             JpgMutation::RemoveHuffmanTable(RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Ac, id: 99 } }),
@@ -216,7 +211,6 @@ mod tests {
         assert_absorb_law(&base, JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(1) }), JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(2) }));
 
         // Tri-state set-then-clear: the later clear wins outright over the pending set.
-        assert_absorb_law(&base, JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(10) }), JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }));
     }
 
     #[test]
@@ -267,9 +261,9 @@ mod tests {
     #[test]
     fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/📚️examples/🎬️demo/🖼️assets/🖼️.jpg")).expect("read committed JPG fixture");
-        let decoded = crate::engine::decode_jpg(&bytes).expect("decode fixture");
-        let reencoded = crate::engine::encode_jpg(&decoded).expect("re-encode fixture");
-        let redecoded = crate::engine::decode_jpg(&reencoded).expect("re-decode fixture");
+        let decoded = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&bytes).expect("decode fixture");
+        let reencoded = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&decoded, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(decoded.frame.as_ref())).expect("re-encode fixture");
+        let redecoded = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&reencoded).expect("re-decode fixture");
         // Engine's own EncodeScopeNote: encode always canonicalizes to Annex K tables at a fixed
         // quality — pixel CONTENT (within a lossy MAE budget) is the retained invariant, not the
         // original file's exact tables/segments (documented normal form).
@@ -297,11 +291,9 @@ mod tests {
         assert!(forward.pixels.is_some());
 
         // Tri-state clears (forward: Some -> None).
-        assert_eq!(forward.re_encode_quality, Some(None), "re_encode_quality tri-state clear must show Some(None)");
         assert_eq!(forward.jfif_thumbnail, Some(None), "jfif_thumbnail tri-state clear must show Some(None)");
         assert_eq!(forward.restart_interval, Some(None), "restart_interval tri-state clear must show Some(None)");
         // Tri-state recreates (backward: None -> Some).
-        assert!(matches!(backward.re_encode_quality, Some(Some(_))));
         assert!(matches!(backward.jfif_thumbnail, Some(Some(_))));
         assert!(matches!(backward.restart_interval, Some(Some(_))));
 
@@ -403,8 +395,6 @@ mod tests {
             JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE2, vec![7, 8]) }),
             JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 0 }),
             JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
-            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(50) }),
-            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }),
         ];
         for mutation in mutations {
             let printed = mutation.print_op();

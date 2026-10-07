@@ -15,6 +15,6 @@ mod tests {
             snapshot.objects.push(violating);
             let mutated = PdfEBuilderConstruction::from_snapshot(snapshot);
             let err = mutated.build().expect_err("a Movie annotation must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::e::schema::CODE_MOVIE_OR_SOUND));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::e::io::CODE_MOVIE_OR_SOUND));
         }
     }

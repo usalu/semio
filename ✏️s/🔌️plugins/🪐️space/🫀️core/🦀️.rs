@@ -67,7 +67,7 @@ pub async fn demo_os_document() -> OsWorkflowArtifactDocument {
 /// 🌱️ The demo space's bare `WorkflowSnapshot` — the studio app's `initial_snapshot`, parsed
 /// straight out of the packaged fixture (no envelope/runtime wrapper).
 pub async fn demo_space_projection() -> WorkflowSnapshot {
-    demo_os_document().await.vcs.initial_snapshot
+    demo_os_document().await.vcs.genesis.snapshot().clone()
 }
 //#endregion 🔖️Fixtures
 
@@ -397,7 +397,7 @@ pub async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpace
             continue;
         }
         let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) else { continue };
-        let projection = &document.vcs.initial_snapshot;
+        let projection = &document.vcs.genesis.snapshot();
         entries.push(semio_framework_os::OsSpaceCatalogEntry {
             id: draft.artifact_id,
             name: document.name.clone(),

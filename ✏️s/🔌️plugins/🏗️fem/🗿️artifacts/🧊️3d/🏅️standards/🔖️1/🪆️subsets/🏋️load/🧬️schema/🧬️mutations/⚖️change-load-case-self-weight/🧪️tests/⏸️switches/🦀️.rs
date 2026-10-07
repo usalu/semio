@@ -8,7 +8,8 @@
 //! One boolean flips off, yet the diff still carries the whole case — the nodal load must come back through the patch unchanged.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/⏸️switches/📸️snapshot/⬅️before/🔣️.json");

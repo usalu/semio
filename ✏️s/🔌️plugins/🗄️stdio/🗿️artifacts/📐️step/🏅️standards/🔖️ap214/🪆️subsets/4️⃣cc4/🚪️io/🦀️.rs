@@ -7,12 +7,12 @@ pub mod derived_composition {
     use crate::standards::v_ap214::engine::ladder::ensure_file_schema;
     use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use crate::standards::v_ap214::subsets::base::io::StepComposer as StepAnyComposer;
-    use crate::standards::v_ap214::subsets::cc4::schema::check_cc4_conformance;
+    use crate::standards::v_ap214::subsets::cc4::io::check_cc4_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_SELF: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc4") };
@@ -101,7 +101,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::standards::v_ap214::subsets::cc4::schema::check_cc4_conformance;
+    use crate::standards::v_ap214::subsets::cc4::io::check_cc4_conformance;
     use crate::{StepDiff, StepMutation, StepSnapshot};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -163,7 +163,7 @@ use semio_framework_diagnostic::Severity;
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 
@@ -177,13 +177,13 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc4") };
 
     /// 🔢️ Maximum ladder rung cc4 permits (see `⚙️engine::ladder::ladder_rung_of`).
-    pub const MAX_RUNG: u8 = 4;
+    use crate::standards::v_ap214::subsets::cc4::schema::MAX_RUNG;
 
     //#region 🔖️Conformance
     pub const CODE_FILE_SCHEMA: &str = "stdio.step.cc4.file-schema-automotive-design";
@@ -222,7 +222,7 @@ use semio_framework_diagnostic::TextSpan;
     }
     /// 🛡️ Checks owned CC4 facts with cancellation before diagnostic allocation.
     pub fn check_cc4_conformance_controlled(snapshot:&StepSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
-        let facts=crate::schema::snapshot::sqlite_snapshot::conformance_facts(snapshot,MAX_RUNG,control)?;let mut out=Vec::new();
+        let facts=crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::conformance_facts(snapshot,MAX_RUNG,control)?;let mut out=Vec::new();
         if !facts.file_schema{out.push(hard(CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema".into()));}
         for(index,(id,type_name,rung))in facts.violations.into_iter().enumerate(){if index%256==0||type_name.len()>65536{control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,index,0)?;}out.push(hard(CODE_LADDER,format!("instance #{id} is a {type_name} (ladder rung {rung}) -- exceeds cc4's max rung 4")));}
         if !facts.product_chain{out.push(soft(CODE_PRODUCT_CHAIN,"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one".into()));}Ok(out)
@@ -262,7 +262,7 @@ use semio_framework_diagnostic::TextSpan;
     //#endregion 🔖️Analyzer
 
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
 }
 pub use derived_analysis::*;
 

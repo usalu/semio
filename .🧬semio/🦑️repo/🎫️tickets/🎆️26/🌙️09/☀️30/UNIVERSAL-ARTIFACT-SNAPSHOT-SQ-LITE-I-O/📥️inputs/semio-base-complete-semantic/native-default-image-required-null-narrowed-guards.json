@@ -1,0 +1,14 @@
+{
+  "regions": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🎛️semantic.json",
+      "before": "          \"frames\": [],\n          \"metadata\": []",
+      "after": "          \"frames\": [],\n          \"icc\": null,\n          \"metadata\": []"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧬️semantic.json",
+      "before": "              \"frames\": [],\n              \"metadata\": []",
+      "after": "              \"frames\": [],\n              \"icc\": null,\n              \"metadata\": []"
+    }
+  ]
+}

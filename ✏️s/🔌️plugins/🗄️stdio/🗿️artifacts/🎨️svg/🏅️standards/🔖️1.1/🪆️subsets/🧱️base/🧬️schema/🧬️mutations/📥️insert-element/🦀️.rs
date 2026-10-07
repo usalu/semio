@@ -2,7 +2,7 @@
 use crate::schema::diff::{diff_at_path, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::NodePath;
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use crate::schema::snapshot::SvgNode;
 
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 pub struct InsertElementPayload {
     pub parent: NodePath,
     pub index: usize,
-    pub node: XmlNode,
+    pub node: SvgNode,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

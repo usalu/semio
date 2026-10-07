@@ -5,7 +5,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::graph::schema::diff::*;
+use crate::standards::v1::subsets::graph::schema::diff::*;
 use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
@@ -14,12 +14,12 @@ use protocol::MutationDiff;
 /// snapshot facet's own real hex/bracket node/edge encoders (duplicated locally, same convention
 /// every sibling subset's `🔺️diff` facet already establishes — see that facet's own doc comment
 /// for why).
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
-use crate::flow::io::text::diff::{dec_node};
-use crate::flow::io::text::diff::{enc_node};
-use crate::flow::io::text::diff::{dec_edge};
-use crate::flow::io::text::diff::{enc_edge};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_node};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{enc_node};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_edge};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{enc_edge};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_nodes(list: &SemioGraphNodeList) -> String {

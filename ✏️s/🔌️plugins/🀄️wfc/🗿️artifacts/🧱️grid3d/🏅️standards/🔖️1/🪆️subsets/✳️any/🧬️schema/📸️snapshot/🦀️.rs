@@ -63,6 +63,10 @@ impl Default for Grid3dTileMedia {
 /// 🌉️ Hand `dsl::DslField` impl — `Grid3dTileMedia` is a `DslEnum` (`DslVariants` only) and
 /// `Grid3dTile::media` is a REQUIRED, never-optional field that must stay a bare `Grid3dTileMedia`
 /// (`s.process.process3d`'s `MeasureRecipe` precedent).
+impl semio_framework_dsl_record::BorrowedDslField for Grid3dTileMedia {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Statements(<Self as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);
+}
+
 impl semio_framework_dsl_record::DslField for Grid3dTileMedia {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Statements(<Grid3dTileMedia as semio_framework_dsl_record::DslVariants>::variants())

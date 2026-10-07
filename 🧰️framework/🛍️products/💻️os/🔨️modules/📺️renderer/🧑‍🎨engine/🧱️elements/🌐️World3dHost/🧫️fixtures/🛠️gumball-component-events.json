@@ -1,0 +1,75 @@
+{
+  "targets": [
+    {
+      "mode": "face",
+      "ids": [
+        "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    },
+    {
+      "mode": "edge",
+      "ids": [
+        "box@geometry#0.edge.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    },
+    {
+      "mode": "vertex",
+      "ids": [
+        "box@geometry#0.vertex.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    }
+  ],
+  "owner": "box@geometry#0",
+  "positions": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0.25,
+      0,
+      0
+    ],
+    [
+      0.5,
+      0,
+      0
+    ],
+    [
+      0.75,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      0
+    ]
+  ],
+  "dispatches": [
+    {
+      "dx": 0.25,
+      "dy": 0,
+      "dz": 0,
+      "phase": "stream"
+    },
+    {
+      "dx": 0.5,
+      "dy": 0,
+      "dz": 0,
+      "phase": "stream"
+    },
+    {
+      "dx": 0.25,
+      "dy": 0,
+      "dz": 0,
+      "phase": "commit"
+    }
+  ],
+  "offset": [
+    1,
+    0,
+    0
+  ]
+}

@@ -13,10 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "create-building-model")]
 pub struct CreateBuildingModel {
     pub child_id: String,
-    /// 🔗️ The target's `ArtifactRef` flattened to its wire URI string (`to_uri()`) — `dsl::DslRecord`
-    /// has no field-level support for `store::os_io::ArtifactRef` directly, mirrored at the diff
-    /// boundary via `parse_target`.
-    pub target: String,
+    /// 🪪️ Exact composed child identity.
+    pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
 impl MutationKind<CadSnapshot, CadMutation> for CreateBuildingModel {

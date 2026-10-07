@@ -50,7 +50,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -1036,9 +1036,9 @@ impl BitmapEditor {
         let points = xs.iter().zip(ys).map(|(x, y)| BitmapStrokePoint { x: *x, y: *y }).collect();
         let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
         if interrupt {
-            slot.drive::<BitmapBrush>(BITMAP_PAINT_STROKE_VERB, GesturePhase::Abort(ToolAbortReason::CaptureLost), None, seed)?;
+            slot.drive::<BitmapBrush>(None, BITMAP_PAINT_STROKE_VERB, GesturePhase::Abort(ToolAbortReason::CaptureLost), None, seed)?;
         }
-        let committed = slot.drive::<BitmapBrush>(BITMAP_PAINT_STROKE_VERB, phase, Some(BrushToolRequest::on(doc.snapshot, points, color)), seed)?;
+        let committed = slot.drive::<BitmapBrush>(None, BITMAP_PAINT_STROKE_VERB, phase, Some(BrushToolRequest::on(doc.snapshot, points, color)), seed)?;
         if slot.window().is_empty() && slot.open().is_some() {
             return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.window-required"), "wfc.bitmap.stroke.window-required"));
         }

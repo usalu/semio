@@ -13,7 +13,8 @@
 //! 💨️ Loads have no collection of their own: attaching one re-emits the WHOLE owning case as a single `loadCases.patched` entry, never a nested load delta.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️add-load/💨️pushes-a-wind-load-5c3f1e/📸️snapshot/⬅️before/🔣️.json");

@@ -1,15 +1,12 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { createRequire } from "node:module";
 import type { CacheInventory } from "../../🧮️composition/🟦️.ts";
 
 /** 🕸️ Compares the entire audited surface with native Nx's resolved multi-provider graph. */
 export async function testNativeInventory(workspace: string, inventory: (root: string) => CacheInventory): Promise<CacheInventory> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕸️coverage/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(schema);
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const { readCachedProjectGraph } = require("@nx/devkit"), graph = readCachedProjectGraph(), result = inventory(workspace);
   const { createTaskGraph } = require("nx/src/tasks-runner/create-task-graph"), { isCacheableTask } = require("nx/src/tasks-runner/utils");
   const names = Object.keys(graph.nodes).sort();

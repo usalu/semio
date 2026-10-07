@@ -22,8 +22,8 @@ async fn real_byte_round_trip_through_jpg_codec() {
     assert_eq!(jpg.width, 2);
     assert_eq!(jpg.height, 1);
     assert_eq!(jpg.other_segments.len(), 1);
-    let bytes = semio_s_artifact_stdio_jpg::engine::encode_jpg(&jpg).expect("encode real jpg bytes");
-    let decoded = semio_s_artifact_stdio_jpg::engine::decode_jpg(&bytes).expect("decode real jpg bytes");
+    let bytes = semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&jpg, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(jpg.frame.as_ref())).expect("encode real jpg bytes");
+    let decoded = semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&bytes).expect("decode real jpg bytes");
     assert_eq!(decoded.width, semio.width);
     assert_eq!(decoded.height, semio.height);
     assert_eq!(decoded.pixels.len(), semio.frames[0].rgba8.len(), "lossy DCT — length matches, exact bytes need not");

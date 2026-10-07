@@ -12,7 +12,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_dsl_record_derive::DslRecord;
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 
@@ -462,8 +462,8 @@ pub type ShootingEmblemChild = store::ArtifactChild<SemioImageSnapshot>;
 /// byte-identical content mint the same handle.
 pub fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmblemChild {
     let child_id = store::content_id("shooting-emblem", semio_framework_pack_json::to_json_string(content).as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "shooting-emblem".into(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "shooting-emblem".into(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 

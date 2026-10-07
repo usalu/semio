@@ -4,7 +4,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
 
 use semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text;
-use crate::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};
 use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
 use std::collections::{BTreeMap, BTreeSet};
 use store::sqlite_snapshot::{SqliteDatabaseLimits,artifact::{RowWriter,Cell}};
@@ -12,7 +12,7 @@ use store::sqlite_snapshot::{SqliteDatabaseLimits,artifact::{RowWriter,Cell}};
 mod semantic;
 
 /// 🫳️ Visits each complete authored text row using the same owned or borrowed writer.
-fn visit_rows(snapshot:&SemioTextSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioTextSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_text_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,run)in snapshot.runs.iter().enumerate(){
   let id=out.insert("semio_text_run",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?),Cell::Text(&run.language),Cell::Text(&run.content)])?;
@@ -34,6 +34,7 @@ fn kind(value: SemioTextMarkKind) -> &'static str { match value { SemioTextMarkK
 fn identity(row: &SqliteRow, columns: usize) -> Result<(),ValueError> { if row.values.len() != columns || row.integer(0)? != row.rowid { Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text row identity or column count is invalid")) } else { Ok(()) } }
 
 impl ArtifactSqliteSnapshot for SemioTextSnapshot {
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::text::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}
 fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::text::io::sqlite::snapshot::native_decoding::decode(payload,control)}
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {let result=(||->Result<(),ValueError>{ admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut bound = Bound::file_only("", control)?; self.native_fields(&mut bound)?; bound.finish() })();result}
@@ -84,7 +85,7 @@ impl SemioTextSnapshot {
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

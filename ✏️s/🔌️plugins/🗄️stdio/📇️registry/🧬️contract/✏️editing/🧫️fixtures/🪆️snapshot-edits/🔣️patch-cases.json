@@ -563,16 +563,6 @@
   ],
   "wideIntegerSource": "{\"unsigned\":18446744073709551615,\"signed\":-9223372036854775808}",
   "constraintCases": {
-    "schema": {
-      "type": "object",
-      "properties": {
-        "count": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4
-        }
-      }
-    },
     "accepted": {
       "operation": "setValue",
       "path": "/count",
@@ -584,15 +574,48 @@
       "value": 255
     },
     "errorCode": "snapshot-edit.constraint-invalid",
-    "errorPath": "$.count"
+    "errorPath": "$.count",
+    "input": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          }
+        }
+      }
+    }
   },
   "floatInputs": [
-    { "source": "0", "accepted": true },
-    { "source": "1", "accepted": true },
-    { "source": "-1", "accepted": true },
-    { "source": "1.5", "accepted": true },
-    { "source": "9007199254740991", "accepted": true },
-    { "source": "9007199254740993", "accepted": false },
-    { "source": "-9007199254740993", "accepted": false }
+    {
+      "source": "0",
+      "accepted": true
+    },
+    {
+      "source": "1",
+      "accepted": true
+    },
+    {
+      "source": "-1",
+      "accepted": true
+    },
+    {
+      "source": "1.5",
+      "accepted": true
+    },
+    {
+      "source": "9007199254740991",
+      "accepted": true
+    },
+    {
+      "source": "9007199254740993",
+      "accepted": false
+    },
+    {
+      "source": "-9007199254740993",
+      "accepted": false
+    }
   ]
 }

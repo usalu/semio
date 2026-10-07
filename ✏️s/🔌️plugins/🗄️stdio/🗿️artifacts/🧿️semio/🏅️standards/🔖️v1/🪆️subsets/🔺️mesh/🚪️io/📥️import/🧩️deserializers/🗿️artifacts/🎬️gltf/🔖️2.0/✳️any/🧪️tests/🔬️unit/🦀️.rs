@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_gltf::engine::GltfAccessorType;
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
 use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView};
 use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAsset, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness};
 

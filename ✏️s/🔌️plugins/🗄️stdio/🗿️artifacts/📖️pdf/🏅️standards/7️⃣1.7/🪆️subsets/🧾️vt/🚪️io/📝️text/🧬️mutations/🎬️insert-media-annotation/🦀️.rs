@@ -1,6 +1,6 @@
 //! 🎬️ Direct text codec for `insert-media-annotation`.
 
-use super::InsertMediaAnnotation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::InsertMediaAnnotation;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "insert-media-annotation";

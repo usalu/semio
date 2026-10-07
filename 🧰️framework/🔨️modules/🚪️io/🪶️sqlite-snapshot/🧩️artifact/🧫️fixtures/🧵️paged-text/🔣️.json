@@ -1,0 +1,27 @@
+{
+  "schemaSql": "CREATE TABLE paged_text(id INTEGER PRIMARY KEY,value TEXT NOT NULL);",
+  "table": "paged_text",
+  "samples": [
+    {
+      "text": "",
+      "bytes": 0
+    },
+    {
+      "text": "ascii",
+      "bytes": 5
+    },
+    {
+      "text": "😀\u0000世界",
+      "bytes": 11
+    }
+  ],
+  "large": {
+    "unit": "😀\u0000界",
+    "repeats": 20000,
+    "bytes": 160000,
+    "cancelAfterBytes": 8192
+  },
+  "borrowedAllocationBytes": 0,
+  "semanticIdentityBytes": 8,
+  "storageClass": "text"
+}

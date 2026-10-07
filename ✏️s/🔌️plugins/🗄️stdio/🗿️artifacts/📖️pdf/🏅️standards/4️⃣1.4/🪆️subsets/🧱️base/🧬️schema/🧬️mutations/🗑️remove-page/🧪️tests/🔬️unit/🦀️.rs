@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1_4::subsets::base::io::binary::mutations as binary;
 use protocol::Mutation;
 
 /// 🚫️ The refusal branch the committed vector cannot express, because a refused mutation

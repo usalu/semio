@@ -2,7 +2,7 @@ use super::*;
 use crate::schema::diff::DocxBlockPath;
 use crate::schema::mutations::{docx_block_run_address, docx_xml_address};
 use crate::schema::snapshot::{DocxBlock, DocxDocument};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 fn snapshot_with_blocks(body: Vec<DocxBlock>) -> DocxSnapshot {
     build_minimal_docx(DocxDocument { body, styles: Vec::new() })
@@ -37,7 +37,7 @@ async fn create_docx_strict_editor_builds_a_definition_for_the_editor_role() {
 #[test]
 fn initial_strict_document_is_conformant_and_renders_one_empty_paragraph_target() {
     let snapshot = <DocxStrictEditor as ArtifactEditor>::initial_snapshot();
-    assert!(crate::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance(&snapshot)
+    assert!(crate::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance(&snapshot)
         .iter()
         .all(|diagnostic| !matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)));
     let targets = crate::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
@@ -114,3 +114,5 @@ async fn set_run_formatting_requires_and_preserves_the_complete_canonical_addres
     assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxStrictEditorCommand::SetRunFormatting { address, bold: true, italic: false, underline: true }));
     assert!(<DocxStrictEditor as ArtifactEditor>::command_from_action("set-run-formatting", None).is_err());
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio/DocxStrictEditor", DocxStrictEditor, || semio_framework_plugin::App { definition: create_docx_strict_editor(), examples: Vec::new() }, "../..");

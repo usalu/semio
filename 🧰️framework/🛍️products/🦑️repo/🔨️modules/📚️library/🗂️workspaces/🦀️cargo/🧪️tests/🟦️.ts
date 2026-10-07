@@ -1,11 +1,11 @@
 import { fileURLToPath } from "node:url";
-import { test, expect } from "bun:test";
+import { test, expect, spyOn } from "bun:test";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import glob from "fast-glob";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
-import { parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
+import { cargoRepositoryPackageSelections, publishCargoWorkspaceMemberships, parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -108,4 +108,117 @@ test("every compiling native command prepares owners and keeps diagnostics off m
  const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
  if(child.exitCode!==0)throw new Error(Buffer.from(child.stderr).toString());
  expect(child.exitCode).toBe(0);expect(Buffer.from(child.stdout).toString()).toBe('{"machine":"retained"}\n');expect(Buffer.from(child.stderr).toString()).toContain("owned input refreshed");
+});
+
+
+test("one membership invocation parses each current manifest once and observes later saves", () => {
+  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
+  const validator = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../🧬️schema/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8")));
+  expect(validator(law)).toBe(true);
+  const root = mkdtempSync(join(artifactRoot!, "cargo-invocation-inventory-"));
+  put(root, "Cargo.toml", workspace(["packages/*"]));
+  const names = Array.from({ length: law.members }, (_, index) => `member-${String(index).padStart(3, "0")}`);
+  const manifest = (index: number): string => `packages/${String(index).padStart(3, "0")}/Cargo.toml`;
+  for (let index = 0; index < law.members; index++) put(root, manifest(index), pkg(names[index]!));
+  const owner = cargoWorkspaceForManifest(root, "Cargo.toml");
+  const original = Bun.TOML.parse;
+  const calls = new Map<string, number>();
+  const documents = new Map<string, unknown>();
+  const parser = spyOn(Bun.TOML, "parse").mockImplementation((source: string) => {
+    calls.set(source, (calls.get(source) ?? 0) + 1);
+    const result = original(source);
+    documents.set(source, result);
+    return result;
+  });
+  const check = (expected: readonly string[]): void => {
+    calls.clear(); documents.clear();
+    const rows = cargoWorkspaceMembers(root, owner);
+    expect(rows.map(row => row.name)).toEqual(expected);
+    for (const [source, document] of documents) expect(document).toEqual(TOML.parse(source));
+    expect(Math.max(...calls.values())).toBeLessThanOrEqual(law.maxParsesPerManifest);
+  };
+  try {
+    check(names);
+    names[law.rename.index] = law.rename.name;
+    put(root, manifest(law.rename.index), pkg(law.rename.name));
+    check(names);
+    unlinkSync(join(root, manifest(law.removeIndex)));
+    check(names.filter((_, index) => index !== law.removeIndex));
+  } finally { parser.mockRestore(); }
+});
+
+
+test("batch package selection discovers one fresh repository inventory", () => {
+  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
+  const root = mkdtempSync(join(artifactRoot!, "cargo-batch-inventory-"));
+  const rootSource = workspace(["packages/*"]);
+  put(root, "Cargo.toml", rootSource);
+  const names = Array.from({ length: law.members }, (_, index) => `member-${String(index).padStart(3, "0")}`);
+  for (let index = 0; index < law.members; index++) put(root, `packages/${String(index).padStart(3, "0")}/Cargo.toml`, pkg(names[index]!));
+  const original = Bun.TOML.parse;
+  let rootParses = 0;
+  const parser = spyOn(Bun.TOML, "parse").mockImplementation((source: string) => { if (source.includes('owner-manifests=["*/Cargo.toml"]') && source.includes('member-manifests=["packages/*/Cargo.toml"]')) rootParses++; return original(source); });
+  try {
+    expect(cargoRepositoryPackageSelections(root, law.selectedIndices.map((index: number) => names[index])) .map(row => row.name)).toEqual(law.selectedIndices.map((index: number) => names[index]));
+    expect(rootParses).toBeLessThanOrEqual(law.maxRepositoryParses);
+  } finally { parser.mockRestore(); }
+});
+
+test("batch owner publication discovers one fresh repository inventory", () => {
+  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
+  const root = mkdtempSync(join(artifactRoot!, "cargo-batch-inventory-"));
+  const rootSource = workspace(["packages/*"]);
+  put(root, "Cargo.toml", rootSource);
+  const names = Array.from({ length: law.members }, (_, index) => `member-${String(index).padStart(3, "0")}`);
+  for (let index = 0; index < law.members; index++) put(root, `packages/${String(index).padStart(3, "0")}/Cargo.toml`, pkg(names[index]!));
+  const original = Bun.TOML.parse;
+  let rootParses = 0;
+  const parser = spyOn(Bun.TOML, "parse").mockImplementation((source: string) => { if (source.includes('owner-manifests=["*/Cargo.toml"]') && source.includes('member-manifests=["packages/*/Cargo.toml"]')) rootParses++; return original(source); });
+  try {
+    for (let index = 0; index < law.publicationOwners; index++) {
+      put(root, `owner-${index}/Cargo.toml`, workspace(["members/*"]));
+      put(root, `owner-${index}/members/a/Cargo.toml`, pkg(`child-${index}`));
+    }
+    rootParses = 0;
+    const published = publishCargoWorkspaceMemberships(root, "write");
+    expect(published).toHaveLength(law.publicationOwners + 1);
+    expect(rootParses).toBeLessThanOrEqual(law.maxPublicationParses);
+    const after = readFileSync(join(root, "Cargo.toml"), "utf8");
+    expect(Bun.TOML.parse(after)).toEqual(TOML.parse(after));
+    expect((TOML.parse(after).workspace as { exclude: string[] }).exclude).toEqual(Array.from({ length: law.publicationOwners }, (_, index) => `owner-${index}`));
+    unlinkSync(join(root, "owner-0/Cargo.toml"));
+    expect(publishCargoWorkspaceMemberships(root, "write")).toHaveLength(law.publicationOwners);
+    expect((TOML.parse(readFileSync(join(root, "Cargo.toml"), "utf8")).workspace as { exclude: string[] }).exclude).not.toContain("owner-0");
+  } finally { parser.mockRestore(); }
+});
+
+
+test("selected package preparation follows the Cargo resolved local closure without preparing siblings",()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8"));
+ for(const row of law.cases){
+  const root=mkdtempSync(join(artifactRoot!,"cargo-selected-preparation-"));
+  put(root,"Cargo.toml",workspace(["framework/*"]).replace('resolver="2"','resolver="2"\nexclude=["specific"]'));
+  put(root,"specific/Cargo.toml",workspace(["models/*"],'[workspace.dependencies]\nbridge={path="../../framework/bridge"}\n'.replace("../../framework","../framework")));
+  const recipe=(name:string)=>'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["'+name+'"]\n';
+  put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel",recipe("neutral-kernel")));
+  put(root,"framework/bridge/Cargo.toml",pkg("bridge",recipe("bridge")+'[dependencies]\nneutral-kernel={path="../kernel"}\n'));
+  put(root,"specific/models/a/Cargo.toml",pkg("model-a",recipe("model-a")+'[dependencies]\nbridge={workspace=true}\n'));
+  put(root,"specific/models/b/Cargo.toml",pkg("model-b",recipe("model-b")));
+  for(const path of ["framework/kernel","framework/bridge","specific/models/a","specific/models/b"])put(root,path+"/🦀️.rs","pub fn law() {}\n");
+  const source='import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.NX_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");';
+  put(root,"📜️script.ts",source);put(root,"specific/📜️script.ts",source);
+  const metadata=Bun.spawnSync(["cargo","metadata","--offline","--format-version","1","--manifest-path",join(root,row.manifest)],{cwd:root,stdout:"pipe",stderr:"pipe"});
+  expect(metadata.exitCode,metadata.stderr.toString()).toBe(0);
+  const oracle=JSON.parse(metadata.stdout.toString()),packages=new Map(oracle.packages.map((value:any)=>[value.id,value])),nodes=new Map(oracle.resolve.nodes.map((value:any)=>[value.id,value]));
+  const seeds=row.packages.length?oracle.packages.filter((value:any)=>row.packages.includes(value.name)).map((value:any)=>value.id):row.manifest.endsWith("models/a/Cargo.toml")?[oracle.resolve.root]:oracle.workspace_members;
+  const reached=new Set<string>(seeds);for(const id of reached)for(const dependency of (nodes.get(id) as any).dependencies)reached.add(dependency);
+  expect([...reached].map(id=>(packages.get(id) as any).name).sort()).toEqual(row.expected);
+  const api=fileURLToPath(new URL("../🟦️.ts",import.meta.url));
+  const args=["test","--manifest-path",row.manifest,...row.packages.flatMap((name:string)=>["-p",name])];
+  put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(root)},${JSON.stringify(args)},${JSON.stringify(root)});`);
+  const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
+  expect(child.exitCode,child.stderr.toString()).toBe(0);
+  expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(row.expected);
+  for(const path of ["Cargo.toml","specific/Cargo.toml"])expect(Bun.TOML.parse(readFileSync(join(root,path),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,path),"utf8")));
+ }
 });

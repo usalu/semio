@@ -538,10 +538,10 @@ impl VerifiedMemberHistoryDictionary {
         self.owners.as_mut().and_then(|owners| owners.input.as_mut()).ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
     }
 
-    pub(super) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(crate::os_io::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str), MemberOpenDiagnostic> {
+    pub(super) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str, crate::os_spr::ActorId), MemberOpenDiagnostic> {
         self.check_step_authority(cx)?;
         let request = self.owners.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.request()?;
-        Ok((request.admitted_expected()?.clone(), request.owner().cloned(), self.schema))
+        Ok((request.admitted_expected()?.clone(), request.owner().cloned(), self.schema, request.actor().clone()))
     }
 }
 

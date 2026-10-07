@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1_0::subsets::base::io::text::snapshot::*;
 
 /// 🧭 Collapses only insignificant spacing outside quoted identifiers in a raw DOCTYPE payload.
 fn normalize_reference_doctype_payload(bytes: &[u8]) -> String {

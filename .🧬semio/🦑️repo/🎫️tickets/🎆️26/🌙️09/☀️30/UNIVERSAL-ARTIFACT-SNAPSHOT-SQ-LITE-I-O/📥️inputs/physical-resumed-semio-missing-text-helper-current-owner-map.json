@@ -1,0 +1,208 @@
+{
+  "at": "2026-10-06T13:06:44.722Z",
+  "mapping": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "enc_indexed_triple",
+          "candidates": []
+        },
+        {
+          "name": "dec_indexed_triple",
+          "candidates": []
+        },
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "routes": [
+        {
+          "name": "encode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        },
+        {
+          "name": "decode_option",
+          "candidates": [
+            "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/🔺️diff/🦀️.rs"
+          ]
+        }
+      ]
+    }
+  ]
+}

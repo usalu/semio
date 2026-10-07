@@ -5,7 +5,8 @@
 //! leaf states its inputs at their declared precision.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles, DragSelection};
+use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles,DragSelection};
+
 use protocol::Mutation as _;
 use semio_framework_tool_machine::{drive_chart_gesture, ChartGesture, GestureDrive, GestureState, GestureTool, ToolAbortReason, ToolRefusal};
 use serde_json::json;
@@ -226,7 +227,7 @@ fn repeated_targets_yield_one_leaf_over_unique_targets() {
     assert_eq!(mutations, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["left", "region-1"]), dx: 5.0, dy: 0.0 })], "each target once, in first-seen order");
     assert!(mutations[0].diff(&base).is_applicable(protocol::MergePolicy::default()), "the leaf passes its own invariants: {:?}", mutations[0].diff(&base).messages());
     let rotate = Puzzle2dSelectionRecord { targets: ids(&["left", "right", "left"]), motion: Puzzle2dSelectionMotion::Rotate { pivot_x: 0.0, pivot_y: 0.0, angle: 1.0 }, proximity: Vec::new(), connect: false };
-    assert_eq!(rotate.mutation(), rotate_selection(ids(&["left", "right"]), 0.0, 0.0, 1.0), "a literal record's leaf is deduplicated too");
+    assert_eq!(rotate.mutation(), rotate_selection(["left".into(), "right".into()].into_iter().collect(), 0.0, 0.0, 1.0), "a literal record's leaf is deduplicated too");
     let decoded = Puzzle2dSelectionRecord::from_gesture(&json!({ "gestureId": "g", "kind": "drag", "targets": ["left", "left"], "dx": 1.0, "dy": 0.0, "proximity": [] })).expect("decodes");
     assert_eq!(decoded.targets, ids(&["left"]), "a board record decodes deduplicated");
 }

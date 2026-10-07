@@ -8,7 +8,7 @@
 use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
 
@@ -472,3 +472,6 @@ pub fn diff_set_snapshot(base: &TsvSnapshot, next: &TsvSnapshot) -> TsvDiff {
 #[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
 mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

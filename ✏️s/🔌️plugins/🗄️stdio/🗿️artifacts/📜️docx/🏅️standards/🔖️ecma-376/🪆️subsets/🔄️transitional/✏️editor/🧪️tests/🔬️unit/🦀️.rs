@@ -2,7 +2,7 @@ use super::*;
 use crate::schema::diff::DocxBlockPath;
 use crate::schema::mutations::{docx_block_run_address, docx_xml_address};
 use crate::schema::snapshot::{DocxBlock, DocxDocument};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 fn snapshot_with_blocks(body: Vec<DocxBlock>) -> DocxSnapshot {
     build_minimal_docx(DocxDocument { body, styles: Vec::new() })
@@ -113,3 +113,5 @@ async fn set_run_formatting_requires_and_preserves_the_complete_canonical_addres
     assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxTransitionalEditorCommand::SetRunFormatting { address, bold: true, italic: false, underline: true }));
     assert!(<DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-run-formatting", None).is_err());
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio/DocxTransitionalEditor", DocxTransitionalEditor, || semio_framework_plugin::App { definition: create_docx_transitional_editor(), examples: Vec::new() }, "../..");

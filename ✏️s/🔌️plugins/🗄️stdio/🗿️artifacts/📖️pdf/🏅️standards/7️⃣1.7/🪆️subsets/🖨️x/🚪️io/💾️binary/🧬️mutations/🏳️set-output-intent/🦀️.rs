@@ -1,6 +1,6 @@
 //! 🏳️ Direct binary codec for `set-output-intent`.
 
-use super::SetOutputIntent;
+use crate::standards::v1_7::subsets::x::schema::mutations::SetOutputIntent;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 2;

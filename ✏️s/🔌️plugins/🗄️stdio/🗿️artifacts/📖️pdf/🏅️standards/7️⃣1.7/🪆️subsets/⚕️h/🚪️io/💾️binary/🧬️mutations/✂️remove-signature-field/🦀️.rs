@@ -3,7 +3,7 @@
 pub const TAG: u8 = 7;
 pub const BINARY_TAG: u8 = TAG;
 
-use super::RemoveSignatureField;
+use crate::standards::v1_7::subsets::h::schema::mutations::RemoveSignatureField;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &RemoveSignatureField) -> Result<Vec<u8>, String> {

@@ -1,4 +1,1 @@
-type BmpArtifact {
-  schema: String!
-  bytes: [Int!]!
-}
+type BmpArtifact { schema: String!, image: BmpImage! }

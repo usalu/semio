@@ -1055,6 +1055,10 @@ pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::Pa
 #[macro_export]
 macro_rules! impl_norm_artifact_record {
     ($Snapshot:ty, extension = $extension:literal, envelope_id = $envelope_id:literal $(, sqlite = $sqlite:path)?) => {
+        $crate::impl_norm_artifact_record!(@text $Snapshot, extension=$extension, envelope_id=$envelope_id);
+        $crate::impl_norm_artifact_record!(@binary $Snapshot, extension=$extension, envelope_id=$envelope_id $(,sqlite=$sqlite)?);
+    };
+    (@text $Snapshot:ty, extension=$extension:literal, envelope_id=$envelope_id:literal) => {
         impl $crate::document::NormArtifactRecord for $Snapshot {
             const EXTENSION: &'static str = $extension;
             const ENVELOPE_ID: &'static str = $envelope_id;
@@ -1080,6 +1084,8 @@ macro_rules! impl_norm_artifact_record {
                 $crate::document::norm_print_dsl(self)
             }
         }
+    };
+    (@binary $Snapshot:ty, extension=$extension:literal, envelope_id=$envelope_id:literal $(,sqlite=$sqlite:path)?) => {
         impl store::ArtifactPack for $Snapshot {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 $crate::document::norm_encode_pack(self, options)

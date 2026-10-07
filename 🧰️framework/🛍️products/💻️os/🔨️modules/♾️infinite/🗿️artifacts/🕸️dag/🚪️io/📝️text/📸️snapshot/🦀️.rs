@@ -16,3 +16,19 @@ impl crate::os_store::ArtifactDsl for DagSnapshot {
   crate::os_store::semio_format::wrap_text(&envelope,&body)
  }
 }
+
+/// 📝️ Render a DAG host snapshot as wire-literal compiled text.
+pub fn dag_host_snapshot_to_wire_literal(host_snapshot: &DagHostSnapshot) -> String {
+    use ::graph::dsl::{wire_literal_from_dag, WireEdge, WireNode};
+    let nodes = host_snapshot.nodes.iter().map(|node| WireNode { id: node.id.clone(), kind: dag_visual_kind(node), port: None, properties: node.properties.clone() }).collect::<Vec<_>>();
+    let edges = host_snapshot
+        .edges
+        .iter()
+        .map(|edge| {
+            let (from, from_port) = split_dag_endpoint(&edge.source);
+            let (to, to_port) = split_dag_endpoint(&edge.target);
+            WireEdge { from, from_port, to, to_port, directed: true, properties: edge.properties.clone() }
+        })
+        .collect::<Vec<_>>();
+    wire_literal_from_dag(&nodes, &edges)
+}

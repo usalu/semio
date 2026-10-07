@@ -740,6 +740,7 @@ pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) 
 }
 
 impl store::InferredField<BitmapSnapshot> for BitmapSolve {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = BitmapSolveResult;
 
@@ -764,6 +765,7 @@ impl store::InferredField<BitmapSnapshot> for BitmapSolve {
 }
 
 impl store::InferredField<BitmapSnapshot> for BitmapContradiction {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = bool;
 
@@ -788,6 +790,7 @@ impl store::InferredField<BitmapSnapshot> for BitmapContradiction {
 }
 
 impl store::InferredField<BitmapSnapshot> for BitmapEntropy {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = f64;
 

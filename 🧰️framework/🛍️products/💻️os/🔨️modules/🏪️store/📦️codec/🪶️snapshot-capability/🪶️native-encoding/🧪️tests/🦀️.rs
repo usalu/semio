@@ -130,7 +130,7 @@ fn sqlite_snapshot_native_exact_output_admission_ignores_approximate_preflight()
     let oracle = child.wait_with_output().unwrap();
     assert!(oracle.status.success(), "{}", String::from_utf8_lossy(&oracle.stderr));
     assert_eq!(oracle.stdout.len(), output_bytes);
-    let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.expansion".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.expansion".into(), standard: "1".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
         ENCODER_CALLS.with(|count| count.set(0));
@@ -154,7 +154,7 @@ fn sqlite_snapshot_native_encoding_admission_rejects_before_either_encoder() {
         process::{Command, Stdio},
     };
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.expansion".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.expansion".into(), standard: "1".into(), subset: "*".into() };
     for case in fixture["cases"].as_array().unwrap() {
         let output_bytes = case["outputBytes"].as_u64().unwrap() as usize;
         let guarded = case["guarded"].as_bool().unwrap();
@@ -217,7 +217,7 @@ fn encoding_stops_inside_owned_output(encoding: SnapshotEncoding) {
     let oracle = child.wait_with_output().unwrap();
     assert!(oracle.status.success(), "{}", String::from_utf8_lossy(&oracle.stderr));
     assert_eq!(String::from_utf8(oracle.stdout).unwrap(), output_bytes.to_string());
-    let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.expansion".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.expansion".into(), standard: "1".into(), subset: "*".into() };
     let mut limits = SqliteDatabaseLimits::default();
     limits.max_value_bytes = case["maximumBytes"].as_u64().unwrap() as usize;
     limits.max_file_bytes = limits.max_value_bytes;

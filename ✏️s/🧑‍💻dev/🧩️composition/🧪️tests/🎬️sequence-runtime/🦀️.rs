@@ -57,7 +57,7 @@ mod context {
     }
     pub async fn new_app() -> SequenceApp {
         super::installed();
-        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::with_registry(EditorApp::default(), AppActionRegistry::from_definition(&create_sequence_app())).await;
+        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::with_registry(EditorApp::default(), AppActionRegistry::from_definition(&create_sequence_app()), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(1).await;
         SequenceApp(app)
     }

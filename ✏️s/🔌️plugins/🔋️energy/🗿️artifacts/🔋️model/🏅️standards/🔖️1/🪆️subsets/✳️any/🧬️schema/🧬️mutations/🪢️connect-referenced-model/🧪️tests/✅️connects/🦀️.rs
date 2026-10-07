@@ -18,7 +18,7 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     let model = crate::model::Model { name: "BESTEST 600".into(), ..crate::model::Model::default() };
-    (snapshot(model), super::connect_referenced_model("doc-2!s.stdio.semio@v1/model".into()))
+    (snapshot(model), super::connect_referenced_model(semio_framework_artifact_reference::ArtifactRef { artifact_id: "doc-2".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } }))
 }
 
 fn case() -> Case {

@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::standards::v1_7::subsets::a::io::PdfABuilderConstruction as PdfABuilder;
-    use crate::standards::v1_7::subsets::a::schema::{CODE_JAVASCRIPT, CODE_LAUNCH};
+    use crate::standards::v1_7::subsets::a::io::{CODE_JAVASCRIPT, CODE_LAUNCH};
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 

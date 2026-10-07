@@ -1,5 +1,4 @@
 /** 🎨️ Actual Three/WebGPU pixel comparison for the shared World3d shading fixture. */
-import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -20,10 +19,9 @@ declare const Canvas: React.ComponentType<Record<string, unknown>>;
 declare const Grid: React.ComponentType<Record<string, unknown>>;
 
 /** 🖼️ The slice of a pixel-oracle fixture a run reads back: where its schema lives and the rows a
- * recorded run is compared against. Ajv's compiled validator is the type guard that proves it. */
+ * recorded run is compared against. The actual pixel readback is compared against these rows. */
 type PixelOracleFixture = {
-  readonly $schema: string;
-  readonly pixelOracle: {
+    readonly pixelOracle: {
     readonly status: string;
     readonly maximumRgbError: number;
     readonly rows: readonly { readonly id: string; readonly rgba8: readonly number[] }[];
@@ -1259,10 +1257,7 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
   const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🖼️reference-visual/🔣️.json");
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
-  const fixture = JSON.parse(await readFile(fixtureArgument, "utf8"));
-  const schema = JSON.parse(await readFile(resolve(dirname(fixtureArgument), fixture.$schema), "utf8"));
-  const validate = new Ajv({ allErrors: true }).compile<PixelOracleFixture>(schema);
-  if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+  const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as PixelOracleFixture;
   const threePath = Bun.resolveSync("three", repoRoot);
   const program = webgpu ? renderReferenceVisualWgpu : renderReferenceVisual;
   const source = 'import * as THREE from "three";\nglobalThis.renderReferenceVisual = ' + program.toString();
@@ -1521,10 +1516,7 @@ async function renderGridWgpu(input: any) {
 
 async function runGridVisualOracle(repoRoot: string, outputDirectory: string | undefined, webgpu: boolean): Promise<void> {
   const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌐️grid-visual/🔣️.json");
-  const fixture = JSON.parse(await readFile(fixtureArgument, "utf8"));
-  const schema = JSON.parse(await readFile(resolve(dirname(fixtureArgument), fixture.$schema), "utf8"));
-  const validate = new Ajv({ allErrors: true }).compile<PixelOracleFixture>(schema);
-  if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+  const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as PixelOracleFixture;
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
   const threePath = Bun.resolveSync("three", repoRoot);
@@ -1587,8 +1579,7 @@ async function runGridVisualOracle(repoRoot: string, outputDirectory: string | u
 /** 🎨️ What this oracle reads off the committed scene-shading fixture. `JSON.parse` answers `unknown`
  * in this program, so the corpus is named rather than assumed. */
 type SceneShadingOracleFixture = {
-  readonly $schema: string;
-  readonly pixelOracle: {
+    readonly pixelOracle: {
     readonly status: string;
     readonly producer: string;
     readonly profile: { readonly maximumRgbError: number };
@@ -1615,9 +1606,6 @@ export async function runSceneShadingOracle(
   // module type and makes every callback parameter below an implicit `any`.
   const { chromium } = (await import(playwrightSpecifier)) as typeof import("playwright");
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as SceneShadingOracleFixture;
-  const schema = JSON.parse(await readFile(resolve(dirname(fixtureArgument), fixture.$schema), "utf8"));
-  const validate = new Ajv({ allErrors: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
   const threePath = Bun.resolveSync("three", repoRoot);
   const webgpu = ["shading-wgpu", "shading-s2-wgpu", "shading-s2-current-mesh", "shading-s2-ordered-mesh", "shading-s2-painted", "shading-s2-celebration"].includes(command);
   const program = command === "shading-s2-painted" ? renderWgpuTextured : command === "shading-s2-celebration" ? renderWgpuCelebration : webgpu ? renderWgpuShading : command === "shading-s2-oracle" ? renderSceneShadingS2 : renderSceneShading;

@@ -1,5 +1,28 @@
-"Exact byte-authoritative BMP snapshot."
-type BmpSnapshot {
-  schema: String!
-  bytes: [Int!]!
+"Native BMP samples and owned metadata."
+scalar UInt
+
+type BmpSnapshot { schema: String!, image: BmpImage! }
+type BmpImage {
+  width: UInt!, height: UInt!, rowOrder: BmpRowOrder!, profile: BmpProfile!, masks: [UInt!]!
+  palette: [BmpPaletteEntry!]!, pixels: BmpPixels!, xPixelsPerMeter: Int!, yPixelsPerMeter: Int!
+  colorsUsed: UInt!, colorsImportant: UInt!, reserved1: Int!, reserved2: Int!, opaqueGap: [Int!]!, opaqueTrailer: [Int!]!
 }
+enum BmpRowOrder { bottomUp topDown }
+enum BmpProfile { indexedRgb1 indexedRgb4 indexedRgb8 directRgb16 directRgb24 directRgb32 directBitfields16 directBitfields32 }
+type BmpPaletteEntry { b: Int!, g: Int!, r: Int!, reserved: Int! }
+type BmpNativeSample { red: UInt!, green: UInt!, blue: UInt!, alpha: UInt!, reserved: UInt! }
+type BmpIndexedPixels { indices: [Int!]! }
+type BmpDirectPixels { samples: [BmpNativeSample!]! }
+union BmpPixels = BmpIndexedPixels | BmpDirectPixels
+
+input BmpSnapshotInput { schema: String!, image: BmpImageInput! }
+input BmpImageInput {
+  width: UInt!, height: UInt!, rowOrder: BmpRowOrder!, profile: BmpProfile!, masks: [UInt!]!
+  palette: [BmpPaletteEntryInput!]!, pixels: BmpPixelsInput!, xPixelsPerMeter: Int!, yPixelsPerMeter: Int!
+  colorsUsed: UInt!, colorsImportant: UInt!, reserved1: Int!, reserved2: Int!, opaqueGap: [Int!]!, opaqueTrailer: [Int!]!
+}
+input BmpPaletteEntryInput { b: Int!, g: Int!, r: Int!, reserved: Int! }
+input BmpNativeSampleInput { red: UInt!, green: UInt!, blue: UInt!, alpha: UInt!, reserved: UInt! }
+input BmpIndexedPixelsInput { indices: [Int!]! }
+input BmpDirectPixelsInput { samples: [BmpNativeSampleInput!]! }
+input BmpPixelsInput @oneOf { indexedPixels: BmpIndexedPixelsInput directPixels: BmpDirectPixelsInput }

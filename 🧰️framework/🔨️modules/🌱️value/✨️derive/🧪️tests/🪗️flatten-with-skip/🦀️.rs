@@ -106,9 +106,9 @@ mod hex_u32 {
     }
 
     pub fn from_value(value: DslValue) -> Result<u32, ValueError> {
-        let DslValue::String(s) = value else { return Err(ValueError::new("expected a hex string".to_string())) };
-        let digits = s.strip_prefix("0x").ok_or_else(|| ValueError::new("expected a 0x-prefixed hex string".to_string()))?;
-        u32::from_str_radix(digits, 16).map_err(|error| ValueError::new(error.to_string()))
+        let DslValue::String(s) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a hex string".to_string())) };
+        let digits = s.strip_prefix("0x").ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a 0x-prefixed hex string".to_string()))?;
+        u32::from_str_radix(digits, 16).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 
@@ -204,7 +204,7 @@ fn skip_with_default_path_uses_that_path_not_type_default() {
 /// `expand_from_value`'s call sites, not just the impl header, since the struct below only compiles
 /// at all if every one of them resolves under this non-default path.
 mod value_root {
-    pub use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueShape};
+    pub use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
 }
 
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue)]
@@ -306,7 +306,7 @@ mod byte_len_bridge {
     }
 
     pub fn from_value(value: DslValue) -> Result<Vec<u8>, ValueError> {
-        let len = value.as_u64().ok_or_else(|| ValueError::new("expected a number".to_string()))?;
+        let len = value.as_u64().ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a number".to_string()))?;
         Ok(vec![0u8; len as usize])
     }
 }

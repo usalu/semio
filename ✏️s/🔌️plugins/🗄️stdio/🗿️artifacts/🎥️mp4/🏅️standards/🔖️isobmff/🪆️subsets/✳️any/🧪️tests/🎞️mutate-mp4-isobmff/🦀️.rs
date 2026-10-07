@@ -78,7 +78,8 @@ mod subject {
     use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_mp4::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
+    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation,Mp4Mutation};
+
     use semio_s_artifact_stdio_mp4_test_oracle::standards::v_isobmff::subsets::any::project_mp4_mutation;
     use semio_repo_test_host::law;
 

@@ -86,7 +86,8 @@ mod subject {
     use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_wav::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
+    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation,WavMutation};
+
     use semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation;
     use semio_repo_test_host::law;
 

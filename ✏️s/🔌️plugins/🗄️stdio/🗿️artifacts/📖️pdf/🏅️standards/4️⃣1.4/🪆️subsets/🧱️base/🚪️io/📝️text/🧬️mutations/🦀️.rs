@@ -12,13 +12,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 type Printer = fn(&PdfMutation) -> Option<String>;
 type Parser = fn(&str) -> Result<PdfMutation, semio_framework_diagnostic::TextError>;
 pub const REGISTRY: &[(&str, Printer, Parser)] = &[
-    (crate::standards::v1_4::subsets::base::schema::mutations::insert_page::OPCODE, crate::standards::v1_4::subsets::base::schema::mutations::insert_page::print, crate::standards::v1_4::subsets::base::schema::mutations::insert_page::parse),
-    (crate::standards::v1_4::subsets::base::schema::mutations::remove_page::OPCODE, crate::standards::v1_4::subsets::base::schema::mutations::remove_page::print, crate::standards::v1_4::subsets::base::schema::mutations::remove_page::parse),
-    (crate::standards::v1_4::subsets::base::schema::mutations::move_page::OPCODE, crate::standards::v1_4::subsets::base::schema::mutations::move_page::print, crate::standards::v1_4::subsets::base::schema::mutations::move_page::parse),
-    (crate::standards::v1_4::subsets::base::schema::mutations::resize_page::OPCODE, crate::standards::v1_4::subsets::base::schema::mutations::resize_page::print, crate::standards::v1_4::subsets::base::schema::mutations::resize_page::parse),
-    (crate::standards::v1_4::subsets::base::schema::mutations::replace_page_text::OPCODE, crate::standards::v1_4::subsets::base::schema::mutations::replace_page_text::print, crate::standards::v1_4::subsets::base::schema::mutations::replace_page_text::parse),
-    (crate::standards::v1_4::subsets::base::schema::mutations::set_snapshot::OPCODE, crate::standards::v1_4::subsets::base::schema::mutations::set_snapshot::print, crate::standards::v1_4::subsets::base::schema::mutations::set_snapshot::parse),
-    (crate::standards::v1_4::subsets::base::schema::mutations::patch_snapshot::OPCODE, crate::standards::v1_4::subsets::base::schema::mutations::patch_snapshot::print, crate::standards::v1_4::subsets::base::schema::mutations::patch_snapshot::parse),
+    (crate::standards::v1_4::subsets::base::io::text::mutations::insert_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::insert_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::insert_page::parse),
+    (crate::standards::v1_4::subsets::base::io::text::mutations::remove_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::remove_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::remove_page::parse),
+    (crate::standards::v1_4::subsets::base::io::text::mutations::move_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::move_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::move_page::parse),
+    (crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::parse),
+    (crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::print, crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::parse),
+    (crate::standards::v1_4::subsets::base::io::text::mutations::set_snapshot::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::set_snapshot::print, crate::standards::v1_4::subsets::base::io::text::mutations::set_snapshot::parse),
+    (crate::standards::v1_4::subsets::base::io::text::mutations::patch_snapshot::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::patch_snapshot::print, crate::standards::v1_4::subsets::base::io::text::mutations::patch_snapshot::parse),
 ];
 //#endregion 🔖️Registry
 

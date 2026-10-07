@@ -10,7 +10,7 @@ pub fn register() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &XmlSnapshot) -> Result<SvgSnapshot, semio_framework_diagnostic::TextError> {
     match &from.doc.root {
-        Some(XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: from.doc.clone() }),
+        Some(XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: crate::standards::v1_1::subsets::base::io::text::snapshot::attributes::bind_svg_document(from.doc.clone()).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))? }),
         _ => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "root element must be svg", semio_framework_diagnostic::TextSpan::at(1, 1))),
     }
 }

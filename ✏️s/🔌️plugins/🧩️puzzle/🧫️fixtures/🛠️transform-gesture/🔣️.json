@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "phase": "once",
+      "offset": [
+        2,
+        0,
+        -1
+      ],
+      "committed": 1
+    },
+    {
+      "phase": "once",
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "committed": 0
+    },
+    {
+      "phase": "stream",
+      "offset": [
+        2,
+        0,
+        -1
+      ],
+      "committed": 0
+    },
+    {
+      "phase": "commit",
+      "offset": [
+        2,
+        0,
+        -1
+      ],
+      "committed": 0
+    },
+    {
+      "phase": "abort",
+      "offset": [
+        2,
+        0,
+        -1
+      ],
+      "committed": 0
+    }
+  ]
+}

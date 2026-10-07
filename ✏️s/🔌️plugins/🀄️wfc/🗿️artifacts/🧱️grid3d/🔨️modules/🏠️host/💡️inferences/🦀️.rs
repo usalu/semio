@@ -672,7 +672,7 @@ pub fn register_grid3d_inference_factory(bus: &semio_framework::ActionBus) -> Re
 }
 
 /// 🏁️ Explicit headless adapter over the same complete parent job the public factory hands out.
-pub fn solve_with_job(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
+pub fn solve(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
     solve_with_clock(snapshot, semio_framework_job::default_now_us)
 }
 
@@ -739,6 +739,7 @@ pub fn solve_with_clock(snapshot: &Grid3dSnapshot, now_us: fn() -> Option<u64>) 
 }
 
 impl store::InferredField<Grid3dSnapshot> for Grid3dSolve {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = Grid3dSolveResult;
 
@@ -755,7 +756,7 @@ impl store::InferredField<Grid3dSnapshot> for Grid3dSolve {
         crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
     }
     fn compute(snapshot: &Grid3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        match solve_with_job(snapshot) {
+        match solve(snapshot) {
             Ok(solution) if solution.satisfiable => Grid3dSolveResult::Solved { assignments: solution.assignments },
             _ => Grid3dSolveResult::Unsolved,
         }
@@ -763,6 +764,7 @@ impl store::InferredField<Grid3dSnapshot> for Grid3dSolve {
 }
 
 impl store::InferredField<Grid3dSnapshot> for Grid3dContradiction {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = bool;
 
@@ -779,11 +781,12 @@ impl store::InferredField<Grid3dSnapshot> for Grid3dContradiction {
         crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
     }
     fn compute(snapshot: &Grid3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        solve_with_job(snapshot).is_ok_and(|commit| commit.satisfiable)
+        solve(snapshot).is_ok_and(|commit| commit.satisfiable)
     }
 }
 
 impl store::InferredField<Grid3dSnapshot> for Grid3dEntropy {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = f64;
 
@@ -827,3 +830,10 @@ impl store::InferredField<Grid3dSnapshot> for Grid3dEntropy {
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+fn close_owned<T: semio_framework_job::InteractiveJob>(mut job: T) {
+    job.begin_close();
+    while !job.terminal_is_empty() {
+        job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+}

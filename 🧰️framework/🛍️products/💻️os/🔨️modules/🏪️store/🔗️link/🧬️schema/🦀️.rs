@@ -9,7 +9,7 @@ use crate::{BlobRef, FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ArtifactLink {
-    pub target: crate::os_io::ArtifactRef,
+    pub target: semio_framework_artifact_reference::ArtifactRef,
     pub pin: LinkPin,
     pub role: String,
 }

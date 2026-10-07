@@ -332,6 +332,26 @@ fn every_context_reviews_as_the_fixture_says() {
     }
 }
 
+/// 🧪️ Accept requires a change against the current draft baseline and a refusal retains every field.
+#[test]
+fn accept_needs_a_changed_draft_and_preserves_every_refused_session() {
+    let law = law();
+    for (name, json) in law["contexts"].as_object().expect("contexts") {
+        let before = session(json);
+        let expected = match (before.stage, before.pending.as_ref()) {
+            (TimeTravelStage::Editing, Some(pending)) if before.unchanged(pending) => Some(TimeTravelRefusal::Unchanged),
+            (TimeTravelStage::Editing, Some(_)) => None,
+            _ => Some(TimeTravelRefusal::Illegal),
+        };
+        assert_eq!(before.accept_refusal(), expected, "{name}");
+        let mut after = before.clone();
+        assert_eq!(after.apply(TimeTravelEvent::Accept { generation: before.generation }).err(), expected, "{name}");
+        if expected.is_some() {
+            assert_eq!(after, before, "{name}");
+        }
+    }
+}
+
 /// ✏️ `begin_refusal` answers, in every fixture context, exactly what applying the canonical `Begin` and the canonical
 /// `BeginWithdrawn` answer — the query a host disables a row's Edit and Withdraw controls by never disagrees with the
 /// reducer.

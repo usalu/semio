@@ -4,7 +4,7 @@ use crate::app::{
     ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, Editor, Emit, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer,
 };
 use crate::ViewModel;
-use semio_framework::{AppRole, Dialect, Fault, IconName, StandardId, SubsetId};
+use {semio_framework::AppRole,semio_framework_artifact_reference::Dialect,semio_framework::Fault,semio_framework::IconName,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_ui_locale::LocalizedLabel;
 

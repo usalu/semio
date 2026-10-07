@@ -1,0 +1,27 @@
+# Original Generation2d Ten-Error Prerequisite
+
+## Actual Selected-Shell Compiler Receipt
+
+Original selected-shell65701 terminated exit1/Cargo101/no signal, Nx17m27/target15m17; no selected-shell inference/history assertions executed. Exact artifact `🗑️generated/enduser-controls-exact/exact-cargo-laws-8YZ5Wd/00`. Full structured Cargo output contains ten errors: redundant transient leaf imports3, schema generation_preview_host caller1, and physical sparse Diff Record helper references6. Launcher stderr showed only the leading3; full authority corrected that initial bounded summary before source edits. Full codes/spans/rendered contexts are retained in `🗑️generated/enduser-selected-shell2-bounded-errors.json`. CommonMark visibility errors are absent.
+
+## Four Original Caller Closures
+
+Binary/text transient codec modules already import original canonical `component::mutations::*`, whose semantic aggregate publicly exports SetGenerationPreview while its leaf module is private. Removed exactly three redundant unresolvable bare-leaf imports. Original physical text snapshot530 owns generation_preview_host; the actual flow-eval-tick command already uses that authority. Qualified only the original schema evaluation convenience caller to the same path, retaining evaluation and explicit retirement. No leaf/module exposure or codec/schema/expectation change. Full three-source SHA/source/diffs and executed exact reversal are in `🗑️generated/enduser-selected-shell2-generation2d-caller-review.json`.
+
+## Six Original Physical Diff References
+
+Original domain Generation2dDiff is a sparse delta with exactly three optional fields: artifact, host_snapshot, generation. Original binary/text `diff_binary!`/`diff_text!` macros require its physical Record methods; the semantic domain intentionally has no DSL representation owner. Fresh readback found the physical text owner contained its original grammar/path/carrier/macro but no Record provider. Doc's separately reviewed G3 physical provider is a source-only precedent, not a runtime result: same three field IDs0/1/2, optional Shape::Value, native ToValue/FromValue authority, omitted absent fields and missing/Absent→Null, original typed value refusal.
+
+Before restoring the provider, authored G2 neutral five cases (empty/artifact/host/generation/all, nested finite values, Unicode and newline text), plus a unit law comparing original text/binary roundtrip and exact sparse field presence to independent serde_json. Source and decoded values use the existing Generation2dDiffRead cold-retirement owner; generated Record values use existing retire_field. Test fixture at original physical text diff/🧫️fixtures/🔣️.json, test at diff/🧪️tests/🔬️unit/🦀️.rs. Existing laws/expectations/rosters remain intact.
+
+Added only the original physical Record implementation and test-module registration to `🚪️io/📝️text/🔺️diff/🦀️.rs`. Binary and text macro invocations, grammar/protocol assets and carrier/schema remain byte-identical. Record projection preserves all inhabited complete native field values; restoration delegates to original FromValue; no new domain DTO/evaluator/mirror/compatibility layer or external dependency. Removing exactly the added implementation/imports/test registration reproduces the complete authoritative pre-edit source, independently verified equal to read-only HEAD; full SHA/source/diff receipt `🗑️generated/enduser-selected-shell2-generation2d-diff-provider-review.json`.
+
+## Runtime Status and Next Gate
+
+Generation2d physical source closure is reviewed; its neutral5 codec law and original selected-shell behavior remain runtime-pending. Doc seven17685 independently terminated PREASSERT on one current shared os_spr HistoryFoldJob.finish_cold caller, and Root is preserving that external history migration. Do not replay native unchanged before canonical history source release. Original selected-shell next remains the same registered composition test/filter. Registering a focused original Generation2d Diff5 command does not constitute executing it; its runtime follows the selected-shell lane sequentially when source coherence permits.
+
+## Current Canonical History Release and Original Selected-Shell Replay 3
+
+Doc's seven17685 captured one missing HistoryFoldJob.finish_cold method while shared source was being edited. Fresh independent readback confirms os_spr reexports the same original causal::transition HistoryFoldJob at spr34, original cold HistoryLog::fold caller241 uses it, and canonical replication/causal/transition/fold102 now publicly supplies finish_cold by driving its existing step cursor; interactive callers continue explicit bounded turns. No alternate wrapper, compatibility shim, or history source edit was added by this lane. This is a source-coherent release, not history runtime qualification.
+
+After Parent's release and original selected-shell65701 terminal10-error capture plus reviewed G2 original caller/provider closure, original selected-shell replay17505 dispatched with unchanged registered composition target, generation3d-app-laws test and mesh_brep_live_scoped_selection_ filter, fresh three Nx flags/CARGO_BUILD_JOBS2, same exact-Cargo artifact directory. Durable log `🗑️generated/enduser-live-selected-shell-runtime-3.log`. Dispatch is not shell inference/history success. Original shell schema/input/oracles/history assertions and retained unit rosters remain unchanged. Focused original G2 Diff5 follows this lane sequentially after terminal; no second heavy native command launched here.

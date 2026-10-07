@@ -116,7 +116,7 @@ fn meta() -> ActionMeta {
 /// unless the mounted live instance id equals the dispatching `ActionMeta`'s.
 async fn new_app() -> VcsArtifactApp<ModuleApp> {
     let definition = create_module_app().await.expect("module definition").definition;
-    let mut app = VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition)).await;
+    let mut app = VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(meta().instance_id).await;
     app
 }
@@ -232,7 +232,7 @@ async fn export_solid_declares_only_format_arg_and_materializes_default() {
     let export = declared().find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
     assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app: VcsArtifactApp<ModuleApp> = VcsArtifactApp::with_registry(ModuleApp, registry).await;
+    let mut app: VcsArtifactApp<ModuleApp> = VcsArtifactApp::with_registry(ModuleApp, registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(meta().instance_id).await;
     // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
     // so the whole-payload operation still applies and stashes a result.
@@ -315,7 +315,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
-        ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).await.expect("valid artifact store fixture");
+        ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ModuleRenderPayload, ModulePayloadMutation>());
     let mut payload = default_payload();
     payload.interactive = false;

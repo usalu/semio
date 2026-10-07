@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://plugin/checkpoint/actor-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["instances", "timers", "pending_requests", "task_restarts"],
+  "properties": {
+    "instances": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "app_id", "actor", "document_pack"],
+        "properties": {
+          "id": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+          "app_id": {"type": "string"},
+          "actor": {"type": "string"},
+          "document_pack": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}}
+        }
+      }
+    },
+    "timers": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+    "pending_requests": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+    "task_restarts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["instance", "command"],
+        "properties": {
+          "instance": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+          "command": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}}
+        }
+      }
+    }
+  }
+}

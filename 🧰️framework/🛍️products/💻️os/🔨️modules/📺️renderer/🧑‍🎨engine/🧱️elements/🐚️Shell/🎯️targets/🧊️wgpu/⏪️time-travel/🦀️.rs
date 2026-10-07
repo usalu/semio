@@ -265,6 +265,8 @@ impl From<Locale> for BandTongue {
 
 const BAND_LABEL_TARGET: &str = "ui.timeTravel.target";
 const BAND_LABEL_PROGRESS: &str = "ui.timeTravel.progress";
+const BAND_LABEL_PREPARATION_PROGRESS: &str = "ui.timeTravel.preparationProgress";
+const BAND_LABEL_PROCESSED: &str = "ui.timeTravel.processed";
 const BAND_LABEL_WORST: &str = "ui.timeTravel.worst";
 const BAND_LABEL_REPLAY_FAULTED: &str = "ui.timeTravel.refusal.replayFaulted";
 const BAND_LABEL_ACCEPTED: &str = "ui.timeTravel.accepted";
@@ -276,7 +278,7 @@ const BAND_LABEL_PEER_EDITING_ROW: &str = "ui.timeTravel.peer.editingRow";
 
 /// 🧾️ Every fixed corpus label key the band copy reads besides its controls, stages, reviews, severities and refusals — the
 /// keys a law requires the corpus to carry.
-pub(crate) const BAND_FIXED_LABEL_KEYS: [&str; 10] = [BAND_LABEL_TARGET, BAND_LABEL_PROGRESS, BAND_LABEL_WORST, BAND_LABEL_REPLAY_FAULTED, BAND_LABEL_ACCEPTED, BAND_LABEL_INDICATOR_TARGET, BAND_LABEL_INDICATOR, BAND_LABEL_PEER_EDITING_TARGET, BAND_LABEL_PEER_EDITING_HISTORY, BAND_LABEL_PEER_EDITING_ROW];
+pub(crate) const BAND_FIXED_LABEL_KEYS: [&str; 12] = [BAND_LABEL_TARGET, BAND_LABEL_PROGRESS, BAND_LABEL_PREPARATION_PROGRESS, BAND_LABEL_PROCESSED, BAND_LABEL_WORST, BAND_LABEL_REPLAY_FAULTED, BAND_LABEL_ACCEPTED, BAND_LABEL_INDICATOR_TARGET, BAND_LABEL_INDICATOR, BAND_LABEL_PEER_EDITING_TARGET, BAND_LABEL_PEER_EDITING_HISTORY, BAND_LABEL_PEER_EDITING_ROW];
 
 /// ❔️ What a band string reads when the corpus lacks its key: the replacement character — never empty, in no language, and
 /// kept off every screen by the law that requires each key the shell reads.
@@ -357,6 +359,11 @@ pub(crate) fn history_refusal_of_fault(fault: &str, tongue: impl Into<BandTongue
     fault_tokens(fault).find_map(|token| history_refusal_notice(token, tongue))
 }
 
+/// 🛟️ Whether a typed history refusal discards only the submitted local input draft.
+pub(crate) fn history_refusal_discards_input_draft(fault: &str) -> bool {
+    fault_tokens(fault).any(|token| refusals::refusal(token).is_some())
+}
+
 /// ✂️ A dispatch-fault string's whole tokens, in order — a code is only ever a whole token.
 fn fault_tokens(fault: &str) -> impl Iterator<Item = &str> {
     fault.split(|c: char| c.is_whitespace() || matches!(c, ':' | ';' | ',' | '[' | ']' | '(' | ')'))
@@ -387,6 +394,11 @@ fn time_travel_target_text(status: &HistoryTimeTravel, terminology: Terminology,
     status.target_label.as_ref().map(|label| label.resolve(terminology, locale).to_string()).filter(|target| !target.is_empty())
 }
 
+/// ⏳️ Names the running preparation or replay through its canonical band copy.
+fn time_travel_progress_key(stage: HistoryTimeTravelStage) -> Option<&'static str> {
+    match stage { HistoryTimeTravelStage::Editing=>Some(BAND_LABEL_PREPARATION_PROGRESS), HistoryTimeTravelStage::Replaying=>Some(BAND_LABEL_PROGRESS), _=>None }
+}
+
 /// 📝️ [`TimeTravelBandLines`] of `status` — React's `timeTravelBandTextV1`: a review reads what the session states
 /// (`review`), never what a missing report might mean; severity is always named in words, never by colour alone; a fault
 /// code the shell knows reads as its localized refusal, any other as the shared replay-failed copy — never the code itself.
@@ -396,7 +408,14 @@ pub(crate) fn time_travel_band_lines(status: &HistoryTimeTravel, terminology: Te
     TimeTravelBandLines {
         stage: band_label(time_travel_stage_key(status.stage), tongue).to_string(),
         target: time_travel_target_text(status, terminology, locale).map(|target| band_label(BAND_LABEL_TARGET, tongue).replace("{target}", &target)),
-        progress: (status.stage == HistoryTimeTravelStage::Replaying).then_some(status.total).flatten().map(|total| band_label(BAND_LABEL_PROGRESS, tongue).replace("{done}", &status.done.unwrap_or(0).to_string()).replace("{total}", &total.to_string())),
+        progress: time_travel_progress_key(status.stage).zip(status.total).map(|(key,total)| {
+            let mut text = band_label(key, tongue).replace("{done}", &status.done.unwrap_or(0).to_string()).replace("{total}", &total.to_string());
+            if let Some(processed) = status.processed {
+                text.push_str(" · ");
+                text.push_str(&band_label(BAND_LABEL_PROCESSED, tongue).replace("{processed}", &processed.to_string()));
+            }
+            text
+        }),
         review: status.review.filter(|_| status.stage == HistoryTimeTravelStage::Reviewing).map(|review| band_label(time_travel_review_key(review), tongue).to_string()),
         outcome: status.worst.map(|worst| band_label(BAND_LABEL_WORST, tongue).replace("{level}", time_travel_severity_text(worst, tongue))),
         fault: status.fault.as_deref().map(|fault| match history_refusal_notice(fault, locale) {
@@ -567,7 +586,7 @@ pub(crate) fn time_travel_band_plan(status: &HistoryTimeTravel, message: String,
     let band = layout.band;
     let pad = theme.padding_standard;
     let progress = match (status.stage, status.total) {
-        (HistoryTimeTravelStage::Replaying, Some(total)) if total > 0 => {
+        (HistoryTimeTravelStage::Editing | HistoryTimeTravelStage::Replaying, Some(total)) if total > 0 => {
             Some((Rect::new(band.x + pad, band.y + band.h - TIME_TRAVEL_PROGRESS_TRACK - 1.0, band.w - pad * 2.0, TIME_TRAVEL_PROGRESS_TRACK), (status.done.unwrap_or(0) as f32 / total as f32).clamp(0.0, 1.0)))
         }
         _ => None,
@@ -839,7 +858,7 @@ impl ShellState {
         crate::interpreter::set_ui_presence_notes(&self.peer_time_travel_presence().notes)
     }
 
-    /// ⏱️ While the runtime replays or finalizes a session, or a history change replays before adoption, re-reads the history at
+    /// ⏱️ While the runtime prepares, replays or finalizes a session, or a history change replays before adoption, re-reads the history at
     /// most every [`TIME_TRAVEL_POLL_MS`] and folds the snapshot — rows, cursor, session and reprojection status — so a reply older
     /// than it can no longer roll the bands back. The
     /// runtime also pushes throttled progress patches on uncorrelated `AppFrame::Invocation` frames, which reach
@@ -847,7 +866,7 @@ impl ShellState {
     /// exchanges. `true` when the status changed.
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn poll_time_travel_progress(&mut self) -> bool {
-        let polling = self.history_time_travel.as_ref().is_some_and(|status| matches!(status.stage, HistoryTimeTravelStage::Replaying | HistoryTimeTravelStage::Finalizing)) || self.history_reprojection.as_ref().is_some_and(|reprojection| !reprojection.paused && reprojection.total > 0);
+        let polling = self.history_time_travel.as_ref().is_some_and(|status| (matches!(status.stage, HistoryTimeTravelStage::Replaying | HistoryTimeTravelStage::Finalizing) || status.stage == HistoryTimeTravelStage::Editing && status.total.is_some())) || self.history_reprojection.as_ref().is_some_and(|reprojection| !reprojection.paused && reprojection.total > 0);
         let now = chrome_now_ms();
         if !polling || now - self.time_travel_polled_at_ms < TIME_TRAVEL_POLL_MS {
             return false;
@@ -997,11 +1016,11 @@ impl ShellState {
         Some(node)
     }
 
-    /// 📶️ The replay's progress as its own node under the band's status — React's `<progress>` inside the band: a progress
-    /// bar named and valued by the progress line while a replay with a known total runs, `None` otherwise.
+    /// 📶️ Preparation or replay progress as its own node under the band's status — React's `<progress>` inside the band: a progress
+    /// bar named and valued by the progress line while known-total work runs, `None` otherwise.
     pub(crate) fn time_travel_progress_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let status = self.history_time_travel.as_ref()?;
-        let total = status.total.filter(|_| status.stage == HistoryTimeTravelStage::Replaying)?;
+        let total = status.total.filter(|_| time_travel_progress_key(status.stage).is_some())?;
         let line = time_travel_band_lines(status, self.active_terminology(), self.band_tongue()).progress?;
         let mut node = chrome_status_accessibility_node(node_id, TIME_TRAVEL_BAND_PROGRESS_ID, line);
         node.role = "progressbar".into();

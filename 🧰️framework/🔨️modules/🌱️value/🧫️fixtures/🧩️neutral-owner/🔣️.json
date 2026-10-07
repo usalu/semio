@@ -1,5 +1,11 @@
 {
   "version": 1,
+  "borrowAuthority": {
+    "schema": "semio.value.borrowed-clone/v1",
+    "cancelAt": [0, 1, 3, 7],
+    "sourceUnchanged": true,
+    "changedSourceAccepted": false
+  },
   "grant": {
     "maximumItems": 1,
     "maximumCopyBytes": 8,

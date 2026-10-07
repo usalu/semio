@@ -13,7 +13,7 @@ use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
@@ -38,13 +38,13 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+pub(crate) fn write_ref(out: &mut Vec<u8>, r: &semio_framework_artifact_reference::ArtifactRef) {
     for field in [&r.artifact_id,&r.dialect.artifact_kind,&r.dialect.standard,&r.dialect.subset]{write_str_lp(out,field);}
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    Ok(store::os_io::ArtifactRef{artifact_id:read_str_lp(reader)?,dialect:store::os_io::ArtifactDialect{artifact_kind:read_str_lp(reader)?,standard:read_str_lp(reader)?,subset:read_str_lp(reader)?}})
+pub(crate) fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
+    Ok(semio_framework_artifact_reference::ArtifactRef{artifact_id:read_str_lp(reader)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:read_str_lp(reader)?,standard:read_str_lp(reader)?,subset:read_str_lp(reader)?}})
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -328,8 +328,8 @@ use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::kit::io::text::snapshot::*;
 /// 📦️ Encodes a [`SemioKitSnapshot`] as a semio pack envelope — the binary twin of the DSL text, produced by a
 /// SEPARATE codec, which is what makes the two committed encodings of one document able to

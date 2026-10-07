@@ -19,6 +19,12 @@ import { dirname, extname, join, relative } from "node:path";
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "document-restoration-oracle") {
+      const test = join(this.repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/📄️document-restoration/🟦️.ts");
+      runCmd("bun", ["test", test], {cwd: this.repoRoot});
+      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", "--resolveJsonModule", test], {cwd: this.repoRoot});
+      return;
+    }
     if (segments[0] === "generation3d-widget-inputs") {
       console.log(`generation3d-widget-input checks=${generation3dWidgetInputSelfTests()} independentAjv=true`);
       console.log(`generation3d-widget-creation checks=${generation3dWidgetCreationSelfTests()} independentAjv=true`);

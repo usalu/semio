@@ -4,7 +4,7 @@ async fn demo_source_nonempty() {
     assert!(!PRIMARY_TEXT.is_empty());
     let _ = source();
     let literal = <crate::TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("current handcrafted TIFF literal fixture");
-    let native = crate::engine::decode_tiff(NATIVE_BYTES).expect("genuine authored TIFF native fixture");
+    let native = crate::standards::v6_0::subsets::document::io::decode_tiff(NATIVE_BYTES).expect("genuine authored TIFF native fixture");
     assert_eq!(literal, native, "handcrafted demo text retains the complete genuine native owner");
     eprintln!("[DEBUG] TIFF current literal demo matches complete genuine native owner ifds={} byte_order={:?}", literal.ifds.len(), literal.byte_order);
 }
@@ -37,8 +37,8 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
     type Mutation = crate::TiffMutation;
     type Inference = crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
 
-    async fn dialect() -> store::os_io::ArtifactDialect {
-        store::os_io::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() }
+    async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
+        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() }
     }
 
     async fn fidelity() -> store::os_store::test_support::IoFidelityClass {
@@ -50,15 +50,15 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
     }
 
     async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
-        crate::engine::decode_tiff(asset.bytes)
+        crate::standards::v6_0::subsets::document::io::decode_tiff(asset.bytes)
     }
 
     async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-        crate::engine::encode_tiff(snapshot)
+        crate::standards::v6_0::subsets::document::io::encode_tiff(snapshot)
     }
 
     async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
-        crate::engine::decode_tiff(bytes)
+        crate::standards::v6_0::subsets::document::io::decode_tiff(bytes)
     }
 
     async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
@@ -81,7 +81,7 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-        crate::engine::decode_tiff(bytes).map(|_| ()).map_err(|e| vec![e])
+        crate::standards::v6_0::subsets::document::io::decode_tiff(bytes).map(|_| ()).map_err(|e| vec![e])
     }
 
     async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

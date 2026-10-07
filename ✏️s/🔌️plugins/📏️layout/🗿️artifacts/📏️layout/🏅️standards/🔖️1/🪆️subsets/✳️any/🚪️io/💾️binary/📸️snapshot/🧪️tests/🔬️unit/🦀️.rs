@@ -75,8 +75,10 @@ async fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
 
 #[semio_framework_async_macros::async_test]
 async fn pack_schema_identity_carries_the_background_drawing_child_and_model_link() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let mut document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
     document.background_drawing = Some(crate::background_drawing_child_handle("dxf", &semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot::default()));
-    document.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("plan-1!s.architect.model@1/*").expect("uri"), pin: store::LinkPin::Checkpoint { id: "cp-1".into() }, role: "model".into() });
+    document.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("plan-1!s.architect.model@1/*").expect("uri"), pin: store::LinkPin::Checkpoint { id: "cp-1".into() }, role: "model".into() });
     store::os_store::test_support::assert_pack_schema_identity(&document);
 }

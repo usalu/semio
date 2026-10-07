@@ -72,7 +72,7 @@ fn fixture_source(input: &serde_json::Value) -> FixtureSource {
 }
 
 fn reference(index: usize) -> ArtifactRef {
-    ArtifactRef { artifact_id: format!("node-{index}"), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "object".into() } }
+    ArtifactRef { artifact_id: format!("node-{index}"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "object".into() } }
 }
 
 fn chain(count: usize) -> FixtureSource {

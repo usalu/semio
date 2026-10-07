@@ -1,5 +1,6 @@
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
+import{fileURLToPath}from"node:url";
 import Ajv from"ajv";
 import fixture from"../🧫️fixtures/🔣️.json";
 
@@ -18,7 +19,7 @@ type Catalogs=Omit<owner.Puzzle2dKindCatalogs,"nodes">&{nodes:NodeKind[]};
 type Meta=Omit<owner.Puzzle2dMeta,"kindCatalogs">&{kindCatalogs?:Catalogs};
 type Region=Omit<owner.Puzzle2dTargetRegion,"x"|"y"|"width"|"height">&{x:Binary64;y:Binary64;width:Binary64;height:Binary64};
 type Snapshot=Omit<owner.Puzzle2dSnapshot,"camera"|"nodes"|"edges"|"targetRegions"|"meta">&{camera:{x:Binary64;y:Binary64;zoom:Binary64};nodes:Node[];edges:Edge[];targetRegions:Region[];meta:Meta};
-const own=owner;
+import * as own from"../🟦️.ts";
 function snapshot():Snapshot{
  const source=structuredClone(fixture.snapshot)as owner.Puzzle2dSnapshot;const{kindCatalogs,...meta}=source.meta;
  return{...source,camera:{x:binary64(source.camera.x),y:binary64(source.camera.y),zoom:binary64(source.camera.zoom)},
@@ -31,7 +32,7 @@ const bytes=async(value:Snapshot)=>exportSqliteDatabase(await own.puzzle2dSnapsh
 const restore=async(value:Uint8Array,options:ArtifactSqliteOptions={})=>own.puzzle2dSnapshotFromSqliteDatabase(await importSqliteDatabase(value),options);
 test("Puzzle 2D independent neutral schema admits every persisted board and catalog field",()=>{const validator=new Ajv({strict:false,validateFormats:false}).addSchema(artifactSchema).addSchema(nativeSchema);expect(fixture["control"]["collectionLength"]).toEqual(2048);expect(fixture["control"]["largeTextBytes"]).toEqual(131073);expect(fixture["control"]["maxOwnedBytes"]).toEqual(65536);expect(fixture["control"]["tinyFileBytes"]).toEqual(1024);expect(fixture["semanticCells"]["tableWidths"]).toEqual([["puzzle2d_attribute",7],["puzzle2d_author",8],["puzzle2d_base_kind",4],["puzzle2d_camera",11],["puzzle2d_catalog_edge_kind",9],["puzzle2d_catalog_handle_kind",11],["puzzle2d_catalog_node_kind",11],["puzzle2d_catalog_wire_kind",10],["puzzle2d_compatible_kind",4],["puzzle2d_document",2],["puzzle2d_edge",35],["puzzle2d_handle",18],["puzzle2d_handle_template",19],["puzzle2d_kind_catalogs",2],["puzzle2d_kind_compatibility",8],["puzzle2d_meta",3],["puzzle2d_node",30],["puzzle2d_representation",9],["puzzle2d_representation_tag",4],["puzzle2d_target_region",19]]);expect(fixture["semanticCells"]["fullRows"]).toEqual(42);});
 test("Puzzle 2D independent SQLite schema has twenty authored ownership tables",async()=>{const db=new Database(":memory:");try{db.run(await Bun.file(new URL("../🗄️.sql",import.meta.url)).text());expect(db.query("SELECT name FROM sqlite_master WHERE type='table'").all().length).toBe(20);expect(db.query("SELECT name FROM sqlite_master WHERE type='index'").all()).toEqual([]);expect(db.query("PRAGMA table_info(puzzle2d_node)").all().length).toBe(30);expect(db.query("PRAGMA table_info(puzzle2d_edge)").all().length).toBe(35);expect(db.query("PRAGMA table_info(puzzle2d_handle_template)").all().length).toBe(19)}finally{db.close()}});
-test("Puzzle 2D public facade exposes both owned semantic directions",()=>{expect(Object.hasOwn(owner,"puzzle2dSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(owner,"puzzle2dSnapshotFromSqliteDatabase")).toBe(true)});
+test("Puzzle 2D public facade exposes both owned semantic directions",()=>{expect(Object.hasOwn(own,"puzzle2dSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(own,"puzzle2dSnapshotFromSqliteDatabase")).toBe(true)});
 test("Puzzle 2D independently queryable files retain every scalar ordered catalog and duplicate literal id",async()=>{const expected=snapshot(),data=await bytes(expected),db=Database.deserialize(data,{safeIntegers:true});try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT rank FROM puzzle2d_author ORDER BY ordinal").all()).toEqual([{rank:-2147483648n},{rank:2147483647n},{rank:null}]);expect(db.query("SELECT tag FROM puzzle2d_representation_tag ORDER BY ordinal").all()).toEqual([{tag:""},{tag:"duplicate"},{tag:"duplicate"}]);expect(db.query("SELECT text,root,visible,locked FROM puzzle2d_node ORDER BY ordinal").all()).toEqual([{text:"😀\0世界",root:0n,visible:0n,locked:1n},{text:null,root:null,visible:null,locked:null}]);expect(await restore(data)).toEqual(expected)}finally{db.close()}});
 test("Puzzle 2D preserves absent and present empty catalog ownership",async()=>{for(const present of[false,true]){const expected=snapshot();expected.nodes=[];expected.edges=[];expected.targetRegions=[];expected.meta={kindCompatibility:[],...(present?{manifestId:"",kindCatalogs:{nodes:[],handles:[],edges:[],wires:[]}}:{})};const data=await bytes(expected),db=Database.deserialize(data);try{expect(db.query("SELECT * FROM puzzle2d_kind_catalogs").all().length).toBe(present?1:0);expect(await restore(data)).toEqual(expected)}finally{db.close()}}});
 function fillWords(expected:Snapshot,word:Binary64):void{
@@ -50,7 +51,7 @@ for(const phase of["projectSnapshot","reconstructSnapshot"]as const)test("Puzzle
 
 /** 📐️ Uses independent SQLite storage classes and UTF8 bytes for the complete authored corpus. */
 test("Puzzle 2D complete semantic cells have independent exact and one-short grants",async()=>{
- expect(fixture.semanticCells["control"]["collectionLength"]).toEqual(2048);expect(fixture.semanticCells["control"]["largeTextBytes"]).toEqual(131073);expect(fixture.semanticCells["control"]["maxOwnedBytes"]).toEqual(65536);expect(fixture.semanticCells["control"]["tinyFileBytes"]).toEqual(1024);expect(fixture.semanticCells["semanticCells"]["tableWidths"]).toEqual([["puzzle2d_attribute",7],["puzzle2d_author",8],["puzzle2d_base_kind",4],["puzzle2d_camera",11],["puzzle2d_catalog_edge_kind",9],["puzzle2d_catalog_handle_kind",11],["puzzle2d_catalog_node_kind",11],["puzzle2d_catalog_wire_kind",10],["puzzle2d_compatible_kind",4],["puzzle2d_document",2],["puzzle2d_edge",35],["puzzle2d_handle",18],["puzzle2d_handle_template",19],["puzzle2d_kind_catalogs",2],["puzzle2d_kind_compatibility",8],["puzzle2d_meta",3],["puzzle2d_node",30],["puzzle2d_representation",9],["puzzle2d_representation_tag",4],["puzzle2d_target_region",19]]);expect(fixture.semanticCells["semanticCells"]["fullRows"]).toEqual(42);
+ expect(fixture["control"]["collectionLength"]).toEqual(2048);expect(fixture["control"]["largeTextBytes"]).toEqual(131073);expect(fixture["control"]["maxOwnedBytes"]).toEqual(65536);expect(fixture["control"]["tinyFileBytes"]).toEqual(1024);expect(fixture["semanticCells"]["tableWidths"]).toEqual([["puzzle2d_attribute",7],["puzzle2d_author",8],["puzzle2d_base_kind",4],["puzzle2d_camera",11],["puzzle2d_catalog_edge_kind",9],["puzzle2d_catalog_handle_kind",11],["puzzle2d_catalog_node_kind",11],["puzzle2d_catalog_wire_kind",10],["puzzle2d_compatible_kind",4],["puzzle2d_document",2],["puzzle2d_edge",35],["puzzle2d_handle",18],["puzzle2d_handle_template",19],["puzzle2d_kind_catalogs",2],["puzzle2d_kind_compatibility",8],["puzzle2d_meta",3],["puzzle2d_node",30],["puzzle2d_representation",9],["puzzle2d_representation_tag",4],["puzzle2d_target_region",19]]);expect(fixture["semanticCells"]["fullRows"]).toEqual(42);
  for(const hex of[undefined,...fixture.binary64Words]){
   const expected=snapshot();if(hex!==undefined)fillWords(expected,{bits:BigInt("0x"+hex)});const database=await own.puzzle2dSnapshotToSqliteDatabase(expected),db=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});let rows:number,cells:number;
   try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
@@ -60,4 +61,53 @@ test("Puzzle 2D complete semantic cells have independent exact and one-short gra
   expect(await own.puzzle2dSnapshotToSqliteDatabase(expected,{maxRows:rows,maxValueBytes:cells})).toEqual(database);
   for(const limit of[{maxRows:rows-1,maxValueBytes:cells},{maxRows:rows,maxValueBytes:cells-1}]){await expect(own.puzzle2dSnapshotToSqliteDatabase(expected,limit)).rejects.toThrow();await expect(own.puzzle2dSnapshotFromSqliteDatabase(database,limit)).rejects.toThrow();}
  }
+});
+
+
+test("Puzzle2d typed sparse deltas and pilot grammar retain neutral authored records",async()=>{
+ const corpus=await Bun.file(new URL("../../../📝️text/🔺️diff/🧫️fixtures/🔣️.json",import.meta.url)).json() as {samples:{json:unknown;document:string}[];diffRecordOwners:string[]};
+ const schema=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🔣️.json",import.meta.url)).json();
+ const validate=new Ajv({strict:false}).addSchema(artifactSchema).compile(schema);
+ for(const sample of corpus.samples){expect(validate(sample.json)).toBe(true);expect(JSON.parse(JSON.stringify(sample.json))).toEqual(sample.json)}
+ expect(validate({schema:3})).toBe(false);expect(validate({unknown:"field"})).toBe(false);
+ const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
+ for(const name of corpus.diffRecordOwners)expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"));
+ const artifact=await Bun.file(new URL("../../../../🧬️schema/🦀️.rs",import.meta.url)).text();expect(artifact).toContain("semio_framework_dsl_record_derive::DslRecord");
+ const owner=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text();
+ for(const constant of ["COMPONENT_GRAMMAR_SEMIO","COMPONENT_GRAMMAR_PATH"])expect(owner).toContain("standards::v1::subsets::any::io::text::diff::"+constant);
+});
+
+test("Puzzle2d native snapshot ownership has retained clone and retirement dispatch",async()=>{
+ const corpus=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧬️retained-clone/🔣️.json",import.meta.url)).json() as {recordOwners:string[];journeys:string[];control:{maximumItems:number}};
+ expect(corpus.control.maximumItems).toBe(1);expect(corpus.journeys).toEqual(["empty","nested","largeUtf8","zeroGrant","cancelDuringCopy","takeOnce","boundedClose"]);
+ const source=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text()+await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🦀️.rs",import.meta.url)).text();
+ for(const name of corpus.recordOwners)for(const role of ["RetainedClone","RetireOwned"])expect(source).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_value::"+role+"[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub (?:struct|enum) "+name+"\\b"));
+});
+
+
+test("Puzzle2d borrowed mutation ownership has exhaustive native clone and retirement dispatch",async()=>{
+ const corpus=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧬️retained-clone/🔣️.json",import.meta.url)).json() as {mutationOwners:string[];borrowedJourneys:string[]};
+ expect(corpus.mutationOwners.length).toBe(37);expect(corpus.borrowedJourneys).toEqual(["allAuthoredLeaves","zeroGrant","sourceSwap","cancelDuringCopy","largeUtf8","takeOnce","boundedClose"]);
+ const directory=new URL("../../../../🧬️schema/🧬️mutations/",import.meta.url),files=Array.from(new Bun.Glob("**/🦀️.rs").scanSync({cwd:fileURLToPath(directory)})).filter(path=>path==="🦀️.rs"||path.split("/").length===2);
+ const source=(await Promise.all(files.map(path=>Bun.file(new URL(path,directory)).text()))).join("\n");
+ for(const name of corpus.mutationOwners)for(const role of ["RetainedClone","RetireOwned"])expect(source).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_value::"+role+"[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub (?:struct|enum) "+name+"\\b"));
+});
+
+
+test("Puzzle2d physical text and arrays preserve the authored semantic shapes with paged owners",async()=>{
+ const corpus=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧬️retained-clone/🔣️.json",import.meta.url)).json() as {physicalOwners:{textType:string;arrayType:string;maximumTurnBytes:number;unchangedSemanticShapes:string[];journeys:string[]}};
+ expect(corpus.physicalOwners.maximumTurnBytes).toBe(4096);expect(corpus.physicalOwners.unchangedSemanticShapes).toEqual(["string","array"]);
+ expect(corpus.physicalOwners.journeys).toEqual(["largeText","largeNodes","nestedHandles","nestedCatalogs","tinyGrant","zeroGrant","cancelDuringCopy","boundedClose"]);
+ const validate=new Ajv({strict:false,validateFormats:false}).addSchema(artifactSchema).compile(nativeSchema);expect(validate(fixture.snapshot)).toBe(true);expect(JSON.parse(JSON.stringify(fixture.snapshot))).toEqual(fixture.snapshot);
+ const source=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text()+await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🦀️.rs",import.meta.url)).text();
+ expect(source).toContain("PagedUtf8<{ usize::MAX }>");expect(source).toContain("PagedList<Puzzle2dNode, { usize::MAX }>");expect(source).toContain("PagedList<Puzzle2dHandle, { usize::MAX }>");expect(source).toContain("PagedList<Puzzle2dTargetRegion, { usize::MAX }>");
+ const document=source.slice(source.indexOf("pub struct Puzzle2dCamera"),source.indexOf("//#endregion 🔖️Document"));expect(document).not.toMatch(/pub \w+: (?:String|Vec<|Option<String>)/);
+});
+
+test("Puzzle2d native lookup preserves independent SQLite first-match topology under exact grants",async()=>{
+ const corpus=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🔎️lookup/🧫️fixtures/🔣️.json",import.meta.url)).json() as {control:{maximumItems:number;maximumBytes:number;largePrefix:string;largeRepeats:number};cases:{scope:string;nodes:string[];handles:string[][];edges:string[];regions:string[];target:string;expected:{outer:number;inner:number|null}|null}[];allocation:{advance:number;close:number}};
+ expect(corpus.control.maximumItems).toBe(1);expect(corpus.control.maximumBytes).toBe(4);expect(corpus.allocation).toEqual({advance:0,close:0});
+ const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
+ for(const row of corpus.cases){const db=new Database(":memory:");try{db.run("CREATE TABLE identifiers(scope TEXT NOT NULL,outer_ordinal INTEGER NOT NULL,inner_ordinal INTEGER,value TEXT NOT NULL)");for(const [scope,ids]of[["node",row.nodes],["edge",row.edges],["region",row.regions]]as const)ids.forEach((id,outer)=>db.run("INSERT INTO identifiers VALUES(?,?,?,?)",[scope,outer,null,text(id)]));row.handles.forEach((ids,outer)=>ids.forEach((id,inner)=>db.run("INSERT INTO identifiers VALUES(?,?,?,?)",["handle",outer,inner,text(id)])));expect(db.query("SELECT outer_ordinal AS outer,inner_ordinal AS inner FROM identifiers WHERE scope=? AND value=? ORDER BY outer_ordinal,inner_ordinal LIMIT 1").get(row.scope,text(row.target))).toEqual(row.expected)}finally{db.close()}}
+ const source=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🔎️lookup/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub struct Puzzle2dLookupCursor");expect(source).toContain("PagedUtf8BoundedOrdCursor");expect(source).toContain("RetainedCloneBinding::close_one");expect(source).not.toContain("to_string_owner");
 });

@@ -1,0 +1,97 @@
+{
+  "inputs": [
+    "📥️oct7-root-corpus-authority-source-input.json",
+    "📥️oct7-root-drawing-layout-authority-source-input.json",
+    "📥️oct7-root-guard-source-input.json",
+    "📥️oct7-root-corpus-verification-route-input.json",
+    "📥️oct7-root-fixture-boundary-gate-source-input.json",
+    "📥️oct7-root-layout-empty-graph-law-input.json"
+  ],
+  "files": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "action": "updated",
+      "currentSha256": "33f11c7810fd449dbce1147840edc3540ccaa6c37ef8def42d6ef9b363c92879"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "action": "updated",
+      "currentSha256": "d77edbdfda6a3fafefe6d98f6e9812405d11192bb7bd011721a3e66f81c81735"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️verification-registration/📜️script.ts",
+      "action": "updated",
+      "currentSha256": "f51736c44c7a9daa8d1c79c9c3e6d27089c20460c64afd45e37aa79e2040b55f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts",
+      "action": "updated",
+      "currentSha256": "c737a67eb521ef60874776ae063a2ebde0c1cdd6ce3579a2f4f8fdd7c8bf2d74"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧬️schema/📋️native-owner/🔣️.json",
+      "action": "removed",
+      "currentSha256": null
+    },
+    {
+      "path": "📋️project.json",
+      "action": "updated",
+      "currentSha256": "a75bfb0d6f1ed469c331bd5a0b516f0cc08fcf7b59a584c6c53bb93a9e3e5300"
+    },
+    {
+      "path": "📜️script.ts",
+      "action": "updated",
+      "currentSha256": "d201ec667d5e80a72d95ae99af89f0d2d92dec488dc955a3a7f9866f9d48b609"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🧬️schema/🎮️native-owner/🔣️.json",
+      "action": "removed",
+      "currentSha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts",
+      "action": "updated",
+      "currentSha256": "07684c3fb0295d439691a58e41edceee97c96998b1e786ee3a02861eb1dd6a91"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️schema/🧷️borrow-authority/🔣️.json",
+      "action": "removed",
+      "currentSha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧪️tests/🧩️conformance/🟦️.ts",
+      "action": "updated",
+      "currentSha256": "424cc5febec45463d4c0a173803520fbec7ac0d32d76d4f948466f87a54d1a24"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧬️schema/🔣️.json",
+      "action": "updated",
+      "currentSha256": "89b53e7abf425c47eb18dcdcef4f92ef5faed174b439834d0d4b7c50f5f39c6a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📨️messages/🧬️schema/🔣️.json",
+      "action": "removed",
+      "currentSha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️schema/🔣️.json",
+      "action": "removed",
+      "currentSha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
+      "action": "updated",
+      "currentSha256": "fb84b0d0c04649c52d5ab40df4a3bc2e2eaf1beaa55b67fecf53b34420eb0948"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "action": "updated",
+      "currentSha256": "0c05dd9e4ae831da3b2cbaa2db9f6e6ca792000e5188c59838ae975224b897ab"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+      "action": "updated",
+      "currentSha256": "1e19218f376c557610a334bbd4740820a82eb8edf9c45c68cb5afe5bf59e2cf4"
+    }
+  ]
+}

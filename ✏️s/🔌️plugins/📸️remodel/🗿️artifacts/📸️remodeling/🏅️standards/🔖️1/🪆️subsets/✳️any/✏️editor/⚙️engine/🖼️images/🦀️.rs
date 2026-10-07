@@ -166,9 +166,9 @@ pub fn encode_png_gray16(data: &[u16], width: u32, height: u32) -> Result<Vec<u8
 /// Baseline sequential only — progressive/arithmetic/lossless SOFn variants surface as
 /// `ImageError::UnsupportedJpeg`, matching this function's pre-extraction contract.
 pub fn decode_jpeg(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
-    let snapshot = semio_s_artifact_stdio_jpg::engine::decode_jpg(bytes).map_err(|error| match error {
-        semio_s_artifact_stdio_jpg::engine::JpgError::Unsupported(msg) => ImageError::UnsupportedJpeg(msg),
-        semio_s_artifact_stdio_jpg::engine::JpgError::Malformed(msg) => ImageError::Decode(msg),
+    let snapshot = semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::decode_jpg(bytes).map_err(|error| match error {
+        semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgError::Unsupported(msg) => ImageError::UnsupportedJpeg(msg),
+        semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgError::Malformed(msg) => ImageError::Decode(msg),
     })?;
     Ok(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels })
 }
@@ -280,7 +280,7 @@ impl CompressedChunkRope {
     }
 }
 
-impl semio_s_artifact_stdio_jpg::engine::JpgByteSource for CompressedChunkRope {
+impl semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgByteSource for CompressedChunkRope {
     fn len(&self) -> usize {
         self.len
     }
@@ -343,7 +343,7 @@ enum BoundedDecodeState {
     PngDecode { buffer: Vec<u8> },
     PngRows { decoder: semio_framework_pixels::PngScanlineDecoder, width: u32, height: u32, pixels: Vec<u8> },
     JpegProbe { rope: CompressedChunkRope, cursor: usize },
-    Jpeg { rope: CompressedChunkRope, decoder: Option<Box<semio_s_artifact_stdio_jpg::engine::JpgStepDecoder>> },
+    Jpeg { rope: CompressedChunkRope, decoder: Option<Box<semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder>> },
     Finished,
 }
 
@@ -454,7 +454,7 @@ impl BoundedStillDecoder {
             BoundedDecodeState::Jpeg { rope, decoder } => {
                 let outcome = match decoder {
                     // 🧾️ First unit: the marker segments up to SOS (tables, frame, scan header).
-                    None => semio_s_artifact_stdio_jpg::engine::JpgStepDecoder::new(&rope).map(|decoder| Err(Box::new(decoder))),
+                    None => semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder::new(&rope).map(|decoder| Err(Box::new(decoder))),
                     // 🎞️ Every later unit: one MCU of the entropy-coded scan, then one output row.
                     Some(mut decoder) => match decoder.step(&rope, JPEG_UNITS_PER_STEP) {
                         Ok(Some(snapshot)) => Ok(Ok(snapshot)),
@@ -468,8 +468,8 @@ impl BoundedStillDecoder {
                         self.state = BoundedDecodeState::Jpeg { rope, decoder: Some(decoder) };
                         BoundedDecodeProgress::Working
                     }
-                    Err(semio_s_artifact_stdio_jpg::engine::JpgError::Unsupported(message)) => BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg(message)),
-                    Err(semio_s_artifact_stdio_jpg::engine::JpgError::Malformed(message)) => BoundedDecodeProgress::Failed(ImageError::Decode(message)),
+                    Err(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgError::Unsupported(message)) => BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg(message)),
+                    Err(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgError::Malformed(message)) => BoundedDecodeProgress::Failed(ImageError::Decode(message)),
                 }
             }
             BoundedDecodeState::Finished => BoundedDecodeProgress::Failed(ImageError::Decode("decoder polled after completion".into())),
@@ -484,8 +484,8 @@ impl BoundedStillDecoder {
 /// `ImageRgba8` (its own invariants already guarantee `data.len() == width * height * 4`),
 /// matching this function's pre-extraction (non-`Result`) signature.
 pub fn encode_jpeg(image: &ImageRgba8, quality: u8) -> Vec<u8> {
-    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width: image.width, height: image.height, pixels: image.data.clone(), re_encode_quality: Some(quality), ..Default::default() };
-    semio_s_artifact_stdio_jpg::engine::encode_jpg(&snapshot).expect("a valid ImageRgba8 always encodes")
+    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width: image.width, height: image.height, pixels: image.data.clone(), ..Default::default() };
+    semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions{quality:quality,..Default::default()}).expect("a valid ImageRgba8 always encodes")
 }
 // #endregion 🔖️JpegViaStdio
 // #endregion 🔖️Codec

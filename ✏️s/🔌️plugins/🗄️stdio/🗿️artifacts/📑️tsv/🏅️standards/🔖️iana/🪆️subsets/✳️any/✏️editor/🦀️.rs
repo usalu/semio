@@ -5,7 +5,8 @@
 
 use crate::editor::tsv::modes::edit;
 use crate::editor::tsv::modes::edit::windows::main;
-use crate::standards::iana::subsets::any::schema::mutations::{insert_row, remove_row, set_cell, set_snapshot};
+use crate::standards::iana::subsets::any::schema::mutations::{insert_row,remove_row,set_cell,set_snapshot};
+
 use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -18,7 +19,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -33,8 +34,8 @@ use semio_framework_plugin::NoPresence;
 use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::StandardId;
-use semio_framework_plugin::SubsetId;
+use {semio_framework_artifact_reference::StandardId};
+use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::ToolExecutionContract;
 use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;

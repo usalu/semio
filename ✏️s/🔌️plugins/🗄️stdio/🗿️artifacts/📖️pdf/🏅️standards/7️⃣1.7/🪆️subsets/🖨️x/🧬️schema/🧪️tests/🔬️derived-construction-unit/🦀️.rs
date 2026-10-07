@@ -24,6 +24,6 @@ mod tests {
             snapshot.objects.push(violating);
             let mutated = PdfXBuilderConstruction::from_snapshot(snapshot);
             let err = mutated.build().expect_err("an /Encrypt dict must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::schema::CODE_ENCRYPT));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::io::CODE_ENCRYPT));
         }
     }

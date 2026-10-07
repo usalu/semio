@@ -16,10 +16,10 @@ impl store::ArtifactSqliteSnapshot for PdfSnapshot {
         for page in &self.pages { bound.add(8192)?; bound.repeated(page.text.len(), 16)?; }
         bound.finish()
     })()}
-    fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,_database:&Db,control:&mut Control<'_>)->store::io_schema::IoResult<()>{(||->Result<store::io_schema::IoOutcome<()>,ValueError>{
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&Db,control:&mut Control<'_>)->store::io_schema::IoResult<()>{(||->Result<store::io_schema::IoOutcome<()>,ValueError>{
         if dialect.artifact_kind!="s.stdio.pdf"||dialect.standard!="1.4"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.4 snapshot does not own this dialect"));}
         control.checkpoint(Phase::ProjectSnapshot,0,1)?;
-        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"a"=>crate::standards::v1_4::subsets::a::schema::check_pdf_a_conformance(self),"x"=>crate::standards::v1_4::subsets::x::schema::check_pdf_x_conformance(self),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.4 subset has no semantic validator"))};
+        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"a"=>crate::standards::v1_4::subsets::a::io::check_pdf_a_conformance(self),"x"=>crate::standards::v1_4::subsets::x::io::check_pdf_x_conformance(self),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.4 subset has no semantic validator"))};
         control.checkpoint(Phase::ProjectSnapshot,1,1)?;
         Ok(store::io_schema::IoOutcome{value:(),diagnostics})
     })().map_err(store::io_schema::IoError::from_value_error)}
@@ -89,7 +89,7 @@ mod tests {
     use semio_framework_value::FromValue;
     fn fixture()->PdfSnapshot{PdfSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap()}
     async fn erased_roundtrip(snapshot: &PdfSnapshot, encoding: sqlite_snapshot::SnapshotEncoding) -> PdfSnapshot {
-        use semio_framework_os_kernel::io::{ArtifactDialect, IoPayload, io_mechanism::{io_route, io_run}};
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route,semio_framework_os_kernel::io::io_mechanism::io_run};
         crate::register_sqlite_test_declaration();
         let dialect = ArtifactDialect { artifact_kind: "s.stdio.pdf".into(), standard: "1.4".into(), subset: "*".into() };
         let sqlite = semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();
@@ -118,7 +118,7 @@ mod tests {
     }
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_pdf14_owned_io_preserves_arbitrary_schema_and_text(){
-        use semio_framework_os_kernel::io::{ArtifactDialect,Dialect,StandardId,SubsetId,register_native_snapshot_codec,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};let native=Dialect{artifact_kind:"s.stdio.pdf",standard:StandardId("1.4"),subset:SubsetId("*")};register_native_snapshot_codec(native,store::ArtifactCodec::of::<PdfSnapshot,crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation>(crate::STDIO_PDF_DOCUMENT_SCHEMA)).unwrap();let dialect:ArtifactDialect=native.into();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::DecodeNative|Phase::EncodeNative)));
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_os_kernel::io::register_native_snapshot_codec,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};let native=Dialect{artifact_kind:"s.stdio.pdf",standard:StandardId("1.4"),subset:SubsetId("*")};register_native_snapshot_codec(native,store::ArtifactCodec::of::<PdfSnapshot,crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation>(crate::STDIO_PDF_DOCUMENT_SCHEMA)).unwrap();let dialect:ArtifactDialect=native.into();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::DecodeNative|Phase::EncodeNative)));
     }
     #[test]
     fn sqlite_snapshot_pdf14_independent_sql_page_query_and_edit(){
@@ -177,7 +177,7 @@ mod own14_public_page_domain {
     async fn sqlite_snapshot_pdf14_populated_actual_owner_public_both_forms_and_independent_native_edit() {
         use semio_framework_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot};
         crate::register_sqlite_test_declaration();
-        let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.pdf".into(), standard: "1.4".into(), subset: "*".into() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pdf".into(), standard: "1.4".into(), subset: "*".into() };
         let expected = owner(false);
         let edited = owner(true);
         let limits = sqlite_snapshot::SqliteDatabaseLimits::default();

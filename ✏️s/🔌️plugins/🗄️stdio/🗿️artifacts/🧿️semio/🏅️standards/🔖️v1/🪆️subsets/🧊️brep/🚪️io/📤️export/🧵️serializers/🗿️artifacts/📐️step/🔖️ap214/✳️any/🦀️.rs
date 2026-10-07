@@ -18,7 +18,7 @@
 
 use std::collections::HashMap;
 
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepSurface, SemioBrepSnapshot};

@@ -15,7 +15,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::iana::subsets::any::schema::diff::TsvDiff;
-use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, TsvMutation};
+use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation,TsvMutation};
+
 use crate::standards::iana::subsets::any::schema::snapshot::LineEnding;
 use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
 

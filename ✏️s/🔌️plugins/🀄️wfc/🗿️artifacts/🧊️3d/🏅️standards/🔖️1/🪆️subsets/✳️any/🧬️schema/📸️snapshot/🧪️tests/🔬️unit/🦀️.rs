@@ -62,7 +62,7 @@ fn declared_nested_mesh_child_projection_preserves_full_identity_and_inline_medi
  let text=|value:&serde_json::Value|value.as_str().expect("text").to_string();
  let tiles=fixture["tiles"].as_array().expect("tiles").iter().map(|row|{let media=&row["media"];Tile{id:text(&row["id"]),label:None,weight:1.0,media:match media["kind"].as_str().expect("kind"){
  "mesh"=>TileMedia3d::Mesh{positions:media["positions"].as_array().expect("positions").iter().map(|v|v.as_f64().expect("coordinate")).collect(),indices:media["indices"].as_array().expect("indices").iter().map(|v|u32::try_from(v.as_u64().expect("index")).expect("u32")).collect(),color:None},
- "meshChild"=>TileMedia3d::MeshChild{child:store::ArtifactChild::new(text(&media["childId"]),store::os_io::ArtifactRef{artifact_id:text(&media["artifactId"]),dialect:store::os_io::ArtifactDialect{artifact_kind:text(&media["artifactKind"]),standard:text(&media["standard"]),subset:text(&media["subset"])}})},
+ "meshChild"=>TileMedia3d::MeshChild{child:store::ArtifactChild::new(text(&media["childId"]),semio_framework_artifact_reference::ArtifactRef{artifact_id:text(&media["artifactId"]),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:text(&media["artifactKind"]),standard:text(&media["standard"]),subset:text(&media["subset"])}})},
  _=>panic!("closed media branch"),}}}).collect();
  let document=Wfc3dSnapshot{tiles,..Wfc3dSnapshot::default()};
  struct Projection{rows:Vec<serde_json::Value>}
@@ -98,7 +98,7 @@ fn declared_nested_mesh_child_admission_requires_exact_type_dialect_and_retained
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️mesh-child/🔣️.json")).expect("closed admission contract");
     let row=&fixture["tiles"][1]["media"];
     let text=|value:&serde_json::Value|value.as_str().expect("identity").to_string();
-    let child=store::ArtifactChild::new(text(&row["childId"]),store::os_io::ArtifactRef{artifact_id:text(&row["artifactId"]),dialect:store::os_io::ArtifactDialect{artifact_kind:text(&row["artifactKind"]),standard:text(&row["standard"]),subset:text(&row["subset"])}});
+    let child=store::ArtifactChild::new(text(&row["childId"]),semio_framework_artifact_reference::ArtifactRef{artifact_id:text(&row["artifactId"]),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:text(&row["artifactKind"]),standard:text(&row["standard"]),subset:text(&row["subset"])}});
     let mut second=child.clone();second.child_id="second-mesh-child引用😀".to_string();second.target.artifact_id="second-mesh-artifact引用😀".to_string();
     let second_expected=serde_json::json!(["tiles","second-mesh-child引用😀","second-mesh-artifact引用😀","s.stdio.semio","v1","mesh"]);
     let mut tiles=vec![Tile{media:TileMedia3d::default(),..Tile::default()},Tile{media:TileMedia3d::MeshChild{child:child.clone()},..Tile::default()},Tile{media:TileMedia3d::MeshChild{child:second},..Tile::default()}];

@@ -52,7 +52,7 @@ fn equals_the_rotate_handle_matrix() {
     assert_eq!(pivot, [60.0, 30.0], "the rotation handle turns about the bounds' centre");
     let motion = handle_motion.matrix();
     let mut snapshot = before();
-    apply_drawing_mutation(&mut snapshot, &rotate_layers(vec!["shape-a".into()], pivot[0], pivot[1], angle)).unwrap();
+    apply_drawing_mutation(&mut snapshot, &rotate_layers(vec!["shape-a".into()].into(), pivot[0], pivot[1], angle)).unwrap();
     let actual = crate::schema::drawing_transform_to_matrix(&crate::schema::layer_base(&snapshot.layers[0]).transform);
     let wanted = crate::schema::geometry::multiply(motion, crate::schema::drawing_transform_to_matrix(&crate::schema::layer_base(&before().layers[0]).transform));
     for index in 0..6 {
@@ -65,9 +65,9 @@ fn equals_the_rotate_handle_matrix() {
 fn outcome_laws() {
     let base = before();
     let codes = |mutation: DrawingMutation| mutation.diff(&base).messages().iter().map(|message| (format!("{:?}", message.level), message.code.0.clone())).collect::<Vec<_>>();
-    assert_eq!(codes(rotate_layers(vec!["ghost".into()], 0.0, 0.0, 1.0)), vec![("Error".into(), "mutation.target-missing".into())]);
-    assert_eq!(codes(rotate_layers(vec!["shape-a".into()], 0.0, 0.0, 0.0)), vec![("Warning".into(), "mutation.no-op".into())]);
-    assert_eq!(codes(rotate_layers(Vec::new(), 0.0, 0.0, 1.0)), vec![("Fatal".into(), "mutation.invariant".into())]);
+    assert_eq!(codes(rotate_layers(vec!["ghost".into()].into(), 0.0, 0.0, 1.0)), vec![("Error".into(), "mutation.target-missing".into())]);
+    assert_eq!(codes(rotate_layers(vec!["shape-a".into()].into(), 0.0, 0.0, 0.0)), vec![("Warning".into(), "mutation.no-op".into())]);
+    assert_eq!(codes(rotate_layers(Vec::new().into(), 0.0, 0.0, 1.0)), vec![("Fatal".into(), "mutation.invariant".into())]);
 }
 
 /// 🗣️ The history row label reads the rotation in degrees, in English and German.

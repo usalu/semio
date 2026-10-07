@@ -72,7 +72,7 @@ async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     let Receipt::Captured { lifetime, request_sequence } = captured else { panic!("open must emit Captured") };
     assert_eq!(request_sequence, 8);
     assert!(!runtime.guest_lifetimes.borrow().get(instance).unwrap().cell.is_live());
-    assert_eq!(crate::plugin_runtime::instance_actor(&runtime, instance).await, "native-fixture");
+    assert_eq!(crate::plugin_runtime::instance_actor(&runtime, instance).await.expect("admitted actor"), "native-fixture");
     let early = Event::InstanceClose(ActorInstanceCloseRequest { lifetime, request_sequence: 9 });
     assert!(crate::reactor::poll_kernel(&runtime, vec![early], None, None, reactor_native_lifecycle_budget()).await.is_err());
     assert!(crate::plugin_runtime::plugin_capture_instance_close(&runtime, instance).is_ok());
@@ -194,4 +194,30 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
         reactor_native_lifecycle_finish(&runtime, b, 9).await;
         reactor_native_lifecycle_finish(&runtime, a, 9).await;
     }
+}
+
+
+/// 🪪️ Native opening admits an explicit actor and refuses missing or empty authority.
+#[semio_framework_async_macros::async_test]
+async fn reactor_native_open_preserves_the_neutral_actor_authority() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
+    let actor = fixture["actors"]["opened"].as_str().expect("opened actor");
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("production declarations"));
+    assert!(crate::plugin_runtime::instance_actor(&runtime, 23).await.is_err(), "a missing admitted actor never invents authority");
+    assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(23, 1, String::new())], None, None, reactor_native_lifecycle_budget()).await.is_err());
+    assert!(runtime.guest_lifetimes.borrow().get(23).is_none(), "empty actor admission owns no instance");
+    let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(23, 2, actor.into())]).await.lifecycle_receipt.expect("native open receipt");
+    let ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("opened native lifetime") };
+    reactor_native_lifecycle_ack(&runtime, captured).await;
+    assert_eq!(crate::plugin_runtime::instance_actor(&runtime, 23).await.expect("admitted native actor"), actor);
+    let document = crate::plugin_runtime::plugin_document_pack(&runtime, 23).await.expect("native stored document");
+    crate::app::artifact_app_laws::plugin_load_document(&runtime, 23, &document).await.expect("native bounded document reload");
+    assert_eq!(crate::plugin_runtime::instance_actor(&runtime, 23).await.expect("native actor after reload"), actor);
+    reactor_native_lifecycle_finish(&runtime, lifetime, 3).await;
+    let reopened = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(23, 4, actor.into())]).await.lifecycle_receipt.expect("native reopen receipt");
+    let ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = reopened else { panic!("reopened native lifetime") };
+    reactor_native_lifecycle_ack(&runtime, reopened).await;
+    assert_eq!(crate::plugin_runtime::instance_actor(&runtime, 23).await.expect("reopened native actor"), fixture["actors"]["reopened"].as_str().expect("reopened actor"));
+    reactor_native_lifecycle_finish(&runtime, lifetime, 5).await;
 }

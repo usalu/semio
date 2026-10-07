@@ -2,6 +2,7 @@
 
 pub(super) fn refusal(code: &str) -> Option<(&'static str, &'static str, semio_framework::Severity, bool)> {
     match code {
+        "timeTravel.unchanged" => Some(("timeTravel.unchanged", "ui.timeTravel.refusal.unchanged", semio_framework::Severity::Warning, false)),
         "history.malformed-transition" => Some(("history.malformed-transition", "ui.history.refusal.malformedTransition", semio_framework::Severity::Error, false)),
         "history.unknown-target" => Some(("history.unknown-target", "ui.history.refusal.unknownTarget", semio_framework::Severity::Error, false)),
         "history.transition-refused" => Some(("history.transition-refused", "ui.history.refusal.transitionRefused", semio_framework::Severity::Error, false)),

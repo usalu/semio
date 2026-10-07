@@ -1,6 +1,6 @@
 use super::*;
 use crate::schema::snapshot::DocxDocument;
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_document_window() {

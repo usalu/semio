@@ -149,11 +149,27 @@ pub fn reset_heap_peak() {
     PEAK_BYTES.store(RETAINED_BYTES.load(Ordering::Relaxed), Ordering::Relaxed);
 }
 
+/// 🔬️ Separate allocator events prevent net shrink from hiding retained or replaced backing.
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct HeapAllocationObservation{pub requested_bytes:usize,pub released_bytes:usize,pub largest_release_bytes:usize,pub overflowed:bool}
+impl HeapAllocationObservation{
+    fn add(mut self,requested:usize,released:usize)->Self{match self.requested_bytes.checked_add(requested){Some(value)=>self.requested_bytes=value,None=>self.overflowed=true}match self.released_bytes.checked_add(released){Some(value)=>self.released_bytes=value,None=>self.overflowed=true}self.largest_release_bytes=self.largest_release_bytes.max(released);self}
+    fn merge(self,other:Self)->Self{let mut value=self.add(other.requested_bytes,other.released_bytes);value.largest_release_bytes=self.largest_release_bytes.max(other.largest_release_bytes);value.overflowed|=other.overflowed;value}
+}
+thread_local!{static THREAD_ALLOCATION_EVENTS:std::cell::Cell<Option<HeapAllocationObservation>>=const{std::cell::Cell::new(None)};}
+fn record_allocation_event(requested:usize,released:usize){let _=THREAD_ALLOCATION_EVENTS.try_with(|slot|{if let Some(value)=slot.get(){slot.set(Some(value.add(requested,released)));}});}
+/// 🧪️ Captures successful system allocation events on the caller thread without allocating a recorder.
+pub fn observe_heap_allocations_on_this_thread<T>(operation:impl FnOnce()->T)->(T,HeapAllocationObservation){
+    struct Restore(Option<HeapAllocationObservation>);
+    impl Drop for Restore{fn drop(&mut self){let _=THREAD_ALLOCATION_EVENTS.try_with(|slot|{let current=slot.replace(None).unwrap_or_default();slot.set(self.0.map(|prior|prior.merge(current)));});}}
+    let restore=Restore(THREAD_ALLOCATION_EVENTS.with(|slot|slot.replace(Some(HeapAllocationObservation::default()))));let result=operation();let observation=THREAD_ALLOCATION_EVENTS.with(|slot|slot.get().expect("allocator observation scope remains installed"));drop(restore);(result,observation)
+}
+
 unsafe impl std::alloc::GlobalAlloc for HeapWitness {
     unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
         let pointer = unsafe { std::alloc::GlobalAlloc::alloc(&std::alloc::System, layout) };
         if !pointer.is_null() {
-            record(layout.size() as isize);
+            record_allocation_event(layout.size(),0);record(layout.size() as isize);
         }
         pointer
     }
@@ -161,20 +177,20 @@ unsafe impl std::alloc::GlobalAlloc for HeapWitness {
     unsafe fn alloc_zeroed(&self, layout: std::alloc::Layout) -> *mut u8 {
         let pointer = unsafe { std::alloc::GlobalAlloc::alloc_zeroed(&std::alloc::System, layout) };
         if !pointer.is_null() {
-            record(layout.size() as isize);
+            record_allocation_event(layout.size(),0);record(layout.size() as isize);
         }
         pointer
     }
 
     unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) {
-        record(-(layout.size() as isize));
+        record_allocation_event(0,layout.size());record(-(layout.size() as isize));
         unsafe { std::alloc::GlobalAlloc::dealloc(&std::alloc::System, pointer, layout) }
     }
 
     unsafe fn realloc(&self, pointer: *mut u8, layout: std::alloc::Layout, new_size: usize) -> *mut u8 {
         let grown = unsafe { std::alloc::GlobalAlloc::realloc(&std::alloc::System, pointer, layout, new_size) };
         if !grown.is_null() {
-            record(new_size as isize - layout.size() as isize);
+            record_allocation_event(new_size,layout.size());record(new_size as isize - layout.size() as isize);
         }
         grown
     }

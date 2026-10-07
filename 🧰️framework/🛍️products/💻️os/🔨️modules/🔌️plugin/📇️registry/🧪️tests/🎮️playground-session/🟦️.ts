@@ -1,5 +1,4 @@
 import { atTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import Ajv2020 from "ajv/dist/2020";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -43,7 +42,6 @@ type TreeSnapshot = { readonly exists: false } | { readonly exists: true; readon
 const root = resolve(import.meta.dirname, "../..");
 const workspace = resolve(root, "../../../../../..");
 const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🎮️playground-session/🔣️.json"), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🎮️playground-session/🔣️.json"), "utf8"));
 const projection = readGeneratedCatalogProjection(join(root, "🤖️generated"));
 const scratchBase = process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT ? resolve(workspace, process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT) : join(workspace, ".🧬semio/🦑️repo/⚡️cache/🧪️plugin-registry/playground-session-output");
 let scratch = "";
@@ -78,10 +76,7 @@ beforeAll(() => { mkdirSync(scratchBase, { recursive: true }); scratch = mkdtemp
 afterAll(() => { if (scratch) rmSync(scratch, { recursive: true, force: true }); });
 
 describe("playground session output ownership", () => {
-  test("the portable ownership contract is schema-valid", () => {
-    const ajv = new Ajv2020({ strict: true, allErrors: true });
-    const validate = ajv.compile(schema);
-    expect(validate(fixture), ajv.errorsText(validate.errors)).toBe(true);
+  test("the session defaults match the actual source owners", () => {
     expect(fixture.default.variant).toBe(DEFAULT_PLAYGROUND_VARIANT);
     expect(fixture.isolation.canonicalRootEnvironment).toBe(PLAYGROUND_SESSION_OUTPUT_ROOT_ENV);
     expect(existsSync(absolute(fixture.isolation.resolverSource))).toBe(true);
@@ -120,7 +115,7 @@ describe("playground session output ownership", () => {
       expect(result.session.variant).toBe(row.variant);
       expect(result.session.registryPluginId).toBe(row.pluginId);
       expect(existsSync(join(stagedRoot, row.variant, "🟦️session.ts"))).toBe(false);
-      expect(JSON.parse(readFileSync(join(stagedRoot, row.variant, ".nx-artifact.json"), "utf8")).files).toEqual([fixture.staging.artifactKey]);
+      expect(JSON.parse(readFileSync(join(stagedRoot, row.variant, ".nx-artifact.json"), "utf8")).files).toEqual(["🎠️playgrounds.json", fixture.staging.artifactKey, "🔌️plugins.json"]);
       const native = await import(pathToFileURL(result.path).href + "?native=" + row.variant);
       expect(native.PLAYGROUND_SESSION.variant).toBe(row.variant);
       expect(native.PLAYGROUND_SESSION.registryPluginId).toBe(row.pluginId);

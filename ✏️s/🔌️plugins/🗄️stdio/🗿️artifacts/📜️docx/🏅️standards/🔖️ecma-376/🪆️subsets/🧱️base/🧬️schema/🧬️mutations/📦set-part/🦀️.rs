@@ -4,13 +4,21 @@
 
 use super::*;
 
+/// 📦️ Authoritative package content, independent of physical XML and binary encodings.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
+pub enum DocxPartContent {
+    Xml { document: semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument },
+    Binary { bytes: Vec<u8> },
+}
+
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetPart {
     pub(crate) path: String,
     pub(crate) content_type: String,
-    pub(crate) bytes: Vec<u8>,
+    pub(crate) payload: DocxPartContent,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetPart {

@@ -120,11 +120,11 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
     let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document(), None);
-    let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut store = ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners());
+    store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners());
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {

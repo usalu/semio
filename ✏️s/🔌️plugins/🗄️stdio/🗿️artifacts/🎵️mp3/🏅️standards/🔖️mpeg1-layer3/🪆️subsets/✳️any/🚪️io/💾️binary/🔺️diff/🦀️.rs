@@ -8,7 +8,7 @@ use super::*;
 use crate::standards::mpeg1_layer3::subsets::any::schema::diff::*;
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{DiffText, MutationDiff};
 
 impl protocol::DiffBinary for Mp3Diff {
 /// ⚡️ Binary = the text bytes verbatim (same simplification `DeflateDiff`/`GifDiff`'s

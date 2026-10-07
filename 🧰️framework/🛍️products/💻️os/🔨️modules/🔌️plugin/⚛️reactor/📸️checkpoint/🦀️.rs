@@ -22,9 +22,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, ToValue, Deserialize, FromValue)]
+#[serde(deny_unknown_fields)]
 struct InstanceCheckpoint {
     id: u32,
     app_id: String,
+    actor: String,
     document_pack: Vec<u8>,
 }
 
@@ -34,18 +36,18 @@ struct InstanceCheckpoint {
 /// path — Elm's Msg-from-Cmd, re-entering `ArtifactApp::handle` against the JUST-restored state)
 /// the first `poll` after `restore`.
 #[derive(Clone, Serialize, ToValue, Deserialize, FromValue)]
+#[serde(deny_unknown_fields)]
 pub struct TaskRestart {
     pub instance: u32,
     pub command: Vec<u8>,
 }
 
 #[derive(Serialize, ToValue, Deserialize, FromValue)]
+#[serde(deny_unknown_fields)]
 pub struct CheckpointPack {
     instances: Vec<InstanceCheckpoint>,
     timers: Vec<u64>,
     pending_requests: Vec<u64>,
-    #[serde(default)]
-    #[value(default)]
     task_restarts: Vec<TaskRestart>,
 }
 
@@ -75,9 +77,10 @@ impl CheckpointPack {
 pub async fn checkpoint<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
-        let files = plugin_runtime::plugin_document_pack(runtime, *id).await.unwrap_or_default();
+        let files = plugin_runtime::plugin_document_pack(runtime, *id).await?;
         let document_pack = store::encode_document_pack_bytes(&files.pack, &files.spr).await;
-        instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), document_pack });
+        let actor = plugin_runtime::instance_actor(runtime, *id).await?;
+        instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), actor, document_pack });
     }
     let pack = CheckpointPack { instances, timers, pending_requests, task_restarts };
     Ok(semio_framework_pack_json::to_json_string(&pack).into_bytes())
@@ -104,7 +107,7 @@ pub async fn restore<PA: crate::app::PluginApp>(runtime: &plugin_runtime::Plugin
         .map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
     let mut document_loads = Vec::with_capacity(pack.instances.len());
     for instance in &pack.instances {
-        let id = plugin_runtime::plugin_create_app_with_id(runtime, instance.id, &instance.app_id).await?;
+        let id = plugin_runtime::plugin_create_app_with_id(runtime, instance.id, &instance.app_id, crate::protocol::ActorId(instance.actor.clone())).await?;
         if !instance.document_pack.is_empty() {
             let (parent_pack, parent_spr) =
                 store::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;

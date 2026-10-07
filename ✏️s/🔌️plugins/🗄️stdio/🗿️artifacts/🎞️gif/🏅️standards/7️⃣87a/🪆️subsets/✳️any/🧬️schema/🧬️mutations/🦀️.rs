@@ -27,7 +27,7 @@ use crate::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImage
 use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutations
 #[path = "🖼️insert-image/🦀️.rs"]
@@ -301,3 +301,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

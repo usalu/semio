@@ -1,11 +1,9 @@
 /** 🧪️ Line layout fixtures checked against the independent lines-and-columns parser. */
 import { expect, test } from "vitest";
-import Ajv from "ajv";
 import { LinesAndColumns } from "lines-and-columns";
 import { drawingTextLines, drawingTextFallbackExtent } from "../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️.json";
 
-test("text fixtures satisfy their neutral schema", () => expect(new Ajv().compile(schema)(fixture)).toBe(true));
 for (const item of fixture.cases) test(`line layout ${JSON.stringify(item.content)}`, () => {
   const lines = [...drawingTextLines(item.content)];
   expect(lines).toEqual(item.lines);

@@ -13,12 +13,13 @@
 
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, enc_indexed_triple, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+
 
 
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::MutationDiff;
 
 //#region 🔖️IndexedCollectionAlgebra
@@ -531,3 +532,6 @@ mod tests;
 pub(crate) fn indexed_is_empty<D, T>(d: &IndexedTripleDiff<D, T>) -> bool {
     d.removed.is_empty() && d.modified.is_empty() && d.added.is_empty()
 }
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

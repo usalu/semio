@@ -3,23 +3,10 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
+
+
 #[allow(unused_imports)]
 mod diff_codec {
-use super::*;
-use crate::standards::v1::subsets::brep::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_vertex};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_vertex};
-use crate::flow::io::text::diff::{dec_edge};
-use crate::flow::io::text::diff::{enc_edge};
-use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
-
 /// 📥️ The `pack::from_json_str` inverse of `SemioBrepDiff`'s `ToValue` — decodes the committed
 /// `../🧬️mutations/<kind>/🧪️tests/<fixture>/🔺️diff/🔣️.json` specification vectors into a real
 /// [`SemioBrepDiff`], mirroring `📸️snapshot/🦀️.rs`'s `decode_semio_brep_snapshot_json` and
@@ -28,36 +15,26 @@ use protocol::MutationDiff;
 pub fn decode_semio_brep_diff_json(text: &str) -> Result<SemioBrepDiff, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
-}
-pub use diff_codec::*;
 
-#[allow(unused_imports)]
-mod diff_codec {
 use super::*;
-use crate::brep::schema::diff::*;
+use crate::standards::v1::subsets::brep::io::binary::diff::{encode_option, decode_option};
+use crate::standards::v1::subsets::brep::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_face};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_face};
-use crate::flow::io::text::diff::{dec_edge};
-use crate::flow::io::text::diff::{enc_edge};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_edge};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_edge};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_vertex};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_vertex};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::enc_str;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::dec_str;
-use crate::standards::v1::subsets::brep::io::text::snapshot::enc_loop;
-use crate::standards::v1::subsets::brep::io::text::snapshot::dec_loop;
-use crate::standards::v1::subsets::brep::io::text::snapshot::enc_shell;
-use crate::standards::v1::subsets::brep::io::text::snapshot::dec_shell;
-use crate::standards::v1::subsets::brep::io::text::snapshot::enc_solid;
-use crate::standards::v1::subsets::brep::io::text::snapshot::dec_solid;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_brep_diff(d: &SemioBrepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();

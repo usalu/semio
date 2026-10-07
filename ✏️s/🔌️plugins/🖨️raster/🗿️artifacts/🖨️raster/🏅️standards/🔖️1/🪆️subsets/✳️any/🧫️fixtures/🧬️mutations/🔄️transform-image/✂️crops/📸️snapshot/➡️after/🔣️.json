@@ -1,9 +1,9 @@
 {
   "assets": {
-    "pixels-paint-9202a577eaa635cf": {
+    "pixels-paint-898f6c7705865227": {
       "childId": "raster-asset-9202a577eaa635cf",
       "target": {
-        "artifactId": "pixels-paint-9202a577eaa635cf-image",
+        "artifactId": "pixels-paint-898f6c7705865227-image",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",
@@ -18,7 +18,7 @@
       "blendMode": "normal",
       "height": 2,
       "id": "paint",
-      "imageKey": "pixels-paint-9202a577eaa635cf",
+      "imageKey": "pixels-paint-898f6c7705865227",
       "kind": "pixel",
       "locked": false,
       "mask": null,

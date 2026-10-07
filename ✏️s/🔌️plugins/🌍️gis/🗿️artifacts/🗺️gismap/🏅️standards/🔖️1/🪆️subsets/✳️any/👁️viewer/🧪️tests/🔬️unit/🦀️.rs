@@ -44,7 +44,7 @@ async fn the_camera_route_joins_its_exact_retained_factory_on_the_window_config_
     assert_eq!(contracts.len(), 1);
     assert_eq!(contracts[0].lanes, &[ArtifactToolPublicationLane::WindowConfig], "a viewer may never name the artifact lane");
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_gismap_viewer());
-    let mut app = semio_framework_plugin::VcsArtifactApp::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry(ViewerApp::<GisMapViewer>::default(), registry).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry(ViewerApp::<GisMapViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
     assert!(app.close_terminal_is_empty());
 }
@@ -93,7 +93,7 @@ async fn the_view_command_round_trips_through_its_binary_codec() {
 #[semio_framework_async_macros::async_test]
 async fn a_dispatched_pan_is_retained_by_its_window_and_rendered_back() {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app_with_members::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers, _>(async { semio_framework_plugin::App { definition: create_gismap_viewer(), examples: Vec::new() } }).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app_with_members::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers, _>(async { semio_framework_plugin::App { definition: create_gismap_viewer(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let view = map_view(map::WINDOW_KIND_ID);
     let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(view.clone());

@@ -48,7 +48,7 @@ fn sqlite_snapshot_puzzle3d_distinct_duplicate_ids_and_every_optional_presence_s
 #[test]
 fn sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_io_preserves_every_field(){
  let declared=super::super::native_codec();let typed=declared.snapshot_sqlite.expect("actual typed declaration");let typed_schema=declared.schema;
- let play=store::ArtifactCodec::bare::<Puzzle3dPlaySnapshot,Puzzle3dMutation>(PUZZLE_3D_SCHEMA);let play_schema=play.schema;let play=play.snapshot_sqlite.expect("actual Play declaration");let dialect=store::io_schema::ArtifactDialect{artifact_kind:"s.puzzle.puzzle3d".into(),standard:"1".into(),subset:"*".into()};
+ let play=store::ArtifactCodec::bare::<Puzzle3dPlaySnapshot,Puzzle3dMutation>(PUZZLE_3D_SCHEMA);let play_schema=play.schema;let play=play.snapshot_sqlite.expect("actual Play declaration");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.puzzle.puzzle3d".into(),standard:"1".into(),subset:"*".into()};
  for word in words(){let s=specimen(word);for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&s))};for(provider,schema)in[(&typed,&typed_schema),(&play,&play_schema)]{let d=(provider.export)(schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=(provider.import)(schema,&dialect,d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(actual,payload);}}}
 }
 

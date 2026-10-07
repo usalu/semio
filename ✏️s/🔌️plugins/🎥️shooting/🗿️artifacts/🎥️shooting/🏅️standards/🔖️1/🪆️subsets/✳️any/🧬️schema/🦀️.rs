@@ -1,12 +1,10 @@
 //! 🧬️ Shooting artifact schema — every field of the artifact with its state class.
 
 use crate::{ShootingEmblemChild, ShootingSnapshot};
-use semio_framework_pack_json::json;
-use semio_framework_pack_json::Value;
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
+
 use semio_s_artifact_stdio_svg::SvgSnapshot;
 
 //#region 🔖️Artifact
@@ -136,7 +134,7 @@ pub fn is_transparent_shooting_background(background: &str) -> bool {
 /// `s.stdio.semio/v1/drawing` → svg export leaf never reads it — the background is therefore
 /// painted as an explicit filled `Path` layer child instead, which the export leaf DOES lower
 /// into real SVG markup.
-fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawingSnapshot, u32, u32) {
+pub(crate) fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawingSnapshot, u32, u32) {
     let shot = active_shot(snapshot);
     let asset = active_asset(snapshot);
     let (width, height) = shot.map_or((256, 256), |entry| (entry.width, entry.height));
@@ -223,72 +221,17 @@ fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
 /// emblem override (if any) as an embedded raster image, and the asset name as a text label — via
 /// the `s.stdio.semio/v1/drawing` → svg stdio bridge (`shooting_scene_to_semio_drawing` +
 /// `shooting_drawing_to_svg_text`), never hand-rolled SVG string formatting.
-pub fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, u32, u32), String> {
-    let (drawing, width, height) = shooting_scene_to_semio_drawing(snapshot);
-    let svg = shooting_drawing_to_svg_text(&drawing)?;
-    Ok((svg, width, height))
-}
+
 
 /// 🌉️ `shooting_scene_svg` over an already-deserialized document `Value`.
-pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let dsl_value: semio_framework_value::DslValue = semio_framework_pack_json::to_dsl_value(value);
-    let snapshot: ShootingSnapshot = semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| error.to_string())?;
-    shooting_scene_svg(&snapshot)
-}
+
 
 /// 🖼️ Builds the icon-render host request JSON for `shot`/`asset` under `fixture`'s scene lighting —
 /// consumed both by the icon window's `render()` and by the `exportActiveShot`/`exportAllShots` shell
 /// commands (`🎮️commands/🖨️export`), two consumers. `fit` mirrors the scene window's centre-model
 /// lane (`ShootingConfig::center_model`): the host re-targets the shot camera at the asset's bounding
 /// sphere and backs off to frame it, so the icon shows what the centred scene shows.
-pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera, fit: bool) -> String {
-    let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
-    let camera = crate::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
-    let scene = &snapshot.scene;
-    let mut camera_value = json!({
-        "position": vec3(camera.position),
-        "target": vec3(camera.target),
-        "zoom": camera.zoom,
-        "fov": camera.fov,
-        "projection": camera.projection.clone().unwrap_or_else(|| "perspective".into()),
-    });
-    if let (Some(object), Some(up)) = (camera_value.as_object_mut(), camera.up) {
-        object.insert("up", vec3(up));
-    }
-    let mut value = json!({
-        "assetUrl": asset.url.as_str(),
-        "camera": camera_value,
-        "fit": { "enabled": fit, "padding": 1.25 },
-        "lights": {
-            "ambientIntensity": scene.ambient.intensity,
-            "ambientColor": scene.ambient.color.as_str(),
-            "sunAzimuth": scene.sun.azimuth,
-            "sunElevation": scene.sun.elevation,
-            "sunIntensity": scene.sun.intensity,
-            "sunColor": scene.sun.color.as_str(),
-        },
-        "width": shot.width,
-        "height": shot.height,
-        "format": shot.format.as_str(),
-        "shape": if shot.shape == "ellipse" { "ellipse" } else { "rectangle" },
-        "shadowEnabled": scene.shadow.enabled,
-        "material": {
-            "color": scene.material.color.as_str(),
-            "metalness": scene.material.metalness,
-            "roughness": scene.material.roughness,
-            "emissive": scene.material.emissive.as_str(),
-            "emissiveIntensity": scene.material.emissive_intensity,
-            "stroke": scene.material.stroke.as_str(),
-        },
-    });
-    if let Some(object) = value.as_object_mut() {
-        let background = shot.background.clone().unwrap_or_else(|| scene.background.clone());
-        if !is_transparent_shooting_background(&background) {
-            object.insert("background", json!(background.as_str()));
-        }
-    }
-    value.to_string()
-}
+
 //#endregion 🔖️MediaExport
 
 //#region 🔖️Descriptor

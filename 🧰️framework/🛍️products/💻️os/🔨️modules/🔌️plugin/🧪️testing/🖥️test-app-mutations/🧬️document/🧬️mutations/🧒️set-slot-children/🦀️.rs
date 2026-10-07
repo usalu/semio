@@ -23,6 +23,8 @@ impl MutationKind<TestSnapshot, TestMutation> for SetSlotChildren {
     }
 
     fn inverse(&self, base: &TestSnapshot) -> Result<Vec<TestMutation>, semio_framework_value::ValueError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
         Ok((|| vec![Self { children: base.slot.iter().map(|child| child.target.to_uri()).collect() }.into()])())
     }
 

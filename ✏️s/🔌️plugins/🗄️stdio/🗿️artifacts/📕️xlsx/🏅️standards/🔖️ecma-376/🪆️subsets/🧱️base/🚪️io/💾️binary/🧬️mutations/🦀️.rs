@@ -7,7 +7,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
-use crate::schema::diff::{dec_cell_value, dec_cell_value_bin, dec_sheet, dec_sheet_bin, dec_str, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_sheet, enc_sheet_bin, enc_str, read_str_lp, write_str_lp, XlsxDiff};
+use crate::schema::diff::{diff_set_snapshot, XlsxDiff};
+use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_cell_value_bin,dec_sheet_bin,enc_cell_value_bin,enc_sheet_bin,read_str_lp,write_str_lp};
+use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_cell_value,dec_sheet,dec_str,enc_cell_value,enc_sheet,enc_str};
 #[cfg(test)]
 use crate::schema::snapshot::XlsxCell;
 #[cfg(test)]

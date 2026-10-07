@@ -1,0 +1,51 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧰️triples/🧪️tests/🔬️unit/🦀️.rs",
+    "targetSha256": "ecb2dc1659e49cc2682f31194fec1fcdcf5d9cee0b8fa6b418004bb84c88b589",
+    "before": "use super::*;",
+    "after": "use super::*;\nuse crate::standards::v1::subsets::base::io::text::snapshot::{enc_indexed_triple,dec_indexed_triple,enc_named_triple,dec_named_triple,enc_named_added,dec_named_added,split_top_level,strip_brackets};",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "targetSha256": "166e3e4bbcdf351e287bfa4f336a6b9c96f59da3badf41619da45dd3474c479e",
+    "before": "use crate::standards::v1::subsets::flow::io::text::mutations::node;",
+    "after": "use crate::standards::v1::subsets::flow::schema::mutations::node;",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "targetSha256": "1cc02d037f57804e587072d58f6fc6eb79aded467a8438791b9821566f12b8b6",
+    "before": "use super::*;",
+    "after": "use super::*;\nuse crate::standards::v1::subsets::animation::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "targetSha256": "f24faaae758bb92b4c6d281953177d5a87d26e37ed5296d47ea57dc09ce70c0e",
+    "before": "use super::*;",
+    "after": "use super::*;\nuse crate::standards::v1::subsets::video::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "targetSha256": "9a5df931931592b4bc3fa1097eaeab51f73040f4750e6cd08df92d19775e5a7d",
+    "before": "let mut native=semio_framework_value::native_decoding::NativeDecodeControl::new(SqliteDatabaseLimits::default().max_allocation_bytes,&mut |_|true);",
+    "after": "let mut accept=|_|true;let mut native=semio_framework_value::native_decoding::NativeDecodeControl::new(SqliteDatabaseLimits::default().max_allocation_bytes,&mut accept);",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "targetSha256": "e0c82c417e01afd9b65c21d4610530c1c9cb23efc7d3335f4e22f2e071d80b11",
+    "before": "use crate::standards::v1::subsets::object::io::sqlite::snapshot::*;",
+    "after": "use crate::standards::v1::subsets::object::io::sqlite::snapshot::*;\nuse crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child,dec_child};\nuse crate::standards::v1::subsets::kit::io::binary::snapshot::{write_child,read_child};",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "targetSha256": "e6275292677c31880165d99d834362e58d2c5c2b7e5e93319bb913b9f0ca8b0d",
+    "before": "use crate::standards::v1::subsets::kit::io::sqlite::snapshot::*;",
+    "after": "use crate::standards::v1::subsets::kit::io::sqlite::snapshot::*;\nuse crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child,dec_child,enc_link,dec_link};\nuse crate::standards::v1::subsets::kit::io::binary::snapshot::{write_child,read_child,write_link,read_link};",
+    "matches": 1
+  }
+]

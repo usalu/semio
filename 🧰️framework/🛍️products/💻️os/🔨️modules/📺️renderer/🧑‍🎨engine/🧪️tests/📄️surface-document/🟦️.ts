@@ -1,11 +1,9 @@
 /** 📄️ Full archive handoff traces preserve the predecessor until its successor is ready. */
 import { expect,it } from "vitest";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧫️fixtures/🔣️.json";
 import { runSessionAppSwitchV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 import { prepareDocumentSurfaceV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🟦️.ts";
-it("validates the neutral handoff traces",() => expect(new Ajv().compile(schema)(fixture)).toBe(true));
 for (const law of fixture.cases) it(law.name,async () => {
   const events: string[] = [];
   let current = !("initiallyCurrent" in law) || law.initiallyCurrent === true;

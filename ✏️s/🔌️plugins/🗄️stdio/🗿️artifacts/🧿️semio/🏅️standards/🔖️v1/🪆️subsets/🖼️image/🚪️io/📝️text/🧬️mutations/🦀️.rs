@@ -2,11 +2,28 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
+/// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
+pub(crate) const TEXT_KEYWORDS: [(&str, &str); 12] = [
+    ("set-snapshot", "setSnapshot"),
+    ("set-dimensions", "setDimensions"),
+    ("set-colorspace", "setColorspace"),
+    ("set-bit-depth", "setBitDepth"),
+    ("set-icc", "setIcc"),
+    ("insert-frame", "insertFrame"),
+    ("remove-frame", "removeFrame"),
+    ("move-frame", "moveFrame"),
+    ("set-frame-delay", "setFrameDelay"),
+    ("set-frame-pixels", "setFramePixels"),
+    ("set-metadata-entry", "setMetadataEntry"),
+    ("remove-metadata-entry", "removeMetadataEntry"),
+];
+
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::image::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::image::schema::diff::{diff_set_snapshot, SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
 use crate::standards::v1::subsets::image::io::text::snapshot::{dec_metadata_entry};
 use crate::standards::v1::subsets::image::io::text::snapshot::{enc_metadata_entry};
@@ -14,8 +31,8 @@ use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};
 use crate::standards::v1::subsets::image::io::text::snapshot::{enc_frame};
 use crate::standards::v1::subsets::image::io::text::snapshot::{dec_colorspace};
 use crate::standards::v1::subsets::image::io::text::snapshot::{enc_colorspace};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
+use crate::standards::v1::subsets::image::io::text::snapshot::{decode_option};
+use crate::standards::v1::subsets::image::io::text::snapshot::{encode_option};
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls

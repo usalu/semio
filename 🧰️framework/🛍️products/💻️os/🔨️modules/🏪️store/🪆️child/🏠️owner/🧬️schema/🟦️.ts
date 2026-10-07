@@ -1,7 +1,7 @@
 /** 🏠️ A child envelope's exact ownership stamp, shared by every composition consumer. */
-import { parseArtifactRef, type ArtifactRef } from "../../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { parseArtifactRef, type ArtifactRef } from "../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import { parseSchemaRecord } from "../../../../../../../🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-export type { ArtifactRef } from "../../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+export type { ArtifactRef } from "../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 export interface OwnerRef { parent: ArtifactRef; slot: string; childId: string; }
 
 /** 🪪️ Decodes declared ownership fields without evaluating foreign accessors. */

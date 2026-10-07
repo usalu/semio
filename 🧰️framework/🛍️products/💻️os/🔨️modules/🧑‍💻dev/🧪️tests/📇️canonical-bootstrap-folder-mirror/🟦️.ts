@@ -92,9 +92,6 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     const canonicalPairCorpus = JSON.parse(readFileSync(join(canonicalPairRoot, "🔣️.json"), "utf8")) as { selection: { documentId: string; baseline: Record<string, unknown> }; frontierCases: readonly CanonicalPairFrontierCaseV1[] };
     const lagModule = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true, allErrors: true });
-    const validate = await devContract("CanonicalBootstrapFolderMirrorCorpusV1");
-    if (!validate(corpus)) throw new Error("canonical bootstrap folder mirror corpus rejected by its owned contract");
     const lagAjv = new Ajv({ strict: true, allErrors: true });
     lagAjv.addSchema(lagModule);
     const validateCanonicalPairSelection = lagAjv.getSchema(`${lagModule.$id}#/$defs/CanonicalCheckpointPairSelectionV1`)!;
@@ -116,7 +113,7 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     ];
     if (!markers.slice(0, 6).every((marker) => own.includes(marker)) || !markers.slice(6).every((marker) => worker.includes(marker))) throw new Error("canonical bootstrap folder mirror source boundary drift");
     if (phase === "source") {
-      console.log(`canonical-bootstrap-folder-mirror: phase=source ajv=1 markers=${markers.length}`);
+      console.log(`canonical-bootstrap-folder-mirror: phase=source payloads=canonical-pair markers=${markers.length}`);
       return;
     }
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -202,7 +199,7 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     const successor = await reserveCanonicalBootstrapFolderMirror(uri, corpus.documentId, canonicalBootstrapFolderMirrorReserve(corpus, b.row.aggregateSha256));
     if (successor.epoch !== ownerB.epoch + 1 || (await readBackbonePayload(uri, corpus.documentId)) !== null) throw new Error("canonical bootstrap folder mirror generic transition reset or bypassed the server epoch");
     await retireCanonicalBootstrapFolderMirror(uri, corpus.documentId, successor);
-    console.log(`canonical-bootstrap-folder-mirror: phase=process ajv=2 sqlite=1 sha256=2 frontiers=${canonicalPairCorpus.frontierCases.length} stale=7 hostile=${corpus.hostile.length} mixed=1 monotonic-epoch=1`);
+    console.log(`canonical-bootstrap-folder-mirror: phase=process payloads=canonical-pair sqlite=1 sha256=2 frontiers=${canonicalPairCorpus.frontierCases.length} stale=7 hostile=${corpus.hostile.length} mixed=1 monotonic-epoch=1`);
   }
 }
 

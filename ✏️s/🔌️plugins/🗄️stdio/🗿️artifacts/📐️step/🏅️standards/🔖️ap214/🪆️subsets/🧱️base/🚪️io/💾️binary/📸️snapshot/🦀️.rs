@@ -1,4 +1,6 @@
 //! binary rep for stdio.step 📸️snapshot
+use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::native;
+use crate::standards::v_ap214::subsets::base::io::binary::diff::{write_str_bin,read_str_bin,enc_file_description_bin,dec_file_description_bin,enc_file_name_bin,dec_file_name_bin,enc_file_schema_bin,dec_file_schema_bin,enc_entity_bin,dec_entity_bin};
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");

@@ -1,0 +1,47 @@
+{
+  "protocol": "dialect protocol\nprotocol neutral.png\nversion 1\n",
+  "receipt": {
+    "schemaVersion": 1,
+    "artifactKind": "s.stdio.png",
+    "artifactSchema": "stdio.png",
+    "factoryId": "stdio.native.png.v1",
+    "extension": "png",
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "protocolSourceSha256": "207f89833b4ab6ae08ae0ba09cc780843d6b5557755b31f8e340f2a9177198e6"
+  },
+  "cases": [
+    {
+      "id": "current-live-receipt",
+      "patch": {},
+      "accepted": true
+    },
+    {
+      "id": "stale-protocol",
+      "patch": {
+        "protocolSourceSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "accepted": false
+    },
+    {
+      "id": "different-native-factory",
+      "patch": {
+        "factoryId": "stdio.native.peer.v1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "zero-native-pack-hash",
+      "patch": {
+        "packSchemaHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "accepted": false
+    },
+    {
+      "id": "different-dialect-schema",
+      "patch": {
+        "artifactSchema": "stdio.peer"
+      },
+      "accepted": false
+    }
+  ]
+}

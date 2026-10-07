@@ -1,4 +1,5 @@
 //! 🖥️ Plugin-based OS kernel: hot-swappable WASM plugins, workflow, document VCS.
+use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
 
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod host {
@@ -408,7 +409,7 @@ use semio_framework_value::ValueError;
     /// `conflicts` decode to empty (matching the old `Deserialize`'s implicit `Vec::default()`
     /// for an absent, non-`Option` field with no `#[serde(default)]` — those two were never
     /// actually optional on the wire in practice, but this preserves exact prior leniency).
-    impl<P: FromValue, Op: FromValue> FromValue for BackboneDocument<P, Op> {
+    impl<P: FromValue + protocol::os_vcs::ArtifactGenesisCodec, Op: FromValue> FromValue for BackboneDocument<P, Op> {
         fn from_value(value: DslValue) -> Result<Self, ValueError> {
             let semio_framework_value::DslValue::Object(fields) = value else {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for BackboneDocument, found {value:?}")));
@@ -473,7 +474,7 @@ use semio_framework_value::ValueError;
     /// 🌱️ Mints a fresh backbone document wrapping `initial_snapshot` with empty edit history.
     pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_snapshot: P) -> BackboneDocument<P, Op>
     where
-        P: Clone,
+        P: Clone + protocol::os_vcs::ArtifactGenesisCodec,
         Op: Clone,
     {
         BackboneDocument {
@@ -515,25 +516,63 @@ use semio_framework_value::ValueError;
         })
     }
 
-    /// 🧺️ Lends a `BackboneDocument`'s authoritative envelope for the duration of one read,
-    /// then retires it through `into_owners` — `ArtifactEnvelope`'s `Drop` aborts the guest unless
-    /// its nested owners were detached first, so no caller is allowed to build one and let it fall
-    /// out of scope on its own.
-    fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> R) -> R
+    /// 🧺️ Moves every backbone owner into the canonical envelope shell.
+    fn take_backbone_envelope<P, Op>(document: BackboneDocument<P, Op>) -> (String, ArtifactEnvelope<P, Op>) {
+        let envelope = ArtifactEnvelope::from_owners(store::ArtifactEnvelopeOwners {
+            schema: document.schema,
+            id: document.id,
+            vcs: document.vcs,
+            backbone: document.backbone,
+            active_alternative_id: None,
+            cursor: None,
+            dialect: None,
+            migrated_from: None,
+            owner: None,
+            lanes: std::collections::BTreeMap::new(),
+            viewer_checkpoint_id: None,
+            edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
+            conflicts: document.conflicts,
+            transitions: document.transitions,
+            history_shape: protocol::HistoryShape::Document,
+            open_transaction: None,
+        });
+        (document.name, envelope)
+    }
+
+    /// 🧺️ Retires a copied backbone envelope through its exact bounded owner catalogue.
+    fn close_backbone_envelope<P, Op>(envelope: ArtifactEnvelope<P, Op>) -> Result<(), VcsError>
     where
-        P: Clone,
-        Op: Clone,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+    {
+        let mut retirement = store::bounded_artifact_store_owners::<P, Op>().retire_envelope_uninstalled(envelope).map_err(VcsError::ValidationFailed)?;
+        loop {
+            match retirement.close_step(1, retirement.next_close_byte_demand().max(4096)).map_err(|error| VcsError::ValidationFailed(error.into_message()))? {
+                store::SnapshotRetirementStep::Complete => {
+                    assert!(retirement.terminal_is_empty(), "backbone envelope retirement reports its exact terminal");
+                    return Ok(());
+                }
+                store::SnapshotRetirementStep::Pending { .. } | store::SnapshotRetirementStep::Blocked => std::thread::yield_now(),
+            }
+        }
+    }
+
+    /// 🧺️ Lends a copied authoritative envelope, then retires every exact nested owner.
+    fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> Result<R, VcsError>) -> Result<R, VcsError>
+    where
+        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
     {
         let envelope = backbone_envelope_of(document);
         let result = read(&envelope);
-        drop(envelope.into_owners());
+        close_backbone_envelope(envelope)?;
         result
     }
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
-        P: Clone,
-        Op: Clone + Mutation<P> + protocol::OpBinary,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
     }
@@ -541,8 +580,8 @@ use semio_framework_value::ValueError;
     /// 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
     pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactPackFiles, VcsError>
     where
-        P: Clone + store::ArtifactPack,
-        Op: Clone + protocol::OpText + protocol::OpBinary,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))
     }
@@ -550,8 +589,8 @@ use semio_framework_value::ValueError;
     /// 📤️ DSL-text counterpart of `export_backbone_pack`.
     pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactTextFiles, VcsError>
     where
-        P: Clone + store::ArtifactDsl,
-        Op: Clone + protocol::OpText,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static + store::ArtifactDsl,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_text(envelope)))
     }
@@ -562,8 +601,8 @@ use semio_framework_value::ValueError;
     /// undo/redo/checkpoint position.
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
-        P: Clone + store::ArtifactPack,
-        Op: Clone + protocol::OpText + protocol::OpBinary,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
     {
         let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))?;
         let inner = resolve_kernel_future(store::encode_document_pack_bytes(&files.pack, &files.spr));
@@ -588,8 +627,10 @@ use semio_framework_value::ValueError;
         }
         // 🧺️ Consume the shell: its `Drop` asserts the owners were detached, so reading fields off it
         // and letting it fall out of scope aborts the guest at runtime.
-        let owners = envelope.into_owners();
-        let edit_messages = owners.edit_messages.iter().cloned().collect();
+        let mut owners = envelope.into_owners();
+        let mut edit_messages = Vec::with_capacity(owners.edit_messages.len());
+        while let Some(entry) = owners.edit_messages.pop() { edit_messages.push(entry); }
+        edit_messages.reverse();
         Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, transitions: owners.transitions, edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
     }
     //#endregion 🔖️BackboneDocument
@@ -807,27 +848,11 @@ use semio_framework_value::ValueError;
     }
 
     impl OsWorkflowStore {
-        pub fn new(document: OsWorkflowArtifactDocument) -> Result<Self, VcsError> {
-            let envelope = ArtifactEnvelope::from_owners(store::ArtifactEnvelopeOwners {
-                schema: document.schema,
-                id: document.id,
-                vcs: document.vcs,
-                backbone: document.backbone,
-                active_alternative_id: None,
-                cursor: None,
-                dialect: None,
-                migrated_from: None,
-                owner: None,
-                lanes: std::collections::BTreeMap::new(),
-                viewer_checkpoint_id: None,
-                edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
-                conflicts: document.conflicts,
-                transitions: document.transitions,
-                history_shape: protocol::HistoryShape::Document,
-                open_transaction: None,
-            });
-            let inner = resolve_kernel_future(ArtifactStore::new(envelope))?;
-            Ok(Self { inner, name: document.name })
+        pub fn new(document: OsWorkflowArtifactDocument, actor: protocol::ActorId) -> Result<Self, VcsError> {
+            let (name, envelope) = take_backbone_envelope(document);
+            let mut inner = resolve_kernel_future(ArtifactStore::new(envelope, actor))?;
+            inner.install_document_store_owners_exact(store::bounded_artifact_store_owners());
+            Ok(Self { inner, name })
         }
 
         pub fn generation(&self) -> u64 {
@@ -1007,12 +1032,14 @@ use semio_framework_value::ValueError;
     /// shared by every catalog write path below (space manifests, collections).
     fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError>
     where
-        P: Clone + store::ArtifactPack,
-        Op: Clone + protocol::OpText + protocol::OpBinary,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
     {
         let mut synced = document.clone();
         synced.backbone = Some(resolve_kernel_future(document_backbone_ref(backbone_uri)));
-        port.write(backbone_uri, &encode_backbone_payload(&synced)?)
+        let result = encode_backbone_payload(&synced).and_then(|payload| port.write(backbone_uri, &payload));
+        close_backbone_envelope(take_backbone_envelope(synced).1)?;
+        result
     }
     //#endregion 🔖️Backbone
 
@@ -1162,8 +1189,10 @@ use semio_framework_value::ValueError;
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let name = parsed.snapshot.name.trim().to_owned();
         // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
-        let owners = parsed.into_envelope().into_owners();
-        let edit_messages = owners.edit_messages.iter().cloned().collect();
+        let mut owners = parsed.into_envelope().into_owners();
+        let mut edit_messages = Vec::with_capacity(owners.edit_messages.len());
+        while let Some(entry) = owners.edit_messages.pop() { edit_messages.push(entry); }
+        edit_messages.reverse();
         let document = BackboneDocument {
             schema: owners.schema,
             id: owners.id,
@@ -2374,7 +2403,7 @@ pub mod workflow {
         None
     }
     //#endregion 🔖️RegistryStubs
-    use semio_framework::{media_types_compatible, ArtifactDialect, MediaCompat, MediaWireFormat};
+    use {semio_framework::media_types_compatible,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaCompat,semio_framework::MediaWireFormat};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
@@ -2936,7 +2965,7 @@ pub mod workflow {
     /// io-mechanism yet -- W6 deletes this function outright. Never merged with the new path above;
     /// `registry_export_media` picks ONE or the other per call, never blends their results.
     fn registry_export_media_legacy(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
-        use semio_framework::{Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+        use {semio_framework_artifact_reference::Dialect,semio_framework::ErasedComposeSource,semio_framework::IoDirection,semio_framework::IoKey,semio_framework::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
         let native_kind = native_dialect_kind(artifact_kind);
         let target_kind = format!("s.{format_kind}");
         let target = match crate::host::resolve_kernel_future(semio_framework::io_dialects_for(&native_kind, IoDirection::Export)) {
@@ -4133,7 +4162,7 @@ pub mod registry {
     use crate::instance::OsParameterFieldSpec;
     use crate::space;
     use crate::workflow;
-    use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, PluginManifest, WindowKindDefinition};
+    use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ArtifactKindSpec,semio_framework::ConfigSpec,semio_framework::MediaClass,semio_framework::MediaForm,semio_framework::MediaType,semio_framework::ModeDefinition,semio_framework::OsMediaCapability,semio_framework::PluginManifest,semio_framework::WindowKindDefinition};
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::Terminology;
     use serde::{Deserialize, Serialize};

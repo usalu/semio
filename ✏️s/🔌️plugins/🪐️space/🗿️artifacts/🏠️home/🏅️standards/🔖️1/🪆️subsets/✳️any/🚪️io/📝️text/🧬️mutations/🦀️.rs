@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 
-pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeCatalogGeneration", crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation::TEXT_OPCODE)];
+pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeCatalogGeneration", crate::standards::v1::subsets::any::io::text::mutations::change_catalog_generation::TEXT_OPCODE)];
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -31,14 +31,7 @@ impl protocol::OpText for SHomeMutation {
     }
 }
 
-impl protocol::OpBinary for SHomeMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 #[path = "🔢️change-catalog-generation/🦀️.rs"]
@@ -50,7 +43,8 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 #[cfg(test)]
-use crate::standards::v1::subsets::any::schema::mutations::{change_catalog_generation as semantic_change_catalog_generation, register_s_home_mutation_descriptors};
+use crate::standards::v1::subsets::any::schema::mutations::{change_catalog_generation as semantic_change_catalog_generation,register_s_home_mutation_descriptors};
+
 use crate::SHomeSnapshot;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.

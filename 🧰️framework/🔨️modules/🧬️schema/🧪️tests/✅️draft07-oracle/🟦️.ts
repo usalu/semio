@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
  * @see https://ajv.js.org/json-schema.html */
 type Vector = {
   readonly id: string;
-  readonly schema: Record<string, unknown>;
+  readonly input: { readonly schema: Record<string, unknown> };
   readonly documents?: readonly Record<string, unknown>[];
   readonly valid: readonly unknown[];
   readonly invalid: readonly { readonly instance: unknown; readonly errorPath: string }[];
@@ -31,7 +31,7 @@ describe("draft-07 structural validation vectors", () => {
   it("declares the draft-07 dialect on every case", () => {
     expect(vectors.dialect).toBe("http://json-schema.org/draft-07/schema#");
     expect(vectors.cases.length).toBeGreaterThanOrEqual(16);
-    for (const testCase of vectors.cases) expect(testCase.schema.$schema).toBe(vectors.dialect);
+    for (const testCase of vectors.cases) expect(testCase.input.schema.$schema).toBe(vectors.dialect);
   });
 
   for (const testCase of vectors.cases) {
@@ -39,7 +39,7 @@ describe("draft-07 structural validation vectors", () => {
       const ajv = new ajvConstructor({ allErrors: true, strict: false });
       applyFormats(ajv);
       for (const document of testCase.documents ?? []) ajv.addSchema(document);
-      const validate = ajv.compile(testCase.schema);
+      const validate = ajv.compile(testCase.input.schema);
 
       for (const instance of testCase.valid) {
         expect(validate(instance), `${testCase.id}: ${JSON.stringify(instance)} → ${ajv.errorsText(validate.errors)}`).toBe(true);

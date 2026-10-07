@@ -51,7 +51,7 @@ pub struct En1997Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1997Snapshot, extension = "en1997", envelope_id = "norm.en1997", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1997Snapshot {

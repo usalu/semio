@@ -100,7 +100,7 @@ impl store::ArtifactSqliteSnapshot for Snapshot{
   c.check_value_bytes(8)?;
   c.checkpoint(SqliteSnapshotPhase::EncodeNative,1,1)
  }
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
   use store::io_schema::IoError;
   c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(IoError::from_value_error)?;
   if dialect.artifact_kind!=super::super::super::KIND||dialect.standard!="1"{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"undeclared compiled refusal dialect")))}

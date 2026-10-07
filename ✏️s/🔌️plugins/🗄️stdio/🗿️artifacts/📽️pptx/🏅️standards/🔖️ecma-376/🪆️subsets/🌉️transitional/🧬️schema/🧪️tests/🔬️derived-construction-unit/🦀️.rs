@@ -22,7 +22,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_builder_has_no_office_document_relationship_and_fails_build() {
         let err = PptxTransitionalBuilderConstruction::empty().build().expect_err("an empty package has no officeDocument relationship, must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::CODE_MAIN_NS));
+        assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::conformance::CODE_MAIN_NS));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -37,10 +37,10 @@ mod tests {
         violating.xml_parts.push(crate::schema::snapshot::PptxXmlPart {
             path: "ppt/slides/slide1.xml".into(),
             content_type: "application/vnd.openxmlformats-officedocument.presentationml.slide+xml".into(),
-            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(r#"<p:sld xmlns:p="http://purl.oclc.org/ooxml/presentationml/main"/>"#).expect("valid XML"),
+            document: semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(r#"<p:sld xmlns:p="http://purl.oclc.org/ooxml/presentationml/main"/>"#).expect("valid XML"),
         });
         let (mutated, _diff) = PptxTransitionalBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: violating }));
         let err = mutated.build().expect_err("a Strict namespace anywhere must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));
+        assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::conformance::CODE_STRICT_NS_PRESENT));
     }
 }

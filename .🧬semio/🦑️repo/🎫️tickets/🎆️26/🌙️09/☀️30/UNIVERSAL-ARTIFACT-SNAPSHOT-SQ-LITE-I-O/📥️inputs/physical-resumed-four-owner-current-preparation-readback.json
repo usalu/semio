@@ -1,0 +1,639 @@
+{
+  "at": "2026-10-06T13:47:59.184Z",
+  "vdiprovider": {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+    "heldBeforeExact": true
+  },
+  "checks": [
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "super::patch_snapshot::",
+          "expected": 3,
+          "actual": 3,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "super::patch_snapshot::",
+          "expected": 3,
+          "actual": 3,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "use crate::standards::v_rfc4180::subsets::any::schema::mutations::{CsvMutation, patch_snapshot::PatchSnapshot};\nuse semio_s_artifact_stdio_contract::editing;",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "use crate::standards::v_rfc4180::subsets::any::schema::mutations::{CsvMutation, patch_snapshot::PatchSnapshot};\nuse semio_s_artifact_stdio_contract::editing;",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/💾️binary/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "use crate::standards::v_rfc8259::subsets::base::schema::mutations::{JsonMutation, patch_snapshot::PatchSnapshot};\nuse semio_s_artifact_stdio_contract::editing;",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "use crate::standards::v_rfc8259::subsets::base::schema::mutations::{JsonMutation, patch_snapshot::PatchSnapshot};\nuse semio_s_artifact_stdio_contract::editing;",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "crate::standards::v_rfc4180::subsets::any::io::binary::mutations::write_bin_record",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v_rfc4180::subsets::any::io::binary::mutations::read_bin_record",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "",
+          "expected": 1,
+          "actual": 13006,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "if parser.peek().is_some() {",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::",
+          "expected": 4,
+          "actual": 4,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance_controlled",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "    use crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance;",
+          "expected": 2,
+          "actual": 3,
+          "retained": true
+        },
+        {
+          "after": "#[path = \"📝️text/🦀️.rs\"]\npub mod text;\n\n#[path=\".\"]\npub mod sqlite {",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "",
+          "expected": 1,
+          "actual": 4747,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "use serde_json::{Map, Number, Value};\nuse crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::{exact_serde_value, ring_signed_area2, right_handed_ring};",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance",
+          "expected": 2,
+          "actual": 2,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-en1996-en1997-current-io-roster-compiler-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-en1996-en1997-current-io-roster-compiler-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "use crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl;",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-en1996-en1997-current-io-roster-compiler-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO",
+          "expected": 2,
+          "actual": 2,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH",
+          "expected": 2,
+          "actual": 2,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO",
+          "expected": 2,
+          "actual": 2,
+          "retained": true
+        },
+        {
+          "after": "crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH",
+          "expected": 2,
+          "actual": 2,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/📐️e/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/📐️e/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/⚕️h/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/⚕️h/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🖨️x/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🖨️x/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🧾️vt/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🧾️vt/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/♿️ua/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/♿️ua/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🗄️a/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🗄️a/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//4️⃣1.4/🪆️subsets/🖨️x/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//4️⃣1.4/🪆️subsets/🖨️x/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//4️⃣1.4/🪆️subsets/🗄️a/🚪️io/🦀️.rs",
+      "fullAfterExact": false,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    },
+    {
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//4️⃣1.4/🪆️subsets/🗄️a/🚪️io/🦀️.rs",
+      "fullAfterExact": true,
+      "pairs": [
+        {
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\")",
+          "expected": 1,
+          "actual": 1,
+          "retained": true
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "chronologicalRecords": 33,
+    "distinctPaths": 25,
+    "finalFullAfterExact": 25,
+    "allPairsRetained": true
+  },
+  "qualification": "Read-only preparation; no runtime qualification",
+  "finalPerPath": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/💾️binary/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-csv-json-current-canonical-compiler-glue-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "guard": "physical-resumed-en1996-en1997-current-io-roster-compiler-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs",
+      "guard": "physical-resumed-en1996-en1997-current-io-roster-compiler-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "guard": "physical-resumed-en1996-en1997-current-io-roster-compiler-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/📐️e/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/⚕️h/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🖨️x/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🧾️vt/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/♿️ua/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//7️⃣1.7/🪆️subsets/🗄️a/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//4️⃣1.4/🪆️subsets/🖨️x/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards//4️⃣1.4/🪆️subsets/🗄️a/🚪️io/🦀️.rs",
+      "guard": "physical-resumed-pdf-current-derived-test-includes-mounted-guards.json",
+      "fullAfterExact": true
+    }
+  ],
+  "intermediateRecords": "Eight PDF first records were superseded by later guarded records on the same path, not concurrent edits."
+}

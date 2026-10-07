@@ -5,11 +5,15 @@ use semio_framework_os_kernel::{
     sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
     ArtifactSqliteSnapshot,
 };
-use semio_s_artifact_stdio_xml::schema::snapshot::{sqlite::XmlSqliteTables, XmlSnapshot};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlSnapshot;
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::XmlSqliteTables;
 use semio_s_artifact_stdio_zip::opc::sqlite::OpcSqliteTables;
 
 #[path = "💰️backing/🦀️.rs"]
 mod backing;
+use crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native;
+#[path = "🛡️subset/🦀️.rs"]
+mod subset;
 
 const OPC: OpcSqliteTables =
     OpcSqliteTables { package: "xlsx_package", part: "xlsx_binary_part", default_type: "xlsx_default_content_type", override_type: "xlsx_override_content_type", relationship_owner: "xlsx_relationship_owner", relationship: "xlsx_relationship" };
@@ -60,28 +64,28 @@ impl Drop for Parts {
 }
 
 impl ArtifactSqliteSnapshot for XlsxSnapshot {
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.stdio.xlsx" || dialect.standard != "ecma-376" {
             return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "XLSX owned dialect belongs to another snapshot owner")));
         }
         match dialect.subset.as_str() {
             "*" => Ok(store::io_schema::IoOutcome::clean(())),
-            "strict" | "transitional" => crate::standards::v_ecma_376::subsets::base::schema::snapshot::subset::validate(self, &dialect.subset, control),
+            "strict" | "transitional" => subset::validate(self, &dialect.subset, control),
             _ => Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "XLSX owned subset has no declared semantic validator"))),
         }
     }
 
     fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
-        crate::standards::v_ecma_376::subsets::base::schema::snapshot::native::encode(self, encoding, control)
+        native::encode(self, encoding, control)
     }
 
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
-        crate::standards::v_ecma_376::subsets::base::schema::snapshot::native::decode(payload, control)
+        native::decode(payload, control)
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        crate::standards::v_ecma_376::subsets::base::schema::snapshot::native::preflight(self, encoding, control)
+        native::preflight(self, encoding, control)
     }
 
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");

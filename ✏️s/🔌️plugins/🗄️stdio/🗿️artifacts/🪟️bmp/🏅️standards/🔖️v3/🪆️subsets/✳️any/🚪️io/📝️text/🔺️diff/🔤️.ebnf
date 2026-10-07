@@ -1,26 +1,23 @@
-(* BmpDiff's wire text IS its JSON serialization (serde, camelCase), sparse fields per
-   🦀️.rs; this documents the real shape, not RFC 8259's JSON grammar. *)
-diff = "{", [ member, { ",", member } ], "}" ;
-member = '"headerSize"', ":", integer
-       | '"width"', ":", integer
-       | '"height"', ":", integer
-       | '"rowOrder"', ":", row order
-       | '"planes"', ":", integer
-       | '"bitsPerPixel"', ":", integer
-       | '"compression"', ":", integer
-       | '"imageSize"', ":", integer
-       | '"xPixelsPerMeter"', ":", integer
-       | '"yPixelsPerMeter"', ":", integer
-       | '"colorsUsed"', ":", integer
-       | '"colorsImportant"', ":", integer
-       | '"palette"', ":", palette diff
-       | '"pixels"', ":", "[", { integer }, "]" ;
-row order = '"bottomUp"' | '"topDown"' ;
-palette diff = "{", [ pmember, { ",", pmember } ], "}" ;
-pmember = '"removed"', ":", "[", { integer }, "]"
-        | '"modified"', ":", "[", { palette modified }, "]"
-        | '"added"', ":", "[", { palette added }, "]" ;
-palette modified = "{", '"index"', ":", integer, ",", '"entry"', ":", palette entry, "}" ;
-palette added = "{", '"index"', ":", integer, ",", '"entry"', ":", palette entry, "}" ;
-palette entry = "{", '"b"', ":", integer, ",", '"g"', ":", integer, ",",
-                '"r"', ":", integer, ",", '"reserved"', ":", integer, "}" ;
+(* 🧬️ Owned image record syntax. Whitespace separates tokens; semantic admission validates field cardinality and native precision. *)
+diff = [ image ] ;
+image = "image", "{", { image_field }, "}" ;
+image_field = integer_field | row_order_field | profile_field | masks_field | palette_field | bytes_field | pixels_block ;
+integer_field = ( "width" | "height" | "x-pixels-per-meter" | "y-pixels-per-meter" | "colors-used" | "colors-important" | "reserved-1" | "reserved-2" ), "=", INT ;
+row_order_field = "row-order", "=", ( "bottom-up" | "top-down" ) ;
+profile_field = "profile", "=", ( "indexed-rgb1" | "indexed-rgb4" | "indexed-rgb8" | "direct-rgb16" | "direct-rgb24" | "direct-rgb32" | "direct-bitfields16" | "direct-bitfields32" ) ;
+masks_field = "masks", "=", INT, ",", INT, ",", INT, ",", INT ;
+palette_field = "palette", "=", "[", { palette_record }, "]" ;
+palette_record = "{", "b", "=", INT, "g", "=", INT, "r", "=", INT, "reserved", "=", INT, "}" ;
+bytes_field = ( "opaque-gap" | "opaque-trailer" ), "=", "[", { INT }, "]" ;
+pixels_block = "pixels", "{", pixels, "}" ;
+pixels = "indexed", "indices", "=", "[", { INT }, "]" | "direct", "samples", "=", "[", { sample_record }, "]" ;
+sample_record = "{", "red", "=", INT, "green", "=", INT, "blue", "=", INT, "alpha", "=", INT, "reserved", "=", INT, "}" ;
+text = STRING | IDENT | INT | FLOAT ;
+INT = [ "-" ], digit, { digit } ;
+FLOAT = INT, ".", digit, { digit } ;
+IDENT = letter, { letter | digit | "_" | "." | "-" } ;
+STRING = "\"", { escaped_character | unescaped_character }, "\"" ;
+escaped_character = "\\", ? any Unicode scalar value ? ;
+unescaped_character = ? Unicode scalar value except quote and backslash ? ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+letter = ? ASCII letter or underscore ? ;

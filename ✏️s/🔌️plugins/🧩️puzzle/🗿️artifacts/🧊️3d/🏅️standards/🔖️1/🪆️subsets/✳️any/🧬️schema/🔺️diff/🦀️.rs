@@ -6,7 +6,7 @@ use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the puzzle3d artifact.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dDiff {
@@ -31,14 +31,14 @@ pub struct Puzzle3dDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dStringList {
     pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `objects`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dObjectsDelta {
     pub added: Vec<Puzzle3dObject>,
@@ -48,7 +48,7 @@ pub struct Puzzle3dObjectsDelta {
 }
 
 /// 🩹 One patched `Puzzle3dObject` entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dObjectPatchEntry {
     pub id: String,
@@ -56,14 +56,14 @@ pub struct Puzzle3dObjectPatchEntry {
 }
 
 /// 🩹 Sparse patch over `Puzzle3dObject` — whole-item replacement via `replacement`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dObjectPatch {
     pub replacement: Option<Puzzle3dObject>,
 }
 
 /// 🧩 Identified-collection delta for `attractions`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dAttractionsDelta {
     pub added: Vec<Puzzle3dAttraction>,
@@ -73,7 +73,7 @@ pub struct Puzzle3dAttractionsDelta {
 }
 
 /// 🩹 One patched `Puzzle3dAttraction` entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dAttractionPatchEntry {
     pub id: String,
@@ -81,14 +81,14 @@ pub struct Puzzle3dAttractionPatchEntry {
 }
 
 /// 🩹 Sparse patch over `Puzzle3dAttraction` — whole-item replacement via `replacement`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dAttractionPatch {
     pub replacement: Option<Puzzle3dAttraction>,
 }
 
 /// 🧩 Identified-collection delta for `targetVolumes`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dTargetVolumesDelta {
     pub added: Vec<Puzzle3dTargetVolume>,
@@ -98,7 +98,7 @@ pub struct Puzzle3dTargetVolumesDelta {
 }
 
 /// 🩹 One patched `Puzzle3dTargetVolume` entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dTargetVolumePatchEntry {
     pub id: String,
@@ -106,14 +106,14 @@ pub struct Puzzle3dTargetVolumePatchEntry {
 }
 
 /// 🩹 Sparse patch over `Puzzle3dTargetVolume` — whole-item replacement via `replacement`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dTargetVolumePatch {
     pub replacement: Option<Puzzle3dTargetVolume>,
 }
 
 /// 🧩 Identified-collection delta for `references`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dReferencesDelta {
     pub added: Vec<Puzzle3dReference>,
@@ -123,7 +123,7 @@ pub struct Puzzle3dReferencesDelta {
 }
 
 /// 🩹 One patched `Puzzle3dReference` entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dReferencePatchEntry {
     pub id: String,
@@ -131,7 +131,7 @@ pub struct Puzzle3dReferencePatchEntry {
 }
 
 /// 🩹 Sparse patch over `Puzzle3dReference` — whole-item replacement via `replacement`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dReferencePatch {
     pub replacement: Option<Puzzle3dReference>,

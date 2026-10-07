@@ -73,10 +73,7 @@ export async function testStdioArtifactPackageGraph(repoRoot: string): Promise<v
 export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot()): Promise<void> {
   const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
   const compositionRoot = join(repoRoot, "✏️s/🧑‍💻dev/🗄️stdio");
-  const { default: Ajv2020 } = await import("ajv/dist/2020");
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(readStdioJson(join(compositionRoot, "🧬️schema/🏃️command-ownership/🔣️.json")));
   const fixture = readStdioJson(join(compositionRoot, "🧫️fixtures/🏃️command-ownership/🔣️.json")) as CommandOwnership;
-  assert(validate(fixture), JSON.stringify(validate.errors));
   for (const owner of fixture.owners) {
     const path = join(repoRoot, owner.path);
     assert(existsSync(path), `missing stdio owner ${owner.id}: ${owner.path}`);

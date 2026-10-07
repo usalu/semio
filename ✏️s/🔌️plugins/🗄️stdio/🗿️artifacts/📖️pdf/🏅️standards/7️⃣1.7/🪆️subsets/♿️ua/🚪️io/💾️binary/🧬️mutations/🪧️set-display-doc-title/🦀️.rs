@@ -1,6 +1,6 @@
 //! 🪧️ Direct binary codec for `set-display-doc-title`.
 
-use super::SetDisplayDocTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetDisplayDocTitle;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 6;

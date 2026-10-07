@@ -5,6 +5,29 @@ const subset=root+'/🏅️standards/🔖️1/🪆️subsets/✳️any';
 const semantic=subset+'/🧬️schema/🔺️diff/🦀️.rs';
 const io=subset+'/🚪️io/📝️text/🔺️diff/🦀️.rs';
 const names={transform_json:'transform',fill_json:'fill',stroke_json:'stroke',trace_params_json:'trace_params',layer_json:'layer',transformJson:'transform',fillJson:'fill',strokeJson:'stroke',traceParamsJson:'traceParams',layerJson:'layer'};
+if(process.argv[2]==='restore-owners'){
+ const pure=new Set(['create_drawing_id','drawing_id_hex','create_drawing_path_layer','default_drawing_document','empty_drawing_snapshot']);
+ const changed:string[]=[];
+ for(const file of execFileSync('rg',['--files',root,'-g','*.rs'],{encoding:'utf8'}).trim().split('\n')){
+  const before=readFileSync(file,'utf8');
+  let source=before.replace(/(\b(?:\w+::)*any::)io::text::snapshot::(\{[^}]*\}|\w+)/gu,(match,prefix,members)=>{
+   const values=members.startsWith('{')?members.slice(1,-1).split(',').map((v:string)=>v.trim()).filter(Boolean):[members];
+   if(!values.some((v:string)=>pure.has(v)))return match;
+   if(!values.every((v:string)=>pure.has(v)))throw new Error('Mixed native/domain import needs explicit split: '+file);
+   return prefix+'schema::'+members;
+  });
+  source=source.replace(/(\b(?:\w+::)*any::)schema::mutations::(\{[^}]*\}|\w+)/gu,(match,prefix,members)=>{
+   const values=members.startsWith('{')?members.slice(1,-1).split(',').map((v:string)=>v.trim()).filter(Boolean):[members];
+   const native=new Set(['apply_drawing_mutation_json','undo_drawing_mutation_json']);
+   if(!values.some((v:string)=>native.has(v)))return match;
+   if(!values.every((v:string)=>native.has(v)))throw new Error('Mixed bridge/domain import needs explicit split: '+file);
+   return prefix+'io::text::mutations::'+members;
+  });
+  if(source!==before){writeFileSync(file,source);changed.push(file);}
+ }
+ writeFileSync('.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-I-O-BOUNDARIES-AND-MUTATION-SEPARATION/drawing-boundary-owner-files.md','# Drawing Boundary Owner Files\n\n'+changed.map(file=>'- '+file).join('\n')+'\n');
+ console.log('[DEBUG] Canonical Drawing domain/native owner consumers updated: '+changed.length);
+}
 if(process.argv[2]==='local-definitions'){
  const path=subset+'/🧬️schema/🔺️diff/🔣️.json',schema=JSON.parse(readFileSync(path,'utf8')),props=schema.$defs.DrawingLayerPatch.properties;
  const member=(directory:string,field:string)=>JSON.parse(readFileSync(subset.replace('/✳️any','')+'/'+directory+'/🧬️schema/🔣️.json','utf8')).properties[field];

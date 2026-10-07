@@ -29,7 +29,7 @@ pub use crate::snapshot::schema::{default_host_snapshot, default_snapshot, Seque
 /// capability row; `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any`
 /// location — i.e. the canonical surface id is `s.sequence.sequence@1/*#editor` /
 /// `s.sequence.sequence@1/*#viewer`, the contract §1 grammar.
-pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.sequence.sequence", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const SEQUENCE_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.sequence.sequence", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 //#endregion 🔖️Constants
 
 //#region 🔖️Domain
@@ -267,8 +267,8 @@ pub fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEd
     let snapshot = sequence_content_snapshot_from_working(steps, edges);
     let content_json = semio_framework_pack_json::to_json_string(&snapshot);
     let child_id = store::content_id("sequence-content", content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
@@ -414,7 +414,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// law to hold (mirrors the stdio pilot's own documented deviation, `📓️w2-p-report.md`).
 pub fn artifact<A: SequenceApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 

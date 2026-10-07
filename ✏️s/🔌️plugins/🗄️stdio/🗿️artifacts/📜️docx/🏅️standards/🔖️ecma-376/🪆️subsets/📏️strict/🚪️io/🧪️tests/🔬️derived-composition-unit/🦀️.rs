@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::schema::snapshot::DocxXmlPart;
-    use crate::standards::v_ecma_376::subsets::strict::schema::CODE_REL_BASE;
+    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::CODE_REL_BASE;
     use semio_framework_plugin::AnalyzeSource;
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
@@ -21,7 +21,7 @@ mod tests {
             vec![DocxXmlPart {
                 path: "word/document.xml".into(),
                 content_type: content_type.into(),
-                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#)).unwrap()).unwrap(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#)).unwrap()).unwrap(),
             }],
         ).expect("bounded test OPC converts to retained ownership")
     }
@@ -52,7 +52,7 @@ mod tests {
             vec![DocxXmlPart {
                 path: "word/document.xml".into(),
                 content_type: content_type.into(),
-                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
             }],
         ).expect("bounded test OPC converts to retained ownership");
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

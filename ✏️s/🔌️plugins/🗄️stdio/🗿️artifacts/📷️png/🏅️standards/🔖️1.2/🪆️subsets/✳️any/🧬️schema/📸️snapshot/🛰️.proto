@@ -1,7 +1,26 @@
 syntax = "proto3";
 package semio.s_stdio_png.snapshot;
 
-message PngSnapshot {
-  string schema = 1;
-  bytes bytes = 2;
+message PngSnapshot { string schema = 1; PngImage image = 2; }
+message PngImage {
+  uint32 width = 1; uint32 height = 2; uint32 bit_depth = 3; PngColorType color_type = 4; bool interlace = 5; repeated uint32 samples = 6;
+  PngPalette palette = 7; PngTransparency transparency = 8; optional uint32 gamma = 9; PngChromaticities chromaticities = 10;
+  optional PngSrgbIntent srgb = 11; PngPhysicalDims physical_dims = 12; PngTimestamp timestamp = 13; PngBackground background = 14;
+  repeated PngTextChunk text_chunks = 15; repeated PngAncillaryChunk ancillary_chunks = 16;
 }
+enum PngColorType { GRAYSCALE = 0; RGB = 1; PALETTE = 2; GRAYSCALE_ALPHA = 3; RGBA = 4; }
+enum PngSrgbIntent { PERCEPTUAL = 0; RELATIVE_COLORIMETRIC = 1; SATURATION = 2; ABSOLUTE_COLORIMETRIC = 3; }
+enum PngTextKind { TEXT = 0; Z_TEXT = 1; I_TEXT = 2; }
+message PngRgb { uint32 r = 1; uint32 g = 2; uint32 b = 3; }
+message PngPalette { repeated PngRgb entries = 1; }
+message PngAlpha { bytes alpha = 1; }
+message PngGray { uint32 gray = 1; }
+message PngRgb16 { uint32 r = 1; uint32 g = 2; uint32 b = 3; }
+message PngIndex { uint32 index = 1; }
+message PngTransparency { oneof color_type { PngAlpha indexed = 1; PngGray grayscale = 2; PngRgb16 rgb = 3; } }
+message PngChromaticities { uint32 white_x = 1; uint32 white_y = 2; uint32 red_x = 3; uint32 red_y = 4; uint32 green_x = 5; uint32 green_y = 6; uint32 blue_x = 7; uint32 blue_y = 8; }
+message PngPhysicalDims { uint32 ppu_x = 1; uint32 ppu_y = 2; bool unit_is_meter = 3; }
+message PngTimestamp { uint32 year = 1; uint32 month = 2; uint32 day = 3; uint32 hour = 4; uint32 minute = 5; uint32 second = 6; }
+message PngBackground { oneof color_type { PngIndex indexed = 1; PngGray grayscale = 2; PngRgb16 rgb = 3; } }
+message PngTextChunk { string keyword = 1; string value = 2; bool compressed = 3; PngTextKind kind = 4; string language_tag = 5; string translated_keyword = 6; }
+message PngAncillaryChunk { bytes kind = 1; bytes data = 2; bool after_raster = 3; }

@@ -1,3 +1,5 @@
 syntax = "proto3";
-package semio.s_stdio_png.artifact;
-message PngArtifact { string schema = 1; bytes bytes = 2; }
+package semio.s_stdio_png;
+import "s_stdio_png/snapshot.proto";
+
+message PngArtifact { string schema = 1; semio.s_stdio_png.snapshot.PngImage image = 2; }

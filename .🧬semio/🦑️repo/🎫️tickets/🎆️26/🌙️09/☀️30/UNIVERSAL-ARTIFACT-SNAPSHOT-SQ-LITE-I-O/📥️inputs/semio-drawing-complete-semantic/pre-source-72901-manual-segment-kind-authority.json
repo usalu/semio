@@ -1,0 +1,407 @@
+{
+  "scriptBefore": "import {Database} from 'bun:sqlite';\nimport assert from 'node:assert/strict';\nimport Ajv2020 from 'ajv/dist/2020';\nimport {parseBinary64,parseBinary32} from '../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts';\nconst root='✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/';\nconst sql=await Bun.file(root+'🗄️.sql').text(),metadata=await Bun.file('🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql').text();\nimport {parseSemioDrawingSnapshot} from '../../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts';\nconst view=new DataView(new ArrayBuffer(8));const w=(n:number)=>{view.setFloat64(0,n);return {bits:view.getBigUint64(0).toString(16).padStart(16,'0')}};const w32=(n:number)=>{view.setFloat32(0,n);return {bits:view.getUint32(0).toString(16).padStart(8,'0')}};const pt=(x:number,y:number)=>({x:w(x),y:w(y)});const a=pt(1,2),b=pt(3,4);const tr=()=>({translation:{x:w(0),y:w(0),z:w(0)},rotation:{x:w(0),y:w(0),z:w(0),w:w(1)},scale:{x:w(1),y:w(1),z:w(1)}});const canvas={width:w(1920.5),height:w(1080.25),background:{r:w32(.25),g:w32(.5),b:w32(.75),a:w32(1)}};const text='English Deutsch\\u0000文';const full={schema:'stdio.semio.drawing',canvas,styles:[{name:'',fill:{r:w32(0),g:w32(1),b:w32(.5),a:w32(0)},strokeWidth:w(0),opacity:w32(.5)}],layers:[{id:'layer-🗂',name:'',visible:true,root:{kind:'group',transform:tr(),children:[{kind:'path',style:'',segments:[{kind:'moveTo',to:a},{kind:'lineTo',to:b},{kind:'cubicTo',c1:a,c2:b,to:a},{kind:'quadTo',c:b,to:a},{kind:'arcTo',rx:w(2),ry:w(3),xRotation:w(-4),largeArc:true,sweep:false,to:b},{kind:'close'}]},{kind:'text',value:text,at:b,style:''},{kind:'image',at:a,width:w(0),height:w(-1),mime:'image/png',bytes:[0,255,127]},{kind:'group',transform:tr(),children:[]}]}},{id:'hidden',name:'hidden',visible:false,root:{kind:'text',value:'',at:a}}]};const empty={schema:full.schema,canvas,styles:[],layers:[]};\nfunction census(source:typeof full|typeof empty,encoding?:string){const db=new Database(':memory:');db.exec(sql);if(encoding)db.exec(metadata);const insert=(table:string,values:any[])=>db.query('INSERT INTO '+table+' VALUES ('+values.map(()=>'?').join(',')+')').run(...values);const ins=(n:string,v:any[])=>insert('semio_drawing_'+n,v);const r=(ns:(number|null)[],widths?:number[])=>ns.flatMap((n,i)=>{if(n===null)return [null,null];if(widths?.[i]===32){view.setFloat32(0,n);return [view.getUint32(0),'finite']}view.setFloat64(0,n);return [view.getBigInt64(0),'finite']});ins('document',[1,source.schema,1920.5,1080.25,.25,.5,.75,1,...r([1920.5,1080.25,.25,.5,.75,1],[64,64,32,32,32,32])]);if(source.layers.length){const style=[0,1,.5,0,null,null,null,null,0,.5];ins('style',[1,1,0,'',...style,...r(style,[32,32,32,32,32,32,32,32,64,32])]);['group','path','text','image','group','text'].forEach((k,i)=>ins('node',[i+1,k]));const tv=[0,0,0,0,0,0,1,1,1,1];ins('group',[1,...tv,...r(tv)]);ins('group',[5,...tv,...r(tv)]);for(let i=0;i<4;i++)ins('child',[i+1,1,i,i+2]);ins('path',[2,1]);const kinds=['moveTo','lineTo','cubicTo','quadTo','arcTo','close'];kinds.forEach((k,i)=>ins('segment',[i+1,2,i,k]));for(const [name,id,ns]of [['move',1,[1,2]],['line',2,[3,4]],['cubic',3,[1,2,3,4,1,2]],['quad',4,[3,4,1,2]]] as [string,number,number[]][])ins(name,[id,...ns,...r(ns)]);ins('arc',[5,2,3,-4,1,0,3,4,...r([2,3,-4,3,4])]);ins('close',[6]);ins('text',[3,text,3,4,1,...r([3,4])]);ins('image',[4,1,2,0,-1,'image/png',new Uint8Array([0,255,127]),...r([1,2,0,-1])]);ins('text',[6,'',1,2,null,...r([1,2])]);ins('layer',[1,1,0,'layer-🗂','',1,1]);ins('layer',[2,1,1,'hidden','hidden',0,6]);}\n if(encoding)insert('semio_snapshot',[1,'s.stdio.semio','v1','drawing',1,encoding]);\n assert.deepEqual(db.query('PRAGMA integrity_check').get(),{integrity_check:'ok'});assert.deepEqual(db.query('PRAGMA foreign_key_check').all(),[]);\n let rows=0,valueBytes=0,schemaBytes=0;const tableWidths:Record<string,number>={};\n for(const row of db.query(\"SELECT name,sql FROM sqlite_master WHERE type='table' ORDER BY name\").all() as {name:string,sql:string}[]){schemaBytes+=Buffer.byteLength(row.name)+Buffer.byteLength(row.sql);tableWidths[row.name]=db.query('PRAGMA table_info('+row.name+')').all().length;const cells=db.query('SELECT * FROM '+row.name).values();rows+=cells.length;for(const values of cells)for(const value of values)valueBytes+=value===null?0:typeof value==='string'?Buffer.byteLength(value):typeof value==='number'||typeof value==='bigint'?8:(value as Uint8Array).length;}\n db.close();return {rows,valueBytes,schemaBytes,tableWidths};\n}\nconst f=census(full),e=census(empty),fb=census(full,'binary'),ft=census(full,'text'),eb=census(empty,'binary'),et=census(empty,'text');assert.equal(Object.keys(f.tableWidths).length,16);assert.equal(Math.max(...Object.values(f.tableWidths)),34);assert.equal(fb.schemaBytes-f.schemaBytes,293);assert.equal(fb.valueBytes-f.valueBytes,44);assert.equal(ft.valueBytes-f.valueBytes,42);\nconst hydrate='const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value===\"object\"?(\"bits\"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt(\"0x\"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,key===\"bytes\"?new Uint8Array(item as number[]):hydrate(item)]))):value;Object.assign(source,hydrate(source))';\nconst spec=[{name:'drawing',cap:'Drawing',tables:16,maxColumns:34,contract:{schemaBytes:f.schemaBytes,tableWidths:f.tableWidths,cases:[{id:'full',sourceSnapshot:full,rows:f.rows,valueBytes:f.valueBytes},{id:'metadataRetainingEmpty',sourceSnapshot:empty,rows:e.rows,valueBytes:e.valueBytes}],publicIo:{schemaBytes:fb.schemaBytes,tableWidths:fb.tableWidths,cases:[{id:'full',rows:fb.rows,valueBytes:{binary:fb.valueBytes,text:ft.valueBytes}},{id:'metadataRetainingEmpty',rows:eb.rows,valueBytes:{binary:eb.valueBytes,text:et.valueBytes}}]}},rustBody:'let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.styles.clear();source.layers.clear();}source',hydrate}];\nlet words=0;const admit=(value:unknown):void=>{if(Array.isArray(value))value.forEach(admit);else if(value&&typeof value==='object'){if('bits'in value){String((value as any).bits).length<=10&&typeof (value as any).bits==='number'?parseBinary32(value):parseBinary64(value);words++;}else Object.values(value).forEach(admit);}};\nconst transpiler=new Bun.Transpiler({loader:'ts'});for(const item of spec[0].contract.cases){const source=structuredClone(item.sourceSnapshot);new Function('source',transpiler.transformSync(hydrate))(source);admit(source);parseSemioDrawingSnapshot(source);assert.equal(source.schema,'stdio.semio.drawing');}\nconst schema={$schema:'https://json-schema.org/draft/2020-12/schema',type:'object',properties:Object.fromEntries(Object.entries(spec[0].contract).map(([key,value])=>[key,{const:value}])),required:Object.keys(spec[0].contract),additionalProperties:false};assert.equal(new Ajv2020({strict:true}).compile(schema)(spec[0].contract),true);\nawait Bun.write(new URL('handcrafted-native-matched-demand-specifications.json',import.meta.url),JSON.stringify(spec,null,2)+'\\n');await Bun.write(new URL('handcrafted-native-matched-contract-schema.json',import.meta.url),JSON.stringify(schema,null,2)+'\\n');console.log(JSON.stringify({f,e,publicIo:spec[0].contract.publicIo,actualBinary64ParserWords:words}));\n",
+  "contractBefore": [
+    {
+      "name": "drawing",
+      "cap": "Drawing",
+      "tables": 16,
+      "maxColumns": 34,
+      "contract": {
+        "schemaBytes": 5913,
+        "tableWidths": {
+          "semio_drawing_arc": 18,
+          "semio_drawing_child": 4,
+          "semio_drawing_close": 1,
+          "semio_drawing_cubic": 19,
+          "semio_drawing_document": 20,
+          "semio_drawing_group": 31,
+          "semio_drawing_image": 15,
+          "semio_drawing_layer": 7,
+          "semio_drawing_line": 7,
+          "semio_drawing_move": 7,
+          "semio_drawing_node": 2,
+          "semio_drawing_path": 2,
+          "semio_drawing_quad": 13,
+          "semio_drawing_segment": 4,
+          "semio_drawing_style": 34,
+          "semio_drawing_text": 9
+        },
+        "cases": [
+          {
+            "id": "full",
+            "sourceSnapshot": {
+              "schema": "stdio.semio.drawing",
+              "canvas": {
+                "width": {
+                  "bits": "409e020000000000"
+                },
+                "height": {
+                  "bits": "4090e10000000000"
+                },
+                "background": {
+                  "r": {
+                    "bits": "3e800000"
+                  },
+                  "g": {
+                    "bits": "3f000000"
+                  },
+                  "b": {
+                    "bits": "3f400000"
+                  },
+                  "a": {
+                    "bits": "3f800000"
+                  }
+                }
+              },
+              "styles": [
+                {
+                  "name": "",
+                  "fill": {
+                    "r": {
+                      "bits": "00000000"
+                    },
+                    "g": {
+                      "bits": "3f800000"
+                    },
+                    "b": {
+                      "bits": "3f000000"
+                    },
+                    "a": {
+                      "bits": "00000000"
+                    }
+                  },
+                  "strokeWidth": {
+                    "bits": "0000000000000000"
+                  },
+                  "opacity": {
+                    "bits": "3f000000"
+                  }
+                }
+              ],
+              "layers": [
+                {
+                  "id": "layer-🗂",
+                  "name": "",
+                  "visible": true,
+                  "root": {
+                    "kind": "group",
+                    "transform": {
+                      "translation": {
+                        "x": {
+                          "bits": "0000000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        }
+                      },
+                      "rotation": {
+                        "x": {
+                          "bits": "0000000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        },
+                        "w": {
+                          "bits": "3ff0000000000000"
+                        }
+                      },
+                      "scale": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "z": {
+                          "bits": "3ff0000000000000"
+                        }
+                      }
+                    },
+                    "children": [
+                      {
+                        "kind": "path",
+                        "style": "",
+                        "segments": [
+                          {
+                            "kind": "moveTo",
+                            "to": {
+                              "x": {
+                                "bits": "3ff0000000000000"
+                              },
+                              "y": {
+                                "bits": "4000000000000000"
+                              }
+                            }
+                          },
+                          {
+                            "kind": "lineTo",
+                            "to": {
+                              "x": {
+                                "bits": "4008000000000000"
+                              },
+                              "y": {
+                                "bits": "4010000000000000"
+                              }
+                            }
+                          },
+                          {
+                            "kind": "cubicTo",
+                            "c1": {
+                              "x": {
+                                "bits": "3ff0000000000000"
+                              },
+                              "y": {
+                                "bits": "4000000000000000"
+                              }
+                            },
+                            "c2": {
+                              "x": {
+                                "bits": "4008000000000000"
+                              },
+                              "y": {
+                                "bits": "4010000000000000"
+                              }
+                            },
+                            "to": {
+                              "x": {
+                                "bits": "3ff0000000000000"
+                              },
+                              "y": {
+                                "bits": "4000000000000000"
+                              }
+                            }
+                          },
+                          {
+                            "kind": "quadTo",
+                            "c": {
+                              "x": {
+                                "bits": "4008000000000000"
+                              },
+                              "y": {
+                                "bits": "4010000000000000"
+                              }
+                            },
+                            "to": {
+                              "x": {
+                                "bits": "3ff0000000000000"
+                              },
+                              "y": {
+                                "bits": "4000000000000000"
+                              }
+                            }
+                          },
+                          {
+                            "kind": "arcTo",
+                            "rx": {
+                              "bits": "4000000000000000"
+                            },
+                            "ry": {
+                              "bits": "4008000000000000"
+                            },
+                            "xRotation": {
+                              "bits": "c010000000000000"
+                            },
+                            "largeArc": true,
+                            "sweep": false,
+                            "to": {
+                              "x": {
+                                "bits": "4008000000000000"
+                              },
+                              "y": {
+                                "bits": "4010000000000000"
+                              }
+                            }
+                          },
+                          {
+                            "kind": "close"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "text",
+                        "value": "English Deutsch\u0000文",
+                        "at": {
+                          "x": {
+                            "bits": "4008000000000000"
+                          },
+                          "y": {
+                            "bits": "4010000000000000"
+                          }
+                        },
+                        "style": ""
+                      },
+                      {
+                        "kind": "image",
+                        "at": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          }
+                        },
+                        "width": {
+                          "bits": "0000000000000000"
+                        },
+                        "height": {
+                          "bits": "bff0000000000000"
+                        },
+                        "mime": "image/png",
+                        "bytes": [
+                          0,
+                          255,
+                          127
+                        ]
+                      },
+                      {
+                        "kind": "group",
+                        "transform": {
+                          "translation": {
+                            "x": {
+                              "bits": "0000000000000000"
+                            },
+                            "y": {
+                              "bits": "0000000000000000"
+                            },
+                            "z": {
+                              "bits": "0000000000000000"
+                            }
+                          },
+                          "rotation": {
+                            "x": {
+                              "bits": "0000000000000000"
+                            },
+                            "y": {
+                              "bits": "0000000000000000"
+                            },
+                            "z": {
+                              "bits": "0000000000000000"
+                            },
+                            "w": {
+                              "bits": "3ff0000000000000"
+                            }
+                          },
+                          "scale": {
+                            "x": {
+                              "bits": "3ff0000000000000"
+                            },
+                            "y": {
+                              "bits": "3ff0000000000000"
+                            },
+                            "z": {
+                              "bits": "3ff0000000000000"
+                            }
+                          }
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "hidden",
+                  "name": "hidden",
+                  "visible": false,
+                  "root": {
+                    "kind": "text",
+                    "value": "",
+                    "at": {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "rows": 32,
+            "valueBytes": 1992
+          },
+          {
+            "id": "metadataRetainingEmpty",
+            "sourceSnapshot": {
+              "schema": "stdio.semio.drawing",
+              "canvas": {
+                "width": {
+                  "bits": "409e020000000000"
+                },
+                "height": {
+                  "bits": "4090e10000000000"
+                },
+                "background": {
+                  "r": {
+                    "bits": "3e800000"
+                  },
+                  "g": {
+                    "bits": "3f000000"
+                  },
+                  "b": {
+                    "bits": "3f400000"
+                  },
+                  "a": {
+                    "bits": "3f800000"
+                  }
+                }
+              },
+              "styles": [],
+              "layers": []
+            },
+            "rows": 1,
+            "valueBytes": 159
+          }
+        ],
+        "publicIo": {
+          "schemaBytes": 6206,
+          "tableWidths": {
+            "semio_drawing_arc": 18,
+            "semio_drawing_child": 4,
+            "semio_drawing_close": 1,
+            "semio_drawing_cubic": 19,
+            "semio_drawing_document": 20,
+            "semio_drawing_group": 31,
+            "semio_drawing_image": 15,
+            "semio_drawing_layer": 7,
+            "semio_drawing_line": 7,
+            "semio_drawing_move": 7,
+            "semio_drawing_node": 2,
+            "semio_drawing_path": 2,
+            "semio_drawing_quad": 13,
+            "semio_drawing_segment": 4,
+            "semio_drawing_style": 34,
+            "semio_drawing_text": 9,
+            "semio_snapshot": 6
+          },
+          "cases": [
+            {
+              "id": "full",
+              "rows": 33,
+              "valueBytes": {
+                "binary": 2036,
+                "text": 2034
+              }
+            },
+            {
+              "id": "metadataRetainingEmpty",
+              "rows": 2,
+              "valueBytes": {
+                "binary": 203,
+                "text": 201
+              }
+            }
+          ]
+        }
+      },
+      "rustBody": "let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.styles.clear();source.layers.clear();}source",
+      "hydrate": "const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value===\"object\"?(\"bits\"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt(\"0x\"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,key===\"bytes\"?new Uint8Array(item as number[]):hydrate(item)]))):value;Object.assign(source,hydrate(source))"
+    }
+  ]
+}

@@ -161,6 +161,26 @@ fn media_form_variants() -> Vec<(String, u32)> {
 }
 
 // 🚫️async: E4 fn-pointer slot — value goes into `dsl::Shape::Record(fn() -> RecordSpec)`.
+use semio_framework_dsl_record::{BorrowedFieldSpec,BorrowedShape};
+const fn workflow_borrowed_optional(mut field:BorrowedFieldSpec)->BorrowedFieldSpec{field.optional=true;field}
+/// 🫳️ Borrows the flattened handwritten workflow carrier metadata.
+macro_rules! workflow_borrowed_record {
+ ($owner:ty; $($field:expr),* $(,)?)=>{
+  impl semio_framework_dsl_record::BorrowedDslRecord for $owner{
+   const RECORD:semio_framework_dsl_record::BorrowedRecordSpec={
+    semio_framework_dsl_record::BorrowedRecordSpec{keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,fields:&[$($field),*]}
+   };
+  }
+  impl semio_framework_dsl_record::BorrowedDslField for $owner{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);}
+ };
+}
+workflow_borrowed_record!(MediaContract;
+ BorrowedFieldSpec::new(0,"kind_id",BorrowedShape::Text),BorrowedFieldSpec::new(1,"class",BorrowedShape::Enum(MEDIA_CLASS_LABELS)),BorrowedFieldSpec::new(2,"form",BorrowedShape::Enum(MEDIA_FORM_LABELS)),BorrowedFieldSpec::new(3,"wire_kind",BorrowedShape::Text),workflow_borrowed_optional(BorrowedFieldSpec::new(4,"wire_format",BorrowedShape::Text)),workflow_borrowed_optional(BorrowedFieldSpec::new(5,"wire_schema",BorrowedShape::Text)),workflow_borrowed_optional(BorrowedFieldSpec::new(6,"conversion_from",BorrowedShape::Enum(MEDIA_FORM_LABELS))),workflow_borrowed_optional(BorrowedFieldSpec::new(7,"conversion_to",BorrowedShape::Enum(MEDIA_FORM_LABELS))));
+workflow_borrowed_record!(WorkflowMediaPort;
+ BorrowedFieldSpec::new(0,"id",BorrowedShape::Text),BorrowedFieldSpec::new(1,"port_id",BorrowedShape::Text),BorrowedFieldSpec::new(2,"label",BorrowedShape::Text),BorrowedFieldSpec::new(3,"direction",BorrowedShape::Enum(MEDIA_DIRECTION_LABELS)),BorrowedFieldSpec::new(4,"class",BorrowedShape::Enum(MEDIA_CLASS_LABELS)),BorrowedFieldSpec::new(5,"form",BorrowedShape::Enum(MEDIA_FORM_LABELS)),workflow_borrowed_optional(BorrowedFieldSpec::new(6,"kind_id",BorrowedShape::Text)),BorrowedFieldSpec::new(7,"required",BorrowedShape::Bool),BorrowedFieldSpec::new(8,"multiplicity",BorrowedShape::Enum(MEDIA_MULTIPLICITY_LABELS)));
+workflow_borrowed_record!(WorkflowInput;
+ BorrowedFieldSpec::new(0,"id",BorrowedShape::Text),BorrowedFieldSpec::new(1,"kind_id",BorrowedShape::Text),BorrowedFieldSpec::new(2,"selector",BorrowedShape::Text),BorrowedFieldSpec::new(3,"required",BorrowedShape::Bool),BorrowedFieldSpec::new(4,"multiplicity",BorrowedShape::Enum(MEDIA_MULTIPLICITY_LABELS)));
+
 fn workflow_enum_shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{
     control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(semio_framework_dsl_record::Shape::Enum(values))})
 }

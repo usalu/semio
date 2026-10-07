@@ -115,16 +115,9 @@ impl Default for MdSnapshot {
 }
 
 impl MdSnapshot {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_text(text: &str) -> Self {
-        let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
-        Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
-    }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn to_text(&self) -> String {
-        crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks)
-    }
+
+
 }
 //#endregion 🔖️CommonMarkModel
 

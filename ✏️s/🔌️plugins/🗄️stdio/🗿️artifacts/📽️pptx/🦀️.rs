@@ -90,9 +90,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(standards::v_ecma_376::subsets::base::io::io_registry::entries())
         .subset_validators(pptx_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("strict") })
-        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("transitional") })
+        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("strict") })
+        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("transitional") })
         .try_build()
 }
 
@@ -125,28 +125,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.pptx",
                     extension: Some("pptx"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pptx"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.pptx.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pptx.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.pptx.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pptx.diff"),
@@ -157,8 +157,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pptx.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -167,8 +167,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pptx.spr"),
                 },
             ]
@@ -200,7 +200,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

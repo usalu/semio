@@ -1,13 +1,13 @@
 //! 🖼️ Image dimensions, frame pixel buffers, nullable ICC profiles and ordered metadata.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::image::schema::snapshot::{SemioImageSnapshot,SemioImageFrame,SemioImageMetadataEntry,SemioColorspace};
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageSnapshot,SemioImageFrame,SemioImageMetadataEntry,SemioColorspace};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer;
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits each Image sample and nullable ICC cell through the same owned or borrowed writer.
-fn visit_rows(snapshot:&SemioImageSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioImageSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_image_document",1,&[Cell::Text(&snapshot.schema),Cell::Integer(i64::from(snapshot.width)),Cell::Integer(i64::from(snapshot.height)),Cell::Text(colorspace(snapshot.colorspace)),Cell::Integer(i64::from(snapshot.bit_depth)),match &snapshot.icc{None=>Cell::Null,Some(value)=>Cell::Blob(value)}])?;
  for(ordinal,frame)in snapshot.frames.iter().enumerate(){
   let key=out.insert("semio_image_frame",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Integer(i64::from(frame.delay_ms))])?;
@@ -28,6 +28,7 @@ fn number(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|err
 fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio image row identity or columns"))}else{Ok(())}}
 fn colorspace(value:SemioColorspace)->&'static str{match value{SemioColorspace::Rgb=>"rgb",SemioColorspace::Rgba=>"rgba",SemioColorspace::Grayscale=>"grayscale",SemioColorspace::GrayscaleAlpha=>"grayscale_alpha",SemioColorspace::Indexed=>"indexed"}}
 impl ArtifactSqliteSnapshot for SemioImageSnapshot{
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::image::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}
 fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::image::io::sqlite::snapshot::native_decoding::decode(payload,control)}
 
@@ -101,7 +102,7 @@ fn identities(rows:&[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

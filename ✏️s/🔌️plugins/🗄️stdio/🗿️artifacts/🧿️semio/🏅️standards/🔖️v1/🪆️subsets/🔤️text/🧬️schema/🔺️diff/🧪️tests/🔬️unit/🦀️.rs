@@ -1,4 +1,4 @@
-use crate::text::io::text::diff::dec_mark_kind;
+use crate::standards::v1::subsets::text::io::text::diff::dec_mark_kind;
 use super::*;
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use protocol::{DiffBinary,DiffCodec,DiffText};

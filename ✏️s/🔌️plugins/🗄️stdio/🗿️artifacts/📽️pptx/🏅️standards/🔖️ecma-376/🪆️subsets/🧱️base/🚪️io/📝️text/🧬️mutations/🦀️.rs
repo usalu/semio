@@ -9,12 +9,19 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use crate::schema::diff::{diff_set_snapshot, PptxDiff};
-use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
+use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxTransform};
 use crate::PptxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use xml_address::{PptxShapeAddress, PptxSlideAddress, PptxXmlAddress, PptxXmlVacancyAddress};
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+struct PptxMutationRecord {
+    kind: String,
+    value: semio_framework_value::DslValue,
+    snapshot: Option<PptxSnapshotRecord>,
+}
 
 impl OpText for PptxMutation {
     fn print_op(&self) -> String {
@@ -42,3 +49,5 @@ impl OpText for PptxMutation {
 }
 }
 pub use mutations_codec::*;
+
+use crate::standards::v_ecma_376::subsets::base::io::text::snapshot::PptxSnapshotRecord;

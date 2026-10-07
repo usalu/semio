@@ -3,6 +3,49 @@ mod app_builder_tests {
     use semio_framework_ui_locale::LocalizedLabel;
     use ui_wgpu::wgpu::create_default_layout;
 
+    /// 🧭️ Executes neutral owner placements through the actual action disposition join and independent serde projection.
+    #[semio_framework_async_macros::async_test]
+    async fn shared_framework_action_descriptor_owner_laws_execute_production_join() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json"))).expect("plain neutral descriptor laws");
+        let base = App::builder(canonical_test_app_id("shared-actions").await, LocalizedLabel::data("Shared actions")).await.document(["semio", "shared-actions"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), "shared.main", SurfaceKind::Canvas2d, IconName::AppWindow).await.default_layout(create_default_layout(&["main".into()], "row", None, None)).await.build_definition();
+        let laws = fixture["descriptorLaws"].as_array().expect("descriptor laws");
+        for law in laws {
+            let mut definition = base.clone();
+            definition.actions.clear();
+            definition.commands.clear();
+            for window in definition.window_kinds.iter_mut() { window.actions.clear(); }
+            for mode in definition.modes.iter_mut() { mode.commands.clear(); }
+            let initial = if law["initial"] == "migrated" { InteractiveJobClassification::Migrated } else { InteractiveJobClassification::Unclassified };
+            for id in law["actionIds"].as_array().expect("action ids") {
+                let id = id.as_str().expect("exact action id");
+                match law["ownerKind"].as_str().expect("owner kind") {
+                    "appAction" | "windowAction" => {
+                        let mut action = ActionDefinition::new_catalog(id, LocalizedLabel::data(id), ActionKind::View);
+                        action.semantics.execution.interactive_job = initial;
+                        if law["ownerKind"] == "appAction" { definition.actions.push(action); } else { definition.window_kinds.iter_mut().next().expect("window owner").actions.push(action); }
+                    }
+                    "appCommand" | "modeCommand" => {
+                        let mut command = CommandDefinition::new_catalog(id, LocalizedLabel::data(id), "test", ActionKind::View);
+                        command.semantics.execution.interactive_job = initial;
+                        if law["ownerKind"] == "appCommand" { definition.commands.push(command); } else { definition.modes.iter_mut().next().expect("mode owner").commands.push(command); }
+                    }
+                    other => panic!("unknown owner kind {other}"),
+                }
+            }
+            super::join_framework_shared_action_dispositions(&mut definition);
+            let rows = match law["ownerKind"].as_str().expect("owner kind") {
+                "appAction" => serde_json::to_value(&definition.actions),
+                "windowAction" => serde_json::to_value(&definition.window_kinds.iter().next().expect("window owner").actions),
+                "appCommand" => serde_json::to_value(&definition.commands),
+                "modeCommand" => serde_json::to_value(&definition.modes.iter().next().expect("mode owner").commands),
+                other => panic!("unknown owner kind {other}"),
+            }.expect("independent descriptor projection");
+            let expected = if law["expected"] == "migrated" { "migrated" } else { "unclassified" };
+            for row in rows.as_array().expect("descriptor rows") { assert_eq!(row["semantics"]["execution"]["interactiveJob"], expected, "{} {}", law["id"], row["id"]); }
+        }
+        eprintln!("[DEBUG] Actual shared action disposition join matches {} neutral owner laws", laws.len());
+    }
+
     /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
     /// not a hand-written pre-migration string. One shared helper rather than one dialect per test.
     async fn canonical_test_app_id(slug: &str) -> String {

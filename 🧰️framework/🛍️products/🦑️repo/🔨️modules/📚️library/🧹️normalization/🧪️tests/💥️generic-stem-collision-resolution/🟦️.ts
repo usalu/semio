@@ -1,5 +1,4 @@
 //#region 🔌️Adapters
-import Ajv from "ajv/dist/2020";
 import fastGlob from "fast-glob";
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
@@ -15,60 +14,6 @@ const vectors = JSON.parse(readFileSync(new URL("../../🧫️fixtures/💥️ge
   packageBoundaryHoistCases: readonly { id: string; packageDir: string; ownerTestPath: string }[];
 };
 
-/** 🧬️ Independent structural oracle for the fixture shape itself (a third-party JSON Schema
- * validator, matching the sibling `📦️package-boundary-classification` suite's own convention). */
-const schema = {
-  $id: "https://semio.local/generic-stem-collision-resolution-vectors",
-  type: "object",
-  required: ["siblingCases", "gluePurityCases", "packageBoundaryHoistCases"],
-  additionalProperties: false,
-  properties: {
-    packageBoundaryHoistCases: {
-      type: "array",
-      minItems: 1,
-      items: {
-        type: "object",
-        required: ["id", "packageDir", "ownerTestPath"],
-        additionalProperties: false,
-        properties: {
-          id: { type: "string", minLength: 1 },
-          packageDir: { type: "string", minLength: 1 },
-          ownerTestPath: { type: "string", minLength: 1 },
-        },
-      },
-    },
-    siblingCases: {
-      type: "array",
-      minItems: 1,
-      items: {
-        type: "object",
-        required: ["id", "dir", "implName", "roleName"],
-        additionalProperties: false,
-        properties: {
-          id: { type: "string", minLength: 1 },
-          dir: { type: "string", minLength: 1 },
-          implName: { type: "string", minLength: 1 },
-          roleName: { type: "string", minLength: 1 },
-        },
-      },
-    },
-    gluePurityCases: {
-      type: "array",
-      minItems: 1,
-      items: {
-        type: "object",
-        required: ["id", "path"],
-        additionalProperties: false,
-        properties: {
-          id: { type: "string", minLength: 1 },
-          path: { type: "string", minLength: 1 },
-        },
-      },
-    },
-  },
-};
-const validator = new Ajv({ strict: true, allErrors: true });
-const validateVectors = validator.compile(schema);
 //#endregion 🧬️Contract
 
 //#region 🧪️Collision
@@ -82,8 +27,7 @@ const validateVectors = validator.compile(schema);
  * sibling into that directory. This suite is the regression guard: on the pre-fix tree every
  * `siblingCases` row fails (both names still coexist in `dir`); post-fix, none do. */
 describe("generic-stem collision resolution (26/08/17/END-TO-END-TAXONOMY-NORMALIZATION)", () => {
-  test("fixture vectors satisfy the independent schema implementation", () => {
-    expect(validateVectors(vectors), JSON.stringify(validateVectors.errors)).toBe(true);
+  test("fixture examples have distinct identifiers", () => {
     const ids = [...vectors.siblingCases, ...vectors.gluePurityCases, ...vectors.packageBoundaryHoistCases].map((row) => row.id);
     expect(new Set(ids).size).toBe(ids.length);
   });

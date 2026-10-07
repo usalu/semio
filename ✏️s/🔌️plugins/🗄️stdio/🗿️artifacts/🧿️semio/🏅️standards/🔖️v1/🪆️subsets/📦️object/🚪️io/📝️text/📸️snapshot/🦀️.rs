@@ -39,15 +39,15 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+pub(crate) fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
     format!("[{},{},{},{}]",enc_str(&r.artifact_id),enc_str(&r.dialect.artifact_kind),enc_str(&r.dialect.standard),enc_str(&r.dialect.subset))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    let parts=crate::standards::v1::subsets::base::schema::triples::split_top_level(crate::standards::v1::subsets::base::schema::triples::strip_brackets(s)?,',');
+pub(crate) fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
+    let parts=crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)?,',');
     let[id,kind,standard,subset]=parts.as_slice()else{return Err("reference requires four literal fields".into())};
-    Ok(store::os_io::ArtifactRef{artifact_id:dec_str(id)?,dialect:store::os_io::ArtifactDialect{artifact_kind:dec_str(kind)?,standard:dec_str(standard)?,subset:dec_str(subset)?}})
+    Ok(semio_framework_artifact_reference::ArtifactRef{artifact_id:dec_str(id)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:dec_str(kind)?,standard:dec_str(standard)?,subset:dec_str(subset)?}})
 }
 
 /// 🪪️ One literal child identity and four literal reference fields.
@@ -58,7 +58,7 @@ pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let parts = crate::standards::v1::subsets::base::schema::triples::split_top_level(crate::standards::v1::subsets::base::schema::triples::strip_brackets(s)?, ',');
+    let parts = crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
@@ -87,7 +87,7 @@ pub(crate) fn enc_transform(t: &SemioTransform) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
-    let parts = crate::standards::v1::subsets::base::schema::triples::split_top_level(crate::standards::v1::subsets::base::schema::triples::strip_brackets(s)?, ',');
+    let parts = crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)?, ',');
     let [tx, ty, tz, rx, ry, rz, rw, sx, sy, sz] = parts.as_slice() else {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };

@@ -2,7 +2,7 @@
 //! document instead of standing inside it.
 
 use super::*;
-use crate::schema::scene_internals::grid_instances_json;
+use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::grid_instances_json;
 
 #[test]
 fn the_window_kind_is_a_world3d_surface_bound_to_its_own_interaction_domain() {

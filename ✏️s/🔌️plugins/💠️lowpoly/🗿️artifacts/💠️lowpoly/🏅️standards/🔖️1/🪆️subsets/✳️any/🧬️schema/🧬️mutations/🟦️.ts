@@ -5,7 +5,7 @@ import type{LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
  * Untagged-by-variant-name on the wire (`serde`'s default externally-tagged enum representation —
  * `{ "MoveObject": { … } }`, confirmed against the committed `🧪️tests/…/🦠️mutation/🔣️.json`
  * fixtures across every mutation family), never a `{ mutation, payload }` envelope. */
-import type { ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type { LowpolyObject, LowpolyPaintLayer } from "../🟦️.ts";
 
 /** One contiguous run of RGBA bytes written into a paint-layer pixel buffer at `offset`. */

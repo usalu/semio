@@ -13,7 +13,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/puzzle-2d",
     environment: "node",
-    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "../../🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts"],
+    include: ["🧪️tests/🧪️transform-gesture/🟦️.ts", "🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "../../🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts"],
     passWithNoTests: false,
   },
 });

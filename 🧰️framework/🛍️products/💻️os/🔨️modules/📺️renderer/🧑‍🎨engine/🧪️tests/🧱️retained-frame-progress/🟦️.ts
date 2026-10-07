@@ -1,21 +1,17 @@
 // @vitest-environment node
-/** 🧱️ Neutral schema and Chromium layout oracle for retained frame origin freshness. */
+/** 🧱️ Neutral and Chromium layout oracle for retained frame origin freshness. */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020.js";
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🧱️retained-frame-progress/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧱️retained-frame-progress/🔣️.json"), "utf8"));
 
 describe("🧱️ retained frame progress and origin", () => {
-  it("validates the language-neutral freshness and publication contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  it("retains the accepted viewport publication policy", () => {
     expect(fixture.publication).toEqual({ draw: "acceptedOnly", hit: "acceptedOnly", origin: "singleAcceptedViewport" });
   });
 

@@ -1,4 +1,4 @@
-use super::super::SetLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetLang;
 use super::*;
 
 #[test]

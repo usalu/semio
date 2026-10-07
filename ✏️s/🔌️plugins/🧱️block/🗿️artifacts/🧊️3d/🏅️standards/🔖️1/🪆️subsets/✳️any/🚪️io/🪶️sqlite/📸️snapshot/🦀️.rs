@@ -391,7 +391,7 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
         let object_kind = kind(rows.one(1, doc.rowid)?, c)?;
         let mut v = Cursor::new(rows.one(2, doc.rowid)?, 2, c);
         let child_id = v.text()?;
-        let target = store::os_io::ArtifactRef { artifact_id: v.text()?, dialect: store::os_io::ArtifactDialect { artifact_kind: v.text()?, standard: v.text()?, subset: v.text()? } };
+        let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: v.text()?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: v.text()?, standard: v.text()?, subset: v.text()? } };
         v.done()?;
         catalog_dialect(&target.dialect.artifact_kind,&target.dialect.standard,&target.dialect.subset)?;
         let catalog = store::ArtifactChild::new(child_id, target);
@@ -443,7 +443,7 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
         rows.finish(c)?;
         Ok(Self { schema, object_kind, representations, catalog, vortex_kind_extra, vortices, compatibility: rules, attributes, authors, camera3d, meta })
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.block.block3d" || dialect.standard != "1" || dialect.subset != "*" {
             return Err(store::io_schema::IoError::from_value_error(invalid("Block3d declared dialect differs")));

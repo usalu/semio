@@ -23,6 +23,11 @@ fn every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips
         let by_serde: HistoryPatch = serde_json::from_value(json.clone()).unwrap_or_else(|error| panic!("{id}: serde refused a valid patch: {error}"));
         let by_value = value_decode(&json).unwrap_or_else(|error| panic!("{id}: FromValue refused a valid patch: {error}"));
         assert_eq!(by_serde, by_value, "{id}: serde and value decode differently");
+        for section in ["timeTravel", "reprojection"] {
+            if let Some(processed) = json[section]["processed"].as_u64() {
+                assert_eq!(serde_json::to_value(&by_serde).expect("wire encodes")[section]["processed"], processed, "{id}: {section} preserves cumulative semantic work");
+            }
+        }
         let reserialized: HistoryPatch = serde_json::from_value(serde_json::to_value(&by_serde).expect("serde encodes")).expect("serde decodes its own encoding");
         assert_eq!(reserialized, by_serde, "{id}: serde round trip");
         let revalued = <HistoryPatch as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&by_value)).expect("value decodes its own encoding");

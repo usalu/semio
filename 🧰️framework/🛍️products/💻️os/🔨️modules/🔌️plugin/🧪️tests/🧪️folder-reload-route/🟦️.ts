@@ -1,12 +1,10 @@
 /** 📁️ TypeScript twin of the folder reload route law (`🧪️tests/🧪️folder-reload-route/🦀️.rs`), checked against the
- * language-agnostic fixture `🧫️fixtures/🧫️folder-reload-route/🔣️.json`. Independent where it counts: Ajv (2020-12)
- * validates the fixture against its schema, and every expectation is derived here from the fixture's steps alone with
+ * language-agnostic fixture `🧫️fixtures/🧫️folder-reload-route/🔣️.json`. Independent where it counts: every expectation is derived here from the fixture's steps alone with
  * this file's own fold of the count-and-label document — an unscoped history edit holds on every line, a scoped one only
  * on its alternative, a mutation that changes nothing warns, and finalizing as a new alternative moves only its author. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
 
 type Edit = Readonly<{ kind: "setCount"; value: number }> | Readonly<{ kind: "setLabel"; value: string }>;
 type Head = Readonly<{ count: number; label: string }>;
@@ -28,8 +26,42 @@ type Fold = Readonly<{ head: Head; superseded: readonly number[]; unchanged: rea
 
 const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️folder-reload-route";
 
+/** 🌐️ A history row names both explicit locales. */
+function assertLabel(label: unknown): void {
+  assert.ok(label !== null && typeof label === "object", "a history row is an object");
+  for (const locale of ["en", "de"] as const) assert.ok(typeof (label as Partial<Label>)[locale] === "string" && (label as Label)[locale].length > 0, `a history row names ${locale}`);
+}
+
+/** 🧮️ A document head carries its count and label. */
+function assertHead(head: unknown): void {
+  assert.ok(head !== null && typeof head === "object", "a head is an object");
+  const value = head as Partial<Head>;
+  assert.ok(Number.isInteger(value.count) && typeof value.label === "string", "a head names its integer count and its label");
+}
+
+/** 🔀️ A read-back merge answers its taken and ahead event counts. */
+function assertMerge(merge: unknown): void {
+  assert.ok(merge !== null && typeof merge === "object", "a merge is an object");
+  const value = merge as Partial<Merge>;
+  assert.ok(Number.isInteger(value.merged) && value.merged! >= 0 && Number.isInteger(value.ahead) && value.ahead! >= 0, "a merge answers its taken and ahead counts");
+}
+
+/** ✏️ Document edits carry a typed value. */
+function assertEdit(edit: Edit): void {
+  if (edit.kind === "setCount") assert.ok(Number.isInteger(edit.value), "a count edit carries an integer");
+  else assert.ok(edit.kind === "setLabel" && typeof edit.value === "string", "a label edit carries text");
+}
+
+/** ✅️ A finalize selects an overwrite or a named alternative. */
+function assertCommit(commit: unknown): asserts commit is { choice?: "overwrite"; name?: string } {
+  assert.ok(commit !== null && typeof commit === "object", "a finalize selects a choice");
+  const value = commit as { choice?: unknown; name?: unknown };
+  assert.ok((value.choice === "overwrite" && value.name === undefined) || (value.choice === undefined && typeof value.name === "string" && value.name.length > 0), "a finalize is an overwrite or a named alternative, never both");
+}
+
 /** ✏️ One edit applied to a head. */
 function applyEdit(head: Head, edit: Edit): Head {
+  assertEdit(edit);
   return edit.kind === "setCount" ? { ...head, count: edit.value } : { ...head, label: edit.value };
 }
 
@@ -62,9 +94,11 @@ export function walkAuthor(steps: readonly Step[]): Readonly<{ edits: readonly E
   const alternatives: string[] = [];
   let draft: { target: number; replacement: Edit } | null = null;
   for (const step of steps) {
+    assert.equal(Object.keys(step).length, 1, "a step names exactly one verb");
     const [name, argument] = Object.entries(step)[0]!;
     if (name === "edit") {
       assert.equal(draft, null, "a document edit is frozen while the history is edited");
+      assertEdit(argument as Edit);
       edits.push(argument as Edit);
     } else if (name === "begin") {
       const target = argument as number;
@@ -75,7 +109,9 @@ export function walkAuthor(steps: readonly Step[]): Readonly<{ edits: readonly E
       draft = { target: draft.target, replacement: { ...draft.replacement, value: (argument as { value: unknown }).value } as Edit };
     } else if (name === "commit") {
       assert.ok(draft !== null, "a commit finalizes an open session");
-      const scope = (argument as { name?: string }).name ?? null;
+      assertCommit(argument);
+      assertEdit(draft.replacement);
+      const scope = argument.name ?? null;
       if (scope !== null) alternatives.push(scope);
       supersessions.push({ ...draft, scope });
       draft = null;
@@ -131,19 +167,20 @@ export function deriveTwoPeers(scenario: TwoPeers): TwoPeers["expected"] {
   };
 }
 
-/** ⚖️ Validates the fixture, rejects hostile rows and derives the expectation through the twin; answers the step count. */
+/** ⚖️ Rejects hostile domain records and derives the expectation through the twin; answers the step count. */
 export function folderReloadRouteOracle(repoRoot: string): number {
   const fixture: Fixture = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🧬️schema/🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
-  assert.equal(validate({ ...fixture, steps: [{ commit: { choice: "overwrite", name: "Both" } }] }), false, "a finalize is an overwrite or a named alternative, never both");
-  assert.equal(validate({ ...fixture, steps: [{ edit: { kind: "setCount", value: "seven" } }] }), false, "a count edit carries an integer");
-  assert.equal(validate({ ...fixture, expected: { ...fixture.expected, reader: { ...fixture.expected.reader, head: { count: 9 } } } }), false, "a head names its count and its label");
-  assert.equal(validate({ ...fixture, expected: { ...fixture.expected, author: { ...fixture.expected.author, historyRows: [{ en: "History edited" }] } } }), false, "a history row is labelled in English and German");
+  assert.throws(() => assertCommit({ choice: "overwrite", name: "Both" }), /never both/);
+  assert.throws(() => assertEdit({ kind: "setCount", value: "seven" } as unknown as Edit), /integer/);
+  assert.throws(() => assertHead({ count: 9 }), /count and its label/);
+  assert.throws(() => assertLabel({ en: "History edited" }), /names de/);
+  assert.throws(() => assertMerge({ merged: 1 }), /taken and ahead/);
+  for (const head of [fixture.expected.author.head, fixture.expected.author.afterReload, fixture.expected.reader.head, fixture.twoPeers.expected.settled.head]) assertHead(head);
+  for (const row of [...fixture.expected.author.historyRows, ...fixture.twoPeers.expected.settled.historyRows]) assertLabel(row);
+  assertMerge(fixture.twoPeers.expected.authorMerge);
+  assertMerge(fixture.twoPeers.expected.peerMerge);
   assert.deepEqual(deriveFolderReload(fixture), fixture.expected);
   assert.notDeepEqual(fixture.expected.author.head, fixture.expected.reader.head, "the two programs view different lines, so a reload that lost a viewed alternative is visible in the head");
-  assert.equal(validate({ ...fixture, twoPeers: { ...fixture.twoPeers, expected: { ...fixture.twoPeers.expected, authorMerge: { merged: 1 } } } }), false, "a merge answers what it took and what the reader is ahead by");
   assert.deepEqual(deriveTwoPeers(fixture.twoPeers), fixture.twoPeers.expected);
   assert.notEqual(fixture.twoPeers.expected.previewBody, `count=${fixture.twoPeers.expected.settled.head.count} label=${fixture.twoPeers.expected.settled.head.label}`, "the preview while editing differs from the settled head, so a read-back that replaced the session's document is visible");
   return fixture.steps.length + fixture.twoPeers.author.length + fixture.twoPeers.session.length + fixture.twoPeers.finish.length;

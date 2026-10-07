@@ -141,6 +141,9 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
         render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts)
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
+    if surface == FRAMEWORK_PANEL_TAB_HISTORY_ID {
+        shell.register_retained_panel_scroll_region(surface, body, &mut input);
+    }
     shell.register_retained_body_hits(surface, body, &mut input);
     shell.world3d_states = world3d_states;
     shell.publish_retained_hit_registry(&mut input);
@@ -155,7 +158,7 @@ fn close_retained_body(surface: &str, documents: Vec<UiDocumentLease>) {
         }
     }
     for mut document in documents {
-        while !document.close_step() {}
+        while !document.close_read_step_with_grant(1, 4096).expect("the law releases its captured document reader").complete {}
     }
 }
 //#endregion 🧰️Harness
@@ -201,13 +204,13 @@ fn the_shared_band_corpus_holds_on_wgpu() {
 }
 
 /// ⚖️ LAW: the band's live node speaks exactly the painted message as ONE polite status in every stage — its role never
-/// flips — busy while the runtime replays or finalizes; a replay with a known total adds its own progress bar under it,
+/// flips — busy while the runtime replays or finalizes; preparation or replay with a known total adds its own progress bar under it,
 /// named and valued by the progress line; no session announces nothing.
 #[test]
 fn the_band_announces_its_message_politely() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(shell.time_travel_status_accessibility_node(1).is_none(), "no session, nothing announced");
-    for (name, replaying, busy) in [("editing a mutation", false, false), ("a running replay", true, true), ("an error downstream", false, false), ("finalizing offers", false, true)] {
+    for (name, progress_expected, busy) in [("editing a mutation", false, false), ("editing prepares a history preview with visible localized progress", true, false), ("a running replay", true, true), ("an error downstream", false, false), ("finalizing offers", false, true)] {
         let status = session(name);
         shell.locale_id = "de".into();
         shell.observe_history_time_travel(Some(&status));
@@ -217,14 +220,14 @@ fn the_band_announces_its_message_politely() {
         assert_eq!(node.label, Some(lines.message()), "{name}");
         assert_eq!(node.live, ui_contract::liveness_name(ui_contract::Liveness::Polite));
         let progress = shell.time_travel_progress_accessibility_node(2);
-        assert_eq!(progress.is_some(), replaying, "{name}: a progress bar only while a replay with a known total runs");
+        assert_eq!(progress.is_some(), progress_expected, "{name}: a progress bar while preparation or replay with a known total runs");
         if let Some(progress) = progress {
-            assert_eq!((progress.key.as_str(), progress.role.as_str(), progress.depth, progress.value_min, progress.value_now, progress.value_max), (TIME_TRAVEL_BAND_PROGRESS_ID, "progressbar", 1, Some(0.0), Some(3.0), Some(8.0)), "{name}");
+            assert_eq!((progress.key.as_str(), progress.role.as_str(), progress.depth, progress.value_min, progress.value_now, progress.value_max), (TIME_TRAVEL_BAND_PROGRESS_ID, "progressbar", 1, Some(0.0), Some(f64::from(status.done.unwrap_or(0))), status.total.map(f64::from)), "{name}");
             assert_eq!((progress.label.clone(), progress.value_text.clone()), (lines.progress.clone(), lines.progress.clone()), "{name}: named and valued by the progress line");
             assert_eq!(progress.live, ui_contract::liveness_name(ui_contract::Liveness::Off), "{name}: the status is the one live region");
         }
         let keys: Vec<String> = shell.band_accessibility_nodes(1).into_iter().map(|node| node.key).collect();
-        assert_eq!(keys, if replaying { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string(), TIME_TRAVEL_BAND_PROGRESS_ID.to_string()] } else { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string()] }, "{name}: the progress follows its status");
+        assert_eq!(keys, if progress_expected { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string(), TIME_TRAVEL_BAND_PROGRESS_ID.to_string()] } else { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string()] }, "{name}: the progress follows its status");
     }
     shell.observe_history_time_travel(None);
     assert!(shell.history_time_travel().is_none(), "an absent status closes the session");
@@ -1405,7 +1408,7 @@ fn a_chrome_dialog_paints_each_editor_accessibly_and_answers_the_pointer() {
     let mut request = ChromeDialogRequest::from_definition("test", &kinds_dialog(), None, Terminology::Native, Locale::De);
     request.use_selection(6, &selection());
     let theme = Theme::light();
-    let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme);
+    let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme, &mut FontAtlas::builtin());
     let semantics = |key: &str| {
         ops.iter()
             .find_map(|op| match op {
@@ -1448,18 +1451,40 @@ fn a_chrome_dialog_paints_each_editor_accessibly_and_answers_the_pointer() {
 const HISTORY_BODY_OPERATIONS: u32 = 120;
 const HISTORY_BODY_PROJECTED: u32 = 3;
 
-/// 🧱️ A guest `BuiltNode` flattened, by ownership, into pre-order retained records (parents before children) — the
-/// records the plugin runtime publishes for it.
-fn built_records(node: ui_contract::BuiltNode, records: &mut Vec<ui_contract::UiNodeRecord>) -> ui_contract::UiNodeId {
-    let ui_contract::BuiltNode { key, component, layout, style, activity, disabled, accessibility, bindings, menu, children, .. } = node;
-    let id = ui_contract::UiNodeId(records.len() as u64 + 1);
-    let slot = records.len();
-    records.push(ui_contract::UiNodeRecord { id, key, component, layout, style, activity, disabled, transition: None, accessibility, bindings, menu, children: ui_contract::UiNodeChildren::default() });
-    for child in children {
-        let child = built_records(child, records);
-        records[slot].children.try_push(child).expect("the history body's children fit one document");
+/// 🧱️ Publishes the guest producer through the same bounded, parent/key reconciler as its runtime.
+fn publish_history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconciler>, built: ui_contract::BuiltNode, generation: u64) -> UiDocumentLease {
+    use semio_framework_ui_runtime::{ComponentTree, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconciler};
+    let surface = SurfaceId::try_from(FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("History surface");
+    let mut job = SurfaceReconcileJob::try_new(current.take().unwrap_or_else(|| SurfaceReconciler::new(surface)), ComponentTree { root: built }, generation).expect("history producer admission");
+    let mut sequence = 0;
+    for _ in 0..100_000 {
+        let mut context = semio_framework_job::StepContext::new(
+            semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(generation),
+            semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(),
+            semio_framework_job::default_now_us, &mut sequence,
+        );
+        match job.drive_one(&mut context) {
+            SurfaceReconcileJobStep::Ready => break,
+            SurfaceReconcileJobStep::Fault => panic!("history producer refused: {:?}", job.fault()),
+            SurfaceReconcileJobStep::MoreWork => {}
+        }
     }
-    id
+    let mut patch = None;
+    assert_eq!(job.take_ready_into(current, &mut patch, SurfaceReconcileJob::required_ready_transfer_bytes()), Ok(true), "history producer completes within its bound");
+    if let Some(mut patch) = patch { while !patch.close_step() {} }
+    let mut terminal = job.into_terminal();
+    while !terminal.close_step() {}
+    let mut document = None;
+    assert_eq!(current.as_ref().expect("published reconciler").capture_document(&mut document, usize::MAX), Ok(true));
+    document.expect("canonical history document")
+}
+
+/// 🧹️ Retires the fixture publisher after its renderer and document readers release their roots.
+fn close_history_producer(current: &mut Option<semio_framework_ui_runtime::SurfaceReconciler>) {
+    if let Some(current) = current.take() {
+        let mut terminal = semio_framework_ui_runtime::SurfaceReconcileTerminal::try_from_reconciler(current, 1000).expect("publisher close admission");
+        while !terminal.close_step() {}
+    }
 }
 
 /// ✏️ Operation `index` of the drag transaction, editable.
@@ -1524,7 +1549,7 @@ fn list_editor_panel() -> TimeTravelPanel {
 /// [`HISTORY_BODY_OPERATIONS`] operations ([`HISTORY_BODY_PROJECTED`] projected), the host's window `(offset, rows)` over that
 /// row with the store's page past the projection, the session `panel` when a history edit is open, and the history step
 /// still replaying (`reprojection`).
-fn history_body(window: Option<(u32, u32)>, panel: Option<TimeTravelPanel>, reprojection: Option<HistoryReprojection>, locale: Locale, generation: u64) -> UiDocumentLease {
+fn history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconciler>, window: Option<(u32, u32)>, panel: Option<TimeTravelPanel>, reprojection: Option<HistoryReprojection>, locale: Locale, generation: u64) -> UiDocumentLease {
     let history = HistoryView {
         commands: vec![CommandView {
             seq: 1,
@@ -1556,10 +1581,15 @@ fn history_body(window: Option<(u32, u32)>, panel: Option<TimeTravelPanel>, repr
         view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
     }
     let built = semio_framework_async::block_on(ui_history_panel(&history, panel.as_ref(), reprojection.as_ref(), &pages, "s.test.history", locale, false, false, &view)).expect("the guest's history body assembles");
-    let mut records = Vec::new();
-    let root = built_records(built, &mut records);
-    let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(generation), root: Some(root), layout_epoch: 0 };
-    UiDocumentLease::try_publish(SurfaceId::try_from(FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("the History panel surface"), identity, records).expect("the guest's history body publishes")
+    let viewport: Value = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🧫️fixtures/history-panel-command-window/🔣️.json")).expect("the neutral history viewport fixture");
+    assert_eq!(serde_json::to_value(&built.layout).expect("history viewport layout"), viewport["rootLayout"]);
+    publish_history_body(current, built, generation)
+}
+
+/// 🔑️ Reads the canonical identity a retained document assigns to an authored key.
+fn history_document_node_id(document: &UiDocumentLease, key: &str) -> ui_contract::UiNodeId {
+    let read = document.try_read().expect("history document read");
+    (0..read.len()).find_map(|ordinal| read.node_at(ordinal).filter(|record| record.key.as_str() == key).map(|record| record.id)).expect("history document contains key")
 }
 
 /// ♿️ The History surface's mirror node whose key names `key`.
@@ -1587,7 +1617,7 @@ fn wheel_history_window_into_view(shell: &mut ShellState, surface: &str, documen
         assert!(shell.handle_pointer_wheel(x, y, 0.0, row_h * 3.0, &mut input), "the History body owns the wheel");
         input = paint_retained_body(shell, surface, document, body);
     }
-    panic!("`{wanted}` never scrolled into the History body");
+    panic!("`{wanted}` never scrolled into the History body: windows={:?} shown={:?}", crate::interpreter::tree_window_measures(surface), history_mirror_mutations());
 }
 
 /// 🖱️ Activates one History mirror node the way the ARIA mirror's click does; answers what it dispatched.
@@ -1609,11 +1639,12 @@ fn activate_history_mirror_node(shell: &mut ShellState, key: &str) -> Vec<Action
 /// description) and activating it or its row begins nothing; with Begin allowed the same button begins an edit of its mutation.
 #[test]
 fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
+    let mut producer = None;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 640.0);
     let row = "framework.history.entry.1";
     let mut shell = session_shell();
-    let mut documents = vec![history_body(None, None, None, Locale::En, 1)];
+    let mut documents = vec![history_body(&mut producer, None, None, None, Locale::En, 1)];
     let _ = paint_retained_body(&mut shell, surface, &documents[0], body);
     let closed = history_mirror_node(row).expect("the transaction row is in the mirror");
     assert_eq!(closed.expanded, Some(false), "a closed row of {HISTORY_BODY_OPERATIONS} operations announces it folds open, never a leaf: {closed:?}");
@@ -1628,14 +1659,15 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     let asked = requests.iter().find(|request| request.body_key == ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
     assert!(asked.open == Some(true) && asked.rows > HISTORY_BODY_PROJECTED, "the request opens the row over more than its projection: {asked:?}");
 
-    documents.push(history_body(Some((asked.offset, asked.rows)), None, None, Locale::En, 2));
+    documents.push(history_body(&mut producer, Some((asked.offset, asked.rows)), None, None, Locale::En, 2));
     let _ = paint_retained_body(&mut shell, surface, &documents[1], body);
     let shown = history_mirror_mutations();
     assert!(shown.len() > HISTORY_BODY_PROJECTED as usize, "the answered window renders past the projected mutations, paged from the store: {shown:?}");
     assert_eq!(shown, (0..shown.len() as u32).map(|index| format!("m-{index}")).collect::<Vec<_>>(), "in op order from the first");
 
     for (generation, locale, edit_word, reason) in [(3, Locale::En, "Edit", "Not possible right now"), (4, Locale::De, "Bearbeiten", "Derzeit nicht möglich")] {
-        documents.push(history_body(Some((100, 8)), Some(replaying_panel()), None, locale, generation));
+        documents.push(history_body(&mut producer, Some((100, 8)), Some(replaying_panel()), None, locale, generation));
+        assert_eq!(history_document_node_id(documents.last().expect("published"), row), history_document_node_id(&documents[1], row), "an inserted editor retains the opened transaction's canonical identity");
         wheel_history_window_into_view(&mut shell, surface, documents.last().expect("published"), body, "m-100");
         assert_eq!(history_mirror_mutations(), (100..108).map(|index| format!("m-{index}")).collect::<Vec<_>>(), "{locale:?}: the scrolled window shows exactly the operations it asked for");
         for index in 100..108 {
@@ -1648,13 +1680,15 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
         assert!(!begun.iter().any(|action| action.action == semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID), "{locale:?}: neither the refused Edit nor its row begins an edit: {begun:?}");
     }
 
-    documents.push(history_body(Some((100, 8)), None, None, Locale::En, 5));
+    documents.push(history_body(&mut producer, Some((100, 8)), None, None, Locale::En, 5));
     wheel_history_window_into_view(&mut shell, surface, documents.last().expect("published"), body, "m-100");
     let edit = history_mirror_node("framework.history.mutation.m-100::row-action::0").expect("m-100's Edit is in the mirror");
     assert!(!edit.disabled && edit.actionable && edit.label.as_deref().is_some_and(|label| label.starts_with("Edit:")), "Begin allowed: Edit is an enabled button: {edit:?}");
     let begun = activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0");
     assert_eq!(begun.iter().map(|action| (action.action.as_str(), args_of(action)["mutationId"].clone())).collect::<Vec<_>>(), [(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, serde_json::json!("m-100"))], "and begins an edit of its own mutation");
     close_retained_body(surface, documents);
+    close_history_producer(&mut producer);
+    eprintln!("[DEBUG] WGPU history paging: closed/opened windows, EN/DE refused actions, enabled target dispatch, and exact reader/producer retirement verified");
 }
 
 /// ⚖️ LAW (gap N2 on wgpu, through the guest's REAL producer and the ARIA mirror): a full list's "Add item" is a disabled
@@ -1664,6 +1698,7 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
 /// the disabled controls dispatch nothing.
 #[test]
 fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
+    let mut producer = None;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 900.0);
     let mut shell = session_shell();
@@ -1672,7 +1707,7 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
         (1, Locale::En, "Add item", "Items: 2 · Maximum 2 items", "Remove item", "Minimum 2 items", ["Remove Corner", "Remove n2"]),
         (2, Locale::De, "Element hinzufügen", "Elemente: 2 · Höchstens 2 Einträge", "Element entfernen", "Mindestens 2 Einträge", ["Entfernen Ecke", "Entfernen n2"]),
     ] {
-        documents.push(history_body(None, Some(list_editor_panel()), None, locale, generation));
+        documents.push(history_body(&mut producer, None, Some(list_editor_panel()), None, locale, generation));
         let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
         let node = |key: &str| history_mirror_node(key).unwrap_or_else(|| panic!("{locale:?}: `{key}` is in the mirror"));
         let add_button = node("framework.history.editor.input.points.add");
@@ -1696,6 +1731,7 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
         );
     }
     close_retained_body(surface, documents);
+    close_history_producer(&mut producer);
 }
 
 /// ⚖️ LAW (gap N17 + the stepped document load on wgpu, the REAL producer): a history change replaying is the body's
@@ -1706,12 +1742,13 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
 /// German.
 #[test]
 fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror() {
+    let mut producer = None;
     use semio_framework::kernel::HistoryReprojectionKind as Kind;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 640.0);
     let mut shell = session_shell();
     let mut documents = Vec::new();
-    let replaying = |kind: Kind| HistoryReprojection { done: 12, total: 400, kind, paused: false, fault: None };
+    let replaying = |kind: Kind| HistoryReprojection { done: 12, total: 400, processed: None, kind, paused: false, fault: None };
     let cases = [
         (Locale::En, Kind::Step, "History step", "Replaying history: 12 of 400 mutations", "Cancel replay"),
         (Locale::De, Kind::Step, "Verlaufsschritt", "Verlauf wird neu angewendet: 12 von 400 Mutationen", "Neuanwendung abbrechen"),
@@ -1719,7 +1756,7 @@ fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_t
         (Locale::De, Kind::Load, "Dokument laden", "Dokument wird geladen: 12 von 400", "Neuanwendung abbrechen"),
     ];
     for (generation, (locale, kind, title, progress, cancel)) in (1..).zip(cases) {
-        documents.push(history_body(None, None, Some(replaying(kind)), locale, generation));
+        documents.push(history_body(&mut producer, None, None, Some(replaying(kind)), locale, generation));
         let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
         let node = |key: &str| history_mirror_node(key).unwrap_or_else(|| panic!("{locale:?} {kind:?}: `{key}` is in the mirror"));
         assert_eq!(node("framework.history.reprojection").label.as_deref(), Some(title), "{locale:?} {kind:?}: the section names what replays");
@@ -1730,13 +1767,14 @@ fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_t
         assert_eq!(sent.iter().map(|action| (action.action.as_str(), args_of(action).get("generation").cloned())).collect::<Vec<_>>(), [(semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, None)], "{locale:?} {kind:?}: it cancels, addressing no session");
     }
     for (generation, locale, refusal) in [(10, Locale::En, "History step refused: "), (11, Locale::De, "Verlaufsschritt abgelehnt: ")] {
-        documents.push(history_body(None, None, Some(HistoryReprojection { done: 0, total: 0, kind: Kind::Step, paused: false, fault: Some("timeTravel.blocked".into()) }), locale, generation));
+        documents.push(history_body(&mut producer, None, None, Some(HistoryReprojection { done: 0, total: 0, processed: None, kind: Kind::Step, paused: false, fault: Some("timeTravel.blocked".into()) }), locale, generation));
         let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
         let status = history_mirror_node("framework.history.reprojection.status").and_then(|node| node.label).unwrap_or_default();
         assert!(status.starts_with(refusal) && status.len() > refusal.len(), "{locale:?}: a refused step names its reason: {status:?}");
         assert!(history_mirror_node("framework.history.reprojection.cancelReplay").is_none(), "{locale:?}: a refused step offers no control");
     }
     close_retained_body(surface, documents);
+    close_history_producer(&mut producer);
 }
 
 /// ⚖️ LAW (probe readiness, `verify time-travel --renderer wgpu` `scrollHistory`): a panel's retained body registers its whole
@@ -1745,15 +1783,12 @@ fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_t
 /// owner.
 #[test]
 fn a_panel_body_is_one_scroll_region_under_its_rows() {
+    let mut producer = None;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 640.0);
     let mut shell = session_shell();
-    let documents = vec![history_body(None, None, None, Locale::En, 1)];
-    let _ = paint_retained_body(&mut shell, surface, &documents[0], body);
-    let mut input = InputState::<ActionDescriptor>::default();
-    shell.register_retained_panel_scroll_region(surface, body, &mut input);
-    shell.register_retained_body_hits(surface, body, &mut input);
-    shell.publish_retained_hit_registry(&mut input);
+    let documents = vec![history_body(&mut producer, None, None, None, Locale::En, 1)];
+    let mut input = paint_retained_body(&mut shell, surface, &documents[0], body);
     let region = format!("{surface}.scroll");
     let hits = input.hits().to_vec();
     let index = hits.iter().position(|hit| hit.control_id.as_deref() == Some(region.as_str())).expect("the panel's scroll region is registered");
@@ -1764,6 +1799,7 @@ fn a_panel_body_is_one_scroll_region_under_its_rows() {
     assert_eq!(input.hit_at(gap.0, gap.1).and_then(|hit| hit.control_id.clone()).as_deref(), Some(region.as_str()), "the gap below the rows is the region");
     assert!(shell.handle_pointer_wheel(gap.0, gap.1, 0.0, 40.0, &mut input), "a wheel over the gap scrolls the body");
     close_retained_body(surface, documents);
+    close_history_producer(&mut producer);
 }
 //#endregion 📚️HistoryBody
 
@@ -1834,7 +1870,7 @@ fn every_history_reprojection_is_announced_outside_the_history_panel() {
         }
     }
     shell.locale_id = "en".into();
-    shell.observe_history_reprojection(Some(&HistoryReprojection { done: 3, total: 12, kind: semio_framework::kernel::HistoryReprojectionKind::Step, paused: false, fault: None }));
+    shell.observe_history_reprojection(Some(&HistoryReprojection { done: 3, total: 12, processed: None, kind: semio_framework::kernel::HistoryReprojectionKind::Step, paused: false, fault: None }));
     let editing = session("editing a mutation");
     shell.observe_history_time_travel(Some(&editing));
     let session_band = shell.time_travel_band_plan_for(&editing, &theme).band;

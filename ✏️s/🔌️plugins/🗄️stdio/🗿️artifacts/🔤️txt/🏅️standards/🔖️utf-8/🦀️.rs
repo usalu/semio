@@ -10,7 +10,7 @@ use crate::standards::v_utf_8::subsets;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 #[cfg(feature = "component-app-assembly")]
-use semio_framework_plugin::StandardId;
+use {semio_framework_artifact_reference::StandardId};
 
 /// 🌳️ `standard "utf-8"`'s complete declaration — one subset, `any`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -1237,7 +1237,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -1758,7 +1769,18 @@
             "value": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -1914,7 +1936,18 @@
               "const": "set"
             },
             "value": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [

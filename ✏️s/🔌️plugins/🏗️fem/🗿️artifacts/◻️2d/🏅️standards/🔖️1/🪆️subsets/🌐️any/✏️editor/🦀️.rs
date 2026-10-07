@@ -305,7 +305,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
             return Err(Fault::from("fem2d-retained-work-repeated"));
         }
         self.consumed = true;
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
         let selected = fem2d_interaction_selection_ids(interaction);
         match command {
             Fem2dCommand::TranslateSelection(payload) => crate::editor::fem2d::commands::gumball::gumball_step("translateSelection", Fem2dGumballMotion::Translate { dx: payload.dx, dy: payload.dy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),

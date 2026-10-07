@@ -16,6 +16,9 @@ pub mod ordered_map;
 pub mod paged;
 #[path = "📋️paged-list/🦀️.rs"]
 pub mod paged_list;
+#[path = "📋️field/🦀️.rs"]
+mod field;
+pub use field::RetainedFieldCursor;
 
 static RETAINED_CLONE_SOURCE_IDS: AtomicU64 = AtomicU64::new(1);
 
@@ -42,6 +45,9 @@ impl<T: Send + Sync + 'static> RetainedCloneSource<T> {
         let source_alias: Box<dyn Any + Send + Sync> = Box::new(Arc::clone(&owner));
         Self { owner, lease: Arc::new(RetainedCloneLeaseOwner { id: RETAINED_CLONE_SOURCE_IDS.fetch_add(1, Ordering::Relaxed), _source_alias: source_alias, _authority: Box::new(authority) }) }
     }
+
+    /// 📦️ Releases the source lease and transfers its immutable owner after child cursors close.
+    pub fn into_owner(self) -> Arc<T> { self.owner }
 
     pub fn borrow(&self) -> RetainedCloneRef<'_, T> {
         RetainedCloneRef { value: self.owner.as_ref(), lease: &self.lease, projection: RetainedCloneProjection { parent: self.owner.as_ref() as *const T as usize, address: self.owner.as_ref() as *const T as usize, discriminator: 0 } }
@@ -100,8 +106,35 @@ pub struct RetainedCloneBinding {
     projection: RetainedCloneProjection,
 }
 
+impl RetainedCloneBinding {
+    /// 🧷️ Releases one alias while the external source authority remains retained.
+    pub fn close_one(binding: &mut Option<Self>, maximum_items: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
+        let Some(owner) = binding.as_ref() else { return Ok(SnapshotRetirementStep::Complete); };
+        if maximum_items == 0 { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if Arc::strong_count(&owner.lease) <= 1 {
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained source authority must remain alive through binding close"));
+        }
+        *binding = None;
+        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    }
+}
+
 fn retained_clone_exclusive_lease() -> Arc<RetainedCloneLeaseOwner> {
     Arc::new(RetainedCloneLeaseOwner { id: RETAINED_CLONE_SOURCE_IDS.fetch_add(1, Ordering::Relaxed), _source_alias: Box::new(()), _authority: Box::new(()) })
+}
+
+/// 🧷️ Binds borrowed fields to one externally retained immutable operation authority.
+/// The caller retains the source owner until its cursors have reached terminal-empty closure.
+pub struct RetainedCloneBorrowAuthority { lease: Arc<RetainedCloneLeaseOwner> }
+
+impl RetainedCloneBorrowAuthority {
+    pub fn new<A: Any + Send + Sync>(authority: A) -> Self {
+        Self { lease: Arc::new(RetainedCloneLeaseOwner { id: RETAINED_CLONE_SOURCE_IDS.fetch_add(1, Ordering::Relaxed), _source_alias: Box::new(()), _authority: Box::new(authority) }) }
+    }
+
+    pub fn borrow<'source, T: ?Sized>(&'source self, source: &'source T) -> RetainedCloneRef<'source, T> {
+        RetainedCloneRef { value: source, lease: &self.lease, projection: RetainedCloneProjection { parent: source as *const T as *const () as usize, address: source as *const T as *const () as usize, discriminator: 0 } }
+    }
 }
 
 fn retained_clone_exclusive_ref<'a, T: ?Sized>(value: &'a T, lease: &'a Arc<RetainedCloneLeaseOwner>, discriminator: usize) -> RetainedCloneRef<'a, T> {
@@ -115,6 +148,18 @@ pub struct RetainedCloneGrant {
     pub maximum_copy_bytes: usize,
     pub maximum_capacity_bytes: usize,
     pub maximum_depth: usize,
+}
+
+impl RetainedCloneGrant {
+    /// 🎟️ Admits one structural allocation while reserving no payload-copy credit.
+    pub fn one_capacity_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
+        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: maximum_bytes, maximum_depth }
+    }
+
+    /// 🎟️ Admits one payload turn while reserving no allocation-capacity credit.
+    pub fn one_payload_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
+        Self { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_depth }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -154,6 +199,7 @@ pub fn admit_retained_clone_retirement(step: SnapshotRetirementStep, maximum_ite
 /// ♻️ Admits scaffold release while refusing a grant that cannot make observable progress.
 pub fn admit_retained_clone_scaffold_retirement(step: SnapshotRetirementStep, maximum_items: usize, maximum_bytes: usize, scope: &str) -> Result<SnapshotRetirementStep, crate::ValueError> {
     match admit_retained_clone_retirement(step, maximum_items, maximum_bytes, scope)? {
+        SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } | SnapshotRetirementStep::Blocked if maximum_bytes == 0 => Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
         SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } | SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, format!("{scope} cannot progress under its retained clone scaffold-release grant"))),
         step => Ok(step),
     }

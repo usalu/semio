@@ -27,13 +27,27 @@ pub mod results_window_config {
         #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/🦀️.rs"]
         mod component;
         pub use component::*;
-        #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-        mod binary;
         #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🦀️.rs"]
         pub mod change_selected_check_index;
-        #[path = "../../🪟️results/🎚️config/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-        mod text;
     }
+    #[path = "."]
+    pub mod io {
+        #[path = "."]
+        pub mod binary {
+            #[path = "../../🪟️results/🎚️config/🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+            pub mod snapshot;
+            #[path = "../../🪟️results/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+            pub mod mutations;
+        }
+        #[path = "."]
+        pub mod text {
+            #[path = "../../🪟️results/🎚️config/🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+            pub mod snapshot;
+            #[path = "../../🪟️results/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+            pub mod mutations;
+        }
+    }
+
 }
 
 #[path = "🖥️app-surface/🦀️.rs"]

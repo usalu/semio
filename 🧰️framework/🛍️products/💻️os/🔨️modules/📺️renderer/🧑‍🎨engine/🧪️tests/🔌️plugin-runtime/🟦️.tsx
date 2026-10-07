@@ -1781,7 +1781,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const { decodeAppCommand } = await import("@semio-tech/framework-os");
         const { readFile } = await import("node:fs/promises");
         const { URL: FileURL } = await import("node:url");
-        const fixture = JSON.parse(await readFile(new FileURL("../../../../../🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🔣️.json", source.url), "utf8"));
+        const fixture = JSON.parse(await readFile(new FileURL("../../../../../🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🎬️media-export-wire/🔣️.json", source.url), "utf8"));
         const authority = { app_instance_id: fixture.handle.appInstanceId, parent_document_id: fixture.handle.parentDocumentId, operation_id: BigInt(fixture.handle.operationId), base_revision: BigInt(fixture.handle.baseRevision), generation: BigInt(fixture.handle.generation) };
         const status = { handle: authority, state: "running" as const, applied_progress: 2n, checkpoint_available: true, mime_type: "audio/mpeg", total_bytes: 3n, detail: "" };
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();

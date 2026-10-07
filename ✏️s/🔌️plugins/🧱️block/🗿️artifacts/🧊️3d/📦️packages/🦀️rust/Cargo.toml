@@ -20,6 +20,7 @@ default = []
 component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-s-plugin-block-catalog = { path = "../../../../🗂️catalog/📦️packages/🦀️rust" }
 semio-s-plugin-block = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

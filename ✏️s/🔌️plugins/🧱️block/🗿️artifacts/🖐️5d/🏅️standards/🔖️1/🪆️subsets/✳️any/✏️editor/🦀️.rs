@@ -569,7 +569,7 @@ impl ArtifactEditor for Block5dPlayApp {
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::standards::v1::subsets::any::schema::inferences::puzzle5d_catalog_fragment(doc.snapshot);
+        let fragment = crate::standards::v1::subsets::any::io::puzzle_catalog::puzzle5d_catalog_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }

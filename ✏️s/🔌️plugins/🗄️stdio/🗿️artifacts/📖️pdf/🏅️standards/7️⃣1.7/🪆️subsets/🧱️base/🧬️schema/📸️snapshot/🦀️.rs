@@ -17,7 +17,7 @@
 
 use framework_schema::ArtifactSchema;
 use std::fmt;
-use super::text as snapshot_text;
+
 #[path="🌱️value/🧬️octets/🦀️.rs"]
 pub(crate) mod octets;
 
@@ -229,6 +229,8 @@ pub enum PdfObject {
     Int(i64),
     Real(PdfDecimal),
     Str(Vec<u8>),
+    Text(String),
+    Date(PdfDate),
     Name(String),
     Array(Vec<PdfObject>),
     Dict(Vec<PdfDictEntry>),
@@ -346,13 +348,13 @@ pub const PDF_IDENTITY_MATRIX: PdfMatrix = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 
 //#region 🔖️Content
 /// 🔤️ A string operand of a text-showing operator. `Text` is Unicode recovered through the
-/// selected font's encoding (and written back through it); `Codes` are the raw character codes
-/// whenever the font cannot map them to Unicode and back, so nothing is fabricated (§9.4.3).
+/// selected font's encoding (and written back through it); `Codes` are logical unsigned character codes
+/// whenever the font cannot map them to Unicode and back (§9.4.3). Native byte grouping belongs to I/O and its application font binding.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextString {
     Text { text: String },
-    Codes { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] bytes: Vec<u8> },
+    Codes { codes: Vec<u32> },
 }
 
 impl PdfTextString {
@@ -368,7 +370,7 @@ impl PdfTextString {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextArrayItem {
     Text { text: String },
-    Codes { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] bytes: Vec<u8> },
+    Codes { codes: Vec<u32> },
     Adjust { amount: f64 },
 }
 
@@ -1626,41 +1628,6 @@ impl PdfDate {
     fn one() -> u32 {
         1
     }
-    /// 📅 Parses `D:YYYYMMDDHHmmSSOHH'mm'` (every field after the year optional).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn parse(text: &str) -> Option<Self> {
-        let body = text.strip_prefix("D:").unwrap_or(text);
-        let digits = |from: usize, len: usize| body.get(from..from + len).filter(|s| s.len() == len && s.bytes().all(|b| b.is_ascii_digit())).and_then(|s| s.parse::<u32>().ok());
-        let year = digits(0, 4)? as i32;
-        let month = digits(4, 2).unwrap_or(1).clamp(1, 12);
-        let day = digits(6, 2).unwrap_or(1).clamp(1, 31);
-        let hour = digits(8, 2).unwrap_or(0).min(23);
-        let minute = digits(10, 2).unwrap_or(0).min(59);
-        let second = digits(12, 2).unwrap_or(0).min(59);
-        let marker = body.bytes().position(|b| !b.is_ascii_digit()).unwrap_or(body.len()).min(14);
-        let offset_minutes = match body.as_bytes().get(marker) {
-            Some(b'Z') => Some(0),
-            Some(sign @ (b'+' | b'-')) => {
-                let hours = digits(marker + 1, 2).unwrap_or(0) as i32;
-                let minutes = digits(marker + 4, 2).unwrap_or(0) as i32;
-                let total = hours * 60 + minutes;
-                Some(if *sign == b'-' { -total } else { total })
-            }
-            _ => None,
-        };
-        Some(Self { year, month, day, hour, minute, second, offset_minutes })
-    }
-}
-
-impl fmt::Display for PdfDate {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "D:{:04}{:02}{:02}{:02}{:02}{:02}", self.year, self.month, self.day, self.hour, self.minute, self.second)?;
-        match self.offset_minutes {
-            Some(0) => formatter.write_str("Z"),
-            Some(offset) => write!(formatter, "{}{:02}'{:02}'", if offset < 0 { '-' } else { '+' }, offset.abs() / 60, offset.abs() % 60),
-            None => Ok(()),
-        }
-    }
 }
 
 /// 📇️ Document `/Info` dictionary (§14.3.3, Table 317).
@@ -2292,29 +2259,9 @@ mod pdf_snapshot_value_tests;
 //#endregion 🔖️Snapshot
 
 //#region 🔖️SnapshotFixtures
-/// 🆕️ A new pdf document: the empty 1.7 document as the real codec round-trips it — its retained object graph
-/// (`objects`/`trailer`) is what a fresh write produced, read back, exactly like [`demo_pdf17_snapshot`]; the empty
-/// `Default` carries no graph, so it saved as a document that reopened as a different one.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn blank_pdf_snapshot() -> PdfSnapshot {
-    use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    encode_pdf(&PdfSnapshot::default()).and_then(|bytes| decode_pdf(&bytes)).expect("blank_pdf_snapshot: the empty document round-trips through the real codec")
-}
 
-/// 📄️ The demo `stdio.pdf.1.7` document -- the single source of truth for `🏅️standards/7️⃣1.7/
-/// 📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this
-/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`).
-///
-/// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT: the typed lanes survive the
-/// round trip by the `lift(lower(t)) == t` law, and `objects`/`trailer` are whatever the fresh
-/// write produced, read back — a hand-built snapshot with empty `objects` would not equal its
-/// own decoded print.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn demo_pdf17_snapshot() -> PdfSnapshot {
-    let seed = crate::standards::v1_7::subsets::base::io::text_document(&[(200.0, 300.0, "Semio")]);
-    let bytes = crate::standards::v1_7::subsets::base::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
-    crate::standards::v1_7::subsets::base::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
-}
+
+
 //#endregion 🔖️SnapshotFixtures
 
 

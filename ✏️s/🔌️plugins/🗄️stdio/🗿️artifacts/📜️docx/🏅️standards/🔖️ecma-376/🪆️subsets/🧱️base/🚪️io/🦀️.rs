@@ -6,98 +6,16 @@
 //! (used by both `📥️import/🧩️deserializers` and `📤️export/🧵️serializers`); `io_registry` moved
 //! here from `⚙️engine`, live (`docx::declaration()`'s `.composers(...)` and this artifact's own
 //! root `io_registry` both reach it).
-//#region 🔖️Error
-/// ⚠️ Typed docx decode/encode failure — a package this engine cannot honestly interpret is
-/// never fabricated into a partial/empty document.
-#[derive(Clone, Debug, PartialEq)]
-pub enum DocxError {
-    Opc(semio_s_artifact_stdio_zip::opc::OpcError),
-    Ownership(semio_framework_value::ValueError),
-    MissingMainDocumentRelationship,
-    MissingPart(String),
-    Xml { part: String, detail: String },
-    Malformed(String),
-}
+use crate::standards::v_ecma_376::subsets::base::schema::{vocabulary::*,refusal::*};
 
-impl std::fmt::Display for DocxError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Opc(e) => write!(f, "docx: {e}"),
-            Self::Ownership(detail) => write!(f, "docx: retained ownership: {}",detail.message),
-            Self::MissingMainDocumentRelationship => write!(f, "docx: package root has no officeDocument relationship"),
-            Self::MissingPart(p) => write!(f, "docx: missing required part {p}"),
-            Self::Xml { part, detail } => write!(f, "docx: xml in {part}: {detail}"),
-            Self::Malformed(detail) => write!(f, "docx: {detail}"),
-        }
-    }
-}
 
-impl std::error::Error for DocxError {}
-/// 🪢️ Package and ownership layers keep their own kind; every document-structure refusal is invalid input.
-impl From<DocxError> for semio_framework_value::ValueError {
-    fn from(error: DocxError) -> Self {
-        let kind = match &error { DocxError::Opc(error) => error.refusal_kind(), DocxError::Ownership(error) => error.kind, _ => semio_framework_value::ValueRefusalKind::InvalidValue };
-        Self::new(kind, error.to_string())
-    }
-}
-
-impl From<semio_s_artifact_stdio_zip::opc::OpcError> for DocxError {
-    fn from(e: semio_s_artifact_stdio_zip::opc::OpcError) -> Self {
-        Self::Opc(e)
-    }
-}
-
-impl From<semio_framework_value::ValueError> for DocxError {
-    fn from(error: semio_framework_value::ValueError) -> Self {
-        Self::Ownership(error)
-    }
-}
-impl DocxError {
-    /// 🧭️ Retains actual owned causes while classifying authored package validation failures.
-    pub fn into_value_error(self) -> semio_framework_value::ValueError {
-        match self {
-            Self::Ownership(error) => error,
-            Self::Opc(error) => error.into_value_error(),
-            error @ (Self::MissingMainDocumentRelationship | Self::MissingPart(_) | Self::Xml { .. } | Self::Malformed(_)) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()),
-        }
-    }
-}
-//#endregion 🔖️Error
-
-//#region 🔖️Constants
-/// 🏅️ ISO/IEC 29500-1 Strict's officeDocument relationship type (`📏️strict`'s
-/// `STRICT_REL_BASE`/`officeDocument`) — decode must recognize this alongside the transitional
-/// `REL_TYPE_OFFICE_DOCUMENT`, since this `✳️any`-level decoder is shared by every subset
-/// including `📏️strict`, which legitimately never uses the transitional relationship type.
-pub const STRICT_REL_TYPE_OFFICE_DOCUMENT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument";
-pub const W_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-pub const R_NS: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-pub const MAIN_DOCUMENT_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
-pub const MAIN_DOCUMENT_PART: &str = "word/document.xml";
-pub const STYLES_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml";
-pub const STYLES_PART: &str = "word/styles.xml";
-/// 🧭️ The styles relationship's `Target`, RELATIVE TO ITS OWNER'S DIRECTORY (`word/`) per OPC
-/// §9.3 -- NOT `STYLES_PART` verbatim, which is package-root-relative and would resolve (via
-/// `resolve_relationship_target("word/document.xml", "word/styles.xml")`) to the wrong path
-/// `word/word/styles.xml`. This is the OPC module's own documented "#1 relative-target gotcha".
-pub const STYLES_REL_TARGET: &str = "styles.xml";
-pub const REL_TYPE_STYLES: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
-/// 🏅️ ISO/IEC 29500-1 Strict's styles relationship type — the exact counterpart of
-/// [`STRICT_REL_TYPE_OFFICE_DOCUMENT`], and needed for the same reason. A package that has been
-/// stamped Strict (`📏️strict`'s `set-relationship-base`/`set-snapshot`) carries THIS type on its
-/// styles relationship and never the transitional one, so a writer that recognizes only
-/// [`REL_TYPE_STYLES`] concludes the package has no styles relationship and appends a second,
-/// transitional-typed one beside the strict one it just failed to see — real package corruption,
-/// caught by `📏️mutate-docx-ecma-376-strict`'s differential rows the moment that case first ran a
-/// subject half.
-pub const STRICT_REL_TYPE_STYLES: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/styles";
 //#endregion 🔖️Constants
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ecma_376::subsets::base::io::DocxAnalyzer;
     use crate::DocxSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
@@ -221,7 +139,7 @@ pub mod derived_construction {
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             let mut document = self.snapshot.project_document().unwrap_or_default();
             document.body.push(DocxBlock::Paragraph(paragraph));
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
             self
         }
 
@@ -239,7 +157,7 @@ pub mod derived_construction {
         pub fn add_table(mut self, table: DocxTable) -> Self {
             let mut document = self.snapshot.project_document().unwrap_or_default();
             document.body.push(DocxBlock::Table(table));
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
             self
         }
 
@@ -251,7 +169,7 @@ pub mod derived_construction {
             } else {
                 document.styles.push(style);
             }
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
             self
         }
     }
@@ -261,7 +179,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::DocxSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.docx` parts.

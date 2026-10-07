@@ -1,0 +1,231 @@
+{
+  "instance": "shape@wire#0",
+  "handle": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "revision": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "camera": {
+    "position": [
+      0,
+      0,
+      4
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "fov": 50
+  },
+  "mesh": {
+    "positions": [
+      0,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0.5,
+      0,
+      0,
+      0.5,
+      0
+    ],
+    "normals": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "indices": [],
+    "vertexIds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "edgePositions": [
+      0,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0.5,
+      0,
+      0.5,
+      0.5,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0,
+      0
+    ],
+    "edgeIds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "componentReferences": {
+      "vertex": [
+        "9007199254740993",
+        "9007199254740994",
+        "9007199254740995",
+        "9007199254740996"
+      ],
+      "edge": [
+        "18446744073709551615",
+        "18446744073709551614",
+        "18446744073709551613",
+        "18446744073709551612"
+      ]
+    }
+  },
+  "transfer": {
+    "position": [],
+    "normal": [],
+    "index": [],
+    "edges": [
+      0,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0.5,
+      0,
+      0.5,
+      0.5,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0,
+      0
+    ],
+    "points": [
+      0,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0.5,
+      0,
+      0,
+      0.5,
+      0
+    ],
+    "face_groups": [],
+    "edge_groups": [
+      {
+        "start": 0,
+        "count": 1,
+        "entity_id": "18446744073709551615"
+      },
+      {
+        "start": 1,
+        "count": 1,
+        "entity_id": "18446744073709551614"
+      },
+      {
+        "start": 2,
+        "count": 1,
+        "entity_id": "18446744073709551613"
+      },
+      {
+        "start": 3,
+        "count": 1,
+        "entity_id": "18446744073709551612"
+      }
+    ],
+    "vertex_groups": [
+      {
+        "start": 0,
+        "count": 1,
+        "entity_id": "9007199254740993"
+      },
+      {
+        "start": 1,
+        "count": 1,
+        "entity_id": "9007199254740994"
+      },
+      {
+        "start": 2,
+        "count": 1,
+        "entity_id": "9007199254740995"
+      },
+      {
+        "start": 3,
+        "count": 1,
+        "entity_id": "9007199254740996"
+      }
+    ]
+  },
+  "picks": [
+    {
+      "kind": "vertex",
+      "pointer": [
+        200,
+        200
+      ],
+      "group": 0,
+      "expected": "shape@wire#0.vertex.0~cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc~9007199254740993~dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "kind": "edge",
+      "pointer": [
+        226.80633650636946,
+        200
+      ],
+      "group": 0,
+      "expected": "shape@wire#0.edge.0~cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc~18446744073709551615~dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  ],
+  "edgeOnly": {
+    "mesh": {
+      "positions": [], "normals": [], "indices": [],
+      "edgePositions": [0,0,0,0.5,0,0,0.5,0,0,0.5,0.5,0,0.5,0.5,0,0,0.5,0,0,0.5,0,0,0,0],
+      "edgeIds": [0,1,2,3],
+      "componentReferences": {"edge": ["18446744073709551615","18446744073709551614","18446744073709551613","18446744073709551612"]}
+    },
+    "expected": {"renderVertices":8,"topologyVertices":0,"edges":4,"boundsMin":[0,0,0],"boundsMax":[0.5,0.5,0]}
+  },
+  "expected": {
+    "vertices": 4,
+    "edges": 4,
+    "indices": 0,
+    "perimeter": 2
+  }
+}

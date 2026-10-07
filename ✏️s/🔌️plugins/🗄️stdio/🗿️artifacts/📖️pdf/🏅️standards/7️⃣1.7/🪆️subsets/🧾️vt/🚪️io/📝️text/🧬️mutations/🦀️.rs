@@ -1,28 +1,28 @@
 //! 📝️ Generic text framing and direct-owner registry for the visible PDF/VT mutation aggregate.
 
-use super::PdfVtMutation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation;
 use protocol::OpText;
 
 //#region 🧾️DerivedRegistry
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("InsertEncryptionDictionary", super::insert_encryption_dictionary::text::TEXT_OPCODE),
-    ("RemoveEncryptionDictionary", super::remove_encryption_dictionary::text::TEXT_OPCODE),
-    ("SetOutputIntent", super::set_output_intent::text::TEXT_OPCODE),
-    ("RemoveOutputIntent", super::remove_output_intent::text::TEXT_OPCODE),
-    ("SetTrimBox", super::set_trim_box::text::TEXT_OPCODE),
-    ("RemoveTrimBox", super::remove_trim_box::text::TEXT_OPCODE),
-    ("EmbedFontFile", super::embed_font_file::text::TEXT_OPCODE),
-    ("RemoveFontFile", super::remove_font_file::text::TEXT_OPCODE),
-    ("InsertJavascriptAction", super::insert_javascript_action::text::TEXT_OPCODE),
-    ("RemoveJavascriptAction", super::remove_javascript_action::text::TEXT_OPCODE),
-    ("InsertLaunchAction", super::insert_launch_action::text::TEXT_OPCODE),
-    ("RemoveLaunchAction", super::remove_launch_action::text::TEXT_OPCODE),
-    ("InsertMediaAnnotation", super::insert_media_annotation::text::TEXT_OPCODE),
-    ("RemoveMediaAnnotation", super::remove_media_annotation::text::TEXT_OPCODE),
-    ("SetDpartRoot", super::set_dpart_root::text::TEXT_OPCODE),
-    ("RemoveDpartRoot", super::remove_dpart_root::text::TEXT_OPCODE),
-    ("SetDpartMetadata", super::set_dpart_metadata::text::TEXT_OPCODE),
-    ("RemoveDpartMetadata", super::remove_dpart_metadata::text::TEXT_OPCODE),
+    ("InsertEncryptionDictionary", self::insert_encryption_dictionary::TEXT_OPCODE),
+    ("RemoveEncryptionDictionary", self::remove_encryption_dictionary::TEXT_OPCODE),
+    ("SetOutputIntent", self::set_output_intent::TEXT_OPCODE),
+    ("RemoveOutputIntent", self::remove_output_intent::TEXT_OPCODE),
+    ("SetTrimBox", self::set_trim_box::TEXT_OPCODE),
+    ("RemoveTrimBox", self::remove_trim_box::TEXT_OPCODE),
+    ("EmbedFontFile", self::embed_font_file::TEXT_OPCODE),
+    ("RemoveFontFile", self::remove_font_file::TEXT_OPCODE),
+    ("InsertJavascriptAction", self::insert_javascript_action::TEXT_OPCODE),
+    ("RemoveJavascriptAction", self::remove_javascript_action::TEXT_OPCODE),
+    ("InsertLaunchAction", self::insert_launch_action::TEXT_OPCODE),
+    ("RemoveLaunchAction", self::remove_launch_action::TEXT_OPCODE),
+    ("InsertMediaAnnotation", self::insert_media_annotation::TEXT_OPCODE),
+    ("RemoveMediaAnnotation", self::remove_media_annotation::TEXT_OPCODE),
+    ("SetDpartRoot", self::set_dpart_root::TEXT_OPCODE),
+    ("RemoveDpartRoot", self::remove_dpart_root::TEXT_OPCODE),
+    ("SetDpartMetadata", self::set_dpart_metadata::TEXT_OPCODE),
+    ("RemoveDpartMetadata", self::remove_dpart_metadata::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

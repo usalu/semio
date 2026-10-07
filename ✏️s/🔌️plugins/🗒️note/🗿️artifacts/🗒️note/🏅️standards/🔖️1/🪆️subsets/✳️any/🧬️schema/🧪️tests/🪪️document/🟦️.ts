@@ -1,3 +1,5 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import {parseNoteArtifactJson,parseNoteDiffJson,parseNoteSnapshotJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 /** 🧪️ Note document boundaries preserve native block payloads and shared link identity. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";
@@ -39,7 +41,7 @@ function diffJson(input: unknown): unknown {
   const result: Record<string, unknown> = { ...value };
   for (const key of ["gridSpacing", "gridSubdivisions", "gridOpacity", "snapGridSpacing", "pencilWidth", "eraserRadius"] as const) if (key in value) result[key] = value[key] == null ? value[key] : binary64Value(value[key]!);
   if (value.artifact != null) result.artifact = documentJson(value.artifact);
-  if (value.blocks != null) result.blocks = { ...value.blocks, added: value.blocks.added.map(entry => ({ ...entry, block: blockJson(entry.block) })) };
+  if (value.blocks != null) result.blocks = { ...value.blocks, added: value.blocks.added.map(entry => ({ ...entry, block: blockJson(entry.block) })), patched: value.blocks.patched.map(entry => ({...entry,patch:{...entry.patch,...(entry.patch.block == null ? {} : {block:blockJson(entry.patch.block)})}})) };
   if (value.assets != null) result.assets = { entries: Object.fromEntries(Object.entries(value.assets.entries).map(([key, value]) => [key, value == null ? value : assetJson(value)])) };
   return result;
 }
@@ -52,20 +54,20 @@ export async function testNoteDocumentContractOracle(): Promise<void> {
   assertDocumentContractOracle({
     name: "Note",
     dependencies,
-    artifact: { schema: facets[0].schema, parse: facets[0].module.parseNoteArtifact, nativeJson: documentJson },
-    snapshot: { schema: facets[1].schema, parse: facets[1].module.parseNoteSnapshot, nativeJson: documentJson },
-    diff: { schema: facets[2].schema, parse: facets[2].module.parseNoteDiff, nativeJson: diffJson },
+    artifact: { schema: facets[0].schema, parse: parseNoteArtifactJson, nativeJson: documentJson },
+    snapshot: { schema: facets[1].schema, parse: parseNoteSnapshotJson, nativeJson: documentJson },
+    diff: { schema: facets[2].schema, parse: parseNoteDiffJson, nativeJson: diffJson },
     validDocuments: [{ input: vectors.document, output: vectors.document }],
     invalidDocuments: [...Object.entries(vectors.invalidFields).map(([field, value]) => ({ ...vectors.document, [field]: value })), ...vectors.invalidBlocks.map((block) => ({ ...vectors.document, blocks: [block] }))],
     invalidDiffs: Object.entries(vectors.invalidFields).map(([field, value]) => ({ [field]: value })),
     mutationRoots: readdirSync(join(root, "../..")).map((subset) => join(root, "../..", subset, "🧫️fixtures/🧬️mutations")).filter(existsSync),
     committed: vectors.committed,
   });
-  const ajv = new Ajv({ strict: false, validateFormats: false });
+  const ajv = new Ajv({ strict: false, validateFormats: false }).addSchema(artifactReferenceSchema);
   for (const schema of [...dependencies, facets[0].schema]) ajv.addSchema(schema);
   const validate = ajv.compile(facets[2].schema);
   for (const diff of vectors.validDiffs) {
     assert.equal(validate(diff), true, JSON.stringify(validate.errors));
-    assert.deepEqual(diffJson(facets[2].module.parseNoteDiff(diff)), diff);
+    assert.deepEqual(diffJson(parseNoteDiffJson(diff)), diff);
   }
 }

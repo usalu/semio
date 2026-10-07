@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-06T13:41:08.918Z",
+  "scope": "Read-only actual current binary owner protocol hashes; no factory runtime qualification",
+  "readbacks": [
+    {
+      "version": "4️⃣1.4",
+      "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "schemaSourceDeclaration": [
+        "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");"
+      ],
+      "protocol": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "protocolBytes": 399,
+      "actualSha256": "5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6",
+      "binding": {
+        "id": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
+        "status": "implemented",
+        "from": "s.stdio.pdf.standard.1-4.dialect.source",
+        "to": "s.stdio.pdf.standard.1-4.dialect.source",
+        "executable_registration": true,
+        "native_factory": {
+          "factory_id": "stdio.native.pdf.v1",
+          "artifact_kind": "s.stdio.pdf",
+          "artifact_schema": "stdio.pdf",
+          "extension": "pdf",
+          "pack_schema_hash": "b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9",
+          "runtime_capability_id": "s.stdio.pdf.standard.1-4.codec.codec-stdio-pdf-extension-pdf.v1"
+        }
+      },
+      "bindingHashMatches": false
+    },
+    {
+      "version": "7️⃣1.7",
+      "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "schemaSourceDeclaration": [
+        "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");"
+      ],
+      "protocol": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "protocolBytes": 899,
+      "actualSha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355",
+      "binding": {
+        "id": "s.stdio.pdf.standard.1-7.codec.native-document.v1",
+        "status": "implemented",
+        "from": "s.stdio.pdf.standard.1-7.dialect.source",
+        "to": "s.stdio.pdf.standard.1-7.dialect.source",
+        "executable_registration": true,
+        "native_factory": {
+          "factory_id": "stdio.native.pdf17.v1",
+          "artifact_kind": "s.stdio.pdf",
+          "artifact_schema": "stdio.pdf.1.7",
+          "extension": "pdf",
+          "pack_schema_hash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+          "runtime_capability_id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1"
+        }
+      },
+      "bindingHashMatches": false
+    }
+  ],
+  "authorityClarification": "ArtifactCodec::of derives binding pack_schema_hash from P::record_spec via os_pack::schema_hash, not SHA256 of protocol text. Protocol SHA comparisons are informational and cannot establish a stale factory binding.",
+  "actualOwningRuntimeLaw": "sqlite_snapshot_pdf_native_factories_publish_exact_structural_hashes in actual PDF root1480"
+}

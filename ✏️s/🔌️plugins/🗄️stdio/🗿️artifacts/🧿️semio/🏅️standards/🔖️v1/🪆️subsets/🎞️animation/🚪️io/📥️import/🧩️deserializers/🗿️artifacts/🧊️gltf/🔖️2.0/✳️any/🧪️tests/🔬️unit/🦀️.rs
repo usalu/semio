@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_plugin::ArtifactBuilder;
-use semio_s_artifact_stdio_gltf::engine::{GltfAccessorType, GltfComponentType};
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{GltfAccessorType, GltfComponentType};
 use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationSampler, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilderConstruction as GltfDocBuilder};
 

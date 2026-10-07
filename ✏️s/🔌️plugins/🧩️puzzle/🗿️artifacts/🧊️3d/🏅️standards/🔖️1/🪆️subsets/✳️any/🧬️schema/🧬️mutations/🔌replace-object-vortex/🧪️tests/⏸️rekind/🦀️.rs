@@ -10,7 +10,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,inverse_puzzle3d_mutation};
+
 use crate::Puzzle3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌replace-object-vortex/⏸️rekind/📸️snapshot/⬅️before/🔣️.json");

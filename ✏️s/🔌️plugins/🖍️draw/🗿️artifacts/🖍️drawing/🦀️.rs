@@ -36,7 +36,7 @@ pub const DRAWING_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "sele
 // these types is itself `#[dsl(block)]`, which already supplies the bare leading keyword from the
 // FIELD's own name — an inner keyword too would double it (`transform { transform x=0 ... }`),
 // same reasoning as `note`'s `NoteImageAsset`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -52,10 +52,10 @@ pub struct DrawingTransform {
     pub rotation: f64,
 }
 
-// No keyword either: reached only through `Vec<GradientStop>` (a plain, un-tagged list) —
+// No keyword either: reached only through `semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>` (a plain, un-tagged list) —
 // `parse_record_body` self-terminates on the first unrecognized key regardless, the same reasoning
 // verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -64,7 +64,7 @@ pub struct GradientStop {
     pub color: [f64; 4],
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
@@ -78,18 +78,18 @@ pub enum FillStyle {
         x2: f64,
         y2: f64,
         #[dsl(table)]
-        stops: Vec<GradientStop>,
+        stops: semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>,
     },
     RadialGradient {
         cx: f64,
         cy: f64,
         r: f64,
         #[dsl(table)]
-        stops: Vec<GradientStop>,
+        stops: semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>,
     },
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -100,10 +100,10 @@ pub struct StrokeStyle {
     pub join: StrokeJoin,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
-    pub dash: Option<Vec<f64>>,
+    pub dash: Option<semio_framework_value::list::PagedList<f64, {usize::MAX}>>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -124,7 +124,7 @@ pub struct DrawingAttributes {
     pub stroke: Option<StrokeStyle>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -133,13 +133,13 @@ pub struct DrawingTraceParams {
     pub simplify_epsilon: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawingImageAsset {
-    pub mime: String,
-    pub data: String,
+    pub mime: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub data: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub width: Option<u32>,
@@ -148,17 +148,17 @@ pub struct DrawingImageAsset {
     pub height: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawingLayerBase {
-    pub id: String,
-    pub name: String,
+    pub id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub name: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub visible: bool,
     pub locked: bool,
     pub opacity: f64,
-    pub blend_mode: String,
+    pub blend_mode: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[dsl(block)]
     pub transform: DrawingTransform,
     #[value(default)]
@@ -167,7 +167,7 @@ pub struct DrawingLayerBase {
     pub attributes: DrawingAttributes,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -178,7 +178,7 @@ pub struct DrawingRect {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -189,7 +189,7 @@ pub struct DrawingEllipse {
     pub ry: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -199,7 +199,7 @@ pub struct DrawingCircle {
     pub r: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -210,12 +210,12 @@ pub struct DrawingLine {
     pub y2: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawingPolygon {
-    pub points: Vec<[f64; 2]>,
+    pub points: semio_framework_value::list::PagedList<[f64; 2], {usize::MAX}>,
 }
 
 // Each body carries its own `#[dsl(keyword = ...)]` — required by the single-field tuple
@@ -224,7 +224,7 @@ pub struct DrawingPolygon {
 // layer. `base: DrawingLayerBase` carries BOTH `#[value(flatten)]` (splices into the JSON-shaped
 // `ToValue`/`FromValue` tree) and `#[dsl(block)]` (the text/binary DSL grammar has no
 // flatten-splice primitive; a bare nested `base { ... }` line is its declarative equivalent).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -234,7 +234,7 @@ pub struct DrawingShapeBody {
     #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
-    pub shape_kind: String,
+    pub shape_kind: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
@@ -257,7 +257,7 @@ pub struct DrawingShapeBody {
     pub polygon: Option<DrawingPolygon>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -268,10 +268,10 @@ pub struct DrawingPathBody {
     #[dsl(block)]
     pub base: DrawingLayerBase,
     #[dsl(statements, block)]
-    pub segments: Vec<PathSegment>,
+    pub segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -283,11 +283,11 @@ pub struct DrawingTextBody {
     pub base: DrawingLayerBase,
     pub x: f64,
     pub y: f64,
-    pub content: String,
+    pub content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub size: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -297,12 +297,12 @@ pub struct DrawingImageBody {
     #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
-    pub image_key: String,
+    pub image_key: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -316,12 +316,12 @@ pub struct DrawingGroupBody {
     #[cfg_attr(test,serde(default,skip_serializing_if="group_isolation_disabled"))]
     pub isolation:bool,
     #[dsl(statements, block)]
-    pub children: Vec<DrawingLayerNode>,
+    pub children: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
 }
 
 fn group_isolation_disabled(value:&bool)->bool {!*value}
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -331,11 +331,11 @@ pub struct DrawingBooleanBody {
     #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
-    pub operation: String,
-    pub children: Vec<String>,
+    pub operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -345,12 +345,12 @@ pub struct DrawingTraceBody {
     #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
-    pub source_key: String,
+    pub source_key: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[dsl(block)]
     pub params: DrawingTraceParams,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind")]
 #[cfg_attr(test, serde(tag = "kind"))]
@@ -384,7 +384,7 @@ pub enum DrawingLayerNode {
 // Field order per variant mirrors the SVG spec's own argument order (e.g. `A rx ry rotation
 // large-arc-flag sweep-flag x,y`) so it reads as real SVG path syntax, just space- instead of
 // comma/space-mixed-delimited between commands.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
@@ -439,7 +439,7 @@ pub enum PathSegment {
     Close,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -487,7 +487,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// matches this file's own `definition()` capability row `"s.draw.schema.artifact"` → descriptor
 /// `"s.draw.drawing"`; `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const DRAWING_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.draw.drawing", standard: semio_framework::StandardId("1"), subset: semio_framework::SubsetId::ANY };
+pub const DRAWING_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.draw.drawing", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 
 /// 🔖️ This artifact's OLD capability-row definition (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) — kept per debt D1 (`📌️important.md`), not
@@ -542,7 +542,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// any caller left in this function.
 pub fn artifact<A: DrawingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.draw.drawing").expect("canonical drawing kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
@@ -1044,7 +1044,8 @@ pub mod schema {
 }
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{drawing_op_for_layer_field, patch_layer_field, DrawingMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{drawing_op_for_layer_field,patch_layer_field,DrawingMutation};
+
 }
 
 pub mod spr {

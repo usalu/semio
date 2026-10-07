@@ -7,7 +7,7 @@
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
-use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::shooting_icon_render_request_json;
 use crate::{ShootingShot, ShootingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Effect, Emit, Fault, FaultCode, FaultOrigin, IconRenderExportItem};
 use semio_framework_value_derive::{FromValue, ToValue};

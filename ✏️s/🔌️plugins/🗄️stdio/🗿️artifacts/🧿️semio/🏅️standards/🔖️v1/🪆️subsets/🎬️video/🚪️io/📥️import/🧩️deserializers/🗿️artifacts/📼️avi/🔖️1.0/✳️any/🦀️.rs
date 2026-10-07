@@ -13,7 +13,7 @@
 //! - `AviChunk.fourcc` (e.g. `"00dc"`) is dropped -- `SemioVideoSample` has no per-sample tag slot.
 
 use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat;
 use semio_s_artifact_stdio_avi::AviSnapshot;
 

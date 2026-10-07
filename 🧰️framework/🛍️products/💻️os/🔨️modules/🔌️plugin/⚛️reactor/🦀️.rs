@@ -571,7 +571,7 @@ enum TaskResumeOutcome {
 }
 
 /// 🧵️ One entry in `TASK_RESUMES` — `meta` is the task's CLONED originating `ActionMeta` (spawn
-/// time for a real task resolution; best-effort `instance_actor(instance)` at restore time for a
+/// time for a real task resolution; required checkpointed `instance_actor(instance)` at restore time for a
 /// `task_restarts` replay, since a checkpoint restart has no "spawn" of its own to snapshot from —
 /// see `restore_now`), preserved so the follow-up dispatch stays attributed to the actor that
 /// asked for it even if a different one is active by the time it resolves.
@@ -1128,7 +1128,7 @@ pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runt
         Ok::<(), semio_framework::Fault>(())
     })?;
     for restart in pack.task_restarts().await {
-        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await, instance_id: restart.instance, view_state: None };
+        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await?, instance_id: restart.instance, view_state: None };
         let pending = PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) };
         TASK_RESUMES
             .with(|resumes| resumes.borrow_mut().push(pending))

@@ -1,4 +1,4 @@
-use crate::drawing::schema::diff::transform;
+use crate::standards::v1::subsets::drawing::schema::diff::transform;
 use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 

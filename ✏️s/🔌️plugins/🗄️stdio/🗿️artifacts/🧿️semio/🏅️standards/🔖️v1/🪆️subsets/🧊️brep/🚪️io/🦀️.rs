@@ -12,8 +12,8 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::brep::io::SemioBrepAnalyzer;
     #[cfg(feature = "conversion-brep")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
-    use std::collections::HashSet;
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
+    use crate::standards::v1::subsets::brep::schema::check_brep_referential_integrity;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
 
@@ -69,63 +69,6 @@ pub mod derived_composition {
         }
     }
 
-    /// 🔗️ Real cross-collection referential-invariant check — dangling ids are reported as errors, not
-    /// silently ignored (nothing here is decode-only anymore).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_brep_referential_integrity(snapshot: &SemioBrepSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
-        let vertex_ids: HashSet<&str> = snapshot.vertices.iter().map(|v| v.id.as_str()).collect();
-        let edge_ids: HashSet<&str> = snapshot.edges.iter().map(|e| e.id.as_str()).collect();
-        let loop_ids: HashSet<&str> = snapshot.loops.iter().map(|l| l.id.as_str()).collect();
-        let face_ids: HashSet<&str> = snapshot.faces.iter().map(|f| f.id.as_str()).collect();
-        let shell_ids: HashSet<&str> = snapshot.shells.iter().map(|s| s.id.as_str()).collect();
-
-        let mut diagnostics = Vec::new();
-        let mut dangling = |code: &'static str, message: String| {
-            diagnostics.push(semio_framework_diagnostic::Diagnostic::error(code, semio_framework_diagnostic::TextSpan::at(1, 1), message));
-        };
-
-        for e in &snapshot.edges {
-            if !vertex_ids.contains(e.start_vertex.as_str()) {
-                dangling("stdio.semio_brep.dangling-edge-start-vertex", format!("edge {:?} references unknown start vertex {:?}", e.id, e.start_vertex));
-            }
-            if !vertex_ids.contains(e.end_vertex.as_str()) {
-                dangling("stdio.semio_brep.dangling-edge-end-vertex", format!("edge {:?} references unknown end vertex {:?}", e.id, e.end_vertex));
-            }
-        }
-        for l in &snapshot.loops {
-            for le in &l.edges {
-                if !edge_ids.contains(le.edge.as_str()) {
-                    dangling("stdio.semio_brep.dangling-loop-edge", format!("loop {:?} references unknown edge {:?}", l.id, le.edge));
-                }
-            }
-        }
-        for f in &snapshot.faces {
-            if !loop_ids.contains(f.outer_loop.as_str()) {
-                dangling("stdio.semio_brep.dangling-face-outer-loop", format!("face {:?} references unknown outer loop {:?}", f.id, f.outer_loop));
-            }
-            for inner in &f.inner_loops {
-                if !loop_ids.contains(inner.as_str()) {
-                    dangling("stdio.semio_brep.dangling-face-inner-loop", format!("face {:?} references unknown inner loop {:?}", f.id, inner));
-                }
-            }
-        }
-        for s in &snapshot.shells {
-            for sf in &s.faces {
-                if !face_ids.contains(sf.face.as_str()) {
-                    dangling("stdio.semio_brep.dangling-shell-face", format!("shell {:?} references unknown face {:?}", s.id, sf.face));
-                }
-            }
-        }
-        for so in &snapshot.solids {
-            for ss in &so.shells {
-                if !shell_ids.contains(ss.shell.as_str()) {
-                    dangling("stdio.semio_brep.dangling-solid-shell", format!("solid {:?} references unknown shell {:?}", so.id, ss.shell));
-                }
-            }
-        }
-        diagnostics
-    }
-
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn validator_entry() -> &'static SubsetValidatorEntry {
@@ -139,7 +82,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("brep") }, store::ArtifactCodec::bare::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("brep") }, store::ArtifactCodec::bare::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         #[cfg(feature = "conversion-brep")]
@@ -153,7 +96,7 @@ pub mod derived_composition {
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
             .schemas([crate::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("brep") })
+            .document_codec_bare::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("brep") })
             .subset_validators(std::slice::from_ref(validator_entry()))
             .inferences([crate::standards::v1::subsets::brep::schema::inferences::semio_brep_artifact_inference_descriptor()]);
         #[cfg(feature = "conversion-brep")]
@@ -280,7 +223,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct SemioBrepParts {

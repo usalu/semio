@@ -43,8 +43,41 @@ macro_rules! dwg_controlled_shape {
     }};
 }
 
+macro_rules! dwg_borrowed_shape {
+    ([primitive $kind:ident]) => {semio_framework_dsl_record::BorrowedShape::$kind};
+    ([typed $child:ty]) => {<$child as semio_framework_dsl_record::BorrowedDslField>::SHAPE};
+    ([tuple $kind:ident $count:literal]) => {semio_framework_dsl_record::BorrowedShape::Tuple(||semio_framework_dsl_record::BorrowedShape::$kind,Some($count))};
+    ([enum $(($label:literal,$ordinal:literal)),+]) => {semio_framework_dsl_record::BorrowedShape::Enum(&[$(($label,$ordinal)),+])};
+}
+macro_rules! dwg_borrowed_metadata {
+    ([] [$($generic:ident)?]; $($fields:tt)*) => {};
+    ([$owner:ident] []; $($fields:tt)*) => {
+        impl semio_framework_dsl_record::BorrowedDslRecord for $owner {
+            dwg_borrowed_metadata!(@spec; $($fields)*);
+        }
+        impl semio_framework_dsl_record::BorrowedDslField for $owner {
+            const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);
+        }
+    };
+    ([$owner:ident] [$generic:ident]; $($fields:tt)*) => {
+        impl<$generic:semio_framework_dsl_record::BorrowedDslField> semio_framework_dsl_record::BorrowedDslRecord for $owner<$generic> {
+            dwg_borrowed_metadata!(@spec; $($fields)*);
+        }
+        impl<$generic:semio_framework_dsl_record::BorrowedDslField> semio_framework_dsl_record::BorrowedDslField for $owner<$generic> {
+            const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);
+        }
+    };
+    (@spec; $($id:literal,$key:literal,$optional:literal,$shape:tt;)+) => {
+        const RECORD:semio_framework_dsl_record::BorrowedRecordSpec=semio_framework_dsl_record::BorrowedRecordSpec {
+            keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,
+            fields:&[$({let mut field=semio_framework_dsl_record::BorrowedFieldSpec::new($id,$key,dwg_borrowed_shape!($shape));field.optional=$optional;field}),+],
+        };
+    };
+}
+
 macro_rules! dwg_metadata {
-    ($spec:ident $(<$generic:ident>)?, $controlled:ident, $producer:ident; $($id:literal, $key:literal, $optional:literal, $shape:tt;)+) => {
+    ($spec:ident $(<$generic:ident>)?, $controlled:ident, $producer:ident $(=> $owner:ident)?; $($id:literal, $key:literal, $optional:literal, $shape:tt;)+) => {
+        dwg_borrowed_metadata!([$($owner)?] [$($generic)?]; $($id,$key,$optional,$shape;)+);
         fn $spec $(<$generic: semio_framework_dsl_record::DslField>)?() -> semio_framework_dsl_record::RecordSpec {
             let fields = vec![$({ let mut field = semio_framework_dsl_record::FieldSpec::new($id, $key, dwg_ordinary_shape!($shape)); field.optional = $optional; field }),+];
             semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, fields)
@@ -204,7 +237,7 @@ impl Default for DwgXRecordValue {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_xrecord_value_spec, dwg_xrecord_value_spec_controlled, dwg_xrecord_value_spec_producer;
+dwg_metadata!(dwg_xrecord_value_spec, dwg_xrecord_value_spec_controlled, dwg_xrecord_value_spec_producer => DwgXRecordValue;
     0, "kind", false, [enum ("string", 0), ("real", 1), ("boolean", 2), ("integer8", 3), ("integer16", 4), ("integer32", 5), ("integer64", 6), ("point3d", 7), ("binary", 8), ("handle", 9), ("objectId", 10)];
     1, "group_code", false, [primitive Int];
     2, "string_value", true, [primitive Text];
@@ -449,7 +482,7 @@ pub struct DwgTableControlEntry {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_table_control_entry_spec, dwg_table_control_entry_spec_controlled, dwg_table_control_entry_spec_producer;
+dwg_metadata!(dwg_table_control_entry_spec, dwg_table_control_entry_spec_controlled, dwg_table_control_entry_spec_producer => DwgTableControlEntry;
     0, "has_handle", false, [primitive Bool];
     1, "handle", true, [primitive UInt];
 );
@@ -565,7 +598,7 @@ impl DwgTableControlBody {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(table_control_body_spec, table_control_body_spec_controlled, table_control_body_spec_producer;
+dwg_metadata!(table_control_body_spec, table_control_body_spec_controlled, table_control_body_spec_producer => DwgTableControlBody;
     1, "kind", false, [enum ("block", 0), ("layer", 1), ("textStyle", 2), ("linetype", 3), ("view", 4), ("ucs", 5), ("viewport", 6), ("registeredApplication", 7), ("dimensionStyle", 8)];
     2, "entries", true, [typed DwgTableControlEntries];
     3, "block", true, [typed DwgBlockTableControl];
@@ -684,7 +717,7 @@ pub enum DwgComplexColorValue {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_complex_color_value_spec, dwg_complex_color_value_spec_controlled, dwg_complex_color_value_spec_producer;
+dwg_metadata!(dwg_complex_color_value_spec, dwg_complex_color_value_spec_controlled, dwg_complex_color_value_spec_producer => DwgComplexColorValue;
     0, "kind", false, [enum ("none", 0), ("byLayer", 1), ("byBlock", 2), ("byColor", 3), ("byAci", 4), ("byPen", 5), ("foreground", 6), ("layerOff", 7), ("layerFrozen", 8)];
     1, "red", true, [typed u8];
     2, "green", true, [typed u8];
@@ -1045,7 +1078,7 @@ impl Default for DwgTableRecordBody {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(table_record_body_spec, table_record_body_spec_controlled, table_record_body_spec_producer;
+dwg_metadata!(table_record_body_spec, table_record_body_spec_controlled, table_record_body_spec_producer => DwgTableRecordBody;
     1, "kind", false, [enum ("registeredApplication", 0), ("textStyle", 1), ("layer", 2), ("linetype", 3), ("blockHeader", 4), ("viewport", 5), ("dimensionStyle", 6)];
     2, "registeredApplication", true, [typed DwgRegisteredApplicationTableRecord];
     3, "textStyle", true, [typed DwgTextStyleTableRecord];
@@ -1689,7 +1722,7 @@ pub enum DwgEvaluationVariant {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_evaluation_variant_spec, dwg_evaluation_variant_spec_controlled, dwg_evaluation_variant_spec_producer;
+dwg_metadata!(dwg_evaluation_variant_spec, dwg_evaluation_variant_spec_controlled, dwg_evaluation_variant_spec_producer => DwgEvaluationVariant;
     0, "kind", false, [enum ("integer32", 0)];
     1, "integer32", true, [typed i32];
 );
@@ -1758,7 +1791,7 @@ pub enum DwgEvaluationExpressionValue {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_evaluation_expression_value_spec, dwg_evaluation_expression_value_spec_controlled, dwg_evaluation_expression_value_spec_producer;
+dwg_metadata!(dwg_evaluation_expression_value_spec, dwg_evaluation_expression_value_spec_controlled, dwg_evaluation_expression_value_spec_producer => DwgEvaluationExpressionValue;
     0, "kind", false, [enum ("empty", 0), ("double", 1), ("pointGroup10", 2), ("pointGroup11", 3), ("string", 4), ("integer32", 5), ("objectReference", 6), ("integer16", 7)];
     1, "double", true, [typed f64];
     2, "point_group_10", true, [typed Vec<f64>];
@@ -1919,7 +1952,7 @@ pub struct DwgVisualStyleProperty<T> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_visual_style_property_spec<T>, dwg_visual_style_property_spec_controlled, dwg_visual_style_property_spec_producer;
+dwg_metadata!(dwg_visual_style_property_spec<T>, dwg_visual_style_property_spec_controlled, dwg_visual_style_property_spec_producer => DwgVisualStyleProperty;
     0, "value", false, [typed T];
     1, "operation", false, [typed DwgVisualStylePropertyOperation];
 );
@@ -2972,7 +3005,7 @@ pub enum DwgConstraintNode {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_constraint_node_spec, dwg_constraint_node_spec_controlled, dwg_constraint_node_spec_producer;
+dwg_metadata!(dwg_constraint_node_spec, dwg_constraint_node_spec_controlled, dwg_constraint_node_spec_producer => DwgConstraintNode;
     0, "kind", false, [enum ("constrainedImplicitPoint", 0), ("pointCurveConstraint", 1), ("constrainedBoundedLine", 2), ("pointCoincidenceConstraint", 3), ("distanceConstraint", 4), ("perpendicularConstraint", 5), ("horizontalConstraint", 6), ("parallelConstraint", 7), ("midPointConstraint", 8), ("equalLengthConstraint", 9), ("colinearConstraint", 10), ("constrainedDatumLine", 11), ("fixedConstraint", 12), ("verticalConstraint", 13)];
     1, "constrained_implicit_point", true, [typed DwgConstrainedImplicitPoint];
     2, "geometric_constraint", true, [typed DwgGeometricConstraint];
@@ -3068,7 +3101,7 @@ pub struct DwgAssoc2dConstraintGroup {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_entity_body_spec, dwg_entity_body_spec_controlled, dwg_entity_body_spec_producer;
+dwg_metadata!(dwg_entity_body_spec, dwg_entity_body_spec_controlled, dwg_entity_body_spec_producer => DwgEntityBody;
     0, "kind", false, [enum ("line", 0), ("arc", 1), ("lwPolyline", 2), ("blockBegin", 3), ("blockEnd", 4), ("insert", 5), ("dimensionLinear", 6), ("viewport", 7), ("point", 8), ("circle", 9), ("ellipse", 10), ("text", 11), ("spline", 12), ("face3d", 13), ("polyline3d", 14), ("polyfaceMesh", 15), ("vertex", 16), ("polyfaceFace", 17), ("sequenceEnd", 18)];
     1, "line", true, [typed DwgLineEntity];
     2, "arc", true, [typed DwgArcEntity];
@@ -3281,7 +3314,7 @@ pub enum DwgLogicalObjectBody {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-dwg_metadata!(dwg_logical_object_body_spec, dwg_logical_object_body_spec_controlled, dwg_logical_object_body_spec_producer;
+dwg_metadata!(dwg_logical_object_body_spec, dwg_logical_object_body_spec_controlled, dwg_logical_object_body_spec_producer => DwgLogicalObjectBody;
     0, "kind", false, [enum ("dictionary", 0), ("tableControl", 1), ("tableRecord", 2), ("xrecord", 3), ("entity", 4), ("associativeDependency", 5), ("associativeValueDependency", 6), ("associativeGeometryDependency", 7), ("blockGripLocationComponent", 8), ("dynamicBlockProxyNode", 9), ("associativeVariable", 10), ("associativeDimensionDependencyBody", 11), ("visualStyle", 12), ("blockParameterDependencyBody", 13), ("blockRepresentationData", 14), ("dynamicBlockPurgePreventer", 15), ("evaluationGraph", 16), ("blockFlipParameter", 17), ("blockVisibilityParameter", 18), ("placeholder", 19), ("dictionaryVariable", 20), ("annotationScale", 21), ("sortEntitiesTable", 22), ("tableStyle", 23), ("mlineStyle", 24), ("mLeaderStyle", 25), ("material", 26), ("blockMoveAction", 27), ("assocNetwork", 28), ("assoc2dConstraintGroup", 29), ("blockLinearParameter", 30), ("blockLinearGrip", 31), ("blockFlipGrip", 32), ("blockVisibilityGrip", 33), ("blockAlignmentParameter", 34), ("blockAlignmentGrip", 35), ("blockStretchAction", 36), ("blockScaleAction", 37), ("blockFlipAction", 38), ("blockBasePointParameter", 39), ("blockVerticalConstraintParameter", 40), ("blockHorizontalConstraintParameter", 41), ("layout", 42)];
     1, "dictionary", true, [typed DwgDictionaryBody];
     2, "table_control", true, [typed DwgTableControlBody];
@@ -5104,7 +5137,7 @@ impl DwgSnapshot {
 /// `0x13`-`0x14`. A document that is EXACTLY this and nothing else is this artifact's canonical
 /// EMPTY DWG, and it is not a hypothetical: `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` is committed
 /// as those 22 bytes (`AC1024` followed by sixteen zeros).
-const DWG_PREAMBLE_LEN: usize = 0x16;
+pub(crate) const DWG_PREAMBLE_LEN: usize = 0x16;
 
 
 
@@ -5159,3 +5192,28 @@ pub const WRITTEN_VERSION: &str = "AC1024";
 
 
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+/// 🫙️ Whether `snapshot` carries the empty document — the preamble triple and nothing else. Compared
+/// against a freshly defaulted snapshot wearing the same triple rather than by inspecting fields one
+/// at a time, so a field added to `DwgSnapshot` later cannot quietly fall out of the question.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn is_preamble_only_document(snapshot: &DwgSnapshot) -> bool {
+    let bare = DwgSnapshot { schema: snapshot.schema.clone(), version: snapshot.version.clone(), maintenance_version: snapshot.maintenance_version, codepage: snapshot.codepage, ..DwgSnapshot::default() };
+    *snapshot == bare
+}
+
+/// 🚫️ Why this writer cannot emit `snapshot`'s stamp, as the `x-semio-invariant` id it breaks and a sentence naming the
+/// value: `version-sentinel` when the stamp is not `AC` + four digits, `written-as-ac1024` when a drawing that carries
+/// content is stamped anything but [`WRITTEN_VERSION`]. AC1018 (R2004) frames objects without a handle-stream size,
+/// AC1027/AC1032 (R2013+) add `has_ds_data` to every object, so a foreign stamp over these object streams would be a file
+/// no reader decodes as written. Only the empty preamble-only document carries no object stream a stamp could
+/// contradict, so it may carry any sentinel.
+///
+/// @see https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf — §20 object layouts
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unwritable_version(snapshot: &DwgSnapshot) -> Option<(&'static str, String)> {
+    if snapshot.version.len() != 6 || !snapshot.version.starts_with("AC") || !snapshot.version.as_bytes()[2..].iter().all(u8::is_ascii_digit) {
+        return Some(("version-sentinel", format!("{:?} is not an AC10xx DWG version sentinel", snapshot.version)));
+    }
+    (snapshot.version != WRITTEN_VERSION && !is_preamble_only_document(snapshot)).then(|| ("written-as-ac1024", format!("a drawing that carries content is written as {WRITTEN_VERSION}; this writer cannot lay out {} object streams", snapshot.version)))
+}

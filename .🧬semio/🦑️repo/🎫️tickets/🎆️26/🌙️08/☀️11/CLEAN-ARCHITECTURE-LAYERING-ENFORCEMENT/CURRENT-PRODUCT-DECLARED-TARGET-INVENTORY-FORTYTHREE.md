@@ -1,0 +1,15 @@
+# Product Declared Target and Recursive Input Observations
+
+Read-only observation48 completed with actual exit zero and ready:false. Its 115750800-byte receipt traces a conservative potential declaration graph from the original renderer request: 67 positive entrypoints across 73 reachable workspace members, 3089 literal edges, 1705 current text-body observations and 23 separately retained binary observations. All 3831 existing frozen endpoints were exact. No source cloning, source/provider release, compiler or assertion success is inferred.
+
+There are 137 explicit refusals: 44 unresolved module path lookups, 68 nonliteral includes, 23 binary transports not admitted, one generated include and one missing literal file. These are unresolved observation authority, and conditional/platform/features or dependency-test demand are not asserted. Examples include proc-macro quote interpolation, nested inline module mounts, font bytes and an OUT_DIR icons.rs include. They require concrete defining owner or generation proofs before any source-floor extension.
+
+Captured Cargo metadata9 lists 119 workspace members and 167 target src_path declarations. Whole-workspace census44 records 84 guarded positive entrypoints, zero guarded nulls, and 83 unguarded missing targets. Observation45 finds regular current files at all 83 exact normalized Root paths; their hashes and bytes are observation only, with Root identity and authorship unclaimed.
+
+The original request-specific conservative dependency graph in observation47 reaches 73 workspace members and 67 entrypoints, all guarded positive and present. It includes every selected-package target and dependency library/proc-macro/custom-build targets, following all declared dependency kinds. Thus whole-workspace breadth and original request demand are separately recorded; no smaller request is proposed.
+
+Inventory43 originally joined raw Cargo strings containing ../.. segments. Immutable qualification44 preserves every raw string and prior SHA, normalizes lexical dot segments, and corrects only guard classification; the count of 83 physically missing whole-workspace entries is unchanged.
+
+Full-workspace observation46 failed before output on a non-UTF8 body check after partial progress. Its log remains retained and it has no source credit. Scoped observation48 derives from that exact helper with full before/after inverse, preserves explicit binary hashes/bytes/base64 observations and path refusals, and keeps every original frozen endpoint guarded.
+
+Read-only artifacts are under 🗑️generated/native-continuation: product-declared-target-entrypoint-inventory-43.json, qualification44, current-observation45 and request-reachability47. Complete observation48 is 🗑️generated/product-wgpu-native-whole/epoch-8/frozen-requested-rust-observation-48.json. Scripts are product-wgpu-native-declared-rust-target-observation-inputs-46/📜️script.ts and product-wgpu-native-requested-rust-observation-inputs-48/📜️script.ts, with GUI156/157 and full creation journals retained.

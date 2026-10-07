@@ -168,7 +168,7 @@ async fn language_neutral_tolerance_contract_matches_rust_decoder() {
         assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
     }
     for test_case in fixture["diffCases"].as_array().expect("tolerance diff cases are an array") {
-        let accepted = crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json(&test_case["diff"].to_string()).is_ok();
+        let accepted = crate::standards::v1::subsets::brep::io::text::diff::decode_semio_brep_diff_json(&test_case["diff"].to_string()).is_ok();
         assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
     }
 }
@@ -197,7 +197,7 @@ async fn language_neutral_tolerance_codec_rejections_match_rust() {
         let accepted = match test_case["encoding"].as_str().expect("diff codec encoding is a string") {
             "text" => SemioBrepDiff::parse_diff(test_case["value"].as_str().expect("text diff case has a value")).is_ok(),
             "binary" => {
-                let bytes = crate::value::io::text::diff::hex_decode(test_case["bytesHex"].as_str().expect("binary diff case has bytes")).expect("binary diff fixture is hex");
+                let bytes = crate::standards::v1::subsets::value::io::text::diff::hex_decode(test_case["bytesHex"].as_str().expect("binary diff case has bytes")).expect("binary diff fixture is hex");
                 SemioBrepDiff::decode_diff(&bytes).is_ok()
             }
             other => panic!("unknown diff codec encoding {other:?}"),

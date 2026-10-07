@@ -298,7 +298,7 @@ pub struct En1999Snapshot {
 
 //#endregion 🔖️Snapshot
 
-crate::impl_norm_artifact_record!(En1999Snapshot, extension = "en1999", envelope_id = "norm.en1999", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);
+
 
 fn is_zero_f64(v: &f64) -> bool { *v == 0.0 }
 fn is_non_tube_od(v: &f64) -> bool { *v == 0.0 }

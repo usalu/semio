@@ -63,10 +63,6 @@ type RasterAssetEntry {
   value: ArtifactChild!
 }
 
-type RasterImageAsset {
-  mime: String!
-  data: String!
-}
 
 type RasterTransform {
   x: Float!

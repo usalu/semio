@@ -10,17 +10,6 @@
     "publishedDescriptors": "utf8-owner-then-part",
     "inventoryCanonicalDigest": "published-reconstructed-inventory"
   },
-  "violationSchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": ["path", "code", "severity", "message"],
-    "properties": {
-      "path": { "type": "string" },
-      "code": { "type": "string" },
-      "severity": { "enum": ["error", "warning"] },
-      "message": { "type": "string" }
-    }
-  },
   "cases": [
     {
       "id": "path-case",

@@ -56,7 +56,7 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = ctx.input_bytes(super::SCAN)?;
         let base = decoded(ctx)?;
-        let bytes = encode_jpg(&base).map_err(|error| format!("identity-round-trip: re-serializing the decoded scan failed: {error:?}"))?;
+        let bytes = encode_jpg(&base, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(base.frame.as_ref())).map_err(|error| format!("identity-round-trip: re-serializing the decoded scan failed: {error:?}"))?;
         law::reparsed_not_copied(&bytes, &input)?;
         let reparsed = decode_jpg(&bytes).map_err(|error| format!("identity-round-trip: the re-encoded scan must decode again: {error:?}"))?;
         let verdict = jpg_baseline_conformance_codes(&reparsed);

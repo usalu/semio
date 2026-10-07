@@ -116,7 +116,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{decode_glb, encode_glb};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{gltf_inverse_restored_document, gltf_mutated_document};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document,gltf_mutated_document};
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Handlers

@@ -325,7 +325,7 @@ pub fn forms_results_child(responses: &[schema::response::FormsResponse]) -> For
     let mut digest = std::collections::hash_map::DefaultHasher::new();
     semio_framework_pack_json::to_json_string(&responses.to_vec()).hash(&mut digest);
     let id = format!("forms-table-{:016x}", digest.finish());
-    store::ArtifactChild::new(id.clone(), store::os_io::ArtifactRef { artifact_id: id, dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } })
+    store::ArtifactChild::new(id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } })
 }
 //#endregion 🔖️Converters
 
@@ -343,9 +343,9 @@ pub fn replace_forms_steps(snapshot: &mut FormsSnapshot, steps: Vec<FormStep>) {
 /// 🪆️ Derives projection handles without using process-local document caches.
 pub fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
     let scene_id = forms_scene_id(steps);
-    let target_for = |subset: &str| store::os_io::ArtifactRef {
+    let target_for = |subset: &str| semio_framework_artifact_reference::ArtifactRef {
         artifact_id: format!("forms-{subset}-{}", scene_id.strip_prefix("forms-scene-").unwrap_or(&scene_id)),
-        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() },
+        dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() },
     };
     let structure = target_for("value");
     (store::ArtifactChild::new(structure.artifact_id.clone(), structure), forms_results_child(&[]))
@@ -445,7 +445,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// it (a second parallel registration channel is the compatibility layer CLAUDE.md forbids).
 pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
 
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.forms.forms").expect("canonical forms kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
@@ -767,7 +767,8 @@ pub mod schema {
 }
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_form_edit_mutation,inverse_form_mutation,FormMutation};
+
 }
 
 
@@ -965,3 +966,9 @@ pub fn forms_child_restore_projection(snapshot: &crate::FormsSnapshot) -> Result
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("forms.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

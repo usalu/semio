@@ -113,7 +113,7 @@ fn the_interaction_topology_names_every_board_entity() {
     puzzle2d_push_target_region(&mut board, 0.5, 0.5, 10.5, 10.5);
     puzzle2d_push_edge(&mut board, json!({ "id": "edge-left-mid", "source": "left:v0", "target": "mid:v0" }));
     let snapshot = Puzzle2dPlaySnapshot::new(board);
-    let region = snapshot.typed().target_regions.first().map(|region| region.id.clone()).expect("the pushed region decodes");
+    let region = snapshot.typed().target_regions.first().map(|region| region.id.to_string_owner()).expect("the pushed region decodes");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Puzzle2dConfig::default();

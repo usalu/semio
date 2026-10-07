@@ -19,8 +19,6 @@
 //! svg, not importable from here across the artifact boundary, so this file declares its own copies
 //! for `📰️xml`'s own crate-visibility scope).
 
-use crate::standards::v1_0::subsets::base::io::binary::diff::dec_children_diff_bin;
-use crate::standards::v1_0::subsets::base::io::binary::diff::enc_children_diff_bin;
 use crate::schema::snapshot::{validate_xml_document_boundaries, XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote};
 use crate::XmlSnapshot;
 use framework_schema::ArtifactSchema;
@@ -160,25 +158,7 @@ impl XmlChildrenDiff {
         *self = absorb_children_diff(std::mem::take(self), &next);
     }
 
-    /// 📝️ Encodes a fragment diff using the native XML text grammar.
-    pub fn encode_text(&self) -> String {
-        enc_children_diff(self)
-    }
 
-    /// 📖️ Decodes a fragment diff using the native XML text grammar.
-    pub fn decode_text(text: &str) -> Result<Self, String> {
-        dec_children_diff(text)
-    }
-
-    /// 📦️ Appends a fragment diff using the native XML binary grammar.
-    pub fn encode_binary(&self, output: &mut Vec<u8>) {
-        enc_children_diff_bin(self, output);
-    }
-
-    /// 🔓️ Reads a fragment diff from a caller-owned binary frame.
-    pub fn decode_binary(reader: &mut store::ByteReader<'_>) -> Result<Self, String> {
-        dec_children_diff_bin(reader)
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "unguarded-missing",
+    "input": {
+      "declared": true,
+      "held": "unguarded",
+      "exists": true
+    },
+    "accepted": true
+  },
+  {
+    "id": "held-positive",
+    "input": {
+      "declared": true,
+      "held": "positive",
+      "exists": true
+    },
+    "accepted": true
+  },
+  {
+    "id": "held-null",
+    "input": {
+      "declared": true,
+      "held": "null",
+      "exists": true
+    },
+    "accepted": false
+  },
+  {
+    "id": "missing-source",
+    "input": {
+      "declared": true,
+      "held": "unguarded",
+      "exists": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "undeclared",
+    "input": {
+      "declared": false,
+      "held": "unguarded",
+      "exists": true
+    },
+    "accepted": false
+  }
+]

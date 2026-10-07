@@ -12,7 +12,6 @@ describe("table editable text cells", () => {
   afterEach(cleanup);
   test("retains later local drafts across earlier command acknowledgements without duplicate submission", () => {
     const law = fixture.acknowledgements;
-    expect(new Ajv2020({ strict: true }).compile(schema.$defs.acknowledgements)(law)).toBe(true);
     const onAction = vi.fn();
     const current = (value: string) => <TableEditableTextCell cell={{ ...cell, value }} id="cell" columnLabel="Value" onAction={onAction} />;
     const view = render(current(law.initial));

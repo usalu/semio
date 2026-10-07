@@ -1,8 +1,8 @@
 import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { repoTestArtifactEnvironment } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
@@ -14,7 +14,7 @@ const repoRoot = resolve(root, "../../../../../../..");
  * run. The per-user default is where a developer's live `dev s` sessions wait, and a test gateway
  * offered there is dialled by them: `ui_focus` then succeeds against a real shell and the tier-2 law
  * measures a stranger's browser instead of the binary. */
-const SUITE_AGENT_BRIDGE_DIR = mkdtempSync(join(tmpdir(), "semio-mcp-suite-bridge-"));
+const SUITE_AGENT_BRIDGE_DIR = mkdtempSync(join(repoTestArtifactEnvironment(repoRoot, "mcp-suite").SEMIO_TEST_ARTIFACT_DIR!, "semio-mcp-suite-bridge-"));
 
 /** 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
  * the pure surface in `../../🟦️.ts`, plus three real-process integration suites that spawn
@@ -34,9 +34,9 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-os-mcp",
     environment: "node",
-    include: [resolve(root, "../*/🟦️.ts")],
+    include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
     exclude: [
-      resolve(root, "../🧪️resolvemcpbinarypath/🟦️.ts"),
+      resolve(root, "../../🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts"),
       resolve(root, "./🟦️.ts"),
     ],
     env: { S_AGENT_BRIDGE_DIR: SUITE_AGENT_BRIDGE_DIR },

@@ -4,25 +4,255 @@
   "title": "BmpSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "bytes"],
+  "required": [
+    "schema",
+    "image"
+  ],
   "properties": {
     "schema": {
       "type": "string",
       "const": "stdio.bmp",
+      "x-semio-state": "artifact"
+    },
+    "image": {
+      "$ref": "#/definitions/image",
       "x-semio-state": "artifact",
       "x-semio-ui": {
-        "label": {"en": "Schema", "de": "Schema"}
+        "label": {
+          "en": "Native BMP image",
+          "de": "Natives BMP-Bild"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "paletteEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "b",
+        "g",
+        "r",
+        "reserved"
+      ],
+      "properties": {
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "reserved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
       }
     },
-    "bytes": {
-      "type": "array",
-      "items": {"type": "integer", "minimum": 0, "maximum": 255},
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "label": {"en": "Exact BMP bytes", "de": "Exakte BMP-Bytes"},
-        "description": {
-          "en": "The complete source file, including reserved fields, palettes, masks, gaps, row padding and trailers.",
-          "de": "Die vollständige Quelldatei einschließlich reservierter Felder, Paletten, Masken, Lücken, Zeilenfüllung und Anhänge."
+    "nativeSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "red",
+        "green",
+        "blue",
+        "alpha",
+        "reserved"
+      ],
+      "properties": {
+        "red": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "green": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "blue": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "alpha": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "reserved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "pixels": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "storage",
+            "indices"
+          ],
+          "properties": {
+            "storage": {
+              "const": "indexed"
+            },
+            "indices": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "storage",
+            "samples"
+          ],
+          "properties": {
+            "storage": {
+              "const": "direct"
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/nativeSample"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "rowOrder",
+        "profile",
+        "masks",
+        "palette",
+        "pixels",
+        "xPixelsPerMeter",
+        "yPixelsPerMeter",
+        "colorsUsed",
+        "colorsImportant",
+        "reserved1",
+        "reserved2",
+        "opaqueGap",
+        "opaqueTrailer"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "rowOrder": {
+          "enum": [
+            "bottomUp",
+            "topDown"
+          ]
+        },
+        "profile": {
+          "enum": [
+            "indexedRgb1",
+            "indexedRgb4",
+            "indexedRgb8",
+            "directRgb16",
+            "directRgb24",
+            "directRgb32",
+            "directBitfields16",
+            "directBitfields32"
+          ]
+        },
+        "masks": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "palette": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/paletteEntry"
+          }
+        },
+        "pixels": {
+          "$ref": "#/definitions/pixels"
+        },
+        "xPixelsPerMeter": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "yPixelsPerMeter": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "colorsUsed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "colorsImportant": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "reserved1": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "reserved2": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "opaqueGap": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "opaqueTrailer": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
         }
       }
     }

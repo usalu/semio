@@ -29,7 +29,7 @@ where
         state
     };
     for (index, edited) in edits {
-        let mut store = ArtifactStore::<P, Mu>::new(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None)).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
+        let mut store = ArtifactStore::<P, Mu>::new(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
         store.install_document_store_owners_exact(bounded_document_store_owners::<P, Mu>());
         for leaf in log {
             store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }).await.unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));

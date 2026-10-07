@@ -33,7 +33,7 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             let source = row["sourceWindowId"].as_str().unwrap();
             let target = row["targetWindowId"].as_str().unwrap();
             let target_exists = row["targetExists"].as_bool().unwrap();
-            let mut registry = WindowConfigOwnerRegistry::default();
+            let mut registry = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["openedActor"].as_str().unwrap().to_owned()));
             registry.register::<IdentityWindowOwner>().unwrap();
             drop(registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap());
             let target_before = if target_exists {

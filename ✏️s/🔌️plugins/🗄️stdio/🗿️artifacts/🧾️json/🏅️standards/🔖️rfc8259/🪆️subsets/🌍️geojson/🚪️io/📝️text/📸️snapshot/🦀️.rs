@@ -7,8 +7,6 @@ use crate::standards::v_rfc8259::subsets::geojson::schema::*;
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot, JsonValue};
 use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
 use serde_json::{Map, Number, Value};
-use derived_construction::*;
-use derived_analysis::*;
 
 
 
@@ -48,9 +46,7 @@ pub fn exact_serde_value(value: &JsonValue) -> Value {
 
 /// 📐️ Twice the signed planar area of a closed ring (shoelace) — positive for counter-clockwise.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ring_signed_area2(ring: &[GeoJsonPosition]) -> f64 {
-    ring.windows(2).map(|pair| pair[0][0] * pair[1][1] - pair[1][0] * pair[0][1]).sum()
-}
+
 
 
 
@@ -65,18 +61,7 @@ pub fn ring_signed_area2(ring: &[GeoJsonPosition]) -> f64 {
 /// 🔁️ A ring as RFC 7946 writes it: closed (the first position repeated when it is not already) and
 /// wound by the right-hand rule — counter-clockwise for the exterior, clockwise for holes (§3.1.6).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn right_handed_ring(ring: &[GeoJsonPosition], exterior: bool) -> Vec<GeoJsonPosition> {
-    let mut closed = ring.to_vec();
-    if let (Some(first), Some(last)) = (ring.first(), ring.last()) {
-        if first != last {
-            closed.push(first.clone());
-        }
-    }
-    if (ring_signed_area2(&closed) > 0.0) != exterior {
-        closed.reverse();
-    }
-    closed
-}
+
 
 
 
@@ -85,6 +70,44 @@ pub fn right_handed_ring(ring: &[GeoJsonPosition], exterior: bool) -> Vec<GeoJso
 /// 📤️ Writes `features` as one RFC 7946 FeatureCollection: WGS 84 only (no `crs`), rings closed and
 /// right-handed, `properties` always present (`null` when absent), `id` only when the feature has one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn geometry_value(geometry: &GeoJsonGeometry, path: &str) -> Result<Value, GeoJsonError> {
+    let coordinates_path = format!("{path}/coordinates");
+    let (kind, coordinates) = match geometry {
+        GeoJsonGeometry::Point(position) => ("Point", position_value(position, &coordinates_path)?),
+        GeoJsonGeometry::MultiPoint(positions) => ("MultiPoint", positions_value(positions, &coordinates_path, 0, "a MultiPoint")?),
+        GeoJsonGeometry::LineString(positions) => ("LineString", positions_value(positions, &coordinates_path, 2, "a LineString")?),
+        GeoJsonGeometry::MultiLineString(lines) => ("MultiLineString", lines.iter().enumerate().map(|(index, line)| positions_value(line, &format!("{coordinates_path}/{index}"), 2, "a LineString")).collect::<Result<Vec<_>, _>>().map(Value::Array)?),
+        GeoJsonGeometry::Polygon(rings) => ("Polygon", polygon_value(rings, &coordinates_path)?),
+        GeoJsonGeometry::MultiPolygon(polygons) => ("MultiPolygon", polygons.iter().enumerate().map(|(index, rings)| polygon_value(rings, &format!("{coordinates_path}/{index}"))).collect::<Result<Vec<_>, _>>().map(Value::Array)?),
+        GeoJsonGeometry::GeometryCollection(members) => {
+            let geometries = members.iter().enumerate().map(|(index, member)| geometry_value(member, &format!("{path}/geometries/{index}"))).collect::<Result<Vec<_>, _>>()?;
+            return Ok(serde_json::json!({ "type": "GeometryCollection", "geometries": geometries }));
+        }
+    };
+    Ok(serde_json::json!({ "type": kind, "coordinates": coordinates }))
+}
+pub(crate) fn position_value(position: &GeoJsonPosition, path: &str) -> Result<Value, GeoJsonError> {
+    if position.len() < 2 {
+        return fail(path, "a position has at least longitude and latitude");
+    }
+    let numbers = position.iter().map(|number| Number::from_f64(*number).map(Value::Number)).collect::<Option<Vec<_>>>();
+    let Some(numbers) = numbers else { return fail(path, "a coordinate is a finite number") };
+    wgs84_range(position, path)?;
+    Ok(Value::Array(numbers))
+}
+pub(crate) fn positions_value(positions: &[GeoJsonPosition], path: &str, minimum: usize, what: &str) -> Result<Value, GeoJsonError> {
+    if positions.len() < minimum {
+        return fail(path, format!("{what} needs at least {minimum} positions"));
+    }
+    positions.iter().enumerate().map(|(index, position)| position_value(position, &format!("{path}/{index}"))).collect::<Result<Vec<_>, _>>().map(Value::Array)
+}
+pub(crate) fn polygon_value(rings: &[Vec<GeoJsonPosition>], path: &str) -> Result<Value, GeoJsonError> {
+    if rings.is_empty() {
+        return fail(path, "a Polygon has an exterior ring");
+    }
+    rings.iter().enumerate().map(|(index, ring)| positions_value(&right_handed_ring(ring, index == 0), &format!("{path}/{index}"), 4, "a linear ring")).collect::<Result<Vec<_>, _>>().map(Value::Array)
+}
+
 pub fn write_geojson(features: &[GeoJsonFeature]) -> Result<Value, GeoJsonError> {
     let mut written = Vec::with_capacity(features.len());
     for (index, feature) in features.iter().enumerate() {
@@ -96,12 +119,12 @@ pub fn write_geojson(features: &[GeoJsonFeature]) -> Result<Value, GeoJsonError>
                 object.insert("id".into(), Value::String(text.clone()));
             }
             Some(GeoJsonId::Number(number)) => {
-                object.insert("id".into(), Value::Number(number.clone()));
+                object.insert("id".into(), exact_serde_value(number));
             }
             None => {}
         }
         object.insert("geometry".into(), feature.geometry.as_ref().map(|geometry| geometry_value(geometry, &format!("{path}/geometry"))).transpose()?.unwrap_or(Value::Null));
-        object.insert("properties".into(), feature.properties.clone().map(Value::Object).unwrap_or(Value::Null));
+        object.insert("properties".into(), feature.properties.as_ref().map(|members|Value::Object(members.iter().map(|(name,value)|(name.clone(),exact_serde_value(value))).collect())).unwrap_or(Value::Null));
         written.push(Value::Object(object));
     }
     Ok(serde_json::json!({ "type": "FeatureCollection", "features": written }))

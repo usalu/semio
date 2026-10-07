@@ -1,4 +1,5 @@
 {
+  "openedActor": "window-identity-reader",
   "windowKind": "identity-window",
   "schema": "test.window.identity",
   "cases": [

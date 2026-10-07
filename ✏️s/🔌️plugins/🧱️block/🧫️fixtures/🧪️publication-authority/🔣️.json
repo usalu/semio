@@ -188,20 +188,20 @@
         {
           "id": "worldSurfaceHover",
           "lanes": [
-            "config"
+            "window-transient"
           ]
         },
         {
           "id": "worldSurfaceLeave",
           "lanes": [
-            "config"
+            "window-transient"
           ]
         },
         {
           "id": "worldSurfacePlace",
           "lanes": [
             "artifact",
-            "config"
+            "window-transient"
           ]
         },
         {

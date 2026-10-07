@@ -1,21 +1,21 @@
 {
   "bindings": [
     {
-      "documentId": "cad.drawing.fixture",
-      "pluginId": "cad",
-      "appId": "s.cad.drawing@1/*#editor",
-      "folder": {
-        "kind": "path",
-        "path": "/Users/ada/Documents/drawings"
-      }
-    },
-    {
       "documentId": "board.ports.directed.v1",
       "pluginId": "puzzle2d",
       "appId": "s.puzzle.puzzle2d@1/*#editor",
       "folder": {
         "kind": "path",
         "path": "/Users/ada/Documents/puzzles"
+      }
+    },
+    {
+      "documentId": "cad.drawing.fixture",
+      "pluginId": "cad",
+      "appId": "s.cad.drawing@1/*#editor",
+      "folder": {
+        "kind": "path",
+        "path": "/Users/ada/Documents/drawings"
       }
     }
   ]

@@ -1,6 +1,6 @@
+# import SemioImageSnapshot from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🔗️.graphql"
 # 🧬️ Raster diff schema — sparse field delta over the artifact.
 # import RasterArtifact from "../🔗️.graphql"
-# import RasterImageAsset from "../🔗️.graphql"
 # import RasterLayerNode from "../🔗️.graphql"
 
 type RasterDiff {
@@ -18,7 +18,7 @@ type RasterAssetsDelta {
 
 type RasterAssetsDeltaEntry {
   key: String!
-  value: RasterImageAsset
+  value: SemioImageSnapshot
 }
 
 type RasterLayersDelta {

@@ -5,6 +5,7 @@ use crate::manifest::{PropertyBag,PropertyDef,PropertyKind,PropertyValue,PortDir
 #[test]
 fn graph_fields_implement_the_canonical_record_identity() {
     fn bound<T:DslField>(){}
+    let semio_framework_dsl_record::BorrowedShape::Map(inner)=<PropertyBag as semio_framework_dsl_record::BorrowedDslField>::SHAPE else{panic!("borrowed property map")};assert!(matches!(inner(),semio_framework_dsl_record::BorrowedShape::Value));
     bound::<PropertyBag>();bound::<PropertyDef>();bound::<PropertyKind>();bound::<PropertyValue>();bound::<PortDirection>();bound::<Vec<PropertyDef>>();
 }
 

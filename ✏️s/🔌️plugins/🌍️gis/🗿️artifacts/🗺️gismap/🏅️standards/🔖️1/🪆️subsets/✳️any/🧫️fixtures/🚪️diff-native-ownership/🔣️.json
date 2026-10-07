@@ -1,0 +1,15 @@
+{
+  "diff": {
+    "artifact": null,
+    "positions": {
+      "added": [],
+      "removed": [
+        "p0"
+      ],
+      "patched": [],
+      "reordered": null
+    },
+    "routes": null,
+    "regions": null
+  }
+}

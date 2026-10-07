@@ -1,7 +1,8 @@
-//! 🎪 `stdio.ifc` artifact — stdio reference format.
-
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
+//! 🎪 `stdio.ifc` artifact — stdio reference format.
+use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
+
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -64,11 +65,11 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor(), standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor()])
         .composers(standards::v4::engine::io_registry::entries())
         .composers(standards::v2x3::engine::io_registry::entries())
-        .document_codec_bare::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("4"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("cv20") })
-        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("sav") })
-        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("cobie") });
+        .document_codec_bare::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("4"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("cv20") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("sav") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("cobie") });
     let builder = standards::v2x3::subsets::cv20::io::declare(builder);
     let builder = standards::v2x3::subsets::sav::io::declare(builder);
     standards::v2x3::subsets::cobie::io::declare(builder).try_build()
@@ -96,7 +97,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use crate::standards::v2x3::engine::io_registry as v2x3;
     use crate::standards::v4::engine::io_registry as v4;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -423,8 +424,8 @@ pub mod engine {
     /// explicitly. Same shape as pdf's own shim fix for 1.4/1.7.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        super::standards::v4::engine::register();
-        super::standards::v2x3::engine::register();
+        super::standards::v4::subsets::any::io::register();
+        super::standards::v2x3::subsets::base::io::register();
     }
 }
 

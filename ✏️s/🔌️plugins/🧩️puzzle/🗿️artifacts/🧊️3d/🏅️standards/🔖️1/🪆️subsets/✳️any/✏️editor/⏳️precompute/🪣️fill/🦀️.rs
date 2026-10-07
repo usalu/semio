@@ -2401,7 +2401,9 @@ pub(crate) fn fill_run_entity(object_id: &str) -> u64 {
 
 /// 🧬️ The two `OpBinary` document ops one placement contributes, in append order.
 pub(crate) fn fill_run_ops(object: &EngineSceneObject, attraction: &AttractionProps, peers: &[Puzzle3dObject], catalog_snapshot: &Puzzle3dSceneSnapshot) -> Option<[Vec<u8>; 2]> {
-    use crate::standards::v1::subsets::any::schema::mutations::{binary::encode_op, connect_vortices, create_object};
+    use crate::standards::v1::subsets::any::io::binary::mutations::encode_op;
+    use crate::standards::v1::subsets::any::schema::mutations::{connect_vortices,create_object};
+
     let mut document: crate::Puzzle3dObject = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok()?;
     let kind_id = object.object_kind.as_deref().unwrap_or("object");
     if document.label.as_deref().map(str::is_empty).unwrap_or(true) {

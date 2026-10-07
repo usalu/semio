@@ -33,12 +33,13 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_svg::{
-    schema::snapshot::{svg_element_from_xml_node, transform_ops_to_matrix, Matrix2D, PathCommand, SvgElement, ViewBox},
+    schema::snapshot::{ transform_ops_to_matrix, Matrix2D, PathCommand, SvgElement, ViewBox},
     SvgSnapshot,
 };
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr,XmlDocument};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::attributes::{svg_element_from_xml_node,native_svg_node};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -355,7 +356,8 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let root_node = from.doc.root.as_ref().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "svg→semio/drawing: document has no root element")))?;
-        let root = svg_element_from_xml_node(root_node).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        let mut native=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(XmlDocument{root:Some(native_svg_node(root_node)),..Default::default()},semio_s_artifact_stdio_xml::schema::snapshot::ownership::retire_xml_document);
+        let root = svg_element_from_xml_node(native.as_mut().root.as_ref().expect("SVG physical bridge root")).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         let (canvas, children) = match &root {
             SvgElement::Svg { view_box, width, height, children, .. } => {
                 let (w, h) = match view_box {

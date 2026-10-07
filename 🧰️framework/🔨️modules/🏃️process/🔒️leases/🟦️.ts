@@ -111,6 +111,18 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
 /** 🚦️ One waiter's place in a resource's arrival queue: `<directory>/<resource-hash>.queue/<arrivedAtMs>-<pid>-<owner>`. */
 export type QueuedLeaseOptions = LeaseOptions & { readonly owner: string };
 
+/** 🔁️ Retries an interrupted filesystem read while preserving cancellation and original permanent errors. */
+export async function retryInterruptedFilesystemRead<T>(signal: AbortSignal, read: () => T): Promise<T> {
+  for (;;) {
+    signal.throwIfAborted();
+    try { return read(); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EINTR") throw error;
+      await delay(1, undefined, { signal });
+    }
+  }
+}
+
 /** 🚦️ Whether the process that wrote a queue ticket still exists (EPERM means it exists under another user). */
 function ticketAlive(pid: number): boolean {
   if (!Number.isSafeInteger(pid) || pid <= 0) return false;
@@ -138,7 +150,7 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
   try {
     for (;;) {
       options.signal.throwIfAborted();
-      const live = readdirSync(queue).sort().filter((name) => {
+      const live = (await retryInterruptedFilesystemRead(options.signal, () => readdirSync(queue))).sort().filter((name) => {
         const pid = Number(name.split("-")[1]);
         if (name === ticket || ticketAlive(pid)) return true;
         rmSync(join(queue, name), { force: true });

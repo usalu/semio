@@ -1,4 +1,5 @@
 /** 🧪️ Layout parent facets retain the live drawing payload while enforcing its child identity. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
@@ -28,7 +29,7 @@ export function testLayoutDocumentContractOracle(): void {
   modelAsChild.referencedModel = { childId: "model", target: document.referencedModel.target };
   assertDocumentContractOracle({
     name: "Layout",
-    dependencies: [ioSchema, blobSchema, childSchema, linkSchema, drawingSchema, dictionarySchema],
+    dependencies: [ioSchema, blobSchema, childSchema, linkSchema, drawingSchema, dictionarySchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: layoutArtifactFromNativeJson, nativeJson:value=>layoutArtifactNativeJson(value as ReturnType<typeof layoutArtifactFromNativeJson>) },
     snapshot: { schema: snapshotSchema, parse: layoutArtifactFromNativeJson, nativeJson:value=>layoutArtifactNativeJson(value as ReturnType<typeof layoutArtifactFromNativeJson>) },
     diff: { schema: diffSchema, parse: layoutDiffFromNativeJson, nativeJson:value=>layoutDiffNativeJson(value as ReturnType<typeof layoutDiffFromNativeJson>) },

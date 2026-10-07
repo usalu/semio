@@ -1,6 +1,10 @@
 //! 📝️ Direct set-snapshot text codec.
+use crate::standards::v_v3::subsets::any::schema::mutations::*;
+use crate::standards::v_v3::subsets::any::schema::snapshot::*;
+use crate::standards::v_v3::subsets::any::io::text::diff::*;
 
-use crate::standards::v_v3::subsets::any::io::text::mutations::*;
+use crate::schema::mutations::{BmpMutation, SetSnapshot};
+use crate::BmpSnapshot;
 use crate::standards::v_v3::subsets::any::io::text::mutations::Entry;
 
 pub const TEXT_OPCODE: &str = "set-snapshot";

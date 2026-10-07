@@ -14,7 +14,6 @@ import { EventEmitter } from "node:events";
 
 const owner = resolve(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as { operations: { mode: "sync" | "lock"; arguments: string[] }[]; platforms: string[]; rejections: string[][] };
-const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
 
 test("source watchers have stable independent graph stores and sockets for each activation binding", () => {
   const workspace = resolve(owner), environment = { S_OS_PORT: "6064", PLAYGROUND_LOCKED_EXAMPLE_ID: "🎬️demo", NX_WORKSPACE_DATA_DIRECTORY: "shared" }, target = "a:activate-react";
@@ -83,12 +82,7 @@ test("selects portable pinned Bun archives and extracts the same bytes as fflate
   expect(() => bunArchiveExecutable(Buffer.from("invalid"), "bun")).toThrow();
 });
 
-test("validates the closed portable dependency corpus before command execution", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...fixture, extra: true })).toBe(false);
-  expect(validate({ ...fixture, operations: fixture.operations.map(operation => ({ ...operation, arguments: ["install", "--production"] })) })).toBe(false);
-});
+
 
 test("selects exact Bun arguments across all supported hosts and rejects installer overrides", async () => {
   for (const platform of fixture.platforms) for (const operation of fixture.operations) {

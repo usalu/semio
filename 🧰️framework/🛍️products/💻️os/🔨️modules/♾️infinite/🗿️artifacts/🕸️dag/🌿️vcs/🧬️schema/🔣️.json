@@ -628,27 +628,6 @@
           "exclusiveMinimum": 0
         }
       }
-    },
-    "SliderOverlayKeyboardStep": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "key",
-        "expected"
-      ],
-      "properties": {
-        "key": {
-          "enum": [
-            "ArrowRight",
-            "ArrowLeft",
-            "Home",
-            "End"
-          ]
-        },
-        "expected": {
-          "type": "number"
-        }
-      }
     }
   }
 }

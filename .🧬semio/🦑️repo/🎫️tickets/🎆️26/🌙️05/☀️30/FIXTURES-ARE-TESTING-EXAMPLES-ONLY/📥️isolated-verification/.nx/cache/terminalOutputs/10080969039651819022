@@ -1,0 +1,51 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" actor
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+(node:72675) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✘ [ERROR] Could not resolve "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️config/🟦️.ts"
+
+failed to load config from /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️config/🟦️.ts
+
+⎯⎯⎯⎯⎯⎯⎯ Startup Error ⎯⎯⎯⎯⎯⎯⎯⎯
+Error: Build failed with 1 error:
+error: Could not resolve "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️config/🟦️.ts"
+    at failureErrorWithLog (/Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:1748:15)
+    at /Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:1207:25
+    at runOnEndCallbacks (/Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:1588:45)
+    at buildResponseToResult (/Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:1205:7)
+    at /Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:1232:16
+    at responseCallbacks.<computed> (/Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:884:9)
+    at handleIncomingPacket (/Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:939:12)
+    at Socket.readFromStdout (/Users/ueli/Documents/semio/node_modules/[4mesbuild[24m/lib/main.js:862:7)
+[90m    at Socket.emit (node:events:509:28)[39m
+[90m    at addChunk (node:internal/streams/readable:563:12)[39m {
+  errors: [36m[Getter/Setter][39m,
+  warnings: [36m[Getter/Setter][39m
+}
+
+
+
+[0m[1m38 |[0m       child[0m[3m[1m.once[0m([0m[32m"close"[0m, (code, signal) => accept({ code, signal }))[0m[2m;[0m
+[0m[1m39 |[0m     })[0m[2m;[0m
+[0m[1m40 |[0m     [0m[35mconst[0m failure = reason === [0m[32m"timeout"[0m ? [0m[32m`[0m${command}[0m[32m exceeded its [0m${options.budgetMs}[0m[32mms budget`[0m : reason ? [0m[32m`[0m${command}[0m[32m [0m${reason}[0m[32m`[0m : signal ? [0m[32m`[0m${command}[0m[32m was killed by [0m${signal}[0m[32m`[0m : code !== [0m[33m0[0m ? [0m[32m`[0m${command}[0m[32m exited with status [0m${code}[0m[32m`[0m : [0m[33mundefined[0m[0m[2m;[0m
+[0m[1m41 |[0m     [0m[35mif[0m (!failure) [0m[35mreturn[0m[0m[2m;[0m
+[0m[1m42 |[0m     if (reason === "timeout") console.error(`[budget] ${command} ${args.join(" ")} exceeded ${options.budgetMs}ms — killed. ${options.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive)."}`);
+[0m[1m43 |[0m     [0m[35mif[0m (options.throwOnFailure) [0m[35mthrow[0m Error(failure)[0m[2m;[0m
+                                           [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mnode exited with status 1[0m
+[0m      [2mat [0m[0m[1m[3mrunBudgetedTestCommand[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts[0m[2m:[0m[33m43[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync runVitestV1[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts[0m[2m:[0m[33m40[0m[2m:[33m9[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync runVitest[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts[0m[2m:[0m[33m1967[0m[2m:[33m9[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" actor" exited with non-zero status code

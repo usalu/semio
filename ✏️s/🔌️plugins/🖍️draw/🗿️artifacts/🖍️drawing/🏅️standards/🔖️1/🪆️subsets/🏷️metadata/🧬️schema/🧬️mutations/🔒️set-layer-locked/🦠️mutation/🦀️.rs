@@ -5,19 +5,19 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🔒️ `set-layer-locked` payload.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "set-layer-locked")]
 pub struct SetLayerLocked {
-    pub layer_id: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub locked: bool,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_locked(layer_id: String, locked: bool) -> DrawingMutation {
+pub fn set_layer_locked(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, locked: bool) -> DrawingMutation {
     DrawingMutation::SetLayerLocked(SetLayerLocked { layer_id, locked })
 }
 
@@ -37,7 +37,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerLocked
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" locked to {}", self.layer_id, self.locked), &format!("Sperre von Ebene \"{}\" auf {} setzen", self.layer_id, self.locked))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

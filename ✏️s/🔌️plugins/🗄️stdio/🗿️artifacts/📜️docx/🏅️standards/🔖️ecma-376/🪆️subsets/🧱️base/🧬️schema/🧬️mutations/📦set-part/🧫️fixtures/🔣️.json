@@ -1,0 +1,120 @@
+{
+  "valid": [
+    {
+      "mutation": "setPart",
+      "path": "docProps/app.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.extended-properties+xml",
+      "payload": {
+        "kind": "xml",
+        "document": {
+          "root": {
+            "kind": "element",
+            "name": "Properties",
+            "attrs": [
+              {
+                "name": "xmlns",
+                "value": "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
+              }
+            ],
+            "children": [
+              {
+                "kind": "element",
+                "name": "Application",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "semio-wave7-mutation-test"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "mutation": "setPart",
+      "path": "word/media/data.bin",
+      "content_type": "application/octet-stream",
+      "payload": {
+        "kind": "binary",
+        "bytes": [
+          0,
+          255,
+          97,
+          0
+        ]
+      }
+    },
+    {
+      "mutation": "setPart",
+      "path": "typed-doctype.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.extended-properties+xml",
+      "payload": {
+        "kind": "xml",
+        "document": {
+          "root": {
+            "kind": "element",
+            "name": "Properties",
+            "attrs": [
+              {
+                "name": "xmlns",
+                "value": "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
+              }
+            ],
+            "children": [
+              {
+                "kind": "element",
+                "name": "Application",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "semio-wave7-mutation-test"
+                  }
+                ]
+              }
+            ]
+          },
+          "doctype": {
+            "name": "Properties",
+            "prologPosition": "1",
+            "declarations": []
+          },
+          "prolog": [
+            {
+              "kind": "comment",
+              "text": "before doctype"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "invalidPayloads": [
+    {
+      "kind": "xml",
+      "bytes": [
+        60,
+        62
+      ]
+    },
+    {
+      "kind": "binary",
+      "bytes": [
+        256
+      ]
+    },
+    {
+      "kind": "binary",
+      "bytes": [
+        0.5
+      ]
+    },
+    {
+      "kind": "unknown",
+      "bytes": []
+    }
+  ]
+}

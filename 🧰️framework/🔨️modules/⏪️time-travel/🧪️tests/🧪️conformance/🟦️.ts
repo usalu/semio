@@ -6,6 +6,7 @@ import { assign, createMachine, initialTransition, transition, type AnyMachineSn
 import lifecycle from "../../🧫️fixtures/🧫️lifecycle-law/🔣️.json";
 import { replayReportBlocksFinalize, type InputReplacement } from "@semio-tech/framework-replication";
 import schema from "../../🧬️schema/🔣️.json";
+import replaySchema from "../../../📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json";
 import * as M from "../../🟦️.ts";
 
 const law = lifecycle as any;
@@ -16,13 +17,11 @@ const kinds = (effects: readonly M.TimeTravelEffect[]): string[] => effects.map(
 
 describe("schema oracle (ajv)", () => {
   const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(replaySchema);
   ajv.addSchema(schema);
   const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
 
-  test("the fixture validates against LifecycleLawFixture", () => {
-    const validate = validator("LifecycleLawFixture");
-    expect(validate(law), JSON.stringify(validate.errors)).toBe(true);
-  });
+
 
   test("every reducer output re-serializes to schema-valid sessions and effects", () => {
     const session = validator("TimeTravelSession");
@@ -35,12 +34,7 @@ describe("schema oracle (ajv)", () => {
     }
   });
 
-  test("hostile fixture mutations are rejected by the schema", () => {
-    const validate = validator("LifecycleLawFixture");
-    expect(validate({ ...law, extra: true })).toBe(false);
-    expect(validate({ ...law, matrix: law.matrix.slice(1) })).toBe(false);
-    expect(validate({ ...law, labels: [{ ...law.labels[0], de: "" }, ...law.labels.slice(1)] })).toBe(false);
-    expect(validate({ ...law, events: { ...law.events, exit: { type: "exit", generation: 1 } } })).toBe(false);
+  test("hostile session and effect values are rejected by the domain schema", () => {
     const session = validator("TimeTravelSession");
     const context = law.contexts["reviewing.ready"];
     expect(session(context)).toBe(true);
@@ -133,6 +127,18 @@ describe("lifecycle law", () => {
         const result = M.applyTimeTravel(session, M.timeTravelEventFromJson(law.events[key]));
         expect(M.timeTravelBeginRefusal(session), `${name} × ${key}`).toBe(result.ok ? null : result.rejection);
       }
+    }
+  });
+
+  test("accept needs a changed draft and preserves every refused session", () => {
+    for (const [name, json] of Object.entries(law.contexts)) {
+      const session = M.timeTravelSessionFromJson(json);
+      const before = M.timeTravelSessionToJson(session);
+      const result = M.applyTimeTravel(session, { type: "accept", generation: session.generation });
+      const expected = session.stage !== "editing" || session.pending === null ? "timeTravel.illegal" : M.timeTravelUnchanged(session, session.pending) ? "timeTravel.unchanged" : null;
+      expect(M.timeTravelAcceptRefusal(session), name).toBe(expected);
+      expect(result.ok ? null : result.rejection, name).toBe(expected);
+      expect(M.timeTravelSessionToJson(session), name).toEqual(before);
     }
   });
 
@@ -349,7 +355,7 @@ describe("state machine oracle (xstate + fast-check)", () => {
     beginWithdrawn: (model, event, row) => begun(model, event, row, "withdrawn"),
     draft: (model, event) => ({ ...model, pending: { ...model.pending!, value: event.value! } }),
     withdraw: (model) => ({ ...model, pending: { ...model.pending!, value: "withdrawn" } }),
-    accept: (model) => (unchanged(model) ? resumed(model, model.pending!.returnStage) : replayed({ ...model, accepted: acceptedAfter(model), pending: null })),
+    accept: (model) => replayed({ ...model, accepted: acceptedAfter(model), pending: null }),
     discard: (model) => resumed(model, model.pending!.returnStage),
     restore: (model, event) => {
       const accepted = model.accepted.filter((draft) => draft.mutation !== event.mutation);

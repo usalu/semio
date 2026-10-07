@@ -4,7 +4,8 @@
 
 use crate::editor::bcf::modes::edit;
 use crate::editor::bcf::modes::edit::windows::main;
-use crate::standards::v2_1::subsets::any::schema::mutations::{patch_snapshot::PatchSnapshot, set_snapshot::SetSnapshot, set_topic_markup::SetTopicMarkup, BcfMutation};
+use crate::standards::v2_1::subsets::any::schema::mutations::{patch_snapshot::PatchSnapshot,set_snapshot::SetSnapshot,set_topic_markup::SetTopicMarkup,BcfMutation};
+
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::app::InteractionView;
@@ -19,7 +20,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -34,8 +35,8 @@ use semio_framework_plugin::NoPresence;
 use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::StandardId;
-use semio_framework_plugin::SubsetId;
+use {semio_framework_artifact_reference::StandardId};
+use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::ToolExecutionContract;
 use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;

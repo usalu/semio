@@ -8,7 +8,8 @@
 //! Only `name` changes: the id `wind` every combination term resolves through is untouched, so a rename orphans nothing.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/📸️snapshot/⬅️before/🔣️.json");

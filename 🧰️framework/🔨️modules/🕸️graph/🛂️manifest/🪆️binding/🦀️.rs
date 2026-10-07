@@ -15,6 +15,7 @@ use semio_framework_value::ValueError;
 use semio_framework_value::{FromValue,ValueRefusalKind,ValueType,DecodedValue};
 macro_rules! scalar {
     ($ty:ty,$first:ident,$second:ident,$first_name:literal,$second_name:literal)=>{
+        impl semio_framework_dsl_record::BorrowedDslField for $ty { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Enum(&[($first_name,0),($second_name,1)]); }
         impl DslField for $ty {
             fn shape()->Shape{Shape::Enum(vec![($first_name.into(),0),($second_name.into(),1)])}
             fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_stage(|control|{control.begin_stage(2)?;let mut values=control.allocate_vec(2)?;values.push((control.copy_text($first_name)?,0));control.step()?;values.push((control.copy_text($second_name)?,1));control.step()?;Ok(Shape::Enum(values))})}
@@ -65,3 +66,13 @@ impl DslField for PropertyDef {
     fn from_value_controlled(value:&FieldValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{match value{semio_framework_dsl_record::FieldValue::Record(record)=>Self::from_record_controlled(record,control),_=>Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue,"expected property declaration record"))}}
     fn retire_decoded(self){retire(self)}
 }
+
+impl semio_framework_dsl_record::BorrowedDslRecord for PropertyDef {
+    const RECORD:semio_framework_dsl_record::BorrowedRecordSpec=semio_framework_dsl_record::BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&[
+        semio_framework_dsl_record::BorrowedFieldSpec::new(0,"name",semio_framework_dsl_record::BorrowedShape::Text),
+        semio_framework_dsl_record::BorrowedFieldSpec::new(1,"kind",<PropertyKind as semio_framework_dsl_record::BorrowedDslField>::SHAPE),
+        semio_framework_dsl_record::BorrowedFieldSpec::new(2,"value-type",semio_framework_dsl_record::BorrowedShape::Value),
+        semio_framework_dsl_record::BorrowedFieldSpec{optional:true,..semio_framework_dsl_record::BorrowedFieldSpec::new(3,"expr",semio_framework_dsl_record::BorrowedShape::Text)},
+    ]};
+}
+impl semio_framework_dsl_record::BorrowedDslField for PropertyDef { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>); }

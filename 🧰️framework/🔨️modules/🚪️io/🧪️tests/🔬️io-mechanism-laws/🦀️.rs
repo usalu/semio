@@ -5,7 +5,7 @@ mod laws {
     //! `conformance_runs_after_deserialize` exercises the public constructor + `IoEntry.run`
     //! directly (no registry needed for that one at all).
     use super::*;
-    use crate::io_schema::{StandardId, SubsetId};
+    use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const A: Dialect = Dialect { artifact_kind: "test.io-mechanism.a", standard: StandardId("1"), subset: SubsetId("*") };
     const B: Dialect = Dialect { artifact_kind: "test.io-mechanism.b", standard: StandardId("1"), subset: SubsetId("*") };

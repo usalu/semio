@@ -1,6 +1,8 @@
-//! 🧬️ XmlSnapshot schema — persistent fields + real codecs.
+//! 🧬️ XmlSnapshot logical state and validation.
 
 use crate::STDIO_XML_DOCUMENT_SCHEMA;
+#[path = "💡️markup-facts/🦀️.rs"]
+pub mod markup_facts;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️XmlModel
@@ -83,11 +85,7 @@ fn is_zero(value: &u64) -> bool {
     *value == 0
 }
 
-impl From<&str> for XmlDoctype {
-    fn from(value: &str) -> Self {
-        parse_doctype(value).expect("valid XML document type literal")
-    }
-}
+
 
 /// 🔗️ Standard SYSTEM or PUBLIC external identifier.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -203,127 +201,13 @@ impl XmlSnapshot {
         self.clone()
     }
 
-    /// 📥️ Parses XML into its lossless logical model.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
-        let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
-        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text)? })
-    }
 
-    /// 📤️ Deterministically materializes XML from the logical model.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        Ok(xml_document_to_text_checked(&self.doc)?.into_bytes())
-    }
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️XmlTextCodec
-/// 🔤 Escapes character data for text-node content. Per XML 1.0 §2.11, only the two-character
-/// sequence `#xD #xA` and any lone `#xD` are normalized (to `#xA`) on the NEXT parse -- a literal
-/// tab or `\n` is legal, untouched, and round-trips as-is, so only `\r` needs re-escaping here
-/// (as `&#13;`) to survive; escaping `\n` too would be a needless (though harmless) divergence
-/// from what the spec actually requires. This is deliberately narrower than [`xml_escape_attr`] --
-/// see that function's doc for why attribute values need a wider set of characters escaped.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_escape_text(s: &str) -> String {
-    let mut out = String::new();
-    for ch in s.chars() {
-        match ch {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '>' => out.push_str("&gt;"),
-            '\r' => out.push_str("&#13;"),
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-
-/// 🔤 Escapes character data for a double-quoted attribute value. Per XML 1.0 §3.3.3, attribute
-/// value normalization replaces every literal tab/`\n`/`\r` with a single space on the NEXT parse
-/// (after line-break normalization already folds `\r`/`\r\n` to `\n`) -- but a character reference
-/// like `&#9;`/`&#10;`/`&#13;` is exempt from that step and survives verbatim. So a value decoded
-/// from such a reference (real example: the folded base64 `xlink:href` in the committed
-/// `qr-code.svg` fixture, which carries dozens of `&#10;`) MUST be re-escaped as a reference on
-/// write, or the byte written is a literal newline that silently collapses to a space next parse,
-/// changing the value's meaning. This is deliberately wider than [`xml_escape_text`], whose text
-/// content has no such normalization step for `\t`/`\n`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_escape_attr(s: &str) -> String {
-    let mut out = String::new();
-    for ch in s.chars() {
-        match ch {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '"' => out.push_str("&quot;"),
-            '\t' => out.push_str("&#9;"),
-            '\n' => out.push_str("&#10;"),
-            '\r' => out.push_str("&#13;"),
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-
-
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn xml_document_to_text(doc: &XmlDocument) -> String {
-    xml_document_to_text_checked(doc).expect("valid XML document boundaries")
-}
-
-/// 📤 Validates and deterministically materializes one logical XML document.
-pub fn xml_document_to_text_checked(doc: &XmlDocument) -> Result<String, String> {
-    validate_xml_document_boundaries(doc)?;
-    let mut out = String::new();
-    if let Some(decl) = &doc.declaration {
-        let quote = decl.quote.as_char();
-        out.push_str("<?xml version=");
-        out.push(quote);
-        out.push_str(&decl.version);
-        out.push(quote);
-        if let Some(encoding) = &decl.encoding {
-            out.push_str(" encoding=");
-            out.push(quote);
-            out.push_str(encoding);
-            out.push(quote);
-        }
-        if let Some(standalone) = decl.standalone {
-            out.push_str(" standalone=");
-            out.push(quote);
-            out.push_str(if standalone { "yes" } else { "no" });
-            out.push(quote);
-        }
-        out.push_str("?>\n");
-    }
-    for (index, node) in doc.prolog.iter().enumerate() {
-        if doc.doctype.as_ref().is_some_and(|doctype| doctype.prolog_position == index as u64) {
-            xml_doctype_to_text(doc.doctype.as_ref().expect("checked doctype"), &mut out);
-            out.push('\n');
-        }
-        xml_node_to_text(node, 0, &mut out);
-        out.push('\n');
-    }
-    if let Some(doctype) = doc.doctype.as_ref().filter(|doctype| doctype.prolog_position == doc.prolog.len() as u64) {
-        xml_doctype_to_text(doctype, &mut out);
-        out.push('\n');
-    }
-    if let Some(node) = &doc.root {
-        xml_node_to_text(node, 0, &mut out);
-    }
-    for node in &doc.epilog {
-        if !out.is_empty() {
-            out.push('\n');
-        }
-        xml_node_to_text(node, 0, &mut out);
-    }
-    Ok(out)
-}
-
-/// 🛡️ Rejects declaration or boundary state that cannot be published by the UTF-8 XML codec.
-pub fn validate_xml_document_boundaries(doc: &XmlDocument) -> Result<(), String> {
-    if let Some(declaration) = &doc.declaration {
+/// 🛡️ Validates the authored XML declaration for UTF-8 publication.
+pub fn validate_xml_declaration_boundary(declaration:Option<&XmlDeclaration>)->Result<(),String>{
+    if let Some(declaration) = declaration {
         let delimiter = declaration.quote.as_char();
         if declaration.version.contains(delimiter) {
             return Err(format!("XML declaration version contains its {} quote delimiter", if delimiter == '"' { "double" } else { "single" }));
@@ -345,6 +229,12 @@ pub fn validate_xml_document_boundaries(doc: &XmlDocument) -> Result<(), String>
             }
         }
     }
+    Ok(())
+}
+
+/// 🛡️ Rejects declaration or boundary state that cannot be published by the UTF-8 XML codec.
+pub fn validate_xml_document_boundaries(doc: &XmlDocument) -> Result<(), String> {
+    validate_xml_declaration_boundary(doc.declaration.as_ref())?;
     for (boundary, nodes) in [("prolog", &doc.prolog), ("epilog", &doc.epilog)] {
         if nodes.iter().any(|node| !matches!(node, XmlNode::Comment { .. } | XmlNode::ProcessingInstruction { .. })) {
             return Err(format!("XML {boundary} may contain only comments and processing instructions"));
@@ -358,153 +248,7 @@ pub fn validate_xml_document_boundaries(doc: &XmlDocument) -> Result<(), String>
     Ok(())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_doctype_to_text(doctype: &XmlDoctype, out: &mut String) {
-    out.push_str("<!DOCTYPE ");
-    out.push_str(&doctype.name);
-    if let Some(external_id) = &doctype.external_id {
-        match external_id {
-            XmlExternalId::System { system_id } => {
-                out.push_str(" SYSTEM \"");
-                out.push_str(&xml_escape_attr(system_id));
-                out.push('\"');
-            }
-            XmlExternalId::Public { public_id, system_id } => {
-                out.push_str(" PUBLIC \"");
-                out.push_str(&xml_escape_attr(public_id));
-                out.push_str("\" \"");
-                out.push_str(&xml_escape_attr(system_id));
-                out.push('\"');
-            }
-        }
-    }
-    if !doctype.declarations.is_empty() {
-        out.push_str(" [");
-        for declaration in &doctype.declarations {
-            match declaration {
-                XmlDtdDeclaration::Entity { parameter, name, value } => {
-                    out.push_str("<!ENTITY ");
-                    if *parameter {
-                        out.push_str("% ");
-                    }
-                    out.push_str(name);
-                    out.push_str(" \"");
-                    out.push_str(&xml_escape_attr(value));
-                    out.push_str("\">");
-                }
-            }
-        }
-        out.push(']');
-    }
-    out.push('>');
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_current_column(out: &str) -> usize {
-    out.rsplit_once('\n').map_or(out.len(), |(_, line)| line.len())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
-    match node {
-        XmlNode::Text { text } => out.push_str(&xml_escape_text(text)),
-        XmlNode::CData { text } => {
-            out.push_str("<![CDATA[");
-            out.push_str(text);
-            out.push_str("]]>");
-        }
-        XmlNode::Comment { text } => {
-            out.push_str("<!--");
-            out.push_str(text);
-            out.push_str("-->");
-        }
-        XmlNode::ProcessingInstruction { target, data } => {
-            out.push_str("<?");
-            out.push_str(target);
-            if !data.is_empty() {
-                out.push(' ');
-                out.push_str(data);
-            }
-            out.push_str("?>");
-        }
-        XmlNode::Element { name, attrs, children } => {
-            out.push('<');
-            out.push_str(name);
-            for (index, attr) in attrs.iter().enumerate() {
-                let rendered = format!("{}=\"{}\"", attr.name, xml_escape_attr(&attr.value));
-                let closing_width = if index + 1 == attrs.len() {
-                    match children.as_slice() {
-                        [] => 2,
-                        [XmlNode::Text { text }] => xml_escape_text(text).chars().count() + name.len() + 4,
-                        _ => 1,
-                    }
-                } else {
-                    0
-                };
-                if xml_current_column(out) + 1 + rendered.len() + closing_width > 120 {
-                    out.push('\n');
-                    out.push_str(&" ".repeat((depth + 1) * 4));
-                } else {
-                    out.push(' ');
-                }
-                out.push_str(&rendered);
-            }
-            if children.is_empty() {
-                out.push_str("/>");
-                return;
-            }
-            out.push('>');
-            for child in children {
-                xml_node_to_text(child, depth + 1, out);
-            }
-            out.push_str("</");
-            out.push_str(name);
-            out.push('>');
-        }
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
-    let trimmed = text.trim();
-    if trimmed.is_empty() {
-        return Ok(XmlDocument::default());
-    }
-    let mut pos = 0;
-    let declaration = parse_xml_declaration_prolog(trimmed, &mut pos)?;
-    let (doctype, prolog) = parse_misc(trimmed, &mut pos, true)?;
-    let root = parse_node(trimmed, &mut pos)?;
-    let (_, epilog) = parse_misc(trimmed, &mut pos, false)?;
-    if pos < trimmed.len() {
-        return Err("trailing content after root element".into());
-    }
-    let document = XmlDocument { root: Some(root), doctype, declaration, prolog, epilog };
-    validate_xml_document_boundaries(&document)?;
-    Ok(document)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️XmlTextCodec
 
 //#region 🔖️HandcraftedArtifactCodecs
 
@@ -526,14 +270,11 @@ mod tests;
 //#endregion 🔖️Tests
 
 #[path="🧭️position/🦀️.rs"]
-mod position;
+pub(crate) mod position;
 
 #[path="🧬️retained/🦀️.rs"]
 pub mod retained;
 
-/// 🧩️ Typed XML components for enclosing owned native documents.
-pub use native_encoding::{XmlNativeEmission,emit_xml_native_document,emit_xml_native_node,emit_xml_native_snapshot_fields};
-pub use native_decoding::{XmlNativeInput,read_xml_native_document,read_xml_native_node,read_xml_native_snapshot_fields};
 
 
 
@@ -558,3 +299,6 @@ pub use native_decoding::{XmlNativeInput,read_xml_native_document,read_xml_nativ
 
 
 
+
+#[path="🧺️ownership/🦀️.rs"]
+pub mod ownership;

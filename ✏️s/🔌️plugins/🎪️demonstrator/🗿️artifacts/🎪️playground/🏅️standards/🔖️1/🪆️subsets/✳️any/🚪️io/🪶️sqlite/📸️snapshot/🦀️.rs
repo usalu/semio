@@ -31,7 +31,7 @@ impl ArtifactSqliteSnapshot for PlaygroundSnapshot {
         reconstruction.checkpoint()?;
         Ok(Self { schema })
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.demonstrator.playground" || dialect.standard != "1" || dialect.subset != "*" {
             return Err(store::io_schema::IoError::from_value_error(invalid("Playground dialect differs from its owned coordinate")));

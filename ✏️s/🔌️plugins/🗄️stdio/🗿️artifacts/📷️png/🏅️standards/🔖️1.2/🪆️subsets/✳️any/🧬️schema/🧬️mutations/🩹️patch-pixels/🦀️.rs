@@ -5,7 +5,7 @@ use crate::schema::mutations::{PngMutation, SetSnapshot};
 use crate::PngSnapshot;
 use protocol::DiffAlgebra;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PatchPixelsMutation {
@@ -25,8 +25,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PatchPixelsMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "rgba8-region", kind: "patch-pixels", record: "PatchPixels" };
 
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        let region = crate::standards::v1_2::subsets::any::io::PngRegion { x: self.x, y: self.y, width: self.width, height: self.height };
-        match crate::standards::v1_2::subsets::any::io::paint_rgba8_region_controlled(base, &self.revision, region, [self.red, self.green, self.blue, self.alpha], &mut |_, _| true) {
+        let region = crate::schema::snapshot::PngRegion { x: self.x, y: self.y, width: self.width, height: self.height };
+        match crate::schema::operations::paint_rgba8_region_controlled(base, &self.revision, region, [self.red, self.green, self.blue, self.alpha], &mut |_, _| true) {
             Ok(next) => protocol::MutationOutcome::new(PngDiff::between(base, &next)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["rgba8-region"]),
         }
@@ -51,5 +51,5 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PatchPixelsMutation {
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
     let base = PngSnapshot::default();
-    PngMutation::PatchPixels(PatchPixelsMutation { revision: crate::standards::v1_2::subsets::any::io::png_revision(&base), x: 0, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 255 })
+    PngMutation::PatchPixels(PatchPixelsMutation { revision: crate::schema::operations::png_revision(&base), x: 0, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 255 })
 }

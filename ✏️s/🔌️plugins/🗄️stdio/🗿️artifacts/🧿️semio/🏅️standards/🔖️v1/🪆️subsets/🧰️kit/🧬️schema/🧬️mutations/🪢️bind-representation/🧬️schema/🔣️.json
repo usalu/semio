@@ -7,7 +7,7 @@
   "required": ["target", "pin", "role"],
   "properties": {
     "target": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef",
       "x-semio-ui": {
         "role": "value",
         "label": {

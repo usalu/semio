@@ -452,13 +452,13 @@ pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) ->
 /// fallout fixes): reconstructing a document store from real pack/spr bytes is exactly the kind of
 /// caller-visible async boundary that sweep is meant to expose, not hide.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
+pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8], actor: protocol::ActorId) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
     let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
-    store::ArtifactStore::new(parsed.envelope).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
+    store::ArtifactStore::new(parsed.envelope, actor).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
 }
 
 /// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed

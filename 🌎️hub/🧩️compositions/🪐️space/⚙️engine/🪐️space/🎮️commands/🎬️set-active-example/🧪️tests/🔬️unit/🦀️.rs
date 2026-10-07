@@ -123,7 +123,7 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let document = crate::resolve_studio_document(space_id).await.expect("created studio");
     assert_eq!(document.name, "Fresh Studio");
     assert!(document.backbone.is_none(), "ephemeral studio must not attach backbone");
-    assert!(document.vcs.initial_snapshot.collections.is_empty());
+    assert!(document.vcs.genesis.snapshot().collections.is_empty());
 
     let empty = empty_workflow_snapshot().await;
     let studio_doc = ArtifactView::new(&empty, &history);

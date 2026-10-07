@@ -1,6 +1,7 @@
 //! Mutation unit smoke — vocabulary kinds + from_snapshot round-trip.
 
-use crate::standards::v1::subsets::any::schema::mutations::{KINDS, Din4108Mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{KINDS,Din4108Mutation};
+
 use crate::Din4108Snapshot;
 
 #[semio_framework_async_macros::async_test]

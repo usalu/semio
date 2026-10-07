@@ -2,10 +2,9 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 
 use crate::schema::diff::{diff_set_snapshot, PptxDiff};
-use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
+use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxTransform};
 use crate::PptxSnapshot;
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
+use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
 //#region 🔖️Mutations
@@ -178,15 +177,6 @@ pub(crate) fn agg_inverse(this: &PptxMutation, base: &PptxSnapshot) -> Result<Ve
 /// field (`slides: Vec<PptxSlide>`), same convention `enc_slide`/`enc_paragraph` use.
 //#endregion 🔖️SnapshotCodec
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-struct PptxMutationRecord {
-    kind: String,
-    value: semio_framework_value::DslValue,
-    snapshot: Option<PptxSnapshotRecord>,
-}
-
-
-
 //#region 🔖️OpBinaryCodec
 /// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
 /// mirrors `📜️docx/…/🧬️mutations/🦀️.rs`'s own `enc_docx_snapshot_bin`/`enc_opc_package_bin`
@@ -215,7 +205,7 @@ struct PptxMutationRecord {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_fixture() -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
+    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },

@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "name": "text frozen refusal restores publication",
+      "kind": "text",
+      "base": "Original",
+      "submitted": "Refused",
+      "draft": "Refused",
+      "disposition": "discard",
+      "expected": "Original",
+      "conflicted": false
+    },
+    {
+      "name": "longText frozen refusal restores publication",
+      "kind": "longText",
+      "base": "Original\nvalue",
+      "submitted": "Refused\nvalue",
+      "draft": "Refused\nvalue",
+      "disposition": "discard",
+      "expected": "Original\nvalue",
+      "conflicted": false
+    },
+    {
+      "name": "number frozen refusal restores publication",
+      "kind": "number",
+      "base": "7",
+      "submitted": "11",
+      "draft": "11",
+      "disposition": "discard",
+      "expected": "7",
+      "conflicted": false
+    },
+    {
+      "name": "date frozen refusal restores publication",
+      "kind": "date",
+      "base": "2026-10-01",
+      "submitted": "2026-10-06",
+      "draft": "2026-10-06",
+      "disposition": "discard",
+      "expected": "2026-10-01",
+      "conflicted": false
+    },
+    {
+      "name": "late refusal preserves newer draft",
+      "kind": "text",
+      "base": "Original",
+      "submitted": "Refused",
+      "draft": "Newer",
+      "disposition": "discard",
+      "expected": "Newer",
+      "conflicted": true
+    },
+    {
+      "name": "recoverable refusal preserves draft",
+      "kind": "text",
+      "base": "Original",
+      "submitted": "Refused",
+      "draft": "Refused",
+      "disposition": "retain",
+      "expected": "Refused",
+      "conflicted": true
+    },
+    {
+      "name": "cancelled completion preserves a subsequent draft",
+      "kind": "text",
+      "base": "Original",
+      "submitted": "Refused",
+      "draft": "Newer",
+      "disposition": "discard",
+      "expected": "Newer",
+      "conflicted": false,
+      "cancelled": true
+    }
+  ],
+  "receiptCapacity": 256,
+  "replacementBase": "Replacement"
+}

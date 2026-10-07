@@ -4,7 +4,8 @@
 //! `Text` nodes are real `set-node` edit targets (`XmlMutation::SetText`'s own documented scope);
 //! `Element`/`CData`/`Comment`/`ProcessingInstruction` nodes render read-only in this window.
 
-use crate::schema::snapshot::{xml_document_to_text_checked, XmlNode};
+use crate::schema::snapshot::{XmlNode};
+use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_to_text_checked};
 use crate::XmlSnapshot;
 use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;

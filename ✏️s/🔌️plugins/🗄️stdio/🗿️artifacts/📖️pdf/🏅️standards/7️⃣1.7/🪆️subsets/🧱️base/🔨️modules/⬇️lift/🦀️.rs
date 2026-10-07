@@ -11,9 +11,10 @@ use super::content::{content_references, parse_content, FontTable};
 use super::fonts::{base_encoding_from_name, cmap, decode_text_string, FontCodec};
 use super::images::lift_image;
 use super::lexer::{dict_f64, dict_get, dict_i64, dict_name};
-use super::xref::ObjectSource;
+use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{HashMap, HashSet};
+use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
 
 //#region 🔖️Lifter
 /// 🏷️ Resource categories whose ids share one namespace each (`Page` keys pages by index).
@@ -45,19 +46,6 @@ pub struct Lifter<'s> {
     scope: usize,
 }
 
-/// 📚 A resource dictionary's name → id maps per category (what a content stream's names
-/// resolve to).
-#[derive(Clone, Debug, Default)]
-pub struct ResourceMap {
-    pub fonts: HashMap<String, String>,
-    pub x_objects: HashMap<String, String>,
-    pub ext_g_states: HashMap<String, String>,
-    pub shadings: HashMap<String, String>,
-    pub patterns: HashMap<String, String>,
-    pub color_spaces: HashMap<String, String>,
-    pub properties: HashMap<String, String>,
-}
-
 struct MappedFonts<'a> {
     map: &'a HashMap<String, String>,
     codecs: &'a HashMap<String, FontCodec>,
@@ -79,7 +67,7 @@ impl<'s> Lifter<'s> {
     fn text(&mut self, value: Option<&PdfObject>) -> Option<String> {
         let value = self.source.deref(value?);
         match value {
-            PdfObject::Str(bytes) => Some(decode_text_string(&bytes)),
+            PdfObject::Text(text) => Some(text),
             PdfObject::Name(name) => Some(name),
             _ => None,
         }
@@ -87,7 +75,7 @@ impl<'s> Lifter<'s> {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn date(&mut self, value: Option<&PdfObject>) -> Option<PdfDate> {
-        self.text(value).and_then(|text| PdfDate::parse(&text))
+        match value.map(|value|self.source.deref(value)) {Some(PdfObject::Date(date))=>Some(date),_=>None}
     }
 
     /// 🆔 Registers (or looks up) the id of a resource object bound under `name`.
@@ -322,30 +310,6 @@ impl Lifter<'_> {
     }
 }
 
-/// 🔁 Rewrites every resource name in `ops` through `map` (names the map does not know stay).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn rename_content(ops: Vec<PdfOp>, map: &ResourceMap) -> Vec<PdfOp> {
-    let rename = |table: &HashMap<String, String>, name: &mut String| {
-        if let Some(id) = table.get(name.as_str()) {
-            *name = id.clone();
-        }
-    };
-    ops.into_iter()
-        .map(|mut op| {
-            match &mut op {
-                PdfOp::SetFont { name, .. } => rename(&map.fonts, name),
-                PdfOp::PaintXObject { name } => rename(&map.x_objects, name),
-                PdfOp::SetExtGState { name } => rename(&map.ext_g_states, name),
-                PdfOp::PaintShading { name } => rename(&map.shadings, name),
-                PdfOp::SetStrokeColorN { pattern: Some(name), .. } | PdfOp::SetFillColorN { pattern: Some(name), .. } => rename(&map.patterns, name),
-                PdfOp::SetStrokeColorSpace { name } | PdfOp::SetFillColorSpace { name } => rename(&map.color_spaces, name),
-                PdfOp::MarkedContentPointWithProperties { properties: PdfPropertyList::Named { name }, .. } | PdfOp::BeginMarkedContentWithProperties { properties: PdfPropertyList::Named { name }, .. } => rename(&map.properties, name),
-                _ => {}
-            }
-            op
-        })
-        .collect()
-}
 //#endregion 🔖️Document
 
 //#region 🔖️Resources
@@ -707,7 +671,7 @@ impl Lifter<'_> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lift_cid_font(&mut self, dict: &[PdfDictEntry]) -> PdfCidFont {
         let (descriptor, program) = dict_get(dict, "FontDescriptor").map(|d| self.source.deref(d)).and_then(|d| d.as_dict().map(|d| self.lift_descriptor(d))).unwrap_or_default();
-        let system_info = dict_get(dict, "CIDSystemInfo").map(|s| self.source.deref(s)).and_then(|s| s.as_dict().map(<[PdfDictEntry]>::to_vec)).map(|s| PdfCidSystemInfo { registry: dict_get(&s, "Registry").and_then(PdfObject::as_str_bytes).map(|b| String::from_utf8_lossy(b).into_owned()).unwrap_or_else(|| "Adobe".into()), ordering: dict_get(&s, "Ordering").and_then(PdfObject::as_str_bytes).map(|b| String::from_utf8_lossy(b).into_owned()).unwrap_or_else(|| "Identity".into()), supplement: dict_i64(&s, "Supplement").unwrap_or(0).max(0) as u32 }).unwrap_or_default();
+        let system_info = dict_get(dict, "CIDSystemInfo").map(|s| self.source.deref(s)).and_then(|s| s.as_dict().map(<[PdfDictEntry]>::to_vec)).map(|s| PdfCidSystemInfo { registry: self.text(dict_get(&s, "Registry")).unwrap_or_else(|| "Adobe".into()), ordering: self.text(dict_get(&s, "Ordering")).unwrap_or_else(|| "Identity".into()), supplement: dict_i64(&s, "Supplement").unwrap_or(0).max(0) as u32 }).unwrap_or_default();
         let widths = dict_get(dict, "W").map(|w| self.source.deref(w)).and_then(|w| w.as_array().map(<[PdfObject]>::to_vec)).map(|items| self.lift_cid_widths(&items)).unwrap_or_default();
         let vertical_metrics = dict_get(dict, "W2").map(|w| self.source.deref(w)).and_then(|w| w.as_array().map(<[PdfObject]>::to_vec)).map(|items| self.lift_cid_vertical(&items)).unwrap_or_default();
         let cid_to_gid = match dict_get(dict, "CIDToGIDMap").map(|m| self.source.deref(m)) {
@@ -796,6 +760,7 @@ impl Lifter<'_> {
         let resolved = self.source.deref(value);
         match resolved {
             PdfObject::Name(name) => Some(PdfDestination::Named { name }),
+            PdfObject::Text(name) => Some(PdfDestination::Named { name }),
             PdfObject::Str(bytes) => Some(PdfDestination::Named { name: decode_text_string(&bytes) }),
             PdfObject::Dict(dict) => {
                 let inner = dict_get(&dict, "D")?.clone();
@@ -828,6 +793,7 @@ impl Lifter<'_> {
     fn lift_file_specification(&mut self, value: &PdfObject) -> Option<PdfFileSpecification> {
         let resolved = self.source.deref(value);
         match resolved {
+            PdfObject::Text(path) => Some(PdfFileSpecification::Path { path }),
             PdfObject::Str(bytes) => Some(PdfFileSpecification::Path { path: decode_text_string(&bytes) }),
             PdfObject::Dict(dict) => {
                 if let Some(id) = self.existing_id(Category::EmbeddedFile, value).or_else(|| dict_get(&dict, "EF").and_then(|ef| ef.dict_get("F").or_else(|| ef.dict_get("UF"))).and_then(|f| self.existing_id(Category::EmbeddedFile, f))) {
@@ -891,10 +857,12 @@ impl Lifter<'_> {
         let names = |lifter: &mut Self, key: &str| -> Vec<String> {
             dict_get(&dict, key).map(|v| lifter.source.deref(v)).map(|v| match v {
                 PdfObject::Array(items) => items.iter().filter_map(|item| match item {
+                    PdfObject::Text(text) => Some(text.clone()),
                     PdfObject::Str(bytes) => Some(decode_text_string(bytes)),
                     PdfObject::Name(name) => Some(name.clone()),
                     _ => None,
                 }).collect(),
+                PdfObject::Text(text) => vec![text],
                 PdfObject::Str(bytes) => vec![decode_text_string(&bytes)],
                 _ => Vec::new(),
             }).unwrap_or_default()
@@ -905,7 +873,7 @@ impl Lifter<'_> {
             "GoToE" => PdfActionKind::GoToEmbedded { destination: dict_get(&dict, "D").cloned().and_then(|d| self.lift_destination(&d)).unwrap_or(PdfDestination::RemotePage { page: 0, fit: PdfDestinationFit::Fit }), new_window },
             "Launch" => PdfActionKind::Launch { file: dict_get(&dict, "F").cloned().and_then(|f| self.lift_file_specification(&f)).unwrap_or(PdfFileSpecification::Path { path: String::new() }), new_window },
             "Thread" => PdfActionKind::Thread { file: dict_get(&dict, "F").cloned().and_then(|f| self.lift_file_specification(&f)), thread: dict_i64(&dict, "D").unwrap_or(0).max(0) as u32 },
-            "URI" => PdfActionKind::Uri { uri: dict_get(&dict, "URI").and_then(PdfObject::as_str_bytes).map(|b| String::from_utf8_lossy(b).into_owned()).unwrap_or_default(), is_map: dict_get(&dict, "IsMap").and_then(PdfObject::as_bool).unwrap_or(false) },
+            "URI" => PdfActionKind::Uri { uri: self.text(dict_get(&dict, "URI")).unwrap_or_default(), is_map: dict_get(&dict, "IsMap").and_then(PdfObject::as_bool).unwrap_or(false) },
             "Sound" => PdfActionKind::Sound { sound: String::new(), volume: dict_f64(&dict, "Volume"), synchronous: dict_get(&dict, "Synchronous").and_then(PdfObject::as_bool).unwrap_or(false), repeat: dict_get(&dict, "Repeat").and_then(PdfObject::as_bool).unwrap_or(false), mix: dict_get(&dict, "Mix").and_then(PdfObject::as_bool).unwrap_or(false) },
             "Movie" => PdfActionKind::Movie { annotation: self.text(dict_get(&dict, "T")), operation: dict_name(&dict, "Operation").map(str::to_string) },
             "Hide" => PdfActionKind::Hide { annotations: names(self, "T"), hide: dict_get(&dict, "H").and_then(PdfObject::as_bool).unwrap_or(true) },
@@ -917,6 +885,7 @@ impl Lifter<'_> {
             "ResetForm" => PdfActionKind::ResetForm { fields: names(self, "Fields"), flags: dict_i64(&dict, "Flags").unwrap_or(0).max(0) as u32 },
             "ImportData" => PdfActionKind::ImportData { file: dict_get(&dict, "F").cloned().and_then(|f| self.lift_file_specification(&f)).unwrap_or(PdfFileSpecification::Path { path: String::new() }) },
             "JavaScript" => PdfActionKind::JavaScript { script: match dict_get(&dict, "JS").map(|js| self.source.deref(js)) {
+                Some(PdfObject::Text(text)) => text,
                 Some(PdfObject::Str(bytes)) => decode_text_string(&bytes),
                 Some(PdfObject::Stream { data, .. }) => String::from_utf8_lossy(&data).into_owned(),
                 _ => String::new(),
@@ -977,7 +946,7 @@ impl Lifter<'_> {
 
     /// 🌳 Flattens a name tree (§7.9.6) into (key, value) pairs in tree order.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn name_tree(&mut self, node: &PdfObject, out: &mut Vec<(Vec<u8>, PdfObject)>, visited: &mut HashSet<u32>) {
+    fn name_tree(&mut self, node: &PdfObject, out: &mut Vec<(String, PdfObject)>, visited: &mut HashSet<u32>) {
         if let Some(reference) = node.as_ref() {
             if !visited.insert(reference.num) {
                 return;
@@ -994,8 +963,8 @@ impl Lifter<'_> {
         if let Some(names) = node.dict_get("Names").map(|n| self.source.deref(n)) {
             if let PdfObject::Array(items) = names {
                 for pair in items.chunks(2) {
-                    if let [PdfObject::Str(key), value] = pair {
-                        out.push((key.clone(), value.clone()));
+                    if let [key, value] = pair {
+                        if let Some(key) = self.text(Some(key)) { out.push((key, value.clone())); }
                     }
                 }
             }
@@ -1194,7 +1163,7 @@ impl Lifter<'_> {
         let mut pairs = Vec::new();
         self.name_tree(&files, &mut pairs, &mut HashSet::new());
         for (key, value) in pairs {
-            let name = decode_text_string(&key);
+            let name = key;
             self.lift_embedded_file(&name, &value, true);
         }
     }
@@ -1210,7 +1179,7 @@ impl Lifter<'_> {
                 self.name_tree(&dests, &mut pairs, &mut HashSet::new());
                 for (key, value) in pairs {
                     if let Some(destination) = self.lift_destination(&value) {
-                        self.snapshot.named_destinations.push(PdfNamedDestination { name: decode_text_string(&key), destination });
+                        self.snapshot.named_destinations.push(PdfNamedDestination { name: key, destination });
                     }
                 }
             }
@@ -1346,6 +1315,7 @@ impl Lifter<'_> {
         let field_type = dict_name(&dict, "FT").map(str::to_string).or_else(|| inherited_type.map(str::to_string));
         let text_value = |lifter: &mut Self, key: &str| -> Option<String> {
             match dict_get(&dict, key).map(|v| lifter.source.deref(v)) {
+                Some(PdfObject::Text(text)) => Some(text),
                 Some(PdfObject::Str(bytes)) => Some(decode_text_string(&bytes)),
                 Some(PdfObject::Name(name)) => Some(name),
                 Some(PdfObject::Stream { data, .. }) => Some(String::from_utf8_lossy(&data).into_owned()),
@@ -1355,10 +1325,12 @@ impl Lifter<'_> {
         let text_values = |lifter: &mut Self, key: &str| -> Vec<String> {
             match dict_get(&dict, key).map(|v| lifter.source.deref(v)) {
                 Some(PdfObject::Array(items)) => items.iter().filter_map(|item| match item {
+                    PdfObject::Text(text) => Some(text.clone()),
                     PdfObject::Str(bytes) => Some(decode_text_string(bytes)),
                     PdfObject::Name(name) => Some(name.clone()),
                     _ => None,
                 }).collect(),
+                Some(PdfObject::Text(text)) => vec![text],
                 Some(PdfObject::Str(bytes)) => vec![decode_text_string(&bytes)],
                 Some(PdfObject::Name(name)) => vec![name],
                 _ => Vec::new(),
@@ -1390,7 +1362,8 @@ impl Lifter<'_> {
                 values: text_values(self, "V"),
                 default_values: text_values(self, "DV"),
                 options: self.source.deref(dict_get(&dict, "Opt").unwrap_or(&PdfObject::Null)).as_array().map(|items| items.iter().map(|item| match item {
-                    PdfObject::Array(pair) => (pair.first().and_then(PdfObject::as_str_bytes).map(decode_text_string).unwrap_or_default(), pair.get(1).and_then(PdfObject::as_str_bytes).map(decode_text_string).unwrap_or_default()),
+                    PdfObject::Array(pair) => (self.text(pair.first()).unwrap_or_default(), self.text(pair.get(1)).unwrap_or_default()),
+                    PdfObject::Text(text) => (text.clone(),text.clone()),
                     PdfObject::Str(bytes) => (decode_text_string(bytes), decode_text_string(bytes)),
                     _ => (String::new(), String::new()),
                 }).collect()).unwrap_or_default(),

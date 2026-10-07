@@ -2,7 +2,7 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-use crate::table::schema::snapshot::{SemioTableSnapshot,SemioTableColumn,SemioTableRow,SemioTableCellKind};
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableSnapshot,SemioTableColumn,SemioTableRow,SemioTableCellKind};
 use crate::standards::v1::subsets::value::io::sqlite::snapshot::{project_value_tree,reconstruct_value_forest,ValueSqliteTables};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer;
@@ -19,7 +19,7 @@ pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value::NativeD
 /// 📃️ Counts actual document primitive cells before typed construction.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 /// 📊️ Visits independent declarations and every cell without imposing a rectangular shape.
-fn visit_rows(snapshot:&SemioTableSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioTableSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_table_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,column)in snapshot.columns.iter().enumerate(){out.insert("semio_table_column",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&column.name),Cell::Text(kind(column.kind))])?;}
  for(ordinal,row)in snapshot.rows.iter().enumerate(){let id=out.insert("semio_table_row",&[Cell::Integer(1),Cell::Integer(number(ordinal)?)])?;for(column,value)in row.cells.iter().enumerate(){let value_id=project_value_tree(value,VALUES,None,out)?;out.insert("semio_table_cell",&[Cell::Integer(id),Cell::Integer(number(column)?),Cell::Integer(value_id)])?;}}Ok(())
@@ -87,7 +87,7 @@ fn identities(rows:&[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

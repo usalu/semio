@@ -3,6 +3,24 @@ import {readFileSync,writeFileSync,unlinkSync,rmdirSync} from "node:fs";
 import {resolve,dirname} from "node:path";
 import {existsSync} from "node:fs";
 import {pathToFileURL} from "node:url";
+if(process.argv.includes("--latest-wins-followup-integrity")) {
+let root=import.meta.dir;while(!existsSync(resolve(root,"nx.json")))root=dirname(root);
+const before=JSON.parse(readFileSync(new URL("📥️latest-wins-and-embedded-selection-before.json",import.meta.url),"utf8")),issues:string[]=[];
+for(const record of before.filter((row:any)=>row.path.endsWith(".ts"))) {
+const current=readFileSync(resolve(root,record.path),"utf8"),ast=ts.createSourceFile(record.path,current,ts.ScriptTarget.Latest,true);
+for(const diagnostic of(ast as any).parseDiagnostics)issues.push(record.path+": "+ts.flattenDiagnosticMessageText(diagnostic.messageText," "));
+if(record.path.includes("tool-job-latest-wins")) {
+const originalTail=record.source.slice(record.source.indexOf("  const rawFixture =")),currentTail=current.slice(current.indexOf("  const rawFixture ="));
+if(originalTail!==currentTail)issues.push("Downstream raw/child/publication/store/dispatch laws changed");
+if(!current.includes('body(source, "publish_mounted_typed_operation_unit").includes(".await")'))issues.push("no-await publication law missing");
+} else {
+if(record.source.slice(record.source.indexOf("  for (const row of fixtures) it"))!==current.slice(current.indexOf("  for (const row of fixtures) it")))issues.push("Actual selection/withdrawal behavioral oracles changed");
+if(current.includes("compile(schema)")||current.includes("embedded-selection/🧬️schema/"))issues.push("Whole-corpus admission survives");
+}
+}
+writeFileSync(new URL("📓️latest-wins-and-embedded-selection-integrity.md",import.meta.url),"# Latest-Wins And Embedded Selection Integrity\n\nChecked two exact authored TypeScript consumers. "+(issues.length?issues.join("\n"):"Zero parse errors; downstream raw, child, store, publication and dispatch laws are byte-for-byte retained; all existing selection and withdrawal behavioral assertions are byte-for-byte retained. The no-await law remains enforced.")+"\n");
+console.log("[DEBUG] scoped followup integrity",{files:2,issues});process.exit(issues.length?1:0);
+}
 if(process.argv.includes("--latest-wins-authority-diagnostic")) {
 let root=import.meta.dir;while(!existsSync(resolve(root,"nx.json")))root=dirname(root);
 const owner="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",path=owner+"/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",source=readFileSync(resolve(root,owner,"🦀️.rs"),"utf8"),test=readFileSync(resolve(root,path),"utf8"),native=readFileSync(resolve(root,owner,"🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"),"utf8");
@@ -13,7 +31,7 @@ const failed=obligations.filter(([name,token])=>!body(name!).includes(token!));
 const other=[["publication contains .await",body("publish_mounted_typed_operation_unit").includes(".await")],["publication dispatches whole group",body("publish_mounted_typed_operation_unit").includes("dispatch_emit_group(")],["missing child token",!source.includes("self.token.child_now()")],["missing publication CAS",!source.includes("compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel")],["missing scope operation",!source.includes("scope.operation")],["missing exact native source law",!native.includes("async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close()")]].filter(([,bad])=>bad);
 const before=JSON.parse(readFileSync(new URL("📥️expanded-consumers-before.json",import.meta.url),"utf8")).find((row:any)=>row.path===path)?.source??"";
 const predicate=(text:string)=>text.slice(text.indexOf("  const obligations:"),text.indexOf("  if (!exact(source))"));
-writeFileSync(new URL("📓️latest-wins-production-authority-failure.md",import.meta.url),"# Latest-Wins Actual Production Authority Failure\n\nThe actual helper execution failed in generated/expanded-owner-checks.log before the final inline constant-schema cleanup, and failed again in generated/final-inline-oracles.log. This is an observed earlier task run, not a pre-task baseline claim. The current obligation list and exact predicate match the saved pre-transform consumer bytes: "+(predicate(before)===predicate(test))+". The late edits only replace fixture-constant equality validators and preserve ToolLatestWinsScope validation. No production Rust source was edited by that cleanup.\n\nCurrent actual production source: "+owner+"/🦀️.rs\n\n## Unsatisfied exact body obligations\n\n"+failed.map(([name,token])=>"- "+name+" requires "+token+"; named source body exists="+(body(name!).length>0)).join("\n")+"\n\n## Other failing predicate clauses\n\n"+other.map(([name])=>"- "+name).join("\n")+"\n\nThe predicate remains enforced and its hostile token-removal checks remain unchanged; no runtime/native pass is claimed.\n");console.log("[DEBUG] Latest-wins actual authority diagnostic",{failed,other,preserved:predicate(before)===predicate(test)});process.exit(0);
+writeFileSync(new URL("📓️latest-wins-current-obligation-diagnostic.md",import.meta.url),"# Latest-Wins Actual Production Authority Failure\n\nThe actual helper execution failed in generated/expanded-owner-checks.log before the final inline constant-schema cleanup, and failed again in generated/final-inline-oracles.log. This is an observed earlier task run, not a pre-task baseline claim. The current obligation list and exact predicate match the saved pre-transform consumer bytes: "+(predicate(before)===predicate(test))+". The late edits only replace fixture-constant equality validators and preserve ToolLatestWinsScope validation. No production Rust source was edited by that cleanup.\n\nCurrent actual production source: "+owner+"/🦀️.rs\n\n## Unsatisfied exact body obligations\n\n"+failed.map(([name,token])=>"- "+name+" requires "+token+"; named source body exists="+(body(name!).length>0)).join("\n")+"\n\n## Other failing predicate clauses\n\n"+other.map(([name])=>"- "+name).join("\n")+"\n\nThis diagnostic lists literal clauses only. The latest-wins-current-owner-followup.md report records the intentional current-owner retarget, scoped positive and hostile controls, and preserved no-await boundary. No runtime/native pass is claimed.\n");console.log("[DEBUG] Latest-wins actual authority diagnostic",{failed,other,preserved:predicate(before)===predicate(test)});process.exit(0);
 }
 if(process.argv.includes("--surface-retention-oracle")) {
 let root=import.meta.dir;while(!existsSync(resolve(root,"nx.json")))root=dirname(root);

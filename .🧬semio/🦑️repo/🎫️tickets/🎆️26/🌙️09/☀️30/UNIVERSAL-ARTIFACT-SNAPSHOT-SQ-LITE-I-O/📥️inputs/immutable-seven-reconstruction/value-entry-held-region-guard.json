@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+  "before": "let key=reconstruct_text(control,child.3.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,\"missing Semio map key\"))?)?;let value=complete.get_mut()[locate(child.2)?].take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,\"missing completed Semio map child\"))?;entries.get_mut().push(SemioValueEntry{key,value});",
+  "after": "let mut entry=Owned::new(SemioValueEntry{key:String::new(),value:SemioValue::Null});entry.get_mut().key=reconstruct_text(control,child.3.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,\"missing Semio map key\"))?)?;entry.get_mut().value=complete.get_mut()[locate(child.2)?].take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,\"missing completed Semio map child\"))?;entries.get_mut().push(entry.take());"
+}

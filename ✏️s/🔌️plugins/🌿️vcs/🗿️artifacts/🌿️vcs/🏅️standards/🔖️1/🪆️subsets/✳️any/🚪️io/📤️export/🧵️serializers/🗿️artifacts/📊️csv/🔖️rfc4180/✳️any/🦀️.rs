@@ -3,8 +3,8 @@
 use crate::standards::v1::subsets::any::io::{vcs_record, VCS_RECORD_COLUMNS};
 use crate::VcsSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
-use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{StandardId, SubsetId};
+use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
+use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 

@@ -10,7 +10,6 @@ import type { ChangeRestartIntervalMutation } from './🔁️change-restart/🟦
 import type { InsertOtherSegmentMutation } from './📥️insert-other/🟦️.ts';
 import type { RemoveOtherSegmentMutation } from './🗑️remove-other/🟦️.ts';
 import type { ReplacePixelsMutation } from './🔲️replace-pixels/🟦️.ts';
-import type { ChangeReEncodeQualityMutation } from './🎚️change-re/🟦️.ts';
 export type JpgMutation =
   | { readonly mutation: 'patch-snapshot'; readonly payload: { readonly patch: SnapshotPatch } }
   | { readonly mutation: 'change-jfif-header'; readonly payload: ChangeJfifHeaderMutation }
@@ -22,5 +21,4 @@ export type JpgMutation =
   | { readonly mutation: 'insert-other-segment'; readonly payload: InsertOtherSegmentMutation }
   | { readonly mutation: 'remove-other-segment'; readonly payload: RemoveOtherSegmentMutation }
   | { readonly mutation: 'replace-pixels'; readonly payload: ReplacePixelsMutation }
-  | { readonly mutation: 'change-re-encode-quality'; readonly payload: ChangeReEncodeQualityMutation }
   | { readonly mutation: 'set-snapshot'; readonly payload: SetSnapshot };

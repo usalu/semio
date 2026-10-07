@@ -1,5 +1,8 @@
 //! 📝️ Direct-color region text codec.
-use crate::standards::v_v3::subsets::any::io::text::mutations::*;
+use crate::standards::v_v3::subsets::any::schema::mutations::*;
+use crate::standards::v_v3::subsets::any::schema::snapshot::*;
+use crate::standards::v_v3::subsets::any::io::text::diff::*;
+use crate::schema::mutations::{BmpMutation, PaintDirectRegion};
 use crate::standards::v_v3::subsets::any::io::text::mutations::Entry;
 pub const TEXT_OPCODE: &str = "paint-direct-region";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };
@@ -17,7 +20,7 @@ pub fn parse(line: &str) -> Result<BmpMutation, semio_framework_diagnostic::Text
         return Err(error("payload has odd hexadecimal length"));
     }
     let bytes = (0..encoded.len()).step_by(2).map(|index| u8::from_str_radix(&encoded[index..index + 2], 16).map_err(|failure| failure.to_string())).collect::<Result<Vec<_>, _>>().map_err(error)?;
-    crate::standards::v_v3::subsets::any::io::text::mutations::binary::decode(&bytes).map_err(|failure| error(failure.to_string()))
+    crate::standards::v_v3::subsets::any::io::binary::mutations::paint_direct_region::decode(&bytes).map_err(|failure| error(failure.to_string()))
 }
 fn error(message: impl Into<String>) -> semio_framework_diagnostic::TextError {
     semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, semio_framework_diagnostic::TextSpan::at(1, 1))

@@ -1,0 +1,5 @@
+# Interface Normalization Schema Stage 2 Finite Audit
+
+The two retained candidate rows have exact full-body SHA-256 joins for every present before, previous, current, and after body. The complete 649,681,640-byte owning census sidecar was streamed independently, without parsing or copying its escaped raw contents; its size and SHA-256 equal the declared 7cbcfaa4fa12b5e6dcff903b5bce53400eb449a0fda7d45204f5adfb85bb5605 authority. The second inspection origin raw source hash also matches.
+
+The new closed schema requires note, scopes, and moving, rejects foreign fields, enforces unique portable relative paths, and rejects parent traversal and backslashes. The retained law candidate references its schema owner while preserving the multi-scope and single-scope verdict comparisons. This records finite staged evidence only. The failed allocation and candidate-ledger writes are retained producer history; no production write, whole runtime, source publication, or complete caller closure is inferred.

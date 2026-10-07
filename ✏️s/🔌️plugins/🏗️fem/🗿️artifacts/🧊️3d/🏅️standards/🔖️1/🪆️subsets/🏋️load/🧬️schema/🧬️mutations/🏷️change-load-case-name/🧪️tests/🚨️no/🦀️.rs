@@ -8,7 +8,8 @@
 //! `snow` is not a load case of this model, so the one guard refuses on the case id.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🚨️no/📸️snapshot/⬅️before/🔣️.json");

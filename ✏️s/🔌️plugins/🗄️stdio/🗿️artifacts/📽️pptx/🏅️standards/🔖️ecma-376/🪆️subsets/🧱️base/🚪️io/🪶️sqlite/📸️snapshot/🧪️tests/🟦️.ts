@@ -1,3 +1,4 @@
+import {parsePptxSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 /** 🧫️ Canonical OPC/XML ownership checked through independent SQLite. */
 import { expect, test } from 'bun:test';
 import { Database } from 'bun:sqlite';
@@ -27,7 +28,7 @@ import requestSettlement from "../🧫️fixtures/💰️backing/🔬️requests
 import { createHash } from 'node:crypto';
 import definition from "../../../../../../../../📜️artifact-definition.json";
 
-type ProfileCheck = (snapshot: PptxSnapshot, subset: "strict" | "transitional", options?: {signal?: AbortSignal; maxValueBytes?: number; onProgress?: (event: {completed: number; total: number}) => void | Promise<void>}) => Promise<readonly {code: string; severity: string}[]>;
+type ProfileCheck = (snapshot: PptxSnapshot, subset: "strict" | "transitional", options?: {signal?: AbortSignal; maximumBytes?: number; onProgress?: (event: {completed: number; total: number}) => void | Promise<void>}) => Promise<readonly {code: string; severity: string}[]>;
 function profileValidator(): ProfileCheck {
   const check = (profileOwner as unknown as {validatePptxSnapshotProfile?: ProfileCheck}).validatePptxSnapshotProfile;
   if (!check) throw Error('PPTX owner has no typed exact-profile validator');
@@ -37,7 +38,7 @@ function profileSnapshot(document: unknown, relationshipBase: string): PptxSnaps
   return {schema: 'literal retained schema', opc: {parts: [], contentTypes: {defaults: [], overrides: []}, relationships: {'': [{id: 'main', relType: relationshipBase + '/officeDocument', target: 'ppt/presentation.xml', targetMode: 'internal'}]}, comment: ''}, xmlParts: [{path: 'ppt/presentation.xml', contentType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml', document: parseXmlDocument(document)}]};
 }
 
-const input = parsePptxSnapshot(fixture);
+const input = parsePptxSnapshotJson(fixture);
 
 const physical = async (snapshot: PptxSnapshot): Promise<Database> => Database.deserialize(await exportSqliteDatabase(await pptxSnapshotToSqliteDatabase(snapshot)));
 
@@ -55,7 +56,7 @@ test('PPTX typed construction fidelity corpus is schema-first and language-neutr
 
 test('PPTX canonical authority uses exactly twenty-one physical tables', async () => {
   expect(authority["fields"]).toEqual(["schema","opc","xmlParts"]);expect(authority["derived"]).toEqual(["presentation"]);expect(authority["tableNames"]).toEqual(["pptx_document","pptx_package","pptx_binary_part","pptx_default_content_type","pptx_override_content_type","pptx_relationship_owner","pptx_relationship","pptx_xml_part","pptx_xml_document","pptx_xml_node","pptx_xml_element","pptx_xml_text","pptx_xml_cdata","pptx_xml_comment","pptx_xml_processing_instruction","pptx_xml_attribute","pptx_xml_child","pptx_xml_document_misc","pptx_xml_declaration","pptx_xml_doctype","pptx_xml_entity"]);
-  const snapshot = parsePptxSnapshot(authority.snapshot);
+  const snapshot = parsePptxSnapshotJson(authority.snapshot);
   const declared = new Database(':memory:');
   try {
     declared.run(PPTX_SQLITE_SCHEMA);
@@ -115,7 +116,7 @@ test('PPTX native literal contains no semantic presentation owner', async () => 
   expect(binary.subarray(0, 8)).toEqual(Buffer.from([137, 83, 69, 77, 13, 10, 26, 10]));
   expect(binary.readUInt32LE(8)).toBe(token.length);
   expect(binary.subarray(12, 12 + token.length)).toEqual(token);
-  expect(await pptxSnapshotFromSqliteDatabase(await pptxSnapshotToSqliteDatabase(parsePptxSnapshot(literalNative.snapshot)))).toEqual(parsePptxSnapshot(literalNative.snapshot));
+  expect(await pptxSnapshotFromSqliteDatabase(await pptxSnapshotToSqliteDatabase(parsePptxSnapshotJson(literalNative.snapshot)))).toEqual(parsePptxSnapshotJson(literalNative.snapshot));
 });
 test('PPTX exact profile fixture exposes namespace declarations through independent SQL', async () => {
   
@@ -141,9 +142,9 @@ test('PPTX typed profile copies admit ownership and publish interior cancellatio
   const controller = new AbortController(); let reached = false;
   await expect(check(snapshot, 'strict', {signal: controller.signal, onProgress(event) {
     if (event.total === path.length && event.completed >= profiles.cancelAfter && event.completed < event.total) { reached = true; controller.abort(); }
-  }})).rejects.toThrow('cancelled');
+  }})).rejects.toHaveProperty('kind','canceled');
   expect(reached).toBe(true);
-  await expect(check(snapshot, 'strict', {maxValueBytes: profiles.smallValueBudget})).rejects.toThrow('limit');
+  await expect(check(snapshot, 'strict', {maximumBytes: profiles.smallValueBudget})).rejects.toThrow('limit');
 });
 test('PPTX intrinsic large-part copies have interior ownership cancellation', async () => {
   const snapshot = structuredClone(input); snapshot.opc.parts[0]!.bytes = new Array(100000).fill(0x97);
@@ -212,14 +213,14 @@ test('PPTX authored retitles history preserves title, picture and transform thro
   for (const [literal, text, titleY] of [[retitlesBefore, 'Nakagin', '0'], [retitlesAfter, 'Nakagin Capsule Tower', '457200']] as const) {
     expect(ajv.validate(schema, literal), JSON.stringify(ajv.errors)).toBe(true);
     expect(Object.keys(literal)).toEqual(['schema', 'opc', 'xmlParts']);
-    const snapshot = parsePptxSnapshot(literal), sql = await physical(snapshot);
+    const snapshot = parsePptxSnapshotJson(literal), sql = await physical(snapshot);
     try {
       expect(sql.query("SELECT text FROM pptx_xml_text WHERE text IN ('Nakagin','Nakagin Capsule Tower')").all()).toEqual([{text}]);
       expect(sql.query("SELECT value FROM pptx_xml_attribute WHERE name='y' ORDER BY id").all()).toEqual([{value: titleY}, {value: '1143000'}]);
       expect(sql.query("SELECT value FROM pptx_xml_attribute WHERE name='r:embed'").all()).toEqual([{value: 'rId2'}]);
       expect(sql.query("SELECT value FROM pptx_xml_attribute WHERE name='cx' ORDER BY id").all()).toEqual([{value: '9144000'}, {value: '9144000'}]);
       expect(sql.query("SELECT value FROM pptx_xml_attribute WHERE name='cy' ORDER BY id").all()).toEqual([{value: '1143000'}, {value: '4000000'}]);
-      expect(sql.query("SELECT target FROM pptx_relationship WHERE identity='rId2'").all()).toEqual([{target: '../../../../🧬️schema/📸️snapshot/🧪️tests/media/image1.gif'}]);
+      expect(sql.query("SELECT target FROM pptx_relationship WHERE identity='rId2'").all()).toEqual([{target: '../media/image1.gif'}]);
       expect(sql.query('PRAGMA foreign_key_check').all()).toEqual([]);
       expect(await pptxSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(sql.serialize())))).toEqual(snapshot);
     } finally { sql.close(); }

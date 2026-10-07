@@ -11,9 +11,9 @@ pub fn inverse(payload: &super::DeleteNode, base: &Puzzle2dSnapshot) -> Result<V
         return Vec::new();
     };
     let index = base.nodes.iter().position(|entry| entry.id == payload.id);
-    let handle_ids: Vec<&str> = node.handles.iter().map(|handle| handle.id.as_str()).collect();
+    let handle_ids: Vec<&semio_framework_value::paged::PagedUtf8<{ usize::MAX }>> = node.handles.iter().map(|handle| &handle.id).collect();
     let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::create_node::create_node(node.clone(), index)];
-    for edge in base.edges.iter().filter(|edge| handle_ids.contains(&edge.source.as_str()) || handle_ids.contains(&edge.target.as_str())) {
+    for edge in base.edges.iter().filter(|edge| handle_ids.contains(&&edge.source) || handle_ids.contains(&&edge.target)) {
         mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_handles::connect_handles(
             edge.id.clone(),
             edge.source.clone(),

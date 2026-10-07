@@ -28,8 +28,8 @@ use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, dif
 
 
 use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
+
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "➕️insert-sample/🦀️.rs"]
@@ -232,3 +232,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/⏱️retimes/🦀️.rs"]
 mod set_snapshot_retimes_the_track_and_promotes_a_sample_to_a_keyframe;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

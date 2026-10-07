@@ -1,5 +1,6 @@
 use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;
 use super::*;
+use crate::standards::v1::subsets::animation::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
 
 /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, at the
 /// position `wire_tag` assigns it, and every one of those names also appears in the

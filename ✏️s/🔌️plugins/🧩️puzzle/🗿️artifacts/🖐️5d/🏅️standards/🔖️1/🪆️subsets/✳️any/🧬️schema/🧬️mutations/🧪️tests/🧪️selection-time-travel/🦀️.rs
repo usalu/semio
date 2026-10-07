@@ -77,7 +77,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
     assert!(cases.len() >= 7, "the corpus edits every selection leaf's parameters and targets");
     for case in cases {
         let id = case.id.as_str();
-        let mut store = crate::standards::v1::subsets::any::io::binary::mutations::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None)).await.expect("the store opens");
+        let mut store = crate::host::owned::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
             store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }).await.expect("a recorded gesture applies");
         }
@@ -115,6 +115,6 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             assert!(operations[case.at].supersession.is_some(), "{id}: the edited gesture is superseded, never rewritten");
             assert!(operations.iter().enumerate().all(|(index, operation)| operation.transaction == Some(&gesture_transaction(index))), "{id}: time travel edits the mutation, never the tool transaction");
         }
-        crate::standards::v1::subsets::any::io::binary::mutations::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
+        crate::host::owned::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
     }
 }

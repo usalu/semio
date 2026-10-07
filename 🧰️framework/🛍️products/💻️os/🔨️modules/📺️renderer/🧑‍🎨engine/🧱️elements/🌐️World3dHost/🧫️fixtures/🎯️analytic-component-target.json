@@ -88,5 +88,158 @@
     "9007199254740993\n",
     "0",
     "18446744073709551616"
+  ],
+  "vertexPickCases": [
+    {
+      "name": "surface samples precede duplicated exact vertices",
+      "data": {
+        "positions": [
+          9,
+          9,
+          9,
+          1,
+          2,
+          3,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          8,
+          8
+        ],
+        "normals": [],
+        "indices": [],
+        "vertexIds": [
+          4294967295,
+          0,
+          0,
+          1,
+          4294967295
+        ],
+        "componentReferences": {
+          "vertex": [
+            "9007199254740993",
+            "18446744073709551615"
+          ]
+        }
+      },
+      "expectedIds": [
+        0,
+        1
+      ],
+      "expectedPositions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "surface samples alone have no vertex picking geometry",
+      "data": {
+        "positions": [
+          9,
+          9,
+          9
+        ],
+        "normals": [],
+        "indices": [],
+        "vertexIds": [
+          4294967295
+        ],
+        "componentReferences": {
+          "vertex": []
+        }
+      },
+      "expectedIds": [],
+      "expectedPositions": []
+    }
+  ],
+  "overlayRefusals": [
+    {
+      "name": "empty exact target lane",
+      "targets": [],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "stale handle",
+      "targets": [
+        "shape@solid#0.face.0~cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "stale revision",
+      "targets": [
+        "shape@solid#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      ],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "unknown exact label",
+      "targets": [
+        "shape@solid#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740992~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "out of range group",
+      "targets": [
+        "shape@solid#0.face.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "different component mode",
+      "targets": [
+        "shape@solid#0.edge.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "trailing target bytes",
+      "targets": [
+        "shape@solid#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
+      ],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "numeric target without source",
+      "targets": [
+        "shape@solid#0.face.0"
+      ],
+      "labels": [
+        "9007199254740993"
+      ]
+    },
+    {
+      "name": "duplicate current label",
+      "targets": [
+        "shape@solid#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "labels": [
+        "9007199254740993",
+        "9007199254740993"
+      ]
+    }
   ]
 }

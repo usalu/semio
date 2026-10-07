@@ -15,8 +15,10 @@ fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
 /// `📓️terra-jobs-runtime-report.md`'s own "last-writer overwrites, identical is not a conflict"
 /// convention one layer up in `register_job_kind`.
 async fn register_job_test_migration() -> (String, String) {
-    let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "1".to_string(), subset: "*".to_string() };
-    let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "2".to_string(), subset: "*".to_string() };
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+    let from = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "1".to_string(), subset: "*".to_string() };
+    let to = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "2".to_string(), subset: "*".to_string() };
     let migration = store::DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_job_test_marker };
     let _ = store::register_dialect_migration(migration);
     (from.to_coordinate(), to.to_coordinate())
@@ -88,8 +90,10 @@ async fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
 
 #[semio_framework_async_macros::async_test]
 async fn migrate_job_reports_a_named_fault_when_no_migration_is_registered() {
-    let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate();
-    let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate();
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+    let from = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate();
+    let to = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate();
     let input = input_bytes(&from, &to, vec![1]).await;
     start_job(403, JOB_KIND_MIGRATE, &input).await;
     step_job(403, FULL_GRANT).await;

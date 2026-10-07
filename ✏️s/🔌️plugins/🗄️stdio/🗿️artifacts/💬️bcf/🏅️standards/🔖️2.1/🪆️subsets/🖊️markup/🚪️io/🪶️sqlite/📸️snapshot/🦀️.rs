@@ -1,6 +1,7 @@
 //! 💬️ Handwritten topic, viewpoint, camera and component relationships.
 use crate::standards::v2_1::subsets::any::schema::snapshot::*;
 use std::collections::BTreeMap;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,FloatColumn,FloatRow,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
 
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

@@ -16,9 +16,9 @@ fn full(index: usize) -> DagSnapshot {
         schema: row["schema"].as_str().unwrap().into(),
         content: store::ArtifactChild::new(
             child["childId"].as_str().unwrap().into(),
-            store::io_schema::ArtifactRef {
+            semio_framework_artifact_reference::ArtifactRef {
                 artifact_id: target["artifactId"].as_str().unwrap().into(),
-                dialect: store::io_schema::ArtifactDialect { artifact_kind: dialect["artifactKind"].as_str().unwrap().into(), standard: dialect["standard"].as_str().unwrap().into(), subset: dialect["subset"].as_str().unwrap().into() },
+                dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: dialect["artifactKind"].as_str().unwrap().into(), standard: dialect["standard"].as_str().unwrap().into(), subset: dialect["subset"].as_str().unwrap().into() },
             },
         ),
     }
@@ -117,7 +117,7 @@ fn sqlite_snapshot_dag_independent_sqlite_interprets_literal_two_table_parent() 
 fn sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns() {
     use store::sqlite_snapshot::*;
     let codec = store::ArtifactCodec::bare::<DagSnapshot, DagMutation>(DAG_DOCUMENT_SCHEMA).snapshot_sqlite.expect("missing DAG parent capability");
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.dag.dag".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.dag.dag".into(), standard: "1".into(), subset: "*".into() };
     for index in 0..3 {
         let expected = Owned::new(full(index));
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -236,7 +236,7 @@ mod public_owned {
     }
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_dag_populated_actual_declaration_public_both_forms_and_independent_edits() {
-        use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route,io_run_with_snapshot_control}};
+        use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
         use store::io_schema::{IoPayload,IoFidelity,SQLITE_SNAPSHOT};
         use store::sqlite_snapshot::{SqliteDatabaseLimits,SnapshotEncoding};
         use std::{io::Write,process::{Command,Stdio}};

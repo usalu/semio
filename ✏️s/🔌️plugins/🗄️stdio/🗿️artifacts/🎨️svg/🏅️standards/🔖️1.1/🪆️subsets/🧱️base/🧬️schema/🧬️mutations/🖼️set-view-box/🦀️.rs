@@ -1,7 +1,7 @@
 //! 🧬️ Direct set-view-box mutation owner.
 use crate::schema::diff::SvgDiff;
 use crate::schema::mutation_support::attribute_diff_at_path;
-use crate::schema::snapshot::{view_box_to_string, NodePath, ViewBox};
+use crate::schema::snapshot::{NodePath, ViewBox};
 use crate::SvgSnapshot;
 
 
@@ -26,7 +26,7 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetViewBoxMutat
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(attribute_diff_at_path(base, &payload.path, "viewBox", payload.view_box.as_ref().map(view_box_to_string))),
+            Self::Apply(payload) => protocol::MutationOutcome::new(attribute_diff_at_path(base, &payload.path, "viewBox", payload.view_box.map(crate::schema::snapshot::SvgAttributeValue::ViewBox))),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
         }
     }

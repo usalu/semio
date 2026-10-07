@@ -34,7 +34,7 @@ pub(in super::super) fn measure<'a>(documents: impl ExactSizeIterator<Item = (&'
         }
         if let Some(value) = doc.doctype {
             add(&mut rows, 1)?;
-            add_bytes(&mut bytes, 16 + super::super::super::position::digits(value.prolog_position) + value.name.len())?;
+            add_bytes(&mut bytes, 16 + crate::standards::v1_0::subsets::base::schema::snapshot::position::digits(value.prolog_position) + value.name.len())?;
             match &value.external_id {
                 None => {}
                 Some(XmlExternalId::System { system_id }) => add_bytes(&mut bytes, 6 + system_id.len())?,

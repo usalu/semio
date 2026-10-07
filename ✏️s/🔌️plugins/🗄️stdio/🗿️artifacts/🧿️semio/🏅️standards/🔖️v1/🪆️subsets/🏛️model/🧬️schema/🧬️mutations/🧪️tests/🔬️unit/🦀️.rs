@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1::subsets::model::io::binary::mutations::wire_tag;
 
 /// 🧪️ kinds_match_the_enum_and_the_catalog — the honesty check the test platform cannot make
 /// for itself, because the framework reads a DECLARED list and never parses Rust. Two claims:

@@ -1,0 +1,7 @@
+{
+  "status": "originalAfter active after actualsharedcompiler12 and all7guardedresult declarations",
+  "session": 58654,
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-din18599-after-eight-and-shared-result-current-glue-artifacts' bun run nx run-many --target=test-snapshot-sqlite-native --projects='@semio-tech/norm-din18599-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-din18599-original-native-after-eight-and-shared-result-current-glue.log' 2>&1",
+  "historicalOwnerAfter": 62216,
+  "controls": "unchanged original owner test-snapshot-sqlite-native quick grants/limits/laws"
+}

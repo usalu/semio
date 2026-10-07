@@ -1,59 +1,21 @@
-# 🧬️ TiffSnapshot schema facet — complete TIFF 6.0 semantic model.
-
-enum TiffByteOrder { LITTLE_ENDIAN BIG_ENDIAN }
-
-"TIFF6 §2 Table 2 — the 12 real IFD entry field types."
+# 🧬️ Exact logical TIFF pages and precision-preserving sample words.
+scalar UInt32
+scalar UInt16
+scalar Int64
 enum TiffFieldType { BYTE ASCII SHORT LONG RATIONAL S_BYTE UNDEFINED S_SHORT S_LONG S_RATIONAL FLOAT DOUBLE }
-
-"One numerator/denominator pair (RATIONAL/S_RATIONAL element)."
-type TiffRationalPair {
-  numerator: Int!
-  denominator: Int!
-}
-
-"""
-Typed union over every TIFF 6.0 field type's decoded value (adjacently tagged: `kind` selects
-which ONE of the typed fields below is populated — GraphQL has no native discriminated union
-with heterogeneous payload shapes, so this mirrors the JSON `{kind,value}` shape as loosely
-grouped fields, same practical approach as `ply`'s `PlyValue`).
-"""
-type TiffValues {
-  kind: TiffFieldType!
-  byteValue: [Int!]
-  asciiValue: String
-  shortValue: [Int!]
-  longValue: [Int!]
-  rationalValue: [TiffRationalPair!]
-  sByteValue: [Int!]
-  undefinedValue: [Int!]
-  sShortValue: [Int!]
-  sLongValue: [Int!]
-  sRationalValue: [TiffRationalPair!]
-  floatValue: [Float!]
-  doubleValue: [Float!]
-}
-
-"One IFD entry — a weak value (whole-value replaced in diffs)."
-type TiffTag {
-  tag: Int!
-  kind: TiffFieldType!
-  values: TiffValues!
-}
-
-"One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order)."
-type TiffIfd {
-  entries: [TiffTag!]!
-  "This directory's own raster as RAW STRIP BYTES; empty for IFD 0 and for a metadata-only directory."
-  pixels: [Int!]!
-}
-
-"""
-Complete `stdio.tiff` 6.0 semantic snapshot. `schema` is an identity field, never diffed.
-`pixels` is the decoded raster payload (canonical 8-bit RGBA, decoded from IFD 0 only).
-"""
-type TiffSnapshot {
-  schema: String! @state(class: ARTIFACT)
-  byteOrder: TiffByteOrder! @state(class: ARTIFACT)
-  ifds: [TiffIfd!]! @state(class: ARTIFACT)
-  pixels: [Int!]! @state(class: ARTIFACT)
-}
+type TiffWord64 { lo: UInt32! hi: UInt32! }
+input TiffWord64Input { lo: UInt32! hi: UInt32! }
+type TiffBinary32 { bits: UInt32! }
+input TiffBinary32Input { bits: UInt32! }
+type TiffRationalPair { numerator: Int64! denominator: Int64! }
+input TiffRationalPairInput { numerator: Int64! denominator: Int64! }
+type TiffValues { kind: TiffFieldType! byteValue: [UInt32!] asciiValue: [String!] shortValue: [UInt32!] longValue: [UInt32!] rationalValue: [TiffRationalPair!] sByteValue: [Int!] undefinedValue: [UInt32!] sShortValue: [Int!] sLongValue: [Int!] sRationalValue: [TiffRationalPair!] floatValue: [TiffBinary32!] doubleValue: [TiffWord64!] }
+input TiffValuesInput { kind: TiffFieldType! byteValue: [UInt32!] asciiValue: [String!] shortValue: [UInt32!] longValue: [UInt32!] rationalValue: [TiffRationalPairInput!] sByteValue: [Int!] undefinedValue: [UInt32!] sShortValue: [Int!] sLongValue: [Int!] sRationalValue: [TiffRationalPairInput!] floatValue: [TiffBinary32Input!] doubleValue: [TiffWord64Input!] }
+type TiffTag { tag: UInt16! values: TiffValues! }
+input TiffTagInput { tag: UInt16! values: TiffValuesInput! }
+type TiffSampleBlock { x: UInt32! y: UInt32! width: UInt32! height: UInt32! channels: UInt16! samples: [TiffWord64!]! }
+input TiffSampleBlockInput { x: UInt32! y: UInt32! width: UInt32! height: UInt32! channels: UInt16! samples: [TiffWord64Input!]! }
+type TiffIfd { entries: [TiffTag!]! blocks: [TiffSampleBlock!]! }
+input TiffIfdInput { entries: [TiffTagInput!]! blocks: [TiffSampleBlockInput!]! }
+type TiffSnapshot { schema: String! @state(class: ARTIFACT) ifds: [TiffIfd!]! @state(class: ARTIFACT) }
+input TiffSnapshotInput { schema: String! ifds: [TiffIfdInput!]! }

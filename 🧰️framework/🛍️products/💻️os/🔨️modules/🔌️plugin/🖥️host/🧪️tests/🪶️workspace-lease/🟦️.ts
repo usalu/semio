@@ -17,7 +17,7 @@ test("closed real Count lease contract selects complete native encodings and eig
 });
 test("independent SQLite validates every Count row for both encodings and exact dialect metadata",()=>{
  const fixture=corpus();
- const sql=readFileSync(join(root,"🧪️testing/🧩️component/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),"utf8");
+ const sql=readFileSync(join(root,"🧪️testing/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql"),"utf8");
  const metadata=readFileSync(join(process.cwd(),"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql"),"utf8");
  for(const encoding of fixture.encodings)for(const count of fixture.counts){
   const db=new Database(":memory:");try{

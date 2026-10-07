@@ -88,3 +88,5 @@ use framework_schema::ArtifactSchema;
 
 }
 pub use snapshot_wire_codec::*;
+
+crate::impl_norm_artifact_record!(@text crate::En1992Snapshot, extension="en1992", envelope_id="norm.en1992");

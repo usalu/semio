@@ -42,9 +42,9 @@ fn full(word: u64, address: usize) -> JackSnapshot {
     let c = &l["childAddresses"][address];
     let content = store::ArtifactChild::new(
         c["childId"].as_str().unwrap().into(),
-        store::io_schema::ArtifactRef {
+        semio_framework_artifact_reference::ArtifactRef {
             artifact_id: c["artifactId"].as_str().unwrap().into(),
-            dialect: store::io_schema::ArtifactDialect { artifact_kind: c["artifactKind"].as_str().unwrap().into(), standard: c["standard"].as_str().unwrap().into(), subset: c["subset"].as_str().unwrap().into() },
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: c["artifactKind"].as_str().unwrap().into(), standard: c["standard"].as_str().unwrap().into(), subset: c["subset"].as_str().unwrap().into() },
         },
     );
     let f = f64::from_bits(word);
@@ -200,7 +200,7 @@ fn sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and
 fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
     use store::sqlite_snapshot::*;
     let codec = store::ArtifactCodec::bare::<JackSnapshot, crate::TrinityGraphMutation>(crate::TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect("Jack absent parent capability");
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.trinity.jack".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.trinity.jack".into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(0, 0));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let native = match encoding {
@@ -320,14 +320,14 @@ pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::ed
 fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("trinity").label("Populated public SQLite").version("0.0.1").package_id("semio:trinity").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_jack_populated_actual_app_public_both_forms(){
-use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route}};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
+use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
 register();let dialect=ArtifactDialect{artifact_kind:"s.trinity.jack".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
 for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let actual=Owned::new(io_import_sqlite_snapshot::<JackSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);assert_full(&actual,&expected,word);assert_eq!((&*actual).encode_pack(),(&*expected).encode_pack());assert_eq!((&*actual).print_dsl(),(&*expected).print_dsl());}}
 eprintln!("[DEBUG] jack actual app public both forms preserve complete owner and words");
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_jack_populated_public_independent_edit_retirement(){
-use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};use std::{io::Write,process::{Command,Stdio}};
+use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};use std::{io::Write,process::{Command,Stdio}};
 register();let dialect=ArtifactDialect{artifact_kind:"s.trinity.jack".into(),standard:"1".into(),subset:"*".into()};
 for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
 let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==14n)throw Error('table census');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.trinity.jack'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE jack_document SET query=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;

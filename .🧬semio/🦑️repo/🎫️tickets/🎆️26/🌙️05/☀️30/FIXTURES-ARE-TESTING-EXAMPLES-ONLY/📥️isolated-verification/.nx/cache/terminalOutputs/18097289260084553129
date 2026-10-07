@@ -1,0 +1,105 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" proofs
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[DEBUG] Plugin15 actual owned source proof 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts [
+  [0m[32m"service-operation-conversion-check"[0m[0m
+]
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+plugin-host-service-operation-source: effects=2 wit=1 sync=1 async=1 mutation=1 passed
+[DEBUG] Plugin15 actual owned source proof ✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts [
+  [0m[32m"publication-authority-audit"[0m[0m
+]
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts:
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[[1m14.39ms[0m[2m][0m
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[[1m10.54ms[0m[2m][0m
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m nakagin-capsule: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[[1m22.13ms[0m[2m][0m
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m nakagin-capsule: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[2.02ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts:
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[[1m37.51ms[0m[2m][0m
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[[1m13.84ms[0m[2m][0m
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-right: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[0.55ms[0m[2m][0m
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-right: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[2.92ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mnakagin-capsule[2m >[0m[1m ships primary asset[0m [0m[2m[0.32ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mhexagonal-cut-concrete-forest-left[2m >[0m[1m ships primary asset[0m [0m[2m[0.49ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mnakagin-capsule[2m >[0m[1m ships primary asset[0m [0m[2m[0.79ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mhexagonal-cut-concrete-forest-left[2m >[0m[1m ships primary asset[0m [0m[2m[0.29ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mhexagonal-cut-concrete-forest-left[2m >[0m[1m ships primary asset[0m [0m[2m[0.10ms[0m[2m][0m
+
+[0m[32m 13 pass[0m
+[0m[2m 0 fail[0m
+ 25 expect() calls
+Ran 13 tests across 7 files. [0m[2m[[1m356.00ms[0m[2m][0m
+[0m[31mvalidated Block publication authority; apps=Block2dPlayApp:9,Block3dPlayApp:22,Block5dPlayApp:7; oracle=owned; hostile=12[0m
+[DEBUG] Plugin15 actual owned source proof ✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts [
+  [0m[32m"publication-authority-audit"[0m[0m
+]
+[0m[31mvalidated Mathematical publication authority; routes=8; WindowConfig=1; oracle=owned; hostile=3[0m
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mdemo[2m >[0m[1m ships primary asset[0m [0m[2m[1.03ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mdemo-session[2m >[0m[1m ships primary asset[0m [0m[2m[0.30ms[0m[2m][0m
+
+[0m[32m 2 pass[0m
+[0m[2m 0 fail[0m
+ 2 expect() calls
+Ran 2 tests across 2 files. [0m[2m[[1m25.00ms[0m[2m][0m
+[DEBUG] Plugin15 actual owned source proof 🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts [
+  [0m[32m"test"[0m[0m[0m[2m,[0m [0m[32m"editor-catalog-contract"[0m[0m
+]
+[0m[31mSyntaxError[0m[2m:[0m [1mExport named 'admitCompositionParentRemovalV1' not found in module '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts'.[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+[0m[1m49 |[0m }[0m[35melse[0m [0m[35mif[0m(command===[0m[32m"behavior"[0m){
+[0m[1m50 |[0m  const child=Bun.spawn([process.execPath,"test",join(root,"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🎞️intrinsic-media/🟦️.ts")],{cwd:root,env:process.env,stdout:"inherit",stderr:"inherit"});assert.equal(await child.exited,0);
+[0m[1m51 |[0m }[0m[35melse[0m [0m[35mif[0m(command===[0m[32m"diagnostics"[0m){
+[0m[1m52 |[0m  const rows=[];for(const owner of["🧱️block","➗️mathematical"]){const base="✏️s/🔌️plugins/"+owner,path=owner==="🧱️block"?base+"/📦️packages/🟦️typescript/📜️script.ts":base+"/🧪️tests/📣️publication-authority/🟦️.ts",text=read(path),ast=ts.createSourceFile(path,text,ts.ScriptTarget.Latest,true),anchors:string[]=[];const visit=(node:ts.Node)=>{if(ts.isArrayLiteralExpression(node)&&node.elements.length>10&&node.elements.every(ts.isStringLiteral))anchors.push(...node.elements.map(item=>(item as ts.StringLiteral).text));ts.forEachChild(node,visit);};visit(ast);const fixture=JSON.parse(read(base+(owner==="🧱️block"?"/🧫️fixtures/🧪️publication-authority/🔣️.json":"/🧫️fixtures/📣️publication-authority/🔣️.json")));for(const app of fixture.apps??[fixture]){const source=read(base+"/"+app.source),actual=[...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::Migrated\)/g)].map(match=>match[1]),expected=app.routes[0m[2m | ... truncated [0m
+[0m[1m53 |[0m }[0m[35melse[0m [0m[35mif[0m(command===[0m[32m"proofs"[0m){
+[0m[1m54 |[0m  for(const [path,...args]of[[plugin+"/🖥️host/📦️packages/🦀️rust/📜️script.ts","service-operation-conversion-check"],["✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts","publication-authority-audit"],["✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts","publication-authority-audit"],["🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts","test","editor-catalog-contract"]]){console.log("[DEBUG] Plugin15 actual owned source proof",path,args);const child=Bun.spawn([process.execPath,join(root,path),...args],{cwd:root,env:process.env,stdout:"inherit",stderr:"inherit"});assert.equal(await child.exited,0);}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    [31m[1m^[0m
+[0m[31mAssertionError[0m[2m:[0m [1mExpected values to be strictly equal:
+
+1 !== 0
+[0m
+ generatedMessage[0m[2m:[0m [0m[33mtrue[0m[0m[2m,[0m
+     actual[0m[2m:[0m [0m[33m1[0m[0m[2m,[0m
+   expected[0m[2m:[0m [0m[33m0[0m[0m[2m,[0m
+   operator[0m[2m:[0m [0m[32m"strictEqual"[0m[0m[2m,[0m
+       code[0m[2m:[0m [32m"ERR_ASSERTION"[0m
+
+[0m      [2mat [0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts[0m[2m:[0m[33m54[0m[2m:[33m624[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" proofs" exited with non-zero status code

@@ -1,0 +1,7 @@
+# Delegated tuple resolution
+
+Read-only nested defining authority inventory saved for all60 owners. Selected root editor schema/dialect tuples are now recorded in semantic-independent-primary-selected-editor-sixty-tuples-held.json. WFC kind/schema constants are actual snapshot definitions; SubsetId::ANY is the actual literal `*` at IO schema line25. No default dialect guessed. Imported Playbook schema resolves to OS Playbook `playbook.program`; Jack resolves TRINITY_GRAPH_SCHEMA to JackSnapshot::SCHEMA `trinity.graph`.
+
+Important distinctions resolved: CAD selected root editor uses `cad.scene`, not neighboring CAD_PLAY_DOCUMENT_SCHEMA `cad.document`; Wires uses `reasoning.wires.identity.snapshot`, not its embedded board schema; Note uses `note.document`, not ink schema. Energy declaration explicitly binds `energy.model` under kind `s.energy.model`, distinct artifact-schema identity. These selected schemas come from defining editor/codec authorities, not owner name heuristics.
+
+This is still explicitly partial proof scope: all actual declaration-tree conversion/additional viewer or controlled codec bindings must be joined before publishing a closed all-primary binding const fixture/schema. The nested authority file retains editor/viewer declarations for that review. Selected root editor60 tuples must not be represented as complete dialect binding count. Framework7 and separate Chart remain separate publication denominators. No runtime or current receipt qualification inferred.

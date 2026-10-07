@@ -19,7 +19,7 @@ mod tests {
         use semio_framework::io_schema::{CARRIER_BINARY, IoFidelity, IoOutcome, IoPayload as NewIoPayload};
 
         const TEST_KIND: &str = "3d.__w1b_export_bug_proof";
-        const TEST_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.__w1b_export_bug_proof", standard: semio_framework::StandardId("1"), subset: semio_framework::SubsetId("*") };
+        const TEST_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.__w1b_export_bug_proof", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
         /// 🧷️ The literal bytes of `store::BINARY_MAGIC` / `os_semio::BINARY_MAGIC`
         /// (`🧬️semio/🦀️.rs`), inlined so this assertion never depends on that constant's
         /// own export path -- a genuinely independent check of the OLD pack format's header.
@@ -27,9 +27,9 @@ mod tests {
 
         fn run(payload: &NewIoPayload) -> semio_framework::io_schema::IoResult<NewIoPayload> {
             let NewIoPayload::Text(json) = payload else {
-                return Err(semio_framework::io_schema::IoError { message: "expected a text native payload".to_string(), diagnostics: Vec::new() });
+                return Err(semio_framework::io_schema::IoError { cause: semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a text native payload"), diagnostics: Vec::new() });
             };
-            let value: Value = serde_json::from_str(json).map_err(|error| semio_framework::io_schema::IoError { message: error.to_string(), diagnostics: Vec::new() })?;
+            let value: Value = serde_json::from_str(json).map_err(|error| semio_framework::io_schema::IoError { cause: semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()), diagnostics: Vec::new() })?;
             let raw = value["value"].as_str().unwrap_or_default().to_string();
             Ok(IoOutcome::clean(NewIoPayload::Binary(raw.into_bytes())))
         }

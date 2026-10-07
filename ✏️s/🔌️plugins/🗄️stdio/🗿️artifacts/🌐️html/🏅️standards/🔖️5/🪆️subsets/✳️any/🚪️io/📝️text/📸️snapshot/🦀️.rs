@@ -312,8 +312,8 @@ pub(crate) fn try_decode_entity(s: &str) -> Option<(char, usize)> {
 /// is a valid UTF-8 boundary.
 pub(crate) struct Parser<'a> {
     src: &'a str,
-    bytes: &'a [u8],
-    pos: usize,
+    pub(crate) bytes: &'a [u8],
+    pub(crate) pos: usize,
     line: u32,
     col: u32,
 }

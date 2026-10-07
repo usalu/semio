@@ -16,7 +16,7 @@ type Case = {
   readonly layout: { readonly tag: string | null; readonly content: string | null; readonly renameAll: string | null };
   readonly wireName: string;
   readonly leaf: { readonly $id: string; readonly properties?: Record<string, { readonly const?: Json }> } & Record<string, Json>;
-  readonly aggregateSchema: ({ readonly $id: string; readonly oneOf: readonly Json[] } & Record<string, Json>) | null;
+  readonly input: { readonly aggregateSchema: ({ readonly $id: string; readonly oneOf: readonly Json[] } & Record<string, Json>) | null };
   readonly fixture: Json;
   readonly outcome?: Json;
   readonly invariants?: readonly string[];
@@ -50,15 +50,15 @@ describe("schema-mutation-payload-parity corpus", () => {
       const wireName = mutationVariantWireName(entry.variant, aggregate!.variants.get(entry.variant) ?? null, aggregate!.layout.renameAll);
       expect(wireName).toBe(entry.wireName);
       const leafEnum = rustValueEnums("leaf.rs", entry.leafRust ?? "").find((candidate) => candidate.name === aggregate!.payloadTypes.get(entry.variant) && candidate.payloadVariant !== null);
-      if (entry.aggregateSchema !== null) expect(mutationAggregateBranch(aggregate!.layout, wireName, entry.leaf.$id, leafEnum?.name ?? null)).toEqual(entry.aggregateSchema.oneOf[0] as Record<string, unknown>);
+      if (entry.input.aggregateSchema !== null) expect(mutationAggregateBranch(aggregate!.layout, wireName, entry.leaf.$id, leafEnum?.name ?? null)).toEqual(entry.input.aggregateSchema.oneOf[0] as Record<string, unknown>);
       const wrapper: MutationLeafWrapper | null = leafEnum === undefined ? null : { layout: leafEnum.layout, wireName: mutationVariantWireName(leafEnum.payloadVariant!, leafEnum.variants.get(leafEnum.payloadVariant!) ?? null, leafEnum.layout.renameAll) };
       expect(wrapper !== null).toBe(entry.leafRust !== undefined);
       const cut = mutationInputPayload(aggregate!.layout, wireName, entry.fixture, wrapper);
       expect("payload" in cut ? cut.payload : null).toEqual(entry.payload);
-      const documents = new Map<string, Record<string, unknown>>([[entry.leaf.$id, entry.leaf], ...(entry.aggregateSchema === null ? [] : [[entry.aggregateSchema.$id, entry.aggregateSchema] as const])]);
+      const documents = new Map<string, Record<string, unknown>>([[entry.leaf.$id, entry.leaf], ...(entry.input.aggregateSchema === null ? [] : [[entry.input.aggregateSchema.$id, entry.input.aggregateSchema] as const])]);
       const checker = mutationPayloadChecker(documents);
       if (entry.invariants !== undefined) expect([...checker.invariants(entry.leaf.$id)].sort()).toEqual([...entry.invariants].sort());
-      const findings = [...checker.opaque(entry.leaf.$id), ...checker.fixture(aggregate!.layout, wireName, entry.leaf.$id, entry.aggregateSchema?.$id ?? null, entry.fixture, wrapper, mutationFixtureOutcome(entry.outcome ?? null))].map((finding) => `${finding.class}@${finding.pointer}`);
+      const findings = [...checker.opaque(entry.leaf.$id), ...checker.fixture(aggregate!.layout, wireName, entry.leaf.$id, entry.input.aggregateSchema?.$id ?? null, entry.fixture, wrapper, mutationFixtureOutcome(entry.outcome ?? null))].map((finding) => `${finding.class}@${finding.pointer}`);
       expect(findings.sort()).toEqual([...entry.findings].sort());
     });
 });

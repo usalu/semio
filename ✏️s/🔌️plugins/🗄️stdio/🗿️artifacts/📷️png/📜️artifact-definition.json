@@ -50,7 +50,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.png.standard.1-2.codec.native-document.v1", "status": "implemented", "from": "s.stdio.png.standard.1-2.dialect.source", "to": "s.stdio.png.standard.1-2.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.png.v1", "artifact_kind": "s.stdio.png", "artifact_schema": "stdio.png", "extension": "png", "pack_schema_hash": "94abe1a4afafee64bc8d4b2fa7ff405cfc4def66ce3a81582988888b030622cf", "runtime_capability_id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1" } }
+    { "id": "s.stdio.png.standard.1-2.codec.native-document.v1", "status": "implemented", "from": "s.stdio.png.standard.1-2.dialect.source", "to": "s.stdio.png.standard.1-2.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.png.v1", "artifact_kind": "s.stdio.png", "artifact_schema": "stdio.png", "extension": "png", "pack_schema_hash": "cbc02a85fcf9bada1be49ad554972160f148cad24f78aad32ceae57d510d633b", "runtime_capability_id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1" } }
   ],
   "mutations": [],
   "inferences": [],

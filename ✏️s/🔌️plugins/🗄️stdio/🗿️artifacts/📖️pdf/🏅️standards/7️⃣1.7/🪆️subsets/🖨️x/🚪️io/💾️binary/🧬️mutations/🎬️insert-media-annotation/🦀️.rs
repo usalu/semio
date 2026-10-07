@@ -1,6 +1,6 @@
 //! 🎬️ Direct binary codec for `insert-media-annotation`.
 
-use super::InsertMediaAnnotation;
+use crate::standards::v1_7::subsets::x::schema::mutations::InsertMediaAnnotation;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 12;

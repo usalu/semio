@@ -1,0 +1,133 @@
+{
+  "cases": [
+    {
+      "name": "connect",
+      "rows": [
+        {
+          "operation": "connect",
+          "sourceNodeId": "a",
+          "sourcePortId": "",
+          "targetNodeId": "b",
+          "targetPortId": ""
+        }
+      ],
+      "mutations": [
+        "connect-adjacency"
+      ],
+      "linked": false
+    },
+    {
+      "name": "delete-linked-pair",
+      "rows": [
+        {
+          "operation": "delete",
+          "nodeIds": [
+            "a",
+            "b"
+          ],
+          "synapseIds": []
+        }
+      ],
+      "mutations": [
+        "disconnect-adjacency",
+        "delete-program-element",
+        "delete-program-element"
+      ]
+    },
+    {
+      "name": "disconnect",
+      "rows": [
+        {
+          "operation": "disconnect",
+          "synapseId": "edge"
+        }
+      ],
+      "mutations": [
+        "disconnect-adjacency"
+      ]
+    },
+    {
+      "name": "empty",
+      "rows": [],
+      "mutations": []
+    },
+    {
+      "name": "private-delete",
+      "rows": [
+        {
+          "operation": "deleteSelection",
+          "nodeIds": [
+            "a"
+          ]
+        }
+      ],
+      "refused": true
+    },
+    {
+      "name": "unknown-node",
+      "rows": [
+        {
+          "operation": "connect",
+          "sourceNodeId": "a",
+          "sourcePortId": "",
+          "targetNodeId": "missing",
+          "targetPortId": ""
+        }
+      ],
+      "refused": true
+    },
+    {
+      "name": "malformed-batch",
+      "rows": [
+        {
+          "operation": "disconnect",
+          "synapseId": "edge"
+        },
+        {
+          "operation": "disconnect",
+          "synapseId": "edge",
+          "extra": true
+        }
+      ],
+      "refused": true
+    },
+    {
+      "name": "existing-connection",
+      "rows": [
+        {
+          "operation": "connect",
+          "sourceNodeId": "a",
+          "sourcePortId": "",
+          "targetNodeId": "b",
+          "targetPortId": ""
+        }
+      ],
+      "mutations": []
+    },
+    {
+      "name": "connect-then-delete",
+      "linked": false,
+      "rows": [
+        {
+          "operation": "connect",
+          "sourceNodeId": "a",
+          "sourcePortId": "",
+          "targetNodeId": "b",
+          "targetPortId": ""
+        },
+        {
+          "operation": "delete",
+          "nodeIds": [
+            "a"
+          ],
+          "synapseIds": []
+        }
+      ],
+      "mutations": [
+        "connect-adjacency",
+        "disconnect-adjacency",
+        "delete-program-element"
+      ]
+    }
+  ]
+}

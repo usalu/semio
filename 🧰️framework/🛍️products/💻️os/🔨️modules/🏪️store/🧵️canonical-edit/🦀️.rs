@@ -74,6 +74,7 @@ enum CanonicalEditNode<'a, M> {
     Edit(&'a Edit<M>),
     Mutation(&'a M),
     Mutations(&'a [M]),
+    PagedMutations(&'a semio_framework_value::list::PagedList<M, {usize::MAX}>),
     Metas(&'a [MutationMeta]),
     Meta(&'a MutationMeta),
     Clock(&'a HybridLogicalTimestamp),
@@ -140,7 +141,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                 0 => Self::Scalar(N::String(&edit.id)),
                 1 => Self::Scalar(N::String(edit.actor.as_deref().ok_or_else(invalid_path)?)),
                 2 => Self::Mutations(&edit.forwards),
-                3 => Self::Mutations(&edit.inverse),
+                3 => Self::PagedMutations(&edit.inverse),
                 4 => Self::Metas(&edit.mutation_meta),
                 5 => Self::Scalar(N::String(edit.verb.as_deref().ok_or_else(invalid_path)?)),
                 6 => Self::Scalar(N::String(&edit.started_at)),
@@ -149,6 +150,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                 _ => return Err(invalid_path()),
             },
             Self::Mutations(values) => Self::Mutation(values.get(index).ok_or_else(invalid_path)?),
+            Self::PagedMutations(values) => Self::Mutation(values.get(index).ok_or_else(invalid_path)?),
             Self::Metas(values) => Self::Meta(values.get(index).ok_or_else(invalid_path)?),
             Self::Meta(meta) => match field_at(&self.fields(), index)?.0 {
                 0 => Self::Scalar(N::String(&meta.mutation_id.as_ref().ok_or_else(invalid_path)?.0)),
@@ -212,6 +214,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         }
         Ok(match self {
             Self::Mutations(values) => ArtifactCanonicalJsonNode::Array(values.len()),
+            Self::PagedMutations(values) => ArtifactCanonicalJsonNode::Array(values.len()),
             Self::Metas(values) => ArtifactCanonicalJsonNode::Array(values.len()),
             Self::Dependencies(values) => ArtifactCanonicalJsonNode::Array(values.len()),
             Self::Hash(_) => ArtifactCanonicalJsonNode::Array(32),
@@ -235,6 +238,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         match self {
             Self::Mutation(value) => V::Source(value),
             Self::Mutations(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Source(value)))),
+            Self::PagedMutations(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Source(value)))),
             Self::Metas(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| Self::Meta(value).borrowed_value()))),
             Self::Dependencies(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Scalar(ArtifactCanonicalJsonNode::String(&value.0))))),
             Self::Hash(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Scalar(ArtifactCanonicalJsonNode::U64(u64::from(*value)))))),

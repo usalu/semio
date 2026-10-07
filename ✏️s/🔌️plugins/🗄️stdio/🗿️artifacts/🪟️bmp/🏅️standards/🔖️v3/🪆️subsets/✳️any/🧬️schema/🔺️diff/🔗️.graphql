@@ -1,3 +1,1 @@
-type BmpDiff {
-  bytes: [Int!]
-}
+type BmpDiff { image: BmpImage }

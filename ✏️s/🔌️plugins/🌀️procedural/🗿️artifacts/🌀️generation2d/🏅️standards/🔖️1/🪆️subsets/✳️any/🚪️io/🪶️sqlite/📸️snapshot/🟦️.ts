@@ -1,5 +1,6 @@
 /** 🌀️ Owned Generation2d relational snapshot entry points. */
-import{projectProceduralSnapshot,reconstructProceduralSnapshot,type ProceduralSnapshot}from"../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🟦️.ts";
+import{projectProceduralSnapshot,reconstructProceduralSnapshot}from"../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🟦️.ts";
+import {type ProceduralSnapshot} from "../../../../../../../../../🫀️core/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts";
 import type{ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import type{SqliteDatabase}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export const GENERATION2D_SQLITE_SCHEMA=`CREATE TABLE generation_document (id INTEGER PRIMARY KEY, host_id INTEGER NOT NULL REFERENCES generation_host(id), selected_generation_id TEXT, preview_text TEXT);

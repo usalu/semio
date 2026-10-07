@@ -8,7 +8,7 @@ use crate::schema::inferences::{Grid3dAssignment, Grid3dInferenceCommit};
 
 
 
-use crate::host::inferences::{solve_with_job};
+use crate::host::inferences::{solve};
 use crate::schema::snapshot::Grid3dSnapshot;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, Operation, StepContext, StepOutcome};
 use semio_framework_plugin::Fault;
@@ -77,12 +77,12 @@ impl Grid3dFillPayload {
         self.assignments.iter().filter(|cell| cell.tile_id.is_some()).count()
     }
 
-    /// 🏁 Finished assignments the residency stores — only decided cells, matching `solve_with_job`.
+    /// 🏁 Finished assignments the residency stores — only decided cells, matching `solve`.
     pub fn decided_assignments(&self) -> Vec<Grid3dAssignment> {
         self.assignments.iter().filter_map(|cell| cell.tile_id.as_ref().map(|tile| Grid3dAssignment { x: cell.x, y: cell.y, z: cell.z, tile_id: tile.clone() })).collect()
     }
 
-    /// 🏁 The commit shape `solve_with_job` returns for the same collapse.
+    /// 🏁 The commit shape `solve` returns for the same collapse.
     pub fn as_commit(&self) -> Grid3dInferenceCommit {
         Grid3dInferenceCommit { satisfiable: !self.contradiction, assignments: self.decided_assignments() }
     }

@@ -14,7 +14,7 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_
 #[cfg(feature = "component-app-assembly")]
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::PngDiff;
 pub use schema::mutations::PngMutation;
@@ -115,7 +115,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
         .composers(standards::v1_2::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.png", standard: semio_framework_plugin::StandardId("1.2"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.png", standard: semio_framework_artifact_reference::StandardId("1.2"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
 }
 
@@ -200,14 +200,14 @@ pub fn register() {
     for lang in pilot_languages() {
         semio_framework_dsl::register_language(*lang);
     }
-    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.png", standard: semio_framework_plugin::StandardId("1.2"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.png", standard: semio_framework_artifact_reference::StandardId("1.2"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 //#endregion 🔖️ImperativeRegister
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1_2::subsets::any::io::io_registry as v1_2;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

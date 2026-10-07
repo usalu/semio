@@ -3,7 +3,7 @@
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::{Gis2dInteractionSnapshot, GIS_MAP_LAYER_IDS};
-use crate::schema::gis_map_descriptor_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;

@@ -71,24 +71,19 @@ pub type CadModelChild = store::ArtifactChild<SemioModelSnapshot>;
 /// `create-drawing`/`delete-drawing` once a caller actually attaches one.
 pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 
-/// 🪪️ Parses and validates one exact CAD child handle before it enters a parent diff.
-pub fn cad_child_from_uri<S>(child_id: &str, target_uri: &str, expected_subset: &str) -> Result<store::ArtifactChild<S>, String> {
-    let target = store::os_io::ArtifactRef::parse_uri(target_uri).map_err(|error| format!("CAD child target is not an artifact URI: {error}"))?;
-    if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != expected_subset {
-        return Err(format!("CAD child target must use s.stdio.semio@v1/{expected_subset}"));
+/// 🪪️ Validates one owned CAD child reference before it enters a parent diff.
+pub fn cad_child<S>(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef, expected_subset: &str) -> Result<store::ArtifactChild<S>, String> {
+    if child_id.is_empty() || target.artifact_id.is_empty() || target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != expected_subset {
+        return Err(format!("CAD child target must own a nonempty identity and s.stdio.semio v1 {expected_subset} dialect"));
     }
-    Ok(store::ArtifactChild::new(child_id.to_string(), target))
+    Ok(store::ArtifactChild::new(child_id.to_string(), target.clone()))
 }
 
 /// 🧩️ Validates a composed model child handle.
-pub fn cad_model_child_from_uri(child_id: &str, target_uri: &str) -> Result<CadModelChild, String> {
-    cad_child_from_uri(child_id, target_uri, "model")
-}
+pub fn cad_model_child(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef) -> Result<CadModelChild, String> { cad_child(child_id, target, "model") }
 
 /// 📐️ Validates a composed drawing child handle.
-pub fn cad_drawing_child_from_uri(child_id: &str, target_uri: &str) -> Result<CadDrawingChild, String> {
-    cad_child_from_uri(child_id, target_uri, "drawing")
-}
+pub fn cad_drawing_child(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef) -> Result<CadDrawingChild, String> { cad_child(child_id, target, "drawing") }
 
 //#region 🔖️WorkingScene
 /// 🧱️ EPHEMERAL working representation of per-pane object content and raw geometry — never persisted, never a
@@ -100,21 +95,21 @@ pub fn cad_drawing_child_from_uri(child_id: &str, target_uri: &str) -> Result<Ca
 #[value(rename_all = "camelCase")]
 pub struct CadWorkingScene {
     #[value(default)]
-    pub(crate) objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) objects: Vec<standards::v1::subsets::any::schema::geometry::CadObject>,
     #[value(default)]
-    pub(crate) building_objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) building_objects: Vec<standards::v1::subsets::any::schema::geometry::CadObject>,
     #[value(default)]
-    pub(crate) energy_objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) energy_objects: Vec<standards::v1::subsets::any::schema::geometry::CadObject>,
     #[value(default)]
-    pub(crate) structure_classic_objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) structure_classic_objects: Vec<standards::v1::subsets::any::schema::geometry::CadObject>,
     #[value(default)]
-    pub(crate) geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) geometry: Option<standards::v1::subsets::any::schema::geometry::CadGeometry>,
     #[value(default)]
-    pub(crate) building_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) building_geometry: Option<standards::v1::subsets::any::schema::geometry::CadGeometry>,
     #[value(default)]
-    pub(crate) energy_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) energy_geometry: Option<standards::v1::subsets::any::schema::geometry::CadGeometry>,
     #[value(default)]
-    pub(crate) structure_classic_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) structure_classic_geometry: Option<standards::v1::subsets::any::schema::geometry::CadGeometry>,
 }
 
 /// 🌉 WRITE direction: a deterministic, content-addressed `s.stdio.semio.model` CHILD HANDLE for
@@ -127,8 +122,8 @@ pub struct CadWorkingScene {
 /// needs `ChildStoreFactory`/`CompositionCoordinator`, out of a pure function's reach.
 pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelChild {
     let child_id = store::content_id(&format!("{}-model", cad_model_child_pane_slug(pane)), content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -147,8 +142,8 @@ fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
 /// bridge changes.
 pub fn cad_named_pane_child(document_id: &str, pane: CadPaneId) -> CadModelChild {
     let child_id = format!("{document_id}-{}-model", cad_model_child_pane_slug(pane));
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -170,7 +165,7 @@ pub(crate) fn cad_bundled_pane_scene(child_id: &str) -> Option<std::sync::Arc<Ca
         .get_or_init(|| {
             let forest = standards::v1::subsets::any::schema::inferences::forest_play_scene();
             let empty = std::sync::Arc::new(CadWorkingScene::default());
-            let bundled = CadPaneId::all().into_iter().filter_map(|pane| Some((cad_pane_model(&forest, pane)?.child_id.clone(), standards::v1::subsets::any::schema::inferences::forest_pane_scene(pane))));
+            let bundled = CadPaneId::all().into_iter().filter_map(|pane| Some((cad_pane_model(&forest, pane)?.child_id.clone(), standards::v1::subsets::any::io::geometry_import::forest_pane_scene(pane))));
             bundled.chain(CadPaneId::all().into_iter().map(|pane| (cad_empty_pane_child(pane).child_id, empty.clone()))).collect()
         })
         .iter()
@@ -208,7 +203,7 @@ pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str
     cad_pane_model(snapshot, pane).filter(|child| child.child_id == child_id)?;
     let genesis = cad_bundled_pane_scene(child_id);
     let objects = genesis.as_deref().map_or(&[][..], |scene| cad_scene_pane_objects(scene, pane));
-    Some(<SemioModelSnapshot as ArtifactPack>::encode_pack(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(objects)))
+    Some(<SemioModelSnapshot as ArtifactPack>::encode_pack(&standards::v1::subsets::any::schema::geometry::semio_model_snapshot_from_objects(objects)))
 }
 
 /// 🧬️ The bounded projection of this snapshot's composed child handles, as both surfaces hand it to
@@ -218,7 +213,7 @@ pub fn cad_child_restore_projection(snapshot: &CadSnapshot) -> Result<store::Chi
 }
 
 /// 🧱️ One pane's objects in a working scene.
-pub(crate) fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -> &[standards::v1::subsets::any::io::geometry_import::CadObject] {
+pub(crate) fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -> &[standards::v1::subsets::any::schema::geometry::CadObject] {
     match pane {
         CadPaneId::Shape => &scene.objects,
         CadPaneId::Building => &scene.building_objects,
@@ -228,7 +223,7 @@ pub(crate) fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -
 }
 
 /// 📐️ One pane's raw geometry in a working scene.
-pub(crate) fn cad_scene_pane_geometry(scene: &CadWorkingScene, pane: CadPaneId) -> Option<&standards::v1::subsets::any::io::geometry_import::CadGeometry> {
+pub(crate) fn cad_scene_pane_geometry(scene: &CadWorkingScene, pane: CadPaneId) -> Option<&standards::v1::subsets::any::schema::geometry::CadGeometry> {
     match pane {
         CadPaneId::Shape => scene.geometry.as_ref(),
         CadPaneId::Building => scene.building_geometry.as_ref(),
@@ -242,13 +237,13 @@ pub(crate) fn cad_scene_pane_geometry(scene: &CadWorkingScene, pane: CadPaneId) 
 /// field for, and the `Arc` whose identity keys the pane's tessellation cache.
 #[derive(Clone, Debug, Default)]
 pub(crate) struct CadComposedPane {
-    pub(crate) objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) objects: Vec<standards::v1::subsets::any::schema::geometry::CadObject>,
     pub(crate) genesis: Option<std::sync::Arc<CadWorkingScene>>,
 }
 
 impl CadComposedPane {
     /// 📐️ The pane's raw genesis geometry, when its child id names a bundled scene.
-    pub(crate) fn geometry(&self, pane: CadPaneId) -> Option<&standards::v1::subsets::any::io::geometry_import::CadGeometry> {
+    pub(crate) fn geometry(&self, pane: CadPaneId) -> Option<&standards::v1::subsets::any::schema::geometry::CadGeometry> {
         self.genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane))
     }
 }
@@ -263,7 +258,7 @@ pub(crate) struct CadComposedPanes([CadComposedPane; 4]);
 impl CadComposedPanes {
     /// 🪆️ Composes `snapshot`'s pane handles with their live child content.
     pub(crate) fn compose(snapshot: &CadSnapshot, children: &semio_framework_plugin::ChildContentView) -> Self {
-        use standards::v1::subsets::any::io::geometry_import::objects_from_model_snapshot;
+        use standards::v1::subsets::any::schema::geometry::objects_from_model_snapshot;
         Self(CadPaneId::all().map(|pane| {
             let Some(handle) = cad_pane_model(snapshot, pane) else { return CadComposedPane::default() };
             let slot = cad_pane_model_slot(pane);
@@ -502,28 +497,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "cad.document",
                     extension: Some("cad"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "cad.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "cad.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("cad.diff"),
@@ -534,8 +529,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -544,8 +539,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.spr"),
                 },
             ]
@@ -638,6 +633,8 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod schema {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs"]
+                    pub mod geometry;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                     mod component;
                     pub use component::*;
@@ -1185,3 +1182,9 @@ pub use standards::v1::subsets::any::examples;
 //#endregion 📚️Examples
 
 pub use crate::standards::v1::subsets::any::io::{CadBuilderConstruction, CadParts, CadAnalyzerAnalysis, CadBuilderFacets, CadBuilder, CadAnalyzer, CadComposer};
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

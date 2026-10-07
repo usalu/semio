@@ -23,10 +23,10 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let before: Vec<PathSegment> = serde_json::from_value(fixture["before"].clone()).unwrap();
     let after: Vec<PathSegment> = serde_json::from_value(fixture["after"].clone()).unwrap();
-    let layer = crate::schema::create_drawing_path_layer("Curve", before);
+    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve", before.into());
     let id = crate::schema::layer_id(&layer).to_string();
-    let document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
-    let mutation = super::mutation::update_path_geometry(id, after.clone());
+    let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
+    let mutation = super::mutation::update_path_geometry(id.into(), after.clone());
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
     store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
     let decoded: Vec<PathSegment> = semio_framework_pack_json::from_json_str(&fixture["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -35,7 +35,7 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let mut edited = document.clone();
     crate::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap();
     let DrawingLayerNode::Path(path) = &edited.layers[0] else { panic!("Expected a path") };
-    assert_eq!(path.segments, after);
+    assert_eq!(path.segments, after.into());
     for mutation in inverse { crate::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap(); }
     assert_eq!(edited, document);
 }

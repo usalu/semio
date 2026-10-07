@@ -2,7 +2,7 @@
 //! per-instance vocabulary (`UpsertInstance`/`RemoveInstance`/`SetHeader`) matching `Ifc2x3Diff`'s
 //! own id-keyed shape.
 
-use crate::standards::v2x3::subsets::base::schema::diff::{enc_part21_instance, Ifc2x3Diff};
+use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 
 
 

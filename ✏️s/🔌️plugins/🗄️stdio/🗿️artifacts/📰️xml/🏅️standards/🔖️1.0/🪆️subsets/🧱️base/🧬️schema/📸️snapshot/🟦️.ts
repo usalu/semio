@@ -201,7 +201,7 @@ export function parseXmlNode(value: unknown, at = "$"): XmlNode {
 export function parseXmlDoctype(value: unknown, at = "$"): XmlDoctype {
   const row = stdioXml10BaseSnapshotGuardObject(value, at);
   return {
-    prologPosition: row["prologPosition"] === undefined ? 0n : parseXmlPosition(row["prologPosition"], `${at}.prologPosition`),
+    prologPosition: row["prologPosition"] === undefined ? 0n : xmlOwnedPosition(row["prologPosition"], `${at}.prologPosition`),
     name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
     externalId: row["externalId"] === undefined ? undefined : parseXmlExternalId(row["externalId"], `${at}.externalId`),
     declarations: row["declarations"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["declarations"], `${at}.declarations`).map((item, index) => parseXmlDtdDeclaration(item, `${at}.declarations[${index}]`)),
@@ -463,3 +463,5 @@ export function validateXmlDeclarationWire(declaration:XmlDeclaration,at="$" ):v
     if (encoding.toLowerCase() !== "utf-8") stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value conflicts with the UTF-8 transport");
   }
 }
+
+function xmlOwnedPosition(value:unknown,at:string):bigint{if(typeof value!=="bigint"||value<0n||value>18446744073709551615n)throw new Error(`${at}: expected owned unsigned64`);return value;}

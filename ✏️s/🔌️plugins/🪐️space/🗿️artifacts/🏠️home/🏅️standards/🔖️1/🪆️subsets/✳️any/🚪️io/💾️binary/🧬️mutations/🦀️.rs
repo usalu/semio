@@ -29,3 +29,17 @@ mod tests;
 
 #[path = "🔢️change-catalog-generation/🦀️.rs"]
 pub mod change_catalog_generation;
+
+mod native_codec {
+use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
+
+impl protocol::OpBinary for SHomeMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

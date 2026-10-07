@@ -605,3 +605,7 @@ mod tests;
 #[path = "🧪️tests/🧪️gesture-leaves/🦀️.rs"]
 mod gesture_leaves_tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/📄️document-restoration/🦀️.rs"]
+mod document_restoration_tests;

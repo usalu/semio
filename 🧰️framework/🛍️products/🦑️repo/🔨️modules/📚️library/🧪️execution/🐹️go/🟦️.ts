@@ -1,5 +1,5 @@
-import { lstatSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { lstatSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { canonicalGoPlan, runCanonicalGoTests, runRepositoryTestCommand } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
@@ -44,7 +44,12 @@ export class GoTestScript extends BundleScript {
       const within = relative(realpathSync(artifacts), executable);
       if (!within || within === ".." || within.startsWith(`..${sep}`) || isAbsolute(within) || !lstatSync(executable).isFile()) throw new Error("Go test binary escapes caller-owned artifacts");
       if (!canonicalGoPlan(root).packages.includes(".")) throw new Error("Go test binary has no canonical root package");
-      await runRepositoryTestCommand(executable, ["-test.v", "-test.count=1", `-test.run=^${segments[3]}$`], { cwd: root, env: process.env });
+      const owner = mkdtempSync(join(realpathSync(artifacts), "go-test-binary-"));
+      try {
+        await runRepositoryTestCommand(executable, ["-test.v", "-test.count=1", `-test.run=^${segments[3]}$`], { cwd: root, env: { ...process.env, SEMIO_GO_OVERLAY_OWNER: owner }, throwOnFailure: true });
+      } finally {
+        rmSync(owner, { recursive: true, force: true });
+      }
       return;
     }
     if (segments.length < 2) throw new Error("Expected go-test <module-root> <input-path|-> [go-test-args...]");

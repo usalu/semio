@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v_ap214::engine::ladder::{ceiling_type_of, has_product_definition_chain, ladder_rung_of, ladder_violations, shape_representation_row};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-use crate::standards::v_ap214::subsets::cc6::schema::check_cc6_conformance;
+use crate::standards::v_ap214::subsets::cc6::io::check_cc6_conformance;
 
 /// 🧫️ The shape of this artifact's own committed fixture, cut down to what a conformance class
 /// reads: the real `AUTOMOTIVE_DESIGN` declaration, the real `#821`/`#822`/`#827` product chain

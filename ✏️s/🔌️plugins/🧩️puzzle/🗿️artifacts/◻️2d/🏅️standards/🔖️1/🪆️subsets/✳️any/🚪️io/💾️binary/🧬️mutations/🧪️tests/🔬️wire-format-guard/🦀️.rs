@@ -5,7 +5,8 @@
 //! (`print_op`/`parse_op`, `encode_op`/`decode_op`) instead of pinning byte literals for a wire
 //! shape this ticket deliberately changed.
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::standards::v1::subsets::any::schema::mutations::{change_manifest_id, connect_handles, create_node, delete_node, disconnect_handles, drag_selection, move_node, rotate_selection, scale_selection};
+use crate::standards::v1::subsets::any::schema::mutations::{change_manifest_id,connect_handles,create_node,delete_node,disconnect_handles,drag_selection,move_node,rotate_selection,scale_selection};
+
 use crate::Puzzle2dNode;
 use protocol::OpText;
 

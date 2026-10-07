@@ -13,10 +13,10 @@ async fn scene(app: &mut VcsArtifactApp<ViewerApp<DrawingViewer>>,view: &ViewMod
 async fn drawing_viewer_camera_ownership_and_restore() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let manifest = || App { definition: create_drawing_viewer(),examples: Vec::new() };
-    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest).await);
+    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
     app.bind_instance_id(91).await;
     let view = ViewModel { window_instances: ["left","right"].into_iter().map(|id| ViewWindowInstance { id: id.into(),window_kind_id: DrawingViewerCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest).await);
+    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
     reopened.bind_instance_id(92).await;
     let outcome: Result<(),String> = async {
         let before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;

@@ -1,0 +1,212 @@
+{
+  "owners": [
+    {
+      "name": "SnapshotPatch",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🦀️.rs",
+      "shape": "Value",
+      "conversion": "FieldValue::Value(ToValue), reverse clones DslValue then validates patch; no Record/tag descriptor"
+    },
+    {
+      "name": "WavData",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "layout": "Inline",
+      "keyword": null,
+      "fields": [
+        {
+          "id": 1,
+          "key": "kind",
+          "shape": "Enum",
+          "labels": [
+            [
+              "pcm16",
+              0
+            ],
+            [
+              "pcm8",
+              1
+            ],
+            [
+              "float32",
+              2
+            ],
+            [
+              "raw",
+              3
+            ]
+          ]
+        },
+        {
+          "id": 2,
+          "key": "pcm16",
+          "shape": "List<Int>",
+          "optional": true
+        },
+        {
+          "id": 3,
+          "key": "pcm8",
+          "shape": "List<UInt>",
+          "optional": true
+        },
+        {
+          "id": 4,
+          "key": "float32",
+          "shape": "List<Float> (actual f32 DslField)",
+          "optional": true
+        },
+        {
+          "id": 5,
+          "key": "raw",
+          "shape": "List<UInt>",
+          "optional": true
+        }
+      ],
+      "binding": "Record; exactly selected active field kind+2; inactive may Missing/Absent only"
+    },
+    {
+      "name": "WavChunkRef",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "layout": "Inline",
+      "keyword": null,
+      "fields": [
+        {
+          "id": 1,
+          "key": "kind",
+          "shape": "Enum",
+          "labels": [
+            [
+              "format",
+              0
+            ],
+            [
+              "samples",
+              1
+            ],
+            [
+              "other",
+              2
+            ]
+          ]
+        },
+        {
+          "id": 2,
+          "key": "index",
+          "shape": "UInt",
+          "optional": true
+        }
+      ],
+      "binding": "Record; index Missing/Absent for format/samples; UInt64 for other; not tagged Statements"
+    },
+    {
+      "name": "Mp4SamplesDiff",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "delegate": "Mp4SamplesDiffRecord",
+      "layout": "Inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "removed",
+          "type": "Vec<usize>"
+        },
+        {
+          "id": 1,
+          "key": "modified",
+          "type": "Vec<Mp4SampleModifiedRecord>"
+        },
+        {
+          "id": 2,
+          "key": "added",
+          "type": "Vec<Mp4SampleAddedRecord>"
+        }
+      ],
+      "nested": [
+        {
+          "name": "Mp4SampleModifiedRecord",
+          "fields": [
+            [
+              0,
+              "index",
+              "usize"
+            ],
+            [
+              1,
+              "diff",
+              "Mp4SampleDiff"
+            ]
+          ]
+        },
+        {
+          "name": "Mp4SampleAddedRecord",
+          "fields": [
+            [
+              0,
+              "index",
+              "usize"
+            ],
+            [
+              1,
+              "item",
+              "Mp4Sample"
+            ]
+          ]
+        }
+      ],
+      "ordinaryOwnership": "clones removed and nested diff/item into temporary derived Record; metadata does not qualify this conversion"
+    },
+    {
+      "name": "Mp4TracksDiff",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "delegate": "Mp4TracksDiffRecord",
+      "layout": "Inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "removed",
+          "type": "Vec<usize>"
+        },
+        {
+          "id": 1,
+          "key": "modified",
+          "type": "Vec<Mp4TrackModifiedRecord>"
+        },
+        {
+          "id": 2,
+          "key": "added",
+          "type": "Vec<Mp4TrackAddedRecord>"
+        }
+      ],
+      "nested": [
+        {
+          "name": "Mp4TrackModifiedRecord",
+          "fields": [
+            [
+              0,
+              "index",
+              "usize"
+            ],
+            [
+              1,
+              "diff",
+              "Mp4TrackDiff"
+            ]
+          ]
+        },
+        {
+          "name": "Mp4TrackAddedRecord",
+          "fields": [
+            [
+              0,
+              "index",
+              "usize"
+            ],
+            [
+              1,
+              "item",
+              "Mp4Track"
+            ]
+          ]
+        }
+      ],
+      "ordinaryOwnership": "same cloned derived Record adapter; no controlled override seen"
+    }
+  ]
+}

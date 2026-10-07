@@ -11,7 +11,6 @@ record snapshot {
   width u32
   height u32
   pixels array u8
-  reEncodeQuality Ref(OptionalOctet)
   jfifVersion array u8
   jfifDensityUnits Ref(JfifDensityUnits)
   jfifXDensity u16

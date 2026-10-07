@@ -5,9 +5,10 @@ use store::{ArtifactCommand, create_document_envelope};
 
 #[semio_framework_async_macros::async_test]
 async fn block3d_document_vcs_replays_granular_operations() {
-    use crate::standards::v1::subsets::any::schema::mutations::{self as m, Block3dStore};
+    use crate::standards::v1::subsets::any::schema::mutations::{self as m,Block3dStore};
 
-    let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None)).await.expect("valid initial state");
+
+    let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid initial state");
     // 🏪️ A bare store carries no owner catalog and refuses its first edit
     // (`edit history insertion requires its exact mutation retirement factory`); install the
     // exact owners production installs through `Block3dPlayApp::build_document_store_owners`.

@@ -1,0 +1,181 @@
+{
+  "contract": {
+    "physicalOwner": "text-diff-record",
+    "fieldIds": {
+      "artifact": 0,
+      "hostSnapshot": 1,
+      "generation": 2
+    },
+    "absent": "omitted-record-field",
+    "semanticParity": "complete-domain-value",
+    "representations": [
+      "text",
+      "binary"
+    ],
+    "independentOracle": "serde_json"
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "value": {
+        "artifact": null,
+        "hostSnapshot": null,
+        "generation": null
+      }
+    },
+    {
+      "id": "artifact",
+      "value": {
+        "artifact": {
+          "hostSnapshot": {
+            "schema": "generation2d",
+            "camera": {
+              "x": 1.5,
+              "y": -2.25,
+              "zoom": 0.875
+            },
+            "widgets": [],
+            "synapses": [],
+            "layout": {}
+          },
+          "generation": {
+            "generations": [
+              {
+                "id": "original-é-🌀",
+                "name": "Original 😀",
+                "values": {
+                  "answer": {
+                    "nested": [
+                      "é😀",
+                      true,
+                      null
+                    ],
+                    "number": 42
+                  }
+                }
+              }
+            ],
+            "selectedGenerationId": "original-é-🌀",
+            "previewText": "Preview 😀\n"
+          }
+        },
+        "hostSnapshot": null,
+        "generation": null
+      }
+    },
+    {
+      "id": "host",
+      "value": {
+        "artifact": null,
+        "hostSnapshot": {
+          "schema": "generation2d",
+          "camera": {
+            "x": 1.5,
+            "y": -2.25,
+            "zoom": 0.875
+          },
+          "widgets": [],
+          "synapses": [],
+          "layout": {}
+        },
+        "generation": null
+      }
+    },
+    {
+      "id": "generation",
+      "value": {
+        "artifact": null,
+        "hostSnapshot": null,
+        "generation": {
+          "generations": [
+            {
+              "id": "original-é-🌀",
+              "name": "Original 😀",
+              "values": {
+                "answer": {
+                  "nested": [
+                    "é😀",
+                    true,
+                    null
+                  ],
+                  "number": 42
+                }
+              }
+            }
+          ],
+          "selectedGenerationId": "original-é-🌀",
+          "previewText": "Preview 😀\n"
+        }
+      }
+    },
+    {
+      "id": "all",
+      "value": {
+        "artifact": {
+          "hostSnapshot": {
+            "schema": "generation2d",
+            "camera": {
+              "x": 1.5,
+              "y": -2.25,
+              "zoom": 0.875
+            },
+            "widgets": [],
+            "synapses": [],
+            "layout": {}
+          },
+          "generation": {
+            "generations": [
+              {
+                "id": "original-é-🌀",
+                "name": "Original 😀",
+                "values": {
+                  "answer": {
+                    "nested": [
+                      "é😀",
+                      true,
+                      null
+                    ],
+                    "number": 42
+                  }
+                }
+              }
+            ],
+            "selectedGenerationId": "original-é-🌀",
+            "previewText": "Preview 😀\n"
+          }
+        },
+        "hostSnapshot": {
+          "schema": "generation2d",
+          "camera": {
+            "x": 1.5,
+            "y": -2.25,
+            "zoom": 0.875
+          },
+          "widgets": [],
+          "synapses": [],
+          "layout": {}
+        },
+        "generation": {
+          "generations": [
+            {
+              "id": "original-é-🌀",
+              "name": "Original 😀",
+              "values": {
+                "answer": {
+                  "nested": [
+                    "é😀",
+                    true,
+                    null
+                  ],
+                  "number": 42
+                }
+              }
+            }
+          ],
+          "selectedGenerationId": "original-é-🌀",
+          "previewText": "Preview 😀\n"
+        }
+      }
+    }
+  ]
+}

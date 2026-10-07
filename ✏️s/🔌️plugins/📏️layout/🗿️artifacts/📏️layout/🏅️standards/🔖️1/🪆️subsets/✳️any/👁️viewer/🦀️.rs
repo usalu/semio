@@ -8,7 +8,7 @@ use crate::mutations::LayoutMutation;
 use crate::viewer::layout::modes::view;
 use crate::viewer::layout::modes::view::windows::preview;
 use crate::{LayoutSnapshot, LAYOUT_DIALECT, LAYOUT_DOCUMENT_SCHEMA};
-use semio_framework::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use semio_framework_2d::compute::EngineHandles;

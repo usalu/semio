@@ -1,3 +1,4 @@
+import {parseArtifactRef,type ArtifactRef} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 /** 🧬️ Energy-model mutation vocabulary — TypeScript twin of `🧬️mutations/🦀️.rs`.
  *
  *  `EnergyModelMutation` carries `#[value(tag = "mutation", rename_all = "camelCase")]`, so the
@@ -125,7 +126,7 @@ export interface RemoveOutputVariable {
 /** 🌦️ `bind-weather-file` payload. */
 export interface BindWeatherFile {
   readonly mutation: "bindWeatherFile";
-  readonly targetUri: string;
+  readonly target: ArtifactRef;
 }
 
 /** 🌤️ `unbind-weather-file` payload. */
@@ -136,7 +137,7 @@ export interface UnbindWeatherFile {
 /** 🪢️ `connect-referenced-model` payload. */
 export interface ConnectReferencedModel {
   readonly mutation: "connectReferencedModel";
-  readonly targetUri: string;
+  readonly target: ArtifactRef;
 }
 
 /** ✂️ `disconnect-referenced-model` payload. */
@@ -2522,3 +2523,6 @@ export type EnergyModelMutation =
   | ChangeGasMaterialGas
   | RenameGasMaterial
   | ChangeMaterialRoughness;
+
+/** 🪪️ Admits the owned link target without native URI interpretation. */
+export function parseEnergyReferenceTarget(value:unknown):ArtifactRef{const target=parseArtifactRef(value);if(target.artifactId===""||Object.values(target.dialect).some(value=>value===""))throw new TypeError("Energy link identity components must be nonempty");return target;}

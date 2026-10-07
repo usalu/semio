@@ -39,7 +39,7 @@ pub struct En1994Snapshot {
     pub fatigue_detail: String,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1994Snapshot, extension = "en1994", envelope_id = "norm.en1994", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1994Snapshot {

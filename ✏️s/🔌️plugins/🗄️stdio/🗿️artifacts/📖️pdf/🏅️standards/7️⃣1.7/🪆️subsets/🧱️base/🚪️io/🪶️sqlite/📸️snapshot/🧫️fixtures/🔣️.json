@@ -606,7 +606,7 @@
             },
             {
               "kind": "codes",
-              "bytes": [
+              "codes": [
                 0,
                 255
               ]
@@ -621,7 +621,7 @@
           "op": "nextLineShowText",
           "text": {
             "kind": "codes",
-            "bytes": [
+            "codes": [
               1,
               2
             ]

@@ -78,7 +78,7 @@ pub(crate) mod context {
     }
     
     pub async fn app_with_registry() -> Generation3dAppFixture {
-        let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(1).await;
         Generation3dAppFixture(app)
     }
@@ -2839,7 +2839,8 @@ fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
 /// of that operator appends no row.
 #[test]
 fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation, change_widget_input::WidgetInputValue, Generation3dMutation};
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,change_widget_input::WidgetInputValue,Generation3dMutation};
+
     let _serial = test_serial();
     let committed = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let (rows, targets, _) = transform_commands::gumball_splice(&committed.host_snapshot, &["extrude@meshOut#0.face.1".into()], "translate").expect("the first grab splices");

@@ -207,11 +207,11 @@ mod oracles {
         Content { operations }.encode().map_err(|error| format!("lopdf could not encode the content stream: {error}"))
     }
 
-    /// 🔤️ A `PdfTextString` wire operand (`{"kind": "text", "text"}` or `{"kind": "codes", "bytes"}`) as a literal string.
+    /// 🔤️ A `PdfTextString` wire operand (`{"kind": "text", "text"}` or `{"kind": "codes", "codes"}`) as a literal string.
     fn text_operand(text: &Json) -> Result<Object, String> {
         match text.str("kind").as_str() {
             "text" => Ok(Object::string_literal(text.str("text"))),
-            "codes" => Ok(Object::String(byte_array(text.get("bytes"))?, StringFormat::Literal)),
+            "codes" => Ok(Object::String(byte_array(text.get("codes"))?, StringFormat::Literal)),
             other => Err(format!("{other:?} is not a PdfTextString kind")),
         }
     }
@@ -847,3 +847,23 @@ pub fn project_pdf_1_7(_bytes: &[u8]) -> Result<Json, String> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+/// 🔢️ Reads native text operand code groups through the independent content parser.
+#[cfg(feature = "oracles")]
+pub fn reference_content_codes(input: &[u8], width: usize) -> Result<Vec<Vec<u32>>, String> {
+    if !(1..=4).contains(&width) { return Err("invalid reference codespace width".into()); }
+    let content = lopdf::content::Content::decode(input).map_err(|error|error.to_string())?;
+    content.operations.iter().filter(|op|op.operator=="Tj").map(|op| {
+        let bytes=op.operands.first().ok_or("reference text operand missing")?.as_str().map_err(|error|error.to_string())?;
+        if bytes.len()%width!=0 {return Err("reference text operand has incomplete native code".into());}
+        Ok(bytes.chunks_exact(width).map(|group|group.iter().fold(0u32,|code,byte|(code<<8)|u32::from(*byte))).collect())
+    }).collect()
+}
+
+/// 🪪️ Decodes one complete native text operand through the independent PDF grammar and text codec.
+#[cfg(feature = "oracles")]
+pub fn reference_text_operand(input:&[u8])->Result<String,String> {
+    let content=lopdf::content::Content::decode(input).map_err(|error|error.to_string())?;
+    let operand=content.operations.first().and_then(|operation|operation.operands.first()).ok_or("independent text operand absent")?;
+    lopdf::decode_text_string(operand).map_err(|error|error.to_string())
+}

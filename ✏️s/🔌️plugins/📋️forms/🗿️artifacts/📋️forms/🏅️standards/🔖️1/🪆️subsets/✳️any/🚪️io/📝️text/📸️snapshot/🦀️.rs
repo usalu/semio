@@ -31,13 +31,13 @@ impl store::ArtifactDsl for FormsSnapshot {
             },
             Err(_) => text,
         };
-        let record = semio_framework_dsl_record::parse(body, &crate::schema::snapshot::native_pack::record_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        let snapshot = crate::schema::snapshot::native_pack::reconstruct_record(&record).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))?;
+        let record = semio_framework_dsl_record::parse(body, &crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
+        let snapshot = crate::standards::v1::subsets::any::io::binary::snapshot::pack::reconstruct_record(&record).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))?;
         snapshot.validate().map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&crate::schema::snapshot::native_pack::record(self).expect("valid Forms native state"), &crate::schema::snapshot::native_pack::record_spec(), semio_framework_dsl_record::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&crate::standards::v1::subsets::any::io::binary::snapshot::pack::record(self).expect("valid Forms native state"), &crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -180,20 +180,54 @@ use crate::FormStep;
 pub fn building_component_spec() -> FormsSnapshot {
     forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("bundled Forms template must be valid")
 }
+
 }
 pub use snapshot_wire_codec::*;
 
-#[allow(unused_imports)]
-mod snapshot_wire2_codec {
-use crate::standards::v1::subsets::any::io::text::snapshot::response::export::*;
-use crate::standards::v1::subsets::any::schema::component::response::{FormsAnswer, FormsResponse};
-use semio_s_artifact_stdio_csv::{CsvField, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
-pub fn response_row(response: &FormsResponse, answer: &FormsAnswer) -> Vec<String> {
-    vec![response.id.clone(), response.submitted_at.to_string(), response.definition_version.clone(), answer.question_id.clone(), answer.label.clone(), answer.kind.clone(), semio_framework_pack_json::to_json_string(&answer.value)]
-}
-}
-pub use snapshot_wire2_codec::*;
 
 #[path="📨️response/🦀️.rs"]
 pub mod response;
+
+mod field_native_codec {
+use crate::FormsSnapshot;
+use semio_framework_pack_json::{Object,Value};
+pub fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
+    let overrides_map: crate::playbook::PlaybookValues = overrides.iter().map(|(key, value)| (key.to_string(), semio_framework_pack_json::to_dsl_value(value))).collect();
+    let result = crate::playbook::initial_values(&crate::mutations::as_playbook_spec(spec), &overrides_map);
+    result.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect()
+}
+
+pub fn value_to_dsl(value: &Value) -> semio_framework_value::DslValue {
+    semio_framework_pack_json::to_dsl_value(value)
+}
+
+pub fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
+    semio_framework_pack_json::from_dsl_value(value)
+}
+
+pub fn dsl_string_value(value: &semio_framework_value::DslValue) -> String {
+    json_string_value(&dsl_to_value(value))
+}
+
+pub fn dsl_f64_value(value: &semio_framework_value::DslValue) -> f64 {
+    json_f64_value(&dsl_to_value(value))
+}
+
+pub fn json_string_value(value: &Value) -> String {
+    match value {
+        Value::String(text) => text.clone(),
+        Value::Bool(flag) => flag.to_string(),
+        Value::Number(semio_framework_pack_json::Number::UInt(v)) => v.to_string(),
+        Value::Number(semio_framework_pack_json::Number::Int(v)) => v.to_string(),
+        Value::Number(semio_framework_pack_json::Number::Float(v)) => v.to_string(),
+        Value::Null => String::new(),
+        other => other.to_string(),
+    }
+}
+
+pub fn json_f64_value(value: &Value) -> f64 {
+    value.as_f64().unwrap_or(0.0)
+}
+}
+pub use field_native_codec::{initial_try_values,value_to_dsl,dsl_to_value,dsl_string_value,dsl_f64_value,json_string_value,json_f64_value};

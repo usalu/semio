@@ -1,0 +1,157 @@
+//! 📑️ Authored document blocks, typed collections, formatting, styles and images.
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
+use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
+use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
+use crate::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot,DocBlock,DocStyle,DocImage,DocRun,RunStyle,DocListItem,DocTableRow,DocTableCell};
+use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,Reconstruction},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use std::collections::{BTreeMap,BTreeSet};
+/// 📚️ Explicit table names for the actual DocBlock types shared by document and presentation.
+#[derive(Clone,Copy)]
+pub struct DocSqliteTables{pub collection:&'static str,pub member:&'static str,pub block:&'static str,pub paragraph:&'static str,pub heading:&'static str,pub run:&'static str,pub list:&'static str,pub list_item:&'static str,pub table:&'static str,pub table_row:&'static str,pub table_cell:&'static str,pub code:&'static str,pub quote:&'static str,pub image_block:&'static str,pub page_break:&'static str}
+/// 📑️ The document's independently declared block table names.
+pub const DOCUMENT_TABLES:DocSqliteTables=DocSqliteTables{collection:"semio_document_collection",member:"semio_document_member",block:"semio_document_block",paragraph:"semio_document_paragraph",heading:"semio_document_heading",run:"semio_document_run",list:"semio_document_list",list_item:"semio_document_list_item",table:"semio_document_table",table_row:"semio_document_table_row",table_cell:"semio_document_table_cell",code:"semio_document_code",quote:"semio_document_quote",image_block:"semio_document_image_block",page_break:"semio_document_page_break"};
+#[path="🧮️semantic/🦀️.rs"]
+pub(crate)mod semantic;
+/// 🪪️ Orders a paid borrowed identity frontier without materializing native Strings.
+pub(crate)fn doc_frontier<'a>(ids:impl Iterator<Item=&'a str>,count:usize,out:&mut RowWriter<'_,'_>)->Result<Vec<(&'a str,i64)>,ValueError>{
+ let phase=out.phase();let mut names=out.allocate_frontier(count)?;for(ordinal,id)in ids.enumerate(){out.checkpoint()?;names.push((id,number(ordinal.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"document identity extent overflow"))?)?));}
+ out.sort_frontier(&mut names,|a,b,control|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,phase,control))?;
+ for pair in names.windows(2){if out.compare_text(pair[0].0,pair[1].0)?==std::cmp::Ordering::Equal{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate document named identity"))}}Ok(names)
+}
+/// 🔍️ Resolves an authored reference with bounded cancellable UTF8 comparisons.
+pub(crate)fn doc_identity(names:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{
+ let mut lo=0;let mut hi=names.len();while lo<hi{let mid=lo+(hi-lo)/2;match out.compare_text(names[mid].0,id)?{std::cmp::Ordering::Less=>lo=mid+1,std::cmp::Ordering::Greater=>hi=mid, std::cmp::Ordering::Equal=>return Ok(names[mid].1)}}Err(ValueError::new(ValueRefusalKind::InvalidValue,"dangling document named reference"))
+}
+/// 🏷️ Preserves external literal references or resolves the caller's real named partition.
+fn doc_reference<'a>(native:Option<&'a str>,names:Option<&[(&str,i64)]>,out:&mut RowWriter<'_,'_>)->Result<Cell<'a>,ValueError>{
+ match native{None=>Ok(Cell::Null),Some(name)=>match names{Some(names)=>Ok(Cell::Integer(doc_identity(names,name,out)?)),None=>Ok(Cell::Text(name))}}
+}
+/// ♻️ Checks style ancestry using paid fixed-width parent marks and cancellable walks.
+fn doc_style_cycles(parents:&mut[(Option<usize>,u8)],out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+ for root in 0..parents.len(){let mut current=Some(root);while let Some(index)=current{out.checkpoint()?;match parents[index].1{2=>break,1=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"cyclic document style inheritance")),_=>{parents[index].1=1;current=parents[index].0;}}}
+  let mut current=Some(root);while let Some(index)=current{out.checkpoint()?;if parents[index].1!=1{break}parents[index].1=2;current=parents[index].0;}
+ }Ok(())
+}
+/// 🫳️ Visits the complete real document corpus using the actual shared RowWriter.
+pub(crate)fn visit_rows(snapshot:&SemioDocumentSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+ let styles=doc_frontier(snapshot.styles.iter().map(|style|style.id.as_str()),snapshot.styles.len(),out)?;let images=doc_frontier(snapshot.images.iter().map(|image|image.id.as_str()),snapshot.images.len(),out)?;let mut parents=out.allocate_frontier(snapshot.styles.len())?;
+ for style in &snapshot.styles{out.checkpoint()?;let parent=style.based_on.as_deref().map(|id|doc_identity(&styles,id,out).and_then(|row|usize::try_from(row-1).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())))).transpose()?;parents.push((parent,0u8));}doc_style_cycles(&mut parents,out)?;
+ for(ordinal,style)in snapshot.styles.iter().enumerate(){let parent=parents[ordinal].0.map(|index|number(index+1).map(Cell::Integer)).transpose()?.unwrap_or(Cell::Null);out.insert_key("semio_document_style",number(ordinal+1)?,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&style.id),Cell::Text(&style.name),parent])?;}
+ for(ordinal,image)in snapshot.images.iter().enumerate(){out.insert("semio_document_image",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&image.id),Cell::Text(&image.mime),Cell::Blob(&image.bytes)])?;}
+ let root=project_block_collection(&snapshot.blocks,DOCUMENT_TABLES,Some(&styles),Some(&images),out)?;out.insert_key("semio_document_document",1,&[Cell::Text(&snapshot.schema),Cell::Integer(root)])?;Ok(())
+}
+/// 🧱️ Visits the shared block tree with a paid iterative collection frontier.
+pub fn project_block_collection(blocks:&[DocBlock],t:DocSqliteTables,styles:Option<&[(&str,i64)]>,images:Option<&[(&str,i64)]>,p:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{
+let root=p.insert_float(t.collection,&[],float_columns(t.collection))?;let mut pending=p.allocate_frontier(1)?;pending.push((root,blocks));while let Some((collection,blocks))=pending.pop(){p.check_rows(blocks.len().checked_add(pending.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"document traversal count overflow"))?)?;for(ordinal,block)in blocks.iter().enumerate(){let kind=match block{DocBlock::Paragraph{..}=>"paragraph",DocBlock::Heading{..}=>"heading",DocBlock::List{..}=>"list",DocBlock::Table{..}=>"table",DocBlock::Code{..}=>"code",DocBlock::Quote{..}=>"quote",DocBlock::Image{..}=>"image",DocBlock::PageBreak=>"pageBreak"};let id=p.insert_float(t.block,&[Cell::Text(kind)],float_columns(t.block))?;p.insert_float(t.member,&[Cell::Integer(collection),Cell::Integer(number(ordinal)?),Cell::Integer(id)],float_columns(t.member))?;
+match block{
+DocBlock::Paragraph{style_id,..}=>{let style=doc_reference(style_id.as_deref(),styles,p)?;p.insert_key_float(t.paragraph,id,&[style],float_columns(t.paragraph))?;},
+DocBlock::Heading{level,style_id,..}=>{let style=doc_reference(style_id.as_deref(),styles,p)?;p.insert_key_float(t.heading,id,&[Cell::Integer(i64::from(*level)),style],float_columns(t.heading))?;},
+DocBlock::List{ordered,items}=>{p.insert_key_float(t.list,id,&[Cell::Integer(i64::from(*ordered))],float_columns(t.list))?;p.check_rows(pending.len().checked_add(items.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"document list traversal overflow"))?)?;for(ordinal,item)in items.iter().enumerate(){let child=p.insert_float(t.collection,&[],float_columns(t.collection))?;p.insert_float(t.list_item,&[Cell::Integer(id),Cell::Integer(number(ordinal)?),Cell::Integer(child)],float_columns(t.list_item))?;p.push_frontier(&mut pending,(child,item.blocks.as_slice()))?;}},
+DocBlock::Table{rows}=>{p.insert_key_float(t.table,id,&[],float_columns(t.table))?;for(ordinal,row)in rows.iter().enumerate(){let row_id=p.insert_float(t.table_row,&[Cell::Integer(id),Cell::Integer(number(ordinal)?)],float_columns(t.table_row))?;p.check_rows(pending.len().checked_add(row.cells.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"document table traversal overflow"))?)?;for(ordinal,cell)in row.cells.iter().enumerate(){let child=p.insert_float(t.collection,&[],float_columns(t.collection))?;p.insert_float(t.table_cell,&[Cell::Integer(row_id),Cell::Integer(number(ordinal)?),Cell::Integer(child)],float_columns(t.table_cell))?;p.push_frontier(&mut pending,(child,cell.blocks.as_slice()))?;}}},
+DocBlock::Code{language,text}=>p.insert_key_float(t.code,id,&[language.as_deref().map(Cell::Text).unwrap_or(Cell::Null),Cell::Text(text)],float_columns(t.code))?,
+DocBlock::Quote{blocks}=>{let child=p.insert_float(t.collection,&[],float_columns(t.collection))?;p.insert_key_float(t.quote,id,&[Cell::Integer(child)],float_columns(t.quote))?;p.push_frontier(&mut pending,(child,blocks))?;},
+DocBlock::Image{image_id,alt,width,height}=>{let image=doc_reference(Some(image_id),images,p)?;p.insert_key_float(t.image_block,id,&[image,Cell::Text(alt),width.map(Cell::Real).unwrap_or(Cell::Null),height.map(Cell::Real).unwrap_or(Cell::Null)],float_columns(t.image_block))?;}
+DocBlock::PageBreak=>p.insert_key_float(t.page_break,id,&[],float_columns(t.page_break))?}
+if let DocBlock::Paragraph{runs,..}|DocBlock::Heading{runs,..}=block{for(ordinal,run)in runs.iter().enumerate(){let s=&run.style;p.insert_float(t.run,&[Cell::Integer(id),Cell::Integer(number(ordinal)?),Cell::Text(&run.text),Cell::Integer(i64::from(s.bold)),Cell::Integer(i64::from(s.italic)),Cell::Integer(i64::from(s.underline)),s.size.map(Cell::Real).unwrap_or(Cell::Null),s.font.as_deref().map(Cell::Text).unwrap_or(Cell::Null),s.color.as_deref().map(Cell::Text).unwrap_or(Cell::Null),s.link.as_deref().map(Cell::Text).unwrap_or(Cell::Null)],float_columns(t.run))?;}}p.checkpoint()?;}}
+Ok(root)}/// 🎟️ Admits all typed Document cells before native forecasting or materialization.
+pub(crate)fn admit_values(snapshot:&SemioDocumentSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
+/// 🏛️ Admits the exact authored table and column layout before native ownership.
+pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
+/// 📦️ Counts the actual native primitive cells before typed ownership.
+pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
+/// 📝️ Counts the actual native primitive cells before typed ownership.
+pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
+
+fn number(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|e|ValueError::new(ValueRefusalKind::WorkLimit,e.to_string()))}
+fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,n:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=n{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid document entity identity or columns"))}else{Ok(())}}
+fn boolean(n:i64)->Result<bool,ValueError>{match n{0=>Ok(false),1=>Ok(true),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid document boolean"))}}
+fn optional_real(row:SqliteRow<'_>,i:usize)->Result<Option<f64>,ValueError>{if row.is_null(i)?{Ok(None)}else{row.real(i).map(Some)}}
+fn optional_integer(row:SqliteRow<'_>,i:usize)->Result<Option<i64>,ValueError>{if row.is_null(i)?{Ok(None)}else{row.integer(i).map(Some)}}
+fn optional_text(row:SqliteRow<'_>,i:usize,r:&mut Reconstruction<'_,'_>)->Result<Option<String>,ValueError>{row.optional_text(i)?.map(|s|r.text(s)).transpose()}
+
+fn restore_reference(row:SqliteRow<'_>,i:usize,names:Option<&BTreeMap<i64,&str>>,r:&mut Reconstruction<'_,'_>)->Result<Option<String>,ValueError>{if row.is_null(i)?{return Ok(None);}let value=match names{Some(map)=>*map.get(&row.integer(i)?).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"dangling document named reference"))?,None=>row.text(i)?};r.text(value).map(Some)}
+/// 🧱️ Projects only the explicitly shared native DocBlock tree with an iterative ownership walk.
+
+fn details<'a>(db:&'a SqliteDatabase,name:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,SqliteRow<'a>>,ValueError>{let mut result=BTreeMap::new();for(n,row)in float_rows(db,name,control)?.into_iter().enumerate(){identity(row,columns)?;if result.insert(row.rowid,row).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate document entity identity"));}if n%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,n,0)?;}}Ok(result)}
+fn groups<'a>(db:&'a SqliteDatabase,name:&str,columns:usize,parents:&BTreeMap<i64,SqliteRow<'_>>,control:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<SqliteRow<'a>>>,ValueError>{let mut result=BTreeMap::<i64,Vec<SqliteRow<'_>>>::new();let mut ids=BTreeSet::new();for(n,row)in float_rows(db,name,control)?.into_iter().enumerate(){identity(row,columns)?;if !ids.insert(row.rowid)||!parents.contains_key(&row.integer(1)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid document relationship owner or identity"));}row.integer(2)?;result.entry(row.integer(1)?).or_default().push(row);if n%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,n,0)?;}}for rows in result.values_mut(){rows.sort_by_key(|row|row.integer(2).unwrap_or(-1));for(ordinal,row)in rows.iter().enumerate(){if row.integer(2)?!=number(ordinal)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"document relationship order must be contiguous"));}}}Ok(result)}
+/// 🧩️ Reconstructs actual DocBlock fields, rejecting cycles, aliases, dangling relationships and variant contradictions.
+pub fn reconstruct_block_collections(db:&SqliteDatabase,t:DocSqliteTables,roots:&[i64],styles:Option<&BTreeMap<i64,&str>>,images:Option<&BTreeMap<i64,&str>>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<Vec<DocBlock>>,ValueError>{
+let collections=details(db,t.collection,1,control)?;let mut blocks=details(db,t.block,2,control)?;let members=groups(db,t.member,4,&collections,control)?;
+let mut paragraphs=details(db,t.paragraph,2,control)?;let mut headings=details(db,t.heading,3,control)?;let mut lists=details(db,t.list,2,control)?;let mut tables=details(db,t.table,1,control)?;let mut codes=details(db,t.code,3,control)?;let mut quotes=details(db,t.quote,2,control)?;let mut image_blocks=details(db,t.image_block,5,control)?;let mut page_breaks=details(db,t.page_break,1,control)?;
+let mut run_parents=paragraphs.clone();for(id,row)in &headings{if run_parents.insert(*id,*row).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"contradictory paragraph and heading fields"));}}let mut runs=groups(db,t.run,11,&run_parents,control)?;let mut items=groups(db,t.list_item,4,&lists,control)?;let mut rows=groups(db,t.table_row,3,&tables,control)?;let table_rows=details(db,t.table_row,3,control)?;let mut cells=groups(db,t.table_cell,4,&table_rows,control)?;
+let mut visited_collections=BTreeSet::new();let mut visited_blocks=BTreeSet::new();let mut schedule=Vec::new();let mut stack:Vec<(i64,bool)>=roots.iter().rev().map(|id|(*id,false)).collect();while let Some((id,done))=stack.pop(){if done{schedule.push(id);continue;}if !collections.contains_key(&id)||!visited_collections.insert(id){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"cyclic, multiply owned or dangling document block collection"));}stack.push((id,true));for member in members.get(&id).into_iter().flatten(){let block_id=member.integer(3)?;let block=blocks.get(&block_id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"dangling document block member"))?;if !visited_blocks.insert(block_id){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"multiply owned document block"));}match block.text(1)?{
+"list"=>for row in items.get(&block_id).into_iter().flatten(){stack.push((row.integer(3)?,false));},
+"table"=>for row in rows.get(&block_id).into_iter().flatten(){for cell in cells.get(&row.rowid).into_iter().flatten(){stack.push((cell.integer(3)?,false));}},
+"quote"=>stack.push((quotes.get(&block_id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing quote fields"))?.integer(1)?,false)),_=>{}}}if visited_collections.len()%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,visited_collections.len(),0)?;}}
+if visited_collections.len()!=collections.len()||visited_blocks.len()!=blocks.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"orphan document block or collection"));}let mut restore=Reconstruction::new(control)?;let mut built=Owned::new(BTreeMap::<i64,Vec<DocBlock>>::new());for collection in schedule{let mut native=Owned::new(Vec::new());for member in members.get(&collection).into_iter().flatten(){let id=member.integer(3)?;let row=blocks.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"duplicate document block ownership"))?;let block=match row.text(1)?{
+"paragraph"|"heading"=>{let mut native_runs=Vec::new();for run in runs.remove(&id).unwrap_or_default(){native_runs.push(DocRun{text:restore.text(run.text(3)?)?,style:RunStyle{bold:boolean(run.integer(4)?)?,italic:boolean(run.integer(5)?)?,underline:boolean(run.integer(6)?)?,size:optional_real(run,7)?,font:optional_text(run,8,&mut restore)?,color:optional_text(run,9,&mut restore)?,link:optional_text(run,10,&mut restore)?}});}if row.text(1)?=="paragraph"{let r=paragraphs.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing paragraph fields"))?;DocBlock::Paragraph{style_id:restore_reference(r,1,styles,&mut restore)?,runs:native_runs}}else{let r=headings.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing heading fields"))?;DocBlock::Heading{level:u8::try_from(r.integer(1)?).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?,style_id:restore_reference(r,2,styles,&mut restore)?,runs:native_runs}}},
+"list"=>{let r=lists.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing list fields"))?;let mut native_items=Owned::new(Vec::new());for item in items.remove(&id).unwrap_or_default(){native_items.get_mut().push(DocListItem{blocks:built.get_mut().remove(&item.integer(3)?).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing owned list block collection"))?});}DocBlock::List{ordered:boolean(r.integer(1)?)?,items:native_items.take()}},
+"table"=>{tables.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing table fields"))?;let mut native_rows=Owned::new(Vec::new());for row in rows.remove(&id).unwrap_or_default(){let mut native_cells=Owned::new(Vec::new());for cell in cells.remove(&row.rowid).unwrap_or_default(){native_cells.get_mut().push(DocTableCell{blocks:built.get_mut().remove(&cell.integer(3)?).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing owned table cell collection"))?});}native_rows.get_mut().push(DocTableRow{cells:native_cells.take()});}DocBlock::Table{rows:native_rows.take()}},
+"code"=>{let r=codes.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing code fields"))?;DocBlock::Code{language:optional_text(r,1,&mut restore)?,text:restore.text(r.text(2)?)?}},
+"quote"=>{let r=quotes.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing quote fields"))?;DocBlock::Quote{blocks:built.get_mut().remove(&r.integer(1)?).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing owned quote collection"))?}},
+"image"=>{let r=image_blocks.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing image block fields"))?;DocBlock::Image{image_id:restore_reference(r,1,images,&mut restore)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"null document image reference"))?,alt:restore.text(r.text(2)?)?,width:optional_real(r,3)?,height:optional_real(r,4)?}},
+"pageBreak"=>{page_breaks.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing page break fields"))?;DocBlock::PageBreak},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown document block kind"))};native.get_mut().push(block);restore.checkpoint()?;}built.get_mut().insert(collection,native.take());}
+if !paragraphs.is_empty()||!headings.is_empty()||!lists.is_empty()||!tables.is_empty()||!codes.is_empty()||!quotes.is_empty()||!image_blocks.is_empty()||!page_breaks.is_empty()||!runs.is_empty()||!items.is_empty()||!rows.is_empty()||!cells.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"orphan or contradictory document block detail"));}let mut result=Owned::new(Vec::new());for root in roots{result.get_mut().push(built.get_mut().remove(root).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing root block collection"))?);}if !built.get_mut().is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"orphan native block collection"));}restore.checkpoint()?;Ok(result.take())}
+fn style_cycles(parents:&BTreeMap<i64,Option<i64>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let mut done=BTreeSet::new();for start in parents.keys(){let mut path=BTreeSet::new();let mut current=Some(*start);while let Some(id)=current{if done.contains(&id){break;}if !path.insert(id){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"cyclic document style inheritance"));}current=*parents.get(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"dangling document style inheritance"))?;if path.len()%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,path.len(),0)?;}}done.extend(path);}Ok(())}
+impl ArtifactSqliteSnapshot for SemioDocumentSnapshot{
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::document::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}
+
+fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::document::io::sqlite::snapshot::native_decoding::decode(payload,control)}
+fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
+
+fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
+if dialect.artifact_kind!="s.stdio.semio"||dialect.standard!="v1"||(dialect.subset!="*"&&dialect.subset!="document"){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned snapshot dialect differs from its dedicated semantic subset"));}
+let row=database.table("semio_document_document")?.single_row()?;
+if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
+control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
+fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(db, control, Self::SQLITE_SCHEMA) })();result}
+}
+
+impl SemioDocumentSnapshot {
+    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    pub fn reconstruct_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>, declared_schema: &str)->Result<Self,ValueError> {
+control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(db,declared_schema,control.limits())?;let doc=single_float_row(db,"semio_document_document")?;identity(doc,3)?;if doc.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid document identity"));}let style_rows=ordered_float_rows(db,"semio_document_style",2,control)?;let image_rows=ordered_float_rows(db,"semio_document_image",2,control)?;let mut styles=BTreeMap::new();let mut images=BTreeMap::new();let mut parents=BTreeMap::new();let mut names=BTreeSet::new();for row in &style_rows{identity(row,6)?;if row.integer(1)?!=1||!names.insert(row.text(3)?)||styles.insert(row.rowid,row.text(3)?).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid document style identity or owner"));}parents.insert(row.rowid,optional_integer(*row,5)?);}style_cycles(&parents,control)?;let mut names=BTreeSet::new();for row in &image_rows{identity(row,6)?;if row.integer(1)?!=1||!names.insert(row.text(3)?)||images.insert(row.rowid,row.text(3)?).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid document image identity or owner"));}}let mut blocks=Owned::new(reconstruct_block_collections(db,DOCUMENT_TABLES,&[doc.integer(2)?],Some(&styles),Some(&images),control)?);let mut r=Reconstruction::new(control)?;let mut native_styles=Vec::new();for row in style_rows{native_styles.push(DocStyle{id:r.text(row.text(3)?)?,name:r.text(row.text(4)?)?,based_on:restore_reference(row,5,Some(&styles),&mut r)?});}let mut native_images=Vec::new();for row in image_rows{native_images.push(DocImage{id:r.text(row.text(3)?)?,mime:r.text(row.text(4)?)?,bytes:r.blob(row.blob(5)?)?});}let result=Owned::new(Self{schema:r.text(doc.text(1)?)?,styles:native_styles,images:native_images,blocks:blocks.get_mut().remove(0)});r.checkpoint()?;Ok(result.take())
+    }
+}
+
+fn float_columns(table:&str)->&'static [FloatColumn]{match table{"semio_document_run"=>&[FloatColumn::Binary64(7)],"semio_document_image_block"=>&[FloatColumn::Binary64(3),FloatColumn::Binary64(4)],"semio_presentation_run"=>&[FloatColumn::Binary64(7)],"semio_presentation_image_block"=>&[FloatColumn::Binary64(3),FloatColumn::Binary64(4)],_=>&[]}}
+fn float_rows<'a>(db:&'a SqliteDatabase,table:&str,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let table_rows=db.table(table)?;control.check_rows(table_rows.rows.len())?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,table_rows.rows.len())?;let mut result=Vec::new();for(count,row)in table_rows.rows.iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,table_rows.rows.len())?;}}Ok(result)}
+fn ordered_float_rows<'a>(db:&'a SqliteDatabase,table:&str,ordinal:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let mut result=Vec::new();for(count,row)in semio_framework_os_kernel::sqlite_snapshot::artifact::ordered_row_refs(db.table(table)?,ordinal,control)?.into_iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,0)?;}}Ok(result)}
+fn single_float_row<'a>(db:&'a SqliteDatabase,table:&str)->Result<SqliteRow<'a>,ValueError>{SqliteRow::new(db.table(table)?.single_row()?,float_columns(table))}
+
+impl SemioDocumentSnapshot{
+/// 📏️ Bounds explicitly owned native fields before encoding.
+pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.styles.len())?;for style in &self.styles{b.text(&style.id)?;b.text(&style.name)?;b.optional_text(style.based_on.as_deref())?;}b.entities(self.images.len())?;for image in &self.images{b.text(&image.id)?;b.text(&image.mime)?;b.bytes(&image.bytes)?;}native_blocks(&self.blocks,b)?;Ok(())}
+}
+
+/// 📑️ Bounds actual shared DocBlock variants and their typed inline fields iteratively.
+pub fn native_blocks(roots:&[DocBlock],b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.entities(roots.len())?;let mut pending:Vec<_>=roots.iter().rev().collect();while let Some(block)=pending.pop(){b.entities(1)?;match block{
+DocBlock::Paragraph{style_id,runs}|DocBlock::Heading{style_id,runs,..}=>{b.scalars(1)?;b.optional_text(style_id.as_deref())?;b.entities(runs.len())?;for run in runs{b.text(&run.text)?;b.scalars(4)?;b.optional_text(run.style.font.as_deref())?;b.optional_text(run.style.color.as_deref())?;b.optional_text(run.style.link.as_deref())?;}},
+DocBlock::List{items,..}=>{b.scalars(1)?;b.entities(items.len())?;for item in items.iter().rev(){b.entities(item.blocks.len())?;pending.extend(item.blocks.iter().rev());}},
+DocBlock::Table{rows}=>{b.entities(rows.len())?;for row in rows.iter().rev(){b.entities(row.cells.len())?;for cell in row.cells.iter().rev(){b.entities(cell.blocks.len())?;pending.extend(cell.blocks.iter().rev());}}},
+DocBlock::Code{language,text}=>{b.optional_text(language.as_deref())?;b.text(text)?;},DocBlock::Quote{blocks}=>{b.entities(blocks.len())?;pending.extend(blocks.iter().rev());},
+DocBlock::Image{image_id,alt,..}=>{b.text(image_id)?;b.text(alt)?;b.scalars(2)?;},DocBlock::PageBreak=>{}}}Ok(())}
+
+impl SemioDocumentSnapshot {
+    /// 🪶️ Projects the owned subset into its declared relational writer while preserving refusals.
+    pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()}
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+pub(crate) mod tests;
+
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;

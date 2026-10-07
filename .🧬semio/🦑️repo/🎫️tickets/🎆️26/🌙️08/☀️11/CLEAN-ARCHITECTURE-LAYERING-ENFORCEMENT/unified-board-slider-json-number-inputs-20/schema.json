@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "required": [
+    "widgetId",
+    "label",
+    "value",
+    "min",
+    "max",
+    "step",
+    "x",
+    "y",
+    "w",
+    "h"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "widgetId": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "value": {
+      "type": "number"
+    },
+    "min": {
+      "type": "number"
+    },
+    "max": {
+      "type": "number"
+    },
+    "step": {
+      "type": "number"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    },
+    "w": {
+      "type": "number"
+    },
+    "h": {
+      "type": "number"
+    }
+  }
+}

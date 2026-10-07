@@ -1,0 +1,29 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "mutation",
+      "expected"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "mutation": {
+        "enum": [
+          "valid",
+          "authority-hash",
+          "bank",
+          "header-bank",
+          "prepared-path",
+          "completion-path",
+          "driver",
+          "ready",
+          "evidence"
+        ]
+      },
+      "expected": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@
 //! That is bounded by the same admission ceilings the cold route uses and is honest for a read-only
 //! surface; a document too large to solve inline paints the unsolved cage instead of failing.
 
-use crate::schema::inferences::solve;
+use crate::host::inferences::solve;
 use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
@@ -65,8 +65,8 @@ pub fn render(document: &Grid3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let (position, target) = framed_camera(document);
     let scene = world3d_scene(
         world3d_camera_json(position, target, 45.0),
-        scene_internals::preview_meshes_json(document),
-        scene_internals::preview_instances_json(document, &assignments),
+        crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_meshes_json(document),
+        crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_instances_json(document, &assignments),
         world3d_selection_json("interactionSelect", &[], None),
         &WorldSunConfig::default(),
     );

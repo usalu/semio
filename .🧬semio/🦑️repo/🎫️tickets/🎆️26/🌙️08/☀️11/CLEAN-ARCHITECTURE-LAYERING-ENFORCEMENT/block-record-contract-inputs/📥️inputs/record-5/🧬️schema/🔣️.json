@@ -1,0 +1,3538 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "artifactSchemaInputs": [
+      {
+        "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+        "source": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json\",\n  \"title\": \"Artifact References\",\n  \"$defs\": {\n    \"ArtifactKindId\": {\n      \"type\": \"string\",\n      \"pattern\": \"^[a-z0-9]+(?:-[a-z0-9]+)*\\\\.[a-z0-9]+(?:-[a-z0-9]+)*\\\\.[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\\\s\\\\S])\"\n    },\n    \"ArtifactDialect\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"artifactKind\",\n        \"standard\",\n        \"subset\"\n      ],\n      \"properties\": {\n        \"artifactKind\": {\n          \"type\": \"string\",\n          \"x-semio-ui\": {\n            \"widget\": \"text\",\n            \"label\": {\n              \"en\": \"Artifact kind\",\n              \"de\": \"Artefaktart\"\n            }\n          }\n        },\n        \"standard\": {\n          \"type\": \"string\",\n          \"x-semio-ui\": {\n            \"widget\": \"text\",\n            \"label\": {\n              \"en\": \"Standard\",\n              \"de\": \"Standard\"\n            }\n          }\n        },\n        \"subset\": {\n          \"type\": \"string\",\n          \"x-semio-ui\": {\n            \"widget\": \"text\",\n            \"label\": {\n              \"en\": \"Subset\",\n              \"de\": \"Teilmenge\"\n            }\n          }\n        }\n      }\n    },\n    \"ArtifactRef\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"artifactId\",\n        \"dialect\"\n      ],\n      \"properties\": {\n        \"artifactId\": {\n          \"type\": \"string\",\n          \"x-semio-ui\": {\n            \"widget\": \"reference\",\n            \"role\": \"target\",\n            \"label\": {\n              \"en\": \"Artifact\",\n              \"de\": \"Artefakt\"\n            },\n            \"description\": {\n              \"en\": \"The referenced artifact.\",\n              \"de\": \"Das referenzierte Artefakt.\"\n            },\n            \"ref\": {\n              \"kind\": \"artifact\"\n            }\n          }\n        },\n        \"dialect\": {\n          \"$ref\": \"#/$defs/ArtifactDialect\",\n          \"x-semio-ui\": {\n            \"label\": {\n              \"en\": \"Dialect\",\n              \"de\": \"Dialekt\"\n            },\n            \"description\": {\n              \"en\": \"Artifact kind, standard and subset of the referenced artifact.\",\n              \"de\": \"Artefaktart, Standard und Teilmenge des referenzierten Artefakts.\"\n            }\n          }\n        }\n      }\n    }\n  }\n}\n",
+        "sha256": "43b3bb2a74e7909982a571d4682423dde84b610f9fdb9e95e9d886a1bddc55d6",
+        "bytes": 2376
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
+        "source": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/os/store/child/schema.json\",\n  \"title\": \"ArtifactChild\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"childId\",\n    \"target\"\n  ],\n  \"properties\": {\n    \"childId\": {\n      \"type\": \"string\",\n      \"description\": \"🆔️ The child's member identity. A content-addressed child (one whose identity follows its content) carries a `ContentId`.\"\n    },\n    \"target\": {\n      \"$ref\": \"https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef\"\n    }\n  },\n  \"$defs\": {\n    \"ContentId\": {\n      \"description\": \"🆔️ `<prefix>-` + the first 16 lowercase hex digits of SHA-256 over the child's canonical content bytes (several fields joined with U+001F). Rust `store::content_id`, TypeScript `contentId`.\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-z0-9][a-z0-9.-]*-[0-9a-f]{16}$\"\n    }\n  }\n}\n",
+        "sha256": "ea8601da66e683c680998aa5370f53670e795e5d0b81fb9f974917250a51b03b",
+        "bytes": 973
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+        "source": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json\",\n  \"title\": \"Block2dArtifact\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"schema\",\n    \"nodeKind\"\n  ],\n  \"properties\": {\n    \"schema\": {\n      \"type\": \"string\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"nodeKind\": {\n      \"$ref\": \"#/$defs/BlockKindIdentity\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"presentation\": {\n      \"$ref\": \"#/$defs/Block2dPresentation\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"handleKinds\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Block2dHandleKind\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"handles\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Block2dHandleTemplate\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"compatibility\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockCompatibilityRule\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"attributes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockAttribute\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"authors\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockAuthor\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"camera2d\": {\n      \"$ref\": \"#/$defs/BlockCamera2d\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"meta\": {\n      \"$ref\": \"#/$defs/BlockMeta\",\n      \"x-semio-state\": \"artifact\"\n    }\n  },\n  \"$defs\": {\n    \"Binary64Word\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"bits\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{16}$\"\n        }\n      },\n      \"required\": [\n        \"bits\"\n      ]\n    },\n    \"Binary64Transport\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/$defs/Binary64Word\"\n        },\n        {\n          \"type\": \"number\"\n        }\n      ]\n    },\n    \"BlockVector3\": {\n      \"type\": \"array\",\n      \"minItems\": 3,\n      \"maxItems\": 3,\n      \"items\": {\n        \"$ref\": \"#/$defs/Binary64Transport\"\n      }\n    },\n    \"BlockVector4\": {\n      \"type\": \"array\",\n      \"minItems\": 4,\n      \"maxItems\": 4,\n      \"items\": {\n        \"$ref\": \"#/$defs/Binary64Transport\"\n      }\n    },\n    \"BlockKindIdentity\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"label\": {\n          \"type\": \"string\"\n        },\n        \"variant\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"unit\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\",\n        \"label\"\n      ]\n    },\n    \"BlockAttribute\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"key\": {\n          \"type\": \"string\"\n        },\n        \"value\": {\n          \"type\": \"string\"\n        },\n        \"definition\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"key\",\n        \"value\"\n      ]\n    },\n    \"BlockAuthor\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\"\n      ]\n    },\n    \"BlockCompatibilityRule\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"source\": {\n          \"type\": \"string\"\n        },\n        \"target\": {\n          \"type\": \"string\"\n        },\n        \"bidirectional\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"source\",\n        \"target\"\n      ]\n    },\n    \"BlockRepresentation\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"meshUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"tags\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"lod\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"attributes\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"$ref\": \"#/$defs/BlockAttribute\"\n          }\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\"\n      ]\n    },\n    \"BlockCamera2d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"x\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"y\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"zoom\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": []\n    },\n    \"BlockCamera3d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"position\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"target\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"zoom\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": []\n    },\n    \"BlockMeta\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": []\n    },\n    \"Block2dPresentation\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"shape\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"radius\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/Binary64Transport\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"width\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/Binary64Transport\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"height\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/Binary64Transport\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"color\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"iconKind\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      }\n    },\n    \"Block2dHandleKind\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"label\": {\n          \"type\": \"string\"\n        },\n        \"color\": {\n          \"type\": \"string\"\n        },\n        \"defaultWireKind\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\",\n        \"label\",\n        \"color\",\n        \"defaultWireKind\"\n      ]\n    },\n    \"Block2dHandleTemplate\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"handleKind\": {\n          \"type\": \"string\"\n        },\n        \"angle\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"radius\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"handleKind\",\n        \"angle\",\n        \"radius\"\n      ]\n    }\n  }\n}\n",
+        "sha256": "3d2fced080807bc65d26f1ca1d4c3842770e53b14c16da2529c871ef35219b45",
+        "bytes": 8869
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+        "source": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/block/block3d/artifact.json\",\n  \"title\": \"Block3dArtifact\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"schema\",\n    \"objectKind\",\n    \"catalog\"\n  ],\n  \"properties\": {\n    \"schema\": {\n      \"type\": \"string\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"objectKind\": {\n      \"$ref\": \"#/$defs/BlockKindIdentity\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"representations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockRepresentation\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"catalog\": {\n      \"$ref\": \"https://json.schemas.assets.semio-tech.com/os/store/child/schema.json\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"vortexKindExtra\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Block3dVortexKindExtra\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"vortices\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Block3dVortexTemplate\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"compatibility\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockCompatibilityRule\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"attributes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockAttribute\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"authors\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockAuthor\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"camera3d\": {\n      \"$ref\": \"#/$defs/BlockCamera3d\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"meta\": {\n      \"$ref\": \"#/$defs/BlockMeta\",\n      \"x-semio-state\": \"artifact\"\n    }\n  },\n  \"$defs\": {\n    \"Binary64Word\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"bits\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{16}$\"\n        }\n      },\n      \"required\": [\n        \"bits\"\n      ]\n    },\n    \"Binary64Transport\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/$defs/Binary64Word\"\n        },\n        {\n          \"type\": \"number\"\n        }\n      ]\n    },\n    \"BlockVector3\": {\n      \"type\": \"array\",\n      \"minItems\": 3,\n      \"maxItems\": 3,\n      \"items\": {\n        \"$ref\": \"#/$defs/Binary64Transport\"\n      }\n    },\n    \"BlockVector4\": {\n      \"type\": \"array\",\n      \"minItems\": 4,\n      \"maxItems\": 4,\n      \"items\": {\n        \"$ref\": \"#/$defs/Binary64Transport\"\n      }\n    },\n    \"BlockKindIdentity\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"label\": {\n          \"type\": \"string\"\n        },\n        \"variant\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"unit\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\",\n        \"label\"\n      ]\n    },\n    \"BlockAttribute\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"key\": {\n          \"type\": \"string\"\n        },\n        \"value\": {\n          \"type\": \"string\"\n        },\n        \"definition\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"key\",\n        \"value\"\n      ]\n    },\n    \"BlockAuthor\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\"\n      ]\n    },\n    \"BlockCompatibilityRule\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"source\": {\n          \"type\": \"string\"\n        },\n        \"target\": {\n          \"type\": \"string\"\n        },\n        \"bidirectional\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"source\",\n        \"target\"\n      ]\n    },\n    \"BlockRepresentation\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"meshUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"tags\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"lod\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"attributes\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"$ref\": \"#/$defs/BlockAttribute\"\n          }\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\"\n      ]\n    },\n    \"BlockCamera2d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"x\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"y\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"zoom\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": []\n    },\n    \"BlockCamera3d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"position\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"target\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"zoom\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": []\n    },\n    \"BlockMeta\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": []\n    },\n    \"Block3dVortexKind\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"label\": {\n          \"type\": \"string\"\n        },\n        \"color\": {\n          \"type\": \"string\"\n        },\n        \"defaultCableKind\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\",\n        \"label\",\n        \"color\",\n        \"defaultCableKind\"\n      ]\n    },\n    \"Block3dVortexKindExtra\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"label\": {\n          \"type\": \"string\"\n        },\n        \"color\": {\n          \"type\": \"string\"\n        },\n        \"defaultCableKind\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"label\",\n        \"color\",\n        \"defaultCableKind\"\n      ]\n    },\n    \"Block3dVortexTemplate\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"vortexKind\": {\n          \"type\": \"string\"\n        },\n        \"position\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"direction\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"radius\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"label\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"vortexKind\"\n      ]\n    },\n    \"Block3dWindowView\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"windowId\": {\n          \"type\": \"string\"\n        },\n        \"representationIds\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"arrangement\": {\n          \"type\": \"string\"\n        },\n        \"spacing\": {\n          \"type\": \"number\"\n        }\n      },\n      \"required\": [\n        \"windowId\"\n      ]\n    }\n  }\n}\n",
+        "sha256": "c2f2c2444e3e2ba4b8d43ba04246e2ae8d1df7f9c7e2c9848b9a67cae18a2a96",
+        "bytes": 9058
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+        "source": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/block/block5d/artifact.json\",\n  \"title\": \"Block5dArtifact\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"schema\",\n    \"partKind\"\n  ],\n  \"properties\": {\n    \"schema\": {\n      \"type\": \"string\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"partKind\": {\n      \"$ref\": \"#/$defs/BlockKindIdentity\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"part2d\": {\n      \"$ref\": \"#/$defs/Block5dPart2d\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"part3d\": {\n      \"$ref\": \"#/$defs/Block5dPart3d\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"representations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockRepresentation\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"gripKinds\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Block5dGripKind\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"grips\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Block5dGripTemplate\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"compatibility\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockCompatibilityRule\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"attributes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockAttribute\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"authors\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/BlockAuthor\"\n      },\n      \"x-semio-state\": \"artifact\"\n    },\n    \"camera2d\": {\n      \"$ref\": \"#/$defs/BlockCamera2d\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"camera3d\": {\n      \"$ref\": \"#/$defs/BlockCamera3d\",\n      \"x-semio-state\": \"artifact\"\n    },\n    \"meta\": {\n      \"$ref\": \"#/$defs/BlockMeta\",\n      \"x-semio-state\": \"artifact\"\n    }\n  },\n  \"$defs\": {\n    \"BlockKindIdentity\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"label\": {\n          \"type\": \"string\"\n        },\n        \"variant\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"unit\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\",\n        \"label\"\n      ]\n    },\n    \"Block5dPart2d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"shape\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"radius\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/Binary64Transport\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"width\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/Binary64Transport\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"height\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/Binary64Transport\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"color\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"iconKind\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": []\n    },\n    \"Block5dPart3d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"orientation\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/BlockVector4\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"scale\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/$defs/BlockVector3\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": []\n    },\n    \"BlockRepresentation\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"meshUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"tags\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"lod\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"attributes\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"$ref\": \"#/$defs/BlockAttribute\"\n          }\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\"\n      ]\n    },\n    \"Block5dGripKind\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"label\": {\n          \"type\": \"string\"\n        },\n        \"color\": {\n          \"type\": \"string\"\n        },\n        \"defaultRopeKind\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\",\n        \"label\",\n        \"color\",\n        \"defaultRopeKind\"\n      ]\n    },\n    \"Block5dGripTemplate\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"gripKind\": {\n          \"type\": \"string\"\n        },\n        \"angle\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"radius2d\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"position\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"direction\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"radius3d\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"gripKind\"\n      ]\n    },\n    \"BlockCompatibilityRule\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"source\": {\n          \"type\": \"string\"\n        },\n        \"target\": {\n          \"type\": \"string\"\n        },\n        \"bidirectional\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"source\",\n        \"target\"\n      ]\n    },\n    \"BlockAttribute\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"key\": {\n          \"type\": \"string\"\n        },\n        \"value\": {\n          \"type\": \"string\"\n        },\n        \"definition\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"key\",\n        \"value\"\n      ]\n    },\n    \"BlockAuthor\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"email\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"name\"\n      ]\n    },\n    \"BlockCamera2d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"x\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"y\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        },\n        \"zoom\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": []\n    },\n    \"BlockCamera3d\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"position\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"target\": {\n          \"$ref\": \"#/$defs/BlockVector3\"\n        },\n        \"zoom\": {\n          \"$ref\": \"#/$defs/Binary64Transport\"\n        }\n      },\n      \"required\": []\n    },\n    \"BlockMeta\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": []\n    },\n    \"Binary64Word\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"properties\": {\n        \"bits\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{16}$\"\n        }\n      },\n      \"required\": [\n        \"bits\"\n      ]\n    },\n    \"Binary64Transport\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/$defs/Binary64Word\"\n        },\n        {\n          \"type\": \"number\"\n        }\n      ]\n    },\n    \"BlockVector3\": {\n      \"type\": \"array\",\n      \"minItems\": 3,\n      \"maxItems\": 3,\n      \"items\": {\n        \"$ref\": \"#/$defs/Binary64Transport\"\n      }\n    },\n    \"BlockVector4\": {\n      \"type\": \"array\",\n      \"minItems\": 4,\n      \"maxItems\": 4,\n      \"items\": {\n        \"$ref\": \"#/$defs/Binary64Transport\"\n      }\n    }\n  }\n}\n",
+        "sha256": "510687e069443a5794067bd4dcffab86524dabc348866bacbe9abedc403be0e3",
+        "bytes": 9943
+      }
+    ],
+    "schema": "semio.block.record-contract/v1",
+    "representations": {
+      "text": "inline-schema-record",
+      "binary": "complete-pack-document"
+    },
+    "controls": [
+      "required-cumulative-schema-projection-physical-construction",
+      "zero-credit-refusal",
+      "caller-cancellation",
+      "explicit-record-retirement"
+    ],
+    "cases": [
+      {
+        "dimension": "2d",
+        "folder": "◻️2d",
+        "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+        "root": "Block2dDiff",
+        "artifact": "Block2dArtifact",
+        "maximumBytes": 16777216,
+        "maximumOutputBytes": 1048576,
+        "cases": [
+          {
+            "id": "absent",
+            "value": {}
+          },
+          {
+            "id": "explicit-empty-authors",
+            "value": {
+              "authors": {
+                "values": []
+              }
+            }
+          },
+          {
+            "id": "unicode-metadata",
+            "value": {
+              "schema": "字段 🚀 Straße"
+            }
+          },
+          {
+            "id": "full-artifact",
+            "artifactDefault": true
+          },
+          {
+            "id": "handleKinds-empty-reordered",
+            "value": {
+              "handleKinds": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "handles-empty-reordered",
+            "value": {
+              "handles": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "nonempty-shared-and-domain-records",
+            "value": {
+              "authors": {
+                "values": [
+                  {
+                    "id": "author-1",
+                    "name": "Müller 🚀",
+                    "email": "author@example.invalid"
+                  }
+                ]
+              },
+              "attributes": {
+                "added": [
+                  {
+                    "key": "attribute-λ",
+                    "value": "🧬️\nvalue",
+                    "definition": "definition-1"
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "attribute-λ",
+                    "patch": {
+                      "replacement": {
+                        "key": "attribute-λ",
+                        "value": "🧬️\nvalue",
+                        "definition": "definition-1"
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "attribute-λ",
+                  "removed-1"
+                ]
+              },
+              "compatibility": {
+                "added": [
+                  {
+                    "id": "compat-1",
+                    "source": "source-1",
+                    "target": "target-2",
+                    "bidirectional": true
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "compat-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "compat-1",
+                        "source": "source-1",
+                        "target": "target-2",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "compat-1",
+                  "removed-1"
+                ]
+              },
+              "meta": {
+                "description": "session 🧬️\nmetadata"
+              },
+              "nodeKind": {
+                "id": "kind-λ",
+                "name": "Kind 🚀",
+                "label": "字段",
+                "variant": "revision-ß",
+                "description": "line one\nline two",
+                "icon": "symbol",
+                "unit": "m"
+              },
+              "presentation": {
+                "shape": "circle",
+                "radius": 2.5,
+                "width": 3,
+                "height": 4,
+                "color": "#aabbcc",
+                "iconKind": "symbol"
+              },
+              "camera2d": {
+                "x": -1.25,
+                "y": 2.5,
+                "zoom": 1.5
+              },
+              "handleKinds": {
+                "added": [
+                  {
+                    "id": "handle-kind-1",
+                    "name": "Handle λ",
+                    "label": "字段",
+                    "color": "#123456",
+                    "defaultWireKind": "wire-kind-1"
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "handle-kind-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "handle-kind-1",
+                        "name": "Handle λ",
+                        "label": "字段",
+                        "color": "#123456",
+                        "defaultWireKind": "wire-kind-1"
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "handle-kind-1",
+                  "removed-1"
+                ]
+              },
+              "handles": {
+                "added": [
+                  {
+                    "id": "handle-1",
+                    "handleKind": "handle-kind-1",
+                    "angle": 0.5,
+                    "radius": 1.25
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "handle-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "handle-1",
+                        "handleKind": "handle-kind-1",
+                        "angle": 0.5,
+                        "radius": 1.25
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "handle-1",
+                  "removed-1"
+                ]
+              }
+            }
+          },
+          {
+            "id": "long-unicode-schema",
+            "value": {
+              "schema": "字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀"
+            }
+          },
+          {
+            "id": "nonempty-complete-artifact-tables",
+            "value": {
+              "artifact": {
+                "schema": "block.2d",
+                "compatibility": [
+                  {
+                    "id": "compat-1",
+                    "source": "source-1",
+                    "target": "target-2",
+                    "bidirectional": true
+                  },
+                  {
+                    "id": "compat-2",
+                    "source": "source-2",
+                    "target": "target-1",
+                    "bidirectional": false
+                  }
+                ],
+                "attributes": [
+                  {
+                    "key": "attribute-λ",
+                    "value": "🧬️\nvalue",
+                    "definition": "definition-1"
+                  },
+                  {
+                    "key": "attribute-2",
+                    "value": "second",
+                    "definition": null
+                  }
+                ],
+                "authors": [
+                  {
+                    "id": "author-1",
+                    "name": "Müller 🚀",
+                    "email": "author@example.invalid"
+                  },
+                  {
+                    "id": "author-2",
+                    "name": "Second",
+                    "email": null
+                  }
+                ],
+                "meta": {
+                  "description": "session 🧬️\nmetadata"
+                },
+                "nodeKind": {
+                  "id": "kind-λ",
+                  "name": "Kind 🚀",
+                  "label": "字段",
+                  "variant": "revision-ß",
+                  "description": "line one\nline two",
+                  "icon": "symbol",
+                  "unit": "m"
+                },
+                "presentation": {
+                  "shape": "circle",
+                  "radius": 2.5,
+                  "width": 3,
+                  "height": 4,
+                  "color": "#aabbcc",
+                  "iconKind": "symbol"
+                },
+                "camera2d": {
+                  "x": -1.25,
+                  "y": 2.5,
+                  "zoom": 1.5
+                },
+                "handleKinds": [
+                  {
+                    "id": "handle-kind-1",
+                    "name": "Handle λ",
+                    "label": "字段",
+                    "color": "#123456",
+                    "defaultWireKind": "wire-kind-1"
+                  },
+                  {
+                    "id": "handle-kind-2",
+                    "name": "Second",
+                    "label": "other",
+                    "color": "#654321",
+                    "defaultWireKind": "wire-kind-2"
+                  }
+                ],
+                "handles": [
+                  {
+                    "id": "handle-1",
+                    "handleKind": "handle-kind-1",
+                    "angle": 0.5,
+                    "radius": 1.25
+                  },
+                  {
+                    "id": "handle-2",
+                    "handleKind": "handle-kind-2",
+                    "angle": -0.25,
+                    "radius": 2.5
+                  }
+                ]
+              }
+            },
+            "canonicalArtifact": {
+              "schema": "block.2d",
+              "compatibility": [
+                {
+                  "id": "compat-1",
+                  "source": "source-1",
+                  "target": "target-2",
+                  "bidirectional": true
+                },
+                {
+                  "id": "compat-2",
+                  "source": "source-2",
+                  "target": "target-1",
+                  "bidirectional": false
+                }
+              ],
+              "attributes": [
+                {
+                  "key": "attribute-λ",
+                  "value": "🧬️\nvalue",
+                  "definition": "definition-1"
+                },
+                {
+                  "key": "attribute-2",
+                  "value": "second"
+                }
+              ],
+              "authors": [
+                {
+                  "id": "author-1",
+                  "name": "Müller 🚀",
+                  "email": "author@example.invalid"
+                },
+                {
+                  "id": "author-2",
+                  "name": "Second"
+                }
+              ],
+              "meta": {
+                "description": "session 🧬️\nmetadata"
+              },
+              "nodeKind": {
+                "id": "kind-λ",
+                "name": "Kind 🚀",
+                "label": "字段",
+                "variant": "revision-ß",
+                "description": "line one\nline two",
+                "icon": "symbol",
+                "unit": "m"
+              },
+              "presentation": {
+                "shape": "circle",
+                "radius": 2.5,
+                "width": 3,
+                "height": 4,
+                "color": "#aabbcc",
+                "iconKind": "symbol"
+              },
+              "camera2d": {
+                "x": -1.25,
+                "y": 2.5,
+                "zoom": 1.5
+              },
+              "handleKinds": [
+                {
+                  "id": "handle-kind-1",
+                  "name": "Handle λ",
+                  "label": "字段",
+                  "color": "#123456",
+                  "defaultWireKind": "wire-kind-1"
+                },
+                {
+                  "id": "handle-kind-2",
+                  "name": "Second",
+                  "label": "other",
+                  "color": "#654321",
+                  "defaultWireKind": "wire-kind-2"
+                }
+              ],
+              "handles": [
+                {
+                  "id": "handle-1",
+                  "handleKind": "handle-kind-1",
+                  "angle": 0.5,
+                  "radius": 1.25
+                },
+                {
+                  "id": "handle-2",
+                  "handleKind": "handle-kind-2",
+                  "angle": -0.25,
+                  "radius": 2.5
+                }
+              ]
+            }
+          }
+        ],
+        "invalidText": [
+          "schema=\"unterminated",
+          "schema=\"first\" schema=\"second\"",
+          "unknown=\"field\"",
+          "schema=\"ok\" trailing"
+        ],
+        "cancellationUnits": 256
+      },
+      {
+        "dimension": "3d",
+        "folder": "🧊️3d",
+        "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+        "root": "Block3dDiff",
+        "artifact": "Block3dArtifact",
+        "maximumBytes": 16777216,
+        "maximumOutputBytes": 1048576,
+        "cases": [
+          {
+            "id": "absent",
+            "value": {}
+          },
+          {
+            "id": "explicit-empty-authors",
+            "value": {
+              "authors": {
+                "values": []
+              }
+            }
+          },
+          {
+            "id": "unicode-metadata",
+            "value": {
+              "schema": "字段 🚀 Straße"
+            }
+          },
+          {
+            "id": "full-artifact",
+            "artifactDefault": true
+          },
+          {
+            "id": "representations-empty-reordered",
+            "value": {
+              "representations": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "vortexKinds-empty-reordered",
+            "value": {
+              "vortexKinds": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "vortices-empty-reordered",
+            "value": {
+              "vortices": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "nonempty-shared-and-domain-records",
+            "value": {
+              "authors": {
+                "values": [
+                  {
+                    "id": "author-1",
+                    "name": "Müller 🚀",
+                    "email": "author@example.invalid"
+                  }
+                ]
+              },
+              "attributes": {
+                "added": [
+                  {
+                    "key": "attribute-λ",
+                    "value": "🧬️\nvalue",
+                    "definition": "definition-1"
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "attribute-λ",
+                    "patch": {
+                      "replacement": {
+                        "key": "attribute-λ",
+                        "value": "🧬️\nvalue",
+                        "definition": "definition-1"
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "attribute-λ",
+                  "removed-1"
+                ]
+              },
+              "compatibility": {
+                "added": [
+                  {
+                    "id": "compat-1",
+                    "source": "source-1",
+                    "target": "target-2",
+                    "bidirectional": true
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "compat-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "compat-1",
+                        "source": "source-1",
+                        "target": "target-2",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "compat-1",
+                  "removed-1"
+                ]
+              },
+              "meta": {
+                "description": "session 🧬️\nmetadata"
+              },
+              "objectKind": {
+                "id": "kind-λ",
+                "name": "Kind 🚀",
+                "label": "字段",
+                "variant": "revision-ß",
+                "description": "line one\nline two",
+                "icon": "symbol",
+                "unit": "m"
+              },
+              "camera3d": {
+                "position": [
+                  1.25,
+                  -2.5,
+                  3.75
+                ],
+                "target": [
+                  0,
+                  1,
+                  0
+                ],
+                "zoom": 2.5
+              },
+              "representations": {
+                "added": [
+                  {
+                    "id": "representation-1",
+                    "name": "Mesh λ",
+                    "meshUrl": "media/模型.glb",
+                    "tags": [
+                      "solid",
+                      "字段"
+                    ],
+                    "lod": "fine",
+                    "description": "mesh description",
+                    "attributes": [
+                      {
+                        "key": "attribute-λ",
+                        "value": "🧬️\nvalue",
+                        "definition": "definition-1"
+                      }
+                    ]
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "representation-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "representation-1",
+                        "name": "Mesh λ",
+                        "meshUrl": "media/模型.glb",
+                        "tags": [
+                          "solid",
+                          "字段"
+                        ],
+                        "lod": "fine",
+                        "description": "mesh description",
+                        "attributes": [
+                          {
+                            "key": "attribute-λ",
+                            "value": "🧬️\nvalue",
+                            "definition": "definition-1"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "representation-1",
+                  "removed-1"
+                ]
+              },
+              "vortexKinds": {
+                "added": [
+                  {
+                    "id": "vortex-kind-1",
+                    "name": "Vortex λ",
+                    "label": "字段",
+                    "color": "#123456",
+                    "defaultCableKind": "cable-kind-1"
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "vortex-kind-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "vortex-kind-1",
+                        "name": "Vortex λ",
+                        "label": "字段",
+                        "color": "#123456",
+                        "defaultCableKind": "cable-kind-1"
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "vortex-kind-1",
+                  "removed-1"
+                ]
+              },
+              "vortices": {
+                "added": [
+                  {
+                    "id": "vortex-1",
+                    "vortexKind": "vortex-kind-1",
+                    "position": [
+                      1.25,
+                      -2.5,
+                      3.75
+                    ],
+                    "direction": [
+                      0,
+                      1,
+                      0
+                    ],
+                    "radius": 0.25,
+                    "label": "Vortex 🚀"
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "vortex-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "vortex-1",
+                        "vortexKind": "vortex-kind-1",
+                        "position": [
+                          1.25,
+                          -2.5,
+                          3.75
+                        ],
+                        "direction": [
+                          0,
+                          1,
+                          0
+                        ],
+                        "radius": 0.25,
+                        "label": "Vortex 🚀"
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "vortex-1",
+                  "removed-1"
+                ]
+              }
+            }
+          },
+          {
+            "id": "long-unicode-schema",
+            "value": {
+              "schema": "字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀"
+            }
+          },
+          {
+            "id": "nonempty-complete-artifact-tables",
+            "value": {
+              "artifact": {
+                "schema": "block.3d",
+                "compatibility": [
+                  {
+                    "id": "compat-1",
+                    "source": "source-1",
+                    "target": "target-2",
+                    "bidirectional": true
+                  },
+                  {
+                    "id": "compat-2",
+                    "source": "source-2",
+                    "target": "target-1",
+                    "bidirectional": false
+                  }
+                ],
+                "attributes": [
+                  {
+                    "key": "attribute-λ",
+                    "value": "🧬️\nvalue",
+                    "definition": "definition-1"
+                  },
+                  {
+                    "key": "attribute-2",
+                    "value": "second",
+                    "definition": null
+                  }
+                ],
+                "authors": [
+                  {
+                    "id": "author-1",
+                    "name": "Müller 🚀",
+                    "email": "author@example.invalid"
+                  },
+                  {
+                    "id": "author-2",
+                    "name": "Second",
+                    "email": null
+                  }
+                ],
+                "meta": {
+                  "description": "session 🧬️\nmetadata"
+                },
+                "objectKind": {
+                  "id": "kind-λ",
+                  "name": "Kind 🚀",
+                  "label": "字段",
+                  "variant": "revision-ß",
+                  "description": "line one\nline two",
+                  "icon": "symbol",
+                  "unit": "m"
+                },
+                "camera3d": {
+                  "position": [
+                    1.25,
+                    -2.5,
+                    3.75
+                  ],
+                  "target": [
+                    0,
+                    1,
+                    0
+                  ],
+                  "zoom": 2.5
+                },
+                "representations": [
+                  {
+                    "id": "representation-1",
+                    "name": "Mesh λ",
+                    "meshUrl": "media/模型.glb",
+                    "tags": [
+                      "solid",
+                      "字段"
+                    ],
+                    "lod": "fine",
+                    "description": "mesh description",
+                    "attributes": [
+                      {
+                        "key": "attribute-λ",
+                        "value": "🧬️\nvalue",
+                        "definition": "definition-1"
+                      },
+                      {
+                        "key": "attribute-2",
+                        "value": "second",
+                        "definition": null
+                      }
+                    ]
+                  },
+                  {
+                    "id": "representation-2",
+                    "name": "Other mesh",
+                    "meshUrl": null,
+                    "tags": [
+                      "second"
+                    ],
+                    "lod": null,
+                    "description": "other",
+                    "attributes": [
+                      {
+                        "key": "attribute-2",
+                        "value": "second",
+                        "definition": null
+                      }
+                    ]
+                  }
+                ],
+                "catalog": {
+                  "childId": "catalog-0123456789abcdef",
+                  "target": {
+                    "artifactId": "catalog-0123456789abcdef",
+                    "dialect": {
+                      "artifactKind": "s.stdio.semio",
+                      "standard": "v1",
+                      "subset": "kit"
+                    }
+                  }
+                },
+                "vortexKindExtra": [
+                  {
+                    "id": "vortex-kind-1",
+                    "name": "Vortex λ",
+                    "label": "字段",
+                    "color": "#123456",
+                    "defaultCableKind": "cable-kind-1"
+                  },
+                  {
+                    "id": "vortex-kind-2",
+                    "name": "Second",
+                    "label": "other",
+                    "color": "#654321",
+                    "defaultCableKind": "cable-kind-2"
+                  }
+                ],
+                "vortices": [
+                  {
+                    "id": "vortex-1",
+                    "vortexKind": "vortex-kind-1",
+                    "position": [
+                      1.25,
+                      -2.5,
+                      3.75
+                    ],
+                    "direction": [
+                      0,
+                      1,
+                      0
+                    ],
+                    "radius": 0.25,
+                    "label": "Vortex 🚀"
+                  },
+                  {
+                    "id": "vortex-2",
+                    "vortexKind": "vortex-kind-2",
+                    "position": [
+                      -2.5,
+                      0,
+                      1.25
+                    ],
+                    "direction": [
+                      1,
+                      0,
+                      0
+                    ],
+                    "radius": 0.5,
+                    "label": null
+                  }
+                ]
+              }
+            },
+            "canonicalArtifact": {
+              "schema": "block.3d",
+              "compatibility": [
+                {
+                  "id": "compat-1",
+                  "source": "source-1",
+                  "target": "target-2",
+                  "bidirectional": true
+                },
+                {
+                  "id": "compat-2",
+                  "source": "source-2",
+                  "target": "target-1",
+                  "bidirectional": false
+                }
+              ],
+              "attributes": [
+                {
+                  "key": "attribute-λ",
+                  "value": "🧬️\nvalue",
+                  "definition": "definition-1"
+                },
+                {
+                  "key": "attribute-2",
+                  "value": "second"
+                }
+              ],
+              "authors": [
+                {
+                  "id": "author-1",
+                  "name": "Müller 🚀",
+                  "email": "author@example.invalid"
+                },
+                {
+                  "id": "author-2",
+                  "name": "Second"
+                }
+              ],
+              "meta": {
+                "description": "session 🧬️\nmetadata"
+              },
+              "objectKind": {
+                "id": "kind-λ",
+                "name": "Kind 🚀",
+                "label": "字段",
+                "variant": "revision-ß",
+                "description": "line one\nline two",
+                "icon": "symbol",
+                "unit": "m"
+              },
+              "camera3d": {
+                "position": [
+                  1.25,
+                  -2.5,
+                  3.75
+                ],
+                "target": [
+                  0,
+                  1,
+                  0
+                ],
+                "zoom": 2.5
+              },
+              "representations": [
+                {
+                  "id": "representation-1",
+                  "name": "Mesh λ",
+                  "meshUrl": "media/模型.glb",
+                  "tags": [
+                    "solid",
+                    "字段"
+                  ],
+                  "lod": "fine",
+                  "description": "mesh description",
+                  "attributes": [
+                    {
+                      "key": "attribute-λ",
+                      "value": "🧬️\nvalue",
+                      "definition": "definition-1"
+                    },
+                    {
+                      "key": "attribute-2",
+                      "value": "second"
+                    }
+                  ]
+                },
+                {
+                  "id": "representation-2",
+                  "name": "Other mesh",
+                  "tags": [
+                    "second"
+                  ],
+                  "description": "other",
+                  "attributes": [
+                    {
+                      "key": "attribute-2",
+                      "value": "second"
+                    }
+                  ]
+                }
+              ],
+              "catalog": {
+                "childId": "catalog-0123456789abcdef",
+                "target": {
+                  "artifactId": "catalog-0123456789abcdef",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "kit"
+                  }
+                }
+              },
+              "vortexKindExtra": [
+                {
+                  "id": "vortex-kind-1",
+                  "name": "Vortex λ",
+                  "label": "字段",
+                  "color": "#123456",
+                  "defaultCableKind": "cable-kind-1"
+                },
+                {
+                  "id": "vortex-kind-2",
+                  "name": "Second",
+                  "label": "other",
+                  "color": "#654321",
+                  "defaultCableKind": "cable-kind-2"
+                }
+              ],
+              "vortices": [
+                {
+                  "id": "vortex-1",
+                  "vortexKind": "vortex-kind-1",
+                  "position": [
+                    1.25,
+                    -2.5,
+                    3.75
+                  ],
+                  "direction": [
+                    0,
+                    1,
+                    0
+                  ],
+                  "radius": 0.25,
+                  "label": "Vortex 🚀"
+                },
+                {
+                  "id": "vortex-2",
+                  "vortexKind": "vortex-kind-2",
+                  "position": [
+                    -2.5,
+                    0,
+                    1.25
+                  ],
+                  "direction": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "radius": 0.5
+                }
+              ]
+            }
+          }
+        ],
+        "invalidText": [
+          "schema=\"unterminated",
+          "schema=\"first\" schema=\"second\"",
+          "unknown=\"field\"",
+          "schema=\"ok\" trailing"
+        ],
+        "cancellationUnits": 256
+      },
+      {
+        "dimension": "5d",
+        "folder": "🖐️5d",
+        "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+        "root": "Block5dDiff",
+        "artifact": "Block5dArtifact",
+        "maximumBytes": 16777216,
+        "maximumOutputBytes": 1048576,
+        "cases": [
+          {
+            "id": "absent",
+            "value": {}
+          },
+          {
+            "id": "explicit-empty-authors",
+            "value": {
+              "authors": {
+                "values": []
+              }
+            }
+          },
+          {
+            "id": "unicode-metadata",
+            "value": {
+              "schema": "字段 🚀 Straße"
+            }
+          },
+          {
+            "id": "full-artifact",
+            "artifactDefault": true
+          },
+          {
+            "id": "representations-empty-reordered",
+            "value": {
+              "representations": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "gripKinds-empty-reordered",
+            "value": {
+              "gripKinds": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "grips-empty-reordered",
+            "value": {
+              "grips": {
+                "added": [],
+                "removed": [],
+                "patched": [],
+                "reordered": []
+              }
+            }
+          },
+          {
+            "id": "nonempty-shared-and-domain-records",
+            "value": {
+              "authors": {
+                "values": [
+                  {
+                    "id": "author-1",
+                    "name": "Müller 🚀",
+                    "email": "author@example.invalid"
+                  }
+                ]
+              },
+              "attributes": {
+                "added": [
+                  {
+                    "key": "attribute-λ",
+                    "value": "🧬️\nvalue",
+                    "definition": "definition-1"
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "attribute-λ",
+                    "patch": {
+                      "replacement": {
+                        "key": "attribute-λ",
+                        "value": "🧬️\nvalue",
+                        "definition": "definition-1"
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "attribute-λ",
+                  "removed-1"
+                ]
+              },
+              "compatibility": {
+                "added": [
+                  {
+                    "id": "compat-1",
+                    "source": "source-1",
+                    "target": "target-2",
+                    "bidirectional": true
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "compat-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "compat-1",
+                        "source": "source-1",
+                        "target": "target-2",
+                        "bidirectional": true
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "compat-1",
+                  "removed-1"
+                ]
+              },
+              "meta": {
+                "description": "session 🧬️\nmetadata"
+              },
+              "partKind": {
+                "id": "kind-λ",
+                "name": "Kind 🚀",
+                "label": "字段",
+                "variant": "revision-ß",
+                "description": "line one\nline two",
+                "icon": "symbol",
+                "unit": "m"
+              },
+              "part2d": {
+                "shape": "circle",
+                "radius": 2.5,
+                "width": 3,
+                "height": 4,
+                "color": "#aabbcc",
+                "iconKind": "symbol"
+              },
+              "part3d": {
+                "orientation": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "scale": [
+                  1.25,
+                  2.5,
+                  3.75
+                ]
+              },
+              "camera2d": {
+                "x": -1.25,
+                "y": 2.5,
+                "zoom": 1.5
+              },
+              "camera3d": {
+                "position": [
+                  1.25,
+                  -2.5,
+                  3.75
+                ],
+                "target": [
+                  0,
+                  1,
+                  0
+                ],
+                "zoom": 2.5
+              },
+              "representations": {
+                "added": [
+                  {
+                    "id": "representation-1",
+                    "name": "Mesh λ",
+                    "meshUrl": "media/模型.glb",
+                    "tags": [
+                      "solid",
+                      "字段"
+                    ],
+                    "lod": "fine",
+                    "description": "mesh description",
+                    "attributes": [
+                      {
+                        "key": "attribute-λ",
+                        "value": "🧬️\nvalue",
+                        "definition": "definition-1"
+                      }
+                    ]
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "representation-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "representation-1",
+                        "name": "Mesh λ",
+                        "meshUrl": "media/模型.glb",
+                        "tags": [
+                          "solid",
+                          "字段"
+                        ],
+                        "lod": "fine",
+                        "description": "mesh description",
+                        "attributes": [
+                          {
+                            "key": "attribute-λ",
+                            "value": "🧬️\nvalue",
+                            "definition": "definition-1"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "representation-1",
+                  "removed-1"
+                ]
+              },
+              "gripKinds": {
+                "added": [
+                  {
+                    "id": "grip-kind-1",
+                    "name": "Grip λ",
+                    "label": "字段",
+                    "color": "#123456",
+                    "defaultRopeKind": "rope-kind-1"
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "grip-kind-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "grip-kind-1",
+                        "name": "Grip λ",
+                        "label": "字段",
+                        "color": "#123456",
+                        "defaultRopeKind": "rope-kind-1"
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "grip-kind-1",
+                  "removed-1"
+                ]
+              },
+              "grips": {
+                "added": [
+                  {
+                    "id": "grip-1",
+                    "gripKind": "grip-kind-1",
+                    "angle": 0.5,
+                    "radius2d": 1.25,
+                    "position": [
+                      1.25,
+                      -2.5,
+                      3.75
+                    ],
+                    "direction": [
+                      0,
+                      1,
+                      0
+                    ],
+                    "radius3d": 0.25
+                  }
+                ],
+                "removed": [
+                  "removed-1"
+                ],
+                "patched": [
+                  {
+                    "id": "grip-1",
+                    "patch": {
+                      "replacement": {
+                        "id": "grip-1",
+                        "gripKind": "grip-kind-1",
+                        "angle": 0.5,
+                        "radius2d": 1.25,
+                        "position": [
+                          1.25,
+                          -2.5,
+                          3.75
+                        ],
+                        "direction": [
+                          0,
+                          1,
+                          0
+                        ],
+                        "radius3d": 0.25
+                      }
+                    }
+                  }
+                ],
+                "reordered": [
+                  "grip-1",
+                  "removed-1"
+                ]
+              }
+            }
+          },
+          {
+            "id": "long-unicode-schema",
+            "value": {
+              "schema": "字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀字段🚀"
+            }
+          },
+          {
+            "id": "nonempty-complete-artifact-tables",
+            "value": {
+              "artifact": {
+                "schema": "block.5d",
+                "compatibility": [
+                  {
+                    "id": "compat-1",
+                    "source": "source-1",
+                    "target": "target-2",
+                    "bidirectional": true
+                  },
+                  {
+                    "id": "compat-2",
+                    "source": "source-2",
+                    "target": "target-1",
+                    "bidirectional": false
+                  }
+                ],
+                "attributes": [
+                  {
+                    "key": "attribute-λ",
+                    "value": "🧬️\nvalue",
+                    "definition": "definition-1"
+                  },
+                  {
+                    "key": "attribute-2",
+                    "value": "second",
+                    "definition": null
+                  }
+                ],
+                "authors": [
+                  {
+                    "id": "author-1",
+                    "name": "Müller 🚀",
+                    "email": "author@example.invalid"
+                  },
+                  {
+                    "id": "author-2",
+                    "name": "Second",
+                    "email": null
+                  }
+                ],
+                "meta": {
+                  "description": "session 🧬️\nmetadata"
+                },
+                "partKind": {
+                  "id": "kind-λ",
+                  "name": "Kind 🚀",
+                  "label": "字段",
+                  "variant": "revision-ß",
+                  "description": "line one\nline two",
+                  "icon": "symbol",
+                  "unit": "m"
+                },
+                "part2d": {
+                  "shape": "circle",
+                  "radius": 2.5,
+                  "width": 3,
+                  "height": 4,
+                  "color": "#aabbcc",
+                  "iconKind": "symbol"
+                },
+                "part3d": {
+                  "orientation": [
+                    0,
+                    0,
+                    0,
+                    1
+                  ],
+                  "scale": [
+                    1.25,
+                    2.5,
+                    3.75
+                  ]
+                },
+                "camera2d": {
+                  "x": -1.25,
+                  "y": 2.5,
+                  "zoom": 1.5
+                },
+                "camera3d": {
+                  "position": [
+                    1.25,
+                    -2.5,
+                    3.75
+                  ],
+                  "target": [
+                    0,
+                    1,
+                    0
+                  ],
+                  "zoom": 2.5
+                },
+                "representations": [
+                  {
+                    "id": "representation-1",
+                    "name": "Mesh λ",
+                    "meshUrl": "media/模型.glb",
+                    "tags": [
+                      "solid",
+                      "字段"
+                    ],
+                    "lod": "fine",
+                    "description": "mesh description",
+                    "attributes": [
+                      {
+                        "key": "attribute-λ",
+                        "value": "🧬️\nvalue",
+                        "definition": "definition-1"
+                      },
+                      {
+                        "key": "attribute-2",
+                        "value": "second",
+                        "definition": null
+                      }
+                    ]
+                  },
+                  {
+                    "id": "representation-2",
+                    "name": "Other mesh",
+                    "meshUrl": null,
+                    "tags": [
+                      "second"
+                    ],
+                    "lod": null,
+                    "description": "other",
+                    "attributes": [
+                      {
+                        "key": "attribute-2",
+                        "value": "second",
+                        "definition": null
+                      }
+                    ]
+                  }
+                ],
+                "gripKinds": [
+                  {
+                    "id": "grip-kind-1",
+                    "name": "Grip λ",
+                    "label": "字段",
+                    "color": "#123456",
+                    "defaultRopeKind": "rope-kind-1"
+                  },
+                  {
+                    "id": "grip-kind-2",
+                    "name": "Second",
+                    "label": "other",
+                    "color": "#654321",
+                    "defaultRopeKind": "rope-kind-2"
+                  }
+                ],
+                "grips": [
+                  {
+                    "id": "grip-1",
+                    "gripKind": "grip-kind-1",
+                    "angle": 0.5,
+                    "radius2d": 1.25,
+                    "position": [
+                      1.25,
+                      -2.5,
+                      3.75
+                    ],
+                    "direction": [
+                      0,
+                      1,
+                      0
+                    ],
+                    "radius3d": 0.25
+                  },
+                  {
+                    "id": "grip-2",
+                    "gripKind": "grip-kind-2",
+                    "angle": -0.25,
+                    "radius2d": 2.5,
+                    "position": [
+                      -2.5,
+                      0,
+                      1.25
+                    ],
+                    "direction": [
+                      1,
+                      0,
+                      0
+                    ],
+                    "radius3d": 0.5
+                  }
+                ]
+              }
+            },
+            "canonicalArtifact": {
+              "schema": "block.5d",
+              "compatibility": [
+                {
+                  "id": "compat-1",
+                  "source": "source-1",
+                  "target": "target-2",
+                  "bidirectional": true
+                },
+                {
+                  "id": "compat-2",
+                  "source": "source-2",
+                  "target": "target-1",
+                  "bidirectional": false
+                }
+              ],
+              "attributes": [
+                {
+                  "key": "attribute-λ",
+                  "value": "🧬️\nvalue",
+                  "definition": "definition-1"
+                },
+                {
+                  "key": "attribute-2",
+                  "value": "second"
+                }
+              ],
+              "authors": [
+                {
+                  "id": "author-1",
+                  "name": "Müller 🚀",
+                  "email": "author@example.invalid"
+                },
+                {
+                  "id": "author-2",
+                  "name": "Second"
+                }
+              ],
+              "meta": {
+                "description": "session 🧬️\nmetadata"
+              },
+              "partKind": {
+                "id": "kind-λ",
+                "name": "Kind 🚀",
+                "label": "字段",
+                "variant": "revision-ß",
+                "description": "line one\nline two",
+                "icon": "symbol",
+                "unit": "m"
+              },
+              "part2d": {
+                "shape": "circle",
+                "radius": 2.5,
+                "width": 3,
+                "height": 4,
+                "color": "#aabbcc",
+                "iconKind": "symbol"
+              },
+              "part3d": {
+                "orientation": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "scale": [
+                  1.25,
+                  2.5,
+                  3.75
+                ]
+              },
+              "camera2d": {
+                "x": -1.25,
+                "y": 2.5,
+                "zoom": 1.5
+              },
+              "camera3d": {
+                "position": [
+                  1.25,
+                  -2.5,
+                  3.75
+                ],
+                "target": [
+                  0,
+                  1,
+                  0
+                ],
+                "zoom": 2.5
+              },
+              "representations": [
+                {
+                  "id": "representation-1",
+                  "name": "Mesh λ",
+                  "meshUrl": "media/模型.glb",
+                  "tags": [
+                    "solid",
+                    "字段"
+                  ],
+                  "lod": "fine",
+                  "description": "mesh description",
+                  "attributes": [
+                    {
+                      "key": "attribute-λ",
+                      "value": "🧬️\nvalue",
+                      "definition": "definition-1"
+                    },
+                    {
+                      "key": "attribute-2",
+                      "value": "second"
+                    }
+                  ]
+                },
+                {
+                  "id": "representation-2",
+                  "name": "Other mesh",
+                  "tags": [
+                    "second"
+                  ],
+                  "description": "other",
+                  "attributes": [
+                    {
+                      "key": "attribute-2",
+                      "value": "second"
+                    }
+                  ]
+                }
+              ],
+              "gripKinds": [
+                {
+                  "id": "grip-kind-1",
+                  "name": "Grip λ",
+                  "label": "字段",
+                  "color": "#123456",
+                  "defaultRopeKind": "rope-kind-1"
+                },
+                {
+                  "id": "grip-kind-2",
+                  "name": "Second",
+                  "label": "other",
+                  "color": "#654321",
+                  "defaultRopeKind": "rope-kind-2"
+                }
+              ],
+              "grips": [
+                {
+                  "id": "grip-1",
+                  "gripKind": "grip-kind-1",
+                  "angle": 0.5,
+                  "radius2d": 1.25,
+                  "position": [
+                    1.25,
+                    -2.5,
+                    3.75
+                  ],
+                  "direction": [
+                    0,
+                    1,
+                    0
+                  ],
+                  "radius3d": 0.25
+                },
+                {
+                  "id": "grip-2",
+                  "gripKind": "grip-kind-2",
+                  "angle": -0.25,
+                  "radius2d": 2.5,
+                  "position": [
+                    -2.5,
+                    0,
+                    1.25
+                  ],
+                  "direction": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "radius3d": 0.5
+                }
+              ]
+            }
+          }
+        ],
+        "invalidText": [
+          "schema=\"unterminated",
+          "schema=\"first\" schema=\"second\"",
+          "unknown=\"field\"",
+          "schema=\"ok\" trailing"
+        ],
+        "cancellationUnits": 256
+      }
+    ],
+    "records": [
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "records": [
+          {
+            "name": "Block2dArtifact",
+            "fields": [
+              {
+                "name": "schema",
+                "type": "String",
+                "key": "schema",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "node_kind",
+                "type": "BlockKindIdentity",
+                "key": "node-kind",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "presentation",
+                "type": "Block2dPresentation",
+                "key": "presentation",
+                "block": true,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "handle_kinds",
+                "type": "Vec<Block2dHandleKind>",
+                "key": "handle-kinds",
+                "block": false,
+                "table": true,
+                "ordinal": 3
+              },
+              {
+                "name": "handles",
+                "type": "Vec<Block2dHandleTemplate>",
+                "key": "handles",
+                "block": false,
+                "table": true,
+                "ordinal": 4
+              },
+              {
+                "name": "compatibility",
+                "type": "Vec<BlockCompatibilityRule>",
+                "key": "compatibility",
+                "block": false,
+                "table": true,
+                "ordinal": 5
+              },
+              {
+                "name": "attributes",
+                "type": "Vec<BlockAttribute>",
+                "key": "attributes",
+                "block": false,
+                "table": true,
+                "ordinal": 6
+              },
+              {
+                "name": "authors",
+                "type": "Vec<BlockAuthor>",
+                "key": "authors",
+                "block": false,
+                "table": true,
+                "ordinal": 7
+              },
+              {
+                "name": "camera2d",
+                "type": "BlockCamera2d",
+                "key": "camera2d",
+                "block": true,
+                "table": false,
+                "ordinal": 8
+              },
+              {
+                "name": "meta",
+                "type": "BlockMeta",
+                "key": "meta",
+                "block": true,
+                "table": false,
+                "ordinal": 9
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "records": [
+          {
+            "name": "Block2dDiff",
+            "fields": [
+              {
+                "name": "artifact",
+                "type": "Option<Box<crate::standards::v1::subsets::any::schema::Block2dArtifact>>",
+                "key": "artifact",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "schema",
+                "type": "Option<String>",
+                "key": "schema",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "node_kind",
+                "type": "Option<BlockKindIdentity>",
+                "key": "node-kind",
+                "block": true,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "presentation",
+                "type": "Option<Block2dPresentation>",
+                "key": "presentation",
+                "block": true,
+                "table": false,
+                "ordinal": 3
+              },
+              {
+                "name": "handle_kinds",
+                "type": "Option<Block2dHandleKindsDelta>",
+                "key": "handle-kinds",
+                "block": true,
+                "table": false,
+                "ordinal": 4
+              },
+              {
+                "name": "handles",
+                "type": "Option<Block2dHandlesDelta>",
+                "key": "handles",
+                "block": true,
+                "table": false,
+                "ordinal": 5
+              },
+              {
+                "name": "compatibility",
+                "type": "Option<Block2dCompatibilityDelta>",
+                "key": "compatibility",
+                "block": true,
+                "table": false,
+                "ordinal": 6
+              },
+              {
+                "name": "attributes",
+                "type": "Option<Block2dAttributesDelta>",
+                "key": "attributes",
+                "block": true,
+                "table": false,
+                "ordinal": 7
+              },
+              {
+                "name": "authors",
+                "type": "Option<Block2dAuthorList>",
+                "key": "authors",
+                "block": true,
+                "table": false,
+                "ordinal": 8
+              },
+              {
+                "name": "camera2d",
+                "type": "Option<BlockCamera2d>",
+                "key": "camera2d",
+                "block": true,
+                "table": false,
+                "ordinal": 9
+              },
+              {
+                "name": "meta",
+                "type": "Option<BlockMeta>",
+                "key": "meta",
+                "block": true,
+                "table": false,
+                "ordinal": 10
+              }
+            ]
+          },
+          {
+            "name": "Block2dStringList",
+            "fields": [
+              {
+                "name": "values",
+                "type": "Vec<String>",
+                "key": "values",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block2dAuthorList",
+            "fields": [
+              {
+                "name": "values",
+                "type": "Vec<BlockAuthor>",
+                "key": "values",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block2dHandleKindsDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<Block2dHandleKind>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block2dHandleKindsPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block2dHandleKindsPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block2dHandleKindsPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block2dHandleKindsPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<Block2dHandleKind>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block2dHandlesDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<Block2dHandleTemplate>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block2dHandlesPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block2dHandlesPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block2dHandlesPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block2dHandlesPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<Block2dHandleTemplate>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block2dCompatibilityDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockCompatibilityRule>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block2dCompatibilityPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block2dCompatibilityPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block2dCompatibilityPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block2dCompatibilityPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockCompatibilityRule>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block2dAttributesDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockAttribute>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block2dAttributesPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block2dAttributesPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block2dAttributesPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block2dAttributesPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockAttribute>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "records": [
+          {
+            "name": "Block3dArtifact",
+            "fields": [
+              {
+                "name": "schema",
+                "type": "String",
+                "key": "schema",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "object_kind",
+                "type": "BlockKindIdentity",
+                "key": "object-kind",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "representations",
+                "type": "Vec<BlockRepresentation>",
+                "key": "representations",
+                "block": false,
+                "table": true,
+                "ordinal": 2
+              },
+              {
+                "name": "catalog",
+                "type": "store::ArtifactChild<SemioKitSnapshot>",
+                "key": "catalog",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              },
+              {
+                "name": "vortex_kind_extra",
+                "type": "Vec<Block3dVortexKindExtra>",
+                "key": "vortex-kind-extra",
+                "block": false,
+                "table": true,
+                "ordinal": 4
+              },
+              {
+                "name": "vortices",
+                "type": "Vec<Block3dVortexTemplate>",
+                "key": "vortices",
+                "block": false,
+                "table": true,
+                "ordinal": 5
+              },
+              {
+                "name": "compatibility",
+                "type": "Vec<BlockCompatibilityRule>",
+                "key": "compatibility",
+                "block": false,
+                "table": true,
+                "ordinal": 6
+              },
+              {
+                "name": "attributes",
+                "type": "Vec<BlockAttribute>",
+                "key": "attributes",
+                "block": false,
+                "table": true,
+                "ordinal": 7
+              },
+              {
+                "name": "authors",
+                "type": "Vec<BlockAuthor>",
+                "key": "authors",
+                "block": false,
+                "table": true,
+                "ordinal": 8
+              },
+              {
+                "name": "camera3d",
+                "type": "BlockCamera3d",
+                "key": "camera3d",
+                "block": true,
+                "table": false,
+                "ordinal": 9
+              },
+              {
+                "name": "meta",
+                "type": "BlockMeta",
+                "key": "meta",
+                "block": true,
+                "table": false,
+                "ordinal": 10
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "records": [
+          {
+            "name": "Block3dDiff",
+            "fields": [
+              {
+                "name": "artifact",
+                "type": "Option<Box<crate::standards::v1::subsets::any::schema::Block3dArtifact>>",
+                "key": "artifact",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "schema",
+                "type": "Option<String>",
+                "key": "schema",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "object_kind",
+                "type": "Option<BlockKindIdentity>",
+                "key": "object-kind",
+                "block": true,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "representations",
+                "type": "Option<Block3dRepresentationsDelta>",
+                "key": "representations",
+                "block": true,
+                "table": false,
+                "ordinal": 3
+              },
+              {
+                "name": "vortex_kinds",
+                "type": "Option<Block3dVortexKindsDelta>",
+                "key": "vortex-kinds",
+                "block": true,
+                "table": false,
+                "ordinal": 4
+              },
+              {
+                "name": "vortices",
+                "type": "Option<Block3dVorticesDelta>",
+                "key": "vortices",
+                "block": true,
+                "table": false,
+                "ordinal": 5
+              },
+              {
+                "name": "compatibility",
+                "type": "Option<Block3dCompatibilityDelta>",
+                "key": "compatibility",
+                "block": true,
+                "table": false,
+                "ordinal": 6
+              },
+              {
+                "name": "attributes",
+                "type": "Option<Block3dAttributesDelta>",
+                "key": "attributes",
+                "block": true,
+                "table": false,
+                "ordinal": 7
+              },
+              {
+                "name": "authors",
+                "type": "Option<Block3dAuthorList>",
+                "key": "authors",
+                "block": true,
+                "table": false,
+                "ordinal": 8
+              },
+              {
+                "name": "camera3d",
+                "type": "Option<BlockCamera3d>",
+                "key": "camera3d",
+                "block": true,
+                "table": false,
+                "ordinal": 9
+              },
+              {
+                "name": "meta",
+                "type": "Option<BlockMeta>",
+                "key": "meta",
+                "block": true,
+                "table": false,
+                "ordinal": 10
+              }
+            ]
+          },
+          {
+            "name": "Block3dStringList",
+            "fields": [
+              {
+                "name": "values",
+                "type": "Vec<String>",
+                "key": "values",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block3dAuthorList",
+            "fields": [
+              {
+                "name": "values",
+                "type": "Vec<BlockAuthor>",
+                "key": "values",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block3dWindowsList",
+            "fields": [
+              {
+                "name": "values",
+                "type": "Vec<Block3dWindowView>",
+                "key": "values",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block3dRepresentationsDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockRepresentation>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block3dRepresentationsPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block3dRepresentationsPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block3dRepresentationsPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block3dRepresentationsPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockRepresentation>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block3dVortexKindsDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<Block3dVortexKind>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block3dVortexKindsPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block3dVortexKindsPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block3dVortexKindsPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block3dVortexKindsPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<Block3dVortexKind>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block3dVorticesDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<Block3dVortexTemplate>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block3dVorticesPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block3dVorticesPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block3dVorticesPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block3dVorticesPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<Block3dVortexTemplate>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block3dCompatibilityDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockCompatibilityRule>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block3dCompatibilityPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block3dCompatibilityPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block3dCompatibilityPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block3dCompatibilityPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockCompatibilityRule>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block3dAttributesDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockAttribute>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block3dAttributesPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block3dAttributesPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block3dAttributesPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block3dAttributesPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockAttribute>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "records": [
+          {
+            "name": "Block5dArtifact",
+            "fields": [
+              {
+                "name": "schema",
+                "type": "String",
+                "key": "schema",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "part_kind",
+                "type": "BlockKindIdentity",
+                "key": "part-kind",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "part_2d",
+                "type": "Block5dPart2d",
+                "key": "part-2d",
+                "block": true,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "part_3d",
+                "type": "Block5dPart3d",
+                "key": "part-3d",
+                "block": true,
+                "table": false,
+                "ordinal": 3
+              },
+              {
+                "name": "representations",
+                "type": "Vec<BlockRepresentation>",
+                "key": "representations",
+                "block": false,
+                "table": true,
+                "ordinal": 4
+              },
+              {
+                "name": "grip_kinds",
+                "type": "Vec<Block5dGripKind>",
+                "key": "grip-kinds",
+                "block": false,
+                "table": true,
+                "ordinal": 5
+              },
+              {
+                "name": "grips",
+                "type": "Vec<Block5dGripTemplate>",
+                "key": "grips",
+                "block": false,
+                "table": true,
+                "ordinal": 6
+              },
+              {
+                "name": "compatibility",
+                "type": "Vec<BlockCompatibilityRule>",
+                "key": "compatibility",
+                "block": false,
+                "table": true,
+                "ordinal": 7
+              },
+              {
+                "name": "attributes",
+                "type": "Vec<BlockAttribute>",
+                "key": "attributes",
+                "block": false,
+                "table": true,
+                "ordinal": 8
+              },
+              {
+                "name": "authors",
+                "type": "Vec<BlockAuthor>",
+                "key": "authors",
+                "block": false,
+                "table": true,
+                "ordinal": 9
+              },
+              {
+                "name": "camera2d",
+                "type": "BlockCamera2d",
+                "key": "camera2d",
+                "block": true,
+                "table": false,
+                "ordinal": 10
+              },
+              {
+                "name": "camera3d",
+                "type": "BlockCamera3d",
+                "key": "camera3d",
+                "block": true,
+                "table": false,
+                "ordinal": 11
+              },
+              {
+                "name": "meta",
+                "type": "BlockMeta",
+                "key": "meta",
+                "block": true,
+                "table": false,
+                "ordinal": 12
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "records": [
+          {
+            "name": "Block5dDiff",
+            "fields": [
+              {
+                "name": "artifact",
+                "type": "Option<Box<crate::standards::v1::subsets::any::schema::Block5dArtifact>>",
+                "key": "artifact",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "schema",
+                "type": "Option<String>",
+                "key": "schema",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "part_kind",
+                "type": "Option<BlockKindIdentity>",
+                "key": "part-kind",
+                "block": true,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "part_2d",
+                "type": "Option<Block5dPart2d>",
+                "key": "part-2d",
+                "block": true,
+                "table": false,
+                "ordinal": 3
+              },
+              {
+                "name": "part_3d",
+                "type": "Option<Block5dPart3d>",
+                "key": "part-3d",
+                "block": true,
+                "table": false,
+                "ordinal": 4
+              },
+              {
+                "name": "representations",
+                "type": "Option<Block5dRepresentationsDelta>",
+                "key": "representations",
+                "block": true,
+                "table": false,
+                "ordinal": 5
+              },
+              {
+                "name": "grip_kinds",
+                "type": "Option<Block5dGripKindsDelta>",
+                "key": "grip-kinds",
+                "block": true,
+                "table": false,
+                "ordinal": 6
+              },
+              {
+                "name": "grips",
+                "type": "Option<Block5dGripsDelta>",
+                "key": "grips",
+                "block": true,
+                "table": false,
+                "ordinal": 7
+              },
+              {
+                "name": "compatibility",
+                "type": "Option<Block5dCompatibilityDelta>",
+                "key": "compatibility",
+                "block": true,
+                "table": false,
+                "ordinal": 8
+              },
+              {
+                "name": "attributes",
+                "type": "Option<Block5dAttributesDelta>",
+                "key": "attributes",
+                "block": true,
+                "table": false,
+                "ordinal": 9
+              },
+              {
+                "name": "authors",
+                "type": "Option<Block5dAuthorList>",
+                "key": "authors",
+                "block": true,
+                "table": false,
+                "ordinal": 10
+              },
+              {
+                "name": "camera2d",
+                "type": "Option<BlockCamera2d>",
+                "key": "camera2d",
+                "block": true,
+                "table": false,
+                "ordinal": 11
+              },
+              {
+                "name": "camera3d",
+                "type": "Option<BlockCamera3d>",
+                "key": "camera3d",
+                "block": true,
+                "table": false,
+                "ordinal": 12
+              },
+              {
+                "name": "meta",
+                "type": "Option<BlockMeta>",
+                "key": "meta",
+                "block": true,
+                "table": false,
+                "ordinal": 13
+              }
+            ]
+          },
+          {
+            "name": "Block5dStringList",
+            "fields": [
+              {
+                "name": "values",
+                "type": "Vec<String>",
+                "key": "values",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block5dAuthorList",
+            "fields": [
+              {
+                "name": "values",
+                "type": "Vec<BlockAuthor>",
+                "key": "values",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block5dRepresentationsDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockRepresentation>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block5dRepresentationsPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block5dRepresentationsPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block5dRepresentationsPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block5dRepresentationsPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockRepresentation>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block5dGripKindsDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<Block5dGripKind>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block5dGripKindsPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block5dGripKindsPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block5dGripKindsPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block5dGripKindsPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<Block5dGripKind>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block5dGripsDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<Block5dGripTemplate>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block5dGripsPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block5dGripsPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block5dGripsPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block5dGripsPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<Block5dGripTemplate>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block5dCompatibilityDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockCompatibilityRule>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block5dCompatibilityPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block5dCompatibilityPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block5dCompatibilityPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block5dCompatibilityPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockCompatibilityRule>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          },
+          {
+            "name": "Block5dAttributesDelta",
+            "fields": [
+              {
+                "name": "added",
+                "type": "Vec<BlockAttribute>",
+                "key": "added",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "removed",
+                "type": "Vec<String>",
+                "key": "removed",
+                "block": false,
+                "table": false,
+                "ordinal": 1
+              },
+              {
+                "name": "patched",
+                "type": "Vec<Block5dAttributesPatchEntry>",
+                "key": "patched",
+                "block": false,
+                "table": false,
+                "ordinal": 2
+              },
+              {
+                "name": "reordered",
+                "type": "Option<Vec<String>>",
+                "key": "reordered",
+                "block": false,
+                "table": false,
+                "ordinal": 3
+              }
+            ]
+          },
+          {
+            "name": "Block5dAttributesPatchEntry",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String",
+                "key": "id",
+                "block": false,
+                "table": false,
+                "ordinal": 0
+              },
+              {
+                "name": "patch",
+                "type": "Block5dAttributesPatch",
+                "key": "patch",
+                "block": true,
+                "table": false,
+                "ordinal": 1
+              }
+            ]
+          },
+          {
+            "name": "Block5dAttributesPatch",
+            "fields": [
+              {
+                "name": "replacement",
+                "type": "Option<BlockAttribute>",
+                "key": "replacement",
+                "block": true,
+                "table": false,
+                "ordinal": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

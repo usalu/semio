@@ -24,9 +24,9 @@ change-run-year = "change-run-year" "new-year" "=" NUMBER
 replace-airflow-network = "replace-airflow-network" "present" "=" NUMBER "zone-ids" "=" NUMBER "node-ids" "=" NUMBER "outdoor-node-id" "=" NUMBER "link-ids" "=" NUMBER
 add-output-variable = "add-output-variable" "name" "=" TEXT "key" "=" TEXT "reporting-frequency" "=" TEXT
 remove-output-variable = "remove-output-variable" "name" "=" TEXT "key" "=" TEXT
-bind-weather-file = "bind-weather-file" "target-uri" "=" TEXT
+bind-weather-file = "bind-weather-file" "target" "=" artifact-reference
 unbind-weather-file = "unbind-weather-file"
-connect-referenced-model = "connect-referenced-model" "target-uri" "=" TEXT
+connect-referenced-model = "connect-referenced-model" "target" "=" artifact-reference
 disconnect-referenced-model = "disconnect-referenced-model"
 rename-zone = "rename-zone" "id" "=" NUMBER "new-name" "=" TEXT
 change-zone-volume = "change-zone-volume" "id" "=" NUMBER "new-volume-m3" "=" NUMBER
@@ -303,3 +303,5 @@ change-gas-material-thickness = "change-gas-material-thickness" "id" "=" NUMBER 
 change-gas-material-gas = "change-gas-material-gas" "id" "=" NUMBER "new-gas" "=" TEXT
 rename-gas-material = "rename-gas-material" "id" "=" NUMBER "new-name" "=" TEXT
 change-material-roughness = "change-material-roughness" "id" "=" NUMBER "new-roughness" "=" TEXT
+
+artifact-reference = "{" "artifact-id" "=" TEXT "artifact-kind" "=" TEXT "standard" "=" TEXT "subset" "=" TEXT "}"

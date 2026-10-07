@@ -2,7 +2,7 @@
 
 use crate::schema::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
 
-pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeExaggeration", crate::standards::v1::subsets::any::schema::mutations::change_exaggeration::TEXT_OPCODE), ("ChangeImportedFeatures", crate::standards::v1::subsets::any::schema::mutations::change_imported_features::TEXT_OPCODE)];
+pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeExaggeration", crate::standards::v1::subsets::any::io::text::mutations::change_exaggeration::TEXT_OPCODE), ("ChangeImportedFeatures", crate::standards::v1::subsets::any::io::text::mutations::change_imported_features::TEXT_OPCODE)];
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -20,14 +20,7 @@ impl protocol::OpText for GisTerrainMutation {
     }
 }
 
-impl protocol::OpBinary for GisTerrainMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 #[path = "📥change-imported-features/🦀️.rs"]
@@ -49,7 +42,7 @@ use crate::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 use semio_framework_value::ToValue;
 use protocol::Mutation;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::ArtifactEnvelope;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///

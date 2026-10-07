@@ -154,3 +154,16 @@ async fn quaternion_rotation_of_identity_is_a_no_op() {
     let p = SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 };
     assert_eq!(rotate_point(SemioQuaternion::default(), p), p);
 }
+
+#[test]
+fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
+    use store::InferredField;
+    let authored:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let snapshot=fixture();
+    let dependency=DrawFlattenedScene::dep_input(&snapshot,&key_for(0,&[0]),&[]);
+    let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
+    let oracle=serde_json::json!([authored["style"],{"name":"s1","fill":{"r":1.0,"g":0.0,"b":0.0,"a":1.0},"strokeWidth":2.0}]);
+    assert_eq!(actual,oracle);
+    assert_eq!(actual,authored["expected"]);
+    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
+}

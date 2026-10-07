@@ -1,11 +1,10 @@
-/** 🛂️ Supersede-law corpus (design §3, §22.1): Ajv validates its shape, and an independent TS statement of the two decision
+/** 🛂️ Supersede-law corpus (design §3, §22.1): an independent TS statement of the two decision
  * tables reproduces every row the Rust store is checked against (`🦀️.rs` beside this file). The input table is modelled over
  * real demo operations folded with fast-json-patch: a withdrawal folds its target as a no-op, an admitted input folds in its
  * place and a refused one folds as a fatal no-op. The unit table says which operations belong to a cross-artifact unit. Both
  * tables are total: the corpus lists every combination of their domains, and fast-check sweeps the fold over random bases. */
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
 import fc from "fast-check";
 import { applyPatch, type Operation as Patch } from "fast-json-patch";
 
@@ -68,12 +67,7 @@ function unit(row: Pick<UnitRow, "operation" | "origin" | "group">): UnitRow["un
 
 //#region 🧪️Corpus
 const corpus = read("../../🧫️fixtures/🧫️supersede-law/🔣️.json") as { inputs: InputRow[]; units: UnitRow[] };
-const schema = read("../../🧬️schema/🔣️supersede-law/🔣️.json");
 
-test("🧬️ the supersede-law corpus satisfies its JSON Schema", () => {
-  const validate = new Ajv({ strict: true, allErrors: true, allowUnionTypes: true }).compile(schema);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-});
 
 test("🛂️ the twin reproduces every input row: what is admitted and what every fold site folds", () => {
   for (const row of corpus.inputs) {

@@ -60,7 +60,7 @@ pub(crate) mod context {
     /// its bound live runtime instance (`interactive-job.live-instance`), and `meta("local")` stamps
     /// `1` — so the id is bound here, before the demo history is seeded through that same surface.
     pub async fn app_with_registry() -> VcsApp {
-        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests).await;
+        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         instance.bind_instance_id(meta("local").instance_id).await;
         let mut instance = VcsApp(instance);
         seed_vcs_demo_history(&mut instance).await;

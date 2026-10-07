@@ -38,15 +38,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-node/schema.json"
-          }
-        ]
-      },
       "fixture": {
         "id": "node-a",
         "mutation": "moveNode",
@@ -58,7 +49,18 @@
         "newX": 5.0,
         "newY": 7.0
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-node/schema.json"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "snake-case-payload-drifts-from-a-camel-case-leaf",
@@ -89,7 +91,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "mutation": "changeGraphDirected",
         "new_directed": true
@@ -99,7 +100,10 @@
       },
       "findings": [
         "invalid@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "externally-tagged-payload-sits-under-its-variant-key",
@@ -135,24 +139,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/external-mutations.json",
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "MoveObject"
-            ],
-            "properties": {
-              "MoveObject": {
-                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-object/schema.json"
-              }
-            }
-          }
-        ]
-      },
       "fixture": {
         "MoveObject": {
           "id": "obj-hull",
@@ -171,7 +157,27 @@
           -1.5
         ]
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/external-mutations.json",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "MoveObject"
+              ],
+              "properties": {
+                "MoveObject": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-object/schema.json"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "id": "externally-tagged-aggregate-refuses-an-internally-tagged-fixture",
@@ -198,7 +204,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "mutation": "moveObject",
         "id": "obj-hull"
@@ -206,7 +211,10 @@
       "payload": null,
       "findings": [
         "layout@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "adjacently-tagged-payload-is-the-content-member",
@@ -234,28 +242,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/adjacent-mutations.json",
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "mutation",
-              "payload"
-            ],
-            "properties": {
-              "mutation": {
-                "const": "set-snapshot"
-              },
-              "payload": {
-                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-snapshot/schema.json"
-              }
-            }
-          }
-        ]
-      },
       "fixture": {
         "mutation": "set-snapshot",
         "payload": {
@@ -265,7 +251,31 @@
       "payload": {
         "width": 4
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/adjacent-mutations.json",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation",
+                "payload"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "set-snapshot"
+                },
+                "payload": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-snapshot/schema.json"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "id": "an-object-without-members-describes-nothing",
@@ -284,7 +294,6 @@
         "title": "UpdateLink",
         "type": "object"
       },
-      "aggregateSchema": null,
       "fixture": {
         "UpdateLink": {
           "id": "link-2",
@@ -299,7 +308,10 @@
         "opaque@#",
         "undescribed@/id",
         "undescribed@/path"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "an-open-object-leaves-an-extra-member-undescribed",
@@ -338,7 +350,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "mutation": "changeTileMedia",
         "media": {
@@ -358,7 +369,10 @@
       },
       "findings": [
         "undescribed@/media/mesh"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "an-option-emitted-as-null-needs-a-nullable-type",
@@ -388,7 +402,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "mutation": "updatePresentation",
         "newRadius": null
@@ -398,7 +411,10 @@
       },
       "findings": [
         "invalid@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "a-nullable-option-accepts-the-null-it-emits",
@@ -432,7 +448,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "mutation": "updatePresentation",
         "newRadius": null
@@ -440,7 +455,10 @@
       "payload": {
         "newRadius": null
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "an-aggregate-whose-leaves-lack-the-tag-const-rejects-its-own-wire",
@@ -473,15 +491,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/energy-mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/add-air-loop-terminal-zone/schema.json"
-          }
-        ]
-      },
       "fixture": {
         "mutation": "addAirLoopTerminalZone",
         "id": 17,
@@ -493,7 +502,18 @@
       },
       "findings": [
         "aggregate@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/energy-mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/add-air-loop-terminal-zone/schema.json"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "an-exhaustive-case-record-carries-the-wire-in-its-mutation-member",
@@ -524,7 +544,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "kind": "remove-edge",
         "mutation": {
@@ -541,7 +560,10 @@
       "payload": {
         "id": "e1"
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "a-wrapped-leaf-exposes-its-payload-variant-content",
@@ -578,7 +600,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "mutation": "setText",
         "payload": {
@@ -597,7 +618,10 @@
         ],
         "text": "World"
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "a-non-payload-variant-of-a-wrapped-leaf-is-inert",
@@ -634,7 +658,6 @@
           }
         }
       },
-      "aggregateSchema": null,
       "fixture": {
         "mutation": "setText",
         "payload": {
@@ -645,7 +668,10 @@
         }
       },
       "payload": null,
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": null
+      }
     },
     {
       "id": "an-adjacent-aggregate-refers-to-a-wrapped-leaf-wire-enum",
@@ -721,28 +747,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/wrapped/mutations.json",
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "mutation",
-              "payload"
-            ],
-            "properties": {
-              "mutation": {
-                "const": "setText"
-              },
-              "payload": {
-                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json#/$defs/SetTextMutation"
-              }
-            }
-          }
-        ]
-      },
       "fixture": {
         "mutation": "setText",
         "payload": {
@@ -761,7 +765,31 @@
         ],
         "text": "World"
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/wrapped/mutations.json",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation",
+                "payload"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "setText"
+                },
+                "payload": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json#/$defs/SetTextMutation"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "id": "an-inert-variant-of-a-wrapped-leaf-still-meets-its-aggregate",
@@ -837,28 +865,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/wrapped/mutations.json",
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "mutation",
-              "payload"
-            ],
-            "properties": {
-              "mutation": {
-                "const": "setText"
-              },
-              "payload": {
-                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json#/$defs/SetTextMutation"
-              }
-            }
-          }
-        ]
-      },
       "fixture": {
         "mutation": "setText",
         "payload": {
@@ -869,7 +875,31 @@
         }
       },
       "payload": null,
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/wrapped/mutations.json",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation",
+                "payload"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "setText"
+                },
+                "payload": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json#/$defs/SetTextMutation"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "id": "an-invariant-refusal-is-a-negative-witness-the-schema-must-reject",
@@ -909,15 +939,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
-          }
-        ]
-      },
       "outcome": {
         "code": "mutation.invariant",
         "path": [
@@ -938,7 +959,18 @@
           "node-a"
         ]
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "an-invariant-refusal-the-schema-accepts-is-reported-negative",
@@ -978,15 +1010,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
-          }
-        ]
-      },
       "outcome": {
         "code": "mutation.invariant",
         "path": [
@@ -1009,7 +1032,18 @@
       },
       "findings": [
         "negative@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "another-refusal-code-keeps-the-fixture-positive",
@@ -1049,15 +1083,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
-          }
-        ]
-      },
       "outcome": {
         "code": "mutation.target-missing",
         "path": [
@@ -1081,7 +1106,18 @@
       "findings": [
         "invalid@",
         "aggregate@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "a-schema-valid-refusal-naming-a-declared-invariant-is-clean",
@@ -1127,15 +1163,6 @@
           }
         ]
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
-          }
-        ]
-      },
       "outcome": {
         "code": "mutation.invariant",
         "path": [
@@ -1156,7 +1183,18 @@
         "from": "step-a",
         "to": "step-a"
       },
-      "findings": []
+      "findings": [],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "a-refusal-naming-an-undeclared-invariant-is-reported-negative",
@@ -1193,15 +1231,6 @@
           }
         }
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
-          }
-        ]
-      },
       "outcome": {
         "code": "mutation.invariant",
         "path": [
@@ -1222,7 +1251,18 @@
       },
       "findings": [
         "negative@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "a-refusal-naming-another-invariant-id-is-reported-negative",
@@ -1268,15 +1308,6 @@
           }
         ]
       },
-      "aggregateSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
-        "oneOf": [
-          {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
-          }
-        ]
-      },
       "outcome": {
         "code": "mutation.invariant",
         "path": [
@@ -1299,7 +1330,18 @@
       },
       "findings": [
         "negative@"
-      ]
+      ],
+      "input": {
+        "aggregateSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
+            }
+          ]
+        }
+      }
     }
   ],
   "features": [

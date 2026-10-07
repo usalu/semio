@@ -1,10 +1,8 @@
 {
-  "schema": "semio.hub.concrete-composition-ownership/v1",
   "components": [
     {
       "package": "semio-hub-writer",
       "owner": "🌎️hub/🧩️compositions/✒️writer",
-      "removedOwner": "✏️s/🔌️plugins/✒️writer",
       "component": "semio:writer",
       "role": "hub",
       "componentKind": "plugin"
@@ -12,7 +10,6 @@
     {
       "package": "semio-hub-mathematical",
       "owner": "🌎️hub/🧩️compositions/➗️mathematical",
-      "removedOwner": "✏️s/🔌️plugins/➗️mathematical",
       "component": "semio:mathematical",
       "role": "hub",
       "componentKind": "plugin"
@@ -20,7 +17,6 @@
     {
       "package": "semio-hub-wfc",
       "owner": "🌎️hub/🧩️compositions/🀄️wfc",
-      "removedOwner": "✏️s/🔌️plugins/🀄️wfc",
       "component": "semio:wfc",
       "role": "hub",
       "componentKind": "plugin"
@@ -28,7 +24,6 @@
     {
       "package": "semio-hub-procedural",
       "owner": "🌎️hub/🧩️compositions/🌀️procedural",
-      "removedOwner": "✏️s/🔌️plugins/🌀️procedural",
       "component": "semio:procedural",
       "role": "hub",
       "componentKind": "plugin"
@@ -36,7 +31,6 @@
     {
       "package": "semio-hub-flow",
       "owner": "🌎️hub/🧩️compositions/🌊️flow",
-      "removedOwner": "✏️s/🔌️plugins/🌊️flow",
       "component": "semio:flow",
       "role": "hub",
       "componentKind": "plugin"
@@ -44,7 +38,6 @@
     {
       "package": "semio-hub-animate",
       "owner": "🌎️hub/🧩️compositions/🎞️animate",
-      "removedOwner": "✏️s/🔌️plugins/🎞️animate",
       "component": "semio:animate",
       "role": "hub",
       "componentKind": "plugin"
@@ -52,7 +45,6 @@
     {
       "package": "semio-hub-shooting",
       "owner": "🌎️hub/🧩️compositions/🎥️shooting",
-      "removedOwner": "✏️s/🔌️plugins/🎥️shooting",
       "component": "semio:shooting",
       "role": "hub",
       "componentKind": "plugin"
@@ -60,7 +52,6 @@
     {
       "package": "semio-hub-demonstrator",
       "owner": "🌎️hub/🧩️compositions/🎪️demonstrator",
-      "removedOwner": "✏️s/🔌️plugins/🎪️demonstrator",
       "component": "semio:demonstrator",
       "role": "hub",
       "componentKind": "plugin"
@@ -68,7 +59,6 @@
     {
       "package": "semio-hub-sequence",
       "owner": "🌎️hub/🧩️compositions/🎬️sequence",
-      "removedOwner": "✏️s/🔌️plugins/🎬️sequence",
       "component": "semio:sequence",
       "role": "hub",
       "componentKind": "plugin"
@@ -76,7 +66,6 @@
     {
       "package": "semio-hub-fem",
       "owner": "🌎️hub/🧩️compositions/🏗️fem",
-      "removedOwner": "✏️s/🔌️plugins/🏗️fem",
       "component": "semio:fem",
       "role": "hub",
       "componentKind": "plugin"
@@ -84,7 +73,6 @@
     {
       "package": "semio-hub-architect",
       "owner": "🌎️hub/🧩️compositions/🏛️architect",
-      "removedOwner": "✏️s/🔌️plugins/🏛️architect",
       "component": "semio:architect",
       "role": "hub",
       "componentKind": "plugin"
@@ -92,7 +80,6 @@
     {
       "package": "semio-hub-process",
       "owner": "🌎️hub/🧩️compositions/🏭️process",
-      "removedOwner": "✏️s/🔌️plugins/🏭️process",
       "component": "semio:process",
       "role": "hub",
       "componentKind": "plugin"
@@ -100,7 +87,6 @@
     {
       "package": "semio-hub-lowpoly",
       "owner": "🌎️hub/🧩️compositions/💠️lowpoly",
-      "removedOwner": "✏️s/🔌️plugins/💠️lowpoly",
       "component": "semio:lowpoly",
       "role": "hub",
       "componentKind": "plugin"
@@ -108,7 +94,6 @@
     {
       "package": "semio-hub-reasoning",
       "owner": "🌎️hub/🧩️compositions/💡️reasoning",
-      "removedOwner": "✏️s/🔌️plugins/💡️reasoning",
       "component": "semio:reasoning",
       "role": "hub",
       "componentKind": "plugin"
@@ -116,7 +101,6 @@
     {
       "package": "semio-hub-forms",
       "owner": "🌎️hub/🧩️compositions/📋️forms",
-      "removedOwner": "✏️s/🔌️plugins/📋️forms",
       "component": "semio:forms",
       "role": "hub",
       "componentKind": "plugin"
@@ -124,7 +108,6 @@
     {
       "package": "semio-hub-layout",
       "owner": "🌎️hub/🧩️compositions/📏️layout",
-      "removedOwner": "✏️s/🔌️plugins/📏️layout",
       "component": "semio:layout",
       "role": "hub",
       "componentKind": "plugin"
@@ -132,7 +115,6 @@
     {
       "package": "semio-hub-cad",
       "owner": "🌎️hub/🧩️compositions/📐️cad",
-      "removedOwner": "✏️s/🔌️plugins/📐️cad",
       "component": "semio:cad",
       "role": "hub",
       "componentKind": "plugin"
@@ -140,7 +122,6 @@
     {
       "package": "semio-hub-norm",
       "owner": "🌎️hub/🧩️compositions/📕️norm",
-      "removedOwner": "✏️s/🔌️plugins/📕️norm",
       "component": "semio:norm",
       "role": "hub",
       "componentKind": "plugin"
@@ -148,7 +129,6 @@
     {
       "package": "semio-hub-playbook",
       "owner": "🌎️hub/🧩️compositions/📖️playbook",
-      "removedOwner": "✏️s/🔌️plugins/📖️playbook",
       "component": "semio:playbook",
       "role": "hub",
       "componentKind": "plugin"
@@ -156,7 +136,6 @@
     {
       "package": "semio-hub-imperative",
       "owner": "🌎️hub/🧩️compositions/📜️imperative",
-      "removedOwner": "✏️s/🔌️plugins/📜️imperative",
       "component": "semio:imperative",
       "role": "hub",
       "componentKind": "plugin"
@@ -164,7 +143,6 @@
     {
       "package": "semio-hub-remodel",
       "owner": "🌎️hub/🧩️compositions/📸️remodel",
-      "removedOwner": "✏️s/🔌️plugins/📸️remodel",
       "component": "semio:remodel",
       "role": "hub",
       "componentKind": "plugin"
@@ -172,7 +150,6 @@
     {
       "package": "semio-hub-energy",
       "owner": "🌎️hub/🧩️compositions/🔋️energy",
-      "removedOwner": "✏️s/🔌️plugins/🔋️energy",
       "component": "semio:energy",
       "role": "hub",
       "componentKind": "plugin"
@@ -180,7 +157,6 @@
     {
       "package": "semio-hub-trinity",
       "owner": "🌎️hub/🧩️compositions/🔱️trinity",
-      "removedOwner": "✏️s/🔌️plugins/🔱️trinity",
       "component": "semio:trinity",
       "role": "hub",
       "componentKind": "plugin"
@@ -188,7 +164,6 @@
     {
       "package": "semio-hub-dag",
       "owner": "🌎️hub/🧩️compositions/🕸️dag",
-      "removedOwner": "✏️s/🔌️plugins/🕸️dag",
       "component": "semio:dag",
       "role": "hub",
       "componentKind": "plugin"
@@ -196,7 +171,6 @@
     {
       "package": "semio-hub-draw",
       "owner": "🌎️hub/🧩️compositions/🖍️draw",
-      "removedOwner": "✏️s/🔌️plugins/🖍️draw",
       "component": "semio:draw",
       "role": "hub",
       "componentKind": "plugin"
@@ -204,7 +178,6 @@
     {
       "package": "semio-hub-raster",
       "owner": "🌎️hub/🧩️compositions/🖨️raster",
-      "removedOwner": "✏️s/🔌️plugins/🖨️raster",
       "component": "semio:raster",
       "role": "hub",
       "componentKind": "plugin"
@@ -212,7 +185,6 @@
     {
       "package": "semio-hub-note",
       "owner": "🌎️hub/🧩️compositions/🗒️note",
-      "removedOwner": "✏️s/🔌️plugins/🗒️note",
       "component": "semio:note",
       "role": "hub",
       "componentKind": "plugin"
@@ -220,7 +192,6 @@
     {
       "package": "semio-hub-puzzle",
       "owner": "🌎️hub/🧩️compositions/🧩️puzzle",
-      "removedOwner": "✏️s/🔌️plugins/🧩️puzzle",
       "component": "semio:puzzle",
       "role": "hub",
       "componentKind": "plugin"
@@ -228,7 +199,6 @@
     {
       "package": "semio-hub-block",
       "owner": "🌎️hub/🧩️compositions/🧱️block",
-      "removedOwner": "✏️s/🔌️plugins/🧱️block",
       "component": "semio:block",
       "role": "hub",
       "componentKind": "plugin"
@@ -236,7 +206,6 @@
     {
       "package": "semio-hub-space",
       "owner": "🌎️hub/🧩️compositions/🪐️space",
-      "removedOwner": "✏️s/🔌️plugins/🪐️space",
       "component": "semio:space",
       "role": "hub",
       "componentKind": "plugin"
@@ -244,7 +213,6 @@
     {
       "package": "semio-hub-sourcing",
       "owner": "🌎️hub/🧩️compositions/🪵️sourcing",
-      "removedOwner": "✏️s/🔌️plugins/🪵️sourcing",
       "component": "semio:sourcing",
       "role": "hub",
       "componentKind": "plugin"

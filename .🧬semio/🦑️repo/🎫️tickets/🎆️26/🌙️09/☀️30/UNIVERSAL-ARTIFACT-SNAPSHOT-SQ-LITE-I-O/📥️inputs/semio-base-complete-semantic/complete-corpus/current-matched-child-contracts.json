@@ -1,0 +1,6127 @@
+{
+  "drawing": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.drawing",
+          "canvas": {
+            "width": {
+              "bits": "409e020000000000"
+            },
+            "height": {
+              "bits": "4090e10000000000"
+            },
+            "background": {
+              "r": {
+                "bits": "3e800000"
+              },
+              "g": {
+                "bits": "3f000000"
+              },
+              "b": {
+                "bits": "3f400000"
+              },
+              "a": {
+                "bits": "3f800000"
+              }
+            }
+          },
+          "styles": [
+            {
+              "name": "",
+              "fill": {
+                "r": {
+                  "bits": "00000000"
+                },
+                "g": {
+                  "bits": "3f800000"
+                },
+                "b": {
+                  "bits": "3f000000"
+                },
+                "a": {
+                  "bits": "00000000"
+                }
+              },
+              "strokeWidth": {
+                "bits": "0000000000000000"
+              },
+              "opacity": {
+                "bits": "3f000000"
+              }
+            }
+          ],
+          "layers": [
+            {
+              "id": "layer-🗂",
+              "name": "",
+              "visible": true,
+              "root": {
+                "kind": "group",
+                "transform": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "kind": "path",
+                    "style": "",
+                    "segments": [
+                      {
+                        "kind": "moveTo",
+                        "to": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "lineTo",
+                        "to": {
+                          "x": {
+                            "bits": "4008000000000000"
+                          },
+                          "y": {
+                            "bits": "4010000000000000"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "cubicTo",
+                        "c1": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          }
+                        },
+                        "c2": {
+                          "x": {
+                            "bits": "4008000000000000"
+                          },
+                          "y": {
+                            "bits": "4010000000000000"
+                          }
+                        },
+                        "to": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "quadTo",
+                        "c": {
+                          "x": {
+                            "bits": "4008000000000000"
+                          },
+                          "y": {
+                            "bits": "4010000000000000"
+                          }
+                        },
+                        "to": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "arcTo",
+                        "rx": {
+                          "bits": "4000000000000000"
+                        },
+                        "ry": {
+                          "bits": "4008000000000000"
+                        },
+                        "xRotation": {
+                          "bits": "c010000000000000"
+                        },
+                        "largeArc": true,
+                        "sweep": false,
+                        "to": {
+                          "x": {
+                            "bits": "4008000000000000"
+                          },
+                          "y": {
+                            "bits": "4010000000000000"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "close"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "value": "English Deutsch\u0000文",
+                    "at": {
+                      "x": {
+                        "bits": "4008000000000000"
+                      },
+                      "y": {
+                        "bits": "4010000000000000"
+                      }
+                    },
+                    "style": ""
+                  },
+                  {
+                    "kind": "image",
+                    "at": {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "0000000000000000"
+                    },
+                    "height": {
+                      "bits": "bff0000000000000"
+                    },
+                    "mime": "image/png",
+                    "bytes": [
+                      0,
+                      255,
+                      127
+                    ]
+                  },
+                  {
+                    "kind": "group",
+                    "transform": {
+                      "translation": {
+                        "x": {
+                          "bits": "0000000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        }
+                      },
+                      "rotation": {
+                        "x": {
+                          "bits": "0000000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        },
+                        "w": {
+                          "bits": "3ff0000000000000"
+                        }
+                      },
+                      "scale": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "z": {
+                          "bits": "3ff0000000000000"
+                        }
+                      }
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            },
+            {
+              "id": "hidden",
+              "name": "hidden",
+              "visible": false,
+              "root": {
+                "kind": "text",
+                "value": "",
+                "at": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "rows": 32,
+        "valueBytes": 1982
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.drawing",
+          "canvas": {
+            "width": {
+              "bits": "409e020000000000"
+            },
+            "height": {
+              "bits": "4090e10000000000"
+            },
+            "background": {
+              "r": {
+                "bits": "3e800000"
+              },
+              "g": {
+                "bits": "3f000000"
+              },
+              "b": {
+                "bits": "3f400000"
+              },
+              "a": {
+                "bits": "3f800000"
+              }
+            }
+          },
+          "styles": [],
+          "layers": []
+        },
+        "rows": 1,
+        "valueBytes": 159
+      }
+    ]
+  },
+  "animation": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.animation",
+          "timelines": [
+            {
+              "name": null,
+              "channels": [
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "translation"
+                    }
+                  },
+                  "interpolation": "linear",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "rotation"
+                    }
+                  },
+                  "interpolation": "step",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "scale"
+                    }
+                  },
+                  "interpolation": "cubicSpline",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "weights"
+                    }
+                  },
+                  "interpolation": "linear",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "custom",
+                      "name": "typed/custom"
+                    }
+                  },
+                  "interpolation": "step",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "",
+              "channels": [
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "translation"
+                    }
+                  },
+                  "interpolation": "linear",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "rotation"
+                    }
+                  },
+                  "interpolation": "step",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "scale"
+                    }
+                  },
+                  "interpolation": "cubicSpline",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "weights"
+                    }
+                  },
+                  "interpolation": "linear",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "custom",
+                      "name": "typed/custom"
+                    }
+                  },
+                  "interpolation": "step",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Grüße\u0000世界",
+              "channels": [
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "translation"
+                    }
+                  },
+                  "interpolation": "linear",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "rotation"
+                    }
+                  },
+                  "interpolation": "step",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "scale"
+                    }
+                  },
+                  "interpolation": "cubicSpline",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "weights"
+                    }
+                  },
+                  "interpolation": "linear",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "target": {
+                    "node": "external-model-node",
+                    "property": {
+                      "kind": "custom",
+                      "name": "typed/custom"
+                    }
+                  },
+                  "interpolation": "step",
+                  "keyframes": [
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "scalar",
+                        "value": {
+                          "bits": "c004000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "vec3",
+                        "value": {
+                          "x": {
+                            "bits": "3ff0000000000000"
+                          },
+                          "y": {
+                            "bits": "4000000000000000"
+                          },
+                          "z": {
+                            "bits": "4008000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "0000000000000000"
+                      },
+                      "value": {
+                        "kind": "quat",
+                        "value": {
+                          "x": {
+                            "bits": "0000000000000000"
+                          },
+                          "y": {
+                            "bits": "0000000000000000"
+                          },
+                          "z": {
+                            "bits": "0000000000000000"
+                          },
+                          "w": {
+                            "bits": "3ff0000000000000"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "4004000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": [
+                          {
+                            "bits": "0000000000000000"
+                          },
+                          {
+                            "bits": "3fd0000000000000"
+                          },
+                          {
+                            "bits": "3fe8000000000000"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "t": {
+                        "bits": "bff0000000000000"
+                      },
+                      "value": {
+                        "kind": "weights",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "rows": 184,
+        "valueBytes": 10080
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.animation",
+          "timelines": []
+        },
+        "rows": 1,
+        "valueBytes": 31
+      }
+    ]
+  },
+  "flow": {
+    "cases": [
+      {
+        "id": "full",
+        "rows": 6,
+        "valueBytes": 320,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "c004000000000000"
+                },
+                "y": {
+                  "bits": "400a000000000000"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 1,
+        "valueBytes": 24,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [],
+          "edges": []
+        }
+      }
+    ]
+  },
+  "cad": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.cad",
+          "layers": [
+            {
+              "name": "visible",
+              "colorIndex": -2147483648,
+              "lineType": "CONTINUOUS",
+              "visible": true
+            },
+            {
+              "name": "hidden",
+              "colorIndex": 2147483647,
+              "lineType": "custom",
+              "visible": false
+            }
+          ],
+          "blocks": [
+            {
+              "name": "block-世界",
+              "basePoint": {
+                "x": {
+                  "bits": "3ff8000000000000"
+                },
+                "y": {
+                  "bits": "c004000000000000"
+                }
+              },
+              "entities": [
+                {
+                  "handle": "block-line",
+                  "layer": "hidden",
+                  "entity": {
+                    "kind": "line",
+                    "a": {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "b": {
+                      "x": {
+                        "bits": "4008000000000000"
+                      },
+                      "y": {
+                        "bits": "4010000000000000"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "entities": [
+            {
+              "handle": "entity-0",
+              "layer": "visible",
+              "entity": {
+                "kind": "line",
+                "a": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "b": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                }
+              }
+            },
+            {
+              "handle": "entity-1",
+              "layer": "hidden",
+              "entity": {
+                "kind": "arc",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "radius": {
+                  "bits": "4004000000000000"
+                },
+                "startAngle": {
+                  "bits": "bff0000000000000"
+                },
+                "endAngle": {
+                  "bits": "4014000000000000"
+                }
+              }
+            },
+            {
+              "handle": "entity-2",
+              "layer": "visible",
+              "entity": {
+                "kind": "circle",
+                "center": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                },
+                "radius": {
+                  "bits": "4004000000000000"
+                }
+              }
+            },
+            {
+              "handle": "entity-3",
+              "layer": "hidden",
+              "entity": {
+                "kind": "ellipse",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "majorAxisEnd": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                },
+                "ratio": {
+                  "bits": "3fe8000000000000"
+                },
+                "startParam": {
+                  "bits": "bff0000000000000"
+                },
+                "endParam": {
+                  "bits": "4014000000000000"
+                }
+              }
+            },
+            {
+              "handle": "entity-4",
+              "layer": "visible",
+              "entity": {
+                "kind": "polyline",
+                "vertices": [
+                  {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  }
+                ],
+                "closed": true
+              }
+            },
+            {
+              "handle": "entity-5",
+              "layer": "hidden",
+              "entity": {
+                "kind": "text",
+                "position": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                },
+                "height": {
+                  "bits": "4029000000000000"
+                },
+                "rotation": {
+                  "bits": "bff8000000000000"
+                },
+                "content": "Grüße\u0000世界"
+              }
+            },
+            {
+              "handle": "entity-6",
+              "layer": "visible",
+              "entity": {
+                "kind": "insert",
+                "blockName": "block-世界",
+                "insertionPoint": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                },
+                "rotation": {
+                  "bits": "3fd0000000000000"
+                }
+              }
+            },
+            {
+              "handle": "entity-7",
+              "layer": "hidden",
+              "entity": {
+                "kind": "solid",
+                "p1": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "p2": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                },
+                "p3": {
+                  "x": {
+                    "bits": "4014000000000000"
+                  },
+                  "y": {
+                    "bits": "4018000000000000"
+                  }
+                },
+                "p4": {
+                  "x": {
+                    "bits": "401c000000000000"
+                  },
+                  "y": {
+                    "bits": "4020000000000000"
+                  }
+                }
+              }
+            },
+            {
+              "handle": "entity-8",
+              "layer": "visible",
+              "entity": {
+                "kind": "dimension",
+                "defPoint": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "textPosition": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                },
+                "measurement": {
+                  "bits": "402b800000000000"
+                },
+                "text": "Grüße\u0000世界"
+              }
+            }
+          ]
+        },
+        "rows": 27,
+        "valueBytes": 1996
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.cad",
+          "layers": [],
+          "blocks": [],
+          "entities": []
+        },
+        "rows": 1,
+        "valueBytes": 23
+      }
+    ]
+  },
+  "table": {
+    "cases": [
+      {
+        "id": "full",
+        "rows": 20,
+        "valueBytes": 595,
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.table",
+          "columns": [
+            {
+              "name": "null",
+              "kind": "null"
+            },
+            {
+              "name": "boolean",
+              "kind": "bool"
+            },
+            {
+              "name": "integer",
+              "kind": "int"
+            },
+            {
+              "name": "floating",
+              "kind": "float"
+            },
+            {
+              "name": "string",
+              "kind": "str"
+            },
+            {
+              "name": "binary",
+              "kind": "bytes"
+            }
+          ],
+          "rows": [
+            {
+              "cells": [
+                {
+                  "kind": "null"
+                },
+                {
+                  "kind": "bool",
+                  "value": true
+                },
+                {
+                  "kind": "int",
+                  "lexeme": "-184467440737095516160001"
+                },
+                {
+                  "kind": "float",
+                  "lexeme": "1.234567890123456789e-99"
+                },
+                {
+                  "kind": "str",
+                  "value": "Grüße\u0000世界"
+                },
+                {
+                  "kind": "bytes",
+                  "value": [
+                    0,
+                    1,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 7,
+        "valueBytes": 233,
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.table",
+          "columns": [
+            {
+              "name": "null",
+              "kind": "null"
+            },
+            {
+              "name": "boolean",
+              "kind": "bool"
+            },
+            {
+              "name": "integer",
+              "kind": "int"
+            },
+            {
+              "name": "floating",
+              "kind": "float"
+            },
+            {
+              "name": "string",
+              "kind": "str"
+            },
+            {
+              "name": "binary",
+              "kind": "bytes"
+            }
+          ],
+          "rows": []
+        }
+      }
+    ]
+  },
+  "mesh": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.mesh",
+          "meshes": [
+            {
+              "id": "mesh-世界",
+              "primitives": [
+                {
+                  "id": "primitive-0",
+                  "topology": "points",
+                  "positions": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    }
+                  ],
+                  "normals": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "uvs": [
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "colors": [
+                    {
+                      "r": {
+                        "bits": "3f800000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f800000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "3f800000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f000000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "3f800000"
+                      },
+                      "a": {
+                        "bits": "00000000"
+                      }
+                    }
+                  ],
+                  "indices": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "materialId": "material"
+                },
+                {
+                  "id": "primitive-1",
+                  "topology": "lines",
+                  "positions": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    }
+                  ],
+                  "normals": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "uvs": [
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "colors": [
+                    {
+                      "r": {
+                        "bits": "3f800000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f800000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "3f800000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f000000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "3f800000"
+                      },
+                      "a": {
+                        "bits": "00000000"
+                      }
+                    }
+                  ],
+                  "indices": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "materialId": null
+                },
+                {
+                  "id": "primitive-2",
+                  "topology": "lineStrip",
+                  "positions": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    }
+                  ],
+                  "normals": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "uvs": [
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "colors": [
+                    {
+                      "r": {
+                        "bits": "3f800000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f800000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "3f800000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f000000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "3f800000"
+                      },
+                      "a": {
+                        "bits": "00000000"
+                      }
+                    }
+                  ],
+                  "indices": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "materialId": "material"
+                },
+                {
+                  "id": "primitive-3",
+                  "topology": "triangles",
+                  "positions": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    }
+                  ],
+                  "normals": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "uvs": [
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "colors": [
+                    {
+                      "r": {
+                        "bits": "3f800000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f800000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "3f800000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f000000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "3f800000"
+                      },
+                      "a": {
+                        "bits": "00000000"
+                      }
+                    }
+                  ],
+                  "indices": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "materialId": null
+                },
+                {
+                  "id": "primitive-4",
+                  "topology": "triangleStrip",
+                  "positions": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    }
+                  ],
+                  "normals": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "uvs": [
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "colors": [
+                    {
+                      "r": {
+                        "bits": "3f800000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f800000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "3f800000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f000000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "3f800000"
+                      },
+                      "a": {
+                        "bits": "00000000"
+                      }
+                    }
+                  ],
+                  "indices": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "materialId": "material"
+                },
+                {
+                  "id": "primitive-5",
+                  "topology": "triangleFan",
+                  "positions": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    }
+                  ],
+                  "normals": [
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "uvs": [
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "v": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    {
+                      "u": {
+                        "bits": "0000000000000000"
+                      },
+                      "v": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  ],
+                  "colors": [
+                    {
+                      "r": {
+                        "bits": "3f800000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f800000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "3f800000"
+                      },
+                      "b": {
+                        "bits": "00000000"
+                      },
+                      "a": {
+                        "bits": "3f000000"
+                      }
+                    },
+                    {
+                      "r": {
+                        "bits": "00000000"
+                      },
+                      "g": {
+                        "bits": "00000000"
+                      },
+                      "b": {
+                        "bits": "3f800000"
+                      },
+                      "a": {
+                        "bits": "00000000"
+                      }
+                    }
+                  ],
+                  "indices": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "materialId": null
+                }
+              ]
+            }
+          ],
+          "materials": [
+            {
+              "id": "material",
+              "baseColor": {
+                "r": {
+                  "bits": "3e800000"
+                },
+                "g": {
+                  "bits": "3f000000"
+                },
+                "b": {
+                  "bits": "3f400000"
+                },
+                "a": {
+                  "bits": "3f800000"
+                }
+              },
+              "metallic": {
+                "bits": "3e800000"
+              },
+              "roughness": {
+                "bits": "3f400000"
+              },
+              "baseColorTexture": "texture",
+              "metallicRoughnessTexture": "texture",
+              "normalTexture": "texture",
+              "occlusionTexture": "texture",
+              "emissiveTexture": "texture"
+            }
+          ],
+          "textures": [
+            {
+              "id": "texture",
+              "mime": "image/custom",
+              "bytes": [
+                0,
+                1,
+                255
+              ]
+            }
+          ]
+        },
+        "rows": 100,
+        "valueBytes": 7650
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.mesh",
+          "meshes": [],
+          "materials": [],
+          "textures": []
+        },
+        "rows": 1,
+        "valueBytes": 24
+      }
+    ]
+  },
+  "presentation": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.presentation",
+          "masters": [
+            {
+              "id": "master",
+              "shapes": [
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "title"
+                  }
+                }
+              ]
+            }
+          ],
+          "layouts": [
+            {
+              "id": "layout",
+              "masterId": "master",
+              "shapes": []
+            }
+          ],
+          "slides": [
+            {
+              "id": "slide-文",
+              "layoutId": "layout",
+              "shapes": [
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "title"
+                  }
+                },
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "subtitle"
+                  }
+                },
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "body"
+                  }
+                },
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "footer"
+                  }
+                },
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "slideNumber"
+                  }
+                },
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "dateTime"
+                  }
+                },
+                {
+                  "shapeKind": "placeholder",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "kind": {
+                    "kind": "other",
+                    "value": ""
+                  }
+                },
+                {
+                  "shapeKind": "textBox",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "blocks": [
+                    {
+                      "kind": "paragraph",
+                      "style_id": "external-style",
+                      "runs": [
+                        {
+                          "text": "English Deutsch\u0000文",
+                          "style": {
+                            "bold": false,
+                            "italic": false,
+                            "underline": false,
+                            "size": null,
+                            "font": null,
+                            "color": null,
+                            "link": null
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "image",
+                      "image_id": "external-image",
+                      "alt": "",
+                      "width": null,
+                      "height": {
+                        "bits": "0000000000000000"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "shapeKind": "picture",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "image": {
+                    "assetId": "",
+                    "mime": "image/png",
+                    "bytes": [
+                      0,
+                      255,
+                      127
+                    ]
+                  }
+                },
+                {
+                  "shapeKind": "table",
+                  "frame": {
+                    "origin": {
+                      "x": {
+                        "bits": "bff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    "width": {
+                      "bits": "400c000000000000"
+                    },
+                    "height": {
+                      "bits": "4011000000000000"
+                    }
+                  },
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "blocks": [
+                            {
+                              "kind": "quote",
+                              "blocks": [
+                                {
+                                  "kind": "pageBreak"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "blocks": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "notes": [
+                {
+                  "kind": "code",
+                  "language": "",
+                  "text": "notes"
+                }
+              ]
+            },
+            {
+              "id": "",
+              "layoutId": null,
+              "shapes": [],
+              "notes": []
+            }
+          ]
+        },
+        "rows": 52,
+        "valueBytes": 2220
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.presentation",
+          "masters": [],
+          "layouts": [],
+          "slides": []
+        },
+        "rows": 1,
+        "valueBytes": 34
+      }
+    ]
+  },
+  "graph": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.graph",
+          "nodes": [
+            {
+              "id": {
+                "value": "first"
+              },
+              "kind": "typed",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "c004000000000000"
+                },
+                "y": {
+                  "bits": "400a000000000000"
+                }
+              },
+              "width": {
+                "bits": "0000000000000000"
+              },
+              "height": {
+                "bits": "0000000000000000"
+              },
+              "ports": [
+                {
+                  "name": "read",
+                  "kind": "in",
+                  "category": "",
+                  "properties": []
+                },
+                {
+                  "name": "write",
+                  "kind": "out",
+                  "category": "",
+                  "properties": []
+                },
+                {
+                  "name": "both",
+                  "kind": "inOut",
+                  "category": "",
+                  "properties": []
+                }
+              ],
+              "properties": [
+                {
+                  "key": "same",
+                  "value": {
+                    "kind": "map",
+                    "entries": [
+                      {
+                        "key": "nested",
+                        "value": {
+                          "kind": "list",
+                          "items": [
+                            {
+                              "kind": "str",
+                              "value": "payload"
+                            },
+                            {
+                              "kind": "ref",
+                              "id": {
+                                "value": "external-domain-id"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": "same",
+                  "value": {
+                    "kind": "bytes",
+                    "value": [
+                      0,
+                      255
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "id": {
+                "value": "second"
+              },
+              "kind": "",
+              "label": "",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                }
+              },
+              "width": {
+                "bits": "0000000000000000"
+              },
+              "height": {
+                "bits": "0000000000000000"
+              },
+              "ports": [],
+              "properties": []
+            }
+          ],
+          "edges": [
+            {
+              "id": {
+                "value": "forward"
+              },
+              "source": {
+                "value": "first"
+              },
+              "target": {
+                "value": "second"
+              },
+              "kind": "data",
+              "label": "one",
+              "properties": []
+            },
+            {
+              "id": {
+                "value": "backward"
+              },
+              "source": {
+                "value": "second"
+              },
+              "target": {
+                "value": "first"
+              },
+              "kind": "data",
+              "label": "two",
+              "properties": []
+            },
+            {
+              "id": {
+                "value": "self"
+              },
+              "source": {
+                "value": "first"
+              },
+              "target": {
+                "value": "first"
+              },
+              "kind": "self",
+              "label": "three",
+              "properties": []
+            }
+          ]
+        },
+        "rows": 19,
+        "valueBytes": 798
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.graph",
+          "nodes": [],
+          "edges": []
+        },
+        "rows": 1,
+        "valueBytes": 27
+      }
+    ]
+  },
+  "kit": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.kit",
+          "types": [
+            {
+              "id": "chair",
+              "name": "Chair 世界",
+              "category": "furniture"
+            }
+          ],
+          "designs": [
+            {
+              "id": "layout",
+              "name": "Design",
+              "pieces": [
+                {
+                  "id": "left",
+                  "typeId": "chair",
+                  "transform": {
+                    "translation": {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    "rotation": {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      },
+                      "w": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    "scale": {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "right",
+                  "typeId": "chair",
+                  "transform": {
+                    "translation": {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    "rotation": {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      },
+                      "w": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    "scale": {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  }
+                }
+              ],
+              "connections": [
+                {
+                  "id": "joint",
+                  "connectingPieceId": "left",
+                  "connectingPort": "a",
+                  "connectedPieceId": "right",
+                  "connectedPort": "b"
+                }
+              ]
+            }
+          ],
+          "objects": [
+            {
+              "childId": "object-one",
+              "target": {
+                "artifactId": "object-one",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            },
+            {
+              "childId": "object-two",
+              "target": {
+                "artifactId": "object-two",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ],
+          "models": [
+            {
+              "childId": "model-one",
+              "target": {
+                "artifactId": "model-one",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "model"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "childId": "value-one",
+            "target": {
+              "artifactId": "value-one",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "value"
+              }
+            }
+          },
+          "representations": [
+            {
+              "target": {
+                "artifactId": "representation-0",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "mesh"
+                }
+              },
+              "role": "chair",
+              "pin": {
+                "kind": "head"
+              }
+            },
+            {
+              "target": {
+                "artifactId": "representation-1",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "mesh"
+                }
+              },
+              "role": "chair",
+              "pin": {
+                "kind": "checkpoint",
+                "id": "checkpoint-世界"
+              }
+            },
+            {
+              "target": {
+                "artifactId": "representation-2",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "mesh"
+                }
+              },
+              "role": "chair",
+              "pin": {
+                "kind": "snapshot",
+                "blob": {
+                  "hash": "content-address",
+                  "size": "18446744073709551615",
+                  "mediaType": "application/octet-stream"
+                }
+              }
+            }
+          ]
+        },
+        "rows": 21,
+        "valueBytes": 1342
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.kit",
+          "types": [],
+          "designs": [],
+          "objects": [],
+          "models": [],
+          "representations": []
+        },
+        "rows": 1,
+        "valueBytes": 23
+      }
+    ]
+  },
+  "brep": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.brep",
+          "vertices": [
+            {
+              "id": "v0",
+              "point": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "tol": {
+                "bits": "3f50624dd2f1a9fc"
+              }
+            },
+            {
+              "id": "v-文",
+              "point": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "tol": {
+                "bits": "3f60624dd2f1a9fc"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "e0",
+              "startVertex": "v0",
+              "endVertex": "v-文",
+              "curve": {
+                "kind": "line",
+                "origin": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "direction": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "tol": {
+                "bits": "3f689374bc6a7efa"
+              }
+            },
+            {
+              "id": "e1",
+              "startVertex": "v0",
+              "endVertex": "v-文",
+              "curve": {
+                "kind": "circle",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "axis": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "radius": {
+                  "bits": "4004000000000000"
+                }
+              },
+              "tol": {
+                "bits": "3f689374bc6a7efa"
+              }
+            },
+            {
+              "id": "e2",
+              "startVertex": "v0",
+              "endVertex": "v-文",
+              "curve": {
+                "kind": "ellipse",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "axis": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "radiusMajor": {
+                  "bits": "400c000000000000"
+                },
+                "radiusMinor": {
+                  "bits": "3ff4000000000000"
+                }
+              },
+              "tol": {
+                "bits": "3f689374bc6a7efa"
+              }
+            },
+            {
+              "id": "e3",
+              "startVertex": "v0",
+              "endVertex": "v-文",
+              "curve": {
+                "kind": "nurbs",
+                "controlPoints": [
+                  {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    },
+                    "z": {
+                      "bits": "4008000000000000"
+                    }
+                  },
+                  {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                ],
+                "weights": [
+                  {
+                    "bits": "3ff0000000000000"
+                  },
+                  {
+                    "bits": "3fe0000000000000"
+                  }
+                ],
+                "degree": 1,
+                "knots": [
+                  {
+                    "bits": "0000000000000000"
+                  },
+                  {
+                    "bits": "0000000000000000"
+                  },
+                  {
+                    "bits": "3ff0000000000000"
+                  },
+                  {
+                    "bits": "3ff0000000000000"
+                  }
+                ]
+              },
+              "tol": {
+                "bits": "3f689374bc6a7efa"
+              }
+            }
+          ],
+          "loops": [
+            {
+              "id": "loop",
+              "edges": [
+                {
+                  "edge": "e0",
+                  "orientation": true
+                },
+                {
+                  "edge": "e1",
+                  "orientation": false
+                },
+                {
+                  "edge": "e2",
+                  "orientation": true
+                },
+                {
+                  "edge": "e3",
+                  "orientation": false
+                }
+              ]
+            },
+            {
+              "id": "inner",
+              "edges": []
+            }
+          ],
+          "faces": [
+            {
+              "id": "f0",
+              "outerLoop": "loop",
+              "innerLoops": [
+                "inner"
+              ],
+              "surface": {
+                "kind": "plane",
+                "origin": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "normal": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "orientation": true,
+              "tol": {
+                "bits": "3f70624dd2f1a9fc"
+              }
+            },
+            {
+              "id": "f1",
+              "outerLoop": "loop",
+              "innerLoops": [
+                "inner"
+              ],
+              "surface": {
+                "kind": "cylinder",
+                "origin": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "axis": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "radius": {
+                  "bits": "4004000000000000"
+                }
+              },
+              "orientation": false,
+              "tol": {
+                "bits": "3f70624dd2f1a9fc"
+              }
+            },
+            {
+              "id": "f2",
+              "outerLoop": "loop",
+              "innerLoops": [
+                "inner"
+              ],
+              "surface": {
+                "kind": "cone",
+                "origin": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "axis": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "radius": {
+                  "bits": "4004000000000000"
+                },
+                "halfAngle": {
+                  "bits": "3fd0000000000000"
+                }
+              },
+              "orientation": true,
+              "tol": {
+                "bits": "3f70624dd2f1a9fc"
+              }
+            },
+            {
+              "id": "f3",
+              "outerLoop": "loop",
+              "innerLoops": [
+                "inner"
+              ],
+              "surface": {
+                "kind": "sphere",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "radius": {
+                  "bits": "4004000000000000"
+                }
+              },
+              "orientation": false,
+              "tol": {
+                "bits": "3f70624dd2f1a9fc"
+              }
+            },
+            {
+              "id": "f4",
+              "outerLoop": "loop",
+              "innerLoops": [
+                "inner"
+              ],
+              "surface": {
+                "kind": "torus",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                "axis": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "majorRadius": {
+                  "bits": "400c000000000000"
+                },
+                "minorRadius": {
+                  "bits": "3ff4000000000000"
+                }
+              },
+              "orientation": true,
+              "tol": {
+                "bits": "3f70624dd2f1a9fc"
+              }
+            },
+            {
+              "id": "f5",
+              "outerLoop": "loop",
+              "innerLoops": [
+                "inner"
+              ],
+              "surface": {
+                "kind": "nurbs",
+                "controlPoints": [
+                  {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    },
+                    "z": {
+                      "bits": "4008000000000000"
+                    }
+                  },
+                  {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                ],
+                "weights": [
+                  {
+                    "bits": "3ff0000000000000"
+                  },
+                  {
+                    "bits": "3fe0000000000000"
+                  }
+                ],
+                "uCount": 1,
+                "vCount": 2,
+                "degreeU": 0,
+                "degreeV": 1,
+                "knotsU": [
+                  {
+                    "bits": "0000000000000000"
+                  },
+                  {
+                    "bits": "3ff0000000000000"
+                  }
+                ],
+                "knotsV": [
+                  {
+                    "bits": "0000000000000000"
+                  },
+                  {
+                    "bits": "0000000000000000"
+                  },
+                  {
+                    "bits": "3ff0000000000000"
+                  },
+                  {
+                    "bits": "3ff0000000000000"
+                  }
+                ]
+              },
+              "orientation": false,
+              "tol": {
+                "bits": "3f70624dd2f1a9fc"
+              }
+            }
+          ],
+          "shells": [
+            {
+              "id": "shell",
+              "faces": [
+                {
+                  "face": "f0",
+                  "orientation": true
+                },
+                {
+                  "face": "f1",
+                  "orientation": false
+                },
+                {
+                  "face": "f2",
+                  "orientation": true
+                },
+                {
+                  "face": "f3",
+                  "orientation": false
+                },
+                {
+                  "face": "f4",
+                  "orientation": true
+                },
+                {
+                  "face": "f5",
+                  "orientation": false
+                }
+              ]
+            }
+          ],
+          "solids": [
+            {
+              "id": "solid",
+              "shells": [
+                {
+                  "shell": "shell",
+                  "isVoid": false
+                },
+                {
+                  "shell": "shell",
+                  "isVoid": true
+                }
+              ]
+            }
+          ],
+          "coedges": [
+            {
+              "id": "c0",
+              "edge": "e0",
+              "forward": true,
+              "pcurve": {
+                "kind": "line",
+                "origin": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "direction": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                }
+              },
+              "prange": [
+                {
+                  "bits": "bff0000000000000"
+                },
+                {
+                  "bits": "4000000000000000"
+                }
+              ],
+              "loopId": "loop",
+              "next": "c1",
+              "prev": "c3"
+            },
+            {
+              "id": "c1",
+              "edge": "e1",
+              "forward": false,
+              "pcurve": {
+                "kind": "circle",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "radius": {
+                  "bits": "4004000000000000"
+                }
+              },
+              "prange": [
+                {
+                  "bits": "bff0000000000000"
+                },
+                {
+                  "bits": "4000000000000000"
+                }
+              ],
+              "loopId": "loop",
+              "next": "c2",
+              "prev": "c0"
+            },
+            {
+              "id": "c2",
+              "edge": "e2",
+              "forward": true,
+              "pcurve": {
+                "kind": "ellipse",
+                "center": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                "xAxis": {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                },
+                "radiusMajor": {
+                  "bits": "400c000000000000"
+                },
+                "radiusMinor": {
+                  "bits": "3ff4000000000000"
+                }
+              },
+              "prange": [
+                {
+                  "bits": "bff0000000000000"
+                },
+                {
+                  "bits": "4000000000000000"
+                }
+              ],
+              "loopId": "loop",
+              "next": "c3",
+              "prev": "c1"
+            },
+            {
+              "id": "c3",
+              "edge": "e3",
+              "forward": false,
+              "pcurve": {
+                "kind": "nurbs",
+                "controlPoints": [
+                  {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  }
+                ],
+                "weights": [
+                  {
+                    "bits": "3ff0000000000000"
+                  },
+                  {
+                    "bits": "3fe0000000000000"
+                  }
+                ],
+                "degree": 1,
+                "knots": [
+                  {
+                    "bits": "0000000000000000"
+                  },
+                  {
+                    "bits": "0000000000000000"
+                  },
+                  {
+                    "bits": "3ff0000000000000"
+                  },
+                  {
+                    "bits": "3ff0000000000000"
+                  }
+                ]
+              },
+              "prange": [
+                {
+                  "bits": "bff0000000000000"
+                },
+                {
+                  "bits": "4000000000000000"
+                }
+              ],
+              "loopId": "loop",
+              "next": "c0",
+              "prev": "c2"
+            }
+          ],
+          "nextLabel": "18446744073709551615"
+        },
+        "rows": 79,
+        "valueBytes": 5149
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.brep",
+          "vertices": [],
+          "edges": [],
+          "loops": [],
+          "faces": [],
+          "shells": [],
+          "solids": [],
+          "coedges": [],
+          "nextLabel": "18446744073709551615"
+        },
+        "rows": 1,
+        "valueBytes": 44
+      }
+    ]
+  },
+  "image": {
+    "cases": [
+      {
+        "id": "full",
+        "rows": 21,
+        "valueBytes": 835,
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.image",
+          "width": 2,
+          "height": 1,
+          "colorspace": "indexed",
+          "bitDepth": 255,
+          "frames": [
+            {
+              "delayMs": 0,
+              "rgba8": [
+                0,
+                0,
+                0,
+                0,
+                255,
+                255,
+                255,
+                255
+              ]
+            },
+            {
+              "delayMs": 4294967295,
+              "rgba8": [
+                255,
+                0,
+                0,
+                255,
+                0,
+                255,
+                0,
+                127
+              ]
+            }
+          ],
+          "icc": [
+            0,
+            1,
+            255
+          ],
+          "metadata": [
+            {
+              "key": "same",
+              "value": "Grüße\u0000世界"
+            },
+            {
+              "key": "same",
+              "value": ""
+            }
+          ]
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 3,
+        "valueBytes": 131,
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.image",
+          "width": 2,
+          "height": 1,
+          "colorspace": "indexed",
+          "bitDepth": 255,
+          "frames": [],
+          "icc": [
+            0,
+            1,
+            255
+          ],
+          "metadata": [
+            {
+              "key": "same",
+              "value": "Grüße\u0000世界"
+            },
+            {
+              "key": "same",
+              "value": ""
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "base": {
+    "cases": [
+      {
+        "id": "brep",
+        "sourceSnapshot": {
+          "schema": "stdio.semio",
+          "subset": {
+            "subset": "brep",
+            "schema": "stdio.semio.brep",
+            "vertices": [],
+            "edges": [],
+            "loops": [],
+            "faces": [],
+            "shells": [],
+            "solids": [],
+            "coedges": [],
+            "nextLabel": "0"
+          }
+        },
+        "rows": 2,
+        "valueBytes": 56
+      },
+      {
+        "id": "kit",
+        "sourceSnapshot": {
+          "schema": "stdio.semio",
+          "subset": {
+            "subset": "kit",
+            "schema": "stdio.semio.kit",
+            "types": [],
+            "designs": [],
+            "objects": [],
+            "models": [],
+            "representations": []
+          }
+        },
+        "rows": 2,
+        "valueBytes": 53
+      }
+    ]
+  },
+  "document": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.document",
+          "styles": [
+            {
+              "id": "",
+              "name": "root",
+              "basedOn": null
+            },
+            {
+              "id": "child",
+              "name": "child",
+              "basedOn": ""
+            }
+          ],
+          "images": [
+            {
+              "id": "image-🖼",
+              "mime": "image/png",
+              "bytes": [
+                0,
+                255,
+                127
+              ]
+            }
+          ],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "style_id": "",
+              "runs": [
+                {
+                  "text": "English Deutsch\u0000文",
+                  "style": {
+                    "bold": true,
+                    "italic": true,
+                    "underline": true,
+                    "size": {
+                      "bits": "bff8000000000000"
+                    },
+                    "font": "",
+                    "color": "#ff0000",
+                    "link": "https://example.test"
+                  }
+                },
+                {
+                  "text": "",
+                  "style": {
+                    "bold": false,
+                    "italic": false,
+                    "underline": false,
+                    "size": null,
+                    "font": null,
+                    "color": null,
+                    "link": null
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "heading",
+              "level": 255,
+              "style_id": "child",
+              "runs": []
+            },
+            {
+              "kind": "list",
+              "ordered": true,
+              "items": [
+                {
+                  "blocks": [
+                    {
+                      "kind": "pageBreak"
+                    }
+                  ]
+                },
+                {
+                  "blocks": []
+                }
+              ]
+            },
+            {
+              "kind": "table",
+              "rows": [
+                {
+                  "cells": [
+                    {
+                      "blocks": [
+                        {
+                          "kind": "paragraph",
+                          "style_id": null,
+                          "runs": [
+                            {
+                              "text": "cell",
+                              "style": {
+                                "bold": false,
+                                "italic": false,
+                                "underline": false,
+                                "size": null,
+                                "font": null,
+                                "color": null,
+                                "link": null
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "blocks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "code",
+              "language": "",
+              "text": "English Deutsch\u0000文"
+            },
+            {
+              "kind": "quote",
+              "blocks": [
+                {
+                  "kind": "quote",
+                  "blocks": []
+                }
+              ]
+            },
+            {
+              "kind": "image",
+              "image_id": "image-🖼",
+              "alt": "",
+              "width": {
+                "bits": "0000000000000000"
+              },
+              "height": null
+            },
+            {
+              "kind": "pageBreak"
+            }
+          ]
+        },
+        "rows": 52,
+        "valueBytes": 1274
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.document",
+          "styles": [],
+          "images": [],
+          "blocks": []
+        },
+        "rows": 2,
+        "valueBytes": 46
+      }
+    ]
+  },
+  "model": {
+    "cases": [
+      {
+        "id": "full",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.model",
+          "spatial": [
+            {
+              "id": "spatial-0",
+              "kind": "site",
+              "name": "Spatial 0",
+              "parentId": null,
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              }
+            },
+            {
+              "id": "spatial-1",
+              "kind": "building",
+              "name": "Spatial 1",
+              "parentId": "spatial-0",
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              }
+            },
+            {
+              "id": "spatial-2",
+              "kind": "storey",
+              "name": "Spatial 2",
+              "parentId": "spatial-1",
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              }
+            },
+            {
+              "id": "spatial-3",
+              "kind": "space",
+              "name": "Spatial 3",
+              "parentId": "spatial-2",
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              }
+            }
+          ],
+          "elements": [
+            {
+              "id": "element-0",
+              "class": {
+                "kind": "wall"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "none"
+              },
+              "spatialId": "spatial-3",
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-1",
+              "class": {
+                "kind": "slab"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "brep",
+                "brepId": "external-geometry"
+              },
+              "spatialId": null,
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-2",
+              "class": {
+                "kind": "column"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "mesh",
+                "meshId": "external-geometry"
+              },
+              "spatialId": "spatial-3",
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-3",
+              "class": {
+                "kind": "beam"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "none"
+              },
+              "spatialId": null,
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-4",
+              "class": {
+                "kind": "door"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "brep",
+                "brepId": "external-geometry"
+              },
+              "spatialId": "spatial-3",
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-5",
+              "class": {
+                "kind": "window"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "mesh",
+                "meshId": "external-geometry"
+              },
+              "spatialId": null,
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-6",
+              "class": {
+                "kind": "roof"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "none"
+              },
+              "spatialId": "spatial-3",
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-7",
+              "class": {
+                "kind": "stair"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "brep",
+                "brepId": "external-geometry"
+              },
+              "spatialId": null,
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-8",
+              "class": {
+                "kind": "furniture"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "mesh",
+                "meshId": "external-geometry"
+              },
+              "spatialId": "spatial-3",
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "element-9",
+              "class": {
+                "kind": "other",
+                "name": "IfcCustom世界"
+              },
+              "placement": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "geometry": {
+                "kind": "none"
+              },
+              "spatialId": null,
+              "psets": [
+                {
+                  "name": "Pset typed",
+                  "properties": [
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "text",
+                        "value": "Grüße\u0000世界"
+                      }
+                    },
+                    {
+                      "key": "same",
+                      "value": {
+                        "kind": "number",
+                        "value": {
+                          "bits": "3ff3c0ca428c59fb"
+                        }
+                      }
+                    },
+                    {
+                      "key": "boolean",
+                      "value": {
+                        "kind": "boolean",
+                        "value": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "relations": [
+            {
+              "id": "relation-0",
+              "kind": {
+                "kind": "aggregates"
+              },
+              "from": "spatial-0",
+              "to": "element-0"
+            },
+            {
+              "id": "relation-1",
+              "kind": {
+                "kind": "containedIn"
+              },
+              "from": "spatial-0",
+              "to": "element-1"
+            },
+            {
+              "id": "relation-2",
+              "kind": {
+                "kind": "connectsTo"
+              },
+              "from": "spatial-0",
+              "to": "element-2"
+            },
+            {
+              "id": "relation-3",
+              "kind": {
+                "kind": "fillsVoid"
+              },
+              "from": "spatial-0",
+              "to": "element-3"
+            },
+            {
+              "id": "relation-4",
+              "kind": {
+                "kind": "voidsElement"
+              },
+              "from": "spatial-0",
+              "to": "element-4"
+            },
+            {
+              "id": "relation-5",
+              "kind": {
+                "kind": "other",
+                "label": "custom relation"
+              },
+              "from": "spatial-0",
+              "to": "element-5"
+            }
+          ]
+        },
+        "rows": 99,
+        "valueBytes": 6496
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "sourceSnapshot": {
+          "schema": "stdio.semio.model",
+          "spatial": [],
+          "elements": [],
+          "relations": []
+        },
+        "rows": 1,
+        "valueBytes": 25
+      }
+    ]
+  },
+  "value": {
+    "cases": [
+      {
+        "id": "full",
+        "rows": 22,
+        "valueBytes": 594,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.value",
+          "root": {
+            "kind": "list",
+            "items": [
+              {
+                "kind": "null"
+              },
+              {
+                "kind": "bool",
+                "value": true
+              },
+              {
+                "kind": "bool",
+                "value": false
+              },
+              {
+                "kind": "str",
+                "value": "Grüße\u0000世界"
+              },
+              {
+                "kind": "bytes",
+                "value": [
+                  0,
+                  1,
+                  127,
+                  255
+                ]
+              },
+              {
+                "kind": "map",
+                "entries": [
+                  {
+                    "key": "same",
+                    "value": {
+                      "kind": "int",
+                      "lexeme": "-184467440737095516160001"
+                    }
+                  },
+                  {
+                    "key": "same",
+                    "value": {
+                      "kind": "float",
+                      "lexeme": "1.234567890123456789e-99"
+                    }
+                  }
+                ]
+              },
+              {
+                "kind": "ref",
+                "id": {
+                  "value": "cycle"
+                }
+              }
+            ]
+          },
+          "nodes": [
+            {
+              "id": {
+                "value": "cycle"
+              },
+              "value": {
+                "kind": "ref",
+                "id": {
+                  "value": "cycle"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 2,
+        "valueBytes": 45,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.value",
+          "root": {
+            "kind": "null"
+          },
+          "nodes": []
+        }
+      }
+    ]
+  }
+}

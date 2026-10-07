@@ -70,7 +70,7 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
     pub async fn app_with_registry() -> OwnedWiresApp {
-        OwnedWiresApp(new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests).await)
+        OwnedWiresApp(new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await)
     }
     
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
@@ -121,7 +121,7 @@ pub(crate) mod context {
         let files = store::print_document_pack(&envelope).await.expect("graph fixture parent pack");
         retire_envelope(envelope);
         let mut archive = app.document_load_archive(&files)?;
-        let parent = store::os_io::ArtifactRef { artifact_id: app.document_identity().expect("live parent identity"), dialect: crate::WIRES_DIALECT.into() };
+        let parent = semio_framework_artifact_reference::ArtifactRef { artifact_id: app.document_identity().expect("live parent identity"), dialect: crate::WIRES_DIALECT.into() };
         let owner = store::OwnerRef { parent: parent.clone(), slot: crate::WIRES_CONTENT_SLOT.into(), child_id: handle.child_id.clone() };
         let child_pack = store::ArtifactPack::encode_pack(&content);
         let envelope_pack = store::genesis_member_envelope_pack("stdio.semio", &handle.target, &owner, &child_pack).await.expect("full fixture child envelope");
@@ -468,7 +468,7 @@ fn debug_child_seed_settles() {
     semio_framework_plugin::app::history_edit_acceptance::block_on_acceptance(async {
         use semio_framework_plugin::PluginApp;
         let manifest = || semio_framework_plugin::App { definition: create_wires_app(), examples: Vec::new() };
-        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_framework_plugin::EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
+        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_framework_plugin::EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         let receiver = semio_framework_plugin::artifact_app_laws::meta("acceptance").instance_id;
         app.bind_instance_id(receiver).await;
         let args = semio_framework_value::DslValue::Object(vec![("kind".into(), semio_framework_value::DslValue::String("identity".into()))]);

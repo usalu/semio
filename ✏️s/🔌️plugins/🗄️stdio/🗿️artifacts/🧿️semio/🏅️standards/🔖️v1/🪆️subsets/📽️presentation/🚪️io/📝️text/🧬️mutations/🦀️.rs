@@ -9,18 +9,18 @@ use super::*;
 use crate::standards::v1::subsets::presentation::schema::mutations::*;
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
 use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
-use crate::presentation::io::text::diff::{dec_shape};
-use crate::presentation::io::text::diff::{enc_shape};
-use crate::presentation::io::text::diff::{dec_slide};
-use crate::presentation::io::text::diff::{enc_slide};
-use crate::presentation::io::text::diff::{dec_layout};
-use crate::presentation::io::text::diff::{enc_layout};
-use crate::presentation::io::text::diff::{dec_master};
-use crate::presentation::io::text::diff::{enc_master};
-use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};
-use crate::standards::v1::subsets::image::io::text::snapshot::{enc_frame};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_shape};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_shape};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_slide};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_slide};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_layout};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_layout};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_master};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_master};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_frame};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_frame};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
@@ -43,7 +43,7 @@ use protocol::{Mutation, OpBinary, OpText};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
     match m {
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", crate::standards::v1::subsets::presentation::schema::diff::enc_presentation_snapshot(snapshot)),
+        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", crate::standards::v1::subsets::presentation::io::text::snapshot::enc_presentation_snapshot(snapshot)),
         SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => format!("insert-slide index={index} slide={}", enc_slide(slide)),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => format!("remove-slide index={index}"),
@@ -75,7 +75,7 @@ pub(crate) fn parse_presentation_mutation(line: &str) -> Result<SemioPresentatio
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("presentation mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::schema::diff::dec_presentation_snapshot(arg("snapshot")?)? })),
+        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::io::text::snapshot::dec_presentation_snapshot(arg("snapshot")?)? })),
         "insert-slide" => Ok(SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? })),
         "remove-slide" => Ok(SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_arg("index")? })),
         "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str)? })),

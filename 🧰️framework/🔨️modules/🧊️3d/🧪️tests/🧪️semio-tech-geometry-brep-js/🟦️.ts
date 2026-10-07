@@ -1,28 +1,170 @@
 import type * as brep from "../../🟦️.ts";
 import { readFileSync } from "node:fs";
-import { BufferGeometry, Float32BufferAttribute, Vector3 } from "three";
+import Ajv from "ajv/dist/2020.js";
+import union from "lodash/union.js";
+import difference from "lodash/difference.js";
+import xor from "lodash/xor.js";
+import uniq from "lodash/uniq.js";
+import { BufferGeometry, Float32BufferAttribute, OrthographicCamera, PerspectiveCamera, Ray, Vector3 } from "three";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "isRenderableMeshTransfer" | "meshTransferToGeometryData" | "meshTransferFromPreviewPayload">, source: TestSource): Promise<void> {
-  const { isRenderableMeshTransfer, meshTransferToGeometryData, meshTransferFromPreviewPayload } = dependencies;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "isRenderableMeshTransfer" | "meshTransferToGeometryData" | "meshTransferFromPreviewPayload" | "mergeMeshTransfers">, source: TestSource): Promise<void> {
+  const { isRenderableMeshTransfer, meshTransferToGeometryData, meshTransferFromPreviewPayload, mergeMeshTransfers } = dependencies;
   type MeshTransfer = brep.MeshTransfer;
 
   const { describe, expect, it } = vitest;
 
   describe("@semio-tech/geometry-brep-js", () => {
+    it("preserves pure analytic wire points and edges with independent Three geometry", () => {
+      const fixtureUrl = new URL("../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json",source.url);
+      const fixture = JSON.parse(readFileSync(fixtureUrl,"utf8"));
+      const transfer = meshTransferFromPreviewPayload(fixture.transfer)!;
+      expect(isRenderableMeshTransfer(transfer)).toBe(true);
+      const mesh = meshTransferToGeometryData(transfer);
+      expect([...mesh.position]).toEqual(fixture.mesh.positions);
+      expect([...mesh.edges]).toEqual(fixture.mesh.edgePositions);
+      expect(mesh.vertexIds).toEqual(fixture.mesh.vertexIds);
+      expect(mesh.edgeIds).toEqual(fixture.mesh.edgeIds);
+      expect(mesh.index.length).toBe(fixture.expected.indices);
+      const geometry = new BufferGeometry().setAttribute("position",new Float32BufferAttribute(mesh.position,3));
+      expect(geometry.getAttribute("position").count).toBe(fixture.expected.vertices);
+      let perimeter=0;
+      for(let index=0;index<mesh.edges.length;index+=6)perimeter+=new Vector3().fromArray(mesh.edges,index).distanceTo(new Vector3().fromArray(mesh.edges,index+3));
+      expect(perimeter).toBe(fixture.expected.perimeter);
+      const edgeOnly = meshTransferToGeometryData(meshTransferFromPreviewPayload({...fixture.transfer,points:[],vertex_groups:[]})!);
+      expect([...edgeOnly.edges]).toEqual(fixture.edgeOnly.mesh.edgePositions);
+      expect(edgeOnly.vertexIds?.length ?? 0).toBe(fixture.edgeOnly.expected.topologyVertices);
+      const edgeGeometry = new BufferGeometry().setAttribute("position",new Float32BufferAttribute(edgeOnly.edges,3));
+      edgeGeometry.computeBoundingBox();
+      expect(edgeGeometry.getAttribute("position").count).toBe(fixture.edgeOnly.expected.renderVertices);
+      expect(edgeGeometry.boundingBox!.min.toArray()).toEqual(fixture.edgeOnly.expected.boundsMin);
+      expect(edgeGeometry.boundingBox!.max.toArray()).toEqual(fixture.edgeOnly.expected.boundsMax);
+      edgeGeometry.dispose();
+      const camera = new PerspectiveCamera(fixture.camera.fov,1,0.1,10);
+      camera.position.fromArray(fixture.camera.position);camera.up.fromArray(fixture.camera.up);camera.lookAt(new Vector3().fromArray(fixture.camera.target));camera.updateMatrixWorld();
+      for(const [index,point] of [[0,new Vector3(0,0,0)],[1,new Vector3(0.25,0,0)]] as const){
+        const screen = point.project(camera);
+        expect((screen.x+1)*200).toBeCloseTo(fixture.picks[index].pointer[0],8);
+        expect((1-screen.y)*200).toBeCloseTo(fixture.picks[index].pointer[1],8);
+      }
+      const pointer = fixture.picks[1].pointer;
+      const direction = new Vector3(pointer[0]/200-1,1-pointer[1]/200,0.5).unproject(camera).sub(camera.position).normalize();
+      expect(new Ray(camera.position,direction).distanceSqToSegment(new Vector3(...fixture.mesh.edgePositions.slice(0,3)),new Vector3(...fixture.mesh.edgePositions.slice(3,6)))).toBeCloseTo(0,12);
+      const pointFixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json",source.url),"utf8"));
+      const point = new Vector3(...pointFixture.cases.find((row:{kind:string})=>row.kind === "point").points[0]);
+      expect(new Ray(point.clone().add(new Vector3(0,0,4)),new Vector3(0,0,-1)).distanceSqToPoint(point)).toBe(0);
+      geometry.dispose();
+      console.log("[DEBUG] originalAnalyticWire independentThree=true topologyVertices=4 edges=4 triangles=0");
+    });
+    it("preserves exact multi-object component selection with independent Lodash merges", () => {
+      const fixture = JSON.parse(readFileSync(new URL("../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎯️component-selection-merges/🔣️.json",source.url),"utf8"));
+      const camera = new PerspectiveCamera(50,1,0.1,10);camera.position.set(0,0,4);camera.up.set(0,1,0);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+      for(const row of fixture.gumball.raySegmentCases){
+        const ray = new Ray(new Vector3(...row.origin),new Vector3(...row.direction).normalize());
+        expect(ray.distanceSqToSegment(new Vector3(...row.a),new Vector3(...row.b))).toBeCloseTo(row.distance ** 2,12);
+      }
+      let originalAnchor: Vector3 | undefined;
+      for(const row of fixture.gumball.pivotCases){
+        const pivot = new Vector3(...row.pivot);
+        const ray = new Vector3((row.pointer[0]/200)-1,1-(row.pointer[1]/200),0.5).unproject(camera).sub(camera.position);
+        const start = camera.position.clone().add(ray.clone().multiplyScalar((pivot.z-camera.position.z)/ray.z));
+        const anchor = start.clone().sub(pivot);
+        if(originalAnchor)expect(anchor.distanceTo(originalAnchor)).toBeLessThan(1e-12);else originalAnchor=anchor;
+        const moved = start.clone().add(new Vector3(...fixture.gumball.delta)).project(camera);
+        expect((moved.x+1)*200).toBeCloseTo(row.movedPointer[0],8);
+        expect((1-moved.y)*200).toBeCloseTo(row.movedPointer[1],8);
+      }
+      let selected: string[] = [];
+      for(const step of fixture.steps){
+        const incoming: string[] = step.incoming.map((index:number)=>fixture.targets[index]);
+        selected = step.merge === "replace" ? incoming : step.merge === "additive" ? union(selected,incoming) : step.merge === "subtractive" ? difference(selected,incoming) : xor(selected,incoming);
+        expect(selected).toEqual(step.selected.map((index:number)=>fixture.targets[index]));
+        const active = step.active === null ? null : fixture.objects[step.active];
+        const groups = uniq(selected.filter(target=>active!==null && target.startsWith(`${active}.face.`)).map(target=>target.slice(target.indexOf(".face.")+6).split("~")[0]));
+        expect(groups).toEqual(step.groups);
+      }
+      for(const step of fixture.overlayLifecycle.steps){
+        const exact: string[] = step.targets.map((index:number)=>fixture.overlayLifecycle.targets[index]);
+        expect(uniq(exact.map(target=>target.slice(0,target.indexOf(".face."))))).toEqual(fixture.objects);
+        expect(exact.map(target=>Number(target.slice(target.indexOf(".face.")+6).split("~")[0]))).toEqual(step.groups);
+        expect(exact.filter(target=>target.startsWith(`${fixture.objects[0]}.face.`))).toEqual([fixture.targets[0]]);
+      }
+      const wide = Array.from({length:fixture.gumball.wideSelection.count},(_,index)=>`${fixture.objects[0]}.face.${index}~${fixture.source.handle}~${BigInt(fixture.gumball.wideSelection.labelStart)+BigInt(index)}~${fixture.source.revision}`);
+      expect(union(wide.slice(0,64),wide.slice(64))).toEqual(wide);
+      expect(uniq(wide).length).toBe(fixture.gumball.wideSelection.count);
+      expect(wide.reduce((bytes,id)=>bytes+new TextEncoder().encode(id).length,0)).toBeLessThan(16384);
+      console.log("[DEBUG] componentSelectionMerge modes=4 independentLodash=true exactSourceLabels=true nonactiveFaceChanges=2 wideTargets=80");
+    });
+    it("merges complete original face edge and vertex provenance", () => {
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json", source.url),"utf8"));
+      const transfers = fixture.transfers.map((wire:unknown) => meshTransferFromPreviewPayload(wire)!);
+      const merged = mergeMeshTransfers(transfers);
+      const output = meshTransferToGeometryData(merged);
+      expect([...merged.index]).toEqual(fixture.merged.index);
+      expect([...merged.edges]).toEqual(fixture.merged.edges);
+      expect([...merged.points!]).toEqual(fixture.merged.points);
+      expect(merged.faceGroups.map(group=>group.start)).toEqual([0,3]);
+      expect(merged.edgeGroups.map(group=>group.start)).toEqual([0,1]);
+      expect(merged.vertexGroups!.map(group=>group.start)).toEqual([0,1]);
+      expect(output.faceIds).toEqual(fixture.expected.faceIds);
+      expect(output.edgeIds).toEqual(fixture.expected.edgeIds);
+      expect(output.vertexIds).toEqual(fixture.expected.vertexIds);
+      expect(output.componentReferences).toEqual(fixture.expected.componentReferences);
+      let area=0,length=0;
+      const geometry = new BufferGeometry().setAttribute("position",new Float32BufferAttribute(output.position,3)).setIndex([...merged.index]);
+      for(let offset=0;offset<merged.index.length;offset+=3){
+        const points=[0,1,2].map(index=>new Vector3().fromBufferAttribute(geometry.getAttribute("position"),merged.index[offset+index]!));
+        area+=new Vector3().subVectors(points[1]!,points[0]!).cross(new Vector3().subVectors(points[2]!,points[0]!)).length()/2;
+      }
+      for(let offset=0;offset<merged.edges.length;offset+=6)length+=new Vector3().fromArray(merged.edges,offset).distanceTo(new Vector3().fromArray(merged.edges,offset+3));
+      expect(area).toBe(fixture.expected.area);expect(length).toBe(fixture.expected.edgeLength);
+      geometry.dispose();
+      console.log(`[DEBUG] originalTransferMerge domains=3 independentThreeArea=${area} edgeLength=${length}`);
+    });
+    it("validates original vertex selection with independent Three geometry", () => {
+      const fixture = JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧫️fixtures/🎯️vertex-selection/🔣️.json", source.url), "utf8"));
+      const geometry = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(fixture.positions.flat(),3));
+      const camera = new OrthographicCamera(-1,1,1,-1,0.1,10);
+      camera.position.set(0,0,4);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+      const original = new Set<string>();
+      for(let index=0;index<fixture.vertexIds.length;index+=1){
+        const point = new Vector3().fromBufferAttribute(geometry.getAttribute("position"),index).project(camera);
+        if(fixture.vertexIds[index]!==fixture.nonselectable && Math.abs(point.x)<=1 && Math.abs(point.y)<=1)original.add(String(fixture.vertexIds[index]));
+      }
+      expect([...original].sort()).toEqual(fixture.expected);
+      geometry.dispose();
+      console.log("[DEBUG] originalVertexSelection independentThree=true surfaceSamplesExcluded=true");
+    });
+    it("rejects malformed original vertex ranges before rendering", () => {
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json",source.url),"utf8"));
+      const points = fixture.cases[0].points;
+      const raw = {position:[0,0,0,1,0,0,0,1,0],normal:[0,0,1,0,0,1,0,0,1],index:[0,1,2],edges:[],points:points.flat(),face_groups:[],edge_groups:[],vertex_groups:points.map((_:unknown,index:number)=>({start:index,count:1,entity_id:String(index+1)}))};
+      const validate = new Ajv({strict:true}).compile({type:"array",minItems:points.length,maxItems:points.length,prefixItems:points.map((_:unknown,index:number)=>({type:"object",required:["start","count","entity_id"],additionalProperties:false,properties:{start:{const:index},count:{const:1},entity_id:{type:"string",minLength:1,maxLength:128}}}))});
+      expect(validate(raw.vertex_groups)).toBe(true);
+      for(const refusal of fixture.refusals){
+        const source=structuredClone(raw);source.vertex_groups[refusal.row]![refusal.field as "start"]=refusal.value;
+        expect(validate(source.vertex_groups),JSON.stringify(validate.errors)).toBe(false);
+        const mesh=meshTransferFromPreviewPayload(source)!;
+        expect(isRenderableMeshTransfer(mesh),JSON.stringify(refusal)).toBe(false);
+        expect(meshTransferToGeometryData(mesh).position.length).toBe(0);
+      }
+    });
     it("preserves only original topology vertex provenance", () => {
       const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json", source.url), "utf8"));
       for (const row of fixture.cases) {
         const labels = row.points.map((_: unknown, index: number) => (18446744073709551615n - BigInt(index)).toString());
-        const raw = { position: [0,0,0,1,0,0,0,1,0], normal: [0,0,1,0,0,1,0,0,1], index: [0,1,2], edges: [], points: row.points.flat(), face_groups: [], edge_groups: [], vertex_groups: labels.map((label: string, index: number) => ({start:index,count:1,entity_id:label})) };
+        const raw = { position: row.kind === "point" ? [] : [0,0,0,1,0,0,0,1,0], normal: row.kind === "point" ? [] : [0,0,1,0,0,1,0,0,1], index: row.kind === "point" ? [] : [0,1,2], edges: [], points: row.points.flat(), face_groups: [], edge_groups: [], vertex_groups: labels.map((label: string, index: number) => ({start:index,count:1,entity_id:label})) };
         const mesh = meshTransferFromPreviewPayload(raw)!;
         const output = meshTransferToGeometryData(mesh) as unknown as { readonly position: Float32Array; readonly vertexIds: readonly number[]; readonly componentReferences: Readonly<Record<string, readonly string[]>> };
-        expect(output.vertexIds).toEqual([fixture.unselectable,fixture.unselectable,fixture.unselectable,...labels.map((_: string,index: number)=>index)]);
+        const surfaceCount = raw.position.length / 3;
+        expect(output.vertexIds).toEqual([...Array(surfaceCount).fill(fixture.unselectable),...labels.map((_: string,index: number)=>index)]);
         expect(output.componentReferences.vertex).toEqual(labels);
         const geometry = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(output.position,3)).setIndex(raw.index);
-        expect(geometry.getAttribute("position").count).toBe(3 + row.points.length);
-        for (const [index,point] of row.points.entries()) expect(new Vector3().fromBufferAttribute(geometry.getAttribute("position"),3+index).distanceTo(new Vector3(...point))).toBe(0);
+        expect(geometry.getAttribute("position").count).toBe(surfaceCount + row.points.length);
+        for (const [index,point] of row.points.entries()) expect(new Vector3().fromBufferAttribute(geometry.getAttribute("position"),surfaceCount+index).distanceTo(new Vector3(...point))).toBe(0);
+        geometry.dispose();
+        console.log(`[DEBUG] originalVertexTransfer kind=${row.kind} points=${row.points.length} independentThree=true`);
       }
     });
     it("preserves analytic face and edge picking references without narrowing labels", () => {

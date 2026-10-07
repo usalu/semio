@@ -1,6 +1,6 @@
 //! 🗣️ Direct text codec for `set-lang`.
 
-use super::SetLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetLang;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-lang";

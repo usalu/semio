@@ -28,7 +28,9 @@
 //! (`hex_encode`/`split_top_level`/`encode_option`/…) verbatim per artifact convention; `f64` fields
 //! use Rust's own round-trippable `Display`/`FromStr` (no external float-formatting dep needed).
 
+#[cfg(test)]
 use crate::standards::v3_0::subsets::any::io::binary::diff::dec_unknown_bin;
+#[cfg(test)]
 use crate::standards::v3_0::subsets::any::io::binary::diff::enc_unknown_bin;
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
@@ -40,7 +42,7 @@ use crate::schema::snapshot::{ObjFace, ObjGroup, ObjNormal, ObjObject, ObjTexCoo
 use crate::ObjSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -1516,3 +1518,6 @@ pub use crate::schema::snapshot::ObjUsemtlRange;
 
 
 
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

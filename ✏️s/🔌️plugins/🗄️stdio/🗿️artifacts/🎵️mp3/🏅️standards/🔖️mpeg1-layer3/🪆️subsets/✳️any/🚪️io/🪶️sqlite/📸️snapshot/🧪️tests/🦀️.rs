@@ -1,3 +1,4 @@
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use crate::standards::mpeg1_layer3::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},ArtifactSqliteSnapshot};
 
@@ -25,7 +26,7 @@ fn sqlite_snapshot_mp3_native_factory_declares_actual_structural_hash(){let valu
 fn sqlite_snapshot_mp3_shipped_demo_assets_match_owned_native_source(){let snapshot=crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🔊️.mp3")).unwrap();assert_eq!(<Mp3Snapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio")).unwrap(),snapshot);assert_eq!(<Mp3Snapshot as store::ArtifactPack>::decode_pack(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio")).unwrap(),snapshot);}
 #[test]
 fn sqlite_snapshot_mp3_actual_erased_capability_preserves_binary_and_text(){
- use semio_framework_os_kernel::{io::{ArtifactDialect,IoPayload},sqlite_snapshot::SnapshotEncoding};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
  let snapshot=fixture();let codec=(crate::native_codecs()[0].codec)();let provider=codec.snapshot_sqlite.as_ref().unwrap();let dialect:ArtifactDialect=crate::MP3_DIALECT.into();
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(<Mp3Snapshot as store::ArtifactPack>::encode_pack(&snapshot)),SnapshotEncoding::Text=>IoPayload::Text(<Mp3Snapshot as store::ArtifactDsl>::print_dsl(&snapshot))};let database=(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).expect("full owned snapshot export").value;assert_eq!(Mp3Snapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap(),snapshot);let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let restored=(provider.import)(&codec.schema,&dialect,import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).expect("full owned snapshot import").value;assert_eq!(match restored{IoPayload::Binary(bytes)=><Mp3Snapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),IoPayload::Text(text)=><Mp3Snapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap()},snapshot);}
 }
@@ -68,7 +69,7 @@ fn sqlite_snapshot_mp3_refuses_malformed_ownership_widths_and_bounds_work(){
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_mp3_actual_declaration_preserves_non_wire_owned_fields(){
- use semio_framework_os_kernel::{io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}},sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase}};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase};
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("MP3 SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();let snapshot=fixture();let dialect:ArtifactDialect=crate::MP3_DIALECT.into();let mut phases=Vec::new();let output=io_export_sqlite_snapshot(&dialect,&snapshot,SnapshotEncoding::Binary,SqliteDatabaseLimits::default(),&mut |event|{phases.push(event.phase);true}).await.unwrap();assert_eq!(io_import_sqlite_snapshot::<Mp3Snapshot>(&dialect,&output.value,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));
 }
 

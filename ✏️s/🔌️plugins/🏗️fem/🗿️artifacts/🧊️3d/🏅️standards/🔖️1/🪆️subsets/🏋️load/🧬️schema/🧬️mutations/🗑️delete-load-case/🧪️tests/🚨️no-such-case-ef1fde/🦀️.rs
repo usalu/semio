@@ -13,7 +13,8 @@
 //! No seismic case was ever opened, so the load schedule is left untouched.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-load-case/🚨️no-such-case-ef1fde/📸️snapshot/⬅️before/🔣️.json");

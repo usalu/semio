@@ -95,61 +95,9 @@ pub use semio_framework_mesh_engine::{
 // instead, so no external call site needs to change.
 pub use abi::*;
 pub use interaction::*;
-pub use io::{
-    dialects_for as io_dialects_for,
-    format_accept_filter,
-    format_descriptor,
-    formats_csv,
-    io_compose_via,
-    io_dispatch,
-    io_keys_for,
-    list_composer_entries,
-    normalize_format_kind,
-    preflight_composer_entry_refs,
-    preflight_format_descriptors,
-    preflight_subset_validators,
-    register_composer_entries,
-    register_composer_entry_refs,
-    register_format_descriptors,
-    register_subset_validator,
-    register_subset_validators,
-    resolve as io_resolve,
-    
-    set_io_fallback_dispatcher,
-    subset_validator_entry_of,
-    wire_artifact_compose,
-    wire_decode_composed_artifact,
-    wire_list_composer_entries,
-    Analysis,
-    AnalyzeSource,
-    ArtifactDialect,
-    AsyncComposeFn,
-    ComposeError,
-    // 🌀️ `io-async-signatures`: the async `ComposerEntry.compose` plumbing — see that module's own
+pub use {io::dialects_for as io_dialects_for,io::format_accept_filter,io::format_descriptor,io::formats_csv,io::io_compose_via,io::io_dispatch,io::io_keys_for,io::list_composer_entries,io::normalize_format_kind,io::preflight_composer_entry_refs,io::preflight_format_descriptors,io::preflight_subset_validators,io::register_composer_entries,io::register_composer_entry_refs,io::register_format_descriptors,io::register_subset_validator,io::register_subset_validators,io::resolve as io_resolve,io::set_io_fallback_dispatcher,io::subset_validator_entry_of,io::wire_artifact_compose,io::wire_decode_composed_artifact,io::wire_list_composer_entries,io::Analysis,io::AnalyzeSource,semio_framework_artifact_reference::ArtifactDialect,io::AsyncComposeFn,io::ComposeError,io::// 🌀️ `io-async-signatures`: the async `ComposerEntry.compose` plumbing — see that module's own
     // doc comments (`ComposeFuture`/`AsyncComposeFn`/`resolve_ready`) for what each does.
-    ComposeFuture,
-    ComposeSource,
-    ComposedArtifact,
-    ComposerEntry,
-    Composition,
-    Confidence as IoConfidence,
-    Dialect,
-    ErasedComposeSource,
-    FormatDescriptor,
-    FormatRegistryError,
-    IoDirection,
-    IoFallback,
-    IoFallbackDispatcher,
-    IoKey,
-    IoPayload,
-    IoResolveError,
-    StandardId,
-    SubsetId,
-    SubsetValidator,
-    SubsetValidatorEntry,
-    WireComposeSource,
-    WireComposedArtifact,
-};
+    ComposeFuture,io::ComposeSource,io::ComposedArtifact,io::ComposerEntry,io::Composition,io::Confidence as IoConfidence,semio_framework_artifact_reference::Dialect,io::ErasedComposeSource,io::FormatDescriptor,io::FormatRegistryError,io::IoDirection,io::IoFallback,io::IoFallbackDispatcher,io::IoKey,io::IoPayload,io::IoResolveError,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,io::SubsetValidator,io::SubsetValidatorEntry,io::WireComposeSource,io::WireComposedArtifact};
 pub use manifest as ui;
 pub use manifest::kernel::{
     decode_presence_peer,

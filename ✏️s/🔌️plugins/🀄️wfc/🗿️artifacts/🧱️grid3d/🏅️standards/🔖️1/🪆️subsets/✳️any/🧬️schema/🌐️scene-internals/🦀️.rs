@@ -9,7 +9,9 @@
 
 use crate::schema::inferences::Grid3dAssignment;
 use crate::schema::snapshot::{axis_offset, axis_size, cell_key, Grid3dColor, Grid3dSnapshot, Grid3dTile, Grid3dTileMedia};
-use semio_framework_pack_json as json;
+use semio_framework_value::{DslValue, ToValue};
+
+fn object<const N: usize>(entries: [(String,DslValue);N]) -> DslValue { DslValue::Object(entries.into_iter().collect()) }
 
 //#region 🔖️Ids
 /// 🧊️ The mesh id of the neutral, unpinned grid cell box.
@@ -107,22 +109,22 @@ pub fn tile_tint(tile: &Grid3dTile) -> [f32; 4] {
     }
 }
 
-fn mesh_entry(id: String, data: semio_framework::MeshData) -> json::Value {
-    json::object([("id".to_string(), json::Value::String(id)), ("data".to_string(), json::Value::from(data))])
+fn mesh_entry(id: String, data: semio_framework::MeshData) -> DslValue {
+    object([("id".to_string(), DslValue::String(id)), ("data".to_string(), data.to_value())])
 }
 
-fn vector3(values: [f64; 3]) -> json::Value {
-    json::Value::Array(values.into_iter().map(json::Value::from).collect())
+fn vector3(values: [f64; 3]) -> DslValue {
+    DslValue::Array(values.into_iter().map(DslValue::float).collect())
 }
 
-fn instance_record(id: String, mesh_id: String, position: [f64; 3], scale: [f64; 3], label: String) -> json::Value {
-    json::object([
-        ("id".to_string(), json::Value::String(id)),
-        ("meshId".to_string(), json::Value::String(mesh_id)),
+fn instance_record(id: String, mesh_id: String, position: [f64; 3], scale: [f64; 3], label: String) -> DslValue {
+    object([
+        ("id".to_string(), DslValue::String(id)),
+        ("meshId".to_string(), DslValue::String(mesh_id)),
         ("position".to_string(), vector3(position)),
-        ("rotation".to_string(), json::Value::Array(vec![json::Value::from(0.0), json::Value::from(0.0), json::Value::from(0.0), json::Value::from(1.0)])),
+        ("rotation".to_string(), DslValue::Array(vec![DslValue::float(0.0), DslValue::float(0.0), DslValue::float(0.0), DslValue::float(1.0)])),
         ("scale".to_string(), vector3(scale)),
-        ("label".to_string(), json::Value::String(label)),
+        ("label".to_string(), DslValue::String(label)),
     ])
 }
 //#endregion 🗿️TileMesh
@@ -130,20 +132,20 @@ fn instance_record(id: String, mesh_id: String, position: [f64; 3], scale: [f64;
 //#region ▦️GridWindow
 /// ▦️ The grid window's mesh catalogue: the neutral cell cage, the masked-cell cage, and one tinted
 /// cage per tile that some cell is pinned to. Never one mesh per cell.
-pub fn grid_meshes_json(snapshot: &Grid3dSnapshot) -> String {
+pub fn grid_meshes_value(snapshot: &Grid3dSnapshot) -> DslValue {
     let mut meshes = vec![mesh_entry(GRID_CELL_MESH.to_string(), unit_box_mesh([0.58, 0.62, 0.68, 0.18])), mesh_entry(GRID_MASKED_MESH.to_string(), unit_box_mesh([0.16, 0.17, 0.2, 0.35]))];
     for tile in &snapshot.tiles {
         if snapshot.pinned.iter().any(|cell| cell.tile_id == tile.id) {
             meshes.push(mesh_entry(format!("{GRID_PINNED_MESH_PREFIX}{}", tile.id), unit_box_mesh(tile_tint(tile))));
         }
     }
-    json::to_string(&json::Value::Array(meshes))
+    DslValue::Array(meshes)
 }
 
 /// ▦️ One instance per grid cell, placed at its own non-uniform origin and scaled to its own box.
 /// The instance id IS the cell key, so a pick comes back as `x:y:z` and the editor's pin/mask
 /// commands need no second lookup table.
-pub fn grid_instances_json(snapshot: &Grid3dSnapshot) -> String {
+pub fn grid_instances_value(snapshot: &Grid3dSnapshot) -> DslValue {
     let mut instances = Vec::with_capacity(snapshot.width as usize * snapshot.height as usize * snapshot.depth as usize);
     for z in 0..snapshot.depth {
         for y in 0..snapshot.height {
@@ -165,51 +167,51 @@ pub fn grid_instances_json(snapshot: &Grid3dSnapshot) -> String {
             }
         }
     }
-    json::to_string(&json::Value::Array(instances))
+    DslValue::Array(instances)
 }
 //#endregion ▦️GridWindow
 
 //#region 👁️PreviewWindow
 /// 👁️ The preview window's mesh catalogue: exactly one entry per authored tile, so a solved grid of
 /// hundreds of cells costs one instanced draw call per distinct tile.
-pub fn preview_meshes_json(snapshot: &Grid3dSnapshot) -> String {
-    let meshes: Vec<json::Value> = snapshot.tiles.iter().map(|tile| mesh_entry(format!("{TILE_MESH_PREFIX}{}", tile.id), tile_mesh(tile))).collect();
-    json::to_string(&json::Value::Array(meshes))
+pub fn preview_meshes_value(snapshot: &Grid3dSnapshot) -> DslValue {
+    let meshes: Vec<DslValue> = snapshot.tiles.iter().map(|tile| mesh_entry(format!("{TILE_MESH_PREFIX}{}", tile.id), tile_mesh(tile))).collect();
+    DslValue::Array(meshes)
 }
 
 /// 👁️ One instance per SOLVED cell, scaled into that cell's own box. `assignments` is the inference
 /// commit's `[x, y, z, tileId]` list — never persisted state.
-pub fn preview_instances_json(snapshot: &Grid3dSnapshot, assignments: &[Grid3dAssignment]) -> String {
-    let instances: Vec<json::Value> = assignments.iter().filter(|row| in_grid(snapshot, row)).map(|row| preview_instance(snapshot, row)).collect();
-    json::to_string(&json::Value::Array(instances))
+pub fn preview_instances_value(snapshot: &Grid3dSnapshot, assignments: &[Grid3dAssignment]) -> DslValue {
+    let instances: Vec<DslValue> = assignments.iter().filter(|row| in_grid(snapshot, row)).map(|row| preview_instance(snapshot, row)).collect();
+    DslValue::Array(instances)
 }
 
 fn in_grid(snapshot: &Grid3dSnapshot, row: &Grid3dAssignment) -> bool {
     row.x < snapshot.width && row.y < snapshot.height && row.z < snapshot.depth
 }
 
-fn preview_instance(snapshot: &Grid3dSnapshot, row: &Grid3dAssignment) -> json::Value {
+fn preview_instance(snapshot: &Grid3dSnapshot, row: &Grid3dAssignment) -> DslValue {
     let key = cell_key(row.x, row.y, row.z);
     instance_record(key.clone(), format!("{TILE_MESH_PREFIX}{}", row.tile_id), cell_origin(snapshot, row.x, row.y, row.z), cell_extent(snapshot, row.x, row.y, row.z), format!("{key} {}", row.tile_id))
 }
 
-/// 🚚️ The incremental companion of [`preview_instances_json`]: `{base, revision, count, changed,
+/// 🚚️ The incremental companion of [`preview_instances_value`]: `{base, revision, count, changed,
 /// removed}`, where `changed` carries whole records so an applying consumer never diffs fields.
 /// `instances_json` stays AUTHORITATIVE on every publication; a consumer not at `base` reads it.
-pub fn preview_instances_delta_json(snapshot: &Grid3dSnapshot, previous: &[Grid3dAssignment], next: &[Grid3dAssignment], revision: u64) -> String {
-    let changed: Vec<json::Value> = next.iter().filter(|row| in_grid(snapshot, row) && !previous.contains(row)).map(|row| preview_instance(snapshot, row)).collect();
-    let removed: Vec<json::Value> = previous
+pub fn preview_instances_delta_value(snapshot: &Grid3dSnapshot, previous: &[Grid3dAssignment], next: &[Grid3dAssignment], revision: u64) -> DslValue {
+    let changed: Vec<DslValue> = next.iter().filter(|row| in_grid(snapshot, row) && !previous.contains(row)).map(|row| preview_instance(snapshot, row)).collect();
+    let removed: Vec<DslValue> = previous
         .iter()
         .filter(|row| !next.iter().any(|candidate| (candidate.x, candidate.y, candidate.z) == (row.x, row.y, row.z)))
-        .map(|row| json::Value::String(cell_key(row.x, row.y, row.z)))
+        .map(|row| DslValue::String(cell_key(row.x, row.y, row.z)))
         .collect();
-    json::to_string(&json::object([
-        ("base".to_string(), json::Value::from(revision.saturating_sub(1))),
-        ("revision".to_string(), json::Value::from(revision)),
-        ("count".to_string(), json::Value::from(next.len() as u64)),
-        ("changed".to_string(), json::Value::Array(changed)),
-        ("removed".to_string(), json::Value::Array(removed)),
-    ]))
+    object([
+        ("base".to_string(), revision.saturating_sub(1).to_value()),
+        ("revision".to_string(), revision.to_value()),
+        ("count".to_string(), (next.len() as u64).to_value()),
+        ("changed".to_string(), DslValue::Array(changed)),
+        ("removed".to_string(), DslValue::Array(removed)),
+    ])
 }
 //#endregion 👁️PreviewWindow
 

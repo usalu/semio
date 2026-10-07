@@ -61,13 +61,11 @@ export interface JpgOtherSegmentsDiff {
   added?: JpgSegmentAdded[];
 }
 
-/** 🔺️ Sparse diff for `stdio.jpg`. Every field present = changed to a value; tri-state fields
- * (`reEncodeQuality`/`jfifThumbnail`/`restartInterval`) use `null` for "cleared". */
+/** 🔺️ Sparse owned diff with explicit null clearing for optional values. */
 export interface JpgDiff {
   width?: number;
   height?: number;
   pixels?: number[];
-  reEncodeQuality?: number | null;
   jfifVersion?: [number, number];
   jfifDensityUnits?: JfifDensityUnits;
   jfifXDensity?: number;

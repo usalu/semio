@@ -50,9 +50,7 @@ pub fn retire_raster_artifact(artifact: crate::standards::v1::subsets::any::sche
 }
 //#endregion 🔖️Snapshot
 
-#[path="📦️record/🦀️.rs"]
-mod record;
-use record::RasterNativeDocument;
+
 
 
 

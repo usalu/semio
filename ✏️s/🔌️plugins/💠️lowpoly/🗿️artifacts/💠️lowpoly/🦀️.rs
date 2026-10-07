@@ -109,8 +109,8 @@ impl LowpolyPaintLayer {
 /// identical rule so the same geometry always resolves to the same handle.
 pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
     let child_id = store::content_id("mesh", mesh_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -120,8 +120,8 @@ pub fn managed_mesh_child_handle(object_id: &str, state: &LowpolyMeshState) -> s
     let bytes=store::pack_rt::encode_wire_value(&value);
     semio_framework_value::FromValue::retire_decoded(value);
     let child_id=store::content_id("mesh",&bytes);
-    let dialect=store::os_io::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"mesh".into()};
-    store::ArtifactChild::new(child_id,store::os_io::ArtifactRef{artifact_id:format!("{object_id}-mesh"),dialect})
+    let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"mesh".into()};
+    store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:format!("{object_id}-mesh"),dialect})
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]

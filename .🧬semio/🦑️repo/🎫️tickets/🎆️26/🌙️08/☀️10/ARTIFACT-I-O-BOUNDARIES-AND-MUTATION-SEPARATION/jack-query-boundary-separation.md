@@ -22,6 +22,8 @@ Actual registered Nx native command: bun nx run @semio-tech/trinity-jack-rs:veri
 
 ## Changed Files
 
+The standalone registered oracle command (session 28090, `-- oracle`) completed exit 0 after shared preparation, total 20m55s. It emitted the SQLite/JSON1 debug log. Callable source oracle also passed in registered repo-lib GREEN session 52058. The unconditional physical IO mount in language-service schema was removed after confirming there were no consumers. Native session 4887 completed preparation and oracle stages but remains running; no native pass is asserted.
+
 - ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🦀️.rs
 - ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🦀️.rs
 - ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/🦀️.rs

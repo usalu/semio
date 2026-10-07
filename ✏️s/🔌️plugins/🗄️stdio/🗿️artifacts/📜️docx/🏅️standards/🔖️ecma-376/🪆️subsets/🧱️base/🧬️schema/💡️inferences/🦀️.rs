@@ -62,3 +62,6 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::outline::DocxOutline;
 //#endregion 🔁️Re-exports
+
+#[path="📰️document/🦀️.rs"]
+pub mod document;

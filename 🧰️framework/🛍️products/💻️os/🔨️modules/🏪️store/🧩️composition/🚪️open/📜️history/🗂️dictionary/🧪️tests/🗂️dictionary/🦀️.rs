@@ -2,7 +2,7 @@
 
 use super::super::{MemberHistoryInputStep, MemberHistoryVerification};
 use super::*;
-use crate::os_io::{ArtifactDialect, ArtifactRef};
+use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use crate::os_store::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef};
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use serde_json::Value;
@@ -119,7 +119,7 @@ fn request(fixture: &Value, row: &Value, history: &[u8]) -> MemberOpenRequest {
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap();
     }
     pages.seal().unwrap();
-    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
+    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages, crate::os_spr::ActorId(fixture["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
 }
 
 fn verified_input(fixture: &Value, row: &Value, history: &[u8]) -> VerifiedMemberHistoryInput {

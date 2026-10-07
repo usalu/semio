@@ -15,6 +15,9 @@
     { "id": "setSelectionMode", "factory": "FrameworkSetSelectionModeJobFactory", "schemaId": "framework.reserved.setSelectionMode.v1", "descriptorDisposition": "migrated", "routeIndex": 19, "maximumRawBytes": 16384, "maximumItems": 64, "workUnits": 1024, "maximumOutputBytes": 16384 }
   ],
   "descriptorLaws": [
+    {"id": "exact-app-action-owner", "ownerKind": "appAction", "ownerId": "app-a", "actionIds": ["copy", "cut", "paste", "noteShellCommand", "setHistoryCommandFilter", "recordTutorial", "clearSelection", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"], "initial": "missing", "expected": "migrated"},
+    {"id": "near-id-app-action-owner", "ownerKind": "appAction", "ownerId": "app-a", "actionIds": ["copy-local", "Copy"], "initial": "missing", "expected": "missing"},
+    {"id": "unaccepted-app-action-owner", "ownerKind": "appAction", "ownerId": "app-a", "actionIds": ["localAction"], "initial": "missing", "expected": "missing"},
     { "id": "exact-window-owner-primary", "ownerKind": "windowAction", "ownerId": "app-a/main", "actionIds": ["copy", "cut", "paste", "noteShellCommand", "setHistoryCommandFilter", "recordTutorial", "clearSelection", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"], "initial": "missing", "expected": "migrated" },
     { "id": "exact-window-owner-secondary", "ownerKind": "windowAction", "ownerId": "app-b/preview", "actionIds": ["copy", "cut", "paste", "noteShellCommand", "setHistoryCommandFilter", "recordTutorial", "clearSelection", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"], "initial": "missing", "expected": "migrated" },
     { "id": "near-id-window-owner", "ownerKind": "windowAction", "ownerId": "app-a/main", "actionIds": ["copy-local", "Copy"], "initial": "missing", "expected": "missing" },

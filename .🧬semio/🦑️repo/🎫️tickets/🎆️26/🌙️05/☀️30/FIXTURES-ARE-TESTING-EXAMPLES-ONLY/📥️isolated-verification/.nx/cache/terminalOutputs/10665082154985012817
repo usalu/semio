@@ -1,0 +1,4 @@
+> bun ./📜️script.ts schema generate
+
+[DEBUG] isolated Nx verification schema
+[schema generate] 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json: 3639 scopes, 9308 diagnostics.

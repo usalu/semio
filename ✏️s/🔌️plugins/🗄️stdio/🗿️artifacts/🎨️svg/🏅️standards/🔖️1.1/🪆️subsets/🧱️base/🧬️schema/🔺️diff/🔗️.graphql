@@ -1,5 +1,5 @@
-# 🌳 `XmlAttr`/`XmlNode`/`XmlDeclaration` are NOT redefined here -- `SvgSnapshot.doc` wraps an
-# XmlDocument and `SvgDiff` diffs that same node tree directly (spec-mandated reuse of xml's NODE
+# 🌳 `XmlAttr`/`SvgNode`/`XmlDeclaration` are NOT redefined here -- `SvgSnapshot.doc` wraps an
+# SvgDocument and `SvgDiff` diffs that same node tree directly (spec-mandated reuse of xml's NODE
 # model; svg's DIFF types below are its own), so this facet relies on 📰️xml's own
 # `📸️snapshot/🔗️.graphql` types being present in the assembled schema, exactly as
 # `stdio.xml`'s own diff/mutations facets rely on `XmlSnapshot` without locally redefining it.
@@ -9,8 +9,8 @@ from the payload when unchanged; represented here as plain nullable fields since
 three-state representation -- the structured text/binary codecs are authoritative
 for the absent/null/set distinction. """
 type SvgDiff {
-  prolog: [XmlNode!]
-  epilog: [XmlNode!]
+  prolog: [SvgNode!]
+  epilog: [SvgNode!]
   declaration: XmlDeclaration
   doctype: XmlDoctype
   root: SvgNodeDiff
@@ -22,25 +22,25 @@ enum SvgNodeDiffKind {
   REPLACE
 }
 
-""" 🌳 Recursive per-node diff -- tagged union flattened like `XmlNode`. """
+""" 🌳 Recursive per-node diff -- tagged union flattened like `SvgNode`. """
 type SvgNodeDiff {
   kind: SvgNodeDiffKind!
   name: String
   attributes: SvgAttributesDiff
   children: SvgChildrenDiff
   text: String
-  node: XmlNode
+  node: SvgNode
 }
 
 type SvgAttrModified {
   name: String!
-  value: String!
+  value: SvgAttributeValue!
 }
 
 type SvgAttrAdded {
   index: Int!
   name: String!
-  value: String!
+  value: SvgAttributeValue!
 }
 
 """ 🏷️ Name-keyed, order-preserving attribute triple. """
@@ -57,7 +57,7 @@ type SvgChildModified {
 
 type SvgChildAdded {
   index: Int!
-  item: XmlNode!
+  item: SvgNode!
 }
 
 """ 🌳 Index-keyed, recursive children triple. """
@@ -69,7 +69,7 @@ type SvgChildrenDiff {
 
 type XmlAttr {
   name: String!
-  value: String!
+  value: SvgAttributeValue!
 }
 
 """ 🗣️ Delimiter the declaration's pseudo-attributes are written with (XML 1.0 §2.8). """

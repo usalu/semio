@@ -63,7 +63,7 @@ impl Puzzle5dArtifactVcs {
     pub fn create() -> js_sys::Promise {
         semio_framework_async::future_to_promise(async {
             let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::puzzle5d::create_puzzle5d_app());
-            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry).await;
+            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
             Ok(Self { app: RefCell::new(app) }.into())
         })
     }

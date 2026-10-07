@@ -534,7 +534,7 @@ mod conformance_laws {
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
 
-        let real_snap = snapshot::decode_dwg(crate::examples::architectural::DOCUMENT_BYTES).expect("decode real fixture");
+        let real_snap = crate::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(crate::examples::architectural::DOCUMENT_BYTES).expect("decode real fixture");
         let real_text = store::ArtifactDsl::print_dsl(&real_snap);
         let (real_envelope, real_body) = store::semio_format::split_text_preamble(&real_text).expect("split preamble");
         let real_reconstructed = format!("{}\n{real_body}", real_envelope.envelope_id());
@@ -578,7 +578,7 @@ mod conformance_laws {
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
-        let real_snap = snapshot::decode_dwg(crate::examples::architectural::DOCUMENT_BYTES).expect("decode real fixture");
+        let real_snap = crate::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(crate::examples::architectural::DOCUMENT_BYTES).expect("decode real fixture");
         let real_packed = store::ArtifactPack::encode_pack(&real_snap);
         let (_, real_inner) = store::semio_format::unwrap_binary(&real_packed).expect("unwrap semio envelope (real fixture)");
         let real_trace = semio_framework_dsl::walk_protocol(&pack_spec, &real_inner).unwrap_or_else(|e| panic!("walk_protocol(pack, real fixture) failed @{}: {}", e.offset, e.message));

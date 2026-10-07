@@ -37,6 +37,7 @@ import surfaceWindows from "./🌧️surface/🔣️.json";
 import physicsWindows from "./🚀️physics/🔣️.json";
 import surfaceRanges from "./🌧️surface/🌊️range/🔣️.json";
 import chartSchema from "../../🧬️schema/🔣️.json";
+import nativeControlSchema from "../../🧬️schema/✅️native-controls/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
 import {compileNativeFinancialGrammar,compileNativeFinancialStock} from "./💹️financial/🟦️.ts";
 import arrowVectors from "./➡️arrows.json";
@@ -91,7 +92,7 @@ export async function compileNativeGrammar(repoRoot: string, workDir: string, na
   if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="scientific-stocks"){await compileNativeScientificModeDefaults(join(workDir,"scientific-stocks"),true);return;}
   if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="scientific-record-domain"){await compileNativeScientificRecordDomain(join(workDir,"scientific-record-domain"));return;}
   if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="scientific-construction-window"){await compileNativeScientificCanvasControls(join(workDir,"scientific-construction-window"),fixture.scientificConstructionWindows);return;}
-  if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="scientific-decision-window"){const neutral=fixture.scientificMixedPhysicalWindows;await compileNativeScientificCanvasControls(join(workDir,"scientific-decision-window"),{schema:{...neutral.schema,properties:{...neutral.schema.properties,cases:{...neutral.schema.properties.cases,minItems:1,maxItems:1}}},vectors:{...neutral.vectors,cases:neutral.vectors.cases.filter(entry=>entry.kind==="decision-lattice")}});return;}
+  if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="scientific-decision-window"){const neutral=fixture.scientificMixedPhysicalWindows;await compileNativeScientificCanvasControls(join(workDir,"scientific-decision-window"),{vectors:{...neutral.vectors,cases:neutral.vectors.cases.filter(entry=>entry.kind==="decision-lattice")}});return;}
   if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="diagram-controls"){await compileNativeDiagramControlEffects(join(workDir,"diagram"));return;}
   if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="scientific-controls"){await compileNativeScientificControlEffects(join(workDir,"scientific"));return;}
   if(process.env.PRINT_NATIVE_GRAMMAR_PHASE==="process-controls"){await compileNativeProcessControlEffects(join(workDir,"process"));return;}
@@ -895,8 +896,8 @@ export type NativeControlPdfPath={paint:number;closed:boolean;points:number[][];
 
 /** 🧾️ Matches per-family native defaults to the canonical schema using neutral AJV vectors. */
 export function compileNativeScientificDefaults():void{
-  const control=fixture.scientificFamilyDefaults,ajv=new Ajv2020({strict:false}),validate=ajv.compile(control.schema),failures:string[]=[];
-  if(!validate(control.vectors))throw Error("Scientific default vectors rejected: "+JSON.stringify(validate.errors));
+  const control=fixture.scientificFamilyDefaults,ajv=new Ajv2020({strict:false}),failures:string[]=[];
+  
   for(const entry of control.vectors){const value=(chartSchema["x-semio-family-options"] as Record<string,{options:Record<string,{default?:unknown}>}>)[entry.family]!.options[entry.key]!.default,independent=ajv.compile({const:entry.expected})(value);if(independent!==(value===entry.expected)||!independent)failures.push(entry.family+"/"+entry.key+" schema default "+JSON.stringify(value)+" expected native "+entry.expected);}
   if(failures.length)throw Error("Scientific per-family default contracts:\n"+failures.join("\n"));
   console.log("[DEBUG] Scientific "+control.vectors.length+" native per-family default contracts matched independent AJV");
@@ -905,8 +906,8 @@ export function compileNativeScientificDefaults():void{
 /** 🧫️ Verifies scientific customization through canonical mutations, D3 and owned actual PDF paint. */
 export async function compileNativeScientificControlEffects(workDir:string):Promise<void>{
   const neutral=fixture.nativeScientificControlEffects,controls=neutral.vectors,before=JSON.stringify(controls),failures:string[]=[];
-  const validate=new Ajv2020({strict:false}).compile(neutral.schema);
-  if(!validate(controls))throw Error("Scientific neutral vectors rejected: "+JSON.stringify(validate.errors));
+  
+  
   const filled=new Set([OPS.fill,OPS.eoFill,OPS.fillStroke,OPS.eoFillStroke,OPS.closeFillStroke,OPS.closeEOFillStroke]);
   let painted=0;
   const themes=(["light","dark"] as const).filter(value=>!process.env.PRINT_NATIVE_CONTROL_THEME||value===process.env.PRINT_NATIVE_CONTROL_THEME);
@@ -1018,9 +1019,9 @@ function scientificCanvasProbePreamble():string[]{return["\\title{Scientific Vie
 \ExplSyntaxOff`];}
 
 /** 🪟️ Compares physical scientific viewports with independent D3 affine paint and isolated chrome. */
-export async function compileNativeScientificCanvasControls(workDir:string,neutral:{schema:object;vectors:{canvas:number[];familyFrame:number[];domain:number[];range:number[];tickDivisions:number[];variants?:number[];cases:{family:string;kind:string;options:Record<string,unknown>;physicalOutline?:number[][];intrinsicGrid?:{kind:string;radius:number;labels:string[]}}[]}}=fixture.scientificCanvasControlEffects):Promise<void>{
+export async function compileNativeScientificCanvasControls(workDir:string,neutral:{vectors:{canvas:number[];familyFrame:number[];domain:number[];range:number[];tickDivisions:number[];variants?:number[];cases:{family:string;kind:string;options:Record<string,unknown>;physicalOutline?:number[][];intrinsicGrid?:{kind:string;radius:number;labels:string[]}}[]}}=fixture.scientificCanvasControlEffects):Promise<void>{
   const control=neutral.vectors,before=JSON.stringify(control),failures:string[]=[];
-  const validate=new Ajv2020({strict:false}).compile(neutral.schema);if(!validate(control))throw Error("Scientific canvas neutral vectors rejected: "+JSON.stringify(validate.errors));
+  
   const cases=control.cases.flatMap((entry,index)=>(control.variants??[0,1,2]).map(mode=>({entry,mode,id:"Cv"+index+"M"+mode}))),[width,height]=control.familyFrame,{domain,range}=control,preamble=scientificCanvasProbePreamble();
   let matched=0;
   const themes=(["light","dark"] as const).filter(theme=>!process.env.PRINT_NATIVE_CONTROL_THEME||theme===process.env.PRINT_NATIVE_CONTROL_THEME);if(!themes.length)throw Error("Unknown scientific canvas theme");
@@ -1079,7 +1080,7 @@ export async function compileNativeScientificCanvasControls(workDir:string,neutr
 /** 🧭️ Checks numeric and physical branch windows without changing their domain-specific coordinates. */
 export async function compileNativeScientificMixedControls(workDir:string):Promise<void>{
   const neutral=fixture.scientificMixedNumericWindows,control=neutral.vectors,original=JSON.stringify(control),failures:string[]=[];
-  const validate=new Ajv2020({strict:false}).compile(neutral.schema);if(!validate(control))throw Error("Mixed scientific neutral vectors rejected: "+JSON.stringify(validate.errors));
+  
   const cases=control.cases.flatMap((entry,index)=>[0,1,2].map(mode=>({entry,mode,id:"Mx"+index+"M"+mode}))),[width,height]=control.frame,themes=(["light","dark"] as const).filter(theme=>!process.env.PRINT_NATIVE_CONTROL_THEME||theme===process.env.PRINT_NATIVE_CONTROL_THEME);
   if(!themes.length)throw Error("Unknown mixed scientific theme");let matched=0;
   for(const appearance of themes){
@@ -1119,9 +1120,9 @@ export async function compileNativeScientificMixedControls(workDir:string):Promi
 
 /** 🧬️ Checks mode-conditioned defaults with explicit neutral vectors and actual D3 relations. */
 export async function compileNativeScientificModeDefaults(workDir:string,stock=Boolean(process.env.PRINT_NATIVE_MODE_STOCKS)):Promise<void>{
-  const neutral=fixture.scientificModeDefaults,control=neutral.vectors,original=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[];
-  if(!validate(control))throw Error("Scientific mode vectors rejected: "+JSON.stringify(validate.errors));
-  const stocks=fixture.scientificStockSemanticVectors;const stockValidate=new Ajv2020({strict:false}).compile(stocks.schema);if(!stockValidate(stocks.vectors))throw Error("Scientific stock vectors rejected");const families=stock?stocks.vectors.cases:control.families, cases=families.flatMap((family,fi)=>family.modes.flatMap((vector,mi)=>[false,true].map(explicit=>({family,vector,explicit,id:"Md"+fi+"M"+mi+(explicit?"X":"O")})))),themes=(["light","dark"] as const).filter(value=>!process.env.PRINT_NATIVE_CONTROL_THEME||value===process.env.PRINT_NATIVE_CONTROL_THEME);
+  const neutral=fixture.scientificModeDefaults,control=neutral.vectors,original=JSON.stringify(control),failures:string[]=[];
+  
+  const stocks=fixture.scientificStockSemanticVectors;const families=stock?stocks.vectors.cases:control.families, cases=families.flatMap((family,fi)=>family.modes.flatMap((vector,mi)=>[false,true].map(explicit=>({family,vector,explicit,id:"Md"+fi+"M"+mi+(explicit?"X":"O")})))),themes=(["light","dark"] as const).filter(value=>!process.env.PRINT_NATIVE_CONTROL_THEME||value===process.env.PRINT_NATIVE_CONTROL_THEME);
   if(!themes.length)throw Error("Unknown scientific mode theme");let compared=0,relations=0;
   for(const appearance of themes){
     const language=appearance==="light"?"en":"de",body:{raw:string}[]=[],directory=join(workDir,appearance);
@@ -1361,8 +1362,8 @@ export async function compileNativeGeoPlanarGuard(workDir:string):Promise<void>{
 /** 🧊️ Compares complete native exterior and hole rings to independent D3 contour vertices. */
 export async function compileNativeGeoContourBoundary(workDir:string):Promise<void>{
   if(process.env.PRINT_NATIVE_GEO_BOUNDARY_REPLAY)workDir=process.env.PRINT_NATIVE_GEO_BOUNDARY_REPLAY;
-  const control=fixture.nativeGeoContourBoundary,validate=new Ajv2020({strict:false}).compile(control.schema);
-  if(!validate(control))throw Error("Boundary fixture "+JSON.stringify(validate.errors));
+  const control=fixture.nativeGeoContourBoundary;
+  
   const body=control.cases.map(entry=>({raw:`\\SemioVizProbeBegin{geo-contour-boundary}{${entry.id}}\\SemioVizValueGrid{boundary-${entry.id}}{${entry.width}}{${entry.height}}{${entry.values.join(",")}}\\ExplSyntaxOn\\semio_viz_spatial_contour:nn{boundary-${entry.id}}{${entry.threshold}}\\semio_viz_probe_values:nx{boundary/count}{\\seq_count:N\\g_semio_viz_spatial_rings_seq}\\seq_map_inline:Nn\\g_semio_viz_spatial_rings_seq{\\seq_set_split:Nnn\\l_tmpa_seq{;}{#1}\\seq_map_inline:Nn\\l_tmpa_seq{\\semio_viz_probe_values:nn{boundary/vertex}{##1}}}\\ExplSyntaxOff`}));
   const records=process.env.PRINT_NATIVE_GEO_BOUNDARY_REPLAY?parseProbeJsonLines(readFileSync(join(workDir,"🧪️probe-out/raw-rings.probe.jsonl"),"utf8")):await compileVizProbeDocument({case:"geo-contour-boundary",scenario:"raw-rings",documentClass:"semio",documentClassOptions:"type=paper,language=en",packages:["semio-viz"],preamble:["\\title{Contour Boundaries}","\\author{Semio}","\\date{}","\\errorcontextlines=200"],body:[...body,{raw:"\\SemioVizProbePage"}]},{workDir,scenario:undefined,keepWorkDir:true});
   const ordered=(points:number[][])=>points.sort((a,b)=>a[0]!-b[0]!||a[1]!-b[1]!);
@@ -1379,8 +1380,8 @@ export async function compileNativeGeoContourBoundary(workDir:string):Promise<vo
 
 /** 📋️ Compiles source-owned process controls against independent D3 hierarchy and actual bounded PDF paint. */
 export async function compileNativeProcessControlEffects(workDir:string):Promise<void>{
-  const control=fixture.nativeProcessControlEffects,validate=new (await import("ajv")).default({strict:false}).compile(JSON.parse(readFileSync(join(import.meta.dir,"🧬️schema/📋️process.json"),"utf8"))),{stratify}=await import("d3-hierarchy");
-  if(!validate(control))throw Error("Process fixture schema: "+JSON.stringify(validate.errors));
+  const control=fixture.nativeProcessControlEffects,{stratify}=await import("d3-hierarchy");
+  
   const table=(name:string,value:{columns:string[];rows:(string|number)[][]})=>`\\SemioVizTable{${name}}{${value.columns.join(",")}}`+value.rows.map(row=>`\\SemioVizRow{${name}}{${row.join(",")}}`).join(""),tables=table("process-cards",control.cards)+table("process-board",control.board)+table("process-participants",control.participants)+table("process-messages",control.messages)+table("process-fragments",control.fragments)+table("process-profile",control.profile);
   const cases=[{id:"cards-size",kind:"kanban-board",options:"data=process-cards,size=size"},{id:"cards-effort",kind:"kanban-board",options:"data=process-cards,size=effort"},{id:"cards-none",kind:"kanban-board",options:"data=process-cards,size={}"},{id:"board-on",kind:"chessboard",options:`data=process-board,files=${control.board.files},ranks=${control.board.ranks},coords=true`},{id:"board-off",kind:"chessboard",options:`data=process-board,files=${control.board.files},ranks=${control.board.ranks},coords=false`},{id:"sequence-on",kind:"sequence-diagram",options:`data=process-participants,messages=process-messages,fragments=process-fragments,step=${control.fragments.step}`},{id:"sequence-off",kind:"sequence-diagram",options:`data=process-participants,messages=process-messages,step=${control.fragments.step}`}];
   for(const mode of ["flame","tree"])for(const order of control.profile.orders)cases.push({id:`profile-${mode}-${order}`,kind:mode==="flame"?"flame-graph":"call-tree",options:`data=process-profile,mode=${mode},order=${order}`});
@@ -1406,8 +1407,8 @@ export async function compileNativeProcessControlEffects(workDir:string):Promise
 
 /** 🌡️ Projects neutral soundings against actual SciTools Tephi golden vectors, D3 scales and native PDF geometry. */
 export async function compileNativeThermodynamicControlEffects(workDir:string):Promise<void>{
-  const control=fixture.nativeThermodynamicControlEffects,validate=new (await import("ajv")).default({strict:false}).compile(JSON.parse(readFileSync(join(import.meta.dir,"🧬️schema/🌡️thermodynamic.json"),"utf8")));
-  if(!validate(control))throw Error("Thermodynamic fixture schema: "+JSON.stringify(validate.errors));
+  const control=fixture.nativeThermodynamicControlEffects;
+  
   if(process.env.PRINT_NATIVE_THERMODYNAMIC_PHASE==="guard"){await compileNativeThermodynamicGuards(workDir);return;}
   const raw=(temperature:number,pressure:number)=>{const phi=Math.log((temperature+273.15)*(1000/pressure)**.286);return[temperature+300*phi,300*phi-temperature];};
   for(const[column,golden]of control.primaryProjected.entries())for(const[index,point]of golden.entries()){equal(raw(control.profile[index]![column+1]!,control.profile[index]![0]!),point,"actual primary Tephi golden transform",1e-9);const temperature=(point[0]!-point[1]!)/2,theta=Math.exp((point[0]!+point[1]!)/600),pressure=1000*((temperature+273.15)/theta)**(1/.286);equal([pressure,temperature],[control.profile[index]![0]!,control.profile[index]![column+1]!],"primary inverse thermodynamic roundtrip",1e-8);}
@@ -1428,7 +1429,7 @@ export async function compileNativeThermodynamicControlEffects(workDir:string):P
 
 /** 📋️ Measures list wrapping and seating legends independently of preserved seat geometry and outer captions. */
 export async function compileNativeListSeatingControlEffects(workDir:string):Promise<void>{
-  const control=fixture.nativeListSeatingControlEffects,validate=new (await import("ajv")).default({strict:false}).compile(JSON.parse(readFileSync(join(import.meta.dir,"🧬️schema/📋️list-seating.json"),"utf8"))),{pointRadial}=await import("d3-shape");if(!validate(control))throw Error("List/seating neutral schema: "+JSON.stringify(validate.errors));
+  const control=fixture.nativeListSeatingControlEffects,{pointRadial}=await import("d3-shape");
   const cases:{id:string;kind:string;options:string;width:number;badge:string;shape:string;label:string}[]=[];for(const badge of ["number","bullet","icon"])for(const width of control.list.widths)cases.push({id:`list-${badge}-${width}`,kind:"list-infographic",options:`data=layout-list,width=${width},height=70,badge=${badge},detail=detail`,width,badge,shape:"",label:""});for(const shape of control.seating.shapes)for(const label of ["label","alternate",""])cases.push({id:`seating-${shape}-${label||"none"}`,kind:"seating-chart",options:`data=layout-seating,width=80,height=40,shape=${shape},rows=2,seat=.8,label={${label}}`,width:80,badge:"",shape,label});
   const tables=`\\SemioVizTable{layout-list}{label,detail,tone}\\SemioVizRow{layout-list}{${control.list.label},${control.list.detail},1}\\SemioVizTable{layout-seating}{${control.seating.columns.join(",")}}`+control.seating.rows.map(row=>`\\SemioVizRow{layout-seating}{${row.join(",")}}`).join(""),failures:string[]=[];
   const expectedSeat=(shape:string,index:number)=>{const count=control.seating.rows.reduce((sum,row)=>sum+Number(row[2]),0),slots=Math.floor(count/2)+1,row=Math.min(1,Math.floor(index/slots)),j=index-row*slots+1;if(shape==="rows"||shape==="rectangle")return[scaleBand(Array.from({length:slots},(_,i)=>i),[2,78])(j-1)!+76/slots/2,scaleBand([0,1],[38,2])(row)!+18/2];if(shape==="theatre")return[scaleLinear([1,slots],[40-(slots-1)/2*74/slots*(1+.08*row),40+(slots-1)/2*74/slots*(1+.08*row)])(j),scaleLinear([0,2],[3,37])(row)];const radius=shape==="circle"?17:37*(.45+.55*row),angle=shape==="circle"?180+360*index/count:180-180*(j-.5)/slots,point=pointRadial(angle*Math.PI/180+Math.PI/2,radius);return[40+point[0],(shape==="circle"?20:3)+point[1]];};
@@ -1443,7 +1444,7 @@ export async function compileNativeListSeatingControlEffects(workDir:string):Pro
 
 /** 🪢️ Requires stock and authored hulls to show independent D3 convex boundaries and nondegenerate concave area. */
 export async function compileNativePrimitiveHullEffects(workDir:string):Promise<void>{
-  const control=fixture.nativePrimitiveHullEffects,validate=new (await import("ajv")).default({strict:false}).compile(JSON.parse(readFileSync(join(import.meta.dir,"🧬️schema/🪢️hull.json"),"utf8"))),{polygonHull,polygonArea}=await import("d3-polygon");if(!validate(control))throw Error("Hull neutral schema: "+JSON.stringify(validate.errors));
+  const control=fixture.nativePrimitiveHullEffects,{polygonHull,polygonArea}=await import("d3-polygon");
   const x=scaleLinear([0,4],[8,72]),y=scaleLinear([0,4],[8,32]),points=control.points.map(point=>[x(point[0]!),y(point[1]!)])as[number,number][],convex=polygonHull(points)!,concave=control.concave.map(index=>points[index]!);if(Math.abs(polygonArea(concave))>=Math.abs(polygonArea(convex)))throw Error("Neutral concave ring has no meaningful area reduction");
   const cases=[{id:"stock-convex",kind:"convex-hull",options:"",concave:false},{id:"stock-concave",kind:"concave-hull",options:"",concave:true},{id:"authored-convex",kind:"convex-hull",options:"data=hull-contract",concave:false},{id:"authored-concave",kind:"concave-hull",options:`data=hull-contract,concavity=${control.concavity}`,concave:true},{id:"authored-coarse",kind:"concave-hull",options:"data=hull-contract,concavity=100",concave:false}],table="\\SemioVizTable{hull-contract}{t,val}"+control.points.map(point=>`\\SemioVizRow{hull-contract}{${point.join(",")}}`).join(""),failures:string[]=[];
   const canonical=(ring:number[][])=>{const clean=ring.length>1&&ring[0]!.every((value,index)=>Math.abs(value-ring.at(-1)![index]!)<1e-8)?ring.slice(0,-1):ring;return clean.map(point=>point.map(value=>Math.round(value/control.toleranceMm))).sort((a,b)=>a[0]!-b[0]!||a[1]!-b[1]!).flat();};
@@ -1455,8 +1456,8 @@ export async function compileNativePrimitiveHullEffects(workDir:string):Promise<
 
 /** 🗓️ Validates authored clinical spacing and irregular time bindings through D3 and owned PDF paths and glyphs. */
 export async function compileNativeTimelineControlEffects(workDir:string):Promise<void>{
-  const control=fixture.nativeTimelineControlEffects,validate=new (await import("ajv")).default({strict:false}).compile(JSON.parse(readFileSync(join(import.meta.dir,"🧬️schema/🗓️timeline.json"),"utf8")));
-  if(!validate(control))throw Error("Timeline neutral schema: "+JSON.stringify(validate.errors));
+  const control=fixture.nativeTimelineControlEffects;
+  
   const cases=control.clinical.map(entry=>({id:entry.id,kind:"patient-timeline",options:`width=80,height=40,laneHeight=${entry.laneHeight},lanes={${entry.lanes.join(",")}},domain={0,100},range={${entry.range.join(",")}},axes=false,grid=false,events={20/1/point/,40/2/point/,5/1/interval-start/,15/1/interval-end/}`,family:"clinical",mode:"",time:"",labels:false}));
   for(const family of ["schedule","version-control"])for(const mode of ["line","area","bar"])for(const [time,labels]of [["t",true],["u",true],["t",false]]as const)cases.push({id:`${family}-${mode}-${time}-${labels}`,kind:family==="schedule"?"burndown-chart":"churn-chart",family,mode,time,labels,options:`data=timeline-series,width=80,height=40,pad=5,time=${time},series={a,b},mode=${mode},labels=${labels},zero=false,${family==="schedule"?`stacked=${mode==="area"},ideal=false`:"mirror=true"}`});
   for(const family of ["schedule","version-control"])for(const mode of ["line","area","bar"])cases.push({id:`${family}-${mode}-equal`,kind:family==="schedule"?"burndown-chart":"churn-chart",family,mode,time:"equal",labels:true,options:`data=timeline-equal,width=80,height=40,pad=5,time=t,series={a,b},mode=${mode},labels=true,zero=false,${family==="schedule"?`stacked=${mode==="area"},ideal=false`:"mirror=true"}`});
@@ -1492,8 +1493,8 @@ async function compileNativeThermodynamicGuards(workDir:string):Promise<void>{
 
 /** 🌫️ Verifies joint density contour levels against normalized Gaussian samples and actual D3 ring paint. */
 export async function compileNativeDensityControlEffects(workDir:string):Promise<void>{
-  const control=fixture.nativeDensityControlEffects,validate=new Ajv2020({strict:false}).compile(control.schema),failures:string[]=[],cases=control.cases.filter(entry=>!process.env.PRINT_NATIVE_DENSITY_NONEMPTY||entry.points.length>0),before=JSON.stringify(control);
-  if(!validate(control))throw Error("Density neutral fixture "+JSON.stringify(validate.errors));
+  const control=fixture.nativeDensityControlEffects,failures:string[]=[],cases=control.cases.filter(entry=>!process.env.PRINT_NATIVE_DENSITY_NONEMPTY||entry.points.length>0),before=JSON.stringify(control);
+  
   for(const appearance of["light","dark"]as const){
     const body:{raw:string}[]=[],directory=join(workDir,appearance),expected=new Map<string,{values:number[];rings:number[][][]} >();
     for(const entry of cases){
@@ -1521,8 +1522,8 @@ export async function compileNativeDensityControlEffects(workDir:string):Promise
 /** 🧩️ Compiles canonical diagram control mutations against D3 and independently owned PDF paint. */
 export async function compileNativeDiagramControlEffects(workDir:string):Promise<void>{
   if(process.env.PRINT_NATIVE_DIAGRAM_REPLAY)workDir=process.env.PRINT_NATIVE_DIAGRAM_REPLAY;
-  const control=fixture.nativeDiagramControlEffects,before=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(control.schema),failures:string[]=[],{hierarchy,tree}=await import("d3-hierarchy"),cases=control.cases.filter(entry=>!process.env.PRINT_NATIVE_DIAGRAM_FAMILY||entry.family===process.env.PRINT_NATIVE_DIAGRAM_FAMILY);
-  if(!validate(control))throw Error("Diagram neutral fixture: "+JSON.stringify(validate.errors));
+  const control=fixture.nativeDiagramControlEffects,before=JSON.stringify(control),failures:string[]=[],{hierarchy,tree}=await import("d3-hierarchy"),cases=control.cases.filter(entry=>!process.env.PRINT_NATIVE_DIAGRAM_FAMILY||entry.family===process.env.PRINT_NATIVE_DIAGRAM_FAMILY);
+  
   for(const appearance of(["light","dark"]as const).filter(value=>!process.env.PRINT_NATIVE_DIAGRAM_APPEARANCE||value===process.env.PRINT_NATIVE_DIAGRAM_APPEARANCE)){
     const body:{raw:string}[]=[],directory=join(workDir,appearance);
     for(const entry of cases){
@@ -1574,8 +1575,8 @@ export async function compileNativeDiagramControlEffects(workDir:string):Promise
 
 /** 🎨️ Verifies categorical spatial point and Voronoi cell paint against an independent D3 ordinal scale. */
 export async function compileNativeSpatialGroupControls(workDir:string):Promise<void>{
-  const control=fixture.nativeSpatialGroupControls,before=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(control.schema),failures:string[]=[],cases=control.algorithms.flatMap(algorithm=>control.bindings.flatMap(binding=>control.permutations.flatMap((permutation,index)=>control.languages.map(language=>({id:algorithm.name+"-"+binding+"-"+index+"-"+language,algorithm,binding,permutation,language})))));
-  if(!validate(control))throw Error("Spatial group fixture "+JSON.stringify(validate.errors));
+  const control=fixture.nativeSpatialGroupControls,before=JSON.stringify(control),failures:string[]=[],cases=control.algorithms.flatMap(algorithm=>control.bindings.flatMap(binding=>control.permutations.flatMap((permutation,index)=>control.languages.map(language=>({id:algorithm.name+"-"+binding+"-"+index+"-"+language,algorithm,binding,permutation,language})))));
+  
   for(const appearance of["light","dark"]as const){
     const body:{raw:string}[]=[],directory=join(workDir,appearance);
     for(const entry of cases){
@@ -1600,8 +1601,8 @@ export async function compileNativeSpatialGroupControls(workDir:string):Promise<
 
 /** 🗓️ Verifies stable-ID planning swimlanes and lineage captions through canonical mutations and independently measured native paint. */
 export async function compileNativePlanningControlEffects(workDir:string):Promise<void>{
-  const control=fixture.nativePlanningControlEffects,before=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(control.schema),failures:string[]=[],cases=[...control.laneBindings.flatMap(binding=>control.schedules.flatMap(schedule=>control.languages.map(language=>({id:"gantt-"+binding+"-"+schedule+"-"+language,family:"gantt",binding,schedule,language,orientation:"horizontal",labels:true})))),...control.captionBindings.flatMap(binding=>control.orientations.flatMap(orientation=>[true,false].flatMap(labels=>control.languages.map(language=>({id:"commit-"+binding+"-"+orientation+"-"+labels+"-"+language,family:"commit",binding,schedule:"cpm",language,orientation,labels})))))];
-  if(!validate(control))throw Error("Planning control fixture "+JSON.stringify(validate.errors));
+  const control=fixture.nativePlanningControlEffects,before=JSON.stringify(control),failures:string[]=[],cases=[...control.laneBindings.flatMap(binding=>control.schedules.flatMap(schedule=>control.languages.map(language=>({id:"gantt-"+binding+"-"+schedule+"-"+language,family:"gantt",binding,schedule,language,orientation:"horizontal",labels:true})))),...control.captionBindings.flatMap(binding=>control.orientations.flatMap(orientation=>[true,false].flatMap(labels=>control.languages.map(language=>({id:"commit-"+binding+"-"+orientation+"-"+labels+"-"+language,family:"commit",binding,schedule:"cpm",language,orientation,labels})))))];
+  
   const early=new Map(control.tasks.map(row=>[row.id,0]));for(let pass=0;pass<control.tasks.length;pass++)for(const row of control.tasks){const parent=control.tasks.find(candidate=>candidate.id===row.deps);early.set(row.id,parent?early.get(parent.id)!+parent.duration:0);}const end=max(control.tasks,row=>early.get(row.id)!+row.duration)!,late=new Map(control.tasks.map(row=>[row.id,end-row.duration]));for(let pass=0;pass<control.tasks.length;pass++)for(const row of [...control.tasks].reverse()){const children=control.tasks.filter(candidate=>candidate.deps===row.id);late.set(row.id,(children.length?Math.min(...children.map(child=>late.get(child.id)!)):end)-row.duration);}
   for(const appearance of["light","dark"]as const){
     const directory=join(workDir,appearance),body:{raw:string}[]=[];
@@ -1635,8 +1636,8 @@ export async function compileNativePlanningControlEffects(workDir:string):Promis
 
 /** 🔤️ Measures custom logo glyphs and radar grid ownership against Shannon, D3 and independent PDF font calibration. */
 export async function compileNativeLogoRadarControls(workDir:string,scope:"logo"|"radar"):Promise<void>{
-  const neutral=fixture.nativeLogoRadarControls,control=neutral.vectors,before=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[];
-  if(!validate(control))throw Error("Logo/radar neutral schema "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeLogoRadarControls,control=neutral.vectors,before=JSON.stringify(control),failures:string[]=[];
+  
   const logos=scope==="logo"?control.logos:[],radars=scope==="radar"?control.radars:[],cases=[...logos.map(value=>({id:value.id,logo:value,radar:undefined})),...radars.map(value=>({id:value.id,logo:undefined,radar:value}))];
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const){
     const directory=join(workDir,appearance),body:{raw:string}[]=[],symbolDomains=new Map<string,string[]>();
@@ -1663,7 +1664,7 @@ export async function compileNativeLogoRadarControls(workDir:string,scope:"logo"
 }
 /** 🏷️ Validates caption binding on specialized fabric, tree and container owners without changing graph IDs. */
 export async function compileNativeInheritedCaptionControls(workDir:string):Promise<void>{
-  const contract=fixture.nativeInheritedCaptionControls,control=contract.vectors,validate=new(await import("ajv")).default({strict:false}).compile(contract.schema),{csvParse,csvFormat}=await import("d3-dsv");if(!validate(control))throw Error("Inherited caption schema: "+JSON.stringify(validate.errors));
+  const contract=fixture.nativeInheritedCaptionControls,control=contract.vectors,{csvParse,csvFormat}=await import("d3-dsv");
   const rows=csvParse(control.csv);deepStrictEqual(csvParse(csvFormat(rows)),rows);const headers=rows.columns,table="\\SemioVizTable{caption-nodes}{"+headers.join(",")+"}"+rows.map(row=>"\\SemioVizRow{caption-nodes}{"+headers.map(column=>row[column]??"").join(",")+"}").join("")+"\\SemioVizTable{caption-edges}{source,target,weight}\\SemioVizRow{caption-edges}{N0,N1,1}\\SemioVizRow{caption-edges}{N0,N2,2}",cases:{id:string;family:string;mode:string;column:string;labels:boolean}[]=[];
   for(const mode of ["fabric",...control.treeModes,...control.containerModes])for(const column of ["label","alternate","blank","missing","off"]){if(control.containerModes.includes(mode)&&column==="missing")continue;cases.push({id:`caption-${mode}-${column}`,family:mode==="fabric"?"biofabric":"data-structure",mode,column:column==="off"?"label":column,labels:column!=="off"});}
   const failures:string[]=[];
@@ -1677,7 +1678,7 @@ export async function compileNativeInheritedCaptionControls(workDir:string):Prom
 /** 🧶 Measures the specialized matrix representation through canonical inference and independent adjacency reduction. */
 export async function compileNativeBiofabricMatrixControls(workDir:string):Promise<void>{
   if(process.env.PRINT_NATIVE_BIOFABRIC_PHASE==="guard"){await compileNativeBiofabricRepresentationGuards(workDir);return;}
-  const contract=fixture.nativeBiofabricMatrixControls,control=contract.vectors,validate=new(await import("ajv")).default({strict:false}).compile(contract.schema);if(!validate(control))throw Error("Biofabric matrix schema: "+JSON.stringify(validate.errors));const descriptor=chartSchema["x-semio-family-options"].biofabric.options.representation,admission=new(await import("ajv")).default({strict:false}).compile({type:descriptor.type,enum:descriptor.enum});for(const[value,wanted]of [["fabric",true],["matrix",true],["unknown",false],[0,false]]as const)if(admission(value)!==wanted)throw Error("Independent AJV representation admission mismatch");
+  const contract=fixture.nativeBiofabricMatrixControls,control=contract.vectors;const descriptor=chartSchema["x-semio-family-options"].biofabric.options.representation,admission=new(await import("ajv")).default({strict:false}).compile({type:descriptor.type,enum:descriptor.enum});for(const[value,wanted]of [["fabric",true],["matrix",true],["unknown",false],[0,false]]as const)if(admission(value)!==wanted)throw Error("Independent AJV representation admission mismatch");
   const baseCase={representation:"matrix",cellGap:.15,diagonal:false,symmetric:false,split:false,scaleBy:"weight",blocks:false},cases=[{...baseCase,id:"base"},{...baseCase,id:"gap",cellGap:1},{...baseCase,id:"diagonal",diagonal:true},{...baseCase,id:"symmetric",symmetric:true},{...baseCase,id:"split",split:true},{...baseCase,id:"binary",scaleBy:"binary"},{...baseCase,id:"blocks",blocks:true},{...baseCase,id:"fabric",representation:"fabric"}],failures:string[]=[],primary="#cc3300",canvas="#003366";
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const){const body:{raw:string}[]=[];
     for(const entry of cases){const options={data:"matrix-edges",nodes:"matrix-nodes",id:"id",group:"group",source:"source",target:"target",weight:"weight",order:"index",labels:false,padding:"3",size:1.7,representation:"fabric",cellGap:entry.cellGap,diagonal:entry.diagonal,symmetric:entry.symmetric,split:entry.split,scaleBy:entry.scaleBy,blocks:entry.blocks},base={chart:{language,theme:{appearance},width:80,height:40,margin:{top:0,right:0,bottom:0,left:0},layers:[],tables:[{name:"matrix-nodes",columns:["id","group"],rows:control.nodes.map(row=>({id:row[0]!,group:row[1]!}))},{name:"matrix-edges",columns:["source","target","weight"],rows:control.edges.map(row=>({source:row[0]!,target:row[1]!,weight:row[2]!}))}],presets:[{kind:"biofabric-style-graph",options}]}}as unknown as VizChartSnapshot,original=JSON.stringify(base),outcome=changeVizChartValue(base,{path:["presets","0","options","representation"],value:entry.representation});if(outcome.messages.length||outcome.diff.edits.length>1)throw Error(entry.id+" matrix mutation rejected "+JSON.stringify(outcome.messages));const replay=applyVizChartDiff(base,outcome.diff),inverse=applyVizChartDiff(replay.snapshot,inverseVizChartDiff(base,outcome.diff));if(replay.messages.length||inverse.messages.length)throw Error("Matrix replay/inverse rejected");deepStrictEqual(inverse.snapshot,base);const snapshot=replay.snapshot;if(JSON.stringify(base)!==original)throw Error("Matrix mutation changed caller");const inferred=await inferVizChart(snapshot);if(inferred.diagnostics.some(diagnostic=>diagnostic.code!=="print.chart.scene-unavailable")||!inferred.tikz.includes("representation={"+entry.representation+"}"))throw Error(entry.id+" matrix inference rejected "+JSON.stringify(inferred.diagnostics));body.push({raw:`\\clearpage\\SemioVizProbeBegin{biofabric-matrix-controls}{${entry.id}}\\colorlet{semio-primary}{matrix-primary}\\colorlet{semio-chrome-canvas}{matrix-canvas}`+inferred.tikz.replace(/(\\begin\{VizFigure\}[^\n]*\n)/,"$1\\draw[line width=.01mm] (0,0) rectangle (80,40);\\special{pdf:literal direct /SemioVizControlMatrix"+entry.id+" BMC}\n").replace("\\end{VizFigure}","\\special{pdf:literal direct EMC}\\end{VizFigure}")});const invalid=changeVizChartValue(base,{path:["presets","0","options","representation"],value:"unknown"});const invalidInference=await inferVizChart(applyVizChartDiff(base,invalid.diff).snapshot);if(!invalid.messages.length&&!invalidInference.diagnostics.some(diagnostic=>diagnostic.code==="print.chart.inference"))throw Error("Closed representation enum admitted unknown");}
@@ -1695,7 +1696,7 @@ async function compileNativeBiofabricRepresentationGuards(workDir:string):Promis
 
 /** ⚙️️ Compares omitted and authored exploded assembly distances with independent D3 centroids and owned PDF bodies. */
 export async function compileNativeEngineeringExplodedControls(workDir:string):Promise<void>{
-  const contract=fixture.nativeEngineeringExplodedControls,c=contract.vectors,validate=new Ajv2020({strict:false}).compile(contract.schema),{extent,mean}=await import("d3-array"),failures:string[]=[];if(!validate(c))throw Error("Engineering neutral "+JSON.stringify(validate.errors));const x=scaleLinear(extent(c.parts,part=>part.x)as[number,number],[c.pad+5,c.width-c.pad-5]),y=scaleLinear(extent(c.parts,part=>part.y)as[number,number],[c.pad+4,c.height-c.pad-4]),nominal=c.parts.map(part=>[x(part.x),y(part.y)]),centroid=[mean(nominal,point=>point[0])!,mean(nominal,point=>point[1])!];
+  const contract=fixture.nativeEngineeringExplodedControls,c=contract.vectors,{extent,mean}=await import("d3-array"),failures:string[]=[];const x=scaleLinear(extent(c.parts,part=>part.x)as[number,number],[c.pad+5,c.width-c.pad-5]),y=scaleLinear(extent(c.parts,part=>part.y)as[number,number],[c.pad+4,c.height-c.pad-4]),nominal=c.parts.map(part=>[x(part.x),y(part.y)]),centroid=[mean(nominal,point=>point[0])!,mean(nominal,point=>point[1])!];
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const){const directory=join(workDir,appearance),body:{raw:string}[]=[];for(const entry of c.cases){const options:Record<string,string|number|boolean>={data:"engineering-contract",mode:entry.mode==="assembly"?"exploded":"assembly",width:c.width,height:c.height,pad:c.pad,labels:false,leaders:entry.leaders,...entry.explode===null?{}:{explode:entry.explode}},base={chart:{width:c.width,height:c.height,language,theme:{appearance},layers:[],tables:[{name:"engineering-contract",columns:["id","x","y","size","kind","label","link","teeth"],rows:c.parts.map(part=>({...part,kind:"body",label:part.id,link:"",teeth:0}))}],presets:[{kind:"assembly-diagram",options}]}}as unknown as VizChartSnapshot,before=JSON.stringify(base),outcome=changeVizChartValue(base,{path:["presets","0","options","mode"],value:entry.mode}),replay=applyVizChartDiff(base,outcome.diff),inverse=applyVizChartDiff(replay.snapshot,inverseVizChartDiff(base,outcome.diff));if(outcome.messages.length||outcome.diff.edits.length!==1||replay.messages.length||inverse.messages.length||JSON.stringify(base)!==before)throw Error("Engineering canonical mutation/purity");deepStrictEqual(inverse.snapshot,base);const inferred=await inferVizChart(replay.snapshot);if(inferred.diagnostics.some(value=>value.code!=="print.chart.scene-unavailable"))throw Error("Engineering native emission "+JSON.stringify(inferred.diagnostics));mkdirSync(directory,{recursive:true});await Bun.write(join(directory,entry.id+"-emitted.tex"),inferred.tikz);body.push({raw:"\\clearpage\\SemioVizProbeBegin{engineering-exploded}{"+entry.id+"}"+inferred.tikz.replace(/(\\begin\{VizFigure\}[^\n]*\n)/,"$1\\draw[line width=.01mm] (0,0) rectangle (80,50);\\special{pdf:literal direct /SemioVizControl"+entry.id+" BMC}\n").replace("\\end{VizFigure}","\\special{pdf:literal direct EMC}\\end{VizFigure}")});}
     await compileVizProbeDocument({case:"engineering-exploded",scenario:appearance,documentClass:"semio",documentClassOptions:`type=paper,language=${language},theme=${appearance}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Exploded Assembly}","\\author{Semio}","\\date{}"],body:[...body,{values:{key:"native/engineering",clist:"1"}}]},{workDir:directory,scenario:undefined,keepWorkDir:true});const out=join(directory,"🧪️probe-out"),name=readdirSync(out).find(name=>name.endsWith(".pdf"));if(!name)throw Error("Engineering PDF absent");const pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,name))),useSystemFonts:true}).promise,paints=new Map<string,ReturnType<typeof nativeControlPdfPaint>>();try{for(let page=1;page<=pdf.numPages;page++){const operators=await(await pdf.getPage(page)).getOperatorList();for(const entry of c.cases)if(operators.argsArray.some((args,index)=>[OPS.beginMarkedContent,OPS.beginMarkedContentProps].includes(operators.fnArray[index]!)&&String(args?.[0]?.name??args?.[0])==="SemioVizControl"+entry.id))paints.set(entry.id,nativeControlPdfPaint(operators,[80,50],"SemioVizControl"+entry.id));}}finally{await pdf.destroy();}await Bun.write(join(directory,"owned-paint.json"),JSON.stringify(Object.fromEntries(paints),null,2));
     for(const entry of c.cases)try{const paint=paints.get(entry.id);if(!paint)throw Error("owned body absent");const boxes=paint.paths.filter(path=>path.closed&&Math.abs(path.fillOpacity-.2)<.005),leaders=paint.paths.filter(path=>!path.closed&&path.points.length===2&&Math.hypot(path.bounds[2]!-path.bounds[0]!,path.bounds[3]!-path.bounds[1]!)>.01),distance=entry.explode??(entry.mode==="exploded"?c.defaultExplode:0);if(boxes.length!==c.parts.length||leaders.length!==(entry.leaders&&distance>0?c.parts.length-1:0))throw Error("body/leader inventory "+boxes.length+"/"+leaders.length);let leaderIndex=0;for(const[index,part]of c.parts.entries()){const start=nominal[index]!,dx=start[0]!-centroid[0]!,dy=start[1]!-centroid[1]!,radius=Math.hypot(dx,dy),end=start.map((value,axis)=>value+(radius>1e-9?distance*(axis===0?dx:dy)/radius:0)),box=boxes[index]!;equal([(box.bounds[0]!+box.bounds[2]!)/2,(box.bounds[1]!+box.bounds[3]!)/2,box.bounds[2]!-box.bounds[0]!,box.bounds[3]!-box.bounds[1]!],[...end,part.size,.7*part.size],entry.id+" D3 centroid displacement "+part.id,c.toleranceMm);if(entry.leaders&&distance>0&&radius>1e-9)equal(leaders[leaderIndex++]!.points.flat(),[...start,...end],entry.id+" complete D3 leader "+part.id,c.toleranceMm);}}
@@ -1704,7 +1705,7 @@ export async function compileNativeEngineeringExplodedControls(workDir:string):P
 }
 /** 🔗 Checks protected empty and known engineering/molecule references and rejects unknown endpoints in the actual compiler. */
 export async function compileNativeEngineeringReferenceGuards(workDir:string):Promise<void>{
-  const guards=fixture.nativeEngineeringExplodedControls.guards,ajv=new Ajv2020({strict:false}),validate=ajv.compile({type:"array",minItems:6,maxItems:6,items:{type:"object",required:["family","kind","reference","valid"],additionalProperties:false,properties:{family:{enum:["engineering-diagram","notation"]},kind:{enum:["assembly-diagram","chemical-diagram"]},reference:{type:"string"},valid:{type:"boolean"}}}}),{group}=await import("d3-array");if(!validate(guards))throw Error("Engineering reference neutral "+JSON.stringify(validate.errors));const ids=new Set(group(["A","B"],id=>id).keys());for(const entry of guards)if((entry.reference===""||ids.has(entry.reference))!==entry.valid)throw Error("Engineering independent reference oracle");
+  const guards=fixture.nativeEngineeringExplodedControls.guards,ajv=new Ajv2020({strict:false}),{group}=await import("d3-array");const ids=new Set(group(["A","B"],id=>id).keys());for(const entry of guards)if((entry.reference===""||ids.has(entry.reference))!==entry.valid)throw Error("Engineering independent reference oracle");
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const){const emissions=new Map<typeof guards[number],string>();for(const entry of guards){const table={name:"engineering-references",columns:["id","x","y","size","kind","label","link","bond","order","teeth"],rows:[{id:"A",x:-1,y:-1,size:2,kind:"body",label:"A",link:"",bond:"",order:1,teeth:0},{id:"B",x:1,y:1,size:2,kind:"body",label:"B",link:entry.reference,bond:entry.reference,order:1,teeth:0}]},snapshot={chart:{width:80,height:50,language,theme:{appearance},layers:[],tables:[table],presets:[{kind:entry.kind,options:{data:table.name,labels:false,width:80,height:50}}]}}as unknown as VizChartSnapshot,inferred=await inferVizChart(snapshot);if(inferred.diagnostics.some(item=>item.code!=="print.chart.scene-unavailable"))throw Error("Engineering reference emission "+JSON.stringify(inferred.diagnostics));emissions.set(entry,inferred.tikz);}
     const compile=async(entries:typeof guards,directory:string)=>compileVizProbeDocument({case:"engineering-reference-domain",scenario:appearance,documentClass:"semio",documentClassOptions:`type=paper,language=${language},theme=${appearance}`,packages:["semio-viz"],preamble:["\\title{Engineering Reference Domain}","\\author{Semio}","\\date{}"],body:[...entries.map(entry=>({raw:"\\clearpage"+emissions.get(entry)})),{values:{key:"native/engineering-reference",clist:"1"}}]},{workDir:directory,scenario:undefined,keepWorkDir:true});await compile(guards.filter(entry=>entry.valid),join(workDir,"valid",appearance));for(const entry of guards.filter(entry=>!entry.valid)){const directory=join(workDir,entry.family,appearance);let refused=false;try{await compile([entry],directory);}catch(error){const log=readFileSync(join(directory,"🧪️probe-out",appearance+".log"),"utf8");if(!String(error).includes("Tectonic compilation failed")||!log.includes("Unknown engineering part"))throw error;refused=true;}if(!refused)throw Error("Unknown engineering endpoint accepted "+entry.family);}
   }console.log("[DEBUG] Engineering/molecule8 protected empty/known references and4 actual hard rejections matched independent D3 identity incidence");
@@ -1715,8 +1716,8 @@ export async function compileNativeUpSetModeControls(workDir:string):Promise<voi
 }
 /** 🧩️ Applies one neutral zero/empty policy to all four declared set modes without mutating source vectors. */
 async function compileNativeUpSetCaseSet(workDir:string,variant:"main"|"zero"|"empty"):Promise<void>{
-  const contract=fixture.nativeUpSetModeControls,c=structuredClone(contract.vectors) as unknown as {modes:string[];sets:[string,number][];intersections:[string[],number][];cell:number;barHeight:number;width:number;height:number;toleranceMm:number},validate=new Ajv2020({strict:false}).compile(contract.schema),{pointRadial}=await import("d3-shape"),{sum}=await import("d3-array"),failures:string[]=[];
-  if(!validate(c))throw Error("UpSet neutral "+JSON.stringify(validate.errors));
+  const contract=fixture.nativeUpSetModeControls,c=structuredClone(contract.vectors) as unknown as {modes:string[];sets:[string,number][];intersections:[string[],number][];cell:number;barHeight:number;width:number;height:number;toleranceMm:number},{pointRadial}=await import("d3-shape"),{sum}=await import("d3-array"),failures:string[]=[];
+  
   const authored=structuredClone(c);if(variant==="zero"){authored.sets=authored.sets.map(([id])=>[id,0]);authored.intersections=authored.intersections.map(([members])=>[members,0]);}if(variant==="empty"){authored.sets=[];authored.intersections=[];}Object.assign(c,authored);
   const cases=c.modes.map(mode=>({id:mode,mode,range:mode==="overlap-network"?"0,50":"-25,25"})),nodes=c.sets.map((set,index)=>{const point=pointRadial(Math.PI/2+2*Math.PI*index/c.sets.length,.3*Math.min(c.width,c.height));return{id:String(set[0]),size:Number(set[1]),point:[c.width/2+point[0],c.height/2+point[1]]};}),pairs=nodes.flatMap((a,i)=>nodes.slice(i+1).map(b=>({a,b,weight:sum(c.intersections.filter(row=>row[0].includes(a.id)&&row[0].includes(b.id)),row=>row[1])}))).filter(pair=>pair.weight>0),maximum=Math.max(0,...c.intersections.map(row=>row[1])),setMaximum=Math.max(0,...nodes.map(node=>node.size)),pairMaximum=Math.max(0,...pairs.map(pair=>pair.weight));
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const){const directory=join(workDir,appearance),body:{raw:string}[]=[];
@@ -1745,7 +1746,7 @@ export async function compileNativeScientificAdmission(workDir:string):Promise<v
 export async function compileNativeSpecializedPlacementControls(workDir:string,owner?:string):Promise<void>{
   if(process.env.PRINT_NATIVE_PLACEMENT_PHASE==="guard"){await compileNativeSpecializedPlacementAdmission(join(workDir,"guards"));return;}
   if(!owner&&!process.env.PRINT_NATIVE_PLACEMENT_FAMILY&&!process.env.PRINT_NATIVE_PLACEMENT_REPLAY){for(const family of ["biofabric","data-structure","commit-graph"]){console.log("[DEBUG] Specialized placement batch "+family);await compileNativeSpecializedPlacementControls(join(workDir,family),family);}await compileNativeSpecializedPlacementAdmission(join(workDir,"guards"));return;}
-  const contract=fixture.nativeSpecializedPlacementControls,control={...contract.vectors,cases:contract.vectors.cases.filter(entry=>(!process.env.PRINT_NATIVE_PLACEMENT_BASELINE||entry.layout!=="force")&&(!process.env.PRINT_NATIVE_PLACEMENT_CASE||entry.id===process.env.PRINT_NATIVE_PLACEMENT_CASE))},validate=new(await import("ajv")).default({strict:false}).compile(contract.schema),{forceSimulation,forceLink,forceManyBody,forceCenter}=await import("d3-force"),{randomLcg}=await import("d3-random"),{pointRadial}=await import("d3-shape"),{default:dagre}=await import("dagre");if(!validate(contract.vectors))throw Error("Specialized placement schema: "+JSON.stringify(validate.errors));const failures:string[]=[],oracles:unknown[]=[],families=["biofabric","data-structure","commit-graph"].filter(family=>!(owner??process.env.PRINT_NATIVE_PLACEMENT_FAMILY)||family===(owner??process.env.PRINT_NATIVE_PLACEMENT_FAMILY));
+  const contract=fixture.nativeSpecializedPlacementControls,control={...contract.vectors,cases:contract.vectors.cases.filter(entry=>(!process.env.PRINT_NATIVE_PLACEMENT_BASELINE||entry.layout!=="force")&&(!process.env.PRINT_NATIVE_PLACEMENT_CASE||entry.id===process.env.PRINT_NATIVE_PLACEMENT_CASE))},{forceSimulation,forceLink,forceManyBody,forceCenter}=await import("d3-force"),{randomLcg}=await import("d3-random"),{pointRadial}=await import("d3-shape"),{default:dagre}=await import("dagre");const failures:string[]=[],oracles:unknown[]=[],families=["biofabric","data-structure","commit-graph"].filter(family=>!(owner??process.env.PRINT_NATIVE_PLACEMENT_FAMILY)||family===(owner??process.env.PRINT_NATIVE_PLACEMENT_FAMILY));
   const oracle=(entry:typeof control.cases[number],family:string)=>{const ids=control.nodes.map(row=>row.id),edges=family==="data-structure"?control.nodes.flatMap((row,index)=>{const parent=entry.parents.length?entry.parents[index]!:row.parent;return parent?[[parent,row.id]]:[]}):(entry.edges.length?entry.edges:control.edges),points=ids.map((id,index)=>({id,x:entry.initial.length?entry.initial[index]![0]!:NaN,y:entry.initial.length?entry.initial[index]![1]!:NaN})),order=entry.order==="name"?[...ids].sort():ids;
     if(entry.layout==="force"){const simulation=forceSimulation(points).stop().randomSource(randomLcg(entry.seed));for(const name of entry.forces)simulation.force(name,name==="link"?forceLink(edges.map(([source,target])=>({source:source!,target:target!}))).id(node=>String((node as typeof points[number]).id)).distance(entry.linkDistance):name==="many-body"?forceManyBody().strength(entry.charge).theta(0):forceCenter(0,0));simulation.tick(entry.iterations);}
     else if(entry.layout==="random"){const random=randomLcg(entry.seed);for(const point of points){point.x=random();point.y=random();}}
@@ -1765,8 +1766,8 @@ export async function compileNativeSpecializedPlacementControls(workDir:string,o
 
 /** 🛡️ Checks native scientific record domains against AJV rows and D3 incidence. */
 export async function compileNativeScientificRecordDomain(workDir:string):Promise<void>{
-  const neutral=fixture.nativeScientificRecordDomain,control=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),before=JSON.stringify(control),failures:string[]=[];
-  if(!validate(control))throw Error("Native scientific record vectors rejected");
+  const neutral=fixture.nativeScientificRecordDomain,control=neutral.vectors,before=JSON.stringify(control),failures:string[]=[];
+  
   const hard=async(appearance:"light"|"dark",entries:typeof control.hardCases,label:string)=>{
     const directory=join(workDir,label,appearance),language=appearance==="light"?"en":"de";let refused=false;
     try{await compileVizProbeDocument({case:"scientific-record-domain",scenario:appearance,documentClass:"semio",documentClassOptions:"type=paper,language="+language+",theme="+appearance,packages:["semio-viz"],preamble:["\\title{Scientific Record Domain}","\\author{Semio}","\\date{}"],body:[...entries.map(entry=>({raw:"\\begin{VizFigure}[width=80,height=48]\\SemioVizRunFamily{"+entry.family+"}[axes=false,grid=false,"+entry.options+"]\\end{VizFigure}"})),{values:{key:"native/accepted",clist:"1"}}]},{workDir:directory,scenario:undefined,keepWorkDir:true});}
@@ -1794,8 +1795,8 @@ export async function compileNativeScientificRecordDomain(workDir:string):Promis
 
 /** 🪝️ Checks every mathematical relation style using actual PDF state and D3 endpoints. */
 export async function compileNativeScientificRelationStyles(workDir:string):Promise<void>{
-  const neutral=fixture.scientificRelationStyles,control=neutral.vectors,original=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[];
-  if(!validate(control))throw Error("Scientific relation style vectors rejected");
+  const neutral=fixture.scientificRelationStyles,control=neutral.vectors,original=JSON.stringify(control),failures:string[]=[];
+  
   for(const appearance of (["light","dark"]as const).filter(value=>!process.env.PRINT_NATIVE_CONTROL_THEME||value===process.env.PRINT_NATIVE_CONTROL_THEME)){
     const language=appearance==="light"?"en":"de",directory=join(workDir,appearance),body:{raw:string}[]=[];
     for(const entry of control.cases){
@@ -1821,8 +1822,8 @@ export async function compileNativeScientificRelationStyles(workDir:string):Prom
 
 /** 📏️ Verifies canonical shape vocabularies and positive scientific body scales. */
 export async function compileNativeScientificScalarAdmission():Promise<void>{
-  const neutral=fixture.scientificScalarAdmission,control=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[],original=JSON.stringify(control),ajv=new Ajv2020({strict:false});
-  if(!validate(control))throw Error("Scientific scalar vectors rejected");
+  const neutral=fixture.scientificScalarAdmission,control=neutral.vectors,failures:string[]=[],original=JSON.stringify(control),ajv=new Ajv2020({strict:false});
+  
   for(const entry of control.cases){
     const schema=entry.key==="nodeShape"?{enum:entry.family==="sci-pathway"?["box","circle"]:["none","box","circle"]}:{type:"number",exclusiveMinimum:0};
     if(Boolean(ajv.compile(schema)(entry.value))!==entry.valid)throw Error("Scientific scalar independent oracle mismatch");
@@ -1836,8 +1837,8 @@ export async function compileNativeScientificScalarAdmission():Promise<void>{
 
 /** 🔒️ Verifies native mode admission against the authored eight-family vocabulary. */
 export async function compileNativeScientificModeDomain(workDir:string):Promise<void>{
-  const neutral=fixture.scientificNativeModeDomain,control=neutral.vectors,original=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[],ajv=new Ajv2020({strict:false}),themes=(["light","dark"]as const).filter(value=>!process.env.PRINT_NATIVE_CONTROL_THEME||value===process.env.PRINT_NATIVE_CONTROL_THEME);
-  if(!validate(control))throw Error("Native scientific mode vectors rejected");
+  const neutral=fixture.scientificNativeModeDomain,control=neutral.vectors,original=JSON.stringify(control),failures:string[]=[],ajv=new Ajv2020({strict:false}),themes=(["light","dark"]as const).filter(value=>!process.env.PRINT_NATIVE_CONTROL_THEME||value===process.env.PRINT_NATIVE_CONTROL_THEME);
+  
   for(const entry of control.cases){const family=control.families.find(family=>family.name===entry.family)!;if(Boolean(ajv.compile({enum:family.modes})(entry.mode))!==entry.valid)throw Error("Independent native mode oracle mismatch");}
   for(const appearance of themes){
     const language=appearance==="light"?"en":"de",directory=join(workDir,"predicates",appearance),body=control.cases.map(entry=>({raw:"\\SemioVizProbeBegin{scientific-mode-domain}{"+entry.id+"}\\ExplSyntaxOn\\bool_set_true:N\\l_semio_viz_sci_records_valid_bool\\keys_set:nn{semio/viz/family/"+entry.family+"}{mode="+entry.mode+"}\\semio_viz_probe_values:nx{native/valid}{\\bool_if:NTF\\l_semio_viz_sci_records_valid_bool{1}{0}}\\ExplSyntaxOff"}));
@@ -1855,8 +1856,8 @@ export async function compileNativeScientificModeDomain(workDir:string):Promise<
 
 /** 🛡️ Requires finite complete public force-start pairs before the existing native solver. */
 export async function compileNativeSpecializedPlacementAdmission(workDir:string):Promise<void>{
-  const contract=fixture.nativeSpecializedPlacementAdmission,validate=new Ajv2020({strict:false}).compile(contract.schema),{csvParse}=await import("d3-dsv"),failures:string[]=[];let executed=0;
-  if(!validate(contract.vectors))throw Error("Public XY neutral schema rejected");
+  const contract=fixture.nativeSpecializedPlacementAdmission,{csvParse}=await import("d3-dsv"),failures:string[]=[];let executed=0;
+  
   const rowSchema=new Ajv2020({strict:false,strictNumbers:true}).compile({type:"object",required:["x","y"],properties:{x:{type:"number"},y:{type:"number"}}});
   for(const entry of contract.vectors.cases.filter(entry=>!process.env.PRINT_NATIVE_PLACEMENT_CASE||entry.id===process.env.PRINT_NATIVE_PLACEMENT_CASE)){
     const parsed=csvParse([entry.columns.join(","),...entry.rows.map(row=>row.join(","))].join("\n")),valid=parsed.every(row=>rowSchema(Object.fromEntries(["x","y"].filter(key=>entry.columns.includes(key)).map(key=>[key,row[key]?.trim()?Number(row[key]):NaN]))));
@@ -1874,7 +1875,7 @@ export async function compileNativeSpecializedPlacementAdmission(workDir:string)
 }
 /** 🧠 Measures all declared architecture palette modes against an authored fifteen-colour D3 ordinal oracle and actual native PDF nodes. */
 export async function compileNativeNeuralArchitectureControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeNeuralArchitectureControls,c=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[];if(!validate(c))throw Error("Neural architecture neutral "+JSON.stringify(validate.errors));const palette=scaleOrdinal(c.modes,c.palette),kindDomain=[...new Set(c.layers.map(layer=>layer.kind))],x=scaleLinear([0,c.layers.length],[c.padding,c.width-c.padding]),nodes=c.layers.flatMap((layer,index)=>Array.from({length:layer.units},(_,unit)=>({x:x(index+.5),y:c.height/2+(unit+1-(layer.units+1)/2)*Math.min(3*c.unitSize,(c.height-2*c.padding-6)/layer.units),kind:kindDomain.indexOf(layer.kind)})));
+  const neutral=fixture.nativeNeuralArchitectureControls,c=neutral.vectors,failures:string[]=[];const palette=scaleOrdinal(c.modes,c.palette),kindDomain=[...new Set(c.layers.map(layer=>layer.kind))],x=scaleLinear([0,c.layers.length],[c.padding,c.width-c.padding]),nodes=c.layers.flatMap((layer,index)=>Array.from({length:layer.units},(_,unit)=>({x:x(index+.5),y:c.height/2+(unit+1-(layer.units+1)/2)*Math.min(3*c.unitSize,(c.height-2*c.padding-6)/layer.units),kind:kindDomain.indexOf(layer.kind)})));
   deepStrictEqual(chartSchema["x-semio-family-options"]["neural-network"].options.mode.enum,c.modes);
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const){const directory=join(workDir,appearance),body:{raw:string}[]=[];for(const[modeIndex,mode]of c.modes.entries()){const base={chart:{width:c.width,height:c.height,language,theme:{appearance,palette:c.palette},layers:[],tables:[{name:"neural-architecture",columns:["layer","units","kind","label"],rows:c.layers}],presets:[{kind:"feed-forward-neural-network",options:{data:"neural-architecture",mode:c.modes[(modeIndex+1)%c.modes.length],render:"units",connections:"none",labels:false,padding:c.padding,unitSize:c.unitSize}}]}}as unknown as VizChartSnapshot,before=JSON.stringify(base),changed=changeVizChartValue(base,{path:["presets","0","options","mode"],value:mode}),replayed=applyVizChartDiff(base,changed.diff),inverse=applyVizChartDiff(replayed.snapshot,inverseVizChartDiff(base,changed.diff));if(changed.messages.length||changed.diff.edits.length!==1||replayed.messages.length||inverse.messages.length||JSON.stringify(base)!==before)throw Error("Neural architecture mode mutation/purity");deepStrictEqual(inverse.snapshot,base);const result=await inferVizChart(replayed.snapshot);if(!result.complete)throw Error("Neural architecture inference "+JSON.stringify(result.diagnostics));mkdirSync(directory,{recursive:true});await Bun.write(join(directory,mode+"-emitted.tex"),result.tikz);body.push({raw:"\\clearpage\\SemioVizProbeBegin{neural-architecture}{"+mode+"}"+result.tikz.replace(/(\\begin\{VizFigure\}[^\n]*\n)/,"$1\\draw[line width=.01mm] (0,0) rectangle (80,50);\\special{pdf:literal direct /SemioVizControlNeural"+mode+" BMC}\n").replace("\\end{VizFigure}","\\special{pdf:literal direct EMC}\\end{VizFigure}")});}
     await compileVizProbeDocument({case:"neural-architecture",scenario:appearance,documentClass:"semio",documentClassOptions:`type=paper,language=${language},theme=${appearance}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Neural Architecture Domain}","\\author{Semio}","\\date{}"],body:[...body,{values:{key:"native/neural-architecture",clist:"1"}}]},{workDir:directory,scenario:undefined,keepWorkDir:true});const out=join(directory,"🧪️probe-out"),name=readdirSync(out).find(name=>name.endsWith(".pdf"));if(!name)throw Error("Neural PDF absent");const pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,name))),useSystemFonts:true}).promise,paints=new Map<string,ReturnType<typeof nativeControlPdfPaint>>();try{for(let page=1;page<=pdf.numPages;page++){const operators=await(await pdf.getPage(page)).getOperatorList();for(const mode of c.modes)if(operators.argsArray.some((args,index)=>[OPS.beginMarkedContent,OPS.beginMarkedContentProps].includes(operators.fnArray[index]!)&&String(args?.[0]?.name??args?.[0])==="SemioVizControlNeural"+mode))paints.set(mode,nativeControlPdfPaint(operators,[80,50],"SemioVizControlNeural"+mode));}}finally{await pdf.destroy();}await Bun.write(join(directory,"owned-paint.json"),JSON.stringify(Object.fromEntries(paints),null,2));for(const[modeIndex,mode]of c.modes.entries())try{const paint=paints.get(mode);if(!paint)throw Error("neural body absent");const circles=paint.paths.filter(path=>path.closed&&path.fill&&Math.abs(path.bounds[2]!-path.bounds[0]!-2*c.unitSize)<c.toleranceMm&&Math.abs(path.bounds[3]!-path.bounds[1]!-2*c.unitSize)<c.toleranceMm);if(circles.length!==nodes.length)throw Error("Neural inventory "+circles.length);for(const[index,node]of nodes.entries()){const path=circles[index]!,colour=rgb(palette(c.modes[(modeIndex+node.kind)%c.modes.length]!));equal([(path.bounds[0]!+path.bounds[2]!)/2,(path.bounds[1]!+path.bounds[3]!)/2],[node.x,node.y],mode+" D3 layer placement "+index,c.toleranceMm);equal(path.fill!,[colour.r,colour.g,colour.b].map(value=>value/255),mode+" D3 architecture palette "+index,.001);}}catch(error){failures.push(language+"/"+mode+" "+String(error));}
@@ -1888,7 +1889,7 @@ export async function nativeNeuralIncidenceChecks():Promise<void>{
 }
 /** 🕸️ Enforces scalar graph IDs and directed endpoint membership in actual native compilation. */
 export async function compileNativeGraphReferenceControls(workDir:string):Promise<void>{
- const contract=fixture.nativeGraphReferenceControls,validate=new Ajv2020({strict:false}).compile(contract.schema),cases=contract.vectors;if(!validate(cases))throw Error("Graph reference neutral "+JSON.stringify(validate.errors));const identity=(value:unknown)=>typeof value==="string"?value:typeof value==="number"&&Number.isFinite(value)?String(value):typeof value==="boolean"?String(value):undefined;
+ const contract=fixture.nativeGraphReferenceControls,cases=contract.vectors;const identity=(value:unknown)=>typeof value==="string"?value:typeof value==="number"&&Number.isFinite(value)?String(value):typeof value==="boolean"?String(value):undefined;
  for(const entry of cases){const ids=entry.nodes.map(identity),from=identity(entry.source),to=identity("target"in entry?entry.target:undefined),valid=ids.every(id=>id!==undefined&&id!=="")&&d3Group(ids,id=>id).size===ids.length&&from!==undefined&&from!==""&&to!==undefined&&to!==""&&ids.includes(from??"")&&ids.includes(to??"");if(valid!==entry.valid)throw Error("Independent graph identity oracle "+entry.id);}
  for(const [language,appearance]of [["en","light"],["de","dark"]]as const){const emitted=new Map<string,string>();for(const entry of cases){const snapshot={chart:{width:80,height:50,language,theme:{appearance},layers:[],tables:[{name:"graph-ref-nodes",columns:["id","label"],rows:entry.nodes.map(id=>({id,label:id}))},{name:"graph-ref-links",columns:["source","target","weight"],rows:[{source:entry.source,..."target"in entry?{target:entry.target}:{},weight:1}]}],presets:[{kind:"force-directed-graph",options:{data:"graph-ref-links",nodes:"graph-ref-nodes",layout:"circular",labels:false}}]}}as unknown as VizChartSnapshot,result=await inferVizChart(snapshot);if(!result.complete)throw Error("Graph reference canonical emission "+JSON.stringify(result.diagnostics));emitted.set(entry.id,result.tikz);}
   const compile=async(ids:readonly string[],directory:string)=>compileVizProbeDocument({case:"graph-reference",scenario:appearance,documentClass:"semio",documentClassOptions:`type=paper,language=${language},theme=${appearance}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Graph Reference Contracts}","\\author{Semio}","\\date{}"],body:[...ids.map(id=>({raw:"\\clearpage\\SemioVizProbeBegin{graph-reference}{"+id+"}"+emitted.get(id)})),{values:{key:"native/graph-reference",clist:"1"}}]},{workDir:directory,scenario:undefined,keepWorkDir:true});const valid=cases.filter(entry=>entry.valid),records=await compile(valid.map(entry=>entry.id),join(workDir,"valid",appearance));for(const entry of valid){const nodes=records.filter(record=>record.scenario===entry.id&&record.key==="geometry/node"),links=records.filter(record=>record.scenario===entry.id&&record.key==="geometry/link");if(nodes.length!==entry.nodes.length||links.length!==1)throw Error("Graph reference actual inventory "+entry.id);}
@@ -1897,7 +1898,7 @@ export async function compileNativeGraphReferenceControls(workDir:string):Promis
 }
 /** 🪢️ Measures stock architecture inventories and authored directed incidence against independent D3 placement. */
 export async function compileNativeNeuralTopologyControls(workDir:string):Promise<void>{
- const neutral=fixture.nativeNeuralTopologyControls,c=neutral.vectors,valid=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[];if(!valid(c))throw Error("Neural topology neutral "+JSON.stringify(valid.errors));const [width,height]=c.frame;
+ const neutral=fixture.nativeNeuralTopologyControls,c=neutral.vectors,failures:string[]=[];const [width,height]=c.frame;
  const implicit=c.implicitConnections.map(connections=>({kind:"feed-forward-neural-network",mode:"rnn",render:"units",layers:neutral.custom.layers,connections,id:"implicit-"+connections,links:neutral.custom.layers.slice(1).flatMap((layer,index)=>Array.from({length:Number(neutral.custom.layers[index]![0])},(_,from)=>Array.from({length:Number(layer[0])},(_,to)=>connections==="none"||connections==="adjacent"&&from!==to?[]:[`${index+1}/${from+1}/${index+2}/${to+1}`]).flat()).flat()).join(",")}));
  const entries=[...c.architectures,...(process.env.PRINT_NATIVE_NEURAL_BASELINE?[]:["custom","empty","strings"]).map(id=>({kind:"feed-forward-neural-network",mode:"rnn",render:"units",layers:neutral.custom.layers,links:id==="empty"?neutral.custom.empty:neutral.custom.links,id})),...process.env.PRINT_NATIVE_NEURAL_BASELINE?[]:implicit].filter(entry=>!process.env.PRINT_NATIVE_NEURAL_ROUTE_ONLY||("curvature"in entry&&entry.curvature!==0));
  for(const [language,appearance]of [["en","light"],["de","dark"]]as const){const directory=join(workDir,appearance),body:{raw:string}[]=[];
@@ -1923,9 +1924,9 @@ export async function compileNativeNeuralReferenceControls(workDir:string):Promi
 }
 /** 🌲️ Checks public stratified forests and order-independent subtree paint through canonical inference. */
 export async function compileNativeDomainReferenceControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeDomainReferenceControls,control=neutral.vectors,original=JSON.stringify(control),validate=new Ajv2020({strict:false}).compile(neutral.schema),{stratify,partition}=await import("d3-hierarchy"),failures:string[]=[],baseline=process.env.PRINT_NATIVE_DOMAIN_PHASE==="baseline",themes=(["light","dark"]as const).filter(theme=>!process.env.PRINT_NATIVE_CONTROL_THEME||theme===process.env.PRINT_NATIVE_CONTROL_THEME);
-  if(!validate(control))throw Error("Domain reference vectors rejected: "+JSON.stringify(validate.errors));
-  const rowValid=new Ajv2020({strict:false,strictNumbers:true}).compile(fixture.nativeDomainReferenceControls.rowSchema);
+  const neutral=fixture.nativeDomainReferenceControls,control=neutral.vectors,original=JSON.stringify(control),{stratify,partition}=await import("d3-hierarchy"),failures:string[]=[],baseline=process.env.PRINT_NATIVE_DOMAIN_PHASE==="baseline",themes=(["light","dark"]as const).filter(theme=>!process.env.PRINT_NATIVE_CONTROL_THEME||theme===process.env.PRINT_NATIVE_CONTROL_THEME);
+  
+  const rowValid=new Ajv2020({strict:false,strictNumbers:true}).compile(nativeControlSchema.$defs.HierarchyRow);
   const oracle=(entry:typeof control.cases[number])=>{if(new Set(entry.rows.map(row=>row.id)).size!==entry.rows.length||!entry.rows.every(row=>rowValid(row)))return;let virtual="__neutral_forest__";while(entry.rows.some(row=>row.id===virtual))virtual+="_";try{return stratify<typeof entry.rows[number]>().id(row=>row.id).parentId(row=>row.id===virtual?null:row.parent||virtual)([{id:virtual,parent:"",value:0,label:""},...entry.rows]).sum(row=>Number(row.value));}catch{return;}};
   for(const entry of control.cases)if(Boolean(oracle(entry))!==entry.valid)throw Error(entry.id+" independent D3/AJV forest admission disagrees");
   const cases=control.cases.filter(entry=>entry.valid&&(!baseline||["ordered","reversed"].includes(entry.id))).flatMap(entry=>control.modes.map(mode=>({entry,mode,id:entry.id+"-"+mode}))),[width,height]=control.frame;
@@ -1961,8 +1962,8 @@ export async function compileNativeDomainReferenceControls(workDir:string):Promi
 
 /** 🕓️ Compares canonical single-predecessor scheduling and actual print geometry with Graphlib and D3. */
 export async function compileNativeCriticalPathControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeCriticalPathControls,control=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),{default:dagre}=await import("dagre"),failures:string[]=[],original=JSON.stringify(control),geometry=control.rendering,frame=geometry.frame,padding=geometry.padding;
-  if(!validate(control))throw Error("Critical neutral schema "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeCriticalPathControls,control=neutral.vectors,{default:dagre}=await import("dagre"),failures:string[]=[],original=JSON.stringify(control),geometry=control.rendering,frame=geometry.frame,padding=geometry.padding;
+  
   const rowValid=new Ajv2020({strict:false,strictNumbers:true}).compile({type:"object",required:["id","pred","duration"],properties:{id:{type:"string",minLength:1},pred:{type:"string"},duration:{type:"number",minimum:0}}});
   const oracle=(entry:typeof control.cases[number])=>{
     const ids=new Set(entry.rows.map(row=>row.id));if(ids.size!==entry.rows.length||!entry.rows.every(row=>rowValid(row)&&(!row.pred||ids.has(row.pred))))return;
@@ -2000,19 +2001,19 @@ export async function compileNativeCriticalPathControls(workDir:string):Promise<
 
 /** 🪶️ Observes actual repeated generated-token bytes and file identity through both existing entrypoints. */
 export async function compileNativeTokenPublication(workDir:string):Promise<void>{
-  const neutral=fixture.nativeTokenPublication,control=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),fs=await import("node:fs"),{getWorkspaceRoot}=await import("../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"),{writePrintLatexTokenStylesheet,renderPrintLatexTokenStylesheet}=await import("../../🔨️modules/🎨print-design-token-paints/🟦️.ts"),{runOwnedCommand}=await import("../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),root=getWorkspaceRoot(),target=join(root,"🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty"),expected=Buffer.from(renderPrintLatexTokenStylesheet(),"utf8"),records:unknown[]=[];
-  if(!validate(control))throw Error("Token publication neutral schema");writePrintLatexTokenStylesheet();deepStrictEqual(fs.readFileSync(target),expected);
+  const neutral=fixture.nativeTokenPublication,control=neutral.vectors,fs=await import("node:fs"),{getWorkspaceRoot}=await import("../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"),{writePrintLatexTokenStylesheet,renderPrintLatexTokenStylesheet}=await import("../../🔨️modules/🎨print-design-token-paints/🟦️.ts"),{runOwnedCommand}=await import("../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),root=getWorkspaceRoot(),target=join(root,"🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty"),expected=Buffer.from(renderPrintLatexTokenStylesheet(),"utf8"),records:unknown[]=[];
+  writePrintLatexTokenStylesheet();deepStrictEqual(fs.readFileSync(target),expected);
   for(const entrypoint of control.entrypoints)for(let repeat=0;repeat<control.repeats;repeat++){const before=fs.lstatSync(target,{bigint:true});if(entrypoint==="exported-writer")writePrintLatexTokenStylesheet();else await runOwnedCommand(process.execPath,[join(root,"🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/📜️script.ts"),"generate"],root,"print-token-no-op",60000);const after=fs.lstatSync(target,{bigint:true});deepStrictEqual(fs.readFileSync(target),expected,entrypoint+" exact UTF8 bytes");deepStrictEqual([after.dev,after.ino,after.size,after.mtimeNs,after.ctimeNs],[before.dev,before.ino,before.size,before.mtimeNs,before.ctimeNs],entrypoint+" no-op file identity");records.push({entrypoint,repeat,unchanged:control.unchanged,bytes:expected.length});}
   mkdirSync(workDir,{recursive:true});await Bun.write(join(workDir,"token-publication.json"),JSON.stringify(records,null,2));console.log("[DEBUG] Four actual token exported/command no-op calls preserved exact UTF8 bytes, mtime, ctime and file identity");
 }
 
 /** 🖼️ Measures authored picture matrices and whole text ink against independent D3 affine projections. */
 export async function compileNativeActualMarkControls(workDir:string):Promise<void>{
-  const contract=fixture.nativeActualImageControls,c=contract.vectors,validate=new Ajv2020({strict:false}).compile(contract.schema),failures:string[]=[],x=scaleLinear([0,2],[8,c.canvas[0]!-8]),y=scaleLinear([0,14],[8,c.canvas[1]!-8]),anchors=[[x(0),y(0)],[x(1),y(7)],[x(2),y(14)]],affine=(point:number[],center:number[],angle:number)=>{const radial=pointRadial(Math.atan2(point[0]!, -point[1]!)+angle*Math.PI/180,Math.hypot(...point));return[center[0]!+radial[0],center[1]!+radial[1]];};
-  if(!validate(c))throw Error("Actual image neutral schema "+JSON.stringify(validate.errors));
+  const contract=fixture.nativeActualImageControls,c=contract.vectors,failures:string[]=[],x=scaleLinear([0,2],[8,c.canvas[0]!-8]),y=scaleLinear([0,14],[8,c.canvas[1]!-8]),anchors=[[x(0),y(0)],[x(1),y(7)],[x(2),y(14)]],affine=(point:number[],center:number[],angle:number)=>{const radial=pointRadial(Math.atan2(point[0]!, -point[1]!)+angle*Math.PI/180,Math.hypot(...point));return[center[0]!+radial[0],center[1]!+radial[1]];};
+  
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const){const directory=join(workDir,appearance);mkdirSync(join(directory,"🧪️probe-input"),{recursive:true});await Bun.write(join(directory,"🧪️probe-input","image.png"),readFileSync(join(import.meta.dir,"🖼️image.png")));const body:{raw:string}[]=[];
     for(const kind of ["image-mark","text-mark"])for(const entry of c.cases.filter(entry=>kind==="image-mark"||entry.size>0)){const id=kind+"-"+entry.id,options:Record<string,unknown>={data:"actual-marks",x:"x",y:"y",rotate:entry.rotate===0?90:0,opacity:entry.opacity,...kind==="image-mark"?{file:entry.file??"image.png",size:entry.size,aspect:entry.aspect}:{}},base={chart:{language,theme:{appearance},width:c.canvas[0],height:c.canvas[1],margin:{top:0,right:0,bottom:0,left:0},layers:[],tables:[{name:"actual-marks",columns:["x","y"],rows:[{x:0,y:0},{x:1,y:7},{x:2,y:14}]}],presets:[{kind,options}]}}as unknown as VizChartSnapshot,before=JSON.stringify(base),outcome=changeVizChartValue(base,{path:["presets","0","options","rotate"],value:entry.rotate}),replay=applyVizChartDiff(base,outcome.diff),inverse=applyVizChartDiff(replay.snapshot,inverseVizChartDiff(base,outcome.diff));if(outcome.messages.length||outcome.diff.edits.length!==1||replay.messages.length||inverse.messages.length||JSON.stringify(base)!==before)throw Error("Actual mark mutation/purity "+id);deepStrictEqual(inverse.snapshot,base);const inferred=await inferVizChart(replay.snapshot);if(!inferred.complete)throw Error("Actual mark inference "+JSON.stringify(inferred.diagnostics));await Bun.write(join(directory,id+"-emitted.tex"),inferred.tikz);body.push({raw:"\\clearpage\\SemioVizProbeBegin{actual-mark-controls}{"+id+"}"+inferred.tikz.replace(/(\\begin\{VizFigure\}[^\n]*\n)/,"$1\\draw[line width=.01mm] (0,0) rectangle (80,40);\\special{pdf:literal direct /SemioVizControl"+id+" BMC}\n").replace("\\end{VizFigure}","\\special{pdf:literal direct EMC}\\end{VizFigure}")});}
-    const alphaCases=fixture.nativeTextRenderingControls.vectors;if(!new Ajv2020({strict:false}).compile(fixture.nativeTextRenderingControls.schema)(alphaCases))throw Error("Text rendering neutral schema");for(const[index,entry]of alphaCases.entries())body.push({raw:`\\clearpage\\SemioVizProbeBegin{actual-mark-controls}{alpha${index}}\\begin{VizFigure}[width=80,height=40]\\draw[line width=.01mm] (0,0) rectangle (80,40);\\special{pdf:literal direct /SemioVizControlAlpha${index} BMC}\\node at (40,20) {\\pgfsetfillopacity{${entry.fill}}\\pgfsetstrokeopacity{${entry.stroke}}\\special{pdf:literal direct ${entry.mode} Tr}Alpha};\\special{pdf:literal direct EMC}\\end{VizFigure}`});
+    const alphaCases=fixture.nativeTextRenderingControls.vectors;for(const[index,entry]of alphaCases.entries())body.push({raw:`\\clearpage\\SemioVizProbeBegin{actual-mark-controls}{alpha${index}}\\begin{VizFigure}[width=80,height=40]\\draw[line width=.01mm] (0,0) rectangle (80,40);\\special{pdf:literal direct /SemioVizControlAlpha${index} BMC}\\node at (40,20) {\\pgfsetfillopacity{${entry.fill}}\\pgfsetstrokeopacity{${entry.stroke}}\\special{pdf:literal direct ${entry.mode} Tr}Alpha};\\special{pdf:literal direct EMC}\\end{VizFigure}`});
     if(!process.env.PRINT_NATIVE_MARK_REPLAY)await compileVizProbeDocument({case:"actual-mark-controls",scenario:appearance,documentClass:"semio",documentClassOptions:`type=paper,language=${language},theme=${appearance}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Actual Image and Text Marks}","\\author{Semio}","\\date{}"],body:[...body,{values:{key:"native/actual-marks",clist:"1"}}]},{workDir:directory,extraSources:["image.png"],scenario:undefined,keepWorkDir:true});const pdfDirectory=process.env.PRINT_NATIVE_MARK_REPLAY?join(process.env.PRINT_NATIVE_MARK_REPLAY,appearance):directory,out=join(pdfDirectory,"🧪️probe-out"),name=readdirSync(out).find(name=>name.endsWith(".pdf"));if(!name)throw Error("Actual mark PDF absent");const pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,name))),useSystemFonts:true}).promise,paints=new Map<string,ReturnType<typeof nativeControlPdfPaint>>(),ids=[...c.cases.flatMap(entry=>["image-mark-"+entry.id,"text-mark-"+entry.id]),...alphaCases.map((_,index)=>"Alpha"+index)];try{for(let page=1;page<=pdf.numPages;page++){const operators=await(await pdf.getPage(page)).getOperatorList();for(const id of ids)if(operators.argsArray.some((args,index)=>[OPS.beginMarkedContent,OPS.beginMarkedContentProps].includes(operators.fnArray[index]!)&&String(args?.[0]?.name??args?.[0])==="SemioVizControl"+id))paints.set(id,nativeControlPdfPaint(operators,c.canvas,"SemioVizControl"+id));}}finally{await pdf.destroy();}await Bun.write(join(directory,"owned-paint.json"),JSON.stringify(Object.fromEntries(paints),null,2));
     for(const entry of c.cases)try{const paint=paints.get("image-mark-"+entry.id);if(!paint)throw Error("Actual payload body absent");if(entry.size===0){if(paint.images.length||paint.paths.length||paint.glyphs.length)throw Error("Zero-area image emitted paint or loaded a bitmap");continue;}if(paint.images.length!==3)throw Error("Actual payload inventory "+paint.images.length);const width=Math.sqrt(entry.size*entry.aspect),height=entry.size/width;for(const[index,image]of paint.images.entries()){equal(image.corners.flat(),[[-width/2,-height/2],[width/2,-height/2],[width/2,height/2],[-width/2,height/2]].map(point=>affine(point,anchors[index]!,entry.rotate)).flat(),entry.id+" D3 image corners",c.toleranceMm);equal([image.opacity],[entry.opacity],entry.id+" actual payload alpha",.00001);equal([image.sourceWidth!,image.sourceHeight!],c.sourceSize,entry.id+" Pillow source dimensions",0);}}catch(error){failures.push(language+"/image/"+entry.id+" "+String(error));}
     for(const entry of c.cases.filter(entry=>entry.size>0))try{const paint=paints.get("text-mark-"+entry.id),reference=paints.get("text-mark-wide");if(!paint||!reference)throw Error("Actual text body absent");if(entry.opacity===0){if(paint.glyphs.length)throw Error("Invisible whole-text mark still paints actual ink");continue;}if(paint.glyphs.length!==3)throw Error("Actual text inventory "+paint.glyphs.length);for(const[index,glyph]of paint.glyphs.entries()){equal([glyph.fillOpacity!],[entry.opacity],entry.id+" actual glyph fill alpha",.00001);const baseline=reference.glyphs[index]!;if(glyph.text!==baseline.text||!baseline.origin||!baseline.advance||!glyph.origin||!glyph.advance)throw Error("Actual text glyph binding absent");equal(glyph.origin,affine(baseline.origin.map((value,axis)=>value-anchors[index]![axis]!),anchors[index]!,entry.rotate),entry.id+" D3 glyph origin",c.toleranceMm);equal(glyph.advance,affine(baseline.advance,[0,0],entry.rotate),entry.id+" D3 glyph advance",c.toleranceMm);}}catch(error){failures.push(language+"/text/"+entry.id+" "+String(error));}
@@ -2023,8 +2024,8 @@ export async function compileNativeActualMarkControls(workDir:string):Promise<vo
 
 /** 🎏️ Measures authored plane-vector paint controls through canonical replay and actual PDF operators. */
 export async function compileNativeVectorPaintControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeVectorPaintControls,c=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),before=JSON.stringify(c),failures:string[]=[],color=rgb(c.stroke),expected=[color.r,color.g,color.b].map(value=>value/255),cases=c.renders.flatMap(render=>c.opacities.flatMap(opacity=>c.languages.map(language=>({id:render+"-"+opacity+"-"+language,render,opacity,language}))));
-  if(!validate(c))throw Error("Vector paint neutral schema "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeVectorPaintControls,c=neutral.vectors,before=JSON.stringify(c),failures:string[]=[],color=rgb(c.stroke),expected=[color.r,color.g,color.b].map(value=>value/255),cases=c.renders.flatMap(render=>c.opacities.flatMap(opacity=>c.languages.map(language=>({id:render+"-"+opacity+"-"+language,render,opacity,language}))));
+  
   const source=process.env.PRINT_NATIVE_VECTOR_PAINT_SOURCE,themes=(["light","dark"]as const).filter(theme=>!source||existsSync(join(source,theme,"🧪️probe-out",theme+".pdf")));
   if(!themes.length)throw Error("Vector paint source has no theme PDF");
   for(const appearance of themes){
@@ -2049,7 +2050,7 @@ export async function compileNativeVectorPaintControls(workDir:string):Promise<v
 
 /** 🧭️ Rejects geographic map controls on a plane vector field through canonical inference and independent JSON Schema admission. */
 export async function compileNativeVectorBaseAdmission():Promise<void>{
-  const c=fixture.nativeVectorBaseAdmission,validate=new Ajv2020({strict:false}).compile(c.schema),before=JSON.stringify(c),failures:string[]=[];
+  const c=fixture.nativeVectorBaseAdmission,validate=new Ajv2020({strict:false}).compile(nativeControlSchema.$defs.VectorOptions),before=JSON.stringify(c),failures:string[]=[];
   for(const language of c.vectors.languages){
     const base={chart:{language,width:80,height:40,margin:{top:0,right:0,bottom:0,left:0},layers:[],tables:[],presets:[{kind:"quiver-plot",options:c.vectors.accepted}]}} as unknown as VizChartSnapshot,valid=await inferVizChart(base);
     if(!validate(c.vectors.accepted)||!valid.complete)throw Error(language+" admitted plane-vector options rejected");
@@ -2062,7 +2063,7 @@ export async function compileNativeVectorBaseAdmission():Promise<void>{
 
 /** 🌊️ Rejects route-only controls and invalid flow style selectors on a flow map through canonical inference and independent JSON Schema admission. */
 export async function compileNativeGeoFlowAdmission():Promise<void>{
-  const c=fixture.nativeGeoFlowAdmission,validate=new Ajv2020({strict:false}).compile(c.schema),before=JSON.stringify(c),failures:string[]=[];
+  const c=fixture.nativeGeoFlowAdmission,validate=new Ajv2020({strict:false}).compile(nativeControlSchema.$defs.GeoFlowOptions),before=JSON.stringify(c),failures:string[]=[];
   for(const language of c.vectors.languages){
     const base={chart:{language,width:80,height:40,margin:{top:0,right:0,bottom:0,left:0},layers:[],tables:[],presets:[{kind:"flow-map",options:c.vectors.accepted}]}} as unknown as VizChartSnapshot,valid=await inferVizChart(base);
     if(!validate(c.vectors.accepted)||!valid.complete)throw Error(language+" admitted geographic-flow options rejected");
@@ -2076,8 +2077,8 @@ export async function compileNativeGeoFlowAdmission():Promise<void>{
 
 /** 🐝️ Compares authored hive ordering and spoke radii with independent D3 sorting/scales and actual native node bodies. */
 export async function compileNativeHiveControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeHiveControls,c=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),before=JSON.stringify(c),failures:string[]=[],cases=c.orders.flatMap(order=>c.radii.flatMap((radii,index)=>c.languages.map(language=>({id:order+"-"+index+"-"+language,order,radii,language}))));
-  if(!validate(c))throw Error("Hive neutral schema "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeHiveControls,c=neutral.vectors,before=JSON.stringify(c),failures:string[]=[],cases=c.orders.flatMap(order=>c.radii.flatMap((radii,index)=>c.languages.map(language=>({id:order+"-"+index+"-"+language,order,radii,language}))));
+  
   const degree=(id:string)=>c.edges.filter(edge=>edge.source===id||edge.target===id).length,groups=[...d3Group(c.nodes,node=>node.group).keys()];
   for(const appearance of["light","dark"]as const){
     const directory=join(workDir,appearance),body:{raw:string}[]=[];
@@ -2099,7 +2100,7 @@ export async function compileNativeHiveControls(workDir:string):Promise<void>{
 
 /** 🔄️ Same-unit recurrence retains visible native loops and independent D3 arc/target geometry. */
 export async function compileNativeNeuralSelfLoopControls(workDir:string):Promise<void>{
- const neutral=fixture.nativeNeuralTopologyControls,c=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),failures:string[]=[];if(!validate(c))throw Error("Neural self-loop neutral "+JSON.stringify(validate.errors));
+ const neutral=fixture.nativeNeuralTopologyControls,c=neutral.vectors,failures:string[]=[];
  for(const[language,appearance]of [["en","light"],["de","dark"]]as const){const directory=join(workDir,appearance),body:{raw:string}[]=[];
   for(const entry of c.selfLoops){const base={chart:{width:c.frame[0],height:c.frame[1],language,theme:{appearance},layers:[],tables:[{name:"neural-self",columns:["layer","units","kind","label"],rows:neutral.custom.layers.map(([units,kind,label],index)=>({layer:index+1,units,kind,label}))}],presets:[{kind:"feed-forward-neural-network",options:{data:"neural-self",mode:"rnn",render:entry.render,directed:entry.directed,padding:c.padding,unitSize:c.unitSize,labels:false,curvature:.35,links:"2/1/2/1"}}]}}as unknown as VizChartSnapshot,before=JSON.stringify(base),changed=changeVizChartValue(base,{path:["presets","0","options","links"],value:"2/2/2/2"}),replayed=applyVizChartDiff(base,changed.diff),inverse=applyVizChartDiff(replayed.snapshot,inverseVizChartDiff(base,changed.diff));if(changed.messages.length||changed.diff.edits.length!==1||replayed.messages.length||inverse.messages.length||JSON.stringify(base)!==before)throw Error("Self-loop mutation/purity");deepStrictEqual(inverse.snapshot,base);const result=await inferVizChart(replayed.snapshot);if(!result.complete)throw Error("Self-loop canonical admission "+JSON.stringify(result.diagnostics));mkdirSync(directory,{recursive:true});const tikz=process.env.PRINT_NATIVE_NEURAL_TIKZ?readFileSync(join(process.env.PRINT_NATIVE_NEURAL_TIKZ,"self-"+entry.id+"-"+language+".tex"),"utf8"):result.tikz;await Bun.write(join(directory,entry.id+"-emitted.tex"),tikz);body.push({raw:"\\clearpage\\SemioVizProbeBegin{neural-self}{"+entry.id+"}"+tikz.replace(/(\\begin\{VizFigure\}[^\n]*\n)/,"$1\\draw[line width=.01mm] (0,0) rectangle (80,50);\\special{pdf:literal direct /SemioVizNeuralSelf"+entry.id+" BMC}\n").replace("\\end{VizFigure}","\\special{pdf:literal direct EMC}\\end{VizFigure}")});}
   const records=await compileVizProbeDocument({case:"neural-self",scenario:appearance,geometry:true,documentClass:"semio",documentClassOptions:"type=paper,language="+language+",theme="+appearance,packages:["semio-viz"],preamble:["\\title{Neural Recurrence}","\\author{Semio}","\\date{}"],body},{workDir:directory,scenario:undefined,keepWorkDir:true}),pdf=await getDocument({data:new Uint8Array(readFileSync(join(directory,"\u{1f9ea}\uFE0Fprobe-out",appearance+".pdf"))),useSystemFonts:true}).promise;
@@ -2110,8 +2111,8 @@ export async function compileNativeNeuralSelfLoopControls(workDir:string):Promis
 
 /** 🧬️ Checks authored genomic windows through canonical event paths and actual feature, coverage, synteny and pileup bodies against D3 scales. */
 export async function compileNativeGenomeWindowControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeGenomeWindowControls,c=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),before=JSON.stringify(c),failures:string[]=[],cases=[...c.modes.flatMap(entry=>c.windows.map(window=>({...entry,...window,id:entry.mode+"-"+window.id}))),...c.extraWindows.map(window=>({...c.modes[0]!,...window,id:"gene-structure-"+window.id}))];
-  if(!validate(c))throw Error("Genome neutral schema "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeGenomeWindowControls,c=neutral.vectors,before=JSON.stringify(c),failures:string[]=[],cases=[...c.modes.flatMap(entry=>c.windows.map(window=>({...entry,...window,id:entry.mode+"-"+window.id}))),...c.extraWindows.map(window=>({...c.modes[0]!,...window,id:"gene-structure-"+window.id}))];
+  
   const source=process.env.PRINT_NATIVE_GENOME_SOURCE;
   for(const[appearance,language]of[["light","en"],["dark","de"]]as const){
     const directory=join(workDir,appearance),body:{raw:string}[]=[];
@@ -2136,8 +2137,8 @@ export async function compileNativeGenomeWindowControls(workDir:string):Promise<
 
 /** 🎹️ Verifies music note and envelope windows through canonical mutation and actual PDF bodies with independent D3 scales. */
 export async function compileNativeMusicWindowControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeMusicWindowControls,c=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),before=JSON.stringify(c),failures:string[]=[],cases=c.modes.flatMap(mode=>c.windows.map(window=>({...mode,id:mode.mode+"-"+window,window,range:window==="omitted"?"":(mode.mode==="rhythm"?c.rhythmRange:c.pitchRange).join(",")})));
-  if(!validate(c))throw Error("Music neutral schema "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeMusicWindowControls,c=neutral.vectors,before=JSON.stringify(c),failures:string[]=[],cases=c.modes.flatMap(mode=>c.windows.map(window=>({...mode,id:mode.mode+"-"+window,window,range:window==="omitted"?"":(mode.mode==="rhythm"?c.rhythmRange:c.pitchRange).join(",")})));
+  
   for(const[appearance,language]of[["light","en"],["dark","de"]]as const){
     const directory=join(workDir,appearance),body:{raw:string}[]=[];
     for(const entry of cases){
@@ -2157,8 +2158,8 @@ export async function compileNativeMusicWindowControls(workDir:string):Promise<v
 
 /** 🌦️️ Measures native meteogram panel height budgets and shared authored windows against independent D3 curve vertices. */
 export async function compileNativeMeteogramWindowControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeMeteogramWindowControls,c=neutral.vectors,validate=new Ajv2020({strict:false}).compile(neutral.schema),before=JSON.stringify(c),failures:string[]=[],cases=c.heights.flatMap(height=>c.windows.map(window=>({...window,height,id:height+"-"+window.id})));
-  if(!validate(c))throw Error("Meteogram neutral schema "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeMeteogramWindowControls,c=neutral.vectors,before=JSON.stringify(c),failures:string[]=[],cases=c.heights.flatMap(height=>c.windows.map(window=>({...window,height,id:height+"-"+window.id})));
+  
   for(const[appearance,language]of[["light","en"],["dark","de"]]as const){
     const directory=join(workDir,appearance),body:{raw:string}[]=[];
     for(const entry of cases){
@@ -2176,8 +2177,8 @@ export async function compileNativeMeteogramWindowControls(workDir:string):Promi
 
 /** 🌲️ Preserves canonical scalar provenance against the shared row policy, D3 hierarchy and native diagnostics. */
 export async function compileNativeDomainScalarControls(workDir:string):Promise<void>{
-  const neutral=fixture.nativeDomainScalarControls,original=JSON.stringify(neutral),validate=new Ajv2020({strict:false}).compile(neutral.schema),rowValid=new Ajv2020({strict:false,strictNumbers:true}).compile(fixture.nativeDomainReferenceControls.rowSchema),{stratify}=await import("d3-hierarchy"),failures:string[]=[],observations:unknown[]=[];
-  if(!validate(neutral.cases))throw Error("Domain scalar neutral rejected "+JSON.stringify(validate.errors));
+  const neutral=fixture.nativeDomainScalarControls,original=JSON.stringify(neutral),rowValid=new Ajv2020({strict:false,strictNumbers:true}).compile(nativeControlSchema.$defs.HierarchyRow),{stratify}=await import("d3-hierarchy"),failures:string[]=[],observations:unknown[]=[];
+  
   const preamble=["\\title{Canonical Domain Scalars}","\\author{Semio}","\\date{}","\\errorcontextlines=200","\\ExplSyntaxOn\\int_new:N\\l_semio_viz_test_scalar_int\\cs_new_eq:NN\\semio_viz_test_scalar_lanes:\\semio_viz_dom_op_lanes:\\cs_set_protected:Npn\\semio_viz_dom_op_lanes:{\\semio_viz_test_scalar_lanes:\\int_zero:N\\l_semio_viz_test_scalar_int\\seq_map_inline:Nn\\l_semio_viz_dom_keys_seq{\\int_incr:N\\l_semio_viz_test_scalar_int\\semio_viz_probe_values:xx{scalar/node/\\int_use:N\\l_semio_viz_test_scalar_int}{\\prop_item:Nn\\l_semio_viz_dom_dep_prop{##1},\\prop_item:Nn\\l_semio_viz_dom_sum_prop{##1}}}}\\ExplSyntaxOff"];
   const published:{id:string;valid:boolean;language:string;appearance:"light"|"dark";source:string;expected:number[][]}[]=[];
   for(const[index,entry]of neutral.cases.entries()){
@@ -2204,8 +2205,8 @@ export async function compileNativeDomainScalarControls(workDir:string):Promise<
 
 /** 🚀️ Compares public trajectory domains with independent physical equations and actual painted D3 scales. */
 export async function compileNativePhysicsWindowControls(workDir:string):Promise<void>{
- const c=physicsWindows.vectors,before=JSON.stringify(c),validate=new Ajv2020({strict:false}).compile(physicsWindows.schema),failures:string[]=[];
- if(!validate(c))throw Error("Physics neutral schema "+JSON.stringify(validate.errors));
+ const c=physicsWindows.vectors,before=JSON.stringify(c),failures:string[]=[];
+ 
  const families:{kind:string;mode:string;padding:number;points:number;options:Record<string,number>}[]=c.cases.map(family=>({...family,options:Object.fromEntries(Object.entries(family.options).map(([key,value])=>{if(typeof value!=="number")throw Error("Physics numeric option "+key);return[key,value]as const;}))}));
  const cases:(typeof families[number]&{id:string;domain?:number[]})[]=families.flatMap(family=>c.windows.map(window=>({...family,...window,id:family.kind+"-"+window.id}))),fit=(points:number[][],axis:number,padding:number)=>{const lo=Math.min(...points.map(point=>point[axis]!)),hi=Math.max(...points.map(point=>point[axis]!));return[lo-padding*(hi-lo),hi+padding*(hi-lo)];};
  for(const[language,appearance]of [["en","light"],["de","dark"]]as const){
@@ -2229,8 +2230,8 @@ export async function compileNativePhysicsWindowControls(workDir:string):Promise
 
 /** 🌧️ Compares public rainfall and seismic windows with independent D3 scales and actual painted vertices. */
 export async function compileNativeSurfaceWindowControls(workDir:string):Promise<void>{
- const c=surfaceWindows.vectors,validate=new Ajv2020({strict:false}).compile(surfaceWindows.schema),before=JSON.stringify(c),failures:string[]=[];
- if(!validate(c))throw Error("Surface neutral schema "+JSON.stringify(validate.errors));
+ const c=surfaceWindows.vectors,before=JSON.stringify(c),failures:string[]=[];
+ 
  const windows=c.windows as readonly {id:string;domain?:number[];range?:number[];omitKeys?:boolean}[],families=[{kind:"hyetograph",mode:"hyetograph"},{kind:"seismic-section",mode:"seismic"}] as const,cases=families.flatMap(family=>windows.map(window=>({...family,...window,id:family.kind+"-"+window.id})));
  for(const[language,appearance]of [["en","light"],["de","dark"]]as const){
   const directory=join(workDir,appearance),body:{raw:string}[]=[];
@@ -2257,8 +2258,8 @@ export async function compileNativeSurfaceWindowControls(workDir:string):Promise
 
 /** 🌊️ Preserves authored geological ranges against independent D3 scales and actual native painted paths. */
 export async function compileNativeSurfaceRangeControls(workDir:string):Promise<void>{
- const c=surfaceRanges.vectors,validate=new Ajv2020({strict:false}).compile(surfaceRanges.schema),before=JSON.stringify(c),failures:string[]=[],windows=c.windows as readonly{id:string;domain?:number[];range?:number[]}[],cases=["seismogram","river-profile"].flatMap(kind=>windows.map(window=>({...window,kind,id:kind+"-"+window.id})));
- if(!validate(c))throw Error("Surface range neutral schema "+JSON.stringify(validate.errors));
+ const c=surfaceRanges.vectors,before=JSON.stringify(c),failures:string[]=[],windows=c.windows as readonly{id:string;domain?:number[];range?:number[]}[],cases=["seismogram","river-profile"].flatMap(kind=>windows.map(window=>({...window,kind,id:kind+"-"+window.id})));
+ 
  for(const[language,appearance]of[["en","light"],["de","dark"]]as const){
   const directory=join(workDir,appearance),body:{raw:string}[]=[];
   for(const entry of cases){

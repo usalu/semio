@@ -8,7 +8,7 @@ const KIND:&str="fixture.neutral-host-fixture.counter";
 const SQL:&str=include_str!("../../🪶️sqlite/🗄️.sql");
 fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
 fn counts()->Vec<i32>{corpus()["counts"].as_array().unwrap().iter().map(|value|i32::try_from(value.as_i64().unwrap()).unwrap()).collect()}
-fn dialect()->store::os_io::ArtifactDialect{store::os_io::ArtifactDialect{artifact_kind:KIND.into(),standard:"1".into(),subset:"*".into()}}
+fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:KIND.into(),standard:"1".into(),subset:"*".into()}}
 fn codec()->store::ArtifactSqliteSnapshotCodec{
  store::ArtifactCodec::bare::<Snapshot,Mutation>(KIND).snapshot_sqlite.expect("the actual published Count owner must opt its bare native codec into semantic SQLite")
 }
@@ -106,6 +106,8 @@ fn sqlite_snapshot_host_count_full_erased_backing_limits_and_phase_cancellation_
 }
 #[test]
 fn sqlite_snapshot_host_count_actual_declared_plugin_wire_preserves_count_and_file_metadata(){
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
  let _codec=codec();let _plugin=crate::assembly::plugin().unwrap();
  use semio_framework_plugin::{plugin_runtime,sqlite_wire::{SnapshotInput,SnapshotLimits,SnapshotFileResult,SnapshotPayloadResult}};
  let coordinate=dialect().to_coordinate();

@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+  "before": "for link in &links{if parent!=Some(link.0){parent=Some(link.0);ordinal=0;}if link.1!=number(ordinal)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"Semio value member ordinals must be contiguous\"))}ordinal+=1;}",
+  "after": "for(index,link)in links.iter().enumerate(){if parent!=Some(link.0){parent=Some(link.0);ordinal=0;}if link.1!=number(ordinal)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"Semio value member ordinals must be contiguous\"))}ordinal+=1;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index+1,links.len())?;}"
+}

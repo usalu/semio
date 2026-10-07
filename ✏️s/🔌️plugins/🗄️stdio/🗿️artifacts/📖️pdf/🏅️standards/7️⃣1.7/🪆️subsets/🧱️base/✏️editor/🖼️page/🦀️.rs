@@ -998,7 +998,7 @@ fn parse_optional_date(value: &str) -> Result<Option<PdfDate>, Fault> {
     if value.is_empty() {
         return Ok(None);
     }
-    PdfDate::parse(value).map(Some).ok_or_else(|| fault("a document date needs D:YYYYMMDDHHmmSS"))
+    crate::standards::v1_7::subsets::base::io::text::snapshot::date::parse_pdf_date(value).map(Some).ok_or_else(|| fault("a document date needs D:YYYYMMDDHHmmSS"))
 }
 
 fn set_viewer_preference(snapshot: &PdfSnapshot, flag: &str, text: &str, value: f64) -> Result<Vec<PdfMutation>, Fault> {
@@ -2576,7 +2576,7 @@ fn cubic(p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), p3: (f64, f64), t: f64)
 fn shown(text: &PdfTextString) -> String {
     match text {
         PdfTextString::Text { text } => text.clone(),
-        PdfTextString::Codes { bytes } => String::from_utf8_lossy(bytes).into_owned(),
+        PdfTextString::Codes { codes } => codes.iter().map(|code|char::from_u32(*code).unwrap_or('\u{FFFD}')).collect(),
     }
 }
 

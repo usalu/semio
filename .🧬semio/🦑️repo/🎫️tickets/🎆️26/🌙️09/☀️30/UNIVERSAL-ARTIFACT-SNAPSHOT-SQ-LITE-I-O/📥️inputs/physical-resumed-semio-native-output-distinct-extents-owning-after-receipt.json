@@ -1,0 +1,94 @@
+{
+  "session": 66676,
+  "authority": "Root original whole Semio owning After",
+  "run": 271,
+  "passed": 270,
+  "failed": 1,
+  "durationSeconds": 69.412,
+  "compile": "2m19s",
+  "nextestId": "4a057a80-5af3-4657-8ebb-3e349a839f8a",
+  "qualified": [
+    "CAD controlled_native_output",
+    "Document controlled_native_output",
+    "Model controlled_native_output",
+    "Presentation controlled_native_output",
+    "Drawing controlled_native_output"
+  ],
+  "remainingFailure": "Base full-empty decoder ownership, owned by Root",
+  "controls": "original whole Semio law roster and controls; no child duplicate replay",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-current16-repaired-original-after-native.log",
+  "actualDebugLines": [
+    "    [DEBUG] controlled native Binary semanticValueBytes=101982 nativeFileBytes=100753",
+    "    [DEBUG] controlled native Text semanticValueBytes=101982 nativeFileBytes=200815",
+    "    [DEBUG] controlled native Binary semanticValueBytes=101255 nativeFileBytes=100262",
+    "    [DEBUG] controlled native Text semanticValueBytes=101255 nativeFileBytes=200554",
+    "    [DEBUG] controlled native Binary semanticValueBytes=101979 nativeFileBytes=100588",
+    "    [DEBUG] controlled native Text semanticValueBytes=101979 nativeFileBytes=200489",
+    "    [DEBUG] controlled native Binary semanticValueBytes=106482 nativeFileBytes=102377",
+    "    [DEBUG] controlled native Text semanticValueBytes=106482 nativeFileBytes=203019",
+    "    [DEBUG] controlled native Binary semanticValueBytes=102215 nativeFileBytes=200682",
+    "    [DEBUG] controlled native Text semanticValueBytes=102215 nativeFileBytes=201421"
+  ],
+  "actualDimensions": [
+    {
+      "owner": "cad",
+      "encoding": "Binary",
+      "semanticValueBytes": 101982,
+      "nativeFileBytes": 100753
+    },
+    {
+      "owner": "cad",
+      "encoding": "Text",
+      "semanticValueBytes": 101982,
+      "nativeFileBytes": 200815
+    },
+    {
+      "owner": "document",
+      "encoding": "Binary",
+      "semanticValueBytes": 101255,
+      "nativeFileBytes": 100262
+    },
+    {
+      "owner": "document",
+      "encoding": "Text",
+      "semanticValueBytes": 101255,
+      "nativeFileBytes": 200554
+    },
+    {
+      "owner": "drawing",
+      "encoding": "Binary",
+      "semanticValueBytes": 101979,
+      "nativeFileBytes": 100588
+    },
+    {
+      "owner": "drawing",
+      "encoding": "Text",
+      "semanticValueBytes": 101979,
+      "nativeFileBytes": 200489
+    },
+    {
+      "owner": "model",
+      "encoding": "Binary",
+      "semanticValueBytes": 106482,
+      "nativeFileBytes": 102377
+    },
+    {
+      "owner": "model",
+      "encoding": "Text",
+      "semanticValueBytes": 106482,
+      "nativeFileBytes": 203019
+    },
+    {
+      "owner": "presentation",
+      "encoding": "Binary",
+      "semanticValueBytes": 102215,
+      "nativeFileBytes": 200682
+    },
+    {
+      "owner": "presentation",
+      "encoding": "Text",
+      "semanticValueBytes": 102215,
+      "nativeFileBytes": 201421
+    }
+  ]
+}

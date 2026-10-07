@@ -1,0 +1,12 @@
+> bun ./📜️script.ts test-owner-command "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts" test long ../../../../🧱️elements/✏️Input/🧪️tests/🧩️component/🟦️.tsx ../../../../🧱️elements/📨️UIDialog/🧪️tests/🧩️component/🟦️.tsx ../../../../🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx ../../../../🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx
+
+[DEBUG] isolated Nx verification test-owner-command
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript
+
+
+ Test Files  4 passed (4)
+      Tests  41 passed (41)
+   Start at  19:31:50
+   Duration  5.63s (transform 8.62s, setup 730ms, import 14.53s, tests 1.88s, environment 2.24s)
+

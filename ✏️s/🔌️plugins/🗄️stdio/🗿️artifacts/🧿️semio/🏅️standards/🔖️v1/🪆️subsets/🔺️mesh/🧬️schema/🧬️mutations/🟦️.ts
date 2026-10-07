@@ -118,5 +118,5 @@ export type SemioMeshMutation =
   | { ChangeTextureMime: ChangeTextureMime }
   | { ReplaceTextureBytes: ReplaceTextureBytes }
   | { MoveVertex: MoveVertex }
-  | { SetSnapshot: SetSnapshot };
-  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }
+  | { SetSnapshot: SetSnapshot }
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } };

@@ -41,12 +41,12 @@ use semio_framework_value::ValueError;
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(extension = "energy")]
 pub(crate) struct EnergyModelPackRecord {
-    schema: String,
-    model: DslValue,
-    structure: EnergyStructureChild,
-    zones: EnergyZonesChild,
-    referenced_model: Option<store::ArtifactLink>,
-    weather_link: Option<store::ArtifactLink>,
+    pub(crate) schema: String,
+    pub(crate) model: DslValue,
+    pub(crate) structure: EnergyStructureChild,
+    pub(crate) zones: EnergyZonesChild,
+    pub(crate) referenced_model: Option<store::ArtifactLink>,
+    pub(crate) weather_link: Option<store::ArtifactLink>,
 }
 
 impl EnergyModelPackRecord {

@@ -6472,7 +6472,7 @@
               },
               "cap": "round",
               "join": "bevel",
-              "tikzStyle": "draw=blue,line width=.7pt"
+              "nativeStyle": "draw=blue,line width=.7pt"
             },
             {
               "kind": "circle",
@@ -6496,7 +6496,7 @@
               },
               "cap": "round",
               "join": "bevel",
-              "tikzStyle": "draw=blue,line width=.7pt"
+              "nativeStyle": "draw=blue,line width=.7pt"
             },
             {
               "kind": "line",
@@ -6521,7 +6521,7 @@
               },
               "cap": "round",
               "join": "bevel",
-              "tikzStyle": "draw=blue,line width=.7pt"
+              "nativeStyle": "draw=blue,line width=.7pt"
             },
             {
               "kind": "polygon",
@@ -6556,7 +6556,7 @@
               },
               "cap": "round",
               "join": "bevel",
-              "tikzStyle": "draw=blue,line width=.7pt"
+              "nativeStyle": "draw=blue,line width=.7pt"
             },
             {
               "kind": "path",
@@ -6647,7 +6647,7 @@
               },
               "cap": "round",
               "join": "bevel",
-              "tikzStyle": "draw=blue,line width=.7pt"
+              "nativeStyle": "draw=blue,line width=.7pt"
             },
             {
               "kind": "text",
@@ -6673,7 +6673,7 @@
               },
               "cap": "round",
               "join": "bevel",
-              "tikzStyle": "draw=blue,line width=.7pt"
+              "nativeStyle": "draw=blue,line width=.7pt"
             }
           ]
         },
@@ -7636,7 +7636,7 @@
         "plan",
         "items",
         "0",
-        "tikzStyle"
+        "nativeStyle"
       ],
       "value": "rounded corners=2pt",
       "expected": true
@@ -7647,7 +7647,7 @@
         "plan",
         "items",
         "0",
-        "tikzStyle"
+        "nativeStyle"
       ],
       "value": 2,
       "expected": false
@@ -7658,7 +7658,7 @@
         "plan",
         "items",
         "0",
-        "tikzStyle"
+        "nativeStyle"
       ],
       "value": {
         "draw": "blue"
@@ -7671,7 +7671,7 @@
         "scene",
         "nodes",
         "0",
-        "tikzStyle"
+        "nativeStyle"
       ],
       "value": "draw=blue",
       "expected": false

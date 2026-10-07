@@ -11,7 +11,7 @@ use super::*;
 use crate::standards::v1::subsets::drawing::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::native::{NativeF64,NativeF32};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
@@ -393,8 +393,8 @@ use super::*;
 use crate::standards::v1::subsets::drawing::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::native::{NativeF64,NativeF32};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;

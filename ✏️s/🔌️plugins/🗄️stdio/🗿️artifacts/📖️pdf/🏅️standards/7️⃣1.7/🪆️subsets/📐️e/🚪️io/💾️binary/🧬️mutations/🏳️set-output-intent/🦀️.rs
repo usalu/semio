@@ -3,7 +3,7 @@
 pub const TAG: u8 = 8;
 pub const BINARY_TAG: u8 = TAG;
 
-use super::SetOutputIntent;
+use crate::standards::v1_7::subsets::e::schema::mutations::SetOutputIntent;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetOutputIntent) -> Result<Vec<u8>, String> {

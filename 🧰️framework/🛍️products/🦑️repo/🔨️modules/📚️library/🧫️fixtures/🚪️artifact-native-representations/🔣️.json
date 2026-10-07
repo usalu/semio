@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"representation":"📝️text","source":"impl protocol::OpText for Command {}","misplaced":[]},
+    {"representation":"📝️text","source":"impl protocol::OpBinary for Command {}","misplaced":["OpBinary"]},
+    {"representation":"💾️binary","source":"impl store::ArtifactPack for Snapshot {}","misplaced":[]},
+    {"representation":"💾️binary","source":"impl store::ArtifactDsl for Snapshot {}","misplaced":["ArtifactDsl"]},
+    {"representation":"🪶️sqlite","source":"impl store::ArtifactSqliteSnapshot for Snapshot {}","misplaced":[]},
+    {"representation":"🪶️sqlite","source":"impl protocol::DiffBinary for Delta {}","misplaced":["DiffBinary"]},
+    {"representation":"📝️text","source":"// impl protocol::OpBinary for Command {}\nconst SAMPLE:&str=\"impl protocol::OpBinary for Command {}\";","misplaced":[]},
+    {"representation":"📝️text","source":"mod native { impl protocol::OpBinary for Command {} }","misplaced":["OpBinary"]},
+    {"representation":"💾️binary","source":"protocol::diff_text!(Delta);","misplaced":["diff_text"]},
+    {"representation":"📝️text","source":"protocol::diff_binary!(Delta);","misplaced":["diff_binary"]}
+  ]
+}

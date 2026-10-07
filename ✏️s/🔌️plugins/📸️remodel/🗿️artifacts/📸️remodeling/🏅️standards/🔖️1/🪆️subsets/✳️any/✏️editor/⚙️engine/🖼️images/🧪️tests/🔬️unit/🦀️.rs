@@ -591,8 +591,8 @@ fn accepted_worst_envelope_jpeg_and_malformed_entropy_steps_are_timed() {
         let value = (((index % width as usize) / 16 + (index / width as usize) / 16) % 2 * 223) as u8;
         pixels[index * 4..index * 4 + 4].copy_from_slice(&[value, 255 - value, value.rotate_left(2), 255]);
     }
-    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width, height, pixels, re_encode_quality: Some(85), ..Default::default() };
-    let encoded = semio_s_artifact_stdio_jpg::engine::encode_jpg(&snapshot).expect("JPEG fixture");
+    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width, height, pixels, ..Default::default() };
+    let encoded = semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions{quality:85,..Default::default()}).expect("JPEG fixture");
     assert!(encoded.len() <= MAX_JPEG_COMPRESSED_BYTES);
     let chunks = compressed_rope(&encoded, MAX_JPEG_COMPRESSED_BYTES);
     std::thread::spawn(move || {

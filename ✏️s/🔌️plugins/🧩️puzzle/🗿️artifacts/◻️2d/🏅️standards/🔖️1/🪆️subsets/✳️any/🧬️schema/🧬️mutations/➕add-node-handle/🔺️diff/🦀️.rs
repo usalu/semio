@@ -7,10 +7,10 @@ use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_invar
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddNodeHandle, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if let Err(reason) = puzzle2d_handle_invariant(&payload.handle) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.node_id.clone(), payload.handle.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.node_id.to_string_owner(), payload.handle.id.to_string_owner()]);
     }
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.node_id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node-handle", payload.node_id), vec![payload.node_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node-handle", payload.node_id), vec![payload.node_id.to_string_owner()]);
     };
     if node.handles.iter().any(|handle| handle.id == payload.handle.id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Handle \"{}\" already exists on node \"{}\".", payload.handle.id, payload.node_id));
@@ -19,7 +19,7 @@ pub fn diff(payload: &super::AddNodeHandle, base: &Puzzle2dSnapshot) -> protocol
     let at = payload.index.unwrap_or(next.handles.len()).min(next.handles.len());
     next.handles.insert(at, payload.handle.clone());
     if next == *node {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.node_id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.node_id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
         nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.node_id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),

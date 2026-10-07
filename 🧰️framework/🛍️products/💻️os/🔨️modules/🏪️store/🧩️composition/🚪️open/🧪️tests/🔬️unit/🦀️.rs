@@ -7,8 +7,8 @@ fn request_for(bytes: &[u8]) -> MemberOpenRequest {
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap();
     }
     pages.seal().unwrap();
-    let expected = ArtifactRef { artifact_id: "member".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
-    MemberOpenRequest::new(OperationId(1), Generation(1), 1000, expected, None, pages).admit(1).unwrap_or_else(|_| panic!("admissible test input"))
+    let expected = ArtifactRef { artifact_id: "member".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
+    MemberOpenRequest::new(OperationId(1), Generation(1), 1000, expected, None, pages, crate::os_spr::ActorId("actor:member-opening-fixture".into())).admit(1).unwrap_or_else(|_| panic!("admissible test input"))
 }
 
 fn retire_request(request: &mut MemberOpenRequest) {
@@ -109,9 +109,9 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
         if row["sealed"].as_bool().unwrap() {
             pages.seal().unwrap();
         }
-        let expected = ArtifactRef { artifact_id: row["artifactId"].as_str().unwrap().into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
+        let expected = ArtifactRef { artifact_id: row["artifactId"].as_str().unwrap().into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
         let owner = row["ownerChildId"].as_str().map(|child_id| OwnerRef { parent: ArtifactRef { artifact_id: "parent".into(), dialect: expected.dialect.clone() }, slot: "content".into(), child_id: child_id.into() });
-        let request = MemberOpenRequest::new(OperationId(1), Generation(1), row["expiresAtUs"].as_u64().unwrap(), expected.clone(), owner.clone(), pages);
+        let request = MemberOpenRequest::new(OperationId(1), Generation(1), row["expiresAtUs"].as_u64().unwrap(), expected.clone(), owner.clone(), pages, crate::os_spr::ActorId(row["openedActor"].as_str().unwrap().into()));
         let result = request.admit(row["nowUs"].as_u64().unwrap());
         assert_eq!(result.is_ok(), row["admitted"].as_bool().unwrap(), "{}", row["id"]);
         let mut request = match result {
@@ -130,11 +130,12 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
             }
         };
         assert_eq!(request.expected(), &expected);
+        assert_eq!(serde_json::to_value(request.actor()).unwrap(), row["openedActor"]);
         assert_eq!(request.owner(), owner.as_ref());
         assert_eq!(request.retained_input_bytes(), bytes);
         assert!(matches!(request.close_step(0, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
         assert_eq!(request.retained_input_bytes(), bytes);
-        let identity_bytes = expected.artifact_id.len()
+        let identity_bytes = row["openedActor"].as_str().unwrap().len() + expected.artifact_id.len()
             + expected.dialect.artifact_kind.len()
             + expected.dialect.standard.len()
             + expected.dialect.subset.len()

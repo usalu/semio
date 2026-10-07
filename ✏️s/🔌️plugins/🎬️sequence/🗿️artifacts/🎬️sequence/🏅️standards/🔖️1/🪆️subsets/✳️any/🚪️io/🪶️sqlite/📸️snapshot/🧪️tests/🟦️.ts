@@ -6,17 +6,19 @@ import fixture from "../🧫️fixtures/🔣️.json";
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import childSchema from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
 import ioSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
-import references from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧫️fixtures/🔣️.json";
+import references from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧫️fixtures/🔣️.json";
+import * as sqliteOwner from "../🟦️.ts";
+import referenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-const own=owner as unknown as {SEQUENCE_SQLITE_SCHEMA:string;sequenceSnapshotToSqliteDatabase:(snapshot:owner.SequenceSnapshot,options?:ArtifactSqliteOptions)=>Promise<SqliteDatabase>;sequenceSnapshotFromSqliteDatabase:(database:SqliteDatabase,options?:ArtifactSqliteOptions)=>Promise<owner.SequenceSnapshot>};
+const own=sqliteOwner as unknown as {SEQUENCE_SQLITE_SCHEMA:string;sequenceSnapshotToSqliteDatabase:(snapshot:owner.SequenceSnapshot,options?:ArtifactSqliteOptions)=>Promise<SqliteDatabase>;sequenceSnapshotFromSqliteDatabase:(database:SqliteDatabase,options?:ArtifactSqliteOptions)=>Promise<owner.SequenceSnapshot>};
 const snapshot=():owner.SequenceSnapshot=>structuredClone(fixture.snapshot);
 test("Sequence neutral persisted-reference laws agree with independent JSON schema",()=>{
- const ajv=new Ajv({strict:false,validateFormats:false}).addSchema(ioSchema).addSchema(childSchema).addSchema(nativeSchema);
+ const ajv=new Ajv({strict:false,validateFormats:false}).addSchema(referenceSchema).addSchema(ioSchema).addSchema(childSchema).addSchema(nativeSchema);
  expect(ajv.validate(nativeSchema,{...fixture.snapshot,steps:[]})).toBe(false);expect(ajv.validate(nativeSchema,{...fixture.snapshot,content:{...fixture.snapshot.content,localOwner:{}}})).toBe(false);
 });
-test("Sequence snapshot facade exposes its complete literal relational owner",()=>{expect(Object.hasOwn(owner,"sequenceSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(owner,"sequenceSnapshotFromSqliteDatabase")).toBe(true)});
+test("Sequence snapshot facade exposes its complete literal relational owner",()=>{expect(Object.hasOwn(sqliteOwner,"sequenceSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"sequenceSnapshotFromSqliteDatabase")).toBe(true)});
 test("Sequence handcrafted SQL independently stores every reference component",async()=>{
  const sql=await Bun.file(new URL("../🗄️.sql",import.meta.url)).text(),db=new Database(":memory:",{safeIntegers:true}),expected=snapshot(),child=expected.content,target=child.target;
  try{db.run(sql);db.run("INSERT INTO sequence_document VALUES (1,?)",[expected.schema]);db.run("INSERT INTO sequence_content VALUES (1,1,?,?,?,?,?)",[child.childId,target.artifactId,target.dialect.artifactKind,target.dialect.standard,target.dialect.subset]);expect(db.query("SELECT schema,child_id,artifact_id,artifact_kind,standard,subset FROM sequence_document JOIN sequence_content ON sequence_document.id=sequence_content.document_id").get()).toEqual({schema:expected.schema,child_id:child.childId,artifact_id:target.artifactId,artifact_kind:target.dialect.artifactKind,standard:target.dialect.standard,subset:target.dialect.subset});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([])}finally{db.close()}

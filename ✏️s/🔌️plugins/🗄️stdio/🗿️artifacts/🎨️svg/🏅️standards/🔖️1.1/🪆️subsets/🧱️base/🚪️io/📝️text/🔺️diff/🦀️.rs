@@ -9,16 +9,17 @@ mod diff_codec {
 use super::*;
 use crate::standards::v1_1::subsets::base::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use semio_s_artifact_stdio_xml::schema::diff::{enc_xml_node, enc_xml_node_bin};
+
+use crate::standards::v1_1::subsets::base::io::binary::diff::enc_svg_node_bin;
 use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlQuote};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+use crate::schema::snapshot::SvgAttr;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use crate::schema::snapshot::SvgNode;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
@@ -95,20 +96,20 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_prolog(prolog: &[XmlNode]) -> String {
-    format!("[{}]", prolog.iter().map(enc_xml_node).collect::<Vec<_>>().join(","))
+pub(crate) fn enc_prolog(prolog: &[SvgNode]) -> String {
+    format!("[{}]", prolog.iter().map(enc_svg_node).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_xml_node).collect()
+pub(crate) fn dec_prolog(s: &str) -> Result<Vec<SvgNode>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_svg_node).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_attr(s: &str) -> Result<XmlAttr, String> {
+pub(crate) fn dec_attr(s: &str) -> Result<SvgAttr, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
-    Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
+    {let name=dec_str(name)?;Ok(SvgAttr { value:crate::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_attribute(&name,&dec_str(value)?)?,name })}
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -204,7 +205,7 @@ pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
 /// hex payload since hex never starts with an uppercase letter.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+pub(crate) fn dec_svg_node(s: &str) -> Result<SvgNode, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -212,16 +213,16 @@ pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
             let parts = split_top_level(inner, ',');
             let [name, attrs, children] = parts.as_slice() else { return Err(format!("element: expected 3 fields, got {}", parts.len())) };
             let attrs = split_top_level(strip_brackets(attrs)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
-            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
-            Ok(XmlNode::Element { name: dec_str(name)?, attrs, children })
+            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_svg_node).collect::<Result<Vec<_>, String>>()?;
+            Ok(SvgNode::Element { name: dec_str(name)?, attrs, children })
         }
-        "T" => Ok(XmlNode::Text { text: dec_str(inner)? }),
-        "D" => Ok(XmlNode::CData { text: dec_str(inner)? }),
-        "M" => Ok(XmlNode::Comment { text: dec_str(inner)? }),
+        "T" => Ok(SvgNode::Text { text: dec_str(inner)? }),
+        "D" => Ok(SvgNode::CData { text: dec_str(inner)? }),
+        "M" => Ok(SvgNode::Comment { text: dec_str(inner)? }),
         "P" => {
             let parts = split_top_level(inner, ',');
             let [target, data] = parts.as_slice() else { return Err(format!("PI: expected 2 fields, got {}", parts.len())) };
-            Ok(XmlNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
+            Ok(SvgNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
         }
         other => Err(format!("xml node: unknown tag {other:?}")),
     }
@@ -230,8 +231,8 @@ pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_attrs_diff(d: &SvgAttributesDiff) -> String {
     let removed = d.removed.iter().map(|n| enc_str(n)).collect::<Vec<_>>().join(",");
-    let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.name), enc_str(&m.value))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.name), enc_str(&a.value))).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.name), enc_str(&crate::standards::v1_1::subsets::base::io::text::snapshot::print_svg_attribute(&m.value)))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.name), enc_str(&crate::standards::v1_1::subsets::base::io::text::snapshot::print_svg_attribute(&a.value)))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 
@@ -245,7 +246,7 @@ pub(crate) fn dec_attrs_diff(body: &str) -> Result<SvgAttributesDiff, String> {
         .filter(|s| !s.is_empty())
         .map(|entry| {
             let (name, value) = entry.split_once(':').ok_or_else(|| format!("attr modified: bad entry {entry:?}"))?;
-            Ok(SvgAttrModified { name: dec_str(name)?, value: dec_str(value)? })
+            {let name=dec_str(name)?;Ok(SvgAttrModified {value:crate::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_attribute(&name,&dec_str(value)?)?,name})}
         })
         .collect::<Result<Vec<_>, String>>()?;
     let added = split_top_level(strip_brackets(added_s)?, ',')
@@ -254,14 +255,14 @@ pub(crate) fn dec_attrs_diff(body: &str) -> Result<SvgAttributesDiff, String> {
         .map(|entry| {
             let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
             let (name, value) = rest.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
-            Ok(SvgAttrAdded { index: parse_usize(idx)?, name: dec_str(name)?, value: dec_str(value)? })
+            {let name=dec_str(name)?;Ok(SvgAttrAdded {index:parse_usize(idx)?,value:crate::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_attribute(&name,&dec_str(value)?)?,name})}
         })
         .collect::<Result<Vec<_>, String>>()?;
     Ok(SvgAttributesDiff { removed, modified, added })
 }
 
 /// 🌳 Recursive: `SvgNodeDiff` itself needs a tag (`E`=Element, `T`=Text, `R`=Replace) since,
-/// unlike `XmlNode`, it appears standalone (not always inside a bracketed container) at the `root=`
+/// unlike `SvgNode`, it appears standalone (not always inside a bracketed container) at the `root=`
 /// top-level token position.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_node_diff(d: &SvgNodeDiff) -> String {
@@ -279,7 +280,7 @@ pub(crate) fn enc_node_diff(d: &SvgNodeDiff) -> String {
             },
         ),
         SvgNodeDiff::Text { text } => format!("T[{}]", encode_option(text, |v| enc_str(v))),
-        SvgNodeDiff::Replace { node } => format!("R[{}]", encode_option(node, enc_xml_node)),
+        SvgNodeDiff::Replace { node } => format!("R[{}]", encode_option(node, enc_svg_node)),
     }
 }
 
@@ -304,7 +305,7 @@ pub(crate) fn dec_node_diff(s: &str) -> Result<SvgNodeDiff, String> {
             Ok(SvgNodeDiff::Element(SvgElementDiff { name: decode_option(name, dec_str)?, attributes, children }))
         }
         "T" => Ok(SvgNodeDiff::Text { text: decode_option(inner, dec_str)? }),
-        "R" => Ok(SvgNodeDiff::Replace { node: decode_option(inner, dec_xml_node)? }),
+        "R" => Ok(SvgNodeDiff::Replace { node: decode_option(inner, dec_svg_node)? }),
         other => Err(format!("node diff: unknown tag {other:?}")),
     }
 }
@@ -313,7 +314,7 @@ pub(crate) fn dec_node_diff(s: &str) -> Result<SvgNodeDiff, String> {
 pub(crate) fn enc_children_diff(d: &SvgChildrenDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_node_diff(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_xml_node(&a.item))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_svg_node(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 
@@ -335,7 +336,7 @@ pub(crate) fn dec_children_diff(body: &str) -> Result<SvgChildrenDiff, String> {
         .filter(|s| !s.is_empty())
         .map(|entry| {
             let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("child added: bad entry {entry:?}"))?;
-            Ok(SvgChildAdded { index: parse_usize(idx)?, item: dec_xml_node(rest)? })
+            Ok(SvgChildAdded { index: parse_usize(idx)?, item: dec_svg_node(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
     Ok(SvgChildrenDiff { removed, modified, added })
@@ -402,20 +403,23 @@ pub use diff_codec::*;
 mod diff_wire_codec {
 use super::*;
 use crate::standards::v1_1::subsets::base::schema::diff::*;
-use semio_s_artifact_stdio_xml::schema::diff::{enc_xml_node, enc_xml_node_bin};
+
+use crate::standards::v1_1::subsets::base::io::binary::diff::enc_svg_node_bin;
 use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlQuote};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+use crate::schema::snapshot::SvgAttr;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use crate::schema::snapshot::SvgNode;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_attr(a: &XmlAttr) -> String {
-    format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
+pub(crate) fn enc_attr(a: &SvgAttr) -> String {
+    format!("[{},{}]", enc_str(&a.name), enc_str(&crate::standards::v1_1::subsets::base::io::text::snapshot::print_svg_attribute(&a.value)))
 }
 }
 pub use diff_wire_codec::*;
+
+pub(crate) fn enc_svg_node(node:&crate::schema::snapshot::SvgNode)->String {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::diff::enc_xml_node(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node))}

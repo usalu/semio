@@ -61,3 +61,6 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::outline::PptxOutline;
 //#endregion 🔁️Re-exports
+
+#[path="🎞️presentation/🦀️.rs"]
+pub mod presentation;

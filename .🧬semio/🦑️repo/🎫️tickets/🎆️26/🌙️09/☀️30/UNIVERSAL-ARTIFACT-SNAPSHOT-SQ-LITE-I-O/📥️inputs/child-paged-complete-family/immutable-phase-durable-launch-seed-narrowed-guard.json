@@ -1,0 +1,414 @@
+{
+  "path": "/Users/ueli/Documents/semio/.vscode/🧩️launch.seed.jsonc",
+  "beforeAnchor": "  \"configurations\": [\n",
+  "inserted": [
+    {
+      "name": "⚖️borrowed-authored-schema-demand🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-authored-schema-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7
+      }
+    },
+    {
+      "name": "⚖️borrowed-authored-schema-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-authored-schema-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.701
+      }
+    },
+    {
+      "name": "⚖️borrowed-authored-schema-oracle🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-authored-schema-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.702
+      }
+    },
+    {
+      "name": "⚖️borrowed-authored-schema-producer-demand🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-authored-schema-producer-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7030000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-authored-schema-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-authored-schema-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7040000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-authored-static-producer-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-authored-static-producer-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.705
+      }
+    },
+    {
+      "name": "⚖️borrowed-operation-symbol-demand🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-operation-symbol-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.706
+      }
+    },
+    {
+      "name": "⚖️borrowed-operation-symbol-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-operation-symbol-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.707
+      }
+    },
+    {
+      "name": "⚖️borrowed-operation-symbol-oracle🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-operation-symbol-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7080000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-operation-symbol-refresh🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-operation-symbol-refresh",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7090000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-operation-symbol-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-operation-symbol-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.71
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-demand🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.711
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-inline-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-inline-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.712
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-inline-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-inline-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7130000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.714
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-oracle🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.715
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-os-demand🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-os-kernel --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-os-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.716
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-os-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-os-kernel --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-os-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7170000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-os-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-os-kernel --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-os-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7180000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-owned-source-demand🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-owned-source-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.719
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-owned-source-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-owned-source-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.72
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-owned-source-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-owned-source-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.721
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-refresh🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-refresh",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7220000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" borrowed-static-pack-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7230000000001
+      }
+    },
+    {
+      "name": "⚖️const-unit-array-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" const-unit-array-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.724
+      }
+    },
+    {
+      "name": "⚖️const-unit-array-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" const-unit-array-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.725
+      }
+    },
+    {
+      "name": "⚖️const-unit-schema-demand🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" const-unit-schema-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.726
+      }
+    },
+    {
+      "name": "⚖️const-unit-schema-mount🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" const-unit-schema-mount",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7270000000001
+      }
+    },
+    {
+      "name": "⚖️const-unit-schema-oracle🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" const-unit-schema-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7280000000001
+      }
+    },
+    {
+      "name": "⚖️const-unit-schema-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" const-unit-schema-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.729
+      }
+    },
+    {
+      "name": "⚖️custom-borrowed-schema-oracle🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" custom-borrowed-schema-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.73
+      }
+    },
+    {
+      "name": "⚖️custom-borrowed-schema-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" custom-borrowed-schema-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.731
+      }
+    },
+    {
+      "name": "⚖️framework-custom-borrowed-schema-oracle🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" framework-custom-borrowed-schema-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7320000000001
+      }
+    },
+    {
+      "name": "⚖️framework-custom-borrowed-schema-stage🧬️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/framework-pack-record-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\" framework-custom-borrowed-schema-stage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7330000000001
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-os-original-native💻️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:test-native --skip-nx-cache -- quick paged_dsl_operation_ --no-fail-fast -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.75
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-os-authored-child-native💻️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --args=\"quick child_complete_actual_authored_operation_producer_joins_original_projection_and_retained_receipt --no-fail-fast -- --nocapture\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.751
+      }
+    },
+    {
+      "name": "⚖️borrowed-static-pack-capsule-native🎒️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-pack-record-rs:test-native --skip-nx-cache -- quick borrowed_static_projected_pack_ --no-fail-fast -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.752
+      }
+    }
+  ],
+  "count": 37
+}

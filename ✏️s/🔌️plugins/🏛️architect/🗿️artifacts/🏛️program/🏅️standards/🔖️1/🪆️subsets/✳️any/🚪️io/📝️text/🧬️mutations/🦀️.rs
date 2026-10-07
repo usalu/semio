@@ -23,19 +23,11 @@ impl protocol::OpText for ProgramMutation {
 
 //#region 🏷️WireTags
 /// 🏷️ `ProgramMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
-const WIRE_PROTOCOL: &str = include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio");
+
 //#endregion 🏷️WireTags
 
 /// 🌱️ Binary twin of the OpText escape hatch — plain JSON bytes.
-impl protocol::OpBinary for ProgramMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
-    }
-}
 
 //#endregion 🔖️HandcraftedOpCodecs
 

@@ -2,6 +2,8 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
+
+
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
@@ -9,49 +11,8 @@ use crate::standards::v1::subsets::text::schema::diff::*;
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-pub use diff_codec::*;
-
-#[allow(unused_imports)]
-mod diff_codec {
-use super::*;
-use crate::text::schema::diff::*;
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
-use framework_schema::ArtifactSchema;
-use protocol::MutationDiff;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

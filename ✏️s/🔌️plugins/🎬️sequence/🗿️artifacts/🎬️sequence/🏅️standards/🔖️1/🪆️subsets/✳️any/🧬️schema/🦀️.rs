@@ -2,7 +2,7 @@
 
 use crate::{default_snapshot, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
-use store::ArtifactDsl;
+
 
 //#region 🔖️Artifact
 /// 🧬️ sequence document artifact state. Ticket

@@ -1,27 +1,117 @@
 //! 🧰️ Kit types, designs, placed pieces, connections, typed child handles and history pins.
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,insert_ieee754,insert_key_ieee754};
-use crate::kit::schema::snapshot::{SemioKitSnapshot,SemioKitType,SemioKitDesign,SemioKitPiece,SemioKitConnection};
+use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
+use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,RowIndex};
+use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot,SemioKitType,SemioKitDesign,SemioKitPiece,SemioKitConnection};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use crate::standards::v1::subsets::base::schema::{geometry::{SemioPoint3,SemioQuaternion},child::validate_semio_child_identity};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
-use std::collections::{BTreeMap,BTreeSet};
+use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+#[path="🧮️semantic/🦀️.rs"]
+mod semantic;
+/// 🔍️ Resolves a retained, paid identity frontier with bounded text comparisons.
+fn identifier(ids:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{
+ let mut lo=0;let mut hi=ids.len();while lo<hi{let mid=lo+(hi-lo)/2;match out.compare_text(ids[mid].0,id)?{std::cmp::Ordering::Less=>lo=mid+1,std::cmp::Ordering::Greater=>hi=mid,std::cmp::Ordering::Equal=>return Ok(ids[mid].1)}}Err(ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio Kit relational identity"))
+}
+/// 🪪️ Admits literal identities using paid borrowed entries and cancellable comparisons.
+fn frontier<'a,T>(values:&'a[T],start:usize,id:impl Fn(&'a T)->&'a str,out:&mut RowWriter<'_,'_>)->Result<Vec<(&'a str,i64)>,ValueError>{
+ let phase=out.phase();let mut ids=out.allocate_frontier(values.len())?;for(ordinal,value)in values.iter().enumerate(){out.checkpoint()?;let index=start.checked_add(ordinal).and_then(|value|value.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio Kit relational identity overflow"))?;ids.push((id(value),number(index)?));}
+ out.sort_frontier(&mut ids,|a,b,control|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,phase,control))?;
+ for pair in ids.windows(2){if out.compare_text(pair[0].0,pair[1].0)?==std::cmp::Ordering::Equal{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio Kit literal identity"))}}Ok(ids)
+}
+/// 🧾️ Projects the literal four-text target identity without an opaque carrier.
+fn reference(target:&semio_framework_artifact_reference::ArtifactRef,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{
+ out.insert("semio_kit_reference",&[Cell::Text(&target.artifact_id),Cell::Text(&target.dialect.artifact_kind),Cell::Text(&target.dialect.standard),Cell::Text(&target.dialect.subset)])
+}
+/// 🧒️ Projects ordered child aliases independently from their persisted target identities.
+fn project_children<S>(children:&[store::ArtifactChild<S>],table:&str,subset:&str,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+ let _ids=frontier(children,0,|child|child.child_id.as_str(),out)?;
+ for(ordinal,child)in children.iter().enumerate(){let target=reference(&child.target,out)?;out.insert(table,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&child.child_id),Cell::Integer(target)])?;validate_semio_child_identity(&child.child_id,&child.target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;}Ok(())
+}
+/// 🔢️ Borrows the canonical unsigned decimal size from fixed stack storage.
+fn decimal(mut value:u64,scratch:&mut[u8;20])->&str{
+ let mut at=scratch.len();loop{at-=1;scratch[at]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&scratch[at..]).expect("ASCII unsigned decimal")
+}
+/// 🫳️ Visits the actual Kit catalog, placements, child references and history pins through one row writer.
+pub(crate)fn visit_rows(snapshot:&SemioKitSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+ let types=frontier(&snapshot.types,0,|kind|kind.id.as_str(),out)?;
+ let _designs=frontier(&snapshot.designs,0,|design|design.id.as_str(),out)?;
+ out.insert_key("semio_kit_document",1,&[Cell::Text(&snapshot.schema)])?;
+ for(ordinal,kind)in snapshot.types.iter().enumerate(){out.insert("semio_kit_type",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&kind.id),Cell::Text(&kind.name),Cell::Text(&kind.category)])?;}
+ let mut piece_start=0usize;
+ for(ordinal,design)in snapshot.designs.iter().enumerate(){
+  let design_id=out.insert("semio_kit_design",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&design.id),Cell::Text(&design.name)])?;
+  let pieces=frontier(&design.pieces,piece_start,|piece|piece.id.as_str(),out)?;
+  piece_start=piece_start.checked_add(design.pieces.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio Kit piece extent overflow"))?;
+  let _connections=frontier(&design.connections,0,|connection|connection.id.as_str(),out)?;
+  for(ordinal,piece)in design.pieces.iter().enumerate(){
+   let t=piece.transform;let kind=identifier(&types,&piece.type_id,out)?;
+   out.insert_float("semio_kit_piece",&[Cell::Integer(design_id),Cell::Integer(number(ordinal)?),Cell::Text(&piece.id),Cell::Integer(kind),Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)],float_columns("semio_kit_piece"))?;
+  }
+  for(ordinal,connection)in design.connections.iter().enumerate(){
+   let source=identifier(&pieces,&connection.connecting_piece_id,out)?;let target=identifier(&pieces,&connection.connected_piece_id,out)?;
+   out.insert("semio_kit_connection",&[Cell::Integer(design_id),Cell::Integer(number(ordinal)?),Cell::Text(&connection.id),Cell::Integer(source),Cell::Text(&connection.connecting_port),Cell::Integer(target),Cell::Text(&connection.connected_port)])?;
+  }
+ }
+ project_children(&snapshot.objects,"semio_kit_object_child","object",out)?;
+ project_children(&snapshot.models,"semio_kit_model_child","model",out)?;
+ if let Some(child)=&snapshot.properties{let target=reference(&child.target,out)?;out.insert("semio_kit_value_child",&[Cell::Integer(1),Cell::Text(&child.child_id),Cell::Integer(target)])?;validate_semio_child_identity(&child.child_id,&child.target,"value").map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;}
+ for(ordinal,link)in snapshot.representations.iter().enumerate(){
+  let target=reference(&link.target,out)?;let kind=identifier(&types,&link.role,out)?;
+  let(pin,checkpoint,blob)=match &link.pin{
+   store::LinkPin::Head=>("head",Cell::Null,Cell::Null),
+   store::LinkPin::Checkpoint{id}=>("checkpoint",Cell::Text(id),Cell::Null),
+   store::LinkPin::Snapshot{blob}=>{let mut scratch=[0u8;20];let size=decimal(blob.size,&mut scratch);let id=out.insert("semio_kit_blob",&[Cell::Text(&blob.hash),Cell::Text(size),Cell::Text(&blob.media_type)])?;("snapshot",Cell::Null,Cell::Integer(id))}
+  };
+  out.insert("semio_kit_representation",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Integer(kind),Cell::Integer(target),Cell::Text(pin),checkpoint,blob])?;
+ }Ok(())
+}
+/// 🎟️ Admits all typed Kit cells before native forecasting or materialization.
+pub(crate)fn admit_values(snapshot:&SemioKitSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
+/// 🏛️ Admits the exact authored table and column layout before native ownership.
+pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
+/// 📦️ Counts the actual native primitive cells before typed ownership.
+pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
+/// 📝️ Counts the actual native primitive cells before typed ownership.
+pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
+
 fn number(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string()))}
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit row identity or columns"))}else{Ok(())}}
-fn ordered<'a>(mut rows:Vec<SqliteRow<'a>>)->Result<Vec<SqliteRow<'a>>,ValueError>{rows.sort_by_key(|row|row.integer(2).unwrap_or(-1));for(ordinal,row)in rows.iter().enumerate(){if row.integer(2)?!=number(ordinal)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio kit ordinals must be contiguous"));}}Ok(rows)}
-fn reference(target:&store::os_io::ArtifactRef,p:&mut Projection<'_,'_>)->Result<i64,ValueError>{let id=p.insert_float("semio_kit_reference",&[Cell::Text(&target.artifact_id),Cell::Text(&target.dialect.artifact_kind),Cell::Text(&target.dialect.standard),Cell::Text(&target.dialect.subset)])?;p.checkpoint()?;Ok(id)}
-fn project_children<S>(children:&[store::ArtifactChild<S>],table:&str,subset:&str,p:&mut Projection<'_,'_>)->Result<(),ValueError>{let mut ids=BTreeSet::new();for(ordinal,child)in children.iter().enumerate(){let target=reference(&child.target,p)?;p.insert_float(table,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&child.child_id),Cell::Integer(target)])?;if !ids.insert(child.child_id.as_str()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio kit child identifier"));}validate_semio_child_identity(&child.child_id,&child.target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;}Ok(())}
-fn children<S>(database:&SqliteDatabase,table:&str,subset:&str,references:&mut BTreeMap<i64,store::os_io::ArtifactRef>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<store::ArtifactChild<S>>,ValueError>{let mut result=Vec::new();let mut ids=BTreeSet::new();let mut child_ids=BTreeSet::new();for(count,row)in ordered_float_rows(database,table,2,control)?.into_iter().enumerate(){identity(row,5)?;if row.integer(1)?!=1||!ids.insert(row.rowid)||!child_ids.insert(row.text(3)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit child ownership or identity"));}if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,0)?;}let target=references.remove(&row.integer(4)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling or multiply owned Semio kit child reference"))?;validate_semio_child_identity(row.text(3)?,&target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;result.push(store::ArtifactChild::new(reconstruct_text(control,row.text(3)?)?,target));}Ok(result)}
+/// 🚫️ Reports an authored Kit relationship refusal.
+fn kit_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+/// 🗃️ Binds declared Kit logical and IEEE columns to paid borrowed source positions.
+fn kit_rows<'a>(db:&'a SqliteDatabase,table:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<RowIndex<'a>,ValueError>{RowIndex::new(db,table,columns,float_columns(table),control,"invalid Semio kit row identity or columns")}
+/// 🔗️ Constructs one consumed descriptor inside its actual first-party retirement guard.
+fn kit_reference(references:&mut RowIndex<'_>,id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Owned<semio_framework_artifact_reference::ArtifactRef>,ValueError>{
+ let row=references.take(id,control)?.ok_or_else(||kit_invalid("dangling or multiply owned Semio kit reference"))?;
+ let mut target=Owned::new(semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}});
+ target.get_mut().artifact_id=reconstruct_text(control,row.text(1)?)?;target.get_mut().dialect.artifact_kind=reconstruct_text(control,row.text(2)?)?;target.get_mut().dialect.standard=reconstruct_text(control,row.text(3)?)?;target.get_mut().dialect.subset=reconstruct_text(control,row.text(4)?)?;Ok(target)
+}
+/// 🔢️ Accepts only the original canonical unsigned decimal spelling without formatting allocation.
+fn kit_blob_size(text:&str)->Result<u64,ValueError>{
+ if text.is_empty()||text.len()>20||(text.len()>1&&text.as_bytes()[0]==b'0')||!text.bytes().all(|byte|byte.is_ascii_digit()){return Err(kit_invalid("invalid Semio kit blob identity or size"))}text.parse::<u64>().map_err(|error|kit_invalid(&error.to_string()))
+}
+/// 📦️ Restores a consumed blob descriptor with guarded partial literal fields.
+fn kit_blob(blobs:&mut RowIndex<'_>,id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Owned<store::BlobRef>,ValueError>{
+ let row=blobs.take(id,control)?.ok_or_else(||kit_invalid("dangling or multiply owned Semio kit blob pin"))?;let mut blob=Owned::new(store::BlobRef{hash:String::new(),size:kit_blob_size(row.text(2)?)?,media_type:String::new()});blob.get_mut().hash=reconstruct_text(control,row.text(1)?)?;blob.get_mut().media_type=reconstruct_text(control,row.text(3)?)?;Ok(blob)
+}
+/// 🪆️ Restores paid ordered handles while protecting each target before later child identity copying.
+fn children<S:Send+'static>(database:&SqliteDatabase,table:&str,subset:&str,references:&mut RowIndex<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<store::ArtifactChild<S>>,ValueError>{
+ let rows=kit_rows(database,table,5,control)?;let order=rows.ordered(2,control,"relationship ordinals must be contiguous and unique")?;rows.unique_text(rows.indices(),3,control,"invalid Semio kit child ownership or identity")?;
+ let mut result=Owned::new(semio_framework_os_kernel::sqlite_snapshot::transfer::reserve::<store::ArtifactChild<S>>(order.len(),control)?);
+ for index in order{let row=rows.row(index)?;if row.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit child ownership or identity"))}let mut target=kit_reference(references,row.integer(4)?,control)?;validate_semio_child_identity(row.text(3)?,target.get_mut(),subset).map_err(|error|kit_invalid(&error))?;let mut child=Owned::new(store::ArtifactChild::<S>::new(String::new(),target.take()));child.get_mut().child_id=reconstruct_text(control,row.text(3)?)?;result.get_mut().push(child.take());}
+ control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,result.get_mut().len(),rows.len())?;Ok(result.take())
+}
 impl ArtifactSqliteSnapshot for SemioKitSnapshot{
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::kit::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}
 fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::kit::io::sqlite::snapshot::native_decoding::decode(payload,control)}
-fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{(|| -> Result<(),ValueError>{let mut b=Bound::new("",control)?;self.native_fields(&mut b)?;b.finish()})()}
+fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{(|| -> Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})()}
 
-fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
 if !SemioKitSnapshot::admits_dialect_parts(&dialect.artifact_kind,&dialect.standard,&dialect.subset){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned snapshot dialect differs from its dedicated semantic subset"));}
 let row=database.table("semio_kit_document")?.single_row()?;
@@ -30,42 +120,58 @@ control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework
 
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
-fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA)}
 }
 
 impl SemioKitSnapshot {
     /// 🧩️ Projects owned semantic fields with typed relational refusals.
     pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-let mut p=Projection::new(Self::SQLITE_SCHEMA,control)?;p.insert_key_float("semio_kit_document",1,&[Cell::Text(&self.schema)])?;let mut types=BTreeMap::new();for(ordinal,kind)in self.types.iter().enumerate(){let id=p.insert_float("semio_kit_type",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&kind.id),Cell::Text(&kind.name),Cell::Text(&kind.category)])?;if types.insert(kind.id.as_str(),id).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio kit type identifier"));}}
-let mut design_ids=BTreeSet::new();for(ordinal,design)in self.designs.iter().enumerate(){let design_id=p.insert_float("semio_kit_design",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&design.id),Cell::Text(&design.name)])?;if !design_ids.insert(design.id.as_str()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio kit design identifier"));}let mut pieces=BTreeMap::new();for(ordinal,piece)in design.pieces.iter().enumerate(){let t=piece.transform;let id=p.insert_float("semio_kit_piece",&[Cell::Integer(design_id),Cell::Integer(number(ordinal)?),Cell::Text(&piece.id),Cell::Integer(*types.get(piece.type_id.as_str()).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit piece type"))?),Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)])?;if pieces.insert(piece.id.as_str(),id).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio kit piece identifier"));}}
-let mut ids=BTreeSet::new();for(ordinal,connection)in design.connections.iter().enumerate(){if !ids.insert(connection.id.as_str()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio kit connection identifier"));}p.insert_float("semio_kit_connection",&[Cell::Integer(design_id),Cell::Integer(number(ordinal)?),Cell::Text(&connection.id),Cell::Integer(*pieces.get(connection.connecting_piece_id.as_str()).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit connecting piece"))?),Cell::Text(&connection.connecting_port),Cell::Integer(*pieces.get(connection.connected_piece_id.as_str()).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit connected piece"))?),Cell::Text(&connection.connected_port)])?;}}
-project_children(&self.objects,"semio_kit_object_child","object",&mut p)?;project_children(&self.models,"semio_kit_model_child","model",&mut p)?;if let Some(child)=&self.properties{let target=reference(&child.target,&mut p)?;p.insert_float("semio_kit_value_child",&[Cell::Integer(1),Cell::Text(&child.child_id),Cell::Integer(target)])?;validate_semio_child_identity(&child.child_id,&child.target,"value").map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;}
-for(ordinal,link)in self.representations.iter().enumerate(){let target=reference(&link.target,&mut p)?;let(kind,checkpoint,blob)=match &link.pin{store::LinkPin::Head=>("head",Cell::Null,Cell::Null),store::LinkPin::Checkpoint{id}=>("checkpoint",Cell::Text(id),Cell::Null),store::LinkPin::Snapshot{blob}=>{let id=p.insert_float("semio_kit_blob",&[Cell::Text(&blob.hash),Cell::Text(&blob.size.to_string()),Cell::Text(&blob.media_type)])?;("snapshot",Cell::Null,Cell::Integer(id))}};p.insert_float("semio_kit_representation",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Integer(*types.get(link.role.as_str()).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit representation type role"))?),Cell::Integer(target),Cell::Text(kind),checkpoint,blob])?;}p.finish()
+semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()
 }
 
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>, declared_schema: &str)->Result<Self,ValueError> {
+control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;let document=single_float_row(database,"semio_kit_document")?;identity(document,2)?;if document.rowid!=1{return Err(kit_invalid("invalid Semio kit document identifier"))}
+let types=kit_rows(database,"semio_kit_type",6,control)?;let designs=kit_rows(database,"semio_kit_design",5,control)?;let type_order=types.ordered(2,control,"relationship ordinals must be contiguous and unique")?;let design_order=designs.ordered(2,control,"relationship ordinals must be contiguous and unique")?;
+for rows in [&types,&designs]{rows.unique_text(rows.indices(),3,control,"invalid Semio kit native ownership or identity")?;for &index in rows.indices(){if rows.row(index)?.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit native ownership or identity"))}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,rows.len())?;}}
+let mut pieces=kit_rows(database,"semio_kit_piece",15,control)?;let mut connections=kit_rows(database,"semio_kit_connection",8,control)?;
+for rows in [&pieces,&connections]{for &index in rows.indices(){if designs.get(rows.row(index)?.integer(1)?,control)?.is_none(){return Err(kit_invalid("invalid Semio kit relationship owner or identity"))}}}
+let piece_order=pieces.grouped_by(2,control,"Semio kit ordinals must be contiguous",|row|Ok((0,Some(row.integer(1)?))))?;let connection_order=connections.grouped_by(2,control,"Semio kit ordinals must be contiguous",|row|Ok((0,Some(row.integer(1)?))))?;
+let mut snapshot=Owned::new(Self{schema:String::new(),types:Vec::new(),designs:Vec::new(),objects:Vec::new(),models:Vec::new(),properties:None,representations:Vec::new()});
+snapshot.get_mut().types=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(type_order.len(),control)?;
+for index in type_order{let row=types.row(index)?;let mut native=Owned::new(SemioKitType{id:String::new(),name:String::new(),category:String::new()});native.get_mut().id=reconstruct_text(control,row.text(3)?)?;native.get_mut().name=reconstruct_text(control,row.text(4)?)?;native.get_mut().category=reconstruct_text(control,row.text(5)?)?;snapshot.get_mut().types.push(native.take());}
+snapshot.get_mut().designs=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(design_order.len(),control)?;
+for index in design_order{
+ let row=designs.row(index)?;let mut design=Owned::new(SemioKitDesign{id:String::new(),name:String::new(),pieces:Vec::new(),connections:Vec::new()});design.get_mut().id=reconstruct_text(control,row.text(3)?)?;design.get_mut().name=reconstruct_text(control,row.text(4)?)?;
+ let range=pieces.range_by(&piece_order,(0,Some(row.rowid)),control,|row|Ok((0,Some(row.integer(1)?))))?;pieces.unique_text(&piece_order[range.clone()],3,control,"duplicate Semio kit piece native identifier")?;design.get_mut().pieces=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(range.len(),control)?;
+ for ordinal in range{let piece=pieces.take_index(piece_order[ordinal],control)?.ok_or_else(||kit_invalid("duplicate Semio kit piece ownership"))?;let mut native=Owned::new(SemioKitPiece{id:String::new(),type_id:String::new(),transform:SemioTransform::default()});native.get_mut().id=reconstruct_text(control,piece.text(3)?)?;let kind=types.get(piece.integer(4)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit piece type"))?;native.get_mut().type_id=reconstruct_text(control,kind.text(3)?)?;native.get_mut().transform=SemioTransform{translation:SemioPoint3{x:piece.real(5)?,y:piece.real(6)?,z:piece.real(7)?},rotation:SemioQuaternion{x:piece.real(8)?,y:piece.real(9)?,z:piece.real(10)?,w:piece.real(11)?},scale:SemioPoint3{x:piece.real(12)?,y:piece.real(13)?,z:piece.real(14)?}};design.get_mut().pieces.push(native.take());}
+ let range=connections.range_by(&connection_order,(0,Some(row.rowid)),control,|row|Ok((0,Some(row.integer(1)?))))?;connections.unique_text(&connection_order[range.clone()],3,control,"duplicate Semio kit connection native identifier")?;design.get_mut().connections=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(range.len(),control)?;
+ for ordinal in range{let connection=connections.take_index(connection_order[ordinal],control)?.ok_or_else(||kit_invalid("duplicate Semio kit connection ownership"))?;let connecting=pieces.get(connection.integer(4)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit connecting piece"))?;let connected=pieces.get(connection.integer(6)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit connected piece"))?;if connecting.integer(1)?!=row.rowid||connected.integer(1)?!=row.rowid{return Err(kit_invalid("Semio kit connection crosses its owning design"))}
+  let mut native=Owned::new(SemioKitConnection{id:String::new(),connecting_piece_id:String::new(),connecting_port:String::new(),connected_piece_id:String::new(),connected_port:String::new()});native.get_mut().id=reconstruct_text(control,connection.text(3)?)?;native.get_mut().connecting_piece_id=reconstruct_text(control,connecting.text(3)?)?;native.get_mut().connecting_port=reconstruct_text(control,connection.text(5)?)?;native.get_mut().connected_piece_id=reconstruct_text(control,connected.text(3)?)?;native.get_mut().connected_port=reconstruct_text(control,connection.text(7)?)?;design.get_mut().connections.push(native.take());
+ }snapshot.get_mut().designs.push(design.take());
+}
+let mut references=kit_rows(database,"semio_kit_reference",5,control)?;for &index in references.indices(){let row=references.row(index)?;for column in 1..5{row.text(column)?;}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,references.len())?;}
+snapshot.get_mut().objects=children::<SemioObjectSnapshot>(database,"semio_kit_object_child","object",&mut references,control)?;snapshot.get_mut().models=children::<SemioModelSnapshot>(database,"semio_kit_model_child","model",&mut references,control)?;
+let table=database.table("semio_kit_value_child")?;if !table.rows.is_empty(){let row=SqliteRow::new(table.single_row()?,float_columns("semio_kit_value_child"))?;identity(row,4)?;if row.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit value child owner"))}let mut target=kit_reference(&mut references,row.integer(3)?,control)?;validate_semio_child_identity(row.text(2)?,target.get_mut(),"value").map_err(|error|kit_invalid(&error))?;let mut child=Owned::new(store::ArtifactChild::<SemioValueSnapshot>::new(String::new(),target.take()));child.get_mut().child_id=reconstruct_text(control,row.text(2)?)?;snapshot.get_mut().properties=Some(child.take());}
+let mut blobs=kit_rows(database,"semio_kit_blob",4,control)?;for &index in blobs.indices(){let row=blobs.row(index)?;row.text(1)?;kit_blob_size(row.text(2)?)?;row.text(3)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,blobs.len())?;}
+let representations=kit_rows(database,"semio_kit_representation",8,control)?;let representation_order=representations.ordered(2,control,"relationship ordinals must be contiguous and unique")?;snapshot.get_mut().representations=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(representation_order.len(),control)?;
+for index in representation_order{
+ let row=representations.row(index)?;if row.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit representation ownership or identity"))}let checkpoint=row.optional_text(6)?;let blob=if row.is_null(7)?{None}else{Some(row.integer(7)?)};
+ let mut pin=Owned::new(store::LinkPin::Head);*pin.get_mut()=match row.text(5)?{
+  "head" if checkpoint.is_none()&&blob.is_none()=>store::LinkPin::Head,
+  "checkpoint" if blob.is_none()=>store::LinkPin::Checkpoint{id:reconstruct_text(control,checkpoint.ok_or_else(||kit_invalid("missing Semio kit checkpoint pin"))?)?},
+  "snapshot" if checkpoint.is_none()=>{let mut blob=kit_blob(&mut blobs,blob.ok_or_else(||kit_invalid("missing Semio kit snapshot pin"))?,control)?;store::LinkPin::Snapshot{blob:blob.take()}},
+  _=>return Err(kit_invalid("invalid Semio kit link pin shape"))
+ };
+ let mut target=kit_reference(&mut references,row.integer(4)?,control)?;let mut link=Owned::new(store::ArtifactLink{target:target.take(),role:String::new(),pin:pin.take()});let kind=types.get(row.integer(3)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit representation type role"))?;link.get_mut().role=reconstruct_text(control,kind.text(3)?)?;snapshot.get_mut().representations.push(link.take());
+}
+if references.remaining()!=0||blobs.remaining()!=0||pieces.remaining()!=0||connections.remaining()!=0{return Err(kit_invalid("orphan Semio kit reference or blob pin descriptor"))}
+snapshot.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot.take())
 
-control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(database,declared_schema,control.limits())?;let document=single_float_row(database,"semio_kit_document")?;identity(document,2)?;if document.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit document identifier"));}
-let mut types=Vec::new();let mut type_names=BTreeMap::new();let mut native_ids=BTreeSet::new();for row in ordered_float_rows(database,"semio_kit_type",2,control)?{identity(row,6)?;if row.integer(1)?!=1||type_names.insert(row.rowid,row.text(3)?).is_some()||!native_ids.insert(row.text(3)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit type ownership or identity"));}types.push(SemioKitType{id:reconstruct_text(control,row.text(3)?)?,name:reconstruct_text(control,row.text(4)?)?,category:reconstruct_text(control,row.text(5)?)?});}
-let design_rows=ordered_float_rows(database,"semio_kit_design",2,control)?;let mut design_ids=BTreeSet::new();let mut native_ids=BTreeSet::new();for row in &design_rows{identity(row,5)?;if row.integer(1)?!=1||!design_ids.insert(row.rowid)||!native_ids.insert(row.text(3)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit design ownership or identity"));}}
-let mut pieces=BTreeMap::<i64,Vec<SqliteRow<'_>>>::new();let mut piece_names=BTreeMap::new();let mut ids=BTreeSet::new();let mut completed=0usize;for row in float_rows(database,"semio_kit_piece",control)?{identity(row,15)?;if !design_ids.contains(&row.integer(1)?)||!ids.insert(row.rowid){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit piece ownership or identity"));}row.integer(2)?;piece_names.insert(row.rowid,(row.integer(1)?,row.text(3)?));pieces.entry(row.integer(1)?).or_default().push(row);completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}
-let mut connections=BTreeMap::<i64,Vec<SqliteRow<'_>>>::new();let mut ids=BTreeSet::new();for row in float_rows(database,"semio_kit_connection",control)?{identity(row,8)?;if !design_ids.contains(&row.integer(1)?)||!ids.insert(row.rowid){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit connection ownership or identity"));}row.integer(2)?;connections.entry(row.integer(1)?).or_default().push(row);completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}
-let mut designs=Vec::new();for design in design_rows{let mut native_pieces=Vec::new();let mut native_ids=BTreeSet::new();for row in ordered(pieces.remove(&design.rowid).unwrap_or_default())?{if !native_ids.insert(row.text(3)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio kit piece native identifier"));}let transform=SemioTransform{translation:SemioPoint3{x:row.real(5)?,y:row.real(6)?,z:row.real(7)?},rotation:SemioQuaternion{x:row.real(8)?,y:row.real(9)?,z:row.real(10)?,w:row.real(11)?},scale:SemioPoint3{x:row.real(12)?,y:row.real(13)?,z:row.real(14)?}};native_pieces.push(SemioKitPiece{id:reconstruct_text(control,row.text(3)?)?,type_id:reconstruct_text(control,type_names.get(&row.integer(4)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit piece type"))?)?,transform});completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}
-let mut native_connections=Vec::new();let mut native_ids=BTreeSet::new();for row in ordered(connections.remove(&design.rowid).unwrap_or_default())?{if !native_ids.insert(row.text(3)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio kit connection native identifier"));}let connecting=piece_names.get(&row.integer(4)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit connecting piece"))?;let connected=piece_names.get(&row.integer(6)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit connected piece"))?;if connecting.0!=design.rowid||connected.0!=design.rowid{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio kit connection crosses its owning design"));}native_connections.push(SemioKitConnection{id:reconstruct_text(control,row.text(3)?)?,connecting_piece_id:reconstruct_text(control,connecting.1)?,connecting_port:reconstruct_text(control,row.text(5)?)?,connected_piece_id:reconstruct_text(control,connected.1)?,connected_port:reconstruct_text(control,row.text(7)?)?});completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}designs.push(SemioKitDesign{id:reconstruct_text(control,design.text(3)?)?,name:reconstruct_text(control,design.text(4)?)?,pieces:native_pieces,connections:native_connections});}
-let mut references=BTreeMap::new();for row in float_rows(database,"semio_kit_reference",control)?{identity(row,5)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;let target=store::os_io::ArtifactRef{artifact_id:reconstruct_text(control,row.text(1)?)?,dialect:store::os_io::ArtifactDialect{artifact_kind:reconstruct_text(control,row.text(2)?)?,standard:reconstruct_text(control,row.text(3)?)?,subset:reconstruct_text(control,row.text(4)?)?}};if references.insert(row.rowid,target).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid or duplicate Semio kit reference"));}completed+=1;}
-let objects=children::<SemioObjectSnapshot>(database,"semio_kit_object_child","object",&mut references,control)?;let models=children::<SemioModelSnapshot>(database,"semio_kit_model_child","model",&mut references,control)?;let table=database.table("semio_kit_value_child")?;let properties=if table.rows.is_empty(){None}else{let row=SqliteRow::new(table.single_row()?,float_columns("semio_kit_value_child"))?;identity(row,4)?;if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit value child owner"));}let target=references.remove(&row.integer(3)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit value child reference"))?;validate_semio_child_identity(row.text(2)?,&target,"value").map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Some(store::ArtifactChild::<SemioValueSnapshot>::new(reconstruct_text(control,row.text(2)?)?,target))};
-let mut blobs=BTreeMap::new();for row in float_rows(database,"semio_kit_blob",control)?{identity(row,4)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;let size=row.text(2)?.parse::<u64>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;if size.to_string()!=row.text(2)?||blobs.insert(row.rowid,store::BlobRef{hash:reconstruct_text(control,row.text(1)?)?,size,media_type:reconstruct_text(control,row.text(3)?)?}).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit blob identity or size"));}completed+=1;}
-let mut representations=Vec::new();let mut ids=BTreeSet::new();for row in ordered_float_rows(database,"semio_kit_representation",2,control)?{identity(row,8)?;if row.integer(1)?!=1||!ids.insert(row.rowid){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit representation ownership or identity"));}let checkpoint=row.optional_text(6)?;let blob=if row.is_null(7)?{None}else{Some(row.integer(7)?)};let pin=match row.text(5)?{"head" if checkpoint.is_none()&&blob.is_none()=>store::LinkPin::Head,"checkpoint" if blob.is_none()=>store::LinkPin::Checkpoint{id:reconstruct_text(control,checkpoint.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio kit checkpoint pin"))?)?},"snapshot" if checkpoint.is_none()=>store::LinkPin::Snapshot{blob:blobs.remove(&blob.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio kit snapshot pin"))?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling or multiply owned Semio kit blob pin"))?},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio kit link pin shape"))};representations.push(store::ArtifactLink{target:references.remove(&row.integer(4)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling or multiply owned Semio kit representation reference"))?,role:reconstruct_text(control,type_names.get(&row.integer(3)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio kit representation type role"))?)?,pin});completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}
-if !references.is_empty()||!blobs.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"orphan Semio kit reference or blob pin descriptor"));}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(Self{schema:reconstruct_text(control,document.text(1)?)?,types,designs,objects,models,properties,representations})
     }
 }
 
 fn float_columns(table:&str)->&'static [FloatColumn]{match table{"semio_kit_piece"=>&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13),FloatColumn::Binary64(14)],_=>&[]}}
-trait FloatProjection { fn insert_float(&mut self,table:&str,cells:&[Cell<'_>])->Result<i64,ValueError>; fn insert_key_float(&mut self,table:&str,key:i64,cells:&[Cell<'_>])->Result<(),ValueError>; }
-impl FloatProjection for Projection<'_,'_> { fn insert_float(&mut self,table:&str,cells:&[Cell<'_>])->Result<i64,ValueError>{insert_ieee754(self,table,cells,float_columns(table))} fn insert_key_float(&mut self,table:&str,key:i64,cells:&[Cell<'_>])->Result<(),ValueError>{insert_key_ieee754(self,table,key,cells,float_columns(table))} }
-fn float_rows<'a>(db:&'a SqliteDatabase,table:&str,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let table_rows=db.table(table)?;control.check_rows(table_rows.rows.len())?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,table_rows.rows.len())?;let mut result=Vec::new();for(count,row)in table_rows.rows.iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,table_rows.rows.len())?;}}Ok(result)}
-fn ordered_float_rows<'a>(db:&'a SqliteDatabase,table:&str,ordinal:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let mut result=Vec::new();for(count,row)in semio_framework_os_kernel::sqlite_snapshot::artifact::ordered_row_refs(db.table(table)?,ordinal,control)?.into_iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,0)?;}}Ok(result)}
 fn single_float_row<'a>(db:&'a SqliteDatabase,table:&str)->Result<SqliteRow<'a>,ValueError>{SqliteRow::new(db.table(table)?.single_row()?,float_columns(table))}
 
 impl SemioKitSnapshot{
@@ -75,7 +181,7 @@ pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&s
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

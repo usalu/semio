@@ -43,7 +43,7 @@ pub fn chart_artifact_declaration()->Result<semio_framework_plugin::app::Artifac
         .capability(capability("s.print.chart.schema",ArtifactCapabilityKind::schema(),"framework.print.chart",include_str!("🧬️schema/📸️snapshot/🔣️.json"))?)?
         .capability(capability("s.print.chart.inference",ArtifactCapabilityKind::inference(),"framework.print.chart.inference",include_str!("🧬️schema/💡️inferences/🔣️.json"))?)?
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.print.chart.codec")?,ArtifactCapabilityKind::codec()).descriptor(include_str!("🧬️schema/📸️snapshot/🔣️.json").as_bytes().to_vec())?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(),"print.chart")?)?.claim(ArtifactIdentityClaim::codec_extension("print.chart","chart")?)?)?;
-    let dialect=protocol::io_schema::Dialect{artifact_kind:CHART_ARTIFACT_KIND,standard:protocol::io_schema::StandardId("v1"),subset:protocol::io_schema::SubsetId("any")};
+    let dialect=semio_framework_artifact_reference::Dialect{artifact_kind:CHART_ARTIFACT_KIND,standard:semio_framework_artifact_reference::StandardId("v1"),subset:semio_framework_artifact_reference::SubsetId("any")};
     ArtifactDeclaration::builder(definition).schema(chart_artifact_schema_descriptor()).inferences([chart_artifact_inference_descriptor()]).inference_services([chart_inference_service()]).document_codec_bare::<ChartSnapshot,ChangeChartValue>("print.chart",dialect).try_build()
 }
 
@@ -61,7 +61,7 @@ pub fn chart_inference_service() -> semio_framework_plugin::ArtifactInferenceSer
     use semio_framework_plugin::{ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferencePayloadContract};
     ArtifactInferenceService::new(ArtifactInferenceServiceMetadata {
         owner: "print", artifact_kind: CHART_ARTIFACT_KIND, artifact_schema: "framework.print.chart", artifact_schema_version: 1, inference_schema: "framework.print.chart.inference", inference_schema_version: 1, algorithm_version: 1, policy_version: 1,
-        payload: Some(ArtifactInferencePayloadContract { payload_schema_id: "framework.print.chart.inference.payload", input_schema: include_str!("🧬️schema/📸️snapshot/🔣️.json"), output_schema: include_str!("🧬️schema/💡️inferences/🔣️.json"), progress_unit: "chart-values", artifact_binding: None, commit: None }),
+        payload: Some(ArtifactInferencePayloadContract { payload_schema_id: "framework.print.chart.inference.payload", input_schema: include_str!("🧬️schema/📸️snapshot/🔣️.json"), output_schema: include_str!("🚪️io/📝️text/💡️inferences/🔣️.json"), progress_unit: "chart-values", artifact_binding: None, commit: None }),
     }, execute_chart_inference)
 }
 
@@ -94,14 +94,14 @@ pub fn execute_chart_inference_controlled(request: &semio_framework_plugin::Arti
     }
     let snapshot = ChartSnapshot::from_value(value).map_err(|error| Error::new("print.chart.inference.snapshot", error.to_string()))?;
     let mut cancellation=None;
-    let result = inferences::infer_chart_controlled(&snapshot, &mut |work| {
+    let result = io::text::inferences::render_chart_controlled(&snapshot, &mut |work| {
         if work.saturating_add(decode_work) > request.budgets.work_units { return Err("inference work budget exhausted".into()); }
         checkpoint(work.saturating_add(decode_work)).map_err(|error| {let message=error.to_string();cancellation=Some(error);message})
     });
     if let Some(error)=cancellation{return Err(error);}
     let inference=match result{
-        Ok(tikz)=>ChartInference{tikz,diagnostics:Vec::new(),complete:true},
-        Err(message)=>ChartInference{tikz:String::new(),diagnostics:vec![inferences::ChartDiagnostic{code:"print.chart.inference".into(),path:"chart".into(),message}],complete:false}
+        Ok(tikz)=>io::text::inferences::ChartTextOutput{tikz,diagnostics:Vec::new(),complete:true},
+        Err(message)=>io::text::inferences::ChartTextOutput{tikz:String::new(),diagnostics:vec![inferences::ChartDiagnostic{code:"print.chart.inference".into(),path:"chart".into(),message}],complete:false}
     };
     let canonical_payload = protocol::pack_rt::encode_wire_value(&inference.to_value());
     if canonical_payload.len() as u64 > request.budgets.allocation_bytes { return Err(Error::new("print.chart.inference.allocation", "output exceeds allocation budget")); }

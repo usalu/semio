@@ -1,4 +1,4 @@
-import { exactCargoGeneratedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, runProbe, SPACE_DATA_DIR_NAME } from "../../🟦️.ts";
@@ -215,7 +215,7 @@ export function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: s
     if (!cleanIsTicketGeneratedOutputDir(name)) return "enter";
     const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
     if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) return "skip";
-    if (exactCargoGeneratedOutputHasLiveLease(abs)) return "skip";
+    if (generatedOutputHasLiveLease(abs)) return "skip";
     out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: cleanPathBytes(abs) });
     return "skip";
   });

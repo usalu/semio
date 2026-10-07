@@ -580,16 +580,12 @@
   "domainId": "graph",
   "domainGranularityId": "handle",
   "expect": {
-    "draws": 1,
+    "draws": 3,
     "drawMeshKey": "eval-extrude@solid#0",
     "triangles": 20,
     "vertices": 36,
     "instanceIds": [
       "extrude@solid#0"
-    ],
-    "wireOnlyMeshesDropped": [
-      "eval-profile@wire#0",
-      "eval-extrusion-axis@vectorOut#0"
     ],
     "selectedIds": [
       "extrude@solid#0"
@@ -604,6 +600,10 @@
       0.4330127018922194,
       0.24999999999999997,
       0.8660254037844386
+    ],
+    "wireOnlyMeshesRetained": [
+      "eval-profile@wire#0",
+      "eval-extrusion-axis@vectorOut#0"
     ]
   }
 }

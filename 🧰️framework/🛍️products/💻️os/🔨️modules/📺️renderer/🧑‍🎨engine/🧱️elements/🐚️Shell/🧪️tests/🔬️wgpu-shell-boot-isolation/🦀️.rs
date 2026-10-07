@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework::{AppRole, ArtifactDialect, ModeDefinition, Modes, PluginManifest, WindowKindDefinition, WindowKinds};
+use {semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::PluginManifest,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 
 /// 🧪️ The smallest app a boot selection can name — `id`, the `(dialect, role)` its id encodes, and
 /// the mandatory window kind. The identity is PARSED out of the id rather than stamped, because

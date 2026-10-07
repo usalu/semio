@@ -31,7 +31,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use record::RasterNativeDocument;
+use crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument;
 
 impl store::ArtifactPack for RasterSnapshot {
     fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}

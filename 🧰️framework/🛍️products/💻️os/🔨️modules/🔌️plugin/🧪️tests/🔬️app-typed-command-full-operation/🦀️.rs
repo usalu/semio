@@ -247,7 +247,7 @@ mod typed_command_full_operation_tests {
         assert_eq!(grant.maximum_bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
         for case in fixture["publicationCases"].as_array().unwrap() {
             let boundary = case["cancelAt"].as_str().unwrap();
-            let mut app = VcsArtifactApp::<A>::new(A::default()).await;
+            let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
             let revision = app.store.content_revision_now();
             let operation = semio_framework_job::Operation::new(
                 semio_framework_job::allocate_operation_id(),
@@ -455,7 +455,7 @@ mod typed_command_full_operation_tests {
         for case in fixture["publicationCases"].as_array().unwrap() {
             for delayed_ack in [false, true] {
                 let boundary = case["cancelAt"].as_str().unwrap();
-                let mut app = VcsArtifactApp::<A>::new(A::default()).await;
+                let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
                 let before = app.store.snapshot_root();
                 let revision = app.store.content_revision_now();
                 let generation = app.store.generation_now();
@@ -855,7 +855,7 @@ mod typed_command_full_operation_tests {
     /// where it was — asserted directly below, over the property instead of its proxy.
     pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
-        let mut app = VcsArtifactApp::<A>::new(A::default()).await;
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
         let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
         let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
         app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(first);
@@ -1715,13 +1715,39 @@ mod child_complete_group_candidate_tests{
             let mutation=crate::test_app_mutation_fixture::TestMutation::from(crate::test_app_mutation_fixture::SetLabel{value:"x".repeat(8194)});let input_pointer=match &mutation{crate::test_app_mutation_fixture::TestMutation::SetLabel(leaf)=>leaf.value.as_ptr(),_=>unreachable!()};
             let accepted=AtomicUsize::new(0);let mut continue_encoding=|_:semio_framework_value::native_encoding::NativeEncodeProgress|mode!="interior-cancel"||accepted.load(Ordering::Relaxed)<256;let mut control=NativeEncodeControl::new(if mode=="initial4096"{4096}else{65536},&mut continue_encoding);let mut options=PackEncodeOptions::default();options.limits.max_file_len=if mode=="file-one-short"{8201}else{8202};if mode=="depth-zero"{options.limits.max_depth=0;}
             let mut child=paged_owner::PagedChildOwner::empty();for(field,text)in[(reader::ChildGroupText::Owner,"owner"),(reader::ChildGroupText::Slot,"slot"),(reader::ChildGroupText::ChildId,"child"),(reader::ChildGroupText::Schema,"child.empty")]{child.read_metadata_from_encoding_source(field,&text,&options,&mut control).unwrap();}
-            let result=child.produce_owned_operation(8202,&options,&mut control,|options,output,control|mutation.encode_op_into(options,&mut Observed{inner:output,accepted:&accepted},control));
+            let mut capsule=mutation.retained_pack_operation();
+            let result=child.produce_owned_operation(8202,&options,&mut control,|options,output,control|semio_framework_os_kernel::variants_binary::encode_op_into(&mut capsule,options,&mut Observed{inner:output,accepted:&accepted},control));
             match result{Ok(mut receipt)=>{assert_eq!(mode,"complete");receipt.read_first_schema_from_source(&fixture["expected"]["schema"].as_str().unwrap(),&mut control).unwrap();for terminology in semio_framework_ui_locale::Terminology::ALL{for locale in semio_framework_ui_locale::Locale::ALL{let crate::test_app_mutation_fixture::TestMutation::SetLabel(leaf)=&mutation else{unreachable!()};receipt.produce_label(terminology,locale,&mut control,|output|leaf.label_into(terminology,locale,output)).unwrap();}}receipt.commit(&mut control).unwrap();},Err(_)=>assert_ne!(mode,"complete")}
             assert_eq!(match &mutation{crate::test_app_mutation_fixture::TestMutation::SetLabel(leaf)=>leaf.value.as_ptr(),_=>unreachable!()},input_pointer);
-            if mode=="complete"{assert_eq!(child.operations.len(),1);assert_eq!(child.operations[0].len(),8202);let prefix=[1,1,0,1,1,7,130,64];for(index,byte)in prefix.into_iter().enumerate(){assert_eq!(child.operations[0].byte_at(index),Some(byte));}for index in 8..8202{assert_eq!(child.operations[0].byte_at(index),Some(b'x'));}let schema=fixture["expected"]["schema"].as_str().unwrap();let view=child.view().unwrap();assert_eq!(view.schema.len(),schema.len());for(index,byte)in schema.bytes().enumerate(){assert_eq!(view.schema.byte(index).unwrap(),byte);}}
+            if mode=="complete"{assert_eq!(child.operations.len(),1);assert_eq!(child.operations[0].len(),8202);let canonical=<crate::test_app_mutation_fixture::TestMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();assert_eq!(canonical.len(),8202);for(index,byte)in canonical.iter().copied().enumerate(){assert_eq!(child.operations[0].byte_at(index),Some(byte));}let prefix=[1,1,0,1,0,7,130,64];for(index,byte)in prefix.into_iter().enumerate(){assert_eq!(child.operations[0].byte_at(index),Some(byte));}for index in 8..8202{assert_eq!(child.operations[0].byte_at(index),Some(b'x'));}let schema=fixture["expected"]["schema"].as_str().unwrap();let view=child.view().unwrap();assert_eq!(view.schema.len(),schema.len());for(index,byte)in schema.bytes().enumerate(){assert_eq!(view.schema.byte(index).unwrap(),byte);}}
             else{assert_eq!(child.operations.len(),0);assert!(child.retained_partial_source().is_some());if mode=="interior-cancel"{assert_eq!(accepted.load(Ordering::Relaxed),256);assert_eq!(child.retained_partial_source().unwrap().len(),256);}assert!(child.retained_partial_source().unwrap().len()<8202);}
+            let scratch=capsule.allocated_bytes();let before=semio_framework_trace::retained_heap_bytes_on_this_thread();assert_eq!(capsule.retire_one(0,4096).unwrap(),(false,0,0));assert_eq!(semio_framework_trace::retained_heap_bytes_on_this_thread(),before);assert_eq!(capsule.allocated_bytes(),scratch);
+            let mut released=0;for _ in 0..32768{let before=semio_framework_trace::retained_heap_bytes_on_this_thread();let step=capsule.retire_one(1,4096).unwrap();let after=semio_framework_trace::retained_heap_bytes_on_this_thread();assert_eq!(usize::try_from(before-after).unwrap(),step.2);assert!(step.1<=1&&step.2<=4096);released+=step.2;if !step.0{break}}assert_eq!(released,scratch);assert_eq!(capsule.allocated_bytes(),0);assert_eq!(capsule.variant_identity().unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvariantViolated);
             let allocated=child.allocated_bytes();assert_eq!(drain_retained(&mut child),allocated);assert!(child.terminal_is_empty());
         }
         eprintln!("[DEBUG] actual authored TestMutation direct projection emits exact8202 frame with full8194 payload into retained receipt and actual four locale cells; caller input pointer survives full-policy success/refusal; whole-file/depth/initial4096/interior256 cancellation retains actual source prefix and explicit1/4096 child closure; typed String and producer metadata/scaffold lifetime remain separate unqualified owners");
+    }
+    #[test]
+    fn child_complete_actual_authored_typed_source_event_observer_matches_system_backing(){
+        let(mut bytes,allocated)=semio_framework_trace::observe_heap_allocations_on_this_thread(||vec![b'x';8194]);assert_eq!((allocated.requested_bytes,allocated.released_bytes),(8194,0));assert!(!allocated.overflowed);
+        let(_,shortened)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bytes.truncate(4096));assert_eq!((shortened.requested_bytes,shortened.released_bytes),(0,0));assert_eq!(bytes.capacity(),8194);
+        let(_,resized)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bytes.shrink_to_fit());assert_eq!(bytes.capacity(),4096);assert_eq!((resized.requested_bytes,resized.released_bytes,resized.largest_release_bytes),(4096,8194,8194));assert!(!resized.overflowed);
+        let(_,released)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(bytes));assert_eq!((released.requested_bytes,released.released_bytes,released.largest_release_bytes),(0,4096,4096));
+        let(pages,allocated)=semio_framework_trace::observe_heap_allocations_on_this_thread(||(vec![0u8;4096],vec![0u8;4096]));assert_eq!((allocated.requested_bytes,allocated.released_bytes),(8192,0));let(inner,outer)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(pages)).1);assert_eq!(inner,outer);assert_eq!((outer.requested_bytes,outer.released_bytes,outer.largest_release_bytes),(0,8192,4096));assert!(!outer.overflowed);
+        eprintln!("[DEBUG] actual system truncate releases0; realloc8194-to4096 records original8194 release+new4096 request; nested two4096 releases total8192 with largest4096");
+    }
+    #[test]
+    fn child_complete_actual_authored_typed_source_physical8194_grant4096(){
+        use semio_framework_value::retirement::{RetireOwned,RetirementStep};
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/♻️typed-source-physical/🔣️.json" )).unwrap();assert_eq!(fixture["textBytes"],8194);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);
+        let mutation=crate::test_app_mutation_fixture::SetLabel{value:"x".repeat(8194)};let pointer=mutation.value.as_ptr();let backing=mutation.value.capacity();assert_eq!(backing,8194);
+        let ((mut cursor,source_pointer),construction)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let source_pointer=mutation.value.as_ptr();(mutation.value.retirement(),source_pointer)});assert_eq!(pointer,source_pointer);assert_eq!(construction.released_bytes,0);assert!(!construction.overflowed);
+        let (step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(0));assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));assert!(!cursor.terminal_is_empty());
+        let mut physical=0;let mut complete=false;
+        for turn in 0..8194+128{
+            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(4096));eprintln!("[DEBUG] actual typed String source retirement turn={turn} requested={} released={} largestRelease={}",observed.requested_bytes,observed.released_bytes,observed.largest_release_bytes);assert!(!observed.overflowed);assert_eq!(observed.requested_bytes,0);assert!(observed.largest_release_bytes<=4096);physical+=observed.released_bytes;
+            match step{RetirementStep::Bytes(reported)=>{assert_eq!(reported,observed.released_bytes,"logical truncation cannot count as physical source release");assert!(reported<=4096)},RetirementStep::Complete=>{assert!(cursor.terminal_is_empty());complete=true;break},RetirementStep::BudgetExhausted=>{},RetirementStep::Child(_)=>panic!("actual contiguous String unexpectedly produced another source owner")}
+        }
+        assert!(complete,"original typed8194 source did not close under original4096 grant");assert_eq!(physical,backing);let (_,scaffold)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor));assert!(scaffold.largest_release_bytes<=4096);assert_eq!(scaffold.requested_bytes,0);assert!(scaffold.released_bytes<backing);
     }
 }

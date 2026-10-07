@@ -9,7 +9,10 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📇️registry/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗿️artifact-reference/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/**/*"
     ]
   },
   "targets": {
@@ -44,17 +47,6 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-refusal"
-      }
-    },
-    "test-binding": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "inputs": [
-        "default"
-      ],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-binding"
       }
     }
   }

@@ -1,0 +1,244 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts" verify
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts:
+[0m[32m✓[0m[0m[1m SQLite remodeling authored semantic tables execute in an independent engine[0m [0m[2m[4.58ms[0m[2m][0m
+unknown format "uint32" ignored in schema at path "#/properties/index"
+unknown format "uint32" ignored in schema at path "#/properties/index"
+unknown format "uint32" ignored in schema at path "#/properties/frameCount"
+unknown format "uint32" ignored in schema at path "#/properties/frameCount"
+unknown format "uint32" ignored in schema at path "#/properties/width"
+unknown format "uint32" ignored in schema at path "#/properties/width"
+unknown format "uint32" ignored in schema at path "#/properties/height"
+unknown format "uint32" ignored in schema at path "#/properties/height"
+unknown format "uint32" ignored in schema at path "#/properties/width"
+unknown format "uint32" ignored in schema at path "#/properties/width"
+unknown format "uint32" ignored in schema at path "#/properties/height"
+unknown format "uint32" ignored in schema at path "#/properties/height"
+unknown format "uint32" ignored in schema at path "#/properties/frameSampleStride"
+unknown format "uint32" ignored in schema at path "#/properties/frameSampleStride"
+unknown format "uint32" ignored in schema at path "#/properties/maxFrames"
+unknown format "uint32" ignored in schema at path "#/properties/maxFrames"
+unknown format "uint32" ignored in schema at path "#/properties/downscaleLongEdgePx"
+unknown format "uint32" ignored in schema at path "#/properties/downscaleLongEdgePx"
+unknown format "uint32" ignored in schema at path "#/properties/targetCount"
+unknown format "uint32" ignored in schema at path "#/properties/targetCount"
+unknown format "uint32" ignored in schema at path "#/properties/octaves"
+unknown format "uint32" ignored in schema at path "#/properties/octaves"
+unknown format "uint32" ignored in schema at path "#/properties/sequentialWindow"
+unknown format "uint32" ignored in schema at path "#/properties/sequentialWindow"
+unknown format "uint32" ignored in schema at path "#/properties/maxPairsPerFrame"
+unknown format "uint32" ignored in schema at path "#/properties/maxPairsPerFrame"
+unknown format "uint32" ignored in schema at path "#/properties/ransacIterations"
+unknown format "uint32" ignored in schema at path "#/properties/ransacIterations"
+unknown format "uint32" ignored in schema at path "#/properties/minTrackLength"
+unknown format "uint32" ignored in schema at path "#/properties/minTrackLength"
+unknown format "uint32" ignored in schema at path "#/properties/baMaxIterations"
+unknown format "uint32" ignored in schema at path "#/properties/baMaxIterations"
+unknown format "uint32" ignored in schema at path "#/properties/windowRadiusPx"
+unknown format "uint32" ignored in schema at path "#/properties/windowRadiusPx"
+unknown format "uint32" ignored in schema at path "#/properties/minViewConsistency"
+unknown format "uint32" ignored in schema at path "#/properties/minViewConsistency"
+unknown format "uint32" ignored in schema at path "#/properties/maxPoints"
+unknown format "uint32" ignored in schema at path "#/properties/maxPoints"
+unknown format "uint32" ignored in schema at path "#/properties/decimateTargetTriangles"
+unknown format "uint32" ignored in schema at path "#/properties/decimateTargetTriangles"
+unknown format "uint32" ignored in schema at path "#/properties/smoothingIterations"
+unknown format "uint32" ignored in schema at path "#/properties/smoothingIterations"
+unknown format "uint32" ignored in schema at path "#/properties/textureSize"
+unknown format "uint32" ignored in schema at path "#/properties/textureSize"
+unknown format "uint32" ignored in schema at path "#/properties/holeFillMaxBoundaryVerts"
+unknown format "uint32" ignored in schema at path "#/properties/holeFillMaxBoundaryVerts"
+unknown format "uint32" ignored in schema at path "#/properties/maxTracks"
+unknown format "uint32" ignored in schema at path "#/properties/maxTracks"
+unknown format "uint32" ignored in schema at path "#/properties/trackWindowPx"
+unknown format "uint32" ignored in schema at path "#/properties/trackWindowPx"
+unknown format "uint32" ignored in schema at path "#/properties/minTrackLengthFrames"
+unknown format "uint32" ignored in schema at path "#/properties/minTrackLengthFrames"
+unknown format "uint32" ignored in schema at path "#/properties/orthoMaxPx"
+unknown format "uint32" ignored in schema at path "#/properties/orthoMaxPx"
+unknown format "uint32" ignored in schema at path "#/properties/frameIndex"
+unknown format "uint32" ignored in schema at path "#/properties/frameIndex"
+unknown format "uint32" ignored in schema at path "#/properties/vertexCount"
+unknown format "uint32" ignored in schema at path "#/properties/vertexCount"
+unknown format "uint32" ignored in schema at path "#/properties/triangleCount"
+unknown format "uint32" ignored in schema at path "#/properties/triangleCount"
+unknown format "uint32" ignored in schema at path "#/properties/boundaryEdgeCount"
+unknown format "uint32" ignored in schema at path "#/properties/boundaryEdgeCount"
+unknown format "uint32" ignored in schema at path "#/properties/boundaryLoopCount"
+unknown format "uint32" ignored in schema at path "#/properties/boundaryLoopCount"
+unknown format "uint32" ignored in schema at path "#/properties/nonManifoldEdgeCount"
+unknown format "uint32" ignored in schema at path "#/properties/nonManifoldEdgeCount"
+unknown format "uint32" ignored in schema at path "#/properties/nonManifoldVertexCount"
+unknown format "uint32" ignored in schema at path "#/properties/nonManifoldVertexCount"
+unknown format "uint32" ignored in schema at path "#/properties/connectedComponents"
+unknown format "uint32" ignored in schema at path "#/properties/connectedComponents"
+unknown format "uint32" ignored in schema at path "#/properties/selfIntersectionPairs"
+unknown format "uint32" ignored in schema at path "#/properties/selfIntersectionPairs"
+unknown format "uint32" ignored in schema at path "#/properties/length"
+unknown format "uint32" ignored in schema at path "#/properties/length"
+[0m[32m✓[0m[0m[1m SQLite remodeling inline buffers follow the independent tagged schema[0m [0m[2m[[1m124.35ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling durable chunks contain literal octets[0m [0m[2m[1.74ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declares its owned public relational entry[0m [0m[2m[0.03ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared JSON admits every exact IEEE word[0m [0m[2m[4.01ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling retained content references own full unsigned64 decimal words[0m [0m[2m[0.77ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling owns every semantic table through an independent physical engine[0m [0m[2m[[1m155.69ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling accepts consistent edited surrogate aliases and independent IEEE words[0m [0m[2m[[1m54.47ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling refuses independently edited orphan and IEEE mismatches[0m [0m[2m[[1m130.91ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling exact document words obey the independent authored JSON schema[0m [0m[2m[[1m56.53ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling projection and restoration obey exact domain row admission[0m [0m[2m[[1m55.08ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared Text retains primitive exact words and signed64 values[0m [0m[2m[1.17ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared mutation schemas share exact words and raw octets[0m [0m[2m[[1m68.21ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared Text owns tagged buffers octets and literal references[0m [0m[2m[0.79ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling native Text binary32 widening is exact and refuses lost payload[0m [0m[2m[0.68ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling every committed snapshot fixture owns the canonical document domain[0m [0m[2m[[1m1126.97ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling committed mutation and diff replay preserves typed snapshots[0m [0m[2m[[1m437.99ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared JSON word objects agree with the independent pretty writer[0m [0m[2m[1.76ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling semantic relationship construction reports its known cancellable frontier[0m [0m[2m[[1m103.47ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling committed JSON snapshot spelling matches its declared exact word writer[0m [0m[2m[[1m474.43ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling committed native Text assets preserve their independently authored frame identities[0m [0m[2m[[1m10.49ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling all semantic cells have independent exact and one-short limits[0m [0m[2m[[1m41.51ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts:
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse array-of-text matches the Rust planner and replays through fast-json-patch[0m [0m[2m[[1m19.98ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse long-text matches the Rust planner and replays through fast-json-patch[0m [0m[2m[7.58ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse struct-like-object matches the Rust planner and replays through fast-json-patch[0m [0m[2m[5.78ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse map-like-object matches the Rust planner and replays through fast-json-patch[0m [0m[2m[1.02ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse array-item-object matches the Rust planner and replays through fast-json-patch[0m [0m[2m[0.48ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse splice-inverse matches the Rust planner and replays through fast-json-patch[0m [0m[2m[3.33ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse root-replace matches the Rust planner and replays through fast-json-patch[0m [0m[2m[0.72ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse root-kind-change matches the Rust planner and replays through fast-json-patch[0m [0m[2m[[1m15.37ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m an inverse needing more parts than its bound is refused, never truncated[0m [0m[2m[6.54ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m intrinsic object ordering preserves numeric keys and exact inverse values[0m [0m[2m[0.48ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m csv native patch schema and large field match independent oracles[0m [0m[2m[[1m44.07ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m json native patch schema and large field match independent oracles[0m [0m[2m[[1m51.06ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m png native patch schema and large field match independent oracles[0m [0m[2m[[1m33.23ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m jpg native patch schema and large field match independent oracles[0m [0m[2m[[1m28.13ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m tiff native patch schema and large field match independent oracles[0m [0m[2m[[1m34.75ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m mp4 native patch schema and large field match independent oracles[0m [0m[2m[[1m33.45ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m wav native patch schema and large field match independent oracles[0m [0m[2m[[1m30.29ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m positioned object insertion preserves the authored key order and rejects invalid positions[0m [0m[2m[0.46ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m moves resolve the destination parent after removal[0m [0m[2m[[1m50.41ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m replace-payload[0m [0m[2m[0.16ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m edit-first-payload-byte[0m [0m[2m[0.02ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m insert-payload-byte[0m [0m[2m[0.02ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m remove-payload-byte[0m [0m[2m[0.03ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-payload-byte[0m [0m[2m[0.12ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m field[0m [0m[2m[0.09ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m append[0m [0m[2m[0.05ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m remove[0m [0m[2m[0.03ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move[0m [0m[2m[0.09ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-to-end[0m [0m[2m[0.05ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m rename-escaped-key[0m [0m[2m[0.11ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m cross-parent-move[0m [0m[2m[0.06ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m same-path[0m [0m[2m[6.62ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m remove-first-object-key[0m [0m[2m[0.09ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-object-key-to-array[0m [0m[2m[0.13ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m duplicate-key[0m [0m[2m[0.13ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-descendant[0m [0m[2m[0.02ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m rename-array-index[0m [0m[2m[0.01ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m missing-remove[0m [0m[2m[0.02ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m metadata patches preserve a large payload by reference[0m [0m[2m[1.80ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m failed path operations leave the original untouched[0m [0m[2m[0.12ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m every canonical patch and inverse meets the registry SnapshotPatch schema[0m [0m[2m[0.14ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m the wire reader admits exactly what the registry SnapshotPatch schema admits (ajv oracle)[0m [0m[2m[0.46ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m snapshot schema locations type exactly the values the whole-document schema admits there (ajv oracle)[0m [0m[2m[[1m73.31ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts:
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral child and IEEE boundaries agree with independent engines[0m [0m[2m[[1m29.38ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d artifact catalog owns the actual independent persisted child[0m [0m[2m[0.18ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d canonical part owns every native IEEE word and both scale variants[0m [0m[2m[2.17ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d author rank and grip order retain the actual signed32 domain[0m [0m[2m[0.20ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d typed part rejects numeric alternatives in its canonical double fields[0m [0m[2m[0.07ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d exposes a canonical whole persisted snapshot parser[0m [0m[2m[0.02ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d complete parent retains empty collections, optional values and native catalog fields[0m [0m[2m[1.59ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d handcrafted entities are independently queryable with real foreign keys[0m [0m[2m[8.60ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d actual persisted parent crosses an independent SQLite reserialization[0m [0m[2m[[1m32.55ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d every authored entity and exact IEEE state survive independent reserialization[0m [0m[2m[[1m292.29ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d independent semantic edits and consistent surrogate renumbering are retained[0m [0m[2m[[1m70.92ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d rejects valid-SQL partial values and unowned or duplicate entities[0m [0m[2m[[1m234.12ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d exact row frontier and real projection/reconstruction cancellation remain controlled[0m [0m[2m[[1m101.03ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d declared JSON schema admits the exact word-backed persisted parent[0m [0m[2m[[1m36.10ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d declared JSON leaf preserves every native word without canonical numeric alternatives[0m [0m[2m[2.98ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d published mutation consumers share canonical words and native integer positions[0m [0m[2m[0.10ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d equivalent case and quoted table identities survive independent SQLite rewriting[0m [0m[2m[[1m84.34ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d authored schema admission precedes borrowed semantic traversal[0m [0m[2m[0.33ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d long Unicode cells publish known interior work in both semantic directions[0m [0m[2m[[1m21.91ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d exact signed IEEE cells cannot wrap outside SQLite INTEGER width[0m [0m[2m[4.29ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d every persisted field retains its authored artifact state axis[0m [0m[2m[0.05ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 0 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m313.95ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 1 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m393.59ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 2 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m239.74ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 3 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m263.18ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 4 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m270.23ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 5 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m262.54ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 6 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m201.96ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 7 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m275.91ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 8 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m233.06ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 9 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m233.46ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 10 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m154.02ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 11 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m200.78ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m Puzzle5d borrowed Scale and diff metadata preserve the authored neutral records[0m [0m[2m[6.32ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m Puzzle5d nullable delta retains omission, clearing and exact typed replacement[0m [0m[2m[[1m12.95ms[0m[2m][0m
+[0m
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts:
+[0m[32m✓[0m[0m[1m canonical shard violation closure accepts every language-neutral order without losing metadata or entries[0m [0m[2m[[1m43.98ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m canonical shard closure rejects changed missing extra and duplicate top-level records[0m [0m[2m[0.96ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m shard descriptor order is explicit and cannot be hidden by co-reordering payloads[0m [0m[2m[0.70ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m serialized shard reconstruction preserves nested metadata and entry array order[0m [0m[2m[1.32ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m canonical artifact validation rejects every language-neutral preimage corruption[0m [0m[2m[2.89ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m the real inventory producer publishes locale-different violation order losslessly[0m [0m[2m[[1m658.46ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m publication verifies canonical violations and rejects inconsistent replacement before writing[0m [0m[2m[[1m23.66ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m inventory shard consistency gate is registered through Nx and both launch catalogs[0m [0m[2m[[1m73.47ms[0m[2m][0m
+[0m
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts:
+[0m[32m✓[0m[0m[1m neutral contract requires isolated queries and a fresh final authority witness[0m [0m[2m[[1m36.03ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m Bun preserves independent ordered query results while reusing only the preflight basis[0m [0m[2m[[1m139.03ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m TypeScript preserves independent ordered query results while reusing only the preflight basis[0m [0m[2m[[1m179.14ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: added-candidate[0m [0m[2m[[1m12.91ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: removed-candidate[0m [0m[2m[3.88ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: deleted-file-retains-index-membership[0m [0m[2m[5.49ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: late-reference-in-existing-file[0m [0m[2m[6.92ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: mode-change[0m [0m[2m[4.24ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: file-becomes-symlink[0m [0m[2m[3.01ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: fake-marker-appears[0m [0m[2m[2.83ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: nested-marker-replaced[0m [0m[2m[2.76ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: same-content-marker-file-replaced[0m [0m[2m[5.79ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: exact-owned-journal-publication[0m [0m[2m[3.20ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: neighbor-ticket-is-not-owned[0m [0m[2m[6.34ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m late temporary content changes stay rejected even when restored before final validation[0m [0m[2m[3.65ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m raw marker bytes cannot drift behind identical UTF-8 replacement characters[0m [0m[2m[2.43ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m marker checks retain exact skipped paths, fake-marker behavior and symlink rejection[0m [0m[2m[2.32ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m freshness does not share projected bytes, target indexes or frozen checks between queries[0m [0m[2m[3.60ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m cancellation is observed during capture, every query and final validation[0m [0m[2m[[1m24.91ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m explicit ignored-ticket and untracked consumers remain in the shared authority[0m [0m[2m[5.19ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m query callbacks can cancel without bypassing the final or next-candidate check[0m [0m[2m[[1m18.10ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m basis identity cannot cross a repository, taxonomy object, plan or preflight invocation[0m [0m[2m[5.29ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m apply validates freshness after its publication callback and before source staging[0m [0m[2m[0.39ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m actual Git markers preserve nested ownership, fake markers and skipped symlink descendants[0m [0m[2m[[1m114.09ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m physical preflight publication boundary: unchanged-rollback[0m [0m[2m[[1m1052.20ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m physical preflight publication boundary: late-new-consumer[0m [0m[2m[[1m881.14ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m physical preflight publication boundary: late-existing-consumer[0m [0m[2m[[1m1206.56ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m physical preflight publication boundary: late-fake-marker[0m [0m[2m[[1m961.51ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m the dedicated preflight gate is registered through Nx and both ordered launch catalogs[0m [0m[2m[[1m50.76ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m the exercised production slices remain stable across the dedicated gate[0m [0m[2m[[1m116.38ms[0m[2m][0m
+[0m
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-scenario-identities/🟦️.ts:
+[0m[32m✓[0m[0m[1m logical mutation scenario ids and physical case names are independent exact identities[0m [0m[2m[[1m66.13ms[0m[2m][0m
+
+[0m[32m 139 pass[0m
+[0m[2m 0 fail[0m
+ 2629 expect() calls
+Ran 139 tests across 6 files. [0m[2m[[1m14.09s[0m[2m][0m
+[DEBUG] Independent actual retained profile area oracle [0m[33m3[0m

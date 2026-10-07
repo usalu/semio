@@ -4,13 +4,11 @@ import { copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, 
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import Ajv from "ajv";
 import fg from "fast-glob";
 import plugin, { cacheInternals } from "../../../🟨️.mjs";
 
 type Corpus = { version: 1; files: Record<string, string>; cases: { id: string; files: string[]; names: string[] }[]; authorities: string[]; snapshot: { entry: string; inputs: string[]; nextSource: string; nextFile: string; nextInputs: string[] } };
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧬️schema/🔣️.json"), "utf8"));
 const toml = createRequire(import.meta.url)("@iarna/toml");
 const library = resolve(import.meta.dir, "../../.."), repository = resolve(library, "../../../../..");
 
@@ -43,7 +41,6 @@ function oracle(root: string, supplied: readonly string[]): string[] {
 }
 
 test("closed inference corpus preserves unique semantic cases", () => {
-  expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
   expect(new Set(fixture.cases.map(row => row.id)).size).toBe(fixture.cases.length);
 });
 

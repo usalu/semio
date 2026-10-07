@@ -72,7 +72,7 @@ async fn registry_backed_editor_installs_its_exact_bounded_command_proof() {
     // 🔚 A registered fixture app owns a real artifact store, which panics at Drop unless it walked
     // its bounded close loop first (`artifact store reached Drop without its exact terminal-empty
     // shallow-shell witness`).
-    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 

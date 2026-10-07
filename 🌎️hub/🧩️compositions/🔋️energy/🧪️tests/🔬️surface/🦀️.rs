@@ -45,7 +45,7 @@ async fn energy_model_editor_and_viewer_share_dialect() {
 async fn new_viewer_builds_a_runnable_energy_model_viewer_app() {
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::viewer::model::create_energy_model_viewer());
     let mut app: semio_framework_plugin::app::VcsArtifactApp<ViewerApp<crate::viewer::model::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers> =
-        semio_framework_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<crate::viewer::model::EnergyModelViewer>::default(), registry).await;
+        semio_framework_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<crate::viewer::model::EnergyModelViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
     // 🧹️ The two genesis members opened onto the store must be retired before Drop.
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

@@ -1,0 +1,57 @@
+{
+  "fields": [
+    {
+      "id": "kind",
+      "label": {
+        "en": "Kind",
+        "de": "Art"
+      },
+      "options": [
+        "shape",
+        "path",
+        "text",
+        "image",
+        "group",
+        "boolean",
+        "trace"
+      ],
+      "invalid": [
+        "invalid-layer-kind",
+        "rect"
+      ]
+    },
+    {
+      "id": "blendMode",
+      "label": {
+        "en": "Blend mode",
+        "de": "Füllmethode"
+      },
+      "options": [
+        "normal",
+        "multiply",
+        "screen",
+        "overlay",
+        "darken",
+        "lighten",
+        "colorDodge",
+        "colorBurn",
+        "hardLight",
+        "softLight",
+        "difference",
+        "exclusion",
+        "hue",
+        "saturation",
+        "color",
+        "luminosity"
+      ],
+      "invalid": [
+        "invalid-blend-mode",
+        "custom blend"
+      ]
+    }
+  ],
+  "locales": [
+    "en",
+    "de"
+  ]
+}

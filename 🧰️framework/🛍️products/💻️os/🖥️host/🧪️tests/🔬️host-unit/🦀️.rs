@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::workflow::{MediaContract, WorkflowEdge, WorkflowPosition, empty_workflow, placeholder_media_contract, validate_workflow};
-    use semio_framework::{AppRole, ArtifactDialect, MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, PluginManifest, WindowKindDefinition};
+    use {semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaClass,semio_framework::MediaForm,semio_framework::MediaType,semio_framework::MediaWireFormat,semio_framework::ModeDefinition,semio_framework::PluginManifest,semio_framework::WindowKindDefinition};
     use std::sync::Arc;
     use store::{MemoryBackbone, MemoryBackbonePort};
     use semio_framework_ui_locale::LocalizedLabel;
@@ -462,11 +462,49 @@ mod tests {
 
     fn test_space_store() -> OsSpaceStore {
         let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None);
-        resolve_kernel_future(ArtifactStore::new(envelope)).expect("valid artifact store fixture")
+        resolve_kernel_future(ArtifactStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture")
     }
 
     fn test_workflow_store() -> OsWorkflowStore {
-        OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", resolve_kernel_future(workflow::empty_workflow_snapshot()))).expect("valid workflow store fixture")
+        OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", resolve_kernel_future(workflow::empty_workflow_snapshot())), protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).expect("valid workflow store fixture")
+    }
+
+    /// 🧹️ Retires a fixture-owned workflow store under page grants before its shell is released.
+    fn close_workflow_fixture(store: &mut OsWorkflowStore) {
+        drop(store.inner.detach_backbone().expect("fixture transport detaches"));
+        for _ in 0..65_536 {
+            if store.inner.close_owned_terminal_is_empty() { return; }
+            store.inner.close_owned_step(1, 4096).expect("fixture owner closes under page grant");
+        }
+        panic!("workflow fixture did not reach terminal emptiness");
+    }
+
+    /// 🧾️ The opened host actor is retained across edits and persistence reopen.
+    #[test]
+    fn workflow_host_preserves_the_opened_actor_context() {
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧾️actor-context/🔣️.json")).expect("neutral actor fixture");
+        for case in fixture["cases"].as_array().expect("cases") {
+            let actor=protocol::ActorId(case["actor"].as_str().expect("actor").into());
+            let reopened_actor=protocol::ActorId(case["reopenActor"].as_str().expect("reopened actor").into());
+            let document=create_backbone_document(workflow::S_WORKFLOW_SCHEMA,"workflow-actor","Workflow",resolve_kernel_future(workflow::empty_workflow_snapshot()));
+            let mut store=OsWorkflowStore::new(document,actor.clone()).expect("opened store");
+            assert_eq!(store.inner.local_actor_id(),&actor);
+            store.add_parameter(&workflow::WorkflowParameterType::Numeric,"First").expect("first edit");
+            let document=store.document();
+            let encoded=encode_backbone_payload(&document).expect("persist host document");
+            close_backbone_envelope(take_backbone_envelope(document).1).expect("persisted copy retires");
+            close_workflow_fixture(&mut store);
+            let reopened=decode_backbone_payload(&encoded,workflow::S_WORKFLOW_SCHEMA).expect("reopen host document");
+            let mut store=OsWorkflowStore::new(reopened,reopened_actor.clone()).expect("reopened store");
+            assert_eq!(store.inner.local_actor_id(),&reopened_actor);
+            store.add_parameter(&workflow::WorkflowParameterType::Numeric,"Second").expect("second edit");
+            let document=store.document();
+            let actors:Vec<_>=document.vcs.edits.iter().map(|edit|edit.actor.as_deref().expect("attributed edit")).collect();
+            assert_eq!(serde_json::to_value(actors).expect("independent Serde actor projection"),case["expectedActors"]);
+            close_backbone_envelope(take_backbone_envelope(document).1).expect("actor projection copy retires");
+            close_workflow_fixture(&mut store);
+            eprintln!("[DEBUG] workflow host actor context {} -> {}: attributed edits and exact terminal retirement verified", actor.0, reopened_actor.0);
+        }
     }
 
     /// 🧮️ The complete history position (applied, redo, checkpoint, alternative) the event log of `edits` + `transitions` folds to.
@@ -502,7 +540,7 @@ mod tests {
         assert_eq!(decoded.edit_messages, document.edit_messages);
         assert_eq!(decoded.conflicts, document.conflicts);
 
-        let rebuilt = OsWorkflowStore::new(decoded).expect("workflow store rebuilds");
+        let rebuilt = OsWorkflowStore::new(decoded, store.inner.local_actor_id().clone()).expect("workflow store rebuilds");
         let rebuilt_document = rebuilt.document();
         assert_eq!(rebuilt_document.edit_messages, document.edit_messages);
         assert_eq!(rebuilt_document.conflicts, document.conflicts);
@@ -535,7 +573,7 @@ mod tests {
         let payload = encode_backbone_payload(&document).expect("binary encode");
         let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("binary decode");
         assert_eq!(document_history(&decoded), history);
-        assert_eq!(document_history(&OsWorkflowStore::new(decoded).expect("workflow rebuild").document()), history);
+        assert_eq!(document_history(&OsWorkflowStore::new(decoded, store.inner.local_actor_id().clone()).expect("workflow rebuild").document()), history);
 
         let text = export_backbone_dsl(&document).expect("text encode");
         let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("text decode");
@@ -592,7 +630,7 @@ mod tests {
         let mut store_a = test_workflow_store();
         let node_a_id = store_a.add_workflow_node("draw", "draw", None, 0.0, 0.0, &mut space_store_a).expect("spawn a");
         let node_b_id = store_a.add_workflow_node("sink", "sink", None, 200.0, 0.0, &mut space_store_a).expect("spawn b");
-        let mut store_b = OsWorkflowStore::new(store_a.document()).expect("valid replicated workflow store fixture");
+        let mut store_b = OsWorkflowStore::new(store_a.document(), protocol::ActorId("workflow-peer-b".into())).expect("valid replicated workflow store fixture");
 
         let (backbone_a, backbone_b) = resolve_kernel_future(MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race"));
         store_a.attach_backbone(store::Backbones::Memory(backbone_a)).expect("attach a");
@@ -834,7 +872,7 @@ mod tests {
     #[test]
     fn document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", resolve_kernel_future(workflow::empty_workflow_snapshot()), None);
-        let mut store = resolve_kernel_future(ArtifactStore::new(envelope)).expect("valid artifact store fixture");
+        let mut store = resolve_kernel_future(ArtifactStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
         resolve_kernel_future(store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], transaction: None })).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
@@ -875,9 +913,9 @@ mod tests {
             version: "0.1.0".into(),
             extends: extends.into(),
             capabilities,
-            topic_contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
+            topic_contributions: semio_framework_pack_json::Value::Array(Vec::new()),
             dependencies: vec![store::extension::PackagePluginDependency { plugin_id: extends.into(), version: "^1.0.0".into() }],
-            contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
+            contributions: semio_framework_pack_json::Value::Array(Vec::new()),
             package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
         };
         let component = b"\0asm\x01\x00\x00\x00fake-component".to_vec();
@@ -926,9 +964,9 @@ mod tests {
             version: "0.1.0".into(),
             extends: "flow".into(),
             capabilities: vec![],
-            topic_contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
+            topic_contributions: semio_framework_pack_json::Value::Array(Vec::new()),
             dependencies: vec![store::extension::PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() }],
-            contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
+            contributions: semio_framework_pack_json::Value::Array(Vec::new()),
             package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
         };
         let manifest_bytes_source = block_on(store::extension::pack(&mismatched_manifest, b"\0asm\x01\x00\x00\x00x", &[])).expect("pack a structurally-valid but contract-violating .sxt");

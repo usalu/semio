@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::schema::snapshot::DocxXmlPart;
-    use crate::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::CODE_STRICT_NS_PRESENT;
     use semio_framework_plugin::AnalyzeSource;
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
@@ -20,7 +20,7 @@ mod tests {
             vec![DocxXmlPart {
                 path: "word/document.xml".into(),
                 content_type: content_type.into(),
-                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
             }],
         ).expect("bounded test OPC converts to retained ownership")
     }
@@ -48,12 +48,12 @@ mod tests {
                 DocxXmlPart {
                     path: "word/document.xml".into(),
                     content_type: content_type.into(),
-                    document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
+                    document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
                 },
                 DocxXmlPart {
                     path: "word/styles.xml".into(),
                     content_type: "application/xml".into(),
-                    document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap()).unwrap(),
+                    document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap()).unwrap(),
                 },
             ],
         ).expect("bounded test OPC converts to retained ownership");

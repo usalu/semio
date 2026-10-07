@@ -1,0 +1,11 @@
+# Edit Message Clamping Audit
+
+Read-only inspection of current store source during Core's frozen native verification boundary. No producer change or test pass is claimed.
+
+`ArtifactStore` replay preparation/adoption is distinct from operation application and edit settlement. `EditReplay::step` checks its deadline after each forward operation, then calls `close_edit` without an interior deadline. `close_edit` calls `bound_edit_messages`, which measures the complete edit message vector, allocates/ranks all message indices, sorts by severity, chooses retained rows, then drains the vector. If messages were cut, it scans every outcome belonging to the closing edit and replaces each outcome's messages with a filtered cloned view of the retained ledger. These scans and dropped row owners are currently synchronous. A large edit can therefore exceed the nominal replay slice while its last operation has already completed.
+
+The existing deterministic semantics are important:4,096-byte per-edit allowance minus edit identity/summary; severity priority with stable original order; stop at the first over-budget ranked message; preserve/truncate one worst message when none fit; retain final display order; add one `mutation.cascade` summary at the first dropped operation. The cached full report worst must continue blocking finalization even if its individual message was summarized.
+
+Required continuation after the frozen cohort: establish a neutral clamping/settlement law with row work grants and cancellation positions, independently compare retained order/summary against a standard sorting oracle, then convert the history replay close phase to bounded measurement/ranking/drain/outcome adoption with registered retirement. Cancellation must retire its partially assembled message owners and leave the document/session baseline unchanged. The cold helper and all callers must be classified rather than assumed to be the cause of the reported browser freeze.
+
+Core has already identified this same concrete seam and recorded it in its execution report. Broad editor/browser verification should resume at the frozen compile boundary while this continuation is kept explicitly required; it must not be silently treated as completed by retained admission fold/decoder passes.

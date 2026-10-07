@@ -38,7 +38,7 @@ async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() 
             })
             .collect();
         let sheet_name = case["sheetName"].as_str().unwrap();
-        let document = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: sheet_name.into(), cells }], ..Default::default() });
+        let document = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: sheet_name.into(), cells }], ..Default::default() });
         let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).expect("grid render");
         let mut nodes = Vec::new();
         descendants(&node, &mut nodes);
@@ -72,7 +72,7 @@ async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() 
 #[semio_framework_async_macros::async_test]
 async fn german_grid_localizes_axes_without_rewriting_column_coordinates() {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
-    let document = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Leer".into(), cells: Vec::new() }], ..Default::default() });
+    let document = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Leer".into(), cells: Vec::new() }], ..Default::default() });
     let node = render(&document, Locale::De, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).unwrap();
     let mut nodes = Vec::new();
     descendants(&node, &mut nodes);

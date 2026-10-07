@@ -10,7 +10,7 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { createBrowserStoragePort, ephemeralSet, type ShellLocale, type StoragePort } from "@semio-tech/framework";
-import { type DeepUiTranslationKeys, type UiI18nPort, type UiLocale, type UiRegisteredTranslationKey, type UiRibbonParentEntries, type UiTranslateFn, type UiTranslationSchema } from "../../../🧱️elements/📚️I18n/🟦️.tsx";
+import { resolveUiLabel, type DeepUiTranslationKeys, type UiI18nPort, type UiLabelPair, type UiLabelValue, type UiTranslationKey, type UiLocale, type UiRegisteredTranslationKey, type UiRibbonParentEntries, type UiTranslateFn, type UiTranslationSchema } from "../../../🧱️elements/📚️I18n/🟦️.tsx";
 
 export { resolveUiLabel };
 export type { DeepUiTranslationKeys, UiI18nPort, UiLabelPair, UiLabelValue, UiLocale, UiRegisteredTranslationKey, UiTranslateFn, UiTranslationKey, UiTranslationSchema };
@@ -581,7 +581,7 @@ export const uiChromeTranslationBundles = {
           utilities: { label: { normal: "Hilfsmittel", beginner: "Hilfsmittel" } },
           retry: { label: { normal: "Erneut versuchen", beginner: "Erneut versuchen" } },
           somethingWentWrong: { label: { normal: "Etwas ist schiefgelaufen", beginner: "Etwas ist schiefgelaufen" } },
-          doubleClickToEdit: { label: { normal: "Zum Bearbeiten doppelklicken", beginner: "Zum Bearbeiten doppelklicken" } },
+          editExactValue: { label: { normal: "Genauen Wert mit Enter, F2 oder Doppelklick bearbeiten", beginner: "Genauen Wert mit Enter, F2 oder Doppelklick bearbeiten" } },
           importFile: { label: { normal: "Datei importieren…", beginner: "Datei importieren…" } },
           clear: { label: { normal: "Leeren", beginner: "Leeren" } },
           collapse: { label: { normal: "Einklappen", beginner: "Einklappen" } },
@@ -945,6 +945,8 @@ export const uiChromeTranslationBundles = {
           },
           target: { label: { normal: "Bearbeitet: {{target}}", beginner: "Bearbeitete Mutation: {{target}}" } },
           progress: { label: { normal: "{{done}} von {{total}} Mutationen werden neu angewendet", beginner: "{{done}} von {{total}} Mutationen werden neu angewendet" } },
+          preparationProgress: { label: { normal: "Verlaufsvorschau wird vorbereitet: {{done}} von {{total}} Schritten", beginner: "Verlaufsvorschau wird vorbereitet: {{done}} von {{total}} Schritten" } },
+          processed: { label: { normal: "Arbeitsfortschritt: {{processed}}", beginner: "Arbeitsfortschritt: {{processed}}" } },
           worst: { label: { normal: "Schwerstes Ergebnis: {{level}}", beginner: "Schwerstes Ergebnis der neu angewendeten Mutationen: {{level}}" } },
           review: {
             noChanges: { label: { normal: "Keine Änderungen: aktueller Verlauf wird angezeigt", beginner: "Keine Änderungen: aktueller Verlauf wird angezeigt" } },
@@ -968,6 +970,7 @@ export const uiChromeTranslationBundles = {
           },
           refusal: {
             frozen: { label: { normal: "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird", beginner: "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird" } },
+            unchanged: { label: { normal: "Vor dem Übernehmen eine Eingabe ändern", beginner: "Vor dem Übernehmen eine Eingabe ändern" } },
             illegal: { label: { normal: "Derzeit nicht möglich", beginner: "Derzeit nicht möglich" } },
             stale: { label: { normal: "Veraltete Anfrage ignoriert", beginner: "Veraltete Anfrage ignoriert" } },
             blocked: { label: { normal: "Blockiert: zuerst die offene Änderung oder die Fehler auflösen", beginner: "Blockiert: zuerst die offene Änderung oder die Fehler auflösen" } },
@@ -1611,7 +1614,7 @@ export const uiChromeTranslationBundles = {
           utilities: { label: { normal: "Utilities", beginner: "Utilities" } },
           retry: { label: { normal: "Retry", beginner: "Retry" } },
           somethingWentWrong: { label: { normal: "Something went wrong", beginner: "Something went wrong" } },
-          doubleClickToEdit: { label: { normal: "Double-click to edit", beginner: "Double-click to edit" } },
+          editExactValue: { label: { normal: "Edit exact value with Enter, F2 or double-click", beginner: "Edit exact value with Enter, F2 or double-click" } },
           importFile: { label: { normal: "Import file…", beginner: "Import file…" } },
           clear: { label: { normal: "Clear", beginner: "Clear" } },
           collapse: { label: { normal: "Collapse", beginner: "Collapse" } },
@@ -1975,6 +1978,8 @@ export const uiChromeTranslationBundles = {
           },
           target: { label: { normal: "Editing: {{target}}", beginner: "Edited mutation: {{target}}" } },
           progress: { label: { normal: "Replaying {{done}} of {{total}} mutations", beginner: "Replaying {{done}} of {{total}} mutations" } },
+          preparationProgress: { label: { normal: "Preparing history preview: {{done}} of {{total}} steps", beginner: "Preparing history preview: {{done}} of {{total}} steps" } },
+          processed: { label: { normal: "Work completed: {{processed}}", beginner: "Work completed: {{processed}}" } },
           worst: { label: { normal: "Worst outcome: {{level}}", beginner: "Worst outcome of the replayed mutations: {{level}}" } },
           review: {
             noChanges: { label: { normal: "No changes: showing the current history", beginner: "No changes: showing the current history" } },
@@ -1998,6 +2003,7 @@ export const uiChromeTranslationBundles = {
           },
           refusal: {
             frozen: { label: { normal: "Editing is paused while history is being edited", beginner: "Editing is paused while history is being edited" } },
+            unchanged: { label: { normal: "Change an input before accepting", beginner: "Change an input before accepting" } },
             illegal: { label: { normal: "Not possible right now", beginner: "Not possible right now" } },
             stale: { label: { normal: "Outdated request ignored", beginner: "Outdated request ignored" } },
             blocked: { label: { normal: "Blocked: resolve the pending change or the errors first", beginner: "Blocked: resolve the pending change or the errors first" } },

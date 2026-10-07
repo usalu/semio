@@ -10,7 +10,8 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { planVizChart, renderVizScene, renderVizTikz } from "../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
+import { planVizChart, renderVizScene } from "../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
+import { renderVizTikz } from "../../🚪️io/📝️text/💡️inferences/🖋️latex/🟦️.ts";
 import { renderGrammarChecks } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts";
 import type { VizChartSpecification } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 // #endregion 🔌️Adapters

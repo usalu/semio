@@ -1,20 +1,20 @@
 //! 💾️ Generic binary framing and direct-owner registry for the visible PDF/H mutation aggregate.
 
-use super::PdfHMutation;
+use crate::standards::v1_7::subsets::h::schema::mutations::PdfHMutation;
 use protocol::OpBinary;
 
 //#region 🧾️DerivedRegistry
 pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[
-    ("SetInfoTitle", "setInfoTitle", super::set_info_title::binary::BINARY_TAG),
-    ("SetInfoAuthor", "setInfoAuthor", super::set_info_author::binary::BINARY_TAG),
-    ("InsertJavascriptAction", "insertJavascriptAction", super::insert_javascript_action::binary::BINARY_TAG),
-    ("RemoveJavascriptAction", "removeJavascriptAction", super::remove_javascript_action::binary::BINARY_TAG),
-    ("InsertLaunchAction", "insertLaunchAction", super::insert_launch_action::binary::BINARY_TAG),
-    ("RemoveLaunchAction", "removeLaunchAction", super::remove_launch_action::binary::BINARY_TAG),
-    ("InsertSignatureField", "insertSignatureField", super::insert_signature_field::binary::BINARY_TAG),
-    ("RemoveSignatureField", "removeSignatureField", super::remove_signature_field::binary::BINARY_TAG),
-    ("EmbedFontFile", "embedFontFile", super::embed_font_file::binary::BINARY_TAG),
-    ("RemoveFontFile", "removeFontFile", super::remove_font_file::binary::BINARY_TAG),
+    ("SetInfoTitle", "setInfoTitle", self::set_info_title::BINARY_TAG),
+    ("SetInfoAuthor", "setInfoAuthor", self::set_info_author::BINARY_TAG),
+    ("InsertJavascriptAction", "insertJavascriptAction", self::insert_javascript_action::BINARY_TAG),
+    ("RemoveJavascriptAction", "removeJavascriptAction", self::remove_javascript_action::BINARY_TAG),
+    ("InsertLaunchAction", "insertLaunchAction", self::insert_launch_action::BINARY_TAG),
+    ("RemoveLaunchAction", "removeLaunchAction", self::remove_launch_action::BINARY_TAG),
+    ("InsertSignatureField", "insertSignatureField", self::insert_signature_field::BINARY_TAG),
+    ("RemoveSignatureField", "removeSignatureField", self::remove_signature_field::BINARY_TAG),
+    ("EmbedFontFile", "embedFontFile", self::embed_font_file::BINARY_TAG),
+    ("RemoveFontFile", "removeFontFile", self::remove_font_file::BINARY_TAG),
 ];
 //#endregion 🧾️DerivedRegistry
 

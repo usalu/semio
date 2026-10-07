@@ -19,7 +19,7 @@ use protocol::OpText;
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `En1997Mutation`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-enum En1997MutationDsl {
+pub(crate) enum En1997MutationDsl {
     ChangeAnnex { new_annex: AnnexChoice },
     ChangeGeotechnicalCategory { new_geotechnical_category: u8 },
     ChangeDesignSituation { new_design_situation: String },
@@ -74,17 +74,10 @@ impl OpText for En1997MutationDsl {
     }
 }
 
-impl protocol::OpBinary for En1997MutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn en1997_mutation_to_dsl(mutation: &En1997Mutation) -> En1997MutationDsl {
+pub(crate) fn en1997_mutation_to_dsl(mutation: &En1997Mutation) -> En1997MutationDsl {
     match mutation {
         En1997Mutation::ChangeAnnex(payload) => En1997MutationDsl::ChangeAnnex { new_annex: payload.new_annex },
         En1997Mutation::ChangeGeotechnicalCategory(payload) => En1997MutationDsl::ChangeGeotechnicalCategory { new_geotechnical_category: payload.new_geotechnical_category },
@@ -109,7 +102,7 @@ fn en1997_mutation_to_dsl(mutation: &En1997Mutation) -> En1997MutationDsl {
     }
 }
 
-fn en1997_mutation_from_dsl(mutation: En1997MutationDsl) -> En1997Mutation {
+pub(crate) fn en1997_mutation_from_dsl(mutation: En1997MutationDsl) -> En1997Mutation {
     match mutation {
         En1997MutationDsl::ChangeAnnex { new_annex } => En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex }),
         En1997MutationDsl::ChangeGeotechnicalCategory { new_geotechnical_category } => {
@@ -150,15 +143,7 @@ impl OpText for En1997Mutation {
     }
 }
 
-impl protocol::OpBinary for En1997Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        en1997_mutation_to_dsl(self).encode_op()
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(en1997_mutation_from_dsl(En1997MutationDsl::decode_op(bytes)?))
-    }
-}
 //#endregion 🔖️OpText
 
 //#region 🧪️Tests

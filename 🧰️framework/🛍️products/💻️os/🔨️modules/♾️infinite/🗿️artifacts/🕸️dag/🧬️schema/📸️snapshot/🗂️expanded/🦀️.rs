@@ -33,6 +33,7 @@ impl FromValue for DagExpandedPaths{
  fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;Ok(Self::new())}
  fn retire_decoded(self){drop(self)}
 }
+impl semio_framework_dsl_record::BorrowedDslField for DagExpandedPaths{const SHAPE:semio_framework_dsl_record::BorrowedShape=<Vec<String> as semio_framework_dsl_record::BorrowedDslField>::SHAPE;}
 impl semio_framework_dsl_record::DslField for DagExpandedPaths{
  fn shape()->semio_framework_dsl_record::Shape{<Vec<String> as semio_framework_dsl_record::DslField>::shape()}
  fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{<Vec<String> as semio_framework_dsl_record::DslField>::shape_controlled(control)}

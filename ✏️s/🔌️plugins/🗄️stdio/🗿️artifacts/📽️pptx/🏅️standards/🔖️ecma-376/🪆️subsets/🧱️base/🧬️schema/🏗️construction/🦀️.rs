@@ -2,9 +2,7 @@
 
 use crate::schema::mutations::xml_address;
 use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxSlide, PptxXmlPart};
-use crate::standards::v_ecma_376::subsets::base::io::{
-    attr, attribute_value, element_matches, expanded_element_name, namespace_scope, resolve_office_document_relationship, DRAWINGML_NAMESPACES, OFFICE_RELATIONSHIP_NAMESPACES, PRESENTATIONML_NAMESPACES, SLIDE_CONTENT_TYPE,
-};
+use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{attr,attribute_value,element_matches,expanded_element_name,namespace_scope,resolve_office_document_relationship,DRAWINGML_NAMESPACES,OFFICE_RELATIONSHIP_NAMESPACES,PRESENTATIONML_NAMESPACES,SLIDE_CONTENT_TYPE}}};
 use crate::PptxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{fresh_relationship_id, OpcRelationship, OpcTargetMode};
@@ -323,7 +321,7 @@ fn relative_target(owner: &str, target: &str) -> String {
 
 pub(crate) fn append_slide(snapshot: &mut PptxSnapshot) -> Result<(), String> {
     if truly_empty(snapshot) {
-        *snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide::default()] });
+        *snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide::default()] });
         return Ok(());
     }
     let slides = xml_address::pptx_slides(snapshot)?;
@@ -384,3 +382,6 @@ pub(crate) fn append_slide(snapshot: &mut PptxSnapshot) -> Result<(), String> {
     );
     Ok(())
 }
+
+#[path="🌱️minimal/🦀️.rs"]
+pub mod minimal;

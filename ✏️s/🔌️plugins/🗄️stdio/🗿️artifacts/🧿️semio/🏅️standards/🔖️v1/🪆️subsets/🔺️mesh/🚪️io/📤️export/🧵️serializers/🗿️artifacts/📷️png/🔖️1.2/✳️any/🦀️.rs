@@ -16,7 +16,7 @@ use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPo
 use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::SemioDrawingToPng;
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioPrimitive, SemioTopology};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::PngSnapshot;
 use std::collections::BTreeMap;
 

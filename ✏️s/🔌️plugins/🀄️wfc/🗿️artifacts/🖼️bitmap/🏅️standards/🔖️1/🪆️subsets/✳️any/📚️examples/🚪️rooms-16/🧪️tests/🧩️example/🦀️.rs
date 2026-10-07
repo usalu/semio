@@ -2,7 +2,7 @@
 //! really produces the regularity the model is meant to learn.
 
 use super::{indices, label, snapshot, DOOR, EDGE, FLOOR, PRIMARY_TEXT, SEED, WALL};
-use crate::io::text::snapshot::{parse_dsl, print_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 
 #[test]
 fn committed_asset_is_the_print_of_the_authored_spec() {
@@ -16,8 +16,8 @@ fn committed_asset_parses_back_to_the_authored_spec() {
 
 #[test]
 fn the_pack_codec_round_trips_the_same_document() {
-    let bytes = crate::io::binary::snapshot::encode(&snapshot());
-    assert_eq!(crate::io::binary::snapshot::decode(&bytes).expect("committed document decodes"), snapshot());
+    let bytes = crate::standards::v1::subsets::any::io::binary::snapshot::encode(&snapshot());
+    assert_eq!(crate::standards::v1::subsets::any::io::binary::snapshot::decode(&bytes).expect("committed document decodes"), snapshot());
 }
 
 #[test]

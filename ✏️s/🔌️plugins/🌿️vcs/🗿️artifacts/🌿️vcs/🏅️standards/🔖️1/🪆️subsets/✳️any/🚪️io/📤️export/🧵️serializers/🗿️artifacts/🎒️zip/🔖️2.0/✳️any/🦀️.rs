@@ -2,8 +2,8 @@
 //! authoritative member plus its rfc8259 rendition (`IoFidelity::Exact`).
 use crate::VcsSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
-use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{StandardId, SubsetId};
+use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
+use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_document_archive};
 
 pub const ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId::ANY };

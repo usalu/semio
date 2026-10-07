@@ -29,9 +29,9 @@ fn cad_document_contract_round_trips_exact_child_identities() {
     for row in fixture["invalidDiffs"].as_array().unwrap() {
         assert!(semio_framework_pack_json::from_json_str::<CadDiff>(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     }
-    let alias=crate::cad_model_child_from_uri("model-a", "model-b!s.stdio.semio@v1/model").unwrap();
+    let alias=crate::cad_model_child("model-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } }).unwrap();
     assert_eq!(alias.child_id,"model-a");
     assert_eq!(alias.target.artifact_id,"model-b");
-    assert!(crate::cad_model_child_from_uri("model-a", "model-a!s.stdio.semio@v1/drawing").is_err());
-    assert!(crate::cad_drawing_child_from_uri("drawing-a", "drawing-a!s.stdio.semio@v1/drawing").is_ok());
+    assert!(crate::cad_model_child("model-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_err());
+    assert!(crate::cad_drawing_child("drawing-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "drawing-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_ok());
 }

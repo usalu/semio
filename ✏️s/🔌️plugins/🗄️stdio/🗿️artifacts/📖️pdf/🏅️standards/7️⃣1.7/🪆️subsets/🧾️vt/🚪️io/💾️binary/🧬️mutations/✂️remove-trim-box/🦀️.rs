@@ -1,6 +1,6 @@
 //! 🧽️ Direct binary codec for `remove-trim-box`.
 
-use super::RemoveTrimBox;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveTrimBox;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 5;

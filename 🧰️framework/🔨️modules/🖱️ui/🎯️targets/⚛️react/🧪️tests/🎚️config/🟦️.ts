@@ -28,6 +28,7 @@ export default defineConfig({
       "../../../../🧱️elements/📚️I18n/🧪️tests/🔬️translation-totality/🟦️.ts",
       "../../../../🧱️elements/🎨️Canvas/🧪️tests/🎯️stack-drop-destination/🟦️.tsx",
       "../../../../🧱️elements/☑️Checkbox/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../🧱️elements/✏️Input/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/💡️ChromeControlHint/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🐚️ShellScope/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🔽️Select/🧪️tests/🧩️component/🟦️.tsx",

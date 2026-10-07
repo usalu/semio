@@ -1,4 +1,4 @@
-//! 🧬️ Byte-authoritative BMP mutation aggregate.
+//! 🧬️ Precise owned sample BMP mutation aggregate.
 
 use crate::schema::diff::BmpDiff;
 use crate::BmpSnapshot;
@@ -9,7 +9,7 @@ pub use super::patch_snapshot::PatchSnapshot;
 pub use super::set_snapshot::SetSnapshot;
 pub use crate::schema::operations::apply_bmp_mutation;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = BmpSnapshot, diff = BmpDiff, schema = "s.stdio.bmp")]
 pub enum BmpMutation {

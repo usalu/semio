@@ -1,6 +1,6 @@
 //! 🗑️ Direct text codec for `remove-dpart-metadata`.
 
-use super::RemoveDpartMetadata;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveDpartMetadata;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-dpart-metadata";

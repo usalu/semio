@@ -48,8 +48,8 @@ use crate::standards::v1::subsets::text::schema::{mutations::SemioTextMutation, 
 use crate::standards::v1::subsets::value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot};
 use crate::standards::v1::subsets::video::schema::{mutations::SemioVideoMutation, snapshot::SemioVideoSnapshot};
 use protocol::Mutation;
-use protocol::OpBinary;
-use protocol::OpText;
+
+
 
 //#region 🔖️Mutation
 #[path = "🎞️apply-animation/🦀️.rs"]
@@ -204,7 +204,7 @@ pub fn semio_mutation_refusal_codes<D>(outcome: &protocol::MutationOutcome<D>) -
 /// envelope without naming any of the eighteen arms' snapshot types.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
-    crate::standards::v1::subsets::base::io::text::snapshot::subset_tag(&snapshot.subset)
+    crate::standards::v1::subsets::base::schema::snapshot::subset_tag(&snapshot.subset)
 }
 
 
@@ -395,3 +395,6 @@ mod set_snapshot_retypes_a_value_envelope_to_an_empty_image;
 #[path = "🖼️apply-image/🧪️tests/🚫️refuses/🦀️.rs"]
 mod apply_image_refuses_a_value_envelope;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

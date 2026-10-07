@@ -1,8 +1,10 @@
 /** 🧬️ Raster artifact schema — every field with its state class. */
-import { parseDslValue, type DslValue, type IntrinsicValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import type { SemioImageSnapshot } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🟦️.ts";
+export type { SemioImageSnapshot } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🟦️.ts";
+import { parseIntrinsicValue, type IntrinsicValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-import { type Binary64, type Binary32, binary64, binary64Value, binary32Value } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64, type Binary32, binary64Value } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import { parseBinary64, parseBinary32 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 
 export interface RasterArtifact {
@@ -75,10 +77,6 @@ export interface RasterLayerMask {
   transform: RasterTransform;
 }
 
-export interface RasterImageAsset {
-  mime: string;
-  data: string;
-}
 
 export interface RasterViewportSize {
   width: number;
@@ -146,11 +144,25 @@ export function parseRasterArtifact(value: unknown, at = "$"): RasterArtifact {
   };
 }
 
-export function parseRasterImageAsset(value: unknown, at = "$"): RasterImageAsset {
+/** 🖼️ Validates decoded image state without opening any carrier. */
+export function parseSemioImageSnapshot(value: unknown, at = "$"): SemioImageSnapshot {
   const row = rasterRasterArtifactGuardObject(value, at);
+  const bytes = (value: unknown, path: string) => rasterRasterArtifactGuardArray(value, path).map((sample, index) => rasterRasterArtifactGuardInteger(sample, `${path}[${index}]`, { minimum: 0, maximum: 255 }));
   return {
-    mime: rasterRasterArtifactGuardString(row["mime"], `${at}.mime`),
-    data: rasterRasterArtifactGuardString(row["data"], `${at}.data`),
+    schema: rasterRasterArtifactGuardString(row["schema"], `${at}.schema`),
+    width: rasterRasterArtifactGuardInteger(row["width"], `${at}.width`, { minimum: 0, maximum: 4294967295 }),
+    height: rasterRasterArtifactGuardInteger(row["height"], `${at}.height`, { minimum: 0, maximum: 4294967295 }),
+    colorspace: rasterRasterArtifactGuardMember(row["colorspace"] ?? "rgb", `${at}.colorspace`, ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"] as const),
+    bitDepth: rasterRasterArtifactGuardInteger(row["bitDepth"] ?? 0, `${at}.bitDepth`, { minimum: 0, maximum: 255 }),
+    frames: rasterRasterArtifactGuardArray(row["frames"] ?? [], `${at}.frames`).map((item, index) => {
+      const frame = rasterRasterArtifactGuardObject(item, `${at}.frames[${index}]`);
+      return { delayMs: rasterRasterArtifactGuardInteger(frame["delayMs"], `${at}.frames[${index}].delayMs`, { minimum: 0, maximum: 4294967295 }), rgba8: bytes(frame["rgba8"] ?? [], `${at}.frames[${index}].rgba8`) };
+    }),
+    icc: row["icc"] == null ? null : bytes(row["icc"], `${at}.icc`),
+    metadata: rasterRasterArtifactGuardArray(row["metadata"] ?? [], `${at}.metadata`).map((item, index) => {
+      const entry = rasterRasterArtifactGuardObject(item, `${at}.metadata[${index}]`);
+      return { key: rasterRasterArtifactGuardString(entry["key"], `${at}.metadata[${index}].key`), value: rasterRasterArtifactGuardString(entry["value"] ?? "", `${at}.metadata[${index}].value`) };
+    }),
   };
 }
 
@@ -190,7 +202,7 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
     adjustmentKind: rasterRasterArtifactGuardString(row["adjustmentKind"], `${at}.adjustmentKind`),
     params: Object.fromEntries(
       Object.entries(rasterRasterArtifactGuardObject(row["params"], `${at}.params`))
-        .map(([key, item]) => [key, parseRasterParameter(item)]),
+        .map(([key, item]) => [key, parseIntrinsicValue(item)]),
     ),
   };
 }
@@ -221,78 +233,11 @@ export function parseRasterLayerMask(value: unknown, at = "$"): RasterLayerMask 
 }
 
 //#region 🔖️JsonProjection
-/** 🔢️ A binary32 word as the JSON number the native printer writes: the shortest decimal that rounds back to the same binary32. */
-export function rasterBinary32Number(word: Binary32): number {
-  const value = binary32Value(word);
-  if (!Number.isFinite(value)) return value;
-  for (let digits = 1; digits <= 9; digits++) {
-    const candidate = Number(value.toPrecision(digits));
-    if (Math.fround(candidate) === value) return candidate;
-  }
-  return value;
-}
-
 /** 🔢️ The transform's derived numeric values — what compositing math and the JSON wire read; the exact identity stays the words. */
 export function rasterTransformNumbers(transform: RasterTransform): { x: number; y: number; a: number; b: number; c: number; d: number } {
   return { x: binary64Value(transform.x), y: binary64Value(transform.y), a: binary64Value(transform.a), b: binary64Value(transform.b), c: binary64Value(transform.c), d: binary64Value(transform.d) };
 }
 
-/** 🌱️ Reads one adjustment parameter from its JSON wire (`DslValue` projection) into the owned intrinsic tree: integers become
- * `unsigned`/`signed`, every other number a binary64 `float`, without recursive calls. */
-export function parseRasterParameter(value: unknown): IntrinsicValue {
-  const root = parseDslValue(value);
-  let result: IntrinsicValue | undefined;
-  const pending: { source: DslValue; put: (value: IntrinsicValue) => void }[] = [{ source: root, put: (value) => { result = value; } }];
-  while (pending.length) {
-    const { source, put } = pending.pop()!;
-    if (source === null) put({ kind: "null" });
-    else if (typeof source === "boolean") put({ kind: "boolean", value: source });
-    else if (typeof source === "number") put(Number.isSafeInteger(source) ? { kind: source < 0 ? "signed" : "unsigned", value: BigInt(source) } : { kind: "float", value: binary64(source) });
-    else if (typeof source === "string") put({ kind: "text", value: source });
-    else if (Array.isArray(source)) {
-      const items: IntrinsicValue[] = new Array(source.length);
-      put({ kind: "array", items });
-      source.forEach((item, index) => pending.push({ source: item, put: (value) => { items[index] = value; } }));
-    } else {
-      const entries = Object.entries(source), members: { name: string; value: IntrinsicValue }[] = entries.map(([name]) => ({ name, value: { kind: "null" } }));
-      put({ kind: "object", members });
-      entries.forEach(([, item], index) => pending.push({ source: item, put: (value) => { members[index]!.value = value; } }));
-    }
-  }
-  return result!;
-}
-
-/** 🌱️ Prints one owned intrinsic parameter as its JSON wire value (the inverse of `parseRasterParameter`); octets have no JSON projection. */
-export function printRasterParameter(value: IntrinsicValue): DslValue {
-  let result: DslValue = null;
-  const pending: { source: IntrinsicValue; put: (value: DslValue) => void }[] = [{ source: value, put: (value) => { result = value; } }];
-  while (pending.length) {
-    const { source, put } = pending.pop()!;
-    switch (source.kind) {
-      case "null": put(null); break;
-      case "boolean": case "text": put(source.value); break;
-      case "unsigned": case "signed": put(Number(source.value)); break;
-      case "float": put(binary64Value(source.value)); break;
-      case "bytes": throw new rasterRasterArtifactGuardRefusal("$", "octet parameters have no JSON projection");
-      case "array": { const items: DslValue[] = new Array(source.items.length); put(items); source.items.forEach((item, index) => pending.push({ source: item, put: (value) => { items[index] = value; } })); break; }
-      case "object": { const members: { [key: string]: DslValue } = {}; put(members); for (const member of source.members) pending.push({ source: member.value, put: (value) => { members[member.name] = value; } }); break; }
-    }
-  }
-  return result;
-}
-
-/** 🎭️ Prints a mask as its JSON wire object (absent extents and key omitted). */
-export function printRasterLayerMask(mask: RasterLayerMask): Record<string, unknown> {
-  return { enabled: mask.enabled, linked: mask.linked, invert: mask.invert, width: mask.width, height: mask.height, imageKey: mask.imageKey, transform: rasterTransformNumbers(mask.transform) };
-}
-
-/** 🧾️ Prints a layer node as its JSON wire object — the inverse of `parseRasterLayerNode`. */
-export function printRasterLayerNode(node: RasterLayerNode): Record<string, unknown> {
-  const common = { kind: node.kind, id: node.id, name: node.name, visible: node.visible, locked: node.locked, opacity: rasterBinary32Number(node.opacity), blendMode: node.blendMode, transform: rasterTransformNumbers(node.transform) };
-  if (node.kind === "pixel") return { ...common, mask: node.mask && printRasterLayerMask(node.mask), width: node.width, height: node.height, imageKey: node.imageKey };
-  if (node.kind === "group") return { ...common, mask: node.mask && printRasterLayerMask(node.mask), children: node.children.map(printRasterLayerNode) };
-  return { ...common, adjustmentKind: node.adjustmentKind, params: Object.fromEntries(Object.entries(node.params).map(([key, value]) => [key, printRasterParameter(value)])) };
-}
 //#endregion 🔖️JsonProjection
 
 export function parseRasterViewportSize(value: unknown, at = "$"): RasterViewportSize {

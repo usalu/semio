@@ -1,7 +1,6 @@
 /** 🧪️ `mutationInputDefs` (the TypeScript twin of Rust `manifest::mutation_input_defs`) over the language-agnostic corpus
  * `🧫️fixtures/🧫️mutation-inputs/🔣️.json`, byte-equal in canonical JSON to the `expectedInputs` the Rust reader is held to
- * by `🦀️.rs` beside this file. Oracles: the npm `jsonschema` package validates the corpus against the manifest's
- * `MutationInputCorpus` export and answers, for every declared input, whether the leaf schema accepts the values its hard
+ * by `🦀️.rs` beside this file. Oracles: the npm `jsonschema` package answers, for every declared input, whether the leaf schema accepts the values its hard
  * bounds, options and `required` admit and refuses the ones they exclude — the same verdicts `🐍️.py` asks Python
  * `jsonschema` for. The strict Ajv oracle compiles every annotated leaf with the registered `x-semio-ui` meta-schema.
  * @see ../../🧬️schema/🔣️.json */
@@ -16,7 +15,7 @@ import { semioSchemaAjvV1 } from "../../../🧬️schema/🔮️oracles/✅️va
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 type Finding = { readonly code: string; readonly pointer: string };
-type Case = { readonly name: string; readonly leafSchema: Record<string, Json>; readonly expectedInputs?: Json[]; readonly expectedError?: Finding; readonly expectedFindings?: readonly Finding[] };
+type Case = { readonly name: string; readonly input: { readonly leafSchema: Record<string, Json> }; readonly expectedInputs?: Json[]; readonly expectedError?: Finding; readonly expectedFindings?: readonly Finding[] };
 const cases = corpus.cases as unknown as readonly Case[];
 const documents = corpus.documents as unknown as Record<string, Record<string, Json>>;
 const resolver = (id: string): unknown => documents[id];
@@ -125,11 +124,6 @@ function probes(leaf: Record<string, Json>, inputs: readonly ActionArgDef[]): [s
 }
 
 describe("🧬️ mutation input descriptors", () => {
-  test("the corpus is a MutationInputCorpus (npm jsonschema)", () => {
-    
-    
-  });
-
   test("the glossary is an InputLabelGlossary with at least 200 labelled names in every locale", () => {
     const result = validator().validate(glossaryDocument, { $ref: `${manifestSchema.$id}#/$defs/InputLabelGlossary` });
     expect(result.errors.map(String)).toEqual([]);
@@ -146,13 +140,13 @@ describe("🧬️ mutation input descriptors", () => {
   for (const entry of cases) {
     test(`${entry.name} reads to the corpus' canonical outcome`, () => {
       if (entry.expectedInputs !== undefined) {
-        expect(canonical(mutationInputDefs(entry.leafSchema, resolver))).toBe(canonical(entry.expectedInputs));
-        expect(canonical(mutationInputDefs(JSON.stringify(entry.leafSchema), resolver))).toBe(canonical(entry.expectedInputs));
+        expect(canonical(mutationInputDefs(entry.input.leafSchema, resolver))).toBe(canonical(entry.expectedInputs));
+        expect(canonical(mutationInputDefs(JSON.stringify(entry.input.leafSchema), resolver))).toBe(canonical(entry.expectedInputs));
         return;
       }
       let refusal: unknown;
       try {
-        mutationInputDefs(entry.leafSchema, resolver);
+        mutationInputDefs(entry.input.leafSchema, resolver);
       } catch (error) {
         refusal = error;
       }
@@ -161,7 +155,7 @@ describe("🧬️ mutation input descriptors", () => {
     });
 
     test(`${entry.name} audits to every finding the corpus names`, () => {
-      const audit = mutationInputAudit(entry.leafSchema, resolver);
+      const audit = mutationInputAudit(entry.input.leafSchema, resolver);
       const expected = entry.expectedFindings ?? (entry.expectedError === undefined ? [] : [entry.expectedError]);
       expect(audit.findings.map((finding) => ({ code: finding.code as string, pointer: finding.pointer }))).toEqual(expected.map(({ code, pointer }) => ({ code, pointer })));
       if (entry.expectedInputs !== undefined) expect(canonical(audit.inputs)).toBe(canonical(entry.expectedInputs));
@@ -173,9 +167,9 @@ describe("🧬️ mutation input descriptors", () => {
     const disagreements: string[] = [];
     let judged = 0;
     for (const entry of cases.filter((candidate) => candidate.expectedInputs !== undefined)) {
-      for (const [probe, payload, admitted] of probes(entry.leafSchema, mutationInputDefs(entry.leafSchema, resolver))) {
+      for (const [probe, payload, admitted] of probes(entry.input.leafSchema, mutationInputDefs(entry.input.leafSchema, resolver))) {
         judged += 1;
-        if (engine.validate(payload, entry.leafSchema as never, { base: `https://json.schemas.assets.semio-tech.com/test/input-ui/leaf/${entry.name}.json` }).valid !== admitted) disagreements.push(`${entry.name} ${probe}: expected ${admitted ? "valid" : "invalid"} ${JSON.stringify(payload)}`);
+        if (engine.validate(payload, entry.input.leafSchema as never, { base: `https://json.schemas.assets.semio-tech.com/test/input-ui/leaf/${entry.name}.json` }).valid !== admitted) disagreements.push(`${entry.name} ${probe}: expected ${admitted ? "valid" : "invalid"} ${JSON.stringify(payload)}`);
       }
     }
     expect(disagreements).toEqual([]);
@@ -186,20 +180,20 @@ describe("🧬️ mutation input descriptors", () => {
     for (const entry of cases.filter((candidate) => candidate.expectedInputs !== undefined)) {
       const ajv = semioSchemaAjvV1({ strict: true });
       for (const [id, document] of Object.entries(documents)) if (ajv.getSchema(id) === undefined) ajv.addSchema(document, id);
-      expect(() => ajv.compile(entry.leafSchema)).not.toThrow();
+      expect(() => ajv.compile(entry.input.leafSchema)).not.toThrow();
       const annotations: unknown[] = [];
       const walk = (node: unknown): void => {
         if (Array.isArray(node)) node.forEach(walk);
         else if (node !== null && typeof node === "object") for (const [key, child] of Object.entries(node)) key === "x-semio-ui" ? annotations.push(child) : walk(child);
       };
-      walk(entry.leafSchema);
+      walk(entry.input.leafSchema);
       for (const annotation of annotations) expect(() => parseInputUi(annotation)).not.toThrow();
     }
     expect(() => semioSchemaAjvV1({ strict: true }).compile({ type: "string", "x-semio-ui": { color: "red" } })).toThrow();
   });
 
   test("a candidate payload regains the discriminator its leaf schema requires (npm jsonschema)", () => {
-    const leaf = cases.find((entry) => entry.name === "annotated-drag-selection")!.leafSchema;
+    const leaf = cases.find((entry) => entry.name === "annotated-drag-selection")!.input.leafSchema;
     const payload = { targets: ["n1"], dx: 2, dy: -1 };
     const instance = mutationInputInstance(leaf, resolver, payload);
     expect(instance.mutation).toBe("dragSelection");
@@ -209,17 +203,17 @@ describe("🧬️ mutation input descriptors", () => {
   });
 
   test("a union payload regains the constants of the variant it names (npm jsonschema)", () => {
-    const leaf = cases.find((entry) => entry.name === "discriminated-union-by-const")!.leafSchema;
+    const leaf = cases.find((entry) => entry.name === "discriminated-union-by-const")!.input.leafSchema;
     const base = { base: "https://json.schemas.assets.semio-tech.com/test/input-ui/leaf/union.json" };
     expect(validator().validate(mutationInputInstance(leaf, resolver, { phase: "restore", index: 2 }), leaf as never, base).valid).toBe(true);
     expect(() => mutationInputInstance(leaf, resolver, { index: 2 })).toThrow(InputSchemaError);
     expect(() => mutationInputInstance(leaf, resolver, { phase: "other", index: 2 })).toThrow(InputSchemaError);
     expect(argControl(mutationInputDefs(leaf, resolver)[0]!)).toMatchObject({ kind: "segmented" });
-    expect(argControl(mutationInputDefs(cases.find((entry) => entry.name === "discriminated-union-annotated-variants")!.leafSchema, resolver)[0]!)).toMatchObject({ kind: "select" });
+    expect(argControl(mutationInputDefs(cases.find((entry) => entry.name === "discriminated-union-annotated-variants")!.input.leafSchema, resolver)[0]!)).toMatchObject({ kind: "select" });
   });
 
   test("argControl mirrors the Rust control derivation for the corpus", () => {
-    const read = (name: string) => mutationInputDefs(cases.find((entry) => entry.name === name)!.leafSchema, resolver);
+    const read = (name: string) => mutationInputDefs(cases.find((entry) => entry.name === name)!.input.leafSchema, resolver);
     expect(argControl(read("annotated-drag-selection")[1]!)).toMatchObject({ kind: "stepper", snapSource: { kind: "config", key: "gridFactor" } });
     expect(argControl(read("dial-in-degrees")[0]!)).toMatchObject({ kind: "dial" });
     expect(argControl(read("log-slider-with-soft-range")[0]!)).toMatchObject({ kind: "slider", min: 0.1, max: 10, scale: "log" });

@@ -149,7 +149,7 @@ export async function plySnapshotFromSqliteDatabase(database:SqliteDatabase,opti
 }
 
 /** 🛂️ Validate exact dialect and full state while accepting consistent structural identities. */
-export async function plySnapshotValidateSqliteSubset(snapshot:PlySnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
+export async function plySnapshotValidateSqliteSubset(snapshot:PlySnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
  await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);
  if(dialect.artifactKind!=="s.stdio.ply"||dialect.standard!=="1.0"||dialect.subset!=="*")throw new Error("geometry owned SQLite dialect differs");
  const expected=await plySnapshotToSqliteDatabase(snapshot,options),candidate=await plySnapshotFromSqliteDatabase(database,options),actual=await plySnapshotToSqliteDatabase(candidate,options);

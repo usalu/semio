@@ -8,7 +8,8 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::model::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::model::schema::diff::{diff_set_snapshot, ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{parse_f64};
 use crate::standards::v1::subsets::model::io::text::snapshot::{dec_relation};
@@ -27,14 +28,14 @@ use crate::standards::v1::subsets::model::io::text::snapshot::{dec_element_class
 use crate::standards::v1::subsets::model::io::text::snapshot::{enc_element_class};
 use crate::standards::v1::subsets::model::io::text::snapshot::{dec_spatial_kind};
 use crate::standards::v1::subsets::model::io::text::snapshot::{enc_spatial_kind};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_transform};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_transform};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+use crate::standards::v1::subsets::model::io::text::snapshot::{dec_transform};
+use crate::standards::v1::subsets::model::io::text::snapshot::{enc_transform};
+use crate::standards::v1::subsets::model::io::text::snapshot::{dec_list};
+use crate::standards::v1::subsets::model::io::text::snapshot::{enc_list};
+use crate::standards::v1::subsets::model::io::text::snapshot::{decode_option};
+use crate::standards::v1::subsets::model::io::text::snapshot::{encode_option};
+use crate::standards::v1::subsets::model::io::text::snapshot::{dec_str};
+use crate::standards::v1::subsets::model::io::text::snapshot::{enc_str};
 use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioModelMutation` block below

@@ -74,7 +74,8 @@ fn declared_code(kind: &str) -> Option<&'static str> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_raster_raster::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation_json, undo_raster_mutation_json};
+    use semio_s_artifact_raster_raster::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation_json,undo_raster_mutation_json};
+
     use semio_s_artifact_raster_raster::standards::v1::subsets::any::io::text::snapshot::{round_trip_raster_dsl};
     use semio_repo_test_host::law;
 

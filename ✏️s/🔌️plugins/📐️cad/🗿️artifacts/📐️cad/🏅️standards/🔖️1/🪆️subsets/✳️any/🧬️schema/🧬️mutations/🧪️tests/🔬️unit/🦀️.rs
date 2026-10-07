@@ -12,15 +12,15 @@ use protocol::Mutation;
 pub fn every_mutation() -> Vec<CadMutation> {
     let sample = sample_model_child("fresh-model-1");
     vec![
-        CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() }),
+        CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
         CadMutation::DeleteShapeModel(DeleteShapeModel {}),
-        CadMutation::CreateBuildingModel(CreateBuildingModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() }),
+        CadMutation::CreateBuildingModel(CreateBuildingModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
         CadMutation::DeleteBuildingModel(DeleteBuildingModel {}),
-        CadMutation::CreateEnergyModel(CreateEnergyModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() }),
+        CadMutation::CreateEnergyModel(CreateEnergyModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
         CadMutation::DeleteEnergyModel(DeleteEnergyModel {}),
-        CadMutation::CreateStructureClassicModel(CreateStructureClassicModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() }),
+        CadMutation::CreateStructureClassicModel(CreateStructureClassicModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
         CadMutation::DeleteStructureClassicModel(DeleteStructureClassicModel {}),
-        CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.to_uri() }),
+        CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.clone() }),
         CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-fresh".into() }),
         CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } }),
         CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }),
@@ -75,7 +75,7 @@ async fn every_variant_registers_an_approved_semantic_descriptor() {
 async fn create_shape_model_satisfies_the_inverse_and_absorb_laws() {
     let base = sample_scene();
     let sample = sample_model_child("law-model-1");
-    let mutation = CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() });
+    let mutation = CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.clone() });
     store::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = CadMutation::DeleteShapeModel(DeleteShapeModel {}).diff(&base).diff().clone();
@@ -85,7 +85,7 @@ async fn create_shape_model_satisfies_the_inverse_and_absorb_laws() {
 #[semio_framework_async_macros::async_test]
 async fn create_drawing_satisfies_the_inverse_and_absorb_laws() {
     let base = sample_scene();
-    let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: "drawing-law-1!s.stdio.semio@v1/drawing".into() });
+    let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id:"drawing-law-1".into(), dialect:semio_framework_artifact_reference::ArtifactDialect {artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"drawing".into()} } });
     store::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-law-1".into() }).diff(&base).diff().clone();
@@ -142,8 +142,8 @@ async fn delete_missing_drawing_is_a_target_missing_error() {
 async fn create_drawing_duplicate_id_never_applies() {
     let sample = sample_model_child("dup-drawing-1");
     let mut base = sample_scene();
-    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
-    let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() });
+    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() }).diff(&base).diff(), &base).expect("valid mutation diff");
+    let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() });
     store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
@@ -175,7 +175,7 @@ async fn create_node_outcome_obeys_the_policy_matrix() {
 async fn delete_drawing_outcome_obeys_the_policy_matrix() {
     let sample = sample_model_child("law-drawing-2");
     let mut base = sample_scene();
-    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
+    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.clone() }).diff(&base).diff(), &base).expect("valid mutation diff");
     store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "cad-drawing-2".into() })).await;
 }
 
@@ -183,7 +183,7 @@ async fn delete_drawing_outcome_obeys_the_policy_matrix() {
 async fn create_drawing_outcome_obeys_the_policy_matrix() {
     let base = sample_scene();
     let sample = sample_model_child("law-drawing-3");
-    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-3".into(), target: sample.target.to_uri() })).await;
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-3".into(), target: sample.target.clone() })).await;
 }
 //#endregion 🧪️OutcomeLaws
 //#region 🧪️KindsCatalog

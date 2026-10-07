@@ -1,10 +1,13 @@
 syntax = "proto3";
+import "../📸️snapshot/🛰️.proto";
+import "../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🛰️.proto";
 package semio.s_stdio_png.mutation;
 message ChangeGammaMutation { string revision = 1; optional uint32 gama = 2; }
 message PatchPixelsMutation { string revision = 1; uint32 x = 2; uint32 y = 3; uint32 width = 4; uint32 height = 5; uint32 red = 6; uint32 green = 7; uint32 blue = 8; uint32 alpha = 9; }
 enum PngNativeProfile { PNG_NATIVE_PROFILE_INDEXED = 0; PNG_NATIVE_PROFILE_GRAYSCALE = 1; PNG_NATIVE_PROFILE_GRAYSCALE_ALPHA = 2; PNG_NATIVE_PROFILE_RGB = 3; PNG_NATIVE_PROFILE_RGBA = 4; }
 message PngNativeRegion { uint32 x = 1; uint32 y = 2; uint32 width = 3; uint32 height = 4; }
 message PngNativePaint { PngNativeProfile profile = 1; uint32 first = 2; uint32 second = 3; uint32 third = 4; uint32 fourth = 5; }
-message PngSnapshot { string schema = 1; bytes bytes = 2; }
-message PaintNativeSamplesMutation { string revision = 1; PngNativeRegion region = 2; PngNativePaint paint = 3; PngSnapshot result = 4; }
-message PngMutation { string mutation = 1; bytes payload = 2; }
+message PaintNativeSamplesMutation { string revision = 1; PngNativeRegion region = 2; PngNativePaint paint = 3; semio.s_stdio_png.snapshot.PngSnapshot result = 4; }
+message SetSnapshotMutation { semio.s_stdio_png.snapshot.PngSnapshot snapshot = 1; }
+message PatchSnapshotMutation { semio.stdio.editing.SnapshotPatch patch = 1; }
+message PngMutation { oneof payload { SetSnapshotMutation set_snapshot = 1; PatchSnapshotMutation patch_snapshot = 2; PatchPixelsMutation patch_pixels = 3; ChangeGammaMutation change_gamma = 4; PaintNativeSamplesMutation paint_native_samples = 5; } }

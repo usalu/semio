@@ -1,0 +1,29 @@
+# Borrowed Operation Symbol Scratch Owning Demand
+
+The held concrete source-locator scratch is `📥️inputs/child-paged-complete-family/borrowed-operation-symbol-scratch-held.rs`. It stores bounded ordinal paths plus exact Text/IntrinsicText/Key kind, never copied semantic text or a borrowed reference. Two real PagedLists retain occurrence locators and scalar sort indices. The indices use a controlled heap sort with 256-byte unsigned UTF8 comparison and source ordinal ties; the first source identity survives canonical deduplication. Original selection remains forced, at most128 bytes, or repeated. Ordinary success and failure keep every admitted scratch page in the caller object. Finalization and positive retirement revoke the complete-symbol grant. Zero grants preserve phase and backing.
+
+The independent read-only audit is `📓️semantic-independent-borrowed-symbol-scratch-held-review.md`. Its parent byte-authority finding was incorporated: return_one now checks actual next-release allocation byte demand before transfer. Its allocation-receipt finding was incorporated into `borrowed-operation-symbol-law-held.rs`: every physical retirement turn independently observes requested/released allocator bytes. The law also exercises pre-admitted actual parent handback with zero physical child disposal, byte1 refusal, and independently observed one-item4096 parent physical release.
+
+The owning law preserves the existing closed neutral ten-occurrence, seven-symbol corpus and first-source order. It demands actual same-source text pointers, exact observed admission versus retained paid backing, fixed4096 refusal, real post-backing cancellation and physical one-item4096 retirement. It is not a typed operation semantic-retirement or original8194 ChildEmit law. The Source fixture has already been validated by strict Ajv, TextEncoder unsigned octet comparison and SQLite BLOB grouping. No current Rust result or new Source receipt is inferred from code inspection.
+
+Stage handle66406 and demand handle80542 were dispatched through Bun and Nx with absolute Script input paths. Both were still in project-graph preparation at this report. Provider mounts remain zero. The new exact provider capsule consists of two small shared-root export/module anchors and one new domain-owned source file; unrelated shared root regions are preserved. Commands and launch entries are retained in the existing input Script and launch file.
+
+The scratch intentionally remains independently held from the necessary actual operation capsule. Its methods receive a source argument; the final operation owner must mechanically retain and enforce that same immutable typed source across discovery, comparison and emission. Text-only fixture coverage supplies no intrinsic/key/statement/table compiled qualification. Sort cancellation, complete borrowed Record emission, every nested scalar sorting index, OS headers and caller transport, decoder recipients, typed semantic source retirement and original8194 ChildEmit remain further required joins. No owned RecordSpec conversion or existing Vec-backed borrowed-preflight scratch is a substitute.
+
+## Original Owning Route CLI Refusal
+
+The actual Pack owning Before5843 terminated before Rust with the CLI refusal `the argument --lib cannot be used multiple times`. Readback of the original package Script establishes its authority: NativeScript already supplies `--lib` and `record::` on the real Pack parent package. This attempt supplies no compiler MissingBefore or runtime evidence. The retry removes only the redundant user argument and preserves the original package/module filter, registered target, policies, assertions, source fixture and budget. The launch entry matches that original-filter invocation. Provider mounts remain zero.
+
+## Genuine Original Filter Missing Before23589
+
+The original registered PackRecord Native route with its unchanged internal `record::` filter completed exit1 after4m46s. Actual Rust rejected the owning law with exactly1 E0432: missing `ProjectedSymbolScratch`, `SourceTextLocator`, and `SourceTextKind`;43warnings, Nextest not entered. Receipt: `🗑️generated/immutable-borrowed-operation-symbol-owning-before-original-filter-retry.log`. The earlier duplicate `--lib` CLI failure is not used as compiler demand.
+
+The three-region provider capsule is now authorized for exact mount against this genuine owning missing demand. Typed source binding, borrowed schema projected output, OS transport adoption, and whole ChildEmit remain unqualified.
+
+Mount21113 failed before file mutation because Nx exec detected an existing circular project graph: value/derive/value via locale. No graph changes were made. The already reviewed exact three-region provider guards were applied atomically through normal file tools after prevalidating every anchor. This is actual source activation only; the original registered Native After is required.
+
+## Genuine Original Owning Native After73892
+
+The original registered PackRecord Native route completed exit0: Rust7.70s; Nextest63run/63passed/0failed/81skipped in3.929s; Nx8m22s. Its original internal `record::` filter selects the existing Record corpus in addition to the provided name filter. The new `borrowed_operation_symbols_preserve_first_source_and_all_paid_pages` owning law explicitly passed in0.010s. Runtime10occurrences/7selected, first source pointer preservation, initial4096 refusal and post-backing cancellation with retained admitted scratch, actual parent handback with zero allocation/release events, and each one-item/4096 physical scratch and parent retirement observation passed. Receipt `🗑️generated/immutable-borrowed-operation-symbol-owning-after.log`.
+
+This is genuine paid scratch component closure. Source binding in the next typed capsule, complete borrowed static projected Pack encoder, unchanged OS transport caller adoption, and full ChildEmit8194/4096 remain pending.

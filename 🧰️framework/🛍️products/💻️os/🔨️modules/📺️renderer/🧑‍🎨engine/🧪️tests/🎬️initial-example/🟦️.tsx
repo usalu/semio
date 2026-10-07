@@ -2,11 +2,9 @@
 import { cleanup,render } from "@semio-tech/ui-react/test";
 import { act,createElement,StrictMode } from "react";
 import { afterEach,expect,it } from "vitest";
-import Ajv from "ajv";
 import fixture from "../../🧱️elements/🐚️Shell/🎬️initial-example/🧫️fixtures/🔣️.json" with { type: "json" };
 import { useInitialExampleReadiness } from "../../🧱️elements/🐚️Shell/🎬️initial-example/🟦️.ts";
 afterEach(cleanup);
-it("validates initial-view traces independently", () => expect(new Ajv().compile(schema)(fixture)).toBe(true));
 for (const law of fixture.cases) it(law.name,async () => {
   const pending = new Map<string,{ resolve: () => void;reject: () => void }>();
   const starts = new Map<string,() => Promise<unknown>>();

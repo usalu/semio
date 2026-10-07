@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;
+use crate::standards::v1_7::subsets::base::io::text::snapshot::demo_pdf17_snapshot;
 
 #[test]
 fn definition_declares_the_page_canvas() {

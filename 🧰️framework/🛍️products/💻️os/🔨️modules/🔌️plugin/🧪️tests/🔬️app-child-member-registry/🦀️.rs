@@ -33,6 +33,7 @@ mod child_member_registry_tests {
             reference.clone(),
             Some(owner.clone()),
             pages,
+            protocol::ActorId("actor:child-registry-fixture".into()),
         )
         .admit(1)
         .unwrap_or_else(|_| panic!("valid retained member request"));

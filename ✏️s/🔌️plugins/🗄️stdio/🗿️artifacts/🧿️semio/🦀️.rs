@@ -5,6 +5,10 @@
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 
+#[cfg(test)]
+#[path = "../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
+pub(crate) mod snapshot_test_backing;
+
 extern crate semio_framework_graph as graph_core;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -1278,20 +1282,20 @@ dsl::space_members! {
 }
 
 /// 🏭️ Mints a typed Semio child through its closed full-dialect factory.
-pub async fn create_semio_member(id: &str, dialect: &dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    <SemioMembers as dsl::MemberFactory>::create(id, dialect, initial_pack).await
+pub async fn create_semio_member(id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: protocol::ActorId) -> Result<SemioMembers, dsl::VcsError> {
+    <SemioMembers as dsl::MemberFactory>::create(id, dialect, initial_pack, actor).await
 }
 
 /// 📤️ Reopens a Semio member only when its persisted schema and dialect match the requested binding.
-pub async fn open_semio_member(expected: &dsl::os_io::ArtifactRef, owner: Option<&dsl::OwnerRef>, envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    <SemioMembers as dsl::MemberFactory>::open(expected, owner, envelope_pack).await
+pub async fn open_semio_member(expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&dsl::OwnerRef>, envelope_pack: &[u8], actor: protocol::ActorId) -> Result<SemioMembers, dsl::VcsError> {
+    <SemioMembers as dsl::MemberFactory>::open(expected, owner, envelope_pack, actor).await
 }
 //#endregion 🔖️Members
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1::subsets::base::io::io_registry as v1;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -1369,10 +1373,7 @@ pub mod standards {
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod base {
                 #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs"]
@@ -1419,16 +1420,7 @@ pub mod io;
                     #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧰️triples/🦀️.rs"]
                     pub mod triples;
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod audio {
                 #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs"]
@@ -1469,13 +1461,7 @@ pub mod io;
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod brep {
                 #[path = "."]
@@ -2140,6 +2126,12 @@ pub mod io;
                     #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🦀️.rs"]
                     mod component;
                     pub use component::*;
+                    #[path = "."]
+                    pub mod geometry {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📐️geometry/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs"]
@@ -3318,10 +3310,7 @@ pub mod io;
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod flow {
                 #[path = "."]
@@ -3525,13 +3514,7 @@ pub mod io;
                         }
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod table {
                 #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🦀️.rs"]
@@ -3687,13 +3670,7 @@ pub mod io;
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod graph {
                 #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs"]
@@ -3954,16 +3931,7 @@ pub mod io;
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod object {
                 #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🦀️.rs"]
@@ -4107,13 +4075,7 @@ pub mod io;
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
             #[path = "."]
             pub mod kit {
                 #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🦀️.rs"]
@@ -4317,13 +4279,7 @@ pub mod io;
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
         }
     }
 }

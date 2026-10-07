@@ -3,18 +3,40 @@
 //! register(). Relocated from `⚙️engine` verbatim (ticket
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 2: codecs live in `🚪️io/`).
 //!
-//! 🖼️ Exact PNG source bytes are the sole persisted authority. Checked layout, metadata,
-//! sample and RGBA8 preview views are derived without rewriting the source. No-op export returns
-//! those exact bytes. Addressed metadata and pixel edits replace only the affected canonical chunks,
-//! retain all unrelated chunks and reject profiles whose sample semantics cannot be edited losslessly.
+//! 🖼️ Native PNG syntax admits precise owned image records; canonical publication owns filtering, compression, framing and CRCs.
 /// 🧩 Borrowed PNG chunk type tag and payload.
 type PngChunkView<'a> = ([u8; 4], &'a [u8]);
 
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_decoding::NativeDecodeProgress,native_encoding::NativeEncodeProgress};
+use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
 use crate::{
-    schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency},
+    schema::snapshot::{PngAncillaryChunk, PngImage, PngBackground, PngChromaticities, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency},
     PngSnapshot,
 };
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct PngChunk {
+    pub kind: [u8; 4],
+    pub data: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "chunk", rename_all = "camelCase")]
+pub enum PngChunkMarker {
+    Ihdr,
+    Plte,
+    Trns,
+    Gama,
+    Chrm,
+    Srgb,
+    Phys,
+    Time,
+    Bkgd,
+    Idat,
+    Iend,
+    Text { index: usize },
+    Unknown { index: usize },
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PngProjection {
@@ -64,50 +86,11 @@ pub struct PngPreview {
     pub bytes: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct PngRegion {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
-#[value(rename_all = "kebab-case")]
-pub enum PngNativeProfile {
-    Indexed,
-    Grayscale,
-    GrayscaleAlpha,
-    Rgb,
-    Rgba,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct PngNativePaint {
-    pub profile: PngNativeProfile,
-    pub first: u16,
-    pub second: u16,
-    pub third: u16,
-    pub fourth: u16,
-}
-
-impl PngNativePaint {
-    pub const fn indexed(index: u16) -> Self { Self { profile: PngNativeProfile::Indexed, first: index, second: 0, third: 0, fourth: 0 } }
-    pub const fn grayscale(gray: u16) -> Self { Self { profile: PngNativeProfile::Grayscale, first: gray, second: 0, third: 0, fourth: 0 } }
-    pub const fn grayscale_alpha(gray: u16, alpha: u16) -> Self { Self { profile: PngNativeProfile::GrayscaleAlpha, first: gray, second: alpha, third: 0, fourth: 0 } }
-    pub const fn rgb(red: u16, green: u16, blue: u16) -> Self { Self { profile: PngNativeProfile::Rgb, first: red, second: green, third: blue, fourth: 0 } }
-    pub const fn rgba(red: u16, green: u16, blue: u16, alpha: u16) -> Self { Self { profile: PngNativeProfile::Rgba, first: red, second: green, third: blue, fourth: alpha } }
-
-    fn samples(self) -> [u16; 4] { [self.first, self.second, self.third, self.fourth] }
-}
-
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1_2::subsets::any::io::PngAnalyzer;
     use crate::PngSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -178,12 +161,15 @@ fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
 /// 📖 Splits a PNG byte stream into `(type, data)` chunks, rejecting CRC mismatches and
 /// truncation up front so downstream decode logic never has to re-check framing.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_chunks(data: &[u8]) -> Result<Vec<PngChunkView<'_>>, String> {
+fn read_chunks<'a>(data: &'a [u8], control:&mut NativeDecodeControl<'_>) -> Result<Vec<PngChunkView<'a>>, PngReadError> {
     if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
         return Err("png: bad signature".into());
     }
     let mut pos = 8usize;
-    let mut chunks = Vec::new();
+    let mut count=0usize;let mut measured=8usize;
+    while measured<data.len() {let header=data.get(measured..measured+8).ok_or("png: truncated chunk header")?;let len=u32::from_be_bytes(header[..4].try_into().unwrap())as usize;measured=measured.checked_add(12).and_then(|n|n.checked_add(len)).ok_or("png: chunk framing overflow")?;if measured>data.len() {return Err("png: truncated chunk".into());}count+=1;}
+    let mut chunks=control.allocate_vec(count)?;
+    control.begin_stage(data.len())?;control.advance(8)?;
     loop {
         if pos + 8 > data.len() {
             return Err("png: truncated chunk header".into());
@@ -192,14 +178,16 @@ fn read_chunks(data: &[u8]) -> Result<Vec<PngChunkView<'_>>, String> {
         let ty: [u8; 4] = [data[pos + 4], data[pos + 5], data[pos + 6], data[pos + 7]];
         let start = pos + 8;
         let end = start.checked_add(len).ok_or("png: chunk length overflow")?;
-        if end + 4 > data.len() {
+        if end.checked_add(4).is_none_or(|end|end>data.len()) {
             return Err("png: truncated chunk data or crc".into());
         }
         let chunk_data = &data[start..end];
         let stored_crc = u32::from_be_bytes([data[end], data[end + 1], data[end + 2], data[end + 3]]);
-        if png_crc32_parts(&ty, chunk_data) != stored_crc {
-            return Err(format!("png: chunk CRC mismatch ({})", String::from_utf8_lossy(&ty)));
-        }
+        let mut crc=0xffff_ffffu32;
+        for byte in ty {crc^=u32::from(byte);for _ in 0..8 {crc=if crc&1!=0 {(crc>>1)^0xedb88320}else{crc>>1};}}
+        control.advance(12)?;
+        for piece in chunk_data.chunks(256) {for byte in piece {crc^=u32::from(*byte);for _ in 0..8 {crc=if crc&1!=0 {(crc>>1)^0xedb88320}else{crc>>1};}}control.advance(piece.len())?;}
+        if !crc!=stored_crc {return Err(format!("png: chunk CRC mismatch ({})",String::from_utf8_lossy(&ty)).into());}
         chunks.push((ty, chunk_data));
         pos = end + 4;
         if ty == *b"IEND" {
@@ -397,8 +385,8 @@ fn bpp_bytes(ihdr: &Ihdr) -> usize {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
-    let bits = width as usize * samples_per_pixel(color_type) * bit_depth as usize;
-    bits.div_ceil(8)
+    let samples = width as usize * samples_per_pixel(color_type);
+    if bit_depth >= 8 { samples * (bit_depth as usize / 8) } else { samples.div_ceil(8 / bit_depth as usize) }
 }
 //#endregion Ihdr
 
@@ -480,9 +468,22 @@ fn choose_filter(cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> (u8, Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp: usize) -> Result<(Vec<Vec<u8>>, usize), String> {
-    let mut rows = Vec::with_capacity(height as usize);
-    let mut prev: Option<Vec<u8>> = None;
+fn choose_filter_controlled(cur:&[u8],prev:Option<&[u8]>,bpp:usize,control:&mut NativeEncodeControl<'_>)->Result<(u8,Vec<u8>),ValueError> {
+    let mut best_filter=0;let mut best_sum=u64::MAX;let mut best=Vec::new();
+    for filter in 0..=4 {
+        let mut output=control.allocate_vec(cur.len())?;let mut sum=0;control.begin_stage(cur.len())?;
+        for x in 0..cur.len() {let a=if x>=bpp {cur[x-bpp]}else{0};let b=prev.map_or(0,|p|p[x]);let c=if x>=bpp {prev.map_or(0,|p|p[x-bpp])}else{0};let byte=match filter {0=>cur[x],1=>cur[x].wrapping_sub(a),2=>cur[x].wrapping_sub(b),3=>cur[x].wrapping_sub(((u16::from(a)+u16::from(b))/2)as u8),_=>cur[x].wrapping_sub(paeth(a,b,c))};output.push(byte);sum+=u64::from((byte as i8).unsigned_abs());control.step()?;}
+        if sum<best_sum {best=output;best_sum=sum;best_filter=filter;}
+    }
+    Ok((best_filter,best))
+}
+fn defilter_row_controlled(filter:u8,filt:&[u8],prev:Option<&[u8]>,bpp:usize,control:&mut NativeDecodeControl<'_>)->Result<Vec<u8>,PngReadError> {
+    if filter>4 {return Err("png: unsupported filter type".into());}let mut output=control.allocate_vec(filt.len())?;control.begin_stage(filt.len())?;
+    for x in 0..filt.len() {let a=if x>=bpp {output[x-bpp]}else{0};let b=prev.map_or(0,|p|p[x]);let c=if x>=bpp {prev.map_or(0,|p|p[x-bpp])}else{0};let byte=match filter {0=>filt[x],1=>filt[x].wrapping_add(a),2=>filt[x].wrapping_add(b),3=>filt[x].wrapping_add(((u16::from(a)+u16::from(b))/2)as u8),_=>filt[x].wrapping_add(paeth(a,b,c))};output.push(byte);control.step()?;}Ok(output)
+}
+
+fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp: usize, control:&mut NativeDecodeControl<'_>) -> Result<(Vec<Vec<u8>>, usize), PngReadError> {
+    let mut rows:Vec<Vec<u8>>=control.allocate_vec(height as usize)?;
     for _ in 0..height {
         if pos >= raw.len() {
             return Err("png: truncated scanline data".into());
@@ -494,8 +495,7 @@ fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp:
         }
         let filt = &raw[pos..pos + row_bytes];
         pos += row_bytes;
-        let recon = defilter_row(ft, filt, prev.as_deref(), bpp)?;
-        prev = Some(recon.clone());
+        let recon=defilter_row_controlled(ft,filt,rows.last().map(Vec::as_slice),bpp,control)?;
         rows.push(recon);
     }
     Ok((rows, pos))
@@ -617,27 +617,27 @@ fn encode_bkgd(b: &PngBackground) -> Vec<u8> {
 
 /// 📝 Serializes one `PngTextChunk` back to its real `tEXt`/`zTXt`/`iTXt` wire shape (§11.3.4).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
+fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) -> Result<(), String> {
     match tc.kind {
         PngTextKind::Text => {
             let mut data = Vec::with_capacity(tc.keyword.len() + 1 + tc.value.len());
-            data.extend_from_slice(tc.keyword.as_bytes());
+            data.extend_from_slice(&latin1_bytes(&tc.keyword));
             data.push(0);
-            data.extend_from_slice(tc.value.as_bytes());
+            data.extend_from_slice(&latin1_bytes(&tc.value));
             write_chunk(out, b"tEXt", &data);
         }
         PngTextKind::ZText => {
             let mut data = Vec::with_capacity(tc.keyword.len() + 2);
-            data.extend_from_slice(tc.keyword.as_bytes());
+            data.extend_from_slice(&latin1_bytes(&tc.keyword));
             data.push(0);
             data.push(0); // compression method 0 = zlib/deflate
-            let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
+            let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&latin1_bytes(&tc.value))?;
             data.extend_from_slice(&compressed);
             write_chunk(out, b"zTXt", &data);
         }
         PngTextKind::IText => {
             let mut data = Vec::new();
-            data.extend_from_slice(tc.keyword.as_bytes());
+            data.extend_from_slice(&latin1_bytes(&tc.keyword));
             data.push(0);
             data.push(if tc.compressed { 1 } else { 0 });
             data.push(0); // compression method 0 = zlib/deflate
@@ -646,7 +646,7 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
             data.extend_from_slice(tc.translated_keyword.as_bytes());
             data.push(0);
             if tc.compressed {
-                let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
+                let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes())?;
                 data.extend_from_slice(&compressed);
             } else {
                 data.extend_from_slice(tc.value.as_bytes());
@@ -654,32 +654,13 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
             write_chunk(out, b"iTXt", &data);
         }
     }
+    Ok(())
 }
+
 //#endregion AncillaryCodec
 
 //#region ExactAuthority
-pub fn empty_png_bytes() -> Vec<u8> {
-    let projection = PngProjection {
-        width: 1,
-        height: 1,
-        bit_depth: 8,
-        color_type: PngColorType::Rgba,
-        interlace: false,
-        plte: None,
-        trns: None,
-        gama: None,
-        chrm: None,
-        srgb: None,
-        phys: None,
-        time: None,
-        bkgd: None,
-        text_chunks: Vec::new(),
-        pixels: vec![255, 255, 255, 255],
-        chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Iend],
-        unknown_chunks: Vec::new(),
-    };
-    author_png_projection(&projection).expect("one-pixel PNG")
-}
+pub fn empty_png_bytes()->Vec<u8> {encode_png(&PngSnapshot::default()).expect("authored empty PNG model")}
 
 fn chunk_addresses(bytes: &[u8]) -> Result<Vec<PngChunkAddress>, String> {
     if bytes.len() < PNG_SIGNATURE.len() || bytes[..PNG_SIGNATURE.len()] != PNG_SIGNATURE {
@@ -729,7 +710,7 @@ pub fn png_layout_bytes(bytes: &[u8]) -> Result<PngLayout, String> {
     if ihdr.color_type == 3 && !chunks.iter().any(|chunk| chunk.kind == *b"PLTE") {
         return Err("png: color type 3 requires PLTE".into());
     }
-    project_png(bytes)?;
+    decode_png_image(bytes)?;
     Ok(PngLayout {
         width: ihdr.width,
         height: ihdr.height,
@@ -744,17 +725,16 @@ pub fn png_layout(snapshot: &PngSnapshot) -> Result<PngLayout, String> {
     if snapshot.schema != crate::STDIO_PNG_DOCUMENT_SCHEMA {
         return Err(format!("png: schema must be {}", crate::STDIO_PNG_DOCUMENT_SCHEMA));
     }
-    png_layout_bytes(&snapshot.bytes)
+    png_layout_bytes(&encode_png(snapshot)?)
 }
 
 pub fn decode_png(bytes: &[u8]) -> Result<PngSnapshot, String> {
-    png_layout_bytes(bytes)?;
-    Ok(PngSnapshot { schema: crate::STDIO_PNG_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
+    Ok(PngSnapshot { schema: crate::STDIO_PNG_DOCUMENT_SCHEMA.into(), image: decode_png_image(bytes)? })
 }
 
 pub fn encode_png(snapshot: &PngSnapshot) -> Result<Vec<u8>, String> {
-    png_layout(snapshot)?;
-    Ok(snapshot.bytes.clone())
+    if snapshot.schema != crate::STDIO_PNG_DOCUMENT_SCHEMA {return Err("png: undeclared semantic schema".into());}
+    encode_png_image(&snapshot.image)
 }
 
 pub fn png_preview(snapshot: &PngSnapshot) -> Result<PngPreview, String> {
@@ -768,423 +748,8 @@ pub fn png_preview(snapshot: &PngSnapshot) -> Result<PngPreview, String> {
     if rgba_bytes > MAXIMUM_RGBA_BYTES {
         return Err(format!("png: preview needs {rgba_bytes} RGBA bytes, above the {MAXIMUM_RGBA_BYTES}-byte display limit"));
     }
-    let projection = project_png(&snapshot.bytes)?;
-    let bytes = author_png_projection(&projection)?;
+    let bytes = encode_png(snapshot)?;
     Ok(PngPreview { width: layout.width, height: layout.height, bytes })
-}
-
-pub fn png_revision(snapshot: &PngSnapshot) -> String {
-    let mut hash = 0xcbf29ce484222325u64;
-    for byte in snapshot.schema.as_bytes().iter().chain(snapshot.bytes.iter()) {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
-    }
-    format!("{hash:016x}")
-}
-
-fn require_revision(snapshot: &PngSnapshot, revision: &str) -> Result<(), String> {
-    let actual = png_revision(snapshot);
-    if revision != actual {
-        return Err(format!("png: stale source revision {revision}; expected {actual}"));
-    }
-    Ok(())
-}
-
-pub fn replace_ancillary_chunk_controlled(
-    snapshot: &PngSnapshot,
-    revision: &str,
-    ordinal: usize,
-    expected_kind: [u8; 4],
-    data: &[u8],
-    progress: &mut dyn FnMut(usize, usize) -> bool,
-) -> Result<PngSnapshot, String> {
-    require_revision(snapshot, revision)?;
-    let layout = png_layout(snapshot)?;
-    let target = layout.chunks.get(ordinal).ok_or_else(|| format!("png: chunk ordinal {ordinal} is absent"))?;
-    if target.kind != expected_kind {
-        return Err(format!("png: chunk ordinal {ordinal} is {}, not {}", String::from_utf8_lossy(&target.kind), String::from_utf8_lossy(&expected_kind)));
-    }
-    if target.kind[0].is_ascii_uppercase() {
-        return Err("png: critical chunks require an explicit format conversion".into());
-    }
-    if !progress(0, 1) {
-        return Err("png: ancillary chunk edit cancelled".into());
-    }
-    let mut replacement = Vec::new();
-    write_chunk(&mut replacement, &target.kind, data);
-    let mut bytes = snapshot.bytes.clone();
-    bytes.splice(target.start..target.end, replacement);
-    let next = decode_png(&bytes)?;
-    if !progress(1, 1) {
-        return Err("png: ancillary chunk edit cancelled".into());
-    }
-    Ok(next)
-}
-
-pub fn set_ancillary_chunk_controlled(
-    snapshot: &PngSnapshot,
-    revision: &str,
-    kind: [u8; 4],
-    data: Option<&[u8]>,
-    progress: &mut dyn FnMut(usize, usize) -> bool,
-) -> Result<PngSnapshot, String> {
-    require_revision(snapshot, revision)?;
-    if kind[0].is_ascii_uppercase() {
-        return Err("png: critical chunks require an explicit format conversion".into());
-    }
-    let layout = png_layout(snapshot)?;
-    let matches: Vec<&PngChunkAddress> = layout.chunks.iter().filter(|chunk| chunk.kind == kind).collect();
-    if matches.len() > 1 {
-        return Err(format!("png: {} is duplicated; edit by exact chunk address", String::from_utf8_lossy(&kind)));
-    }
-    if !progress(0, 1) {
-        return Err("png: ancillary chunk edit cancelled".into());
-    }
-    let mut bytes = snapshot.bytes.clone();
-    match (matches.first().copied(), data) {
-        (Some(target), Some(payload)) => {
-            let mut replacement = Vec::new();
-            write_chunk(&mut replacement, &kind, payload);
-            bytes.splice(target.start..target.end, replacement);
-        }
-        (Some(target), None) => {
-            bytes.drain(target.start..target.end);
-        }
-        (None, Some(payload)) => {
-            let before = layout.chunks.iter().find(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing IDAT")?.start;
-            let mut insertion = Vec::new();
-            write_chunk(&mut insertion, &kind, payload);
-            bytes.splice(before..before, insertion);
-        }
-        (None, None) => return Ok(snapshot.clone()),
-    }
-    let next = decode_png(&bytes)?;
-    if !progress(1, 1) {
-        return Err("png: ancillary chunk edit cancelled".into());
-    }
-    Ok(next)
-}
-
-pub fn set_gamma_chunk_controlled(
-    snapshot: &PngSnapshot,
-    revision: &str,
-    gama: Option<u32>,
-    progress: &mut dyn FnMut(usize, usize) -> bool,
-) -> Result<PngSnapshot, String> {
-    require_revision(snapshot, revision)?;
-    if gama == Some(0) {
-        return Err("png: gAMA must be nonzero".into());
-    }
-    let layout = png_layout(snapshot)?;
-    let target = layout.chunks.iter().find(|chunk| chunk.kind == *b"gAMA");
-    if !progress(0, 1) {
-        return Err("png: gamma edit cancelled".into());
-    }
-    let mut bytes = snapshot.bytes.clone();
-    match (target, gama) {
-        (Some(chunk), Some(value)) => {
-            let mut replacement = Vec::new();
-            write_chunk(&mut replacement, b"gAMA", &value.to_be_bytes());
-            bytes.splice(chunk.start..chunk.end, replacement);
-        }
-        (Some(chunk), None) => {
-            bytes.drain(chunk.start..chunk.end);
-        }
-        (None, Some(value)) => {
-            let before = layout
-                .chunks
-                .iter()
-                .find(|chunk| chunk.kind == *b"PLTE" || chunk.kind == *b"IDAT")
-                .ok_or("png: missing PLTE/IDAT gamma insertion boundary")?
-                .start;
-            let mut insertion = Vec::new();
-            write_chunk(&mut insertion, b"gAMA", &value.to_be_bytes());
-            bytes.splice(before..before, insertion);
-        }
-        (None, None) => return Ok(snapshot.clone()),
-    }
-    let next = decode_png(&bytes)?;
-    if !progress(1, 1) {
-        return Err("png: gamma edit cancelled".into());
-    }
-    Ok(next)
-}
-
-fn checked_region(layout: &PngLayout, region: PngRegion) -> Result<(), String> {
-    if region.width == 0 || region.height == 0 {
-        return Err("png: paint region must be nonempty".into());
-    }
-    let end_x = region.x.checked_add(region.width).ok_or("png: region x overflow")?;
-    let end_y = region.y.checked_add(region.height).ok_or("png: region y overflow")?;
-    if end_x > layout.width || end_y > layout.height {
-        return Err(format!("png: region exceeds {}x{} image", layout.width, layout.height));
-    }
-    Ok(())
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct NativePassRow {
-    filter: u8,
-    samples: Vec<u8>,
-    start_x: u32,
-    y: u32,
-    step_x: u32,
-    width: u32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PngNativePaintPhase {
-    Address,
-    Decode,
-    Paint,
-    Filter,
-    Encode,
-    Assemble,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct PngNativePaintProgress {
-    pub phase: PngNativePaintPhase,
-    pub completed: usize,
-    pub total: usize,
-    pub owned_bytes: usize,
-}
-
-pub const MAXIMUM_NATIVE_PAINT_OWNED_BYTES: usize = 512 * 1024 * 1024;
-
-fn checked_png_extent(bytes: &[u8]) -> Result<usize, String> {
-    if bytes.len() < PNG_SIGNATURE.len() || bytes[..PNG_SIGNATURE.len()] != PNG_SIGNATURE {
-        return Err("png: bad signature".into());
-    }
-    let mut cursor = PNG_SIGNATURE.len();
-    let mut count = 0usize;
-    let mut found_iend = false;
-    while cursor < bytes.len() {
-        let header = bytes.get(cursor..cursor + 8).ok_or("png: truncated chunk header")?;
-        let length = u32::from_be_bytes(header[..4].try_into().expect("four-byte length")) as usize;
-        let kind: [u8; 4] = header[4..8].try_into().expect("four-byte kind");
-        let data_start = cursor.checked_add(8).ok_or("png: chunk offset overflow")?;
-        let data_end = data_start.checked_add(length).ok_or("png: chunk length overflow")?;
-        let end = data_end.checked_add(4).ok_or("png: chunk CRC range overflow")?;
-        bytes.get(data_start..end).ok_or("png: truncated chunk data")?;
-        count = count.checked_add(1).ok_or("png: chunk count overflow")?;
-        cursor = end;
-        if kind == *b"IEND" {
-            found_iend = true;
-            break;
-        }
-    }
-    if !found_iend {
-        return Err("png: missing IEND".into());
-    }
-    if cursor != bytes.len() {
-        return Err("png: bytes follow IEND".into());
-    }
-    Ok(count)
-}
-
-fn chunk_addresses_controlled(bytes: &[u8], control: &mut NativeDecodeControl<'_>) -> Result<Vec<PngChunkAddress>, ValueError> {
-    let count = checked_png_extent(bytes).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
-    let mut chunks = control.allocate_vec(count)?;
-    control.begin_stage(bytes.len())?;
-    let mut cursor = PNG_SIGNATURE.len();
-    while cursor < bytes.len() {
-        let header = &bytes[cursor..cursor + 8];
-        let length = u32::from_be_bytes(header[..4].try_into().expect("four-byte length")) as usize;
-        let kind: [u8; 4] = header[4..8].try_into().expect("four-byte kind");
-        let data_start = cursor + 8;
-        let data_end = data_start + length;
-        let end = data_end + 4;
-        let data = &bytes[data_start..data_end];
-        let stored = &bytes[data_end..end];
-        if png_crc32_parts(&kind, data).to_be_bytes() != stored {
-            return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("png: chunk CRC mismatch ({})", String::from_utf8_lossy(&kind))));
-        }
-        chunks.push(PngChunkAddress { ordinal: chunks.len(), kind, start: cursor, data_start, data_end, end });
-        control.advance(end - cursor)?;
-        cursor = end;
-        if kind == *b"IEND" {
-            break;
-        }
-    }
-    Ok(chunks)
-}
-
-fn source_layout(snapshot: &PngSnapshot) -> Result<PngLayout, String> {
-    if snapshot.schema != crate::STDIO_PNG_DOCUMENT_SCHEMA {
-        return Err(format!("png: schema must be {}", crate::STDIO_PNG_DOCUMENT_SCHEMA));
-    }
-    let chunks = chunk_addresses(&snapshot.bytes)?;
-    let views = chunks.iter().map(|chunk| (chunk.kind, &snapshot.bytes[chunk.data_start..chunk.data_end])).collect::<Vec<_>>();
-    validate_png_structure(&views)?;
-    let first = chunks.first().ok_or("png: missing IHDR")?;
-    let ihdr = parse_ihdr(&snapshot.bytes[first.data_start..first.data_end]).map_err(ValueError::into_message)?;
-    Ok(PngLayout {
-        width: ihdr.width,
-        height: ihdr.height,
-        bit_depth: ihdr.bit_depth,
-        color_type: PngColorType::from_u8(ihdr.color_type)?,
-        interlace: ihdr.interlace == 1,
-        chunks,
-    })
-}
-
-fn source_layout_controlled(snapshot: &PngSnapshot, control: &mut NativeDecodeControl<'_>) -> Result<PngLayout, ValueError> {
-    if snapshot.schema != crate::STDIO_PNG_DOCUMENT_SCHEMA {
-        return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("png: schema must be {}", crate::STDIO_PNG_DOCUMENT_SCHEMA)));
-    }
-    let chunks = chunk_addresses_controlled(&snapshot.bytes, control)?;
-    let mut views = control.allocate_vec::<PngChunkView<'_>>(chunks.len())?;
-    for chunk in &chunks {
-        views.push((chunk.kind, &snapshot.bytes[chunk.data_start..chunk.data_end]));
-    }
-    validate_png_structure(&views).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
-    let first = chunks.first().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "png: missing IHDR"))?;
-    let ihdr = parse_ihdr(&snapshot.bytes[first.data_start..first.data_end])?;
-    Ok(PngLayout {
-        width: ihdr.width,
-        height: ihdr.height,
-        bit_depth: ihdr.bit_depth,
-        color_type: PngColorType::from_u8(ihdr.color_type).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?,
-        interlace: ihdr.interlace == 1,
-        chunks,
-    })
-}
-
-fn expected_native_raw_bytes(layout: &PngLayout) -> Result<usize, ValueError> {
-    let mut total = 0usize;
-    let mut add = |width: u32, height: u32| -> Result<(), ValueError> {
-        let row = packed_row_bytes(width, layout.color_type.to_u8(), layout.bit_depth).checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "png: scanline extent overflow"))?;
-        let pass = row.checked_mul(height as usize).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "png: pass extent overflow"))?;
-        total = total.checked_add(pass).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "png: raw extent overflow"))?;
-        Ok(())
-    };
-    if layout.interlace {
-        for pass in 0..ADAM7.len() {
-            let (width, height) = adam7_pass_dims(layout.width, layout.height, pass);
-            if width != 0 && height != 0 {
-                add(width, height)?;
-            }
-        }
-    } else {
-        add(layout.width, layout.height)?;
-    }
-    Ok(total)
-}
-
-fn native_row_count(layout: &PngLayout) -> Result<usize, ValueError> {
-    if layout.interlace {
-        ADAM7.iter().enumerate().try_fold(0usize, |total, (pass, _)| {
-            let (width, height) = adam7_pass_dims(layout.width, layout.height, pass);
-            total.checked_add(if width == 0 { 0 } else { height as usize }).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "png: native row count overflow"))
-        })
-    } else {
-        Ok(layout.height as usize)
-    }
-}
-
-fn defilter_row_controlled(filter: u8, bytes: &[u8], previous: Option<&[u8]>, bpp: usize, control: &mut NativeDecodeControl<'_>) -> Result<Vec<u8>, ValueError> {
-    if filter > 4 {
-        return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("png: unsupported filter type {filter}")));
-    }
-    let mut output = control.allocate_vec(bytes.len())?;
-    control.begin_stage(bytes.len())?;
-    for (index, byte) in bytes.iter().copied().enumerate() {
-        let a = if index >= bpp { output[index - bpp] } else { 0 };
-        let b = previous.map_or(0, |row| row[index]);
-        let c = if index >= bpp { previous.map_or(0, |row| row[index - bpp]) } else { 0 };
-        output.push(match filter {
-            0 => byte,
-            1 => byte.wrapping_add(a),
-            2 => byte.wrapping_add(b),
-            3 => byte.wrapping_add(((u16::from(a) + u16::from(b)) / 2) as u8),
-            4 => byte.wrapping_add(paeth(a, b, c)),
-            _ => unreachable!("filter was validated"),
-        });
-        control.step()?;
-    }
-    Ok(output)
-}
-
-#[allow(clippy::too_many_arguments)]
-fn decode_native_pass(
-    raw: &[u8],
-    mut position: usize,
-    width: u32,
-    height: u32,
-    start_x: u32,
-    start_y: u32,
-    step_x: u32,
-    step_y: u32,
-    bpp: usize,
-    layout: &PngLayout,
-    rows: &mut Vec<NativePassRow>,
-    control: &mut NativeDecodeControl<'_>,
-) -> Result<usize, ValueError> {
-    let row_bytes = packed_row_bytes(width, layout.color_type.to_u8(), layout.bit_depth);
-    let mut previous = None;
-    for row in 0..height {
-        let filter = *raw.get(position).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "png: truncated scanline filter"))?;
-        position += 1;
-        let end = position.checked_add(row_bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "png: scanline length overflow"))?;
-        let filtered = raw.get(position..end).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "png: truncated scanline data"))?;
-        let samples = defilter_row_controlled(filter, filtered, previous.map(|index: usize| rows[index].samples.as_slice()), bpp, control)?;
-        position = end;
-        rows.push(NativePassRow { filter, samples, start_x, y: start_y + row * step_y, step_x, width });
-        previous = Some(rows.len() - 1);
-    }
-    Ok(position)
-}
-
-fn native_rows_controlled(
-    snapshot: &PngSnapshot,
-    layout: &PngLayout,
-    phase: Option<&std::cell::Cell<PngNativePaintPhase>>,
-    control: &mut NativeDecodeControl<'_>,
-) -> Result<Vec<NativePassRow>, ValueError> {
-    let first = layout.chunks.iter().position(|chunk| chunk.kind == *b"IDAT").ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "png: missing IDAT"))?;
-    let last = layout.chunks.iter().rposition(|chunk| chunk.kind == *b"IDAT").expect("nonempty IDAT list");
-    let idat = &layout.chunks[first..=last];
-    if idat.iter().any(|chunk| chunk.kind != *b"IDAT") {
-        return Err(ValueError::new(ValueRefusalKind::InvalidValue, "png: IDAT chunks must be consecutive"));
-    }
-    let compressed_bytes = idat.iter().try_fold(0usize, |total, chunk| total.checked_add(chunk.data_end - chunk.data_start).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "png: compressed IDAT extent overflow")))?;
-    let mut compressed = control.allocate_vec(compressed_bytes)?;
-    control.begin_stage(compressed_bytes)?;
-    for chunk in idat {
-        let bytes = &snapshot.bytes[chunk.data_start..chunk.data_end];
-        compressed.extend_from_slice(bytes);
-        control.advance(bytes.len())?;
-    }
-    if let Some(phase) = phase {
-        phase.set(PngNativePaintPhase::Decode);
-    }
-    let expected = expected_native_raw_bytes(layout)?;
-    let raw = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decompress_zlib(&compressed, expected, control)?;
-    if raw.len() != expected {
-        return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("png: decompressed extent {} differs from expected {expected}", raw.len())));
-    }
-    native_rows_from_raw_controlled(&raw, layout, control)
-}
-
-fn native_rows_from_raw_controlled(raw: &[u8], layout: &PngLayout, control: &mut NativeDecodeControl<'_>) -> Result<Vec<NativePassRow>, ValueError> {
-    let mut rows = control.allocate_vec::<NativePassRow>(native_row_count(layout)?)?;
-    let bpp = (layout.color_type.samples_per_pixel() * layout.bit_depth as usize).div_ceil(8).max(1);
-    let mut position = 0usize;
-    if layout.interlace {
-        for (pass, &(start_x, start_y, step_x, step_y)) in ADAM7.iter().enumerate() {
-            let (width, height) = adam7_pass_dims(layout.width, layout.height, pass);
-            if width != 0 && height != 0 {
-                position = decode_native_pass(&raw, position, width, height, start_x, start_y, step_x, step_y, bpp, layout, &mut rows, control)?;
-            }
-        }
-    } else {
-        position = decode_native_pass(&raw, position, layout.width, layout.height, 0, 0, 1, 1, bpp, layout, &mut rows, control)?;
-    }
-    if position != raw.len() {
-        return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("png: {} trailing decompressed bytes", raw.len() - position)));
-    }
-    Ok(rows)
 }
 
 fn write_native_sample(row: &mut [u8], ordinal: usize, bit_depth: u8, sample: u16) {
@@ -1200,944 +765,6 @@ fn write_native_sample(row: &mut [u8], ordinal: usize, bit_depth: u8, sample: u1
     }
 }
 
-fn native_profile(layout: &PngLayout) -> PngNativeProfile {
-    match layout.color_type {
-        PngColorType::Grayscale => PngNativeProfile::Grayscale,
-        PngColorType::Rgb => PngNativeProfile::Rgb,
-        PngColorType::Palette => PngNativeProfile::Indexed,
-        PngColorType::GrayscaleAlpha => PngNativeProfile::GrayscaleAlpha,
-        PngColorType::Rgba => PngNativeProfile::Rgba,
-    }
-}
-
-fn checked_native_paint(snapshot: &PngSnapshot, layout: &PngLayout, paint: PngNativePaint) -> Result<(), String> {
-    let expected = native_profile(layout);
-    if paint.profile != expected { return Err(format!("png: native paint profile {:?} does not match {:?}", paint.profile, expected)); }
-    let maximum = if layout.bit_depth == 16 { u16::MAX } else { ((1u32 << layout.bit_depth) - 1) as u16 };
-    let sample_count = layout.color_type.samples_per_pixel();
-    if paint.samples()[..sample_count].iter().any(|sample| *sample > maximum) {
-        return Err(format!("png: native sample exceeds {maximum} for {}-bit profile", layout.bit_depth));
-    }
-    if paint.profile == PngNativeProfile::Indexed {
-        let palette_entries = layout.chunks.iter().find(|chunk| chunk.kind == *b"PLTE").map_or(0, |chunk| (chunk.data_end - chunk.data_start) / 3);
-        if usize::from(paint.first) >= palette_entries { return Err(format!("png: palette index {} exceeds {} entries", paint.first, palette_entries)); }
-    }
-    let _ = snapshot;
-    Ok(())
-}
-
-pub fn validate_native_paint(snapshot: &PngSnapshot, region: PngRegion, paint: PngNativePaint) -> Result<usize, String> {
-    let layout = source_layout(snapshot)?;
-    checked_region(&layout, region)?;
-    checked_native_paint(snapshot, &layout, paint)?;
-    native_row_count(&layout).map_err(ValueError::into_message)
-}
-
-fn append_filtered_row(output: &mut Vec<u8>, row: &NativePassRow, previous: Option<&[u8]>, bpp: usize, control: &mut NativeEncodeControl<'_>) -> Result<(), ValueError> {
-    output.push(row.filter);
-    control.step()?;
-    for index in 0..row.samples.len() {
-        let current = row.samples[index];
-        let a = if index >= bpp { row.samples[index - bpp] } else { 0 };
-        let b = previous.map_or(0, |value| value[index]);
-        let c = if index >= bpp { previous.map_or(0, |value| value[index - bpp]) } else { 0 };
-        output.push(match row.filter {
-            0 => current,
-            1 => current.wrapping_sub(a),
-            2 => current.wrapping_sub(b),
-            3 => current.wrapping_sub(((u16::from(a) + u16::from(b)) / 2) as u8),
-            4 => current.wrapping_sub(paeth(a, b, c)),
-            _ => unreachable!("decoded filters are validated"),
-        });
-        control.step()?;
-    }
-    Ok(())
-}
-
-fn encode_native_rows_controlled(rows: &[NativePassRow], layout: &PngLayout, control: &mut NativeEncodeControl<'_>) -> Result<Vec<u8>, ValueError> {
-    let length = rows.iter().try_fold(0usize, |total, row| total.checked_add(row.samples.len().checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "png: filtered row extent overflow"))?).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "png: filtered raster extent overflow")))?;
-    let mut raw = control.allocate_vec(length)?;
-    control.begin_stage(length)?;
-    let mut previous = None;
-    let mut previous_pass = None;
-    let bpp = (layout.color_type.samples_per_pixel() * layout.bit_depth as usize).div_ceil(8).max(1);
-    for (index, row) in rows.iter().enumerate() {
-        let pass = (row.start_x, row.step_x);
-        if previous_pass != Some(pass) {
-            previous = None;
-        }
-        append_filtered_row(&mut raw, row, previous.map(|position: usize| rows[position].samples.as_slice()), bpp, control)?;
-        previous = Some(index);
-        previous_pass = Some(pass);
-    }
-    Ok(raw)
-}
-
-fn write_chunk_preallocated(output: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
-    output.extend_from_slice(&(data.len() as u32).to_be_bytes());
-    output.extend_from_slice(kind);
-    output.extend_from_slice(data);
-    output.extend_from_slice(&png_crc32_parts(kind, data).to_be_bytes());
-}
-
-fn retire_png_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let item_bytes = std::mem::size_of::<T>();
-    if !values.is_empty() {
-        let byte_items = if item_bytes == 0 { maximum_items } else { maximum_bytes / item_bytes };
-        let released_items = values.len().min(maximum_items).min(byte_items);
-        if released_items == 0 { return Some((0, 0)); }
-        values.truncate(values.len() - released_items);
-        return Some((released_items, released_items * item_bytes));
-    }
-    if values.capacity() == 0 { return None; }
-    let backing = values.capacity().checked_mul(item_bytes).unwrap_or(usize::MAX);
-    if maximum_items == 0 || maximum_bytes < backing { return Some((0, 0)); }
-    drop(std::mem::take(values));
-    Some((1, backing))
-}
-
-fn retire_png_string_step(value: &mut String, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    if !value.is_empty() {
-        let bytes = value.chars().next_back().map_or(0, char::len_utf8);
-        if maximum_items == 0 || maximum_bytes < bytes { return Some((0, 0)); }
-        value.pop();
-        return Some((1, bytes));
-    }
-    if value.capacity() == 0 { return None; }
-    let backing = value.capacity();
-    if maximum_items == 0 || maximum_bytes < backing { return Some((0, 0)); }
-    drop(std::mem::take(value));
-    Some((1, backing))
-}
-
-#[derive(Debug)]
-pub struct PngNativePaintOperation {
-    revision: String,
-    layout: PngLayout,
-    rows: Vec<NativePassRow>,
-    region: PngRegion,
-    paint: PngNativePaint,
-    cursor: usize,
-    maximum_owned_bytes: usize,
-    admitted_owned_bytes: usize,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum RetainedNativePaintPhase {
-    Decode,
-    Paint,
-    Filter,
-    Encode,
-    Assemble,
-    Complete,
-}
-
-/// 🧵️ Result of one bounded exact native-paint step.
-#[derive(Debug)]
-pub enum PngNativePaintWorkStep {
-    Yield(PngNativePaintProgress),
-    Complete,
-    Cancelled,
-}
-
-/// 🌊️ Retained exact-sample paint with resumable RFC 1950 decode and encode phases.
-pub struct PngNativePaintWorkOperation {
-    revision: String,
-    layout: PngLayout,
-    idat_first_index: usize,
-    idat_last_index: usize,
-    region: PngRegion,
-    paint: PngNativePaint,
-    decoder: Option<semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibDecoder>,
-    encoder: Option<semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibEncoder>,
-    raw: Vec<u8>,
-    rows: Vec<NativePassRow>,
-    decode_row: Option<NativePassRow>,
-    decode_raw_cursor: usize,
-    decode_sample_cursor: usize,
-    cursor: usize,
-    pixel_cursor: usize,
-    filter_cursor: usize,
-    compressed: Vec<u8>,
-    assembled: Vec<u8>,
-    assemble_stage: u8,
-    assemble_field_cursor: usize,
-    assemble_chunk_index: usize,
-    assemble_data_offset: usize,
-    assemble_crc: u32,
-    maximum_owned_bytes: usize,
-    phase: RetainedNativePaintPhase,
-    result: Option<PngSnapshot>,
-    closing: bool,
-}
-
-impl PngNativePaintWorkOperation {
-    pub fn try_new(snapshot: &PngSnapshot, revision: &str, region: PngRegion, paint: PngNativePaint, maximum_owned_bytes: usize) -> Result<Self, String> {
-        require_revision(snapshot, revision)?;
-        let layout = source_layout(snapshot)?;
-        checked_region(&layout, region)?;
-        checked_native_paint(snapshot, &layout, paint)?;
-        let expected = expected_native_raw_bytes(&layout).map_err(ValueError::into_message)?;
-        let first = layout.chunks.iter().position(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing IDAT")?;
-        let last = layout.chunks.iter().rposition(|chunk| chunk.kind == *b"IDAT").expect("nonempty IDAT list");
-        if layout.chunks[first..=last].iter().any(|chunk| chunk.kind != *b"IDAT") {
-            return Err("png: IDAT chunks must be consecutive".into());
-        }
-        let compressed_bytes = layout.chunks[first..=last].iter().try_fold(0usize, |total, chunk| total.checked_add(chunk.data_end - chunk.data_start).ok_or("png: compressed IDAT extent overflow"))?;
-        let mut zlib_header = [0u8; 2];
-        let mut zlib_header_length = 0usize;
-        for chunk in &layout.chunks[first..=last] {
-            for byte in &snapshot.bytes[chunk.data_start..chunk.data_end] {
-                if zlib_header_length == zlib_header.len() {
-                    break;
-                }
-                zlib_header[zlib_header_length] = *byte;
-                zlib_header_length += 1;
-            }
-            if zlib_header_length == zlib_header.len() {
-                break;
-            }
-        }
-        if zlib_header_length != zlib_header.len() {
-            return Err("png: retained zlib stream has no complete header".into());
-        }
-        if zlib_header[0] & 15 != 8 || zlib_header[0] >> 4 > 7 {
-            return Err("png: unsupported retained zlib method or window".into());
-        }
-        let window = 1usize << ((zlib_header[0] >> 4) + 8);
-        let preflight = layout
-            .chunks
-            .capacity()
-            .checked_mul(std::mem::size_of::<PngChunkAddress>())
-            .and_then(|bytes| bytes.checked_add(revision.len()))
-            .and_then(|bytes| bytes.checked_add(compressed_bytes))
-            .and_then(|bytes| bytes.checked_add(expected))
-            .and_then(|bytes| bytes.checked_add(window))
-            .ok_or("png: retained paint preflight ownership overflow")?;
-        if preflight > maximum_owned_bytes {
-            return Err("png: retained paint preflight exceeds caller ownership limit".into());
-        }
-        let mut compressed = Vec::new();
-        compressed.try_reserve_exact(compressed_bytes).map_err(|_| "png: retained compressed input allocation failed")?;
-        for chunk in &layout.chunks[first..=last] {
-            compressed.extend_from_slice(&snapshot.bytes[chunk.data_start..chunk.data_end]);
-        }
-        let revision = revision.to_owned();
-        let scaffold = layout
-            .chunks
-            .capacity()
-            .checked_mul(std::mem::size_of::<PngChunkAddress>())
-            .and_then(|bytes| bytes.checked_add(revision.capacity()))
-            .ok_or("png: retained paint scaffold ownership overflow")?;
-        let remaining = maximum_owned_bytes.checked_sub(scaffold).ok_or("png: retained paint scaffold exceeds caller ownership limit")?;
-        let decoder = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibDecoder::try_new(compressed, expected, remaining).map_err(ValueError::into_message)?;
-        Ok(Self {
-            revision,
-            layout,
-            idat_first_index: first,
-            idat_last_index: last,
-            region,
-            paint,
-            decoder: Some(decoder),
-            encoder: None,
-            raw: Vec::new(),
-            rows: Vec::new(),
-            decode_row: None,
-            decode_raw_cursor: 0,
-            decode_sample_cursor: 0,
-            cursor: 0,
-            pixel_cursor: 0,
-            filter_cursor: 0,
-            compressed: Vec::new(),
-            assembled: Vec::new(),
-            assemble_stage: 0,
-            assemble_field_cursor: 0,
-            assemble_chunk_index: 0,
-            assemble_data_offset: 0,
-            assemble_crc: 0xffff_ffff,
-            maximum_owned_bytes,
-            phase: RetainedNativePaintPhase::Decode,
-            result: None,
-            closing: false,
-        })
-    }
-
-    fn retained_scaffold_bytes(&self) -> Result<usize, String> {
-        let row_headers = self.rows.capacity().checked_mul(std::mem::size_of::<NativePassRow>()).ok_or("png: retained row-header ownership overflow")?;
-        let rows = self.rows.iter().try_fold(row_headers, |total, row| total.checked_add(row.samples.capacity()).ok_or("png: retained row ownership overflow"))?;
-        let rows = rows.checked_add(self.decode_row.as_ref().map_or(0, |row| row.samples.capacity())).ok_or("png: retained decode-row ownership overflow")?;
-        rows.checked_add(self.layout.chunks.capacity().checked_mul(std::mem::size_of::<PngChunkAddress>()).ok_or("png: retained chunk-address ownership overflow")?)
-            .and_then(|bytes| bytes.checked_add(self.revision.capacity()))
-            .and_then(|bytes| bytes.checked_add(self.raw.capacity()))
-            .and_then(|bytes| bytes.checked_add(self.compressed.capacity()))
-            .and_then(|bytes| bytes.checked_add(self.assembled.capacity()))
-            .ok_or_else(|| "png: retained paint scaffold ownership overflow".into())
-    }
-
-    fn retained_owned_bytes(&self) -> Result<usize, String> {
-        let mut total = self.retained_scaffold_bytes()?;
-        if let Some(decoder) = &self.decoder { total = total.checked_add(decoder.owned_bytes().map_err(ValueError::into_message)?).ok_or("png: retained decoder ownership overflow")?; }
-        if let Some(encoder) = &self.encoder { total = total.checked_add(encoder.owned_bytes().map_err(ValueError::into_message)?).ok_or("png: retained encoder ownership overflow")?; }
-        if let Some(result) = &self.result { total = total.checked_add(result.schema.capacity()).and_then(|bytes| bytes.checked_add(result.bytes.capacity())).ok_or("png: retained result ownership overflow")?; }
-        Ok(total)
-    }
-
-    fn progress(&self) -> PngNativePaintProgress {
-        let (phase, completed, total) = match self.phase {
-            RetainedNativePaintPhase::Decode if self.raw.is_empty() => self.decoder.as_ref().map_or((PngNativePaintPhase::Decode, 0, 1), |decoder| { let (completed, total) = decoder.progress(); (PngNativePaintPhase::Decode, completed, total.max(1)) }),
-            RetainedNativePaintPhase::Decode => (PngNativePaintPhase::Decode, self.decode_raw_cursor, self.raw.len().max(1)),
-            RetainedNativePaintPhase::Paint => (PngNativePaintPhase::Paint, self.cursor, self.rows.len().max(1)),
-            RetainedNativePaintPhase::Filter => (PngNativePaintPhase::Filter, self.cursor, self.rows.len().max(1)),
-            RetainedNativePaintPhase::Encode => self.encoder.as_ref().map_or((PngNativePaintPhase::Encode, 0, 1), |encoder| { let (completed, total) = encoder.progress(); (PngNativePaintPhase::Encode, completed, total.max(1)) }),
-            RetainedNativePaintPhase::Assemble => (PngNativePaintPhase::Assemble, self.assembled.len(), self.assembled.capacity().max(1)),
-            RetainedNativePaintPhase::Complete => (PngNativePaintPhase::Assemble, 1, 1),
-        };
-        PngNativePaintProgress { phase, completed, total, owned_bytes: self.retained_owned_bytes().unwrap_or(self.maximum_owned_bytes) }
-    }
-
-    fn row_spec(&self, ordinal: usize) -> Result<Option<(u32, u32, u32, u32, usize)>, String> {
-        let mut seen = 0usize;
-        if self.layout.interlace {
-            for (pass, &(start_x, start_y, step_x, step_y)) in ADAM7.iter().enumerate() {
-                let (width, height) = adam7_pass_dims(self.layout.width, self.layout.height, pass);
-                if width == 0 || height == 0 {
-                    continue;
-                }
-                let end = seen.checked_add(height as usize).ok_or("png: retained row ordinal overflow")?;
-                if ordinal < end {
-                    let row = ordinal - seen;
-                    return Ok(Some((start_x, start_y + row as u32 * step_y, step_x, width, packed_row_bytes(width, self.layout.color_type.to_u8(), self.layout.bit_depth))));
-                }
-                seen = end;
-            }
-            return Ok(None);
-        }
-        if ordinal >= self.layout.height as usize {
-            return Ok(None);
-        }
-        Ok(Some((0, ordinal as u32, 1, self.layout.width, packed_row_bytes(self.layout.width, self.layout.color_type.to_u8(), self.layout.bit_depth))))
-    }
-
-    fn start_decode_row(&mut self) -> Result<bool, String> {
-        let Some((start_x, y, step_x, width, row_bytes)) = self.row_spec(self.rows.len())? else {
-            if self.decode_raw_cursor != self.raw.len() {
-                return Err(format!("png: {} trailing decompressed bytes", self.raw.len() - self.decode_raw_cursor));
-            }
-            self.phase = RetainedNativePaintPhase::Paint;
-            self.cursor = 0;
-            return Ok(false);
-        };
-        let filter = *self.raw.get(self.decode_raw_cursor).ok_or("png: truncated retained scanline filter")?;
-        if filter > 4 {
-            return Err(format!("png: unsupported filter type {filter}"));
-        }
-        self.decode_raw_cursor += 1;
-        let end = self.decode_raw_cursor.checked_add(row_bytes).ok_or("png: retained scanline extent overflow")?;
-        if end > self.raw.len() {
-            return Err("png: truncated retained scanline data".into());
-        }
-        let mut samples = Vec::new();
-        samples.try_reserve_exact(row_bytes).map_err(|_| "png: retained scanline allocation failed")?;
-        self.decode_row = Some(NativePassRow { filter, samples, start_x, y, step_x, width });
-        self.decode_sample_cursor = 0;
-        if self.retained_owned_bytes()? > self.maximum_owned_bytes {
-            return Err("png: retained scanline exceeds caller ownership limit".into());
-        }
-        Ok(true)
-    }
-
-    fn decode_sample(&mut self) -> Result<(), String> {
-        if self.decode_row.is_none() && !self.start_decode_row()? {
-            return Ok(());
-        }
-        let row = self.decode_row.as_ref().expect("started retained row");
-        let row_bytes = packed_row_bytes(row.width, self.layout.color_type.to_u8(), self.layout.bit_depth);
-        if self.decode_sample_cursor == row_bytes {
-            self.decode_raw_cursor = self.decode_raw_cursor.checked_add(self.decode_sample_cursor).ok_or("png: retained scanline cursor overflow")?;
-            self.rows.push(self.decode_row.take().expect("completed retained row"));
-            self.decode_sample_cursor = 0;
-            return Ok(());
-        }
-        let index = self.decode_sample_cursor;
-        let byte = self.raw[self.decode_raw_cursor + index];
-        let bpp = (self.layout.color_type.samples_per_pixel() * self.layout.bit_depth as usize).div_ceil(8).max(1);
-        let previous = self.rows.last().filter(|previous| previous.start_x == row.start_x && previous.step_x == row.step_x).map(|previous| previous.samples.as_slice());
-        let a = if index >= bpp { row.samples[index - bpp] } else { 0 };
-        let b = previous.map_or(0, |previous| previous[index]);
-        let c = if index >= bpp { previous.map_or(0, |previous| previous[index - bpp]) } else { 0 };
-        let value = match row.filter {
-            0 => byte,
-            1 => byte.wrapping_add(a),
-            2 => byte.wrapping_add(b),
-            3 => byte.wrapping_add(((u16::from(a) + u16::from(b)) / 2) as u8),
-            4 => byte.wrapping_add(paeth(a, b, c)),
-            _ => unreachable!("retained filter was validated"),
-        };
-        self.decode_row.as_mut().expect("started retained row").samples.push(value);
-        self.decode_sample_cursor += 1;
-        Ok(())
-    }
-
-    fn paint_pixel(&mut self) {
-        let Some(row) = self.rows.get_mut(self.cursor) else { return };
-        if self.pixel_cursor == row.width as usize {
-            self.cursor += 1;
-            self.pixel_cursor = 0;
-            return;
-        }
-        let x = row.start_x + self.pixel_cursor as u32 * row.step_x;
-        if row.y >= self.region.y && row.y < self.region.y + self.region.height && x >= self.region.x && x < self.region.x + self.region.width {
-            let samples = self.paint.samples();
-            let sample_count = self.layout.color_type.samples_per_pixel();
-            for (channel, sample) in samples[..sample_count].iter().enumerate() {
-                write_native_sample(&mut row.samples, self.pixel_cursor * sample_count + channel, self.layout.bit_depth, *sample);
-            }
-        }
-        self.pixel_cursor += 1;
-    }
-
-    fn filter_byte(&mut self) -> Result<bool, String> {
-        let Some(row) = self.rows.get(self.cursor) else {
-            return Ok(false);
-        };
-        if self.filter_cursor == 0 {
-            self.raw.push(row.filter);
-            self.filter_cursor = 1;
-            return Ok(true);
-        }
-        let index = self.filter_cursor - 1;
-        if index == row.samples.len() {
-            self.cursor += 1;
-            self.filter_cursor = 0;
-            return Ok(false);
-        }
-        let previous = self.rows[..self.cursor].last().filter(|previous| previous.start_x == row.start_x && previous.step_x == row.step_x).map(|previous| previous.samples.as_slice());
-        let bpp = (self.layout.color_type.samples_per_pixel() * self.layout.bit_depth as usize).div_ceil(8).max(1);
-        let current = row.samples[index];
-        let a = if index >= bpp { row.samples[index - bpp] } else { 0 };
-        let b = previous.map_or(0, |previous| previous[index]);
-        let c = if index >= bpp { previous.map_or(0, |previous| previous[index - bpp]) } else { 0 };
-        self.raw.push(match row.filter {
-            0 => current,
-            1 => current.wrapping_sub(a),
-            2 => current.wrapping_sub(b),
-            3 => current.wrapping_sub(((u16::from(a) + u16::from(b)) / 2) as u8),
-            4 => current.wrapping_sub(paeth(a, b, c)),
-            _ => unreachable!("decoded filters are validated"),
-        });
-        self.filter_cursor += 1;
-        Ok(true)
-    }
-
-    fn update_assembly_crc(&mut self, byte: u8) {
-        self.assemble_crc ^= u32::from(byte);
-        for _ in 0..8 {
-            self.assemble_crc = if self.assemble_crc & 1 != 0 { (self.assemble_crc >> 1) ^ 0xedb8_8320 } else { self.assemble_crc >> 1 };
-        }
-    }
-
-    fn initialize_assembly(&mut self, snapshot: &PngSnapshot) -> Result<(), String> {
-        let first_index = self.idat_first_index;
-        let last_index = self.idat_last_index;
-        let count = last_index - first_index + 1;
-        let total = self.layout.chunks[first_index]
-            .start
-            .checked_add(self.compressed.len())
-            .and_then(|bytes| bytes.checked_add(count.checked_mul(12)?))
-            .and_then(|bytes| bytes.checked_add(snapshot.bytes.len() - self.layout.chunks[last_index].end))
-            .ok_or("png: retained assembled extent overflow")?;
-        let admitted = self.retained_owned_bytes()?.checked_add(total).and_then(|bytes| bytes.checked_add(snapshot.schema.len())).ok_or("png: retained assembled ownership overflow")?;
-        if admitted > self.maximum_owned_bytes {
-            return Err("png: retained assembled result exceeds caller ownership limit".into());
-        }
-        self.assembled.try_reserve_exact(total).map_err(|_| "png: retained assembled allocation failed")?;
-        if self.retained_owned_bytes()? > self.maximum_owned_bytes {
-            return Err("png: retained assembled allocation exceeds caller ownership limit".into());
-        }
-        self.assemble_stage = 0;
-        self.assemble_field_cursor = 0;
-        self.assemble_chunk_index = first_index;
-        self.assemble_data_offset = 0;
-        self.assemble_crc = 0xffff_ffff;
-        Ok(())
-    }
-
-    fn assembly_chunk_take(&self, last_index: usize) -> usize {
-        let remaining = self.compressed.len() - self.assemble_data_offset;
-        if self.assemble_chunk_index == last_index {
-            remaining
-        } else {
-            let chunk = &self.layout.chunks[self.assemble_chunk_index];
-            (chunk.data_end - chunk.data_start).min(remaining)
-        }
-    }
-
-    fn assemble_byte(&mut self, snapshot: &PngSnapshot) -> Result<bool, String> {
-        let first_index = self.idat_first_index;
-        let last_index = self.idat_last_index;
-        match self.assemble_stage {
-            0 => {
-                let end = self.layout.chunks[first_index].start;
-                if self.assemble_field_cursor == end {
-                    self.assemble_stage = 1;
-                    self.assemble_field_cursor = 0;
-                    return Ok(false);
-                }
-                self.assembled.push(snapshot.bytes[self.assemble_field_cursor]);
-                self.assemble_field_cursor += 1;
-            }
-            1 => {
-                if self.assemble_chunk_index > last_index {
-                    self.assemble_stage = 5;
-                    self.assemble_field_cursor = self.layout.chunks[last_index].end;
-                    return Ok(false);
-                }
-                let length = u32::try_from(self.assembly_chunk_take(last_index)).map_err(|_| "png: retained IDAT chunk exceeds PNG length field")?.to_be_bytes();
-                self.assembled.push(length[self.assemble_field_cursor]);
-                self.assemble_field_cursor += 1;
-                if self.assemble_field_cursor == length.len() {
-                    self.assemble_stage = 2;
-                    self.assemble_field_cursor = 0;
-                    self.assemble_crc = 0xffff_ffff;
-                }
-            }
-            2 => {
-                let byte = b"IDAT"[self.assemble_field_cursor];
-                self.assembled.push(byte);
-                self.update_assembly_crc(byte);
-                self.assemble_field_cursor += 1;
-                if self.assemble_field_cursor == 4 {
-                    self.assemble_stage = 3;
-                    self.assemble_field_cursor = 0;
-                }
-            }
-            3 => {
-                let take = self.assembly_chunk_take(last_index);
-                if self.assemble_field_cursor == take {
-                    self.assemble_data_offset += take;
-                    self.assemble_stage = 4;
-                    self.assemble_field_cursor = 0;
-                    return Ok(false);
-                }
-                let byte = self.compressed[self.assemble_data_offset + self.assemble_field_cursor];
-                self.assembled.push(byte);
-                self.update_assembly_crc(byte);
-                self.assemble_field_cursor += 1;
-            }
-            4 => {
-                let crc = (!self.assemble_crc).to_be_bytes();
-                self.assembled.push(crc[self.assemble_field_cursor]);
-                self.assemble_field_cursor += 1;
-                if self.assemble_field_cursor == crc.len() {
-                    self.assemble_chunk_index += 1;
-                    self.assemble_stage = 1;
-                    self.assemble_field_cursor = 0;
-                }
-            }
-            5 => {
-                if self.assemble_field_cursor == snapshot.bytes.len() {
-                    self.assemble_stage = 6;
-                    return Ok(false);
-                }
-                self.assembled.push(snapshot.bytes[self.assemble_field_cursor]);
-                self.assemble_field_cursor += 1;
-            }
-            _ => return Ok(false),
-        }
-        Ok(true)
-    }
-
-    /// ➡️ Advances native work and yields at every caller fuel/deadline boundary.
-    pub fn advance(&mut self, snapshot: &PngSnapshot, context: &mut semio_framework_job::StepContext<'_>) -> Result<PngNativePaintWorkStep, String> {
-        if self.closing {
-            return Err("png: native paint work is closing".into());
-        }
-        require_revision(snapshot, &self.revision)?;
-        loop {
-            if context.is_cancelled() {
-                return Ok(PngNativePaintWorkStep::Cancelled);
-            }
-            if context.should_yield() {
-                return Ok(PngNativePaintWorkStep::Yield(self.progress()));
-            }
-            match self.phase {
-                RetainedNativePaintPhase::Decode => {
-                    if self.raw.is_empty() {
-                        let decoder = self.decoder.as_mut().ok_or("png: retained decoder is missing")?;
-                        match decoder.advance(context).map_err(ValueError::into_message)? {
-                            semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Yield => return Ok(PngNativePaintWorkStep::Yield(self.progress())),
-                            semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Cancelled => return Ok(PngNativePaintWorkStep::Cancelled),
-                            semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Complete => {
-                                self.raw = decoder.take_output().map_err(ValueError::into_message)?;
-                                let row_count = native_row_count(&self.layout).map_err(ValueError::into_message)?;
-                                self.rows.try_reserve_exact(row_count).map_err(|_| "png: retained row table allocation failed")?;
-                                if self.retained_owned_bytes()? > self.maximum_owned_bytes {
-                                    return Err("png: retained decoded raster exceeds caller ownership limit".into());
-                                }
-                            }
-                        }
-                    } else {
-                        self.decode_sample()?;
-                        context.consume_fuel(1);
-                    }
-                }
-                RetainedNativePaintPhase::Paint => {
-                    if self.cursor == self.rows.len() {
-                        self.phase = RetainedNativePaintPhase::Filter;
-                        self.raw.clear();
-                        self.cursor = 0;
-                        self.filter_cursor = 0;
-                        continue;
-                    }
-                    self.paint_pixel();
-                    context.consume_fuel(1);
-                }
-                RetainedNativePaintPhase::Filter => {
-                    if self.cursor == self.rows.len() {
-                        let raw = std::mem::take(&mut self.raw);
-                        let remaining = self.maximum_owned_bytes.checked_sub(self.retained_owned_bytes()?).ok_or("png: retained filter ownership exceeds caller limit")?;
-                        self.encoder = Some(semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibEncoder::try_new(raw, self.maximum_owned_bytes, remaining).map_err(ValueError::into_message)?);
-                        if self.retained_owned_bytes()? > self.maximum_owned_bytes {
-                            return Err("png: retained encoder exceeds caller ownership limit".into());
-                        }
-                        self.phase = RetainedNativePaintPhase::Encode;
-                        continue;
-                    }
-                    if self.filter_byte()? {
-                        context.consume_fuel(1);
-                    }
-                }
-                RetainedNativePaintPhase::Encode => {
-                    let encoder = self.encoder.as_mut().ok_or("png: retained encoder is missing")?;
-                    match encoder.advance(context).map_err(ValueError::into_message)? {
-                        semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Yield => return Ok(PngNativePaintWorkStep::Yield(self.progress())),
-                        semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Cancelled => return Ok(PngNativePaintWorkStep::Cancelled),
-                        semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Complete => {
-                            self.compressed = encoder.take_output().map_err(ValueError::into_message)?;
-                            self.phase = RetainedNativePaintPhase::Assemble;
-                            self.initialize_assembly(snapshot)?;
-                        }
-                    }
-                }
-                RetainedNativePaintPhase::Assemble => {
-                    if self.assemble_stage == 6 {
-                        let result = PngSnapshot { schema: snapshot.schema.clone(), bytes: std::mem::take(&mut self.assembled) };
-                        validate_completed_native_paint_domain(snapshot, &result, self.region, self.paint)?;
-                        self.result = Some(result);
-                        if self.retained_owned_bytes()? > self.maximum_owned_bytes {
-                            return Err("png: retained completed result exceeds caller ownership limit".into());
-                        }
-                        self.phase = RetainedNativePaintPhase::Complete;
-                        return Ok(PngNativePaintWorkStep::Complete);
-                    }
-                    if self.assemble_byte(snapshot)? {
-                        context.consume_fuel(1);
-                    }
-                }
-                RetainedNativePaintPhase::Complete => return Ok(PngNativePaintWorkStep::Complete),
-            }
-        }
-    }
-
-    pub fn take_result(&mut self) -> Result<PngSnapshot, String> {
-        if self.phase != RetainedNativePaintPhase::Complete {
-            return Err("png: retained native paint result requested before completion".into());
-        }
-        self.result.take().ok_or_else(|| "png: retained native paint result was already taken".into())
-    }
-
-    pub fn begin_close(&mut self) {
-        self.closing = true;
-        if let Some(decoder) = self.decoder.as_mut() { decoder.begin_close(); }
-        if let Some(encoder) = self.encoder.as_mut() { encoder.begin_close(); }
-    }
-
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(decoder) = self.decoder.as_mut() {
-            let step = decoder.close_step(maximum_items, maximum_bytes);
-            if step != InteractiveJobCloseStep::Complete { return step; }
-            if !decoder.terminal_is_empty() { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
-            self.decoder = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(encoder) = self.encoder.as_mut() {
-            let step = encoder.close_step(maximum_items, maximum_bytes);
-            if step != InteractiveJobCloseStep::Complete { return step; }
-            if !encoder.terminal_is_empty() { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
-            self.encoder = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(row) = self.decode_row.as_mut() {
-            if let Some(step) = retire_png_vec_step(&mut row.samples, maximum_items, maximum_bytes) {
-                return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-            }
-            self.decode_row = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(row) = self.rows.last_mut() {
-            if let Some(step) = retire_png_vec_step(&mut row.samples, maximum_items, maximum_bytes) {
-                return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-            }
-            if maximum_items == 0 { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
-            self.rows.pop();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(step) = retire_png_vec_step(&mut self.rows, maximum_items, maximum_bytes) {
-            return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-        }
-        if let Some(step) = retire_png_vec_step(&mut self.raw, maximum_items, maximum_bytes) {
-            return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-        }
-        if let Some(step) = retire_png_vec_step(&mut self.compressed, maximum_items, maximum_bytes) {
-            return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-        }
-        if let Some(step) = retire_png_vec_step(&mut self.assembled, maximum_items, maximum_bytes) {
-            return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-        }
-        if let Some(step) = retire_png_vec_step(&mut self.layout.chunks, maximum_items, maximum_bytes) {
-            return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-        }
-        if let Some(result) = self.result.as_mut() {
-            if let Some(step) = retire_png_vec_step(&mut result.bytes, maximum_items, maximum_bytes) {
-                return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-            }
-            if let Some(step) = retire_png_string_step(&mut result.schema, maximum_items, maximum_bytes) {
-                return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-            }
-            self.result = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(step) = retire_png_string_step(&mut self.revision, maximum_items, maximum_bytes) {
-            return InteractiveJobCloseStep::Pending { released_items: step.0, released_bytes: step.1 };
-        }
-        InteractiveJobCloseStep::Complete
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.closing
-            && self.decoder.is_none()
-            && self.encoder.is_none()
-            && self.decode_row.is_none()
-            && self.rows.capacity() == 0
-            && self.raw.capacity() == 0
-            && self.compressed.capacity() == 0
-            && self.assembled.capacity() == 0
-            && self.layout.chunks.capacity() == 0
-            && self.revision.capacity() == 0
-            && self.result.is_none()
-    }
-}
-
-impl PngNativePaintOperation {
-    pub fn total_rows(&self) -> usize { self.rows.len() }
-    pub fn painted_rows(&self) -> usize { self.cursor }
-    pub fn paint_complete(&self) -> bool { self.cursor == self.rows.len() }
-    pub fn admitted_owned_bytes(&self) -> usize { self.admitted_owned_bytes }
-
-    pub fn paint_next(&mut self) -> bool {
-        let Some(row) = self.rows.get_mut(self.cursor) else { return false };
-        if row.y >= self.region.y && row.y < self.region.y + self.region.height {
-            let samples = self.paint.samples();
-            let sample_count = self.layout.color_type.samples_per_pixel();
-            for pixel in 0..row.width as usize {
-                let x = row.start_x + pixel as u32 * row.step_x;
-                if x >= self.region.x && x < self.region.x + self.region.width {
-                    for (channel, sample) in samples[..sample_count].iter().enumerate() {
-                        write_native_sample(&mut row.samples, pixel * sample_count + channel, self.layout.bit_depth, *sample);
-                    }
-                }
-            }
-        }
-        self.cursor += 1;
-        true
-    }
-
-    pub fn finish(self, snapshot: &PngSnapshot, progress: &mut dyn FnMut(PngNativePaintProgress) -> bool) -> Result<PngSnapshot, String> {
-        require_revision(snapshot, &self.revision)?;
-        if !self.paint_complete() {
-            return Err("png: native paint rows are incomplete".into());
-        }
-        let remaining = self.maximum_owned_bytes.checked_sub(self.admitted_owned_bytes).ok_or("png: native paint ownership accounting overflow")?;
-        let phase = std::cell::Cell::new(PngNativePaintPhase::Filter);
-        let mut callback = |event: NativeEncodeProgress| progress(PngNativePaintProgress {
-            phase: phase.get(),
-            completed: event.completed,
-            total: event.total,
-            owned_bytes: self.admitted_owned_bytes.saturating_add(event.owned_bytes),
-        });
-        let mut control = NativeEncodeControl::new(remaining, &mut callback);
-        let raw = encode_native_rows_controlled(&self.rows, &self.layout, &mut control).map_err(ValueError::into_message)?;
-        phase.set(PngNativePaintPhase::Encode);
-        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::compress_zlib(&raw, self.maximum_owned_bytes, &mut control).map_err(ValueError::into_message)?;
-        let first_index = self.layout.chunks.iter().position(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing IDAT")?;
-        let last_index = self.layout.chunks.iter().rposition(|chunk| chunk.kind == *b"IDAT").expect("nonempty IDAT list");
-        let idat = &self.layout.chunks[first_index..=last_index];
-        let first = &idat[0];
-        let last = &idat[idat.len() - 1];
-        phase.set(PngNativePaintPhase::Assemble);
-        let replacement_length = compressed.len().checked_add(idat.len().checked_mul(12).ok_or("png: IDAT framing extent overflow")?).ok_or("png: IDAT replacement extent overflow")?;
-        let mut replacement = control.allocate_vec(replacement_length).map_err(ValueError::into_message)?;
-        let mut offset = 0usize;
-        for (index, chunk) in idat.iter().enumerate() {
-            let original = chunk.data_end - chunk.data_start;
-            let remaining_compressed = compressed.len() - offset;
-            let take = if index + 1 == idat.len() { remaining_compressed } else { original.min(remaining_compressed) };
-            write_chunk_preallocated(&mut replacement, b"IDAT", &compressed[offset..offset + take]);
-            offset += take;
-        }
-        let total = first.start.checked_add(replacement.len()).and_then(|value| value.checked_add(snapshot.bytes.len() - last.end)).ok_or("png: painted source extent overflow")?;
-        let mut bytes = control.allocate_vec(total).map_err(ValueError::into_message)?;
-        control.begin_stage(total).map_err(ValueError::into_message)?;
-        bytes.extend_from_slice(&snapshot.bytes[..first.start]);
-        control.advance(first.start).map_err(ValueError::into_message)?;
-        bytes.extend_from_slice(&replacement);
-        control.advance(replacement.len()).map_err(ValueError::into_message)?;
-        bytes.extend_from_slice(&snapshot.bytes[last.end..]);
-        control.advance(snapshot.bytes.len() - last.end).map_err(ValueError::into_message)?;
-        let schema = control.copy_text(&snapshot.schema).map_err(ValueError::into_message)?;
-        Ok(PngSnapshot { schema, bytes })
-    }
-}
-
-fn validate_completed_native_paint_domain(
-    base: &PngSnapshot,
-    result: &PngSnapshot,
-    region: PngRegion,
-    paint: PngNativePaint,
-) -> Result<(), String> {
-    let base_layout = source_layout(base)?;
-    checked_region(&base_layout, region)?;
-    checked_native_paint(base, &base_layout, paint)?;
-    let result_layout = source_layout(result)?;
-    if (base_layout.width, base_layout.height, base_layout.bit_depth, base_layout.color_type, base_layout.interlace)
-        != (result_layout.width, result_layout.height, result_layout.bit_depth, result_layout.color_type, result_layout.interlace)
-    {
-        return Err("png: completed native paint changed the source profile".into());
-    }
-    let base_first = base_layout.chunks.iter().find(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing base IDAT")?;
-    let base_last = base_layout.chunks.iter().rfind(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing base IDAT")?;
-    let result_first = result_layout.chunks.iter().find(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing result IDAT")?;
-    let result_last = result_layout.chunks.iter().rfind(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing result IDAT")?;
-    let base_count = base_layout.chunks.iter().filter(|chunk| chunk.kind == *b"IDAT").count();
-    let result_count = result_layout.chunks.iter().filter(|chunk| chunk.kind == *b"IDAT").count();
-    if base_count != result_count {
-        return Err("png: completed native paint changed the IDAT partition count".into());
-    }
-    if base.bytes[..base_first.start] != result.bytes[..result_first.start] || base.bytes[base_last.end..] != result.bytes[result_last.end..] {
-        return Err("png: completed native paint changed bytes outside the IDAT run".into());
-    }
-    let base_idat = base_layout.chunks.iter().filter(|chunk| chunk.kind == *b"IDAT").collect::<Vec<_>>();
-    let result_idat = result_layout.chunks.iter().filter(|chunk| chunk.kind == *b"IDAT").collect::<Vec<_>>();
-    let result_extent = result_idat.iter().try_fold(0usize, |total, chunk| total.checked_add(chunk.data_end - chunk.data_start).ok_or("png: completed native paint IDAT extent overflow"))?;
-    let mut remaining = result_extent;
-    for (index, (before, after)) in base_idat.iter().zip(&result_idat).enumerate() {
-        let expected = if index + 1 == base_idat.len() { remaining } else { (before.data_end - before.data_start).min(remaining) };
-        if after.data_end - after.data_start != expected {
-            return Err("png: completed native paint changed the authored IDAT partition convention".into());
-        }
-        remaining -= expected;
-    }
-    Ok(())
-}
-
-/// 🛡️ Validates a prepared paint result's closed IDAT replacement domain without replaying codecs.
-pub fn validate_completed_native_paint(base: &PngSnapshot, result: &PngSnapshot, region: PngRegion, paint: PngNativePaint) -> Result<(), String> {
-    validate_completed_native_paint_domain(base, result, region, paint)
-}
-
-pub fn begin_native_paint(
-    snapshot: &PngSnapshot,
-    revision: &str,
-    region: PngRegion,
-    paint: PngNativePaint,
-    maximum_owned_bytes: usize,
-    progress: &mut dyn FnMut(PngNativePaintProgress) -> bool,
-) -> Result<PngNativePaintOperation, String> {
-    require_revision(snapshot, revision)?;
-    let phase = std::cell::Cell::new(PngNativePaintPhase::Address);
-    let mut callback = |event: NativeDecodeProgress| progress(PngNativePaintProgress { phase: phase.get(), completed: event.completed, total: event.total, owned_bytes: event.owned_bytes });
-    let mut control = NativeDecodeControl::new(maximum_owned_bytes, &mut callback);
-    let revision = control.copy_text(revision).map_err(ValueError::into_message)?;
-    control.charge(std::mem::size_of::<PngNativePaintOperation>()).map_err(ValueError::into_message)?;
-    let layout = source_layout_controlled(snapshot, &mut control).map_err(ValueError::into_message)?;
-    checked_region(&layout, region)?;
-    checked_native_paint(snapshot, &layout, paint)?;
-    let rows = native_rows_controlled(snapshot, &layout, Some(&phase), &mut control).map_err(ValueError::into_message)?;
-    let admitted_owned_bytes = control.owned_bytes();
-    Ok(PngNativePaintOperation { revision, layout, rows, region, paint, cursor: 0, maximum_owned_bytes, admitted_owned_bytes })
-}
-
-pub fn paint_native_region_owned_controlled(
-    snapshot: &PngSnapshot,
-    revision: &str,
-    region: PngRegion,
-    paint: PngNativePaint,
-    maximum_owned_bytes: usize,
-    progress: &mut dyn FnMut(PngNativePaintProgress) -> bool,
-) -> Result<PngSnapshot, String> {
-    let mut operation = begin_native_paint(snapshot, revision, region, paint, maximum_owned_bytes, progress)?;
-    let total = operation.total_rows().max(1);
-    while operation.paint_next() {
-        if !progress(PngNativePaintProgress { phase: PngNativePaintPhase::Paint, completed: operation.painted_rows(), total, owned_bytes: operation.admitted_owned_bytes() }) {
-            return Err("png: native paint canceled".into());
-        }
-    }
-    operation.finish(snapshot, progress)
-}
-
-pub fn png_native_pixel(snapshot: &PngSnapshot, x: u32, y: u32) -> Result<Vec<u16>, String> {
-    let layout = png_layout(snapshot)?;
-    checked_region(&layout, PngRegion { x, y, width: 1, height: 1 })?;
-    let mut callback = |_| true;
-    let mut control = NativeDecodeControl::new(MAXIMUM_NATIVE_PAINT_OWNED_BYTES, &mut callback);
-    let rows = native_rows_controlled(snapshot, &layout, None, &mut control).map_err(ValueError::into_message)?;
-    let sample_count = layout.color_type.samples_per_pixel();
-    for row in rows {
-        if row.y != y || x < row.start_x || !(x - row.start_x).is_multiple_of(row.step_x) { continue; }
-        let pixel = ((x - row.start_x) / row.step_x) as usize;
-        if pixel >= row.width as usize { continue; }
-        return Ok(unpack_samples(&row.samples, row.width as usize, sample_count, layout.bit_depth)[pixel * sample_count..pixel * sample_count + sample_count].iter().map(|sample| *sample as u16).collect());
-    }
-    Err(format!("png: native sample at {x},{y} is absent"))
-}
-
-pub fn paint_native_region_controlled(
-    snapshot: &PngSnapshot,
-    revision: &str,
-    region: PngRegion,
-    paint: PngNativePaint,
-    progress: &mut dyn FnMut(usize, usize) -> bool,
-) -> Result<PngSnapshot, String> {
-    paint_native_region_owned_controlled(snapshot, revision, region, paint, MAXIMUM_NATIVE_PAINT_OWNED_BYTES, &mut |event| progress(event.completed, event.total))
-}
-
-pub fn paint_rgba8_region_controlled(
-    snapshot: &PngSnapshot,
-    revision: &str,
-    region: PngRegion,
-    color: [u8; 4],
-    progress: &mut dyn FnMut(usize, usize) -> bool,
-) -> Result<PngSnapshot, String> {
-    let layout = png_layout(snapshot)?;
-    if layout.color_type != PngColorType::Rgba || layout.bit_depth != 8 || layout.interlace {
-        return Err("png: RGBA8 paint requires an 8-bit non-interlaced RGBA profile; use a profile-specific sample edit".into());
-    }
-    paint_native_region_controlled(snapshot, revision, region, PngNativePaint::rgba(color[0].into(), color[1].into(), color[2].into(), color[3].into()), progress)
-}
-//#endregion ExactAuthority
-
-//#region Codec
-/// 🚫 EncodeScopeNote: always emits color type 6 (RGBA) / bit depth 8 / interlace method 0 for
-/// the PIXEL data. `pixels` is a canonical 8-bit-RGBA model, so re-encoding a decoded
-/// palette/grayscale/16-bit/interlaced source will not byte-for-byte round-trip the original
-/// file's IDAT — only its pixel content (see `codec_retention_law`). Decode (below) fully
-/// supports the input diversity; only the raster half of encode canonicalizes — every typed
-/// ancillary/text/unknown chunk IS honestly re-emitted, in the decoded relative chunk order.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn author_png_projection(snap: &PngProjection) -> Result<Vec<u8>, String> {
     let expected_len = (snap.width as usize).checked_mul(snap.height as usize).and_then(|p| p.checked_mul(4)).ok_or("dimensions overflow")?;
     if snap.pixels.len() != expected_len {
@@ -2240,7 +867,7 @@ pub fn author_png_projection(snap: &PngProjection) -> Result<Vec<u8>, String> {
             }
             PngChunkMarker::Text { index } => {
                 if let Some(tc) = snap.text_chunks.get(*index) {
-                    write_text_chunk(&mut out, tc);
+                    write_text_chunk(&mut out, tc)?;
                 }
             }
             PngChunkMarker::Unknown { index } => {
@@ -2264,15 +891,129 @@ pub fn author_png_projection(snap: &PngProjection) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
-    let chunks = read_chunks(data)?;
+
+fn latin1_text(bytes: &[u8]) -> String { bytes.iter().map(|byte| char::from(*byte)).collect() }
+fn latin1_bytes(value: &str) -> Vec<u8> { value.chars().map(|character| character as u8).collect() }
+
+
+struct PngEncodedChunks {chunks:Vec<([u8;4],Vec<u8>)>,file_size:usize,maximum_file:usize}
+impl PngEncodedChunks {
+    fn push(&mut self,kind:[u8;4],data:&[u8],control:&mut NativeEncodeControl<'_>)->Result<(),ValueError> {
+        if data.len()>u32::MAX as usize {return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"PNG chunk exceeds native length"));}
+        self.file_size=self.file_size.checked_add(12).and_then(|n|n.checked_add(data.len())).filter(|n|*n<=self.maximum_file).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PNG output exceeds file limit"))?;
+        self.chunks.push((kind,control.copy_bytes(data)?));Ok(())
+    }
+}
+
+fn png_latin1_encode(text:&str,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError> {let mut output=control.allocate_vec(text.len())?;control.begin_stage(text.len())?;for character in text.chars() {output.push(u8::try_from(character as u32).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"PNG text exceeds Latin-1"))?);control.advance(character.len_utf8())?;}Ok(output)}
+
+fn png_text_native(text:&PngTextChunk,maximum_file:usize,control:&mut NativeEncodeControl<'_>)->Result<([u8;4],Vec<u8>),ValueError> {
+    let keyword=png_latin1_encode(&text.keyword,control)?;
+    let value=if text.kind==PngTextKind::IText {control.copy_bytes(text.value.as_bytes())?} else {png_latin1_encode(&text.value,control)?};
+    let compressed=if text.compressed {semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::compress_zlib(&value,maximum_file,control)?} else {value};
+    let extra=match text.kind {PngTextKind::Text=>1,PngTextKind::ZText=>2,PngTextKind::IText=>5+text.language_tag.len()+text.translated_keyword.len()};
+    let size=keyword.len().checked_add(extra).and_then(|n|n.checked_add(compressed.len())).filter(|n|*n<=maximum_file).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PNG text exceeds file limit"))?;
+    let mut data=control.allocate_vec(size)?;data.extend_from_slice(&keyword);data.push(0);
+    let kind=match text.kind {PngTextKind::Text=>*b"tEXt",PngTextKind::ZText=>{data.push(0);*b"zTXt"},PngTextKind::IText=>{data.extend_from_slice(&[u8::from(text.compressed),0]);data.extend_from_slice(text.language_tag.as_bytes());data.push(0);data.extend_from_slice(text.translated_keyword.as_bytes());data.push(0);*b"iTXt"}};
+    control.begin_stage(compressed.len())?;for piece in compressed.chunks(256) {data.extend_from_slice(piece);control.advance(piece.len())?;}Ok((kind,data))
+}
+
+fn encode_png_image(image:&PngImage)->Result<Vec<u8>,String> {let mut callback=|_|true;let mut control=NativeEncodeControl::new(1024*1024*1024,&mut callback);encode_png_image_controlled(image,512*1024*1024,&mut control).map_err(ValueError::into_message)}
+
+fn validate_png_image_controlled(image:&PngImage,checkpoint:&mut dyn FnMut(bool,usize)->Result<(),ValueError>)->Result<(),ValueError> {
+    let invalid=|message:&str|ValueError::new(ValueRefusalKind::InvalidValue,message);
+    image.validate_header().map_err(|message|invalid(&message))?;
+    let maximum=if image.bit_depth==16 {u16::MAX}else{(1u16<<image.bit_depth)-1};
+    checkpoint(true,image.samples.len())?;
+    for sample in &image.samples {if *sample>maximum||image.color_type==PngColorType::Palette&&usize::from(*sample)>=image.palette.as_ref().map_or(0,Vec::len) {return Err(invalid("png: native sample precision or palette identity differs from the owned profile"));}checkpoint(false,1)?;}
+    for text in &image.text_chunks {
+        checkpoint(true,1)?;
+        if text.keyword.is_empty()||text.kind==PngTextKind::Text&&text.compressed||text.kind==PngTextKind::ZText&&!text.compressed {return Err(invalid("png: text metadata differs from its native text profile"));}
+        checkpoint(false,1)?;
+        let mut length=0;checkpoint(true,text.keyword.len())?;
+        for character in text.keyword.chars() {length+=1;if length>79||character=='\0'||character as u32>255 {return Err(invalid("png: text metadata differs from its native text profile"));}checkpoint(false,character.len_utf8())?;}
+        if text.kind!=PngTextKind::IText&&(!text.language_tag.is_empty()||!text.translated_keyword.is_empty()) {return Err(invalid("png: Latin-1 text metadata contains an international-only field"));}
+        checkpoint(true,text.value.len())?;for character in text.value.chars() {if text.kind!=PngTextKind::IText&&character as u32>255 {return Err(invalid("png: Latin-1 text metadata contains an international-only field"));}checkpoint(false,character.len_utf8())?;}
+        checkpoint(true,text.language_tag.len())?;for byte in text.language_tag.bytes() {if !byte.is_ascii() {return Err(invalid("png: international text language tag must be ASCII"));}checkpoint(false,1)?;}
+    }
+    let mut after=false;checkpoint(true,image.ancillary_chunks.len())?;
+    for chunk in &image.ancillary_chunks {if !chunk.kind.iter().all(u8::is_ascii_alphabetic)||!chunk.kind[0].is_ascii_lowercase()||!chunk.kind[2].is_ascii_uppercase()||[*b"tRNS",*b"gAMA",*b"cHRM",*b"sRGB",*b"pHYs",*b"tIME",*b"bKGD",*b"tEXt",*b"zTXt",*b"iTXt"].contains(&chunk.kind)||after&&!chunk.after_raster {return Err(invalid("png: opaque ancillary metadata overlaps a typed field or has invalid placement"));}after|=chunk.after_raster;checkpoint(false,1)?;}
+    Ok(())
+}
+
+fn encode_png_image_controlled(image:&PngImage,maximum_file:usize,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError> {
+    validate_png_image_controlled(image,&mut |start,amount|if start {control.begin_stage(amount)}else{control.advance(amount)})?;
+    let color=image.color_type.to_u8();let spp=image.color_type.samples_per_pixel();
+    let ihdr=Ihdr {width:image.width,height:image.height,bit_depth:image.bit_depth,color_type:color,interlace:u8::from(image.interlace)};
+    let bpp=bpp_bytes(&ihdr);let mut passes=Vec::with_capacity(7);
+    if image.interlace {for(pass,&(sx,sy,dx,dy))in ADAM7.iter().enumerate() {let(width,height)=adam7_pass_dims(image.width,image.height,pass);passes.push((sx,sy,dx,dy,width,height));}}else{passes.push((0,0,1,1,image.width,image.height));}
+    let raw_size=passes.iter().try_fold(0usize,|total,&(_,_,_,_,width,height)| {if width==0||height==0 {return Ok(total);}total.checked_add((packed_row_bytes(width,color,image.bit_depth)+1).checked_mul(height as usize).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PNG raw extent overflow"))?).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PNG raw extent overflow"))})?;
+    let mut raw=control.allocate_vec(raw_size)?;
+    for(sx,sy,dx,dy,width,height)in passes {
+        if width==0||height==0 {continue;}let row_bytes=packed_row_bytes(width,color,image.bit_depth);let mut previous=None;
+        for y in 0..height {
+            let mut row=control.allocate_vec(row_bytes)?;row.resize(row_bytes,0);control.begin_stage(width as usize*spp)?;
+            for x in 0..width {let source=(((sy+y*dy)as usize*image.width as usize)+(sx+x*dx)as usize)*spp;for channel in 0..spp {write_native_sample(&mut row,x as usize*spp+channel,image.bit_depth,image.samples[source+channel]);control.step()?;}}
+            let(filter,filtered)=choose_filter_controlled(&row,previous.as_deref(),bpp,control)?;raw.push(filter);control.begin_stage(filtered.len())?;for piece in filtered.chunks(256) {raw.extend_from_slice(piece);control.advance(piece.len())?;}previous=Some(row);
+        }
+    }
+    let compressed=semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::compress_zlib(&raw,maximum_file,control)?;
+    let count=14usize.checked_add(image.text_chunks.len()).and_then(|n|n.checked_add(image.ancillary_chunks.len())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PNG chunk count overflow"))?;
+    let mut output=PngEncodedChunks {chunks:control.allocate_vec(count)?,file_size:8,maximum_file};
+    let mut header=[0;13];header[..4].copy_from_slice(&image.width.to_be_bytes());header[4..8].copy_from_slice(&image.height.to_be_bytes());header[8..].copy_from_slice(&[image.bit_depth,color,0,0,u8::from(image.interlace)]);output.push(*b"IHDR",&header,control)?;
+    if let Some(gamma)=image.gamma {output.push(*b"gAMA",&gamma.to_be_bytes(),control)?;}
+    if let Some(c)=image.chromaticities {let mut data=[0;32];for(index,field)in[c.white_x,c.white_y,c.red_x,c.red_y,c.green_x,c.green_y,c.blue_x,c.blue_y].into_iter().enumerate() {data[index*4..index*4+4].copy_from_slice(&field.to_be_bytes());}output.push(*b"cHRM",&data,control)?;}
+    if let Some(intent)=image.srgb {output.push(*b"sRGB",&[intent.to_u8()],control)?;}
+    if let Some(palette)=&image.palette {let mut data=control.allocate_vec(palette.len()*3)?;control.begin_stage(palette.len())?;for entry in palette {data.extend_from_slice(&[entry.r,entry.g,entry.b]);control.step()?;}output.push(*b"PLTE",&data,control)?;}
+    if let Some(transparency)=&image.transparency {match transparency {PngTransparency::Indexed {alpha}=>output.push(*b"tRNS",alpha,control)?,PngTransparency::Grayscale {gray}=>output.push(*b"tRNS",&gray.to_be_bytes(),control)?,PngTransparency::Rgb {r,g,b}=>{let mut data=[0;6];data[..2].copy_from_slice(&r.to_be_bytes());data[2..4].copy_from_slice(&g.to_be_bytes());data[4..].copy_from_slice(&b.to_be_bytes());output.push(*b"tRNS",&data,control)?;}}}
+    if let Some(background)=&image.background {let data=encode_bkgd(background);control.charge(data.capacity())?;output.push(*b"bKGD",&data,control)?;}
+    if let Some(p)=image.physical_dims {let mut data=[0;9];data[..4].copy_from_slice(&p.ppu_x.to_be_bytes());data[4..8].copy_from_slice(&p.ppu_y.to_be_bytes());data[8]=u8::from(p.unit_is_meter);output.push(*b"pHYs",&data,control)?;}
+    if let Some(t)=image.timestamp {let mut data=[0;7];data[..2].copy_from_slice(&t.year.to_be_bytes());data[2..].copy_from_slice(&[t.month,t.day,t.hour,t.minute,t.second]);output.push(*b"tIME",&data,control)?;}
+    for text in &image.text_chunks {let(kind,data)=png_text_native(text,maximum_file,control)?;output.push(kind,&data,control)?;}
+    for chunk in image.ancillary_chunks.iter().filter(|chunk|!chunk.after_raster) {output.push(chunk.kind,&chunk.data,control)?;}
+    output.push(*b"IDAT",&compressed,control)?;
+    for chunk in image.ancillary_chunks.iter().filter(|chunk|chunk.after_raster) {output.push(chunk.kind,&chunk.data,control)?;}
+    output.push(*b"IEND",&[],control)?;
+    let mut bytes=control.allocate_vec(output.file_size)?;bytes.extend_from_slice(&PNG_SIGNATURE);
+    for(kind,data)in output.chunks {bytes.extend_from_slice(&(data.len()as u32).to_be_bytes());bytes.extend_from_slice(&kind);let mut crc=0xffff_ffffu32;for byte in kind {crc^=u32::from(byte);for _ in 0..8 {crc=if crc&1!=0 {(crc>>1)^0xedb88320}else{crc>>1};}}control.begin_stage(data.len())?;for piece in data.chunks(256) {bytes.extend_from_slice(piece);for byte in piece {crc^=u32::from(*byte);for _ in 0..8 {crc=if crc&1!=0 {(crc>>1)^0xedb88320}else{crc>>1};}}control.advance(piece.len())?;}bytes.extend_from_slice(&(!crc).to_be_bytes());}
+    Ok(bytes)
+}
+
+pub fn project_png(bytes: &[u8]) -> Result<PngProjection, String> {
+    let image = decode_png_image(bytes)?;
+    let pixels = crate::schema::operations::png_rgba8_preview(&image)?;
+    let mut chunk_order = vec![PngChunkMarker::Ihdr];
+    if image.gamma.is_some() { chunk_order.push(PngChunkMarker::Gama); }
+    if image.chromaticities.is_some() { chunk_order.push(PngChunkMarker::Chrm); }
+    if image.srgb.is_some() { chunk_order.push(PngChunkMarker::Srgb); }
+    if image.palette.is_some() { chunk_order.push(PngChunkMarker::Plte); }
+    if image.transparency.is_some() { chunk_order.push(PngChunkMarker::Trns); }
+    if image.background.is_some() { chunk_order.push(PngChunkMarker::Bkgd); }
+    if image.physical_dims.is_some() { chunk_order.push(PngChunkMarker::Phys); }
+    if image.timestamp.is_some() { chunk_order.push(PngChunkMarker::Time); }
+    chunk_order.extend((0..image.text_chunks.len()).map(|index|PngChunkMarker::Text { index }));
+    let mut unknown_chunks=Vec::new();
+    for chunk in image.ancillary_chunks.iter().filter(|chunk|!chunk.after_raster) { chunk_order.push(PngChunkMarker::Unknown { index:unknown_chunks.len() }); unknown_chunks.push(PngChunk { kind:chunk.kind,data:chunk.data.clone() }); }
+    chunk_order.push(PngChunkMarker::Idat);
+    for chunk in image.ancillary_chunks.iter().filter(|chunk|chunk.after_raster) { chunk_order.push(PngChunkMarker::Unknown { index:unknown_chunks.len() }); unknown_chunks.push(PngChunk { kind:chunk.kind,data:chunk.data.clone() }); }
+    chunk_order.push(PngChunkMarker::Iend);
+    Ok(PngProjection { width:image.width,height:image.height,bit_depth:image.bit_depth,color_type:image.color_type,interlace:image.interlace,plte:image.palette,trns:image.transparency,gama:image.gamma,chrm:image.chromaticities,srgb:image.srgb,phys:image.physical_dims,time:image.timestamp,bkgd:image.background,text_chunks:image.text_chunks,pixels,chunk_order,unknown_chunks })
+}
+
+fn decode_png_image(data:&[u8])->Result<PngImage,String> {let mut progress=|_|true;let mut control=NativeDecodeControl::new(512*1024*1024,&mut progress);decode_png_image_controlled(data,&mut control).map_err(|error|error.into_value().into_message())}
+
+enum PngReadError {Format(String),Refusal(ValueError)}
+impl From<String> for PngReadError {fn from(value:String)->Self {Self::Format(value)}}
+impl From<&str> for PngReadError {fn from(value:&str)->Self {Self::Format(value.into())}}
+impl From<ValueError> for PngReadError {fn from(value:ValueError)->Self {Self::Refusal(value)}}
+impl PngReadError {fn into_value(self)->ValueError {match self {Self::Format(message)=>ValueError::new(ValueRefusalKind::InvalidValue,message),Self::Refusal(error)=>error}}}
+
+fn decode_png_image_controlled(data: &[u8],control:&mut NativeDecodeControl<'_>) -> Result<PngImage, PngReadError> {
+    let chunks = read_chunks(data,control)?;
     validate_png_structure(&chunks)?;
     let mut ihdr: Option<Ihdr> = None;
-    let mut palette: Vec<[u8; 3]> = Vec::new();
-    let mut palette_alpha: Vec<u8> = Vec::new();
-    let mut gray_trans: Option<u32> = None;
-    let mut rgb_trans: Option<(u32, u32, u32)> = None;
-    let mut idat = Vec::new();
+    let compressed_size=chunks.iter().filter(|(kind,_)|*kind==*b"IDAT").try_fold(0usize,|n,(_,data)|n.checked_add(data.len()).ok_or("png: IDAT size overflow"))?;
+    let mut idat=control.allocate_vec(compressed_size)?;
     let mut seen_idat = false;
 
     let mut plte_out: Option<Vec<PngRgb>> = None;
@@ -2283,22 +1024,20 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
     let mut phys_out: Option<PngPhysicalDims> = None;
     let mut time_out: Option<PngTimestamp> = None;
     let mut bkgd_out: Option<PngBackground> = None;
-    let mut text_chunks: Vec<PngTextChunk> = Vec::new();
-    let mut unknown_chunks: Vec<PngChunk> = Vec::new();
-    let mut chunk_order: Vec<PngChunkMarker> = Vec::new();
-    let mut idat_marker_emitted = false;
+    let mut text_chunks: Vec<PngTextChunk> = control.allocate_vec(chunks.len())?;
+    let mut ancillary_chunks: Vec<PngAncillaryChunk> = control.allocate_vec(chunks.len())?;
 
     for &(ty, chunk) in &chunks {
         if ty == *b"IHDR" {
             ihdr = Some(parse_ihdr(chunk).map_err(ValueError::into_message)?);
-            chunk_order.push(PngChunkMarker::Ihdr);
+
         } else if ty == *b"PLTE" {
             if chunk.len() % 3 != 0 {
                 return Err("png PLTE: length not a multiple of 3".into());
             }
-            palette = chunk.as_chunks::<3>().0.iter().map(|c| [c[0], c[1], c[2]]).collect();
-            plte_out = Some(palette.iter().map(|c| PngRgb { r: c[0], g: c[1], b: c[2] }).collect());
-            chunk_order.push(PngChunkMarker::Plte);
+            let mut entries=control.allocate_vec(chunk.len()/3)?;control.begin_stage(chunk.len()/3)?;for c in chunk.as_chunks::<3>().0 {entries.push(PngRgb {r:c[0],g:c[1],b:c[2]});control.step()?;}
+            plte_out=Some(entries);
+
         } else if ty == *b"tRNS" {
             let color_type = ihdr.as_ref().ok_or("png: tRNS before IHDR")?.color_type;
             match color_type {
@@ -2307,7 +1046,6 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
                         return Err("png tRNS: expected 2 bytes for grayscale".into());
                     }
                     let g = u16::from_be_bytes([chunk[0], chunk[1]]);
-                    gray_trans = Some(g as u32);
                     trns_out = Some(PngTransparency::Grayscale { gray: g });
                 }
                 2 => {
@@ -2317,47 +1055,45 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
                     let r = u16::from_be_bytes([chunk[0], chunk[1]]);
                     let g = u16::from_be_bytes([chunk[2], chunk[3]]);
                     let b = u16::from_be_bytes([chunk[4], chunk[5]]);
-                    rgb_trans = Some((r as u32, g as u32, b as u32));
                     trns_out = Some(PngTransparency::Rgb { r, g, b });
                 }
                 3 => {
-                    palette_alpha = chunk.to_vec();
-                    trns_out = Some(PngTransparency::Indexed { alpha: palette_alpha.clone() });
+                    trns_out = Some(PngTransparency::Indexed { alpha: control.copy_bytes(chunk)? });
                 }
                 _ => {} // spec: tRNS shall not appear for 4/6 (already carry alpha) — ignore rather than fail
             }
-            chunk_order.push(PngChunkMarker::Trns);
+
         } else if ty == *b"gAMA" {
             if chunk.len() != 4 {
                 return Err("png gAMA: expected 4 bytes".into());
             }
             gama_out = Some(u32::from_be_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]));
-            chunk_order.push(PngChunkMarker::Gama);
+
         } else if ty == *b"cHRM" {
             if chunk.len() != 32 {
                 return Err("png cHRM: expected 32 bytes".into());
             }
             let v = |i: usize| u32::from_be_bytes([chunk[i], chunk[i + 1], chunk[i + 2], chunk[i + 3]]);
             chrm_out = Some(PngChromaticities { white_x: v(0), white_y: v(4), red_x: v(8), red_y: v(12), green_x: v(16), green_y: v(20), blue_x: v(24), blue_y: v(28) });
-            chunk_order.push(PngChunkMarker::Chrm);
+
         } else if ty == *b"sRGB" {
             if chunk.len() != 1 {
                 return Err("png sRGB: expected 1 byte".into());
             }
             srgb_out = Some(PngSrgbIntent::from_u8(chunk[0])?);
-            chunk_order.push(PngChunkMarker::Srgb);
+
         } else if ty == *b"pHYs" {
             if chunk.len() != 9 {
                 return Err("png pHYs: expected 9 bytes".into());
             }
             phys_out = Some(PngPhysicalDims { ppu_x: u32::from_be_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]), ppu_y: u32::from_be_bytes([chunk[4], chunk[5], chunk[6], chunk[7]]), unit_is_meter: chunk[8] == 1 });
-            chunk_order.push(PngChunkMarker::Phys);
+
         } else if ty == *b"tIME" {
             if chunk.len() != 7 {
                 return Err("png tIME: expected 7 bytes".into());
             }
             time_out = Some(PngTimestamp { year: u16::from_be_bytes([chunk[0], chunk[1]]), month: chunk[2], day: chunk[3], hour: chunk[4], minute: chunk[5], second: chunk[6] });
-            chunk_order.push(PngChunkMarker::Time);
+
         } else if ty == *b"bKGD" {
             let color_type = ihdr.as_ref().ok_or("png: bKGD before IHDR")?.color_type;
             bkgd_out = Some(match color_type {
@@ -2381,32 +1117,35 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
                 }
                 _ => return Err("png bKGD: unsupported color type".into()),
             });
-            chunk_order.push(PngChunkMarker::Bkgd);
+
         } else if ty == *b"tEXt" {
             let nul = chunk.iter().position(|&b| b == 0).ok_or("png tEXt: missing NUL after keyword")?;
-            let keyword = String::from_utf8_lossy(&chunk[..nul]).to_string();
-            let value = String::from_utf8_lossy(&chunk[nul + 1..]).to_string();
+            control.charge(chunk.len().saturating_mul(2))?;
+            let keyword = latin1_text(&chunk[..nul]);
+            let value = latin1_text(&chunk[nul + 1..]);
             let index = text_chunks.len();
             text_chunks.push(PngTextChunk { keyword, value, compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() });
-            chunk_order.push(PngChunkMarker::Text { index });
+
         } else if ty == *b"zTXt" {
             let nul = chunk.iter().position(|&b| b == 0).ok_or("png zTXt: missing NUL after keyword")?;
-            let keyword = String::from_utf8_lossy(&chunk[..nul]).to_string();
+            control.charge(chunk.len().saturating_mul(2))?;
+            let keyword = latin1_text(&chunk[..nul]);
             if chunk.len() < nul + 2 {
                 return Err("png zTXt: missing compression method".into());
             }
             if chunk[nul + 1] != 0 {
                 return Err("png zTXt: compression method must be zero".into());
             }
-            let value_bytes = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&chunk[nul + 2..])?;
-            let value = String::from_utf8_lossy(&value_bytes).to_string();
+            let value_bytes=semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decompress_zlib(&chunk[nul+2..],control.maximum_bytes().saturating_sub(control.owned_bytes()),control)?;
+            let value = latin1_text(&value_bytes);
             let index = text_chunks.len();
             text_chunks.push(PngTextChunk { keyword, value, compressed: true, kind: PngTextKind::ZText, language_tag: String::new(), translated_keyword: String::new() });
-            chunk_order.push(PngChunkMarker::Text { index });
+
         } else if ty == *b"iTXt" {
             let mut pos = 0usize;
             let nul1 = chunk[pos..].iter().position(|&b| b == 0).ok_or("png iTXt: missing NUL after keyword")?;
-            let keyword = String::from_utf8_lossy(&chunk[pos..pos + nul1]).to_string();
+            control.charge(chunk.len().saturating_mul(2))?;
+            let keyword = latin1_text(&chunk[pos..pos + nul1]);
             pos += nul1 + 1;
             if pos + 2 > chunk.len() {
                 return Err("png iTXt: truncated flags".into());
@@ -2427,36 +1166,30 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
             let language_tag = std::str::from_utf8(language_tag_bytes).expect("ASCII language tag").to_owned();
             pos += nul2 + 1;
             let nul3 = chunk[pos..].iter().position(|&b| b == 0).ok_or("png iTXt: missing NUL after translated keyword")?;
-            let translated_keyword = std::str::from_utf8(&chunk[pos..pos + nul3]).map_err(|_| "png iTXt: translated keyword must be UTF-8")?.to_owned();
+            let translated_keyword=control.copy_text(std::str::from_utf8(&chunk[pos..pos+nul3]).map_err(|_|"png iTXt: translated keyword must be UTF-8")?)?;
             pos += nul3 + 1;
             let rest = &chunk[pos..];
             let value_bytes = if compressed_flag {
-                let decompressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(rest)?;
+                let decompressed=semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decompress_zlib(rest,control.maximum_bytes().saturating_sub(control.owned_bytes()),control)?;
                 decompressed
             } else {
-                rest.to_vec()
+                control.copy_bytes(rest)?
             };
             let value = String::from_utf8(value_bytes).map_err(|_| "png iTXt: text must be UTF-8")?;
             let index = text_chunks.len();
             text_chunks.push(PngTextChunk { keyword, value, compressed: compressed_flag, kind: PngTextKind::IText, language_tag, translated_keyword });
-            chunk_order.push(PngChunkMarker::Text { index });
+
         } else if ty == *b"IDAT" {
             idat.extend_from_slice(chunk);
             seen_idat = true;
-            if !idat_marker_emitted {
-                chunk_order.push(PngChunkMarker::Idat);
-                idat_marker_emitted = true;
-            }
         } else if ty == *b"IEND" {
-            chunk_order.push(PngChunkMarker::Iend);
+
         } else if ty[0].is_ascii_uppercase() {
-            return Err(format!("png: unsupported critical chunk {}", String::from_utf8_lossy(&ty)));
+            return Err(format!("png: unsupported critical chunk {}", String::from_utf8_lossy(&ty)).into());
         } else {
             // 🗃️ Ancillary chunk the codec doesn't specifically model — typed raw-retention,
             // verbatim, in position (the recipe's "nothing real on disk silently dropped" rule).
-            let index = unknown_chunks.len();
-            unknown_chunks.push(PngChunk { kind: ty, data: chunk.to_vec() });
-            chunk_order.push(PngChunkMarker::Unknown { index });
+            ancillary_chunks.push(PngAncillaryChunk { kind: ty, data: control.copy_bytes(chunk)?, after_raster: seen_idat });
         }
     }
 
@@ -2464,31 +1197,34 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
     if !seen_idat {
         return Err("png: missing IDAT".into());
     }
-    if ihdr.color_type == 3 && palette.is_empty() {
+    if ihdr.color_type == 3 && plte_out.as_ref().is_none_or(Vec::is_empty) {
         return Err("png: color type 3 requires PLTE".into());
     }
 
-    let raw = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&idat)?;
     let spp = samples_per_pixel(ihdr.color_type);
+    let count = (ihdr.width as usize).checked_mul(ihdr.height as usize).and_then(|n|n.checked_mul(spp)).ok_or("png: native sample count overflow")?;
+    if count > 256 * 1024 * 1024 { return Err("png: native sample admission exceeds 512 MiB".into()); }
+    let expected=if ihdr.interlace==0 {(packed_row_bytes(ihdr.width,ihdr.color_type,ihdr.bit_depth)+1).checked_mul(ihdr.height as usize).ok_or("png: raw raster extent overflow")?} else {let mut count=0usize;for pass in 0..7 {let(w,h)=adam7_pass_dims(ihdr.width,ihdr.height,pass);if w!=0&&h!=0 {count=count.checked_add((packed_row_bytes(w,ihdr.color_type,ihdr.bit_depth)+1).checked_mul(h as usize).ok_or("png: Adam7 raster extent overflow")?).ok_or("png: Adam7 raster extent overflow")?;}}count};
+    let raw=semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decompress_zlib(&idat,expected,control)?;
     let bpp = bpp_bytes(&ihdr);
-    let mut rgba = vec![0u8; ihdr.width as usize * ihdr.height as usize * 4];
+    let mut native_samples=control.allocate_vec(count)?;control.begin_stage(count)?;while native_samples.len()<count {let added=(count-native_samples.len()).min(256);native_samples.resize(native_samples.len()+added,0);control.advance(added)?;}
 
-    let mut put_row = |samples: &[u32], row_width: usize, base_x: u32, base_y: u32, step_x: u32| -> Result<(), String> {
+    let mut put_row = |row: &[u8], row_width: usize, base_x: u32, base_y: u32, step_x: u32,control:&mut NativeDecodeControl<'_>| -> Result<(), PngReadError> {
+        control.begin_stage(row_width*spp)?;
         for i in 0..row_width {
-            let px = pixel_to_rgba(&samples[i * spp..i * spp + spp], &ihdr, &palette, &palette_alpha, gray_trans, rgb_trans).map_err(ValueError::into_message)?;
             let x = base_x + i as u32 * step_x;
-            let idx = (base_y as usize * ihdr.width as usize + x as usize) * 4;
-            rgba[idx..idx + 4].copy_from_slice(&px);
+            let idx = (base_y as usize * ihdr.width as usize + x as usize) * spp;
+            for channel in 0..spp {let ordinal=i*spp+channel;native_samples[idx+channel]=match ihdr.bit_depth {16=>u16::from_be_bytes([row[ordinal*2],row[ordinal*2+1]]),8=>u16::from(row[ordinal]),depth=>{let bit=ordinal*depth as usize;u16::from((row[bit/8]>>(8-depth as usize-bit%8))&((1u8<<depth)-1))}};control.step()?;}
         }
         Ok(())
     };
 
     if ihdr.interlace == 0 {
         let row_bytes = packed_row_bytes(ihdr.width, ihdr.color_type, ihdr.bit_depth);
-        let (rows, _) = defilter_pass(&raw, 0, ihdr.height, row_bytes, bpp)?;
+        let (rows, consumed) = defilter_pass(&raw, 0, ihdr.height, row_bytes, bpp,control)?;
+        if consumed != raw.len() { return Err("png: bytes follow the final native raster row".into()); }
         for (y, row) in rows.iter().enumerate() {
-            let samples = unpack_samples(row, ihdr.width as usize, spp, ihdr.bit_depth);
-            put_row(&samples, ihdr.width as usize, 0, y as u32, 1)?;
+            put_row(row, ihdr.width as usize, 0, y as u32, 1,control)?;
         }
     } else {
         let mut pos = 0usize;
@@ -2498,34 +1234,35 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
                 continue;
             }
             let row_bytes = packed_row_bytes(pw, ihdr.color_type, ihdr.bit_depth);
-            let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp)?;
+            let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp,control)?;
             pos = new_pos;
             for (j, row) in rows.iter().enumerate() {
-                let samples = unpack_samples(row, pw as usize, spp, ihdr.bit_depth);
-                put_row(&samples, pw as usize, sx, sy + j as u32 * sty, stx)?;
+                put_row(row, pw as usize, sx, sy + j as u32 * sty, stx,control)?;
             }
         }
+        if pos != raw.len() { return Err("png: bytes follow the final Adam7 raster row".into()); }
     }
 
-    Ok(PngProjection {
+    let image = PngImage {
         width: ihdr.width,
         height: ihdr.height,
         bit_depth: ihdr.bit_depth,
         color_type: PngColorType::from_u8(ihdr.color_type)?,
         interlace: ihdr.interlace == 1,
-        plte: plte_out,
-        trns: trns_out,
-        gama: gama_out,
-        chrm: chrm_out,
+        palette: plte_out,
+        transparency: trns_out,
+        gamma: gama_out,
+        chromaticities: chrm_out,
         srgb: srgb_out,
-        phys: phys_out,
-        time: time_out,
-        bkgd: bkgd_out,
+        physical_dims: phys_out,
+        timestamp: time_out,
+        background: bkgd_out,
         text_chunks,
-        pixels: rgba,
-        chunk_order,
-        unknown_chunks,
-    })
+        samples: native_samples,
+        ancillary_chunks,
+    };
+    validate_png_image_controlled(&image,&mut |start,amount|if start {control.begin_stage(amount)}else{control.advance(amount)})?;
+    Ok(image)
 }
 //#endregion Codec
 
@@ -2613,7 +1350,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::PngSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.png` parts.
@@ -2707,3 +1444,7 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: PngAnalyzer,
     composer: PngComposer,
 );
+
+#[cfg(test)]
+#[path="🧪️tests/🧬️owned-native-oracle/🦀️.rs"]
+mod owned_native_oracle_tests;

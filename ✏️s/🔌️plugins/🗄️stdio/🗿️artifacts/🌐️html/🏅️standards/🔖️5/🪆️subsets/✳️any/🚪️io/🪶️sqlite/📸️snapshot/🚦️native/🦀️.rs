@@ -1,5 +1,5 @@
 //! 🚦️ Controlled HTML markup producer, preserving the owner's literal native authority.
-use crate::standards::v5::subsets::any::schema::snapshot::component::controlled_native::{HtmlSnapshot, HtmlNode, HtmlAttr, RawTextKind};
+use crate::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, HtmlNode, HtmlAttr, RawTextKind};
 use crate::standards::v5::subsets::any::io::text::snapshot::{is_name_byte};
 use crate::standards::v5::subsets::any::io::text::snapshot::{is_void_element};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
@@ -13,11 +13,11 @@ const _:()=assert!(std::mem::size_of::<HtmlContinuation>()==std::mem::size_of::<
 const _:()=assert!(std::mem::size_of::<HtmlContinuation>()<=std::mem::size_of::<(String,Vec<HtmlAttr>,Vec<HtmlNode>)>());
 const _:()=assert!(std::mem::size_of::<HtmlContinuation>()<=std::mem::size_of::<HtmlNode>()&&std::mem::align_of::<HtmlContinuation>()<=std::mem::align_of::<HtmlNode>());
 pub(crate) fn retire_node(root:HtmlNode){
- #[cfg(test)]crate::standards::v5::subsets::any::schema::snapshot::component::controlled_native::sqlite_lifecycle_tests::retirement_visit();
+ #[cfg(test)]crate::standards::v5::subsets::any::io::sqlite::snapshot::lifecycle_tests::retirement_visit();
  let HtmlNode::Element{children,..}=root else{return};let mut work=children;let mut previous=std::ptr::null_mut::<HtmlContinuation>();
  loop{
   if let Some(node)=work.pop(){
-   #[cfg(test)]crate::standards::v5::subsets::any::schema::snapshot::component::controlled_native::sqlite_lifecycle_tests::retirement_visit();
+   #[cfg(test)]crate::standards::v5::subsets::any::io::sqlite::snapshot::lifecycle_tests::retirement_visit();
    if let HtmlNode::Element{children,..}=node{let slot=unsafe{work.as_mut_ptr().add(work.len())}.cast::<HtmlContinuation>();let frame=HtmlContinuation{work:std::mem::take(&mut work),previous};unsafe{std::ptr::write(slot,frame)}previous=slot;work=children;}
   }else if previous.is_null(){return}else{let frame=unsafe{std::ptr::read(previous)};previous=frame.previous;work=frame.work;}
  }

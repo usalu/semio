@@ -731,7 +731,7 @@ fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
 /// 📄️ The real registry preserves imported graph documents and retires its rebuilt roots.
 #[test]
 fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_snapshot() {
-    use semio_framework_plugin::{Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId};
+    use {semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{import, io_registry};
     let contract = fixture()["registryText"].clone();
     assert_eq!(contract["source"], "imported-unit-cube");

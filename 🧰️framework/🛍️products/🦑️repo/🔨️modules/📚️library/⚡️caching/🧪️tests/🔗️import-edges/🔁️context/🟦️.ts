@@ -5,7 +5,6 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
-import Ajv from "ajv";
 import { build } from "esbuild";
 import ts from "typescript";
 
@@ -14,7 +13,6 @@ type Vector = { id: string; source: string; phases: Phase[] };
 type ModuleProvider = { moduleSourceImports(path: string, source: string): readonly string[]; commandSourceImports(path: string, source: string): readonly string[] };
 const caching = resolve(import.meta.dir, "../../.."), require = createRequire(import.meta.url);
 const fixture = JSON.parse(readFileSync(join(caching, "🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { version: number; imports: { id: string; path: string; source: string; imports: string[] }[]; contexts: Vector[] };
-const schema = JSON.parse(readFileSync(join(caching, "🧬️schema/🔗️import-edges/🔣️.json"), "utf8"));
 
 /** 🔍️ Obtains runtime strings from independent esbuild resolution and TypeScript emission/scanning. */
 async function oracle(path: string, source: string): Promise<string[]> {
@@ -30,8 +28,7 @@ async function oracle(path: string, source: string): Promise<string[]> {
   return [...paths].sort();
 }
 
-test("closed module source and resolution context corpus has unique identities", () => {
-  expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+test("module source and resolution examples have unique identities", () => {
   for (const rows of [fixture.imports, fixture.contexts]) expect(new Set(rows.map(row => row.id)).size).toBe(rows.length);
   console.log(`[DEBUG] import edge corpus: ${fixture.imports.length} source vectors, ${fixture.contexts.length} context replay laws`);
 });

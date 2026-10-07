@@ -1,11 +1,16 @@
 /** 🔒️ Persisted layer protection and inherited command capabilities. */
 import {expect,test} from "bun:test";
+
 import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+
 import {hierarchy} from "d3-hierarchy";
+
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
 import fixture from "../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json";
 import schema from "../../🔣️.json";
-import {parseRasterLayerNode,printRasterLayerNode,layerProtection} from "../../🟦️.ts";
+import {layerProtection} from "../../🟦️.ts";
+import {rasterLayerNodeFromJson as parseRasterLayerNode} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
+import {printRasterLayerNode} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
 for(const row of fixture.cases)test("Protection for "+row.id,()=>{
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(valueSchema).addSchema({$id:schema.$id,$defs:schema.$defs}).compile({$ref:schema.$id+"#/$defs/RasterLayerNode"});
   for(const layer of fixture.layers)expect(validate(layer)).toBe(true);

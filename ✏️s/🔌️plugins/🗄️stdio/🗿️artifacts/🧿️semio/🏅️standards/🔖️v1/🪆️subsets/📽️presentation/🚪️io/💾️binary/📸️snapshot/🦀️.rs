@@ -8,21 +8,21 @@ mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::presentation::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — the sibling `🔺️diff` facet re-exports document's own real, already-
 /// tested `DocBlock` codec (`enc_block`/`dec_block`) plus the entity value-codecs it owns
 /// (`enc_master`/`enc_layout`/`enc_slide`, `enc_str`, `enc_list`) — this facet imports them rather
 /// than duplicating a third independent copy (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-
 /// EVOLUTION presentation wave, following `document`'s own snapshot-imports-from-diff convention).
-use crate::presentation::io::text::diff::{dec_slide};
-use crate::presentation::io::text::diff::{enc_slide};
-use crate::presentation::io::text::diff::{dec_layout};
-use crate::presentation::io::text::diff::{enc_layout};
-use crate::presentation::io::text::diff::{dec_master};
-use crate::presentation::io::text::diff::{enc_master};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_slide};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_slide};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_layout};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_layout};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_master};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_master};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
 use framework_schema::ArtifactSchema;
@@ -382,22 +382,22 @@ use super::*;
 use super::*;
 use crate::standards::v1::subsets::presentation::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — the sibling `🔺️diff` facet re-exports document's own real, already-
 /// tested `DocBlock` codec (`enc_block`/`dec_block`) plus the entity value-codecs it owns
 /// (`enc_master`/`enc_layout`/`enc_slide`, `enc_str`, `enc_list`) — this facet imports them rather
 /// than duplicating a third independent copy (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-
 /// EVOLUTION presentation wave, following `document`'s own snapshot-imports-from-diff convention).
-use crate::presentation::io::text::diff::{dec_slide};
-use crate::presentation::io::text::diff::{enc_slide};
-use crate::presentation::io::text::diff::{dec_layout};
-use crate::presentation::io::text::diff::{enc_layout};
-use crate::presentation::io::text::diff::{dec_master};
-use crate::presentation::io::text::diff::{enc_master};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_slide};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_slide};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_layout};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_layout};
+use crate::standards::v1::subsets::presentation::io::text::diff::{dec_master};
+use crate::standards::v1::subsets::presentation::io::text::diff::{enc_master};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
 use framework_schema::ArtifactSchema;

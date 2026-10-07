@@ -5,13 +5,13 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ecma_376::subsets::base::io::DocxComposer as DocxAnyComposer;
-    use crate::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
+    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance;
     use crate::DocxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_STRICT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -99,97 +99,18 @@ pub mod derived_construction {
     #[cfg(test)]
     use crate::schema::mutations::set_snapshot;
     use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun, DocxXmlPart};
-    use crate::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_REL_BASE};
+    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::{check_strict_conformance, STRICT_REL_BASE};
     use crate::{DocxDiff, DocxMutation, DocxSnapshot};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     #[cfg(test)]
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
-    //#region 🔖️Namespaces
-    const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/wordprocessingml/main";
-    const MAIN_DOCUMENT_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
-    const MAIN_DOCUMENT_PART: &str = "word/document.xml";
-    //#endregion 🔖️Namespaces
+    use crate::standards::v_ecma_376::subsets::strict::schema::construction::build_minimal_strict_docx;
 
-    //#region 🔖️Seed
-    /// 🌱️ Assembles a fresh, minimal-but-strict-conformant OPC package around `document` -- real
-    /// construction (mirrors the ✳️any subset's `build_minimal_docx` shape), just with the strict
-    /// namespace, root `conformance="strict"` attribute, and strict officeDocument relationship base
-    /// written from the start instead of the transitional ones.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn build_minimal_strict_docx(document: DocxDocument) -> DocxSnapshot {
-        let mut opc = OpcPackage::empty();
-        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-        opc.content_types.set_default("xml", "application/xml");
-        opc.content_types.set_override(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE);
-        opc.add_generated_relationship("", &format!("{STRICT_REL_BASE}/officeDocument"), MAIN_DOCUMENT_PART);
-        DocxSnapshot::from_parts(
-            opc,
-            vec![DocxXmlPart::try_from_document(MAIN_DOCUMENT_PART.into(), MAIN_DOCUMENT_CONTENT_TYPE.into(), document_to_strict_xml(&document))
-                .expect("the minimal strict XML document fits retained ownership")],
-        )
-            .expect("the minimal strict DOCX package fits retained OPC ownership")
-    }
-
-    /// ✍️ Same paragraph/run -> XML shape as the ✳️any subset's `engine::document_to_xml`, just with
-    /// the strict `xmlns:w` value and an added `conformance="strict"` root attribute.
-    /// ✍️ Renders only the `Paragraph` blocks of `doc.body` (strict conformance's ergonomic
-    /// construction path is paragraph/run-only, same scope as before this ticket's table/style
-    /// enrichment; a `Table` block reaching this builder via `SetSnapshot`/raw `mutate` still survives
-    /// losslessly through the shared `✳️any` engine's `document_to_xml`, this fn is only the TYPED
-    /// convenience path for `add_paragraph`/`add_text_paragraph`/`add_runs`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn document_to_strict_xml(doc: &DocxDocument) -> XmlDocument {
-        let body_children = doc
-            .body
-            .iter()
-            .filter_map(|block| match block {
-                crate::schema::snapshot::DocxBlock::Paragraph(p) => Some(p),
-                _ => None,
-            })
-            .map(|p| {
-                let run_children = p
-                    .runs
-                    .iter()
-                    .map(|r| {
-                        let mut rc = Vec::new();
-                        if r.bold || r.italic || r.underline {
-                            let mut rpr = Vec::new();
-                            if r.bold {
-                                rpr.push(XmlNode::Element { name: "w:b".into(), attrs: vec![], children: vec![] });
-                            }
-                            if r.italic {
-                                rpr.push(XmlNode::Element { name: "w:i".into(), attrs: vec![], children: vec![] });
-                            }
-                            if r.underline {
-                                rpr.push(XmlNode::Element { name: "w:u".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: "single".into() }], children: vec![] });
-                            }
-                            rc.push(XmlNode::Element { name: "w:rPr".into(), attrs: vec![], children: rpr });
-                        }
-                        rc.push(XmlNode::Element { name: "w:t".into(), attrs: vec![XmlAttr { name: "xml:space".into(), value: "preserve".into() }], children: vec![XmlNode::Text { text: r.text.clone() }] });
-                        XmlNode::Element { name: "w:r".into(), attrs: vec![], children: rc }
-                    })
-                    .collect();
-                XmlNode::Element { name: "w:p".into(), attrs: vec![], children: run_children }
-            })
-            .collect();
-        XmlDocument {
-            prolog: Vec::new(),
-            epilog: Vec::new(),
-            root: Some(XmlNode::Element {
-                name: "w:document".into(),
-                attrs: vec![XmlAttr { name: "xmlns:w".into(), value: STRICT_MAIN_NS.into() }, XmlAttr { name: "conformance".into(), value: "strict".into() }],
-                children: vec![XmlNode::Element { name: "w:body".into(), attrs: vec![], children: body_children }],
-            }),
-            doctype: None,
-            declaration: None,
-        }
-    }
-    //#endregion 🔖️Seed
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -272,112 +193,21 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
+    use crate::standards::v_ecma_376::subsets::base::io::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
     use crate::{schema::snapshot::DocxXmlPart, DocxSnapshot};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
 
-    //#region 🔖️Namespaces
-    pub const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/wordprocessingml/main";
-    pub const TRANSITIONAL_MAIN_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-    pub const STRICT_REL_BASE: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships";
-    pub const TRANSITIONAL_REL_BASE: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-    pub const VML_NS: &str = "urn:schemas-microsoft-com:vml";
-    //#endregion 🔖️Namespaces
+    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::*;
 
-    //#region 🔖️Conformance
-    pub const CODE_MAIN_NS_MISSING: &str = "stdio.docx.strict.main-ns-missing";
-    pub const CODE_TRANSITIONAL_NS_PRESENT: &str = "stdio.docx.strict.transitional-ns-present";
-    pub const CODE_VML_PRESENT: &str = "stdio.docx.strict.vml-present";
-    pub const CODE_REL_BASE: &str = "stdio.docx.strict.non-strict-relationship-base";
-    pub const CODE_CONFORMANCE_ATTR: &str = "stdio.docx.strict.conformance-attr-missing";
-    pub const CODE_ALTERNATE_CONTENT: &str = "stdio.docx.strict.alternate-content-present";
-
-    /// 🔎️ Resolves the main document part via the root officeDocument relationship -- matched by
-    /// relationship-type SUFFIX (`/officeDocument`) rather than the transitional-shaped
-    /// `REL_TYPE_OFFICE_DOCUMENT` constant verbatim, since a genuinely strict package's root
-    /// relationship carries the SAME suffix under the strict base namespace (that swap is exactly what
-    /// `CODE_REL_BASE` below checks for) -- matching by suffix here keeps this lookup honest for both
-    /// conformance classes instead of silently failing to find the main part on any strict document.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn main_document_part(snapshot: &DocxSnapshot) -> Option<(&DocxXmlPart, String)> {
-        let rel = snapshot.opc.relationships_for("")?.iter().find(|relationship| relationship.rel_type.to_string_owner().ends_with("/officeDocument"))?;
-        let path = resolve_relationship_target("", &rel.target.to_string_owner());
-        snapshot.xml_part(&path).map(|part| (part, path))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn part_contains(part: &DocxXmlPart, needle: &str) -> bool {
-        !needle.is_empty()
-            && part
-                .materialize_document_exact()
-                .is_ok_and(|document| semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text(&document).contains(needle))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn hard(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn soft(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
-    }
-
-    /// 🛡️ Real ISO/IEC 29500-1:2016 Strict conformance checks against one already-decoded
-    /// `DocxSnapshot`. Shared single source of truth: `DocxStrictComposer::compose` hard-gates on
-    /// this (pre-serialization, authoritative), `DocxStrictBuilder::build` hard-gates on this too, and
-    /// the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_strict_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
-        let opc = &snapshot.opc;
-        let mut out = Vec::new();
-
-        match main_document_part(snapshot) {
-            Some((part, path)) => {
-                if !part_contains(part, STRICT_MAIN_NS) {
-                    out.push(hard(CODE_MAIN_NS_MISSING, format!("main document part {path} does not declare the strict WordprocessingML namespace {STRICT_MAIN_NS}")));
-                }
-                if !part_contains(part, "conformance=\"strict\"") {
-                    out.push(soft(CODE_CONFORMANCE_ATTR, format!("main document part {path} root element does not declare conformance=\"strict\"")));
-                }
-            }
-            None => out.push(hard(CODE_MAIN_NS_MISSING, "package has no root officeDocument relationship -- cannot locate the main document part to check the strict namespace on".into())),
-        }
-
-        for part in &snapshot.xml_parts {
-            if part_contains(part, TRANSITIONAL_MAIN_NS) {
-                out.push(hard(CODE_TRANSITIONAL_NS_PRESENT, format!("part {} contains the transitional WordprocessingML namespace {TRANSITIONAL_MAIN_NS} -- strict conformance forbids mixed namespaces", part.path)));
-            }
-            if part_contains(part, VML_NS) {
-                out.push(hard(CODE_VML_PRESENT, format!("part {} contains the VML namespace {VML_NS} -- VML is transitional-only markup, forbidden under strict conformance", part.path)));
-            }
-            if part_contains(part, "mc:AlternateContent") {
-                out.push(soft(CODE_ALTERNATE_CONTENT, format!("part {} contains mc:AlternateContent compatibility markup", part.path)));
-            }
-        }
-
-        let mut owners: Vec<&String> = opc.relationships.keys().collect();
-        owners.sort();
-        for owner in owners {
-            for rel in opc.relationships.get(owner).expect("enumerated retained relationship owner").iter() {
-                if rel.rel_type.to_string_owner().starts_with(TRANSITIONAL_REL_BASE) {
-                    out.push(hard(CODE_REL_BASE, format!("relationship {} owned by {owner:?} uses the transitional relationship base {TRANSITIONAL_REL_BASE} -- strict conformance requires {STRICT_REL_BASE}", rel.id)));
-                }
-            }
-        }
-
-        out
-    }
-    //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer
     /// 🧐️ Analyzes `stdio.docx` (ecma-376/📏️strict): delegates the real parse to the ✳️any subset's
@@ -424,3 +254,8 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: DocxStrictAnalyzer,
     composer: DocxStrictComposer,
 );
+
+#[path = "📝️text"]
+pub mod text { #[path = "🧬️mutations/🦀️.rs"] pub mod mutations; }
+#[path = "💾️binary"]
+pub mod binary { #[path = "🧬️mutations/🦀️.rs"] pub mod mutations; }

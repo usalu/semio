@@ -10,7 +10,7 @@ use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
@@ -23,8 +23,8 @@ use semio_framework_plugin::NoPresence;
 use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::StandardId;
-use semio_framework_plugin::SubsetId;
+use {semio_framework_artifact_reference::StandardId};
+use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_ui_locale::Label;
 
 //#region 🔖️Dialect
@@ -181,7 +181,7 @@ impl ArtifactEditor for DocxTransitionalEditor {
     }
 
     fn initial_snapshot() -> DocxSnapshot {
-        crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(crate::schema::snapshot::DocxDocument {
+        crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(crate::schema::snapshot::DocxDocument {
             body: vec![crate::schema::snapshot::DocxBlock::Paragraph(crate::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
         })

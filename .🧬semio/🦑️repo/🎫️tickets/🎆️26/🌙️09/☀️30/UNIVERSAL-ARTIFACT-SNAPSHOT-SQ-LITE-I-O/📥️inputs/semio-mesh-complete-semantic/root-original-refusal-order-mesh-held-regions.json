@@ -1,0 +1,31 @@
+{
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+  "beforeHeldSha256": "272184c821e7b3e90bab464747ff4e87cb15fc1c435e0d523b8cfdb40e83fe0d",
+  "afterHeldSha256": "df966b3dc0272701753390640e33a1f1f03cf70498bcaf33a6dab8e541d324ef",
+  "regions": [
+    {
+      "before": "base_color:SemioRgba{r:row.binary32(4)?,g:row.binary32(5)?,b:row.binary32(6)?,a:row.binary32(7)?},metallic:row.binary32(8)?,roughness:row.binary32(9)?",
+      "after": "base_color:SemioRgba{r:0.0,g:0.0,b:0.0,a:0.0},metallic:0.0,roughness:0.0"
+    },
+    {
+      "before": "material.get_mut().id=reconstruct_text(control,row.text(3)?)?;material.get_mut().base_color_texture=",
+      "after": "material.get_mut().id=reconstruct_text(control,row.text(3)?)?;material.get_mut().base_color=SemioRgba{r:row.binary32(4)?,g:row.binary32(5)?,b:row.binary32(6)?,a:row.binary32(7)?};material.get_mut().metallic=row.binary32(8)?;material.get_mut().roughness=row.binary32(9)?;material.get_mut().base_color_texture="
+    },
+    {
+      "before": "native_mesh.get_mut().id=reconstruct_text(control,mesh.text(3)?)?;native_mesh.get_mut().primitives=",
+      "after": "native_mesh.get_mut().primitives="
+    },
+    {
+      "before": "});native.get_mut().id=reconstruct_text(control,primitive.text(3)?)?;native.get_mut().material_id=optional_text(*primitive,5,control)?;",
+      "after": "});"
+    },
+    {
+      "before": "native_mesh.get_mut().primitives.push(native.take());",
+      "after": "native.get_mut().id=reconstruct_text(control,primitive.text(3)?)?;native.get_mut().material_id=optional_text(*primitive,5,control)?;native_mesh.get_mut().primitives.push(native.take());"
+    },
+    {
+      "before": "result.get_mut().meshes.push(native_mesh.take());",
+      "after": "native_mesh.get_mut().id=reconstruct_text(control,mesh.text(3)?)?;result.get_mut().meshes.push(native_mesh.take());"
+    }
+  ]
+}

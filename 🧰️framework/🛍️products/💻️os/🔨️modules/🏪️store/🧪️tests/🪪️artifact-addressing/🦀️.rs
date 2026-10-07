@@ -3,6 +3,8 @@ use super::*;
 
 #[test]
 fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fields() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _,DialectCoordinateText as _};
+
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
     for row in fixture["valid"].as_array().unwrap() {
         let value = DslValue::from(row["child"].clone());
@@ -12,7 +14,7 @@ fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fie
         assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(), row["child"]);
         assert_eq!(child.target.dialect.to_coordinate(), row["coordinate"].as_str().unwrap());
         assert_eq!(child.target.to_uri(), row["uri"].as_str().unwrap());
-        assert_eq!(crate::os_io::ArtifactRef::parse_uri(row["uri"].as_str().unwrap()).unwrap(), child.target);
+        assert_eq!(semio_framework_artifact_reference::ArtifactRef::parse_uri(row["uri"].as_str().unwrap()).unwrap(), child.target);
         let decoded = ArtifactChild::<()>::from_value(child.to_value()).unwrap();
         assert!(decoded.local_owner::<String>().is_none());
         assert_eq!(decoded, child);
@@ -21,10 +23,10 @@ fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fie
         assert!(ArtifactChild::<()>::from_value(DslValue::from(value.clone())).is_err(), "accepted foreign child shape {value}");
     }
     for value in fixture["invalidCoordinates"].as_array().unwrap() {
-        assert!(crate::os_io::ArtifactDialect::parse_coordinate(value.as_str().unwrap()).is_err());
+        assert!(semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(value.as_str().unwrap()).is_err());
     }
     for value in fixture["invalidUris"].as_array().unwrap() {
-        assert!(crate::os_io::ArtifactRef::parse_uri(value.as_str().unwrap()).is_err());
+        assert!(semio_framework_artifact_reference::ArtifactRef::parse_uri(value.as_str().unwrap()).is_err());
     }
 }
 

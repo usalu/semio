@@ -12,7 +12,7 @@ use crate::viewer::txt as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::ExampleSource;
-use semio_framework_plugin::{Dialect, StandardId, SubsetId};
+use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 #[cfg(feature = "component-app-assembly")]
 use std::sync::OnceLock;
 

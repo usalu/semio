@@ -52,7 +52,8 @@ const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "change-c
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::mutations::{apply_sourcing_mutation_reporting, inverse_sourcing_mutation_steps, SourcingMutation};
+    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::mutations::{apply_sourcing_mutation_reporting,inverse_sourcing_mutation_steps,SourcingMutation};
+
     use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::io::text::mutations::{decode_sourcing_mutation_json};
     use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::{schema::snapshot::{curation_selection_summary, CurationSnapshot}, io::snapshot::{json::{decode_curation_snapshot_json, encode_curation_snapshot_json}, text::{parse_curation_dsl, print_curation_dsl}}};
 

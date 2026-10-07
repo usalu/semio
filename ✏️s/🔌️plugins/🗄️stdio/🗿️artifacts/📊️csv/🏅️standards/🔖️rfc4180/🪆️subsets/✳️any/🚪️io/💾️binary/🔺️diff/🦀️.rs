@@ -107,7 +107,7 @@ pub(crate) fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff
     w.write_varint_u64(d.added.len() as u64);
     for a in &d.added {
         w.write_varint_u64(a.index as u64);
-        crate::schema::mutations::write_bin_record(w, &a.record);
+        crate::standards::v_rfc4180::subsets::any::io::binary::mutations::write_bin_record(w, &a.record);
     }
 }
 
@@ -129,7 +129,7 @@ pub(crate) fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRe
     let mut added = Vec::with_capacity(added_n);
     for _ in 0..added_n {
         let index = r.read_varint_u64()? as usize;
-        let record = crate::schema::mutations::read_bin_record(r)?;
+        let record = crate::standards::v_rfc4180::subsets::any::io::binary::mutations::read_bin_record(r)?;
         added.push(CsvRecordAdded { index, record });
     }
     Ok(CsvRecordsDiff { removed, modified, added })

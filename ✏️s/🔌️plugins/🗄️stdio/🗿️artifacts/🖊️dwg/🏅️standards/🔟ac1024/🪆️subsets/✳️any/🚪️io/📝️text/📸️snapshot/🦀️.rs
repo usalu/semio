@@ -70,21 +70,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 
 
 
-/// 🚫️ Why this writer cannot emit `snapshot`'s stamp, as the `x-semio-invariant` id it breaks and a sentence naming the
-/// value: `version-sentinel` when the stamp is not `AC` + four digits, `written-as-ac1024` when a drawing that carries
-/// content is stamped anything but [`WRITTEN_VERSION`]. AC1018 (R2004) frames objects without a handle-stream size,
-/// AC1027/AC1032 (R2013+) add `has_ds_data` to every object, so a foreign stamp over these object streams would be a file
-/// no reader decodes as written. Only the empty preamble-only document carries no object stream a stamp could
-/// contradict, so it may carry any sentinel.
-///
-/// @see https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf — §20 object layouts
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn unwritable_version(snapshot: &DwgSnapshot) -> Option<(&'static str, String)> {
-    if snapshot.version.len() != 6 || dwg_version_sentinel(snapshot.version.as_bytes()).is_err() {
-        return Some(("version-sentinel", format!("{:?} is not an AC10xx DWG version sentinel", snapshot.version)));
-    }
-    (snapshot.version != WRITTEN_VERSION && !is_preamble_only_document(snapshot)).then(|| ("written-as-ac1024", format!("a drawing that carries content is written as {WRITTEN_VERSION}; this writer cannot lay out {} object streams", snapshot.version)))
-}
+
 
 
 }

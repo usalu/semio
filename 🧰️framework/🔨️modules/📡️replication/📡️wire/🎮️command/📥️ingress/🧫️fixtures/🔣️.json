@@ -75,6 +75,22 @@
       ]
     },
     {
+      "package": "semio-framework-pack-error",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml",
+      "edges": [
+        {
+          "scope": "normal",
+          "name": "semio-framework-diagnostic",
+          "manifest": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml"
+        }
+      ]
+    },
+    {
       "package": "semio-framework-replication",
       "manifest": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
       "edges": [
@@ -97,6 +113,11 @@
           "scope": "normal",
           "name": "semio-framework-io-base64",
           "manifest": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-pack-error",
+          "manifest": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml"
         },
         {
           "scope": "normal",

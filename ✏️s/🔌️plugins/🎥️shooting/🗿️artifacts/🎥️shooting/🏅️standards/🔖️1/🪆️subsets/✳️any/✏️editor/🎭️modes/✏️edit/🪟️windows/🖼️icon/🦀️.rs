@@ -3,7 +3,7 @@
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::icon::options;
 use crate::editor::shooting::terminology::ShootingLabels;
-use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::shooting_icon_render_request_json;
 use crate::ShootingSnapshot;
 use semio_framework_plugin::IconRenderScene;
 use semio_framework_ui_locale::LocalizedLabel;

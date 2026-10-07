@@ -8,7 +8,7 @@ use crate::{Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
 use crate::standards::v1::subsets::any::schema;
 use crate::viewer::block2d::modes::view;
 use crate::viewer::block2d::modes::view::windows::board;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use {semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command

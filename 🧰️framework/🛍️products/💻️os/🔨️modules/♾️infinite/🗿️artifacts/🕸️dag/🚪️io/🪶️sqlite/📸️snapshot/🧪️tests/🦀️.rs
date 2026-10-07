@@ -172,7 +172,7 @@ fn sqlite_snapshot_framework_dag_controlled_value_keeps_actual_owned_state() {
 fn sqlite_snapshot_framework_dag_erased_both_native_formats_have_queryable_entities() {
     use store::sqlite_snapshot::*;
     let capability = store::ArtifactCodec::bare::<DagSnapshot, DagMutation>("dag.host_snapshot").snapshot_sqlite.expect("framework DAG relational owner");
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(words()[6]));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = match encoding {
@@ -236,7 +236,7 @@ fn sqlite_snapshot_framework_dag_borrowed_preflight_preserves_zero_owned_admissi
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_framework_dag_normal_owner_public_registration_words_and_edit(){
- use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route}};use std::{io::Write,process::{Command,Stdio}};
+ use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use std::{io::Write,process::{Command,Stdio}};
  let registration=<DagSnapshot as ArtifactPack>::native_snapshot_registration();assert!(registration.is_some(),"DagSnapshot must publish normal owning native registration rather than a test-local bare codec");let(owner,codec)=registration.unwrap();assert_eq!(owner.artifact_kind,"dag.host_snapshot");assert_eq!(owner.standard.0,"1");assert_eq!(owner.subset.0,"*");assert!(codec.snapshot_sqlite.is_some());store::io::register_native_document_codec(owner,codec).unwrap();
  let dialect=ArtifactDialect{artifact_kind:"dag.host_snapshot".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,store::io_schema::IoFidelity::Exact);}
  for word in words(){let expected=Owned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let actual=Owned::new(io_import_sqlite_snapshot::<DagSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);assert_full(&actual,&expected);assert_eq!(actual.encode_pack(),expected.encode_pack());assert_eq!(actual.print_dsl(),expected.print_dsl());

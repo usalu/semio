@@ -4,9 +4,20 @@ use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue,SemioVal
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioValueSnapshot,ValueError>{native::decode(payload,STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,control,|body,control,limits|{let body=control.borrow_text(body)?;document(body,control,limits)},document)}
+/// 🛬️ Counts complete cells before the same caller's actual native ownership allocation.
+pub(crate)fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioValueSnapshot,ValueError>{
+ let limits=control.limits();crate::standards::v1::subsets::value::io::sqlite::snapshot::admit_layout(limits)?;
+ let size=match payload{store::os_io::IoPayload::Binary(value)=>value.len(),store::os_io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio value native input exceeds file limit"))}
+ control.allocation_stage(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+  let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_control=NativeDecodeControl::new(remaining,&mut callback);
+  let result=(||->Result<SemioValueSnapshot,ValueError>{let result=match payload{
+   store::os_io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;let body=native_control.borrow_text(body)?;document(body,&mut native_control,limits)?},
+   store::os_io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
+  };let result=native::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();(result,native_control.owned_bytes())
+ })?
+}
 pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioValueSnapshot,ValueError>{
- let mut entities=0;native::entities(&mut entities,1,limits)?;let[schema,root,nodes]=native::record(body,control)?;let schema=native::hex_text(schema,control)?;let root=native::Owned::new(value_text(root,control,limits,&mut entities)?);
+ crate::standards::v1::subsets::value::io::sqlite::snapshot::admit_document(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let[schema,root,nodes]=native::record(body,control)?;let schema=native::hex_text(schema,control)?;let root=native::Owned::new(value_text(root,control,limits,&mut entities)?);
  let mut items=native::Items::new(nodes)?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;children(entities,count,limits)?;let mut nodes=native::Owned::new(control.allocate_vec::<SemioValueNode>(count)?);
  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{let(id,value)=item.split_once(':').ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio native value node requires colon"))?;let id=ValueId::new(native::hex_text(id,control)?);let value=value_text(value,control,limits,&mut entities)?;nodes.get_mut().push(SemioValueNode{id,value});control.step()?;}Ok::<_,ValueError>(())})?;
  Ok(SemioValueSnapshot{schema,root:root.take(),nodes:nodes.take()})

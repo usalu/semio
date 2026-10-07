@@ -1,4 +1,5 @@
-import { dialectCoordinate, parseDialectCoordinate, type ArtifactDialect, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "../🚪️io/🧬️schema/🟦️.ts";
+import { type ArtifactDialect } from "../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { dialectCoordinate, parseDialectCoordinate, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "../🚪️io/🧬️schema/🟦️.ts";
 import { base64StandardDecode } from "../🚪️io/🔤️base64/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../⏱️trace/🧮️memory/🟦️.ts";
 import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../🛂️manifest/🧬️schema/🟦️.ts";
@@ -1905,6 +1906,7 @@ export type HistoryTimeTravel = {
   readonly targetLabel?: LocalizedLabel;
   readonly done?: number;
   readonly total?: number;
+  readonly processed?: number;
   readonly worst?: Severity;
   readonly blocking?: boolean;
   readonly fault?: string;
@@ -2123,6 +2125,7 @@ export type HistoryReprojectionKind = "remote" | "step" | "load";
 export type HistoryReprojection = {
   readonly done: number;
   readonly total: number;
+  readonly processed?: number;
   readonly kind?: HistoryReprojectionKind;
   readonly paused?: boolean;
   readonly fault?: string;
@@ -2144,6 +2147,7 @@ export const HISTORY_REPROJECTION_LABELS = [
   { key: "load.progress", en: "Loading document: {done} of {total}", de: "Dokument wird geladen: {done} von {total}" },
   { key: "load.refused", en: "Document load refused: {reason}", de: "Laden des Dokuments abgelehnt: {reason}" },
   { key: "reason.unnamed", en: "the change could not be applied", de: "die Änderung konnte nicht angewendet werden" },
+  { key: "work.processed", en: "Work completed: {processed}", de: "Arbeitsfortschritt: {processed}" },
 ] as const;
 
 /** 📢️ What a shell announces while a history change replays before adoption — TS twin of Rust `HistoryReprojectionStatus`. */
@@ -2159,12 +2163,13 @@ export function historyReprojectionStatus(reprojection: HistoryReprojection, _te
   const paused = reprojection.paused === true && kind === "remote";
   const notice = reprojection.fault === undefined ? undefined : historyNotice(reprojection.fault);
   const reason = notice !== undefined && !notice.en.includes("{") && !notice.de.includes("{") ? notice[locale] : label("reason.unnamed");
-  const text =
+  let text =
     reprojection.fault !== undefined && reprojection.total === 0
       ? label(`${kind}.refused`).replaceAll("{reason}", () => reason)
       : paused
         ? label("remote.paused")
         : label(`${kind}.progress`).replaceAll("{done}", () => String(reprojection.done)).replaceAll("{total}", () => String(reprojection.total));
+  if (reprojection.processed !== undefined && !paused && reprojection.total > 0) text += ` · ${label("work.processed").replaceAll("{processed}", () => String(reprojection.processed))}`;
   return { title: label(`${kind}.title`), text, done: reprojection.done, total: reprojection.total, paused, fault: reprojection.fault ?? null };
 }
 //#endregion 🔖️HistoryReprojectionStatus

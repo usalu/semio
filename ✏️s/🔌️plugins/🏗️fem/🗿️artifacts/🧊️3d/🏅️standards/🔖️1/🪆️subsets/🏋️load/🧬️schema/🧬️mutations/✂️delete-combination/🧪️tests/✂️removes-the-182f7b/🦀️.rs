@@ -8,7 +8,8 @@
 //! A combination is a pure superposition rule: dropping it must leave both referenced load cases in place.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-182f7b/📸️snapshot/⬅️before/🔣️.json");

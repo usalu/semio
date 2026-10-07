@@ -16,6 +16,7 @@ fn mesh3d_original_component_references_and_source_are_exact_and_retired() {
         for point in [[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]] { mesh3d_write_vec3(token, Mesh3dField::Positions, point).unwrap(); mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap(); }
         for index in 0..3 { mesh3d_write_u32(token, Mesh3dField::Indices, index).unwrap(); }
         mesh3d_move_component_references(token, references).unwrap();
+        while !mesh3d_component_admission_step(token, 1, MESH3D_PAGE_BYTES).unwrap().complete {}
         mesh3d_seal(token).unwrap()
     };
     let close = |lease| { mesh3d_begin_close(lease).unwrap(); let mut turns = 0; while !mesh3d_close_step(lease).unwrap() { turns += 1; assert!(turns < 256); } assert!(mesh3d_terminal_is_empty(lease)); };
@@ -45,6 +46,221 @@ fn mesh3d_original_component_references_and_source_are_exact_and_retired() {
         close(lease);
     }
     eprintln!("[DEBUG] originalComponentSource labels=4 invalidLabels=5 originalPointers=true independentSerdeU64=true terminalEmpty=true");
+}
+
+fn component_admission_test_publish(original: &mut BTreeMap<String, Vec<String>>) -> Result<Mesh3dLease, Mesh3dFault> {
+    let token = mesh3d_begin(79, 90, Mesh3dSchema::triangle_mesh(3, 3))?;
+    let result = (|| {
+        while !mesh3d_allocate_step(token)? {}
+        for point in [[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]] { mesh3d_write_vec3(token, Mesh3dField::Positions, point)?; mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0])?; }
+        for index in 0..3 { mesh3d_write_u32(token, Mesh3dField::Indices, index)?; }
+        mesh3d_move_component_references(token, original)?;
+        while !mesh3d_component_admission_step(token, 1, MESH3D_PAGE_BYTES)?.complete {}
+        mesh3d_seal(token)
+    })();
+    if result.is_err() { mesh3d_abort(token).unwrap(); while !mesh3d_abort_step(token).unwrap() {} }
+    result
+}
+
+fn close_component_admission_test_mesh(lease: Mesh3dLease) {
+    mesh3d_begin_close(lease).unwrap();
+    for _ in 0..100000 { if mesh3d_close_step(lease).unwrap() { assert!(mesh3d_terminal_is_empty(lease)); return; } }
+    panic!("original metadata owner did not retire");
+}
+
+#[test]
+fn mesh3d_original_component_admission_marks_duplicate_and_invalid_u64_groups_ineligible() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let law = &fixture["admission"];
+    let mut original: BTreeMap<String, Vec<String>> = serde_json::from_value(law["references"].clone()).unwrap();
+    let lease = component_admission_test_publish(&mut original).unwrap();
+    let mut answers = Vec::new();
+    for row in law["cases"].as_array().unwrap() {
+        let kind = row["kind"].as_str().unwrap();
+        let labels: Vec<String> = serde_json::from_value(law["references"][kind].clone()).unwrap();
+        let label = row["label"].as_str().unwrap();
+        let oracle = serde_json::from_str::<u64>(label).ok().filter(|value| *value > 0 && value.to_string() == label);
+        let unique = oracle.filter(|value| labels.iter().filter(|text| serde_json::from_str::<u64>(text).ok() == Some(*value)).count() == 1);
+        assert_eq!(unique.is_some(), row["eligible"].as_bool().unwrap());
+        let field = match kind { "face" => Mesh3dField::FaceIds, "edge" => Mesh3dField::EdgeIds, "vertex" => Mesh3dField::VertexIds, _ => panic!("unknown neutral component kind") };
+        answers.push((lease.component_label(field, row["group"].as_u64().unwrap() as u32), unique));
+    }
+    close_component_admission_test_mesh(lease);
+    for (actual, expected) in answers { assert_eq!(actual, expected.map_or(Err(Mesh3dFault::Schema), |label| Ok(Some(label)))); }
+    println!("[DEBUG] Original provenance admission matches independent Serde exact-u64 uniqueness and keeps typed domains separate");
+}
+
+#[test]
+fn mesh3d_original_component_admission_refuses_oversized_owned_source_and_retires_it() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let bytes = fixture["admission"]["oversizedSource"]["labelBytes"].as_u64().unwrap() as usize;
+    let mut original = BTreeMap::from([("face".into(), vec!["7".repeat(bytes)])]);
+    assert!(serde_json::to_vec(&original).unwrap().len() > MESH3D_OWNER_BYTE_CAPACITY);
+    let answer = component_admission_test_publish(&mut original);
+    if let Ok(lease) = answer { close_component_admission_test_mesh(lease); }
+    assert_eq!(answer, Err(Mesh3dFault::ByteCapacity));
+    assert!(original.is_empty());
+    println!("[DEBUG] Original mesh provenance refuses and retires oversized source bytes={bytes}");
+}
+
+#[test]
+fn mesh3d_original_zero_index_wire_and_point_domains_preserve_independent_buffers() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    for row in fixture["zeroIndex"]["accepted"].as_array().unwrap() {
+        let positions: Vec<[f32; 3]> = serde_json::from_value(row["positions"].clone()).unwrap();
+        let vertex_ids: Vec<u32> = serde_json::from_value(row["vertexIds"].clone()).unwrap();
+        let edges: Vec<[[f32; 3]; 2]> = serde_json::from_value(row["edges"].clone()).unwrap();
+        let edge_ids: Vec<u32> = serde_json::from_value(row["edgeIds"].clone()).unwrap();
+        let schema = Mesh3dSchema { vertices: positions.len() as u32, vertex_ids: vertex_ids.len() as u32, edges: edges.len() as u32, edge_ids: edge_ids.len() as u32, ..Mesh3dSchema::triangle_mesh(positions.len() as u32, 0) };
+        let token = mesh3d_begin(80, 91, schema).expect("original nonempty typed zero-index domain");
+        while !mesh3d_allocate_step(token).unwrap() {}
+        for point in &positions { mesh3d_write_vec3(token, Mesh3dField::Positions, *point).unwrap(); mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap(); }
+        for id in &vertex_ids { mesh3d_write_u32(token, Mesh3dField::VertexIds, *id).unwrap(); }
+        for edge in &edges { mesh3d_write_edge(token, *edge).unwrap(); }
+        for id in &edge_ids { mesh3d_write_u32(token, Mesh3dField::EdgeIds, *id).unwrap(); }
+        let lease = mesh3d_seal(token).unwrap();
+        assert_eq!(lease.schema().unwrap(), schema);
+        let bounds: [[f32; 3]; 2] = serde_json::from_value(row["bounds"].clone()).unwrap();
+        assert_eq!(lease.aabb().unwrap(), (bounds[0], bounds[1]));
+        for (index, point) in positions.iter().enumerate() { assert_eq!(lease.vec3(Mesh3dField::Positions, index as u32).unwrap(), *point); if !vertex_ids.is_empty() { assert_eq!(lease.u32(Mesh3dField::VertexIds, index as u32).unwrap(), vertex_ids[index]); } }
+        if vertex_ids.is_empty() { assert_eq!(lease.u32(Mesh3dField::VertexIds, 0), Err(Mesh3dFault::Schema)); }
+        for (index, edge) in edges.iter().enumerate() { assert_eq!(lease.edge(index as u32).unwrap(), *edge); assert_eq!(lease.u32(Mesh3dField::EdgeIds, index as u32).unwrap(), edge_ids[index]); }
+        close_component_admission_test_mesh(lease);
+    }
+    for row in fixture["zeroIndex"]["refused"].as_array().unwrap() {
+        let schema = Mesh3dSchema { vertices: row["vertices"].as_u64().unwrap() as u32, indices: row["indices"].as_u64().unwrap() as u32, vertex_ids: row["vertexIds"].as_u64().unwrap() as u32, edges: row["edges"].as_u64().unwrap() as u32, edge_ids: row["edgeIds"].as_u64().unwrap() as u32, ..Mesh3dSchema::triangle_mesh(0, 0) };
+        assert!(matches!(mesh3d_begin(80, 91, schema), Err(Mesh3dFault::Schema)));
+    }
+    println!("[DEBUG] Original zero-index wire and point buffers match independent Serde source arrays, no fabricated triangles");
+}
+
+#[test]
+fn mesh3d_original_component_admission_reserves_aggregate_authority_metadata_credit() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let law = &fixture["admission"]["authorityBudget"];
+    let page_bytes = law["pageBytes"].as_u64().unwrap() as usize;
+    assert_eq!(page_bytes, MESH3D_PAGE_BYTES);
+    assert_eq!(law["ceilingPages"].as_u64().unwrap() as usize, MESH3D_AUTHORITY_PAGE_CAPACITY);
+    let pages = law["geometryPages"].as_u64().unwrap() as usize;
+    let schema = Mesh3dSchema::triangle_mesh(((pages * page_bytes - 12) / 24) as u32, 3);
+    let mut authority = Mesh3dAuthority::new();
+    let mut tokens = Vec::new();
+    for _ in 0..law["filledOwners"].as_u64().unwrap() { let token = authority.begin(82, 93, schema).unwrap(); assert_eq!(usize::from(authority.writing_ref(token).unwrap().layout.page_count), pages); tokens.push(token); }
+    let token = component_admission_local_writer(&mut authority);
+    let mut original = BTreeMap::from([("face".into(), vec!["7".repeat(law["labelBytes"].as_u64().unwrap() as usize)])]);
+    authority.move_component_references(token, &mut original).unwrap();
+    let available = (MESH3D_AUTHORITY_PAGE_CAPACITY - authority.reserved_pages) * page_bytes;
+    let owned = authority.writing_ref(token).unwrap().component_references.as_ref().unwrap();
+    let independent_bytes = serde_json::to_vec(owned).unwrap().len();
+    assert!(independent_bytes > available && independent_bytes < MESH3D_OWNER_BYTE_CAPACITY);
+    assert_eq!(authority.component_admission_step(token, 1, page_bytes), Err(Mesh3dFault::PageCapacity));
+    assert_eq!(authority.seal(token), Err(Mesh3dFault::PageCapacity));
+    tokens.push(token);
+    for token in tokens { authority.begin_close_write(token).unwrap(); while !authority.close_step(token.slot, token.epoch).unwrap() {} }
+    assert!(original.is_empty());
+    assert_eq!(authority.reserved_pages, 0);
+    println!("[DEBUG] Original metadata aggregate authority quota refuses before publication with independent Serde bytes={} available={} and all owners terminal-empty", independent_bytes, available);
+}
+
+#[test]
+fn mesh3d_original_component_admission_refuses_sentinel_only_point_at_complete_seal() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let sentinel = fixture["zeroIndex"]["vertexSentinel"].as_u64().unwrap() as u32;
+    let mut answers = Vec::new();
+    for row in fixture["zeroIndex"]["sentinelCases"].as_array().unwrap() {
+        let positions: Vec<[f32; 3]> = serde_json::from_value(row["positions"].clone()).unwrap();
+        let ids: Vec<u32> = serde_json::from_value(row["vertexIds"].clone()).unwrap();
+        let indices: Vec<u32> = serde_json::from_value(row["indices"].clone()).unwrap();
+        let edges: Vec<[[f32; 3]; 2]> = serde_json::from_value(row["edges"].clone()).unwrap();
+        let independent = !indices.is_empty() || !edges.is_empty() || ids.iter().any(|id| *id != sentinel);
+        assert_eq!(independent, row["eligible"].as_bool().unwrap());
+        let schema = Mesh3dSchema { vertex_ids: ids.len() as u32, edges: edges.len() as u32, ..Mesh3dSchema::triangle_mesh(positions.len() as u32, indices.len() as u32) };
+        let token = mesh3d_begin(83, 94, schema).unwrap();
+        while !mesh3d_allocate_step(token).unwrap() {}
+        assert_eq!(mesh3d_seal(token), Err(Mesh3dFault::Incomplete));
+        for point in positions { mesh3d_write_vec3(token, Mesh3dField::Positions, point).unwrap(); mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap(); }
+        for id in &ids { mesh3d_write_u32(token, Mesh3dField::VertexIds, *id).unwrap(); }
+        for index in indices { mesh3d_write_u32(token, Mesh3dField::Indices, index).unwrap(); }
+        for edge in edges { mesh3d_write_edge(token, edge).unwrap(); }
+        let result = mesh3d_seal(token);
+        if let Ok(lease) = result { for (group, id) in ids.iter().enumerate() { assert_eq!(lease.u32(Mesh3dField::VertexIds, group as u32).unwrap(), *id); } close_component_admission_test_mesh(lease); }
+        else { mesh3d_abort(token).unwrap(); while !mesh3d_abort_step(token).unwrap() {} }
+        println!("[DEBUG] Original sentinel domain={} independentEligible={} actualSeal={:?} originalIds={:?}", row["kind"].as_str().unwrap(), independent, result, ids);
+        answers.push((result.map(|_| ()), independent));
+    }
+    for (actual, eligible) in answers { assert_eq!(actual, if eligible { Ok(()) } else { Err(Mesh3dFault::Schema) }); }
+}
+
+fn component_admission_local_writer(authority: &mut Mesh3dAuthority) -> Mesh3dWriteToken {
+    let token = authority.begin(81, 92, Mesh3dSchema::triangle_mesh(3, 3)).unwrap();
+    let owner = authority.writing(token).unwrap();
+    while !owner.allocate_step() {}
+    for _ in 0..3 { owner.write(Mesh3dField::Positions, &[0; 12]).unwrap(); owner.write(Mesh3dField::Normals, &[0; 12]).unwrap(); }
+    for index in 0u32..3 { owner.write(Mesh3dField::Indices, &index.to_le_bytes()).unwrap(); }
+    token
+}
+
+#[test]
+fn mesh3d_original_component_admission_freezes_grants_and_cancels_its_owned_index() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let law = &fixture["admission"];
+    let mut authority = Mesh3dAuthority::new();
+    let token = component_admission_local_writer(&mut authority);
+    let mut original: BTreeMap<String, Vec<String>> = serde_json::from_value(law["references"].clone()).unwrap();
+    let pointer = original["face"].as_ptr();
+    authority.move_component_references(token, &mut original).unwrap();
+    assert!(original.is_empty());
+    assert_eq!(authority.seal(token), Err(Mesh3dFault::Incomplete));
+    let credit = authority.writing_ref(token).unwrap().component_credit;
+    for grant in [&law["zeroGrant"], &law["insufficientGrant"]] {
+        let step = authority.component_admission_step(token, grant["items"].as_u64().unwrap() as usize, grant["bytes"].as_u64().unwrap() as usize).unwrap();
+        let oracle = serde_json::json!({"complete":step.complete,"processedItems":step.processed_items,"processedBytes":step.processed_bytes,"retiredItems":step.retired_items,"retiredBytes":step.retired_bytes});
+        for key in ["complete", "processedItems", "processedBytes", "retiredItems", "retiredBytes"] { assert_eq!(oracle[key], grant[key]); }
+        let owner = authority.writing_ref(token).unwrap();
+        assert_eq!((owner.component_domain, owner.component_group, owner.component_credit, owner.component_seen.len(), owner.component_ineligible.len()), (0, 0, credit, 0, 0));
+        assert_eq!(owner.component_references.as_ref().unwrap()["face"].as_ptr(), pointer);
+    }
+    for _ in 0..law["cancelAfterItems"].as_u64().unwrap() {
+        let step = authority.component_admission_step(token, 1, law["grant"]["bytes"].as_u64().unwrap() as usize).unwrap();
+        assert_eq!(step.processed_items, 1);
+    }
+    let owner = authority.writing_ref(token).unwrap();
+    assert_eq!(owner.component_seen.len(), 1);
+    assert_eq!(owner.component_ineligible.len(), 2);
+    assert!(owner.component_credit > credit);
+    assert!(authority.reserved_pages > 1);
+    authority.begin_close_write(token).unwrap();
+    for _ in 0..law["maximumTurns"].as_u64().unwrap() { if authority.close_step(token.slot, token.epoch).unwrap() { assert_eq!(authority.reserved_pages, 0); assert!(authority.slots[usize::from(token.slot)].is_none()); println!("[DEBUG] Original admission zero/small grants freeze source pointers and scratch; partial cancellation retires source/index and releases all credits"); return; } }
+    panic!("original cancelled admission failed to retire");
+}
+
+#[test]
+fn mesh3d_original_component_admission_retires_typed_scratch_before_publication() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let law = &fixture["admission"];
+    let mut original: BTreeMap<String, Vec<String>> = serde_json::from_value(law["references"].clone()).unwrap();
+    let expected = original.values().map(|labels| labels.iter().filter_map(|label| serde_json::from_str::<u64>(label).ok().filter(|value| *value > 0 && value.to_string() == *label)).collect::<BTreeSet<_>>().len()).sum::<usize>();
+    let mut authority = Mesh3dAuthority::new();
+    let token = component_admission_local_writer(&mut authority);
+    authority.move_component_references(token, &mut original).unwrap();
+    let mut retired = (0, 0);
+    let mut completed = false;
+    for _ in 0..law["maximumTurns"].as_u64().unwrap() {
+        let step = authority.component_admission_step(token, 1, law["grant"]["bytes"].as_u64().unwrap() as usize).unwrap();
+        assert!(step.processed_items + step.retired_items <= 1);
+        assert!(step.processed_bytes + step.retired_bytes <= law["grant"]["bytes"].as_u64().unwrap() as usize);
+        retired.0 += step.retired_items; retired.1 += step.retired_bytes;
+        if step.complete { completed = true; break; }
+    }
+    assert!(completed);
+    assert_eq!(retired, (expected, expected * law["scratchEntryBytes"].as_u64().unwrap() as usize));
+    assert!(authority.writing_ref(token).unwrap().component_seen.is_empty());
+    let lease = authority.seal(token).unwrap();
+    assert!(authority.ready(lease).unwrap().component_seen.is_empty());
+    authority.begin_close(lease).unwrap();
+    while !authority.close_step(lease.slot, lease.epoch).unwrap() {}
+    assert_eq!(authority.reserved_pages, 0);
+    println!("[DEBUG] Original typed admission retires scratch entries={} logicalBytes={} before original lease publication, independent Serde oracle", retired.0, retired.1);
 }
 
 struct LegacyMeshOracleData {
@@ -1121,4 +1337,41 @@ fn lod_grid_step_world_quantizes_like_reacts_helper() {
 fn grid_placement_anchor_uses_orbit_xy_and_datum_z() {
     let anchor = grid_placement_anchor(vec3_new_m(3.0, 4.0, 999.0), [0.0, 0.0, 12.5]);
     assert_eq!(anchor, vec3_new_m(3.0, 4.0, 12.5));
+}
+
+/// 📍️ Rectangle and lasso selection skip sampled vertices in the original paged mesh.
+#[test]
+fn screen_select_original_vertices_skips_surface_samples() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️vertex-selection/🔣️.json")).unwrap();
+    let mut data = LegacyMeshOracleData::triangle();
+    data.positions = serde_json::from_value(fixture["positions"].clone()).unwrap();
+    data.normals = vec![[0.0,0.0,1.0]; data.positions.len()];
+    data.indices = serde_json::from_value(fixture["indices"].clone()).unwrap();
+    data.vertex_ids = serde_json::from_value(fixture["vertexIds"].clone()).unwrap();
+    let mesh = paged_mesh_fixture(data);
+    let draws = vec![SceneDraw3d { mesh_key: "original".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "original".into(), model: mat4_identity_m(), color: [1.0;4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
+    let lookup = std::collections::HashMap::from([("original".into(), mesh)]);
+    let camera = Camera3d::default();
+    let polygon: Vec<[f32;2]> = serde_json::from_value(fixture["polygon"].clone()).unwrap();
+    let expected: Vec<String> = serde_json::from_value(fixture["expected"].clone()).unwrap();
+    for method in fixture["methods"].as_array().unwrap() {
+        let selected = screen_select_components(&lookup, &draws, camera.view_proj(800.0,600.0), default_projection_spec(), 800.0,600.0,&polygon, method.as_str() == Some("rectangle"),"vertex",None,false);
+        assert_eq!(selected,expected,"method {method}");
+    }
+    mesh3d_begin_close(mesh).unwrap();
+    while !mesh3d_close_step(mesh).unwrap() {}
+    assert!(mesh3d_terminal_is_empty(mesh));
+    eprintln!("[DEBUG] originalVertexScreenSelection methods=2 surfaceSamplesExcluded=true terminalEmpty=true");
+}
+
+/// 🎯️ Original ray-to-segment distances retain finite endpoints and the forward ray domain.
+#[test]
+fn ray_segment_distance_matches_neutral_three_cases() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    for row in fixture["gumball"]["raySegmentCases"].as_array().unwrap() {
+        let vector = |key: &str| vec3_new_m(row[key][0].as_f64().unwrap() as f32, row[key][1].as_f64().unwrap() as f32, row[key][2].as_f64().unwrap() as f32);
+        let distance = ray_segment_distance(vector("origin"), vector("direction").normalize_m(), vector("a"), vector("b")).expect("nondegenerate original segment");
+        assert!((f64::from(distance) - row["distance"].as_f64().unwrap()).abs() < 1e-5, "{}: {distance}", row["name"]);
+    }
+    println!("[DEBUG] originalRaySegment cases=8 finiteEndpoints=true forwardRay=true independentThree=true");
 }

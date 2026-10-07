@@ -56,8 +56,8 @@ mod tests {
         type Mutation = crate::standards::v1_0::subsets::valid::schema::XmlValidMutation;
         type Inference = crate::standards::v1_0::subsets::base::schema::inferences::XmlInference;
 
-        async fn dialect() -> store::os_io::ArtifactDialect {
-            store::os_io::ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "valid".into() }
+        async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
+            semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "valid".into() }
         }
 
         async fn fidelity() -> store::os_store::test_support::IoFidelityClass {

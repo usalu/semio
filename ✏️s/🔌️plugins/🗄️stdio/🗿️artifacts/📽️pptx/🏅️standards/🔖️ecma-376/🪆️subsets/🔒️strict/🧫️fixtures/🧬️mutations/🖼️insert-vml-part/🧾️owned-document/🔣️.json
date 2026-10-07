@@ -1,0 +1,33 @@
+{
+  "path": "ppt/drawings/vmlDrawing1.vml",
+  "document": {
+    "root": {
+      "kind": "element",
+      "name": "xml",
+      "attrs": [
+        {
+          "name": "xmlns:v",
+          "value": "urn:schemas-microsoft-com:vml"
+        }
+      ],
+      "children": [
+        {
+          "kind": "element",
+          "name": "v:shape",
+          "attrs": [
+            {
+              "name": "id",
+              "value": "legacyShape"
+            },
+            {
+              "name": "type",
+              "value": "#_x0000_t202"
+            }
+          ],
+          "children": []
+        }
+      ]
+    }
+  },
+  "xml": "<xml xmlns:v=\"urn:schemas-microsoft-com:vml\"><v:shape id=\"legacyShape\" type=\"#_x0000_t202\"/></xml>"
+}

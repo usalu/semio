@@ -78,7 +78,7 @@ pub fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
 
 #[cfg(test)]
 pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
+    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation {
         slides: vec![PptxSlide {
             shapes: vec![
                 PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }], position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 } },
@@ -90,7 +90,7 @@ pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
 
 #[cfg(test)]
 pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
+    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation {
         slides: vec![PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("new")], position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 } }] }],
     })
 }

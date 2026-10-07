@@ -1,0 +1,3 @@
+# Value List and Hub Note Corpus Closure
+
+Removed orphan List formatted exact extent negative wholecorpus schema: actual Rust laws still consume unchanged neutral plain input JSON and validate precise allocation/cancellation/formatter observations. Removed Hub Note committed descriptor metadata schema and obsolete schema pointer in plain input; actual note integration only reads real descriptor/component/profile fields and is byte-preserved. Both schemas had no actual independent admission consumers. Source preimages/three paths retained. Native note smoke law is optional if compiled component missing; no runtime success claimed from source review.

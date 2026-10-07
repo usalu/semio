@@ -5,11 +5,18 @@
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🧫️history-reprojection/🔣️.json";
+import schema from "../../🧬️schema/🔣️history-patch/🔣️.json";
 import { HISTORY_REPROJECTION_LABELS, historyReprojectionStatus, type HistoryReprojection } from "../../🟦️.ts";
 
 describe("history reprojection status", () => {
   it("the fixture satisfies its schema and refuses hostile rows", () => {
     const first = fixture.cases[0]!;
+    const ajv = new Ajv({ allErrors: true, strict: false });
+    ajv.addSchema(schema);
+    const validate = ajv.compile({ $ref: `${schema.$id}#/definitions/HistoryReprojection` });
+    for (const row of fixture.cases) expect(validate(row.reprojection), JSON.stringify(validate.errors)).toBe(true);
+    for (const processed of [-1, 4294967296, "128"]) expect(validate({ ...first.reprojection, processed })).toBe(false);
+    expect(validate({ ...first.reprojection, rawCursor: {} })).toBe(false);
   });
 
   it("the twin carries exactly the fixture rows", () => {

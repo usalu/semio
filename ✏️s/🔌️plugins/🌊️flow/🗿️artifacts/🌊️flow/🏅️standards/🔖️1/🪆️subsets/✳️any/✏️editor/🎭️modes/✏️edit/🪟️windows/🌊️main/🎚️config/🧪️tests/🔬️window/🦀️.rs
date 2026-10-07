@@ -66,7 +66,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
                 let generation = view.for_window_instance(generation_id).unwrap();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 app.bind_instance_id(FLOW_WINDOW_OWNERSHIP_INSTANCE).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -140,7 +140,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     for context in [&left, &right] {
                         if app.window_config_generation(context).await.map_err(|error| format!("{error:?}"))?.is_none() { return Err("Flow config was lost during same-byte document reload".into()); }
                     }
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                     reopened.bind_instance_id(72).await;
                     for pack in config_packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                     let reopened_left = scene(&mut reopened, &left).await?.viewport.ok_or("reopened left Flow viewport missing")?;
@@ -204,7 +204,7 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                     ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let window = view.for_window_instance(window_id).unwrap();
-                let mut app: Box<FlowRuntime> = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut app: Box<FlowRuntime> = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 app.bind_instance_id(FLOW_ONE_TURN_INSTANCE).await;
                 let outcome: Result<(), String> = async {
                     let meta = ActionMeta { instance_id: FLOW_ONE_TURN_INSTANCE, view_state: Some(window.clone()), ..artifact_app_laws::meta("flow-one-turn") };

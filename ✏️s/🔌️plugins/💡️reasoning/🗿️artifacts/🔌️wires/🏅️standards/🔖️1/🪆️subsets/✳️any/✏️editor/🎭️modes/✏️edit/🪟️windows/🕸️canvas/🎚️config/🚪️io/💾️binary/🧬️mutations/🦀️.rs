@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::wires::modes::edit::windows::canvas::config::mutations::*;
 use crate::editor::wires::modes::edit::windows::canvas::config::{WiresCanvasCamera, WiresCanvasWindowConfig};
-use set_camera::SetCamera;
 
 impl protocol::OpBinary for WiresCanvasWindowConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

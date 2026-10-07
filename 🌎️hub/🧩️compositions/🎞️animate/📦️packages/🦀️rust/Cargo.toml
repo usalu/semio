@@ -24,8 +24,8 @@ role = "hub"
 [package.metadata.semio.storybook]
 id = "animate"
 titlePrefix = "🎬️animate"
-sourceRoots = ["🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react"]
-storyGlobs = ["📖️stories/**/🧪️.story.tsx"]
+sourceRoots = ["../../../✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react"]
+storyGlobs = ["../../../✏️s/🔌️plugins/🎞️animate/📖️stories/**/🧪️.story.tsx"]
 
 [[package.metadata.semio.playground]]
 variant = "animate"

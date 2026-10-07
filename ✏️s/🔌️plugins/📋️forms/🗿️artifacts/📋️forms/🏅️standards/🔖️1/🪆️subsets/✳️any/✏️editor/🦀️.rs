@@ -184,7 +184,7 @@ pub fn try_values_map(transient: &try_window::transient::FormsTryWindowTransient
 }
 
 pub fn effective_try_values(spec: &FormsSnapshot, transient: &try_window::transient::FormsTryWindowTransient) -> Object {
-    crate::schema::initial_try_values(spec, &try_values_map(transient))
+    crate::standards::v1::subsets::any::io::text::snapshot::initial_try_values(spec, &try_values_map(transient))
 }
 
 /// 🔠️ Parses a command's JSON-blob payload field (`value_json`/`values_json`/…), falling back to
@@ -489,7 +489,7 @@ semio_framework_plugin::app_commands! {
 /// 🔌️ Forms' typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `forms.form` document schema) plus the WORKFLOWS-END-TO-END-TYPED-PORTS
 /// `dictionary:out` port: the form's currently-configured default field values (see
-/// `crate::schema::initial_try_values`), re-exported as a typed `form.dictionary` intrinsic
+/// `crate::standards::v1::subsets::any::io::text::snapshot::initial_try_values`), re-exported as a typed `form.dictionary` intrinsic
 /// object keyed by question id — the layout app's `fields:in` counterpart. Relocated from the deleted
 /// artifact `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is the app's
 /// own IO surface, not artifact behaviour.

@@ -4,7 +4,7 @@ use super::*;
 async fn observe_refusal(case_id: &str) {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let case = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == case_id).unwrap();
-    let mut store = super::super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "detach-refusal", DemoSnapshot { n: Some(4) }, None)).await.expect("real initialized Store");
+    let mut store = super::super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "detach-refusal", DemoSnapshot { n: Some(4) }, None), ActorId("actor:detach-fixture".into())).await.expect("real initialized Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     let (mut local, peer) = MemoryBackbone::pair("detach-local", "detach-peer").await;
     let payload_byte = u8::try_from(fixture["payload"]["byte"].as_u64().unwrap()).unwrap();

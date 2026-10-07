@@ -1,6 +1,8 @@
+use crate::standards::v1::subsets::any::io::binary::mutations::new_trinity_graph_store;
 use crate::JackWorkingScene;
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{register_trinity_graph_mutation_descriptors, set_query, SetQuery};
+use crate::standards::v1::subsets::any::schema::mutations::{register_trinity_graph_mutation_descriptors,set_query,SetQuery};
+
 use crate::{Camera, Edge, Manifest, Node, Port, PortDirection};
 use store::ArtifactCommand;
 
@@ -122,7 +124,7 @@ async fn set_query_validation_bounds_the_query() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_graph_store() {
-    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture())).await.expect("valid artifact store");
+    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())]).await.expect("apply");
     ::store::os_store::test_support::assert_document_text_round_trip(&store).await;
     ::store::os_store::test_support::assert_document_pack_round_trip(&store).await;
@@ -130,7 +132,7 @@ async fn document_text_round_trip_graph_store() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_trinity_graph_mutations_noop_on_empty() {
-    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture())).await.expect("valid artifact store");
+    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     let generation_before = store.generation();
     dispatch_trinity_graph_mutations(&mut store, vec![]).await.expect("empty ops ok");
     assert_eq!(store.generation(), generation_before);
@@ -138,7 +140,7 @@ async fn dispatch_trinity_graph_mutations_noop_on_empty() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_query_undo_restores_the_prior_query() {
-    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture())).await.expect("valid artifact store");
+    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     let before = store.snapshot().unwrap().query.clone();
     dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())]).await.expect("set query");
     assert_eq!(store.snapshot().unwrap().query, "MATCH (a:Piece) RETURN a");

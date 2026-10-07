@@ -29,7 +29,7 @@ use crate::schema::diff::{self, StlDiff};
 use crate::schema::snapshot::StlTriangle;
 use crate::StlSnapshot;
 use protocol::Mutation;
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutations
 #[path = "➕insert-triangle/🦀️.rs"]
@@ -194,3 +194,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/✏️renames/🦀️.rs"]
 mod set_snapshot_renames_the_solid_and_closes_the_wedge_with_a_third_facet;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

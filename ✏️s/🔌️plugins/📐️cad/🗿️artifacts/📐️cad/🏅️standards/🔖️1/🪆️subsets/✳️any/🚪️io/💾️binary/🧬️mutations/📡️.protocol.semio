@@ -13,27 +13,27 @@ field format u8
 field tag varint
 record create-shape-model tag=0
 field child-id utf8
-field target utf8
+field target bytes
 record delete-shape-model tag=1
 field payload bytes
 record create-building-model tag=2
 field child-id utf8
-field target utf8
+field target bytes
 record delete-building-model tag=3
 field payload bytes
 record create-energy-model tag=4
 field child-id utf8
-field target utf8
+field target bytes
 record delete-energy-model tag=5
 field payload bytes
 record create-structure-classic-model tag=6
 field child-id utf8
-field target utf8
+field target bytes
 record delete-structure-classic-model tag=7
 field payload bytes
 record create-drawing tag=8
 field child-id utf8
-field target utf8
+field target bytes
 record delete-drawing tag=9
 field child-id utf8
 record create-node tag=10
@@ -71,3 +71,6 @@ record replace-references tag=18
 field model-definition-id utf8
 field references bytes
 field new-model-definition-id utf8
+
+# target owns a nested record body with four UTF-8 fields in canonical order:
+# artifact-id, artifact-kind, standard, subset. URI text is not a target payload.

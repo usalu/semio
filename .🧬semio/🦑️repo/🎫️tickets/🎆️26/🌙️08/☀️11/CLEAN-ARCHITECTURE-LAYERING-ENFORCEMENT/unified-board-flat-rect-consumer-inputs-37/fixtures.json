@@ -1,0 +1,81 @@
+[
+  {
+    "id": "flat-rect",
+    "input": [
+      "r",
+      0,
+      0,
+      640,
+      400
+    ],
+    "accepted": true
+  },
+  {
+    "id": "negative-and-fractional",
+    "input": [
+      "r",
+      -2.5,
+      4,
+      12,
+      22.75
+    ],
+    "accepted": true
+  },
+  {
+    "id": "nested-coords",
+    "input": [
+      "r",
+      [
+        0,
+        0,
+        640,
+        400
+      ]
+    ],
+    "accepted": false
+  },
+  {
+    "id": "rounded",
+    "input": [
+      "rr",
+      0,
+      0,
+      640,
+      400
+    ],
+    "accepted": false
+  },
+  {
+    "id": "missing-coordinate",
+    "input": [
+      "r",
+      0,
+      0,
+      640
+    ],
+    "accepted": false
+  },
+  {
+    "id": "extra-coordinate",
+    "input": [
+      "r",
+      0,
+      0,
+      640,
+      400,
+      1
+    ],
+    "accepted": false
+  },
+  {
+    "id": "nonnumeric",
+    "input": [
+      "r",
+      0,
+      0,
+      "640",
+      400
+    ],
+    "accepted": false
+  }
+]

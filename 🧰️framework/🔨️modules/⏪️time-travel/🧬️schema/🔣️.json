@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/time-travel/schema.json",
   "title": "TimeTravelSchema",
-  "description": "Source of record for the ⏪️time-travel framework module: the ephemeral local-only history-edit session (identity, generation, base stamp, stage, accepted drafts in history order, pending draft, replay report, progress, fault), its events, effects, refusals, labels and the lifecycle-law fixture. Wire names are camelCase; u64 values are JSON integers (TS bigint), the content revision is lowercase hex and replacement payloads are byte arrays (the protocol ToValue shape). Driver contract: Begin carries the target position resolved at the session base; every store generation change is sent as baseMoved with the re-resolved positions of every session target (in every stage, also inactive; an unchanged base is timeTravel.stale); every other event except begin and exit carries the session generation and any other generation is timeTravel.stale; a reviewing session is classified by TimeTravelReview (noChanges iff nothing is accepted; needsReplay when drafts have no report after a cancelled or faulted replay, resolved by rerun); malformed fault codes and alternative names are timeTravel.illegal.",
+  "description": "Source of record for the ⏪️time-travel framework module: the ephemeral local-only history-edit session (identity, generation, base stamp, stage, accepted drafts in history order, pending draft, replay report, progress, fault), its events, effects, refusals and labels. Wire names are camelCase; u64 values are JSON integers (TS bigint), the content revision is lowercase hex and replacement payloads are byte arrays (the protocol ToValue shape). Driver contract: Begin carries the target position resolved at the session base; every store generation change is sent as baseMoved with the re-resolved positions of every session target (in every stage, also inactive; an unchanged base is timeTravel.stale); every other event except begin and exit carries the session generation and any other generation is timeTravel.stale; a reviewing session is classified by TimeTravelReview (noChanges iff nothing is accepted; needsReplay when drafts have no report after a cancelled or faulted replay, resolved by rerun); malformed fault codes and alternative names are timeTravel.illegal.",
   "$defs": {
     "U8": {
       "type": "integer",
@@ -118,7 +118,7 @@
     },
     "ReplayReport": {
       "description": "protocol ReplayReport, owned by the replication schema of record; it blocks finalize iff any outcome's worst is error or fatal.",
-      "$ref": "https://json.schemas.assets.semio-tech.com/replication/replay-report.json#/definitions/Report"
+      "$ref": "https://json.schemas.assets.semio-tech.com/replication/replay-report.json"
     },
     "TimeTravelBase": {
       "description": "The store state a session last observed: the content revision of its history. The store's local generation is no part of it.",
@@ -761,7 +761,8 @@
         "timeTravel.illegal",
         "timeTravel.stale",
         "timeTravel.blocked",
-        "timeTravel.empty"
+        "timeTravel.empty",
+        "timeTravel.unchanged"
       ]
     },
     "TimeTravelTransition": {
@@ -827,6 +828,7 @@
         "refusalStale",
         "refusalBlocked",
         "refusalEmpty",
+        "refusalUnchanged",
         "frozen",
         "choiceOverwrite",
         "choiceOverwriteDescription",
@@ -856,7 +858,10 @@
         "memberEdited",
         "refusalNotWithdrawable",
         "refusalEditorClosed",
-        "refusalReadOnly"
+        "refusalReadOnly",
+        "preparationProgress",
+        "preparationProgressValueText",
+        "processed"
       ]
     }
   }

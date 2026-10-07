@@ -1,0 +1,14 @@
+{
+  "before": {
+    "comment": "",
+    "commentUtf8": false
+  },
+  "mutation": {
+    "comment": "🙂"
+  },
+  "after": {
+    "comment": "🙂",
+    "commentUtf8": false
+  },
+  "nativeEncode": false
+}

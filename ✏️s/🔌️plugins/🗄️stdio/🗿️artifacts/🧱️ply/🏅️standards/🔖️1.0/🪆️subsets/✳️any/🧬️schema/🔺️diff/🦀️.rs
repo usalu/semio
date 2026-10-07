@@ -26,7 +26,7 @@ use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlySca
 use crate::PlySnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
@@ -948,3 +948,6 @@ mod codec_tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::schema::snapshot::PlyValue;
 //#endregion 🔁️Re-exports
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

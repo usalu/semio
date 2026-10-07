@@ -24,7 +24,7 @@ fn revision(value: &str) -> [u8; 32] {
     hex(value).try_into().expect("fixed revision")
 }
 
-fn reference(value: &serde_json::Value) -> crate::os_io::ArtifactRef {
+fn reference(value: &serde_json::Value) -> semio_framework_artifact_reference::ArtifactRef {
     semio_framework_pack_json::from_json_str(&serde_json::to_string(value).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture reference")
 }
 
@@ -65,7 +65,7 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
         id: edit_id.clone(),
         actor: Some(actor.clone()),
         forwards: vec![format!("{role}:forward")],
-        inverse: vec![format!("{role}:inverse")],
+        inverse: vec![format!("{role}:inverse")].into(),
         mutation_meta: vec![crate::os_spr::MutationMeta {
             mutation_id: Some(crate::os_spr::MutationId(format!("{edit_id}#0"))),
             dependencies: Vec::new(),
@@ -116,11 +116,11 @@ fn decision() -> DurableOwnedThreeMemberDecisionV1 {
     .expect("fixture decision")
 }
 
-async fn owned_store(id: &str, dialect: crate::os_io::ArtifactDialect, owner: Option<OwnerRef>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
+async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<OwnerRef>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
     let mut envelope = crate::os_store::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = ArtifactStore::new(envelope).await.expect("owned group fixture Store");
+    let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId("actor:owned-group-fixture".into())).await.expect("owned group fixture Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store
 }
@@ -146,7 +146,7 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
         id: edit_id.clone(),
         actor: Some(actor.clone()),
         forwards: vec![DemoMutation::SetN(SetN { n: next })],
-        inverse: vec![DemoMutation::SetN(SetN { n: store.snapshot_ref().n.unwrap_or_default() })],
+        inverse: vec![DemoMutation::SetN(SetN { n: store.snapshot_ref().n.unwrap_or_default() })].into(),
         mutation_meta: vec![crate::os_spr::MutationMeta {
             mutation_id: Some(crate::os_spr::MutationId(format!("{edit_id}#0"))),
             dependencies: Vec::new(),
@@ -170,9 +170,9 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
 }
 
 async fn owned_three_stores() -> (ArtifactStore<DemoSnapshot, DemoMutation>, ArtifactStore<DemoSnapshot, DemoMutation>, ArtifactStore<DemoSnapshot, DemoMutation>) {
-    let parent_dialect = crate::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };
-    let child_dialect = |subset: &str| crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
-    let parent_reference = crate::os_io::ArtifactRef { artifact_id: "map-a".into(), dialect: parent_dialect.clone() };
+    let parent_dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };
+    let child_dialect = |subset: &str| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
+    let parent_reference = semio_framework_artifact_reference::ArtifactRef { artifact_id: "map-a".into(), dialect: parent_dialect.clone() };
     let parent = owned_store("map-a", parent_dialect, None).await;
     let drawing = owned_store("gismap-drawing", child_dialect(DRAWING_ROLE), Some(OwnerRef { parent: parent_reference.clone(), slot: DRAWING_ROLE.into(), child_id: "gismap-drawing".into() })).await;
     let value = owned_store("gismap-value", child_dialect(VALUE_ROLE), Some(OwnerRef { parent: parent_reference, slot: VALUE_ROLE.into(), child_id: "gismap-value".into() })).await;
@@ -800,7 +800,7 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
         let read = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("one captured group read");
         if coordinator.phase() == DurableOwnedThreeStoreCommitPhaseV1::Journal {
             assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);
-            assert!(parent.set_local_actor_id(None).is_err());
+            assert_eq!(parent.local_actor_id().0, crate::os_spr::LOCAL_ACTOR_ID);
             assert!(drawing.invalidate_after_replay().is_err());
             observed_pending = true;
         }

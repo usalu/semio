@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/select-generation/schema.json",
+  "title": "SelectGeneration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mutation", "generationId"],
+  "properties": {
+    "mutation": {"const": "selectGeneration"},
+    "generationId": {
+      "type": ["string", "null"],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {"en": "Selected Generation", "de": "Ausgewählte Generierung"},
+        "description": {"en": "Select an existing generation or clear the selection.", "de": "Eine vorhandene Generierung auswählen oder die Auswahl aufheben."},
+        "ref": {"kind": "generation"},
+        "group": "selection",
+        "order": 10
+      }
+    }
+  }
+}

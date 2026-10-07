@@ -18,7 +18,7 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
     /// `interactive-job.live-instance` unless the app's mounted live instance id equals the
     /// dispatching `ActionMeta`'s, and every fixture in this tree dispatches as `meta("local")`.
     pub(crate) async fn app_with_registry() -> SpaceVcsApp {
-        let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app()).await;
+        let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
         semio_framework_plugin::PluginApp::bind_instance_id(&mut app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
         app
     }
@@ -380,7 +380,7 @@ async fn checkout_checkpoint_restores_projection() {
 }
 
 /// 🧪️ The definitional proof: two independent instances start from `SpaceApp::initial_snapshot()`
-/// (genuinely EMPTY — `paired_apps`/`new_app::<A>()` never seed the bundled demo projection; this
+/// (genuinely EMPTY — `paired_apps`/`new_app::<A>(semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into()))` never seed the bundled demo projection; this
 /// test previously assumed otherwise and dispatched a rename against a node id that could never
 /// exist in either instance, which the missing-target guard correctly rejected once the crate could
 /// finally link and run this test for the first time), apply DISJOINT edits (A spawns a "draw"

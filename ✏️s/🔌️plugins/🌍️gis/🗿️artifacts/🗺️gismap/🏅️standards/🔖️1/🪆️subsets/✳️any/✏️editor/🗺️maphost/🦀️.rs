@@ -5,7 +5,7 @@
 //! `🎮️commands/*` node that has to hit-test, frame or query the live map goes through here.
 
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
-use crate::schema::gis_map_descriptor_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_surface::tiled_map::MapHost;
 use serde_json::Value;

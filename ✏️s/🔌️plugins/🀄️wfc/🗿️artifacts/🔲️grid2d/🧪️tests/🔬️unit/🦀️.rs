@@ -8,7 +8,7 @@ fn the_document_schema_is_the_dialect_artifact_kind() {
     assert_eq!(WFC_GRID2D_DOCUMENT_SCHEMA, "s.wfc.grid2d");
     assert_eq!(WFC_GRID2D_DIALECT.artifact_kind, WFC_GRID2D_DOCUMENT_SCHEMA);
     assert_eq!(WFC_GRID2D_DIALECT.standard.0, "1");
-    assert_eq!(WFC_GRID2D_DIALECT.subset, semio_framework_plugin::SubsetId::ANY);
+    assert_eq!(WFC_GRID2D_DIALECT.subset, semio_framework_artifact_reference::SubsetId::ANY);
 }
 
 #[test]

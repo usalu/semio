@@ -13,7 +13,8 @@
 //! A load id the case already carries is a no-op WARNING, not a duplicate-id FATAL — `add-load` patches a case rather than coining a document-level identity.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️add-load/⏸️dup-load-id-4f4a0a/📸️snapshot/⬅️before/🔣️.json");

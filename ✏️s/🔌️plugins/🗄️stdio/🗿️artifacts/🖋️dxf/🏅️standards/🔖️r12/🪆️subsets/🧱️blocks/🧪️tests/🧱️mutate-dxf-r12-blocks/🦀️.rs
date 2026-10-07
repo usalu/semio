@@ -135,7 +135,8 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, produced};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation, DxfMutation};
+    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation,DxfMutation};
+
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_dxf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::{print_dxf_document};

@@ -344,7 +344,8 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_architect_program::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any as export_zip;
-    use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::mutations::{apply_program_mutation_outcome, inverse_program_mutation_steps, ProgramMutation};
+    use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::mutations::{apply_program_mutation_outcome,inverse_program_mutation_steps,ProgramMutation};
+
     use semio_s_artifact_architect_program::standards::v1::subsets::any::io::text::snapshot::{encode_program_snapshot_json};
     use semio_s_artifact_architect_program::standards::v1::subsets::any::io::text::snapshot::{decode_program_snapshot_json};
     use semio_s_artifact_architect_program::standards::v1::subsets::any::io::text::mutations::{decode_program_mutation_json};

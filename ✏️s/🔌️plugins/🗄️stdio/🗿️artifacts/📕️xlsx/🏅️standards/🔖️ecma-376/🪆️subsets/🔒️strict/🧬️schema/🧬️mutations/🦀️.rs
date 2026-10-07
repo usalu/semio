@@ -21,7 +21,7 @@
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::{diff_set_snapshot, XlsxDiff};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxXmlPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
@@ -114,12 +114,6 @@ pub fn apply_xlsx_strict_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxSt
 fn main_part_path(base: &XlsxSnapshot) -> Option<String> {
     let relationship = base.opc.relationships_for("").iter().find(|relationship| relationship.rel_type.ends_with("/officeDocument"))?;
     Some(resolve_relationship_target("", &relationship.target))
-}
-
-/// 📖️ An opaque OPC part's text — the legacy VML drawing is a binary-authority part, never a logical XML part.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn part_text(base: &XlsxSnapshot, path: &str) -> Option<String> {
-    String::from_utf8(base.opc.part(path)?.bytes.clone()).ok()
 }
 
 /// ✍️ Rewrites every attribute value equal to a member of `from` to `to`, through the whole
@@ -246,15 +240,15 @@ fn diff_conformance_attribute(base: &XlsxSnapshot, value: Option<&str>) -> XlsxD
     diff_to(base, next)
 }
 
-/// 🔺️ The diff of adding a legacy VML drawing part — an opaque OPC part, since its content type is
-/// not XML — together with its content-type override.
+/// 🔺️ The diff of adding a legacy VML drawing part with logical XML ownership together with its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_insert_vml_part(base: &XlsxSnapshot, path: &str, markup: &str) -> XlsxDiff {
-    if base.opc.part(path).is_some() {
+fn diff_insert_vml_part(base: &XlsxSnapshot, path: &str, document: &XmlDocument) -> XlsxDiff {
+    if base.opc.part(path).is_some() || base.xml_part(path).is_some() {
         return XlsxDiff::default();
     }
     let mut next = base.clone();
-    next.opc.set_part(path, VML_CONTENT_TYPE, markup.as_bytes().to_vec());
+    next.opc.content_types.set_override(path, VML_CONTENT_TYPE);
+    next.xml_parts.push(XlsxXmlPart { path: path.trim_start_matches('/').into(), content_type: VML_CONTENT_TYPE.into(), document: document.clone() });
     diff_to(base, next)
 }
 
@@ -263,7 +257,7 @@ fn diff_insert_vml_part(base: &XlsxSnapshot, path: &str, markup: &str) -> XlsxDi
 fn diff_remove_vml_part(base: &XlsxSnapshot, path: &str) -> XlsxDiff {
     let key = path.trim_start_matches('/');
     let mut next = base.clone();
-    next.opc.parts.retain(|part| part.path != key);
+    next.xml_parts.retain(|part| part.path != key);
     next.opc.content_types.overrides.retain(|(name, _)| name.trim_start_matches('/') != key);
     diff_to(base, next)
 }
@@ -294,7 +288,7 @@ pub(crate) fn agg_diff(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> protoc
         XlsxStrictMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace }) => diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, namespace),
         XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
         XlsxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
+        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, document }) => diff_insert_vml_part(base, path, document),
         XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
         XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, content_type }) => diff_set_content_type(base, path, content_type),
     })
@@ -322,8 +316,8 @@ pub(crate) fn agg_inverse(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> Res
             None => return Vec::new(),
         },
         XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
-        XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match part_text(base, path) {
-            Some(markup) => XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup }),
+        XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match base.xml_part(path) {
+            Some(part) => XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: part.document.clone() }),
             None => return Vec::new(),
         },
         XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path, .. }) => match resolved_content_type(base, path) {

@@ -163,14 +163,14 @@ pub(crate) mod context {
     /// that generation, so a test that swaps a production envelope must start from here; seeding first
     /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
     pub fn unseeded_app_with_registry() -> Process3dApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
         ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         Process3dApp(app)
     }
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn app_with_registry() -> Process3dApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
         ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         seed_domain_catalog_contributions(&mut app);
         Process3dApp(app)
@@ -327,7 +327,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
         "schema": crate::PROCESS_3D_SCHEMA,
         "id": "process3d-production-mounted-law",
         "vcs": {
-            "initialSnapshot": snapshot_hex,
+            "initialPack": snapshot_hex,
             "edits": [{
                 "id": "process3d-production-deep-edit",
                 "actor": "process3d-production-law",
@@ -345,7 +345,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     }))
     .expect("schema-first Process3d production fixture envelope");
     let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
-    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::process3d_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::host::owned::process3d_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -366,13 +366,13 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
 fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
-    crate::standards::v1::subsets::any::io::binary::mutations::process3d_admit_publication_authority(
+    crate::host::owned::process3d_admit_publication_authority(
         handle.operation,
         handle.generation,
         handle.generation.0,
         handle.generation.0,
         handle.generation.0,
-        crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: crate::standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MOUNTED_CONTROL_CREDITS },
+        crate::host::owned::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: crate::host::owned::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::host::owned::PROCESS3D_MOUNTED_CONTROL_CREDITS },
     )
     .expect("Process3d production publication authority");
     for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -387,7 +387,7 @@ fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::con
 
 fn drive_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..200_000 {
-        crate::standards::v1::subsets::any::io::binary::mutations::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
+        crate::host::owned::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("Process3d production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -405,7 +405,7 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     // 🛣️ The publication lease table is a process-global four-slot DIRECT-MAPPED registry shared by the
     // whole test binary; two laws admitting concurrently collide on a slot and report
     // `process3d-publication.saturated`, which is scheduling, never the property under test.
-    let _lane = crate::standards::v1::subsets::any::io::binary::mutations::process3d_publication_authority_lane();
+    let _lane = crate::host::owned::process3d_publication_authority_lane();
     let accepted_label = "accepted-production-swap";
     let mut accepted = crate::editor::process3d::unit_tests::context::unseeded_app_with_registry();
     let base_generation = accepted.artifact_generation_now();
@@ -435,9 +435,9 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
     assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str()), (3, 2, "Beam"));
     assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
-    assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
+    assert!(crate::host::owned::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
 
-    use crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+    use crate::host::owned::Process3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
     for (hostile, expected_code) in [
         (Missing, "process3d-publication.authority-missing"),
         (WrongOperation, "process3d-publication.wrong-operation"),
@@ -452,15 +452,15 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
         let (hostile_wire, hostile_snapshot, hostile_digest) = production_envelope_wire("rejected-production-candidate");
         assert_eq!(production_semantic_digest(&hostile_snapshot), hostile_digest);
         let handle = admit_production_envelope(&mut app, &hostile_wire);
-        crate::standards::v1::subsets::any::io::binary::mutations::process3d_arm_publication_hostile(handle.operation, hostile);
+        crate::host::owned::process3d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
+        assert_eq!(crate::host::owned::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
         assert_eq!(app.artifact_generation_now(), base_generation);
         let retained = app.snapshot().expect("last-valid snapshot after rejected candidate");
         assert_eq!(retained, last_valid);
         assert_eq!(production_semantic_digest(&retained), last_valid_digest, "hostile candidate must not change the last-valid digest");
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected Process3d terminal ACK after candidate retirement"));
-        assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_publication_authority(handle.operation, handle.generation));
+        assert!(crate::host::owned::process3d_release_publication_authority(handle.operation, handle.generation));
     }
 }
 
@@ -490,7 +490,7 @@ fn drive_resumable_work(
     let operation = retained_operation();
     let mut progress = 0;
     loop {
-        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0)).expect("retained work step") {
+        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0)).expect("retained work step") {
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => progress += 1,
             ArtifactCommandWorkStep::Complete(emit) => return (progress, emit),
             ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => return (progress, emit),
@@ -682,7 +682,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
         loop {
             let started = std::time::Instant::now();
             let step = work
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
                 .expect("maximum work step");
             assert!(started.elapsed().as_micros() < 8_000, "resumable {} exceeded the interactive step ceiling", command.command_id());
             if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
@@ -1474,7 +1474,7 @@ fn published_example_load(app: &mut context::Process3dRawApp, example: &str) -> 
 /// `Incomplete` (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
 #[test]
 fn every_example_loads_through_the_member_less_archive_door() {
-    let _lane = crate::standards::v1::subsets::any::io::binary::mutations::process3d_publication_authority_lane();
+    let _lane = crate::host::owned::process3d_publication_authority_lane();
     for (operation, example) in [(71_u64, PROCESS3D_EXAMPLE_TIMBER), (72, PROCESS3D_EXAMPLE_PLATE), (73, PROCESS3D_EXAMPLE_CONCRETE_FOREST)] {
         let mut app = context::unseeded_app_with_registry();
         let (pack, spr) = published_example_load(&mut app, example);

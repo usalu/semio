@@ -45,6 +45,3 @@ pub fn contribute(base: &JpgSnapshot, restart_interval: Option<u16>) -> JpgDiff 
 //#endregion Semantics
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
-mod tests_direct_behavior;

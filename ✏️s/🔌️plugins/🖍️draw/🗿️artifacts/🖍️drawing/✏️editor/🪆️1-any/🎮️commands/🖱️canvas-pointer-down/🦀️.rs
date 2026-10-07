@@ -18,7 +18,7 @@ use crate::schema::geometry::handles::{handle_motion, HandleMotion};
 use crate::schema::scene_paint::scene::query::{PreparedScenePickJob,PreparedScenePick,PreparedSceneIdentity};
 use crate::editor::drawing::geometry_session::MountedSceneQuery;
 use crate::schema::{create_drawing_trace_layer, layer_id};
-use crate::standards::v1::subsets::any::io::text::snapshot::{create_drawing_path_layer};
+use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
 use crate::{DrawingLayerNode, DrawingSnapshot, PathSegment};
 use crate::schema::geometry::editing::{PathPoint,path_point_hit};
 use machine::Command;
@@ -237,7 +237,7 @@ fn shape_drag_id(utility: &str, geometry: [f64; 4], layer_ordinal: usize, operat
     for value in geometry {
         identity.extend_from_slice(&value.to_bits().to_be_bytes());
     }
-    crate::schema::create_drawing_id("shape", &identity)
+    crate::standards::v1::subsets::any::schema::create_drawing_id("shape", &identity)
 }
 
 /// 🔷️ The `create-layer` a shape drag yields, `None` when the drag is too small to commit.
@@ -255,7 +255,7 @@ fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: 
         _ => ("Rectangle", "rect", [x, y, width, height]),
     };
     let mut base = crate::schema::default_layer_base(name);
-    base.id = shape_drag_id(utility, geometry, doc.layers.len(), operation);
+    base.id = shape_drag_id(utility, geometry, doc.layers.len(), operation).into();
     let mut layer = DrawingLayerNode::Shape(crate::DrawingShapeBody {
         base,
         shape_kind: shape_kind.into(),
@@ -329,7 +329,7 @@ pub(crate) fn drawing_grab_leaf(grab: &DrawingGrab, start: [f64; 2], cursor: [f6
             if constrained {
                 if delta[0].abs() >= delta[1].abs() { delta[1] = 0.0; } else { delta[0] = 0.0; }
             }
-            (delta.iter().all(|value| value.is_finite()) && delta != [0.0, 0.0]).then(|| drag_path_points(targets.clone(), delta[0], delta[1]))
+            (delta.iter().all(|value| value.is_finite()) && delta != [0.0, 0.0]).then(|| drag_path_points(targets.clone().into(), delta[0], delta[1]))
         }
     }
 }

@@ -99,7 +99,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
             let frames_right = view.for_window_instance("remodel-frames-right").unwrap();
             let report_left = view.for_window_instance("remodel-report-left").unwrap();
             let report_right = view.for_window_instance("remodel-report-right").unwrap();
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest).await);
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
             app.bind_instance_id(88).await;
             let outcome: Result<(), String> = async {
                 let payload = import_frame_payload::checker_data_url(8, 8, 2).await;
@@ -147,7 +147,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 if !left_report.columns_json.contains("RMS (px)") || !right_report.columns_json.contains("Observations") { return Err("Remodel Report render did not consume isolated table selection".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                 if packs.len() != 6 { return Err(format!("Remodel persisted {} exact window packs instead of six", packs.len())); }
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 reopened.bind_instance_id(89).await;
                 semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &document_before).await.map_err(|error| format!("{error:?}"))?;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }

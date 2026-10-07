@@ -12,7 +12,7 @@ pub type SemioAudioSnapshotText = String;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::audio::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
@@ -225,6 +225,8 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level,strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::hex_decode_string;
 use crate::standards::v1::subsets::audio::schema::diff::*;
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};

@@ -1,2 +1,1 @@
-"Exact byte-authoritative PNG artifact."
-type PngArtifact { schema: String! @state(class: ARTIFACT) bytes: [Int!]! @state(class: ARTIFACT) }
+type PngArtifact { schema: String!, image: PngImage! }

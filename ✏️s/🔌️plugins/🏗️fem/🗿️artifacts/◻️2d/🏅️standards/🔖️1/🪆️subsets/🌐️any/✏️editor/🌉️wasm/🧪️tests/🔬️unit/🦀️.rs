@@ -9,7 +9,7 @@ mod tests {
             "fem2d",
             crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot(),
             None,
-        )))
+        ), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())))
         .expect("valid store");
         store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::Fem2dSnapshot, crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation>());
         assert!(store.snapshot().expect("snapshot").nodes.is_empty());

@@ -13,7 +13,7 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_
 
 pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::JpgDiff;
 pub use schema::mutations::JpgMutation;
@@ -86,7 +86,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) —
-/// replaces the old side-effecting `crate::engine::register()`, previously called
+/// replaces the old side-effecting `crate::standards::v_jfif_1_01::subsets::document::io::register()`, previously called
 /// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
 /// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
 /// rows — 🧾️document + 🧱️baseline already folded into one list there) by its FULLY QUALIFIED path,
@@ -117,7 +117,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .schema(standards::v_jfif_1_01::subsets::document::schema::jpg_artifact_schema_descriptor())
         .formats(formats)
         .inferences([standards::v_jfif_1_01::subsets::document::schema::inferences::jpg_artifact_inference_descriptor()])
-        .composers(standards::v_jfif_1_01::engine::io_registry::entries())
+        .composers(standards::v_jfif_1_01::subsets::document::io::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA, JPG_ANY_DIALECT)
@@ -202,8 +202,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::subsets::document::io::io_registry as v_jfif_1_01;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use crate::standards::v_jfif_1_01::subsets::document::io::io_registry as v_jfif_1_01;
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -281,8 +281,6 @@ pub mod standards {
                         pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif/🦀️.rs"]
                         pub mod change_jfif_header;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re/🦀️.rs"]
-                        pub mod change_re_encode_quality;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart/🦀️.rs"]
                         pub mod change_restart_interval;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other/🦀️.rs"]
@@ -370,19 +368,13 @@ pub mod standards {
                 #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧬️schema/🦀️.rs"]
                 pub mod schema;
             
-#[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🚪️io/🦀️.rs"]
-pub mod io;
 }
         }
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
 pub mod schema {
     pub use super::standards::v_jfif_1_01::subsets::document::schema::*;
-}
-pub mod engine {
-    pub use super::standards::v_jfif_1_01::engine::*;
 }
 
 

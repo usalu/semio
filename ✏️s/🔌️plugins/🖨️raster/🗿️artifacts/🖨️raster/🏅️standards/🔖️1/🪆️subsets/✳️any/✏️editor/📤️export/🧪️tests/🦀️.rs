@@ -1,7 +1,7 @@
 //! 🧪️ Export retains exact pixels, bounded output and cancellation without document edits.
 use super::*;
 use crate::standards::v1::subsets::any::schema::{snapshot::retire_raster_snapshot};
-use crate::standards::v1::subsets::any::io::text::snapshot::{create_pixel_layer};
+use crate::standards::v1::subsets::any::schema::create_pixel_layer;
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
 
 fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {

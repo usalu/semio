@@ -2,18 +2,13 @@ import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
 import TOML from "@iarna/toml";
 import { inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../../../../🔍️discovery/🟦️.ts";
 import { inspectRustBindingFacts, rustExternProviders, resolveRustImportBindings, type RustBindingProblemKind } from "../🟦️.ts";
 
 const owner = resolve(import.meta.dir, "..");
 const corpus = JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8")) as {scopeCases:readonly {id:string;source:string;sourceScope:readonly string[];state:"resolved"|"unresolved";modulePath?:readonly string[];code?:string;count?:number}[];mountCase:{sources:Record<string,string>;source:string;expectedBindings:{from:string;root:string;provider:string;module:string[]}[];linkedAncestor:string;expectedLinkedProblem:RustBindingProblemKind};cases: {id:string;source:string;sourceLocator?:string;rootSources?:Record<string,string>;consumerManifest:string;compileKind:"library"|"test"|"build";manifests:Record<string,string>;expectedRoots:string[];expectedProblems:RustBindingProblemKind[];expectedProviders:string[];authorityWitness?:{manifest:string;field:"library-path"|"workspace-path"|"dependency-path"};inputNodes?:Record<string,"missing"|"symlink"|"file"|"directory">}[]};
-test("closed portable binding corpus",()=>{
- const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(resolve(owner,"🧬️schema/🔣️.json"),"utf8")));
- expect(validate(corpus)).toBe(true);
- expect(new Set(corpus.cases.map(row=>row.id)).size).toBe(corpus.cases.length);
-});
+
 for(const row of corpus.cases) test(row.id,()=>{
  const files=new Map(Object.entries(row.manifests));
  const sources=new Map(files);

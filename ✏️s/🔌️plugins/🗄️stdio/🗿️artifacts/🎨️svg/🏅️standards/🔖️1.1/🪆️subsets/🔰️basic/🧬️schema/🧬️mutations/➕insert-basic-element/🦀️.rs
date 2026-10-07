@@ -11,7 +11,7 @@ use super::*;
 pub struct InsertBasicElement {
     pub(crate) parent: NodePath,
     pub(crate) index: usize,
-    pub(crate) node: XmlNode,
+    pub(crate) node: SvgNode,
 }
 
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertBasicElement {

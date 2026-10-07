@@ -12,6 +12,6 @@ mod tests {
         let snapshot = Ifc2x3SavBuilderConstruction::new().build().unwrap();
         let (mutated, _diff) = Ifc2x3SavBuilderConstruction::from_snapshot(snapshot).mutate(Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 1 }));
         let err = mutated.build().expect_err("removing the only analysis model must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v2x3::subsets::sav::schema::CODE_NO_ANALYSIS_MODEL));
+        assert!(err.iter().any(|d| d.code.0 == crate::standards::v2x3::subsets::sav::io::CODE_NO_ANALYSIS_MODEL));
     }
 }

@@ -1,12 +1,12 @@
 //! 🧬️ DOCX snapshot with one authoritative logical document per XML-bearing OPC part.
 
 use crate::{
-    standards::v_ecma_376::subsets::base::io::{DocxError, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES},
+    standards::v_ecma_376::subsets::base::{schema::{refusal::{DocxError},vocabulary::{REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES}}},
     STDIO_DOCX_DOCUMENT_SCHEMA,
 };
 use framework_schema::ArtifactSchema;
 use semio_framework_value::list::PagedList;
-use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, sqlite::{retire_xml_document, retire_xml_document_with_frontier}, xml_document_to_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, ownership::{retire_xml_document, retire_xml_document_with_frontier}, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
 
@@ -228,7 +228,7 @@ pub struct DocxSnapshot {
 
 impl Default for DocxSnapshot {
     fn default() -> Self {
-        crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(DocxDocument::default())
+        crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default())
     }
 }
 
@@ -326,17 +326,10 @@ impl DocxSnapshot {
     }
 
     /// 📰️ Projects the editable semantic view without creating a second persisted authority.
-    pub fn project_document(&self) -> Result<DocxDocument, crate::standards::v_ecma_376::subsets::base::io::DocxError> {
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::project_snapshot_document(self)
+    pub fn project_document(&self) -> Result<DocxDocument, crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError> {
+        crate::standards::v_ecma_376::subsets::base::schema::inferences::document::project_snapshot_document(self)
     }
 
-    pub fn part_text(&self, path: &str) -> Option<String> {
-        let key = path.trim_start_matches('/');
-        self.xml_part(key)
-            .and_then(|part| part.document.materialize_exact().ok())
-            .map(|document| xml_document_to_text(&document))
-            .or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec_owner()).ok()))
-    }
 }
 //#endregion 🔖️Snapshot
 
@@ -347,8 +340,7 @@ impl DocxSnapshot {
 
 
 
-#[path="🧩️native/🦀️.rs"]
-mod native;
+
 
 #[path="🛡️subset/🦀️.rs"]
-mod subset;
+pub(crate) mod subset;

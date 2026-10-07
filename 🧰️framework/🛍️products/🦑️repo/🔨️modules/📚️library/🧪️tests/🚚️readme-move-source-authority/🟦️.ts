@@ -9,7 +9,7 @@ import { getNodeValue, parse as parseJson, parseTree, type ParseError } from "js
 import ts from "typescript";
 
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts");
-const source = normalizationSourceDeclarations(sourcePath), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
+const sourcePreimage = readFileSync(sourcePath), source = normalizationSourceDeclarations(sourcePath), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚚️readme-move-source-authority/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🚚️readme-move-source-authority/🔣️.json"), "utf8"));
 const sha = (value: string | Uint8Array): string => createHash("sha256").update(value).digest("hex");
@@ -90,6 +90,8 @@ function implementation(compiler: typeof compilers[number], adapters: Record<str
     const optional = declarations.get(name);
     if (optional) selected.push(optional.getText(tree).replace(/^export\s+/u, ""));
   }
+  selected.push(declarations.get("isTransactionRepositoryAuthorityError")!.getText(tree));
+  selected.push(tree.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "TransactionRepositoryAuthorityError")!.getText(tree));
   const moveError = tree.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === vector.forwardBoundary.typedError);
   if (moveError) selected.push(moveError.getText(tree));
   const constants = tree.statements.filter(ts.isVariableStatement).filter((node) => node.declarationList.declarations.some((item) => ["PLAN_HASH", "PLAN_OPERATION_ID", "PLAN_COMMIT_ID"].includes(item.name.getText(tree))));
@@ -109,8 +111,6 @@ const apis = compilers.map((compiler) => ({ compiler, api: implementation(compil
 
 test("move source authority has a closed neutral grammar with independent JSON and file-hash parity", () => {
   expect(getNodeValue(parseTree(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚚️readme-move-source-authority/🔣️.json"), "utf8"))!)).toEqual(vector);
-  expect(new Ajv({ allErrors: true }).compile(schema.definitions.execution)(vector.execution)).toBe(true);
-  expect(new Ajv({ allErrors: true }).compile(schema.definitions.strictCompilation)(vector.strictCompilation)).toBe(true);
   const validate = new Ajv({ allErrors: true }).compile(schema);
   for (const row of vector.cases) {
     const move = scenario(row).candidate.moves[0], inputs = move.sourceAuthority?.inputs;
@@ -247,7 +247,9 @@ test("actual selected-resume catch inverse-recovers typed move input drift but n
   class StartedPartial extends Error {}
   for (const compiler of compilers) for (const row of vector.resumeErrorCases) {
     const calls: string[] = [], plan = fixture().plan, journal: any = { state: "editing" }, error = row.kind === "move" ? new MoveInputDrift("move input drift") : row.kind === "generator" ? new GeneratorInputDrift("generator input drift") : row.kind === "partial" ? new StartedPartial("partial output") : new Error("unknown owned state");
-    const environment = { plan, journal, repoRoot: "/virtual", journalPath: "virtual-journal", taxonomy: {}, options: {}, digest: plan.planDigest, TaxonomyMoveSourceInputDriftError: MoveInputDrift, TaxonomyGeneratorInputDriftError: GeneratorInputDrift, TaxonomyStartedRegenerationPartialError: StartedPartial, persistJournal: () => calls.push("persist"), rollbackTransaction: () => calls.push("rollback"), releaseLease: () => calls.push("release") };
+    const isTransactionRepositoryAuthorityError = new Function(compiler.compile(tree.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "TransactionRepositoryAuthorityError")!.getText(tree) + "\n" + declarations.get("isTransactionRepositoryAuthorityError")!.getText(tree)) + "\nreturn isTransactionRepositoryAuthorityError;")();
+    const transactionRepositoryFinally = new Function("isTransactionRepositoryAuthorityError", compiler.compile(declarations.get("transactionRepositoryFinally")!.getText(tree)) + "\nreturn transactionRepositoryFinally;")(isTransactionRepositoryAuthorityError);
+    const environment = { transactionRepositoryFinally, isTransactionRepositoryAuthorityError, plan, journal, repoRoot: "/virtual", journalPath: "virtual-journal", taxonomy: {}, options: {}, digest: plan.planDigest, TaxonomyMoveSourceInputDriftError: MoveInputDrift, TaxonomyGeneratorInputDriftError: GeneratorInputDrift, TaxonomyStartedRegenerationPartialError: StartedPartial, persistJournal: () => calls.push("persist"), rollbackTransaction: () => calls.push("rollback"), releaseLease: () => calls.push("release") };
     const run = new Function(...Object.keys(environment), compiler.compile("return function(error) { try { throw error; } catch (error) " + catches[0]!.block.getText(tree) + " }") )(...Object.values(environment));
     let outcome = "thrown";
     try { outcome = run(error).state; } catch { }
@@ -301,7 +303,7 @@ test("actual forward wrapper stops before external reads when owned reconciliati
 });
 
 test("exact new move authority declarations satisfy independent strict TypeScript compilation", () => {
-  const names = new Set(["TaxonomyLeafPreimage", "TaxonomyMoveSourceAuthority", "TaxonomyMove", "TaxonomyGeneratorNodeRecord", "parseMoveSourceAuthority", "parseMove", "TaxonomyMoveSourceInputDriftError", "validateForwardMoveSourceInputs"]);
+  const names = new Set(["TaxonomyLeafPreimage", "TaxonomyMoveSourceAuthority", "TaxonomyMove", "TaxonomyGeneratorNodeRecord", "parseMoveSourceAuthority", "parseMove", "TaxonomyMoveSourceInputDriftError", "validateForwardMoveSourceInputs", "TransactionRepositoryAuthorityError", "TransactionRepositoryAuthorityFailureReason", "isTransactionRepositoryAuthorityError"]);
   const selected = tree.statements.filter((node) => (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name && names.has(node.name.text));
   expect(selected).toHaveLength(names.size);
   const ambient = `
@@ -331,7 +333,7 @@ declare function resumeGeneratorInputRecord(root: string, authority: object, jou
 });
 
 test("test preparation leaves normalizer bytes unchanged and never materializes synthetic paths", () => {
-  expect(sha(readFileSync(sourcePath))).toBe(sha(source));
+  expect(sha(readFileSync(sourcePath))).toBe(sha(sourcePreimage));
   expect(vector.scope).toBe("in-memory-only");
   expect(vector.phaseCases).toHaveLength(13);
 });

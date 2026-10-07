@@ -49,3 +49,15 @@ The expanded body scan reached every mounted non-test schema Rust source and mov
 The source file list and ownership records are retained in `runtime-files.md` and the ticket scripts. No modifying Git commands or worktrees were used.
 
 Known remaining review areas are Lowpoly media conversion JSON adapters reported by the separate semantic agent, NoteBlock's encoded block patch field, and deeper inherent method bodies outside the specifically separated WFC services. Native compile results must resolve privacy, module mount and trait closure; parser success cannot stand in for those results. Other agents own framework artifact roots, shared scalar ownership, TypeScript extraction and semantic Diff/replay separation.
+
+## Runtime Closure Update
+
+The focused Drawing official Nx target completed successfully after fixing self-contained diff schema definitions and the nullable fill contract. The run included three IO tests (Ajv independent JSON contract and DataView numeric oracle), two selection/status tests, and the package check. The language-agnostic clear-style fixture remains distinct from an untouched style.
+
+The Drawing native typed-patch target completed unsuccessfully before reaching Drawing: raw binary IO mutation framing retained two references to removed schema::mutations::COMPONENT_PROTOCOL_SEMIO. The physical metadata route repair updated 94 references to their representation owner. This is a repair, not a passing native rerun.
+
+Further ownership changes completed: CAD SQLite frontier admission and keyed/dense adapters moved to IO while pure ordering/filtering remains semantic; glTF GraphQL/proto JSON decoding and protobuf varint decoding moved to text/binary mutations; glTF retained serde oracle implementations are test-only under text snapshot; Semio Drawing and Mesh cache serializer bridges moved to text inferences; Puzzle3d fill checkpoint fixed-width bytes moved to binary inferences. Bitmap host now consumes intrinsic bytes and uses the shared text binder for physical request/response conversion. The TypeScript agent owns Bitmap schema/mirrors and Forms response export.
+
+Lowpoly's previously reported document JSON helpers are already replaced in the shared checkout by lowpoly_snapshot_from_mesh, mesh_document_value, and mesh_from_document_value. The inspected functions now expose typed snapshots/intrinsic values.
+
+The latest broad Rust check target covers generation3d, DWG, TXT, and Bitmap. It began after the shared graph construction wait; no completion is claimed here. Prior compiler failures exposed DWG relocated SQLite imports and TXT registry/module collisions, repaired with exact canonical semantic/physical imports and registry dispatch paths. XML/SVG snapshot helpers are already physically extracted; their stale schema-qualified caller routes are being closed.

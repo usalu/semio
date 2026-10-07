@@ -13,7 +13,7 @@ import { declaredComponentKind } from "../../../../../../🦑️repo/🔨️modu
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
 const manifestSchema = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🧬️schema/🔣️.json"), "utf8"));
-const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/🧬️catalog-publication/🔣️.json"), "utf8")) as { executionProtocol: { appChannelVersion: number }; vectors: { id: string; change: string; valid: boolean }[]; componentKinds: { id: string; manifest: string; kind?: "plugin" | "extension" | null; invalid?: boolean }[]; descriptorInputs: { id: string; change: string; appChannelVersion?: number; valid: boolean }[]; stringLengths: { id: string; value: string; schema: object; valid: boolean }[] };
+const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/🧬️catalog-publication/🔣️.json"), "utf8")) as { executionProtocol: { appChannelVersion: number }; vectors: { id: string; change: string; valid: boolean }[]; componentKinds: { id: string; manifest: string; kind?: "plugin" | "extension" | null; invalid?: boolean }[]; descriptorInputs: { id: string; change: string; appChannelVersion?: number; valid: boolean }[]; stringLengths: { id: string; value: string; input: { schema: object }; valid: boolean }[] };
 const roots: string[] = [];
 const digest = (value: string): string => createHash("sha256").update(value).digest("hex");
 const decodeOracle = (bytes: Uint8Array): unknown => {
@@ -136,9 +136,9 @@ describe("owner catalog publication", () => {
     else expect(declaredComponentKind(vector.manifest) ?? null).toBe(vector.kind);
   });
   for (const vector of fixture.stringLengths) it(vector.id, () => {
-    const oracle = new Ajv({ strict: true }).compile(vector.schema)(vector.value);
+    const oracle = new Ajv({ strict: true }).compile(vector.input.schema)(vector.value);
     expect(Boolean(oracle)).toBe(vector.valid);
-    expect(validateJsonSchemaSubset(vector.schema, vector.value).length === 0).toBe(vector.valid);
+    expect(validateJsonSchemaSubset(vector.input.schema, vector.value).length === 0).toBe(vector.valid);
   });
 });
 

@@ -1,0 +1,18 @@
+{
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-eight-native-artifacts' bun run nx run-many --target=test-snapshot-sqlite-native --projects='@semio-tech/norm-vdi3805-rs,@semio-tech/norm-en1990-rs,@semio-tech/norm-en1994-rs,@semio-tech/norm-din16798-rs,@semio-tech/norm-din18599-rs,@semio-tech/norm-en1993-rs,@semio-tech/norm-en1997-rs,@semio-tech/norm-en1996-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-eight-norm-native.log' 2>&1",
+  "projects": [
+    "@semio-tech/norm-vdi3805-rs",
+    "@semio-tech/norm-en1990-rs",
+    "@semio-tech/norm-en1994-rs",
+    "@semio-tech/norm-din16798-rs",
+    "@semio-tech/norm-din18599-rs",
+    "@semio-tech/norm-en1993-rs",
+    "@semio-tech/norm-en1997-rs",
+    "@semio-tech/norm-en1996-rs"
+  ],
+  "status": "Launched original unchanged route after actual corrected producer compiler/runtime join",
+  "at": "2026-10-06T11:37:24.766979+00:00",
+  "scope": "Original remaining8Native owner route; VDI original20After plus new1Before, provider still held; other7After unchanged quick controls",
+  "launchedAt": "2026-10-06T12:10:04.250169+00:00",
+  "producerJoin": "Immutable original metadata56950 terminal0; original owning1pass/0fail/94skip; compile3.49s, original controlled metadata laws; no downstream inference"
+}

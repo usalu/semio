@@ -6,7 +6,7 @@
 
 use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::standards::v1::subsets::drawing::schema::mutations::{
     set_snapshot::SetSnapshot,

@@ -12,11 +12,11 @@ pub struct Entry {
 }
 
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v1_2::subsets::any::schema::mutations::set_snapshot::CODEC,
-    crate::standards::v1_2::subsets::any::schema::mutations::patch_snapshot::CODEC,
-    crate::standards::v1_2::subsets::any::schema::mutations::change_gamma::CODEC,
-    crate::standards::v1_2::subsets::any::schema::mutations::patch_pixels::CODEC,
-    crate::standards::v1_2::subsets::any::schema::mutations::paint_native_samples::CODEC,
+    crate::standards::v1_2::subsets::any::io::binary::mutations::set_snapshot::CODEC,
+    crate::standards::v1_2::subsets::any::io::binary::mutations::patch_snapshot::CODEC,
+    crate::standards::v1_2::subsets::any::io::binary::mutations::change_gamma::CODEC,
+    crate::standards::v1_2::subsets::any::io::binary::mutations::patch_pixels::CODEC,
+    crate::standards::v1_2::subsets::any::io::binary::mutations::paint_native_samples::CODEC,
 ];
 
 impl protocol::OpBinary for PngMutation {

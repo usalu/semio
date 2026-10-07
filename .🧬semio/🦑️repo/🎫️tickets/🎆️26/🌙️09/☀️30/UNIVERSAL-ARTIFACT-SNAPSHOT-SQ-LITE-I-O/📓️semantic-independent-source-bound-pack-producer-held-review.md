@@ -1,0 +1,9 @@
+# Source-Bound Pack Producer Held Review
+
+Candidate public from_source borrows actual original T through private borrowed source wrapper, while from_variant borrows actual original variant projection. Semantic-owner constructor remains private; caller-held capsule owns paid symbol and ordinal pages. Static lazy metadata is read through actual BorrowedShape producers. No semantic owner clone appears.
+
+Ordinal heap-sort ranges append at current order.len and recursively retain parent range; successful nested calls pop only entries above their own start. Field IDs sort ascending with duplicate rejection, maps compare UTF8 plus ordinal tie, table columns sort authored IDs. Cancellation/refusal retains scalar/order backing and sets Failed; retirement/parent return revokes Ready and checks actual physical page size before return. Positive zero-byte/item grants retain phase and backing. No definite static compiler/API/lifetime blocker found in reviewed195lines; no runtime/compiler credit. Caller must perform explicit actual settlement; ordinary implicit drop does not establish bounded operation closure.
+
+An initial concern that Wire label paths6/7 were absent from discovery was withdrawn after reading actual ordinary pack encode Symbols::value and actual projected baseline: both discover from/edge nodes+properties only, intentionally omit edge_label. Candidate0..6 exactly preserves existing canonical discovery; new eligible label text remains inline unless indexed elsewhere. Do not expand this range based on the withdrawn concern. Intrinsic object keys stay inline and are not symbol-discovered, matching actual canonical path.
+
+Whole producer/oracle parity remains a runtime obligation; this static audit is not sufficient evidence for complete Pack semantics or whole-operation physical ownership.

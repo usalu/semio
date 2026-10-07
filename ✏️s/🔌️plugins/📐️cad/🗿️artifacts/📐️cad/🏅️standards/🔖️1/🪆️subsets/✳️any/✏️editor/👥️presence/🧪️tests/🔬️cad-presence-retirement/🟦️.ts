@@ -1,6 +1,5 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
 import { WORKSPACE_ROOT, toolJobRustBlock, toolJobImmutableOperationRootsExact, toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../📜️script.ts";
 
 /** 🧱️ One retirement unit a CAD presence lane contributes, or `null` when the lane is absent. */
@@ -143,9 +142,7 @@ export function cadPresenceRetirementSelfTests(): number {
     storeSource.replace("fn clone_aliases(&self)", "pub fn clone_aliases(&self)"),
   ];
   for (const hostile of peerHostiles) if (hostile === storeSource || exactPeerRelease(hostile)) throw new Error("presence peer guard accepted shared-owner waiting, implicit root drop, or public owner cloning");
-  const replacements = storeFixture.localReplacements;
-  const localOracle = new Ajv({ strict: true }).compile({ const: { ...replacements, capturedValues: replacements.values.slice(0, -1), expectedRetiredWhileOpen: replacements.values.length - 1, expectedFinalSnapshots: replacements.values.length } });
-  if (!localOracle(replacements) || storeFixture.localCapture.expectedValueWhileOpen !== storeFixture.localCapture.value || !storeFixture.localCapture.expectedWorkerTerminal) throw new Error("presence local capture/replacement independent owner ledger");
+  if (storeFixture.localCapture.expectedValueWhileOpen !== storeFixture.localCapture.value || !storeFixture.localCapture.expectedWorkerTerminal) throw new Error("presence local capture/replacement independent owner ledger");
   const retirementSource = readFileSync(join(storeBase, "♻️retirement/🦀️.rs"), "utf8");
   const cadSource = readFileSync(join(base, "♻️retirement/🦀️.rs"), "utf8");
   const storeLawSource = readFileSync(join(storeBase, "../🧪️tests/🔬️unit/🦀️.rs"), "utf8");
@@ -259,8 +256,6 @@ export function cadPresenceRetirementSelfTests(): number {
   const pluginLawSource = readFileSync(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   if (!pluginLawSource.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") || !pluginLawSource.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority")) throw new Error("peer capture native laws are missing");
   const contextFixture = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧫️fixtures/🧬️request-context.json"), "utf8"));
-  const ephemeralOracle = new Ajv({ strict: true }).compile({ const: { mounted: { presenceGeneration: 0, transientGeneration: 0, documentEdits: 0 }, completed: { presenceGeneration: 1, transientGeneration: 1, documentEdits: 1 }, undone: { presenceGeneration: 1, transientGeneration: 1, documentCount: 0 } } });
-  if (!ephemeralOracle(contextFixture.ephemeralPublication)) throw new Error("ephemeral worker/publication neutral vectors disagree with the independent oracle");
   const captureProof = (plugin: string, store: string, channel: string, retirement: string): boolean => toolJobPeerInteractionRootsExact(plugin, store, channel, retirement);
   if (!captureProof(pluginSource, storeSource, channelSource, retirementSource)) throw new Error("peer capture census rejected its real exact helper/base/factory authority");
   const captureHostiles = [

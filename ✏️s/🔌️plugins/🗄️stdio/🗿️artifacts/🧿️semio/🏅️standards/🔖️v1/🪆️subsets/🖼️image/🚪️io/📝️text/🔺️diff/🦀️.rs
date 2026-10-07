@@ -5,10 +5,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::image::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::image::schema::diff::*;
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -18,14 +19,8 @@ use protocol::command::DiffAlgebra;
 /// but callers using method syntax do not get the trait for free) (W2b closer fix).
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::hex_encode;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::hex_decode;
-use crate::standards::v1::subsets::image::io::text::snapshot::parse_u8;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::parse_u32;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::encode_option;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::decode_option;
-use crate::standards::v1::subsets::image::io::text::snapshot::enc_colorspace;
-use crate::standards::v1::subsets::image::io::text::snapshot::dec_colorspace;
+use crate::standards::v1::subsets::image::io::text::snapshot::encode_option;
+use crate::standards::v1::subsets::image::io::text::snapshot::decode_option;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_image_diff(d: &SemioImageDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();

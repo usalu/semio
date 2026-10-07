@@ -5,7 +5,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::object::schema::diff::*;
+use crate::standards::v1::subsets::object::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
@@ -16,8 +16,8 @@ use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 use crate::standards::v1::subsets::object::io::text::snapshot::{dec_child_opt};
 use crate::standards::v1::subsets::object::io::text::snapshot::{enc_child_opt};
-use crate::model::io::text::diff::{dec_transform};
-use crate::model::io::text::diff::{enc_transform};
+use crate::standards::v1::subsets::model::io::text::diff::{dec_transform};
+use crate::standards::v1::subsets::model::io::text::diff::{enc_transform};
 
 /// 🧾️ `<hex-flag><line>` per field, `\n`-joined, empty string = no-op diff — real, not decorative.
 /// `t=`/`b=`/`m=`/`p=` prefixes; a field absent from the diff simply has no line.

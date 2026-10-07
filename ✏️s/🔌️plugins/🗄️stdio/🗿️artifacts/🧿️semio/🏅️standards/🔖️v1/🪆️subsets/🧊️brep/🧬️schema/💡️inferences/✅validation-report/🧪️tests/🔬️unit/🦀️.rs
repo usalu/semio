@@ -69,3 +69,16 @@ async fn changing_any_collection_misses_the_cache() {
     assert_eq!(after.misses - before.misses, 1, "a real change to a covered collection must miss");
 }
 //#endregion 🧪️IncrementalityLaw
+
+#[test]
+fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
+    use store::InferredField;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let snapshot=SemioBrepSnapshot::default();
+    let dependency=BrepValidationReport::dep_input(&snapshot,&"document".into(),&[]);
+    let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
+    let oracle=serde_json::json!({"vertices":[],"edges":[],"loops":[],"faces":[],"shells":[],"solids":[]});
+    assert_eq!(actual,oracle);
+    assert_eq!(actual,fixture["expected"]);
+    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
+}

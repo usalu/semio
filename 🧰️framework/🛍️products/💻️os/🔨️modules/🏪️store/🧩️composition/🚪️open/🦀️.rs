@@ -8,7 +8,7 @@ pub use history::factory::MemberOpenDeclaration;
 pub use operation::{InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
 
 use super::{ErasedSnapshotRetirement, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, SnapshotRetirementStep, SpaceMember};
-use crate::os_io::ArtifactRef;
+use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
 
@@ -88,6 +88,7 @@ pub trait MemberOpenOperation {
 }
 
 pub struct MemberOpenRequest {
+    actor: ManuallyDrop<crate::os_spr::ActorId>,
     operation: OperationId,
     generation: Generation,
     expires_at_us: u64,
@@ -107,8 +108,9 @@ pub struct MemberOpenRequest {
 }
 
 impl MemberOpenRequest {
-    pub fn new(operation: OperationId, generation: Generation, expires_at_us: u64, expected: ArtifactRef, owner: Option<OwnerRef>, pages: OwnedSchemaDecodePages) -> Self {
+    pub fn new(operation: OperationId, generation: Generation, expires_at_us: u64, expected: ArtifactRef, owner: Option<OwnerRef>, pages: OwnedSchemaDecodePages, actor: crate::os_spr::ActorId) -> Self {
         Self {
+            actor: ManuallyDrop::new(actor),
             operation,
             generation,
             expires_at_us,
@@ -140,6 +142,8 @@ impl MemberOpenRequest {
         }
         self.expected.as_ref().ok_or(MemberOpenDiagnostic::Stale)
     }
+    pub fn actor(&self) -> &crate::os_spr::ActorId { &self.actor }
+
     pub fn owner(&self) -> Option<&OwnerRef> {
         self.owner.as_ref()
     }
@@ -165,7 +169,7 @@ impl MemberOpenRequest {
             Some(MemberOpenDiagnostic::Empty)
         } else if now_us >= self.expires_at_us {
             Some(MemberOpenDiagnostic::Expired)
-        } else if !reference(self.expected()) {
+        } else if !reference(self.expected()) || !text(&self.actor().0) {
             Some(MemberOpenDiagnostic::Identity)
         } else if self.owner().is_some_and(|owner| !reference(&owner.parent) || !text(&owner.slot) || !text(&owner.child_id)) {
             Some(MemberOpenDiagnostic::Owner)
@@ -312,6 +316,10 @@ impl MemberOpenRequest {
                 step => Ok(step),
             };
         }
+        if !self.actor.0.is_empty() {
+            *self.closing_identity = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut self.actor.0)));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         if let Some(expected) = self.expected.take() {
             *self.closing_identity = Some(semio_framework_value::retirement::owned_retirement((expected, self.owner.take())));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -322,7 +330,7 @@ impl MemberOpenRequest {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.detached && self.expected.is_none() && self.owner.is_none() && self.pages.is_none() && self.closing_page.is_none() && self.closing_identity.is_none()
+        self.detached && self.actor.0.is_empty() && self.expected.is_none() && self.owner.is_none() && self.pages.is_none() && self.closing_page.is_none() && self.closing_identity.is_none()
     }
 }
 
@@ -374,7 +382,7 @@ where
 
 impl<P, M> MemberStoreOpenRetained<P, M>
 where
-    P: Clone + super::ToValue + super::FromValue + Send + 'static,
+    P: Clone + super::ToValue + super::FromValue + Send + Sync + 'static,
     M: Clone + super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
     pub(super) fn new(request: MemberOpenRequest, owners: super::DocumentStoreOwners<P, M>) -> Self {
@@ -458,7 +466,7 @@ where
 
 impl<P, M> ErasedSnapshotRetirement for MemberStoreOpenRetained<P, M>
 where
-    P: Clone + super::ToValue + super::FromValue + Send + 'static,
+    P: Clone + super::ToValue + super::FromValue + Send + Sync + 'static,
     M: Clone + super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {

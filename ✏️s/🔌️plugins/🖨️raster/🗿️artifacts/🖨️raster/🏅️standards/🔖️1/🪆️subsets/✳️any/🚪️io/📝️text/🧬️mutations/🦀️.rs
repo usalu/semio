@@ -7,7 +7,7 @@
 
 use crate::mutations::{apply_filter,transform_image,fill_selection,fill_region,paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
 pub use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
-use crate::{RasterImageAsset, RasterLayerNode};
+use crate::{SemioImageSnapshot, RasterLayerNode};
 use protocol::OpText;
 
 //#region 📖️SemioGrammar
@@ -16,11 +16,58 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslScalar)]
+enum RasterImageColorspaceDsl { Rgb, Rgba, Grayscale, GrayscaleAlpha, Indexed }
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+struct RasterImageFrameDsl { delay_ms: u32, rgba8: Vec<u8> }
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+struct RasterImageMetadataDsl { key: String, value: String }
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+pub(crate) struct RasterImageDsl {
+    schema: String,
+    width: u32,
+    height: u32,
+    colorspace: RasterImageColorspaceDsl,
+    bit_depth: u8,
+    #[dsl(table)]
+    frames: Vec<RasterImageFrameDsl>,
+    icc: Option<Vec<u8>>,
+    #[dsl(table)]
+    metadata: Vec<RasterImageMetadataDsl>,
+}
+
+impl From<&SemioImageSnapshot> for RasterImageDsl {
+    fn from(image: &SemioImageSnapshot) -> Self {
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioColorspace;
+        Self {
+            schema: image.schema.clone(), width: image.width, height: image.height, bit_depth: image.bit_depth,
+            colorspace: match image.colorspace { SemioColorspace::Rgb => RasterImageColorspaceDsl::Rgb, SemioColorspace::Rgba => RasterImageColorspaceDsl::Rgba, SemioColorspace::Grayscale => RasterImageColorspaceDsl::Grayscale, SemioColorspace::GrayscaleAlpha => RasterImageColorspaceDsl::GrayscaleAlpha, SemioColorspace::Indexed => RasterImageColorspaceDsl::Indexed },
+            frames: image.frames.iter().map(|frame| RasterImageFrameDsl { delay_ms: frame.delay_ms, rgba8: frame.rgba8.clone() }).collect(),
+            icc: image.icc.clone(), metadata: image.metadata.iter().map(|entry| RasterImageMetadataDsl { key: entry.key.clone(), value: entry.value.clone() }).collect(),
+        }
+    }
+}
+
+impl From<RasterImageDsl> for SemioImageSnapshot {
+    fn from(image: RasterImageDsl) -> Self {
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+        Self {
+            schema: image.schema, width: image.width, height: image.height, bit_depth: image.bit_depth,
+            colorspace: match image.colorspace { RasterImageColorspaceDsl::Rgb => SemioColorspace::Rgb, RasterImageColorspaceDsl::Rgba => SemioColorspace::Rgba, RasterImageColorspaceDsl::Grayscale => SemioColorspace::Grayscale, RasterImageColorspaceDsl::GrayscaleAlpha => SemioColorspace::GrayscaleAlpha, RasterImageColorspaceDsl::Indexed => SemioColorspace::Indexed },
+            frames: image.frames.into_iter().map(|frame| SemioImageFrame { delay_ms: frame.delay_ms, rgba8: frame.rgba8 }).collect(),
+            icc: image.icc, metadata: image.metadata.into_iter().map(|entry| SemioImageMetadataEntry { key: entry.key, value: entry.value }).collect(),
+        }
+    }
+}
+
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `RasterMutation` — every real variant flattened into its own
 /// keyworded record, converted at the `store::OpText` boundary only.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-enum RasterMutationDsl {
+pub(crate) enum RasterMutationDsl {
     CreateLayer {
         #[dsl(key = "parent")]
         parent_id: Option<String>,
@@ -86,7 +133,7 @@ enum RasterMutationDsl {
         #[dsl(key = "id")]
         asset_id: String,
         #[dsl(block)]
-        asset: RasterImageAsset,
+        asset: RasterImageDsl,
     },
     ChangeLayerAdjustmentParameter {
         #[dsl(key = "id")]
@@ -197,17 +244,10 @@ impl OpText for RasterMutationDsl {
     }
 }
 
-impl protocol::OpBinary for RasterMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
+pub(crate) fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
     match mutation {
         RasterMutation::CreateLayer(payload) => RasterMutationDsl::CreateLayer { parent_id: payload.parent_id.clone(), index: payload.index, layer: payload.layer.clone() },
         RasterMutation::DeleteLayer(payload) => RasterMutationDsl::DeleteLayer { layer_id: payload.layer_id.clone() },
@@ -220,7 +260,7 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
         RasterMutation::MoveLayer(payload) => RasterMutationDsl::MoveLayer { layer_id: payload.layer_id.clone(), new_x: payload.new_x, new_y: payload.new_y },
         RasterMutation::ResizeLayer(payload) => RasterMutationDsl::ResizeLayer { layer_id: payload.layer_id.clone(), new_width: payload.new_width, new_height: payload.new_height },
         RasterMutation::ChangeLayerAdjustmentKind(payload) => RasterMutationDsl::ChangeLayerAdjustmentKind { layer_id: payload.layer_id.clone(), new_adjustment_kind: payload.new_adjustment_kind.clone() },
-        RasterMutation::AddLayerAsset(payload) => RasterMutationDsl::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: payload.asset.clone() },
+        RasterMutation::AddLayerAsset(payload) => RasterMutationDsl::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: RasterImageDsl::from(&payload.asset) },
         RasterMutation::ChangeLayerAdjustmentParameter(payload) => RasterMutationDsl::ChangeLayerAdjustmentParameter {layer_id:payload.layer_id.clone(),parameter:payload.parameter.clone(),expected:payload.expected,value:payload.value},
         RasterMutation::ChangeLayerTransform(payload)=>RasterMutationDsl::ChangeLayerTransform {layer_id:payload.layer_id.clone(),expected:payload.expected.clone(),transform:payload.transform.clone()},
         RasterMutation::ChangeLayerMask(payload) => RasterMutationDsl::ChangeLayerMask { layer_id: payload.layer_id.clone(), expected: payload.expected.clone(), mask: payload.mask.clone() },
@@ -271,7 +311,7 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
     }
 }
 
-fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
+pub(crate) fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
     match mutation {
         RasterMutationDsl::CreateLayer { parent_id, index, layer } => RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id, index, layer }),
         RasterMutationDsl::DeleteLayer { layer_id } => RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id }),
@@ -284,7 +324,7 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
         RasterMutationDsl::MoveLayer { layer_id, new_x, new_y } => RasterMutation::MoveLayer(move_layer::mutation::MoveLayer { layer_id, new_x, new_y }),
         RasterMutationDsl::ResizeLayer { layer_id, new_width, new_height } => RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id, new_width, new_height }),
         RasterMutationDsl::ChangeLayerAdjustmentKind { layer_id, new_adjustment_kind } => RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id, new_adjustment_kind }),
-        RasterMutationDsl::AddLayerAsset { asset_id, asset } => RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
+        RasterMutationDsl::AddLayerAsset { asset_id, asset } => RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id, asset: asset.into() }),
         RasterMutationDsl::ChangeLayerAdjustmentParameter {layer_id,parameter,expected,value} => RasterMutation::ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id,parameter,expected,value}),
         RasterMutationDsl::ChangeLayerTransform {layer_id,expected,transform}=>RasterMutation::ChangeLayerTransform(change_layer_transform::ChangeLayerTransform {layer_id,expected,transform}),
         RasterMutationDsl::ChangeLayerMask { layer_id, expected, mask } => RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id, expected, mask }),
@@ -334,15 +374,7 @@ impl OpText for RasterMutation {
 
 /// ⚡️ Binary mirror of the `OpText` bridge above — `RasterMutationDsl` already derives `OpBinary` via
 /// `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
-impl protocol::OpBinary for RasterMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        raster_mutation_to_dsl(self).encode_op()
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(raster_mutation_from_dsl(RasterMutationDsl::decode_op(bytes)?))
-    }
-}
 //#endregion 🔖️OpText
 
 /// 📜️ Describes the artifact mutation dialect.
@@ -446,3 +478,59 @@ pub(crate) fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) ->
 }
 }
 pub use mutations_wire_codec::*;
+
+pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let stepped = bridge_step(&snapshot, &mutation);
+    retire_bridge_snapshot(snapshot);
+    protocol::Mutation::retire_cold(mutation);
+    let (applied, messages) = stepped?;
+    let rendered = bridge_render(&applied, messages);
+    retire_bridge_snapshot(applied);
+    Ok(rendered)
+}
+
+pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    use protocol::Mutation;
+    let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let inverse = <RasterMutation as Mutation<RasterSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let stepped = bridge_step(&base, &mutation);
+    Mutation::retire_cold(mutation);
+    retire_bridge_snapshot(base);
+    let (mut current, mut messages) = match stepped {
+        Ok(pair) => pair,
+        Err(error) => {
+            retire_bridge_mutations(inverse);
+            return Err(error);
+        }
+    };
+    let mut pending = inverse.into_iter();
+    let mut refusal = None;
+    while let Some(undo) = pending.next() {
+        let stepped = bridge_step(&current, &undo);
+        Mutation::retire_cold(undo);
+        match stepped {
+            Ok((next, raised)) => {
+                retire_bridge_snapshot(std::mem::replace(&mut current, next));
+                messages.extend(raised);
+            }
+            Err(error) => {
+                refusal = Some(error);
+                break;
+            }
+        }
+    }
+    if let Some(error) = refusal {
+        retire_bridge_mutations(pending.collect());
+        retire_bridge_snapshot(current);
+        return Err(error);
+    }
+    let rendered = bridge_render(&current, messages);
+    retire_bridge_snapshot(current);
+    Ok(rendered)
+}
+
+use crate::standards::v1::subsets::any::schema::mutations::{bridge_step,retire_bridge_mutations};
+
+
+use crate::RasterSnapshot;

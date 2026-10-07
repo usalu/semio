@@ -6,7 +6,7 @@ fn base(id: &str) -> DrawingLayerBase {
 }
 
 fn path_layer(id: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Path(DrawingPathBody { base: base(id), segments: Vec::new() })
+    DrawingLayerNode::Path(DrawingPathBody { base: base(id), segments: Vec::new().into() })
 }
 
 fn group_layer(id: &str, children: Vec<DrawingLayerNode>) -> DrawingLayerNode {
@@ -15,7 +15,7 @@ fn group_layer(id: &str, children: Vec<DrawingLayerNode>) -> DrawingLayerNode {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_layers_are_all_at_depth_zero() {
-    let snapshot = DrawingSnapshot { layers: vec![path_layer("a"), path_layer("b")], ..DrawingSnapshot::default() };
+    let snapshot = DrawingSnapshot { layers: vec![path_layer("a"), path_layer("b")].into(), ..DrawingSnapshot::default() };
     let topology = compute_drawing_topology(&snapshot);
     assert_eq!(topology.topo_order, vec!["a".to_string(), "b".to_string()]);
     assert_eq!(topology.depth.get("a"), Some(&0));
@@ -26,7 +26,7 @@ async fn flat_layers_are_all_at_depth_zero() {
 
 #[semio_framework_async_macros::async_test]
 async fn nested_group_children_get_incrementing_depth_and_precede_nothing_before_their_parent() {
-    let snapshot = DrawingSnapshot { layers: vec![group_layer("g1", vec![path_layer("child"), group_layer("g2", vec![path_layer("grandchild")])])], ..DrawingSnapshot::default() };
+    let snapshot = DrawingSnapshot { layers: vec![group_layer("g1", vec![path_layer("child"), group_layer("g2", vec![path_layer("grandchild")])])].into(), ..DrawingSnapshot::default() };
     let topology = compute_drawing_topology(&snapshot);
     assert_eq!(topology.topo_order, vec!["g1".to_string(), "child".to_string(), "g2".to_string(), "grandchild".to_string()]);
     assert_eq!(topology.depth.get("g1"), Some(&0));
@@ -39,7 +39,7 @@ async fn nested_group_children_get_incrementing_depth_and_precede_nothing_before
 
 #[semio_framework_async_macros::async_test]
 async fn empty_layers_produce_an_empty_topology() {
-    let topology = compute_drawing_topology(&DrawingSnapshot { layers: Vec::new(), ..DrawingSnapshot::default() });
+    let topology = compute_drawing_topology(&DrawingSnapshot { layers: Vec::new().into(), ..DrawingSnapshot::default() });
     assert!(topology.topo_order.is_empty());
     assert_eq!(topology.node_count, 0);
     assert!(topology.cycle_free);

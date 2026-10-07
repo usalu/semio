@@ -20,7 +20,7 @@
 //! - `styles` is always empty: CommonMark has no named-style concept.
 
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
 use semio_s_artifact_stdio_md::MdSnapshot;
 

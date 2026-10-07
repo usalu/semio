@@ -4,7 +4,8 @@ use crate::schema::mutations::{
     InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation,
     SetTextPayload, XmlNodePath,
 };
-use crate::schema::snapshot::{xml_document_from_text, xml_document_to_text, xml_document_to_text_checked, XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlNode, XmlQuote};
+use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlNode, XmlQuote};
+use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text, xml_document_to_text_checked};
 use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
@@ -52,19 +53,19 @@ async fn snapshot_codecs_preserve_intermediate_boundaries_and_builder_refuses_in
     let mut invalid = sample_snapshot();
     invalid.doc.doctype = Some(XmlDoctype { prolog_position: invalid.doc.prolog.len() as u64 + 1, name: "root".into(), external_id: None, declarations: Vec::new() });
 
-    let text = crate::schema::mutation_support::encode_snapshot(&invalid);
-    assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).unwrap(), invalid);
+    let text = crate::standards::v1_0::subsets::base::io::text::snapshot::encode_snapshot(&invalid);
+    assert_eq!(crate::standards::v1_0::subsets::base::io::text::snapshot::decode_snapshot(&text).unwrap(), invalid);
 
     let mut binary = Vec::new();
-    crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
-    assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid);
-    assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid).build().is_err(), "builder ingress must reject an out-of-range doctype position");
+    crate::standards::v1_0::subsets::base::io::binary::snapshot::encode_snapshot_binary(&invalid, &mut binary);
+    assert_eq!(crate::standards::v1_0::subsets::base::io::binary::snapshot::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid);
+    assert!(crate::standards::v1_0::subsets::base::io::XmlBuilderConstruction::from_snapshot(invalid).build().is_err(), "builder ingress must reject an out-of-range doctype position");
 
     let mut invalid_epilog = sample_snapshot();
     invalid_epilog.doc.epilog = vec![XmlNode::Element { name: "outside".into(), attrs: Vec::new(), children: Vec::new() }];
-    let text = crate::schema::mutation_support::encode_snapshot(&invalid_epilog);
-    assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).unwrap(), invalid_epilog);
-    assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid_epilog).build().is_err(), "builder ingress must reject a non-miscellaneous epilog node");
+    let text = crate::standards::v1_0::subsets::base::io::text::snapshot::encode_snapshot(&invalid_epilog);
+    assert_eq!(crate::standards::v1_0::subsets::base::io::text::snapshot::decode_snapshot(&text).unwrap(), invalid_epilog);
+    assert!(crate::standards::v1_0::subsets::base::io::XmlBuilderConstruction::from_snapshot(invalid_epilog).build().is_err(), "builder ingress must reject a non-miscellaneous epilog node");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -77,12 +78,12 @@ async fn snapshot_codecs_preserve_declarations_and_xml_wire_ingress_refuses_unpu
             Some(XmlDeclaration { version: "1.0".into(), encoding: Some(case["encoding"].as_str().expect("encoding").into()), standalone: None, quote: if case["quote"] == "single" { XmlQuote::Single } else { XmlQuote::Double } });
         let expected = case["error"].as_str().expect("error");
 
-        let text = crate::schema::mutation_support::encode_snapshot(&invalid);
-        assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).unwrap(), invalid, "{}", case["id"]);
+        let text = crate::standards::v1_0::subsets::base::io::text::snapshot::encode_snapshot(&invalid);
+        assert_eq!(crate::standards::v1_0::subsets::base::io::text::snapshot::decode_snapshot(&text).unwrap(), invalid, "{}", case["id"]);
         let mut binary = Vec::new();
-        crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
-        assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid, "{}", case["id"]);
-        assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid.clone()).build().is_err(), "{} builder ingress", case["id"]);
+        crate::standards::v1_0::subsets::base::io::binary::snapshot::encode_snapshot_binary(&invalid, &mut binary);
+        assert_eq!(crate::standards::v1_0::subsets::base::io::binary::snapshot::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid, "{}", case["id"]);
+        assert!(crate::standards::v1_0::subsets::base::io::XmlBuilderConstruction::from_snapshot(invalid.clone()).build().is_err(), "{} builder ingress", case["id"]);
         assert_eq!(XmlArtifact::from_snapshot(invalid.clone()).expect_err("raw artifact conversion"), expected, "{}", case["id"]);
         let mut artifact = XmlArtifact::default();
         let before = artifact.clone();
@@ -387,7 +388,7 @@ async fn between_roundtrip_law() {
 
     // Real fixture (the demo's `🏷️.xml`) diffed against a mutated variant.
     let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
-    let fixture_doc = crate::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
+    let fixture_doc = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
     let fixture = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: fixture_doc };
     let mut mutated = fixture.clone();
     crate::schema::mutations::apply_xml_mutation(&mut mutated, &XmlMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()) })));
@@ -401,11 +402,11 @@ async fn between_roundtrip_law() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
-    let doc = crate::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
+    let doc = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
     // Documented normal form: leading/trailing whitespace around the document is trimmed (the
     // codec re-emits no trailing newline); the fixture has neither internal whitespace nor
     // empty elements, so the byte content otherwise round-trips exactly.
-    let re_encoded = crate::schema::snapshot::xml_document_to_text(&doc);
+    let re_encoded = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&doc);
     assert_eq!(re_encoded, fixture_text.trim());
 
     let snap = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc };

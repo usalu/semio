@@ -1,0 +1,9 @@
+{
+  "commands": ["OracleScript", "SubjectScript", "ParityScript"],
+  "stdoutChunk": "compiled dependency artifact\n",
+  "stderrChunk": "compiler diagnostic context\n",
+  "repetitions": 16384,
+  "backpressureMs": 100,
+  "stderrTerminal": "[DEBUG] terminal compiler refusal\n",
+  "exitCode": 7
+}

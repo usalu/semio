@@ -14,7 +14,7 @@
 //! no PBR value/color model to round-trip against `SemioMaterial`).
 
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjNormal, ObjObject, ObjTexCoord, ObjVertex};
 use semio_s_artifact_stdio_obj::ObjSnapshot;
 

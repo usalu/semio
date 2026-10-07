@@ -14,7 +14,7 @@ mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::brep::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 
@@ -347,24 +347,24 @@ pub(crate) fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::schema::snapshot::super) fn enc_vertex(v: &BrepVertex) -> String {
+pub(in crate::standards::v1::subsets::brep::io) fn enc_vertex(v: &BrepVertex) -> String {
     format!("[{},{},{}]", enc_str(&v.id), enc_point3(&v.point), NativeF64(v.tol))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::schema::snapshot::super) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
+pub(in crate::standards::v1::subsets::brep::io) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, point, tol] = parts.as_slice() else { return Err(format!("vertex: expected 3 fields, got {}", parts.len())) };
     Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)?, tol: parse_f64(tol)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::schema::snapshot::super) fn enc_edge(e: &BrepEdge) -> String {
+pub(in crate::standards::v1::subsets::brep::io) fn enc_edge(e: &BrepEdge) -> String {
     format!("[{},{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve), NativeF64(e.tol))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::schema::snapshot::super) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
+pub(in crate::standards::v1::subsets::brep::io) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, start_vertex, end_vertex, curve, tol] = parts.as_slice() else { return Err(format!("edge: expected 5 fields, got {}", parts.len())) };
     Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)?, tol: parse_f64(tol)? })
@@ -387,12 +387,12 @@ pub(crate) fn enc_loop_id(value:&str)->String{format!("[{}]",enc_str(value))}
 
 pub(crate) fn dec_loop_id(value:&str)->Result<String,String>{dec_str(strip_brackets(value)?)}
 
-pub(in crate::standards::v1::subsets::brep::schema::snapshot::super) fn enc_face(f: &BrepFace) -> String {
+pub(in crate::standards::v1::subsets::brep::io) fn enc_face(f: &BrepFace) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_loop_id(s)), enc_surface(&f.surface), enc_bool(f.orientation), NativeF64(f.tol))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::schema::snapshot::super) fn dec_face(s: &str) -> Result<BrepFace, String> {
+pub(in crate::standards::v1::subsets::brep::io) fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face: expected 6 fields, got {}", parts.len())) };
     Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_loop_id)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: parse_f64(tol)? })
@@ -554,8 +554,8 @@ mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::brep::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 

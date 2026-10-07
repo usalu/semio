@@ -67,8 +67,18 @@ fn same(left: &Value, right: &Value) -> bool {
     }
 }
 
+fn schema_documents() -> Vec<&'static str> {
+    let mut documents = std::collections::BTreeMap::<String, &'static str>::new();
+    for source in [SNAPSHOT_SCHEMA, DIFF_SCHEMA].into_iter().chain(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMA_DOCUMENTS.iter().flat_map(|documents| documents.iter().copied())) {
+        let document = json(source);
+        let id = document["$id"].as_str().expect("every declared schema document has an identity").to_owned();
+        if let Some(previous) = documents.insert(id.clone(), source) { assert_eq!(json(previous), document, "conflicting declared schema identity {id}"); }
+    }
+    documents.into_values().collect()
+}
+
 fn validator(schema: &str) -> framework_schema::OwnedJsonSchemaValidator {
-    framework_schema::OwnedJsonSchemaValidator::compile_with_documents(schema, &[SNAPSHOT_SCHEMA, DIFF_SCHEMA]).unwrap_or_else(|error| panic!("schema compiles: {error:?}"))
+    framework_schema::OwnedJsonSchemaValidator::compile_with_documents(schema, &schema_documents()).unwrap_or_else(|error| panic!("schema compiles: {error:?}"))
 }
 
 fn assert_valid(schema: &str, instance: &str, what: &str) {
@@ -81,7 +91,7 @@ fn assert_valid(schema: &str, instance: &str, what: &str) {
 fn aggregate_validator() -> &'static framework_schema::OwnedJsonSchemaValidator {
     static AGGREGATE: OnceLock<framework_schema::OwnedJsonSchemaValidator> = OnceLock::new();
     AGGREGATE.get_or_init(|| {
-        let documents = [SNAPSHOT_SCHEMA, DIFF_SCHEMA].into_iter().chain(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.iter().copied()).collect::<Vec<_>>();
+        let documents = schema_documents().into_iter().chain(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.iter().copied()).collect::<Vec<_>>();
         framework_schema::OwnedJsonSchemaValidator::compile_with_documents(AGGREGATE_SCHEMA, &documents).unwrap_or_else(|error| panic!("aggregate schema compiles: {error:?}"))
     })
 }
@@ -117,13 +127,20 @@ pub(crate) fn assert_case(name: &str) {
 fn assert_committed_wire(name: &str, text: &str, mutation: &GltfMutation) {
     assert!(same(&wire(mutation), &json(text)), "{name}: decode→encode is not a fixed point");
     assert_aggregate_admits(text, name);
-    let schema = <GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(mutation).unwrap_or_else(|| panic!("{name}: the leaf publishes its payload schema"));
+    let schema = <GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(mutation);
+    let is_editable = schema.is_some();
+    let schema = schema.unwrap_or_else(|| {
+        assert!(matches!(mutation, GltfMutation::SetSnapshot(_)), "{name}: only the declared whole-snapshot leaf is withdraw-only");
+        <super::super::set_snapshot::SetSnapshot as protocol::MutationLeaf>::PAYLOAD_SCHEMA
+    });
     let payload = <GltfMutation as protocol::Mutation<GltfSnapshot>>::payload_value(mutation);
     let content = &json(text)["payload"];
     let editable = if content.get("phase").is_some() { &content["value"] } else { content };
     assert!(same(&wire(&payload), editable), "{name}: payload_value is the editable content of the aggregate member");
     assert_valid(schema, &semio_framework_pack_json::to_json_string(&payload), name);
-    assert_eq!(&<GltfMutation as protocol::Mutation<GltfSnapshot>>::with_payload_value(mutation, payload).expect("the payload rebuilds its own kind"), mutation, "{name}");
+    let rebuilt = <GltfMutation as protocol::Mutation<GltfSnapshot>>::with_payload_value(mutation, payload);
+    if is_editable { assert_eq!(&rebuilt.expect("the payload rebuilds its own kind"), mutation, "{name}"); }
+    else { assert!(rebuilt.is_err(), "{name}: the declared withdraw-only leaf refuses payload editing"); }
 }
 
 /// 🎯️ The case lands `before` on `after` through the committed diff, or refuses with its committed code and no change; an
@@ -174,7 +191,7 @@ fn assert_inverse_restores(name: &str, mutation: &GltfMutation, before: &GltfSna
         let text = semio_framework_pack_json::to_json_string(&step);
         assert_aggregate_admits(&text, &format!("{name} inverse"));
         let restore = json(&text)["payload"].get("phase").is_some();
-        assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(&step).is_none(), restore, "{name}: only a wrapped leaf's restore is inert");
+        assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(&step).is_none(), restore || matches!(step, GltfMutation::SetSnapshot(_)), "{name}: wrapped restores and the declared whole-snapshot leaf are inert");
         let decoded: GltfMutation = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("inverse wire decodes");
         let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(&decoded, &restored);
         assert!(outcome.messages().is_empty(), "{name}: {:?}", outcome.messages());
@@ -224,9 +241,9 @@ fn every_committed_case_is_mounted_by_its_leaf_implementation_case() {
 /// 🎛️ The framework reader declares every leaf's inputs, resolving the shared documents by `$id`.
 #[test]
 fn every_leaf_schema_declares_its_inputs_to_the_framework_reader() {
-    let documents = [SNAPSHOT_SCHEMA, DIFF_SCHEMA].map(|text| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("shared document parses")));
+    let documents = schema_documents().into_iter().map(|text| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("shared document parses"))).collect::<Vec<_>>();
     let resolve = |id: &str| documents.iter().find(|document| document.get("$id").and_then(semio_framework_value::DslValue::as_str) == Some(id)).cloned();
-    assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.len(), 121);
+    assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.len(), json(AGGREGATE_SCHEMA)["oneOf"].as_array().unwrap().len());
     for schema in <GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS {
         let title = json(schema)["title"].as_str().unwrap_or_default().to_string();
         let inputs = semio_framework::mutation_input_defs(schema, &resolve).unwrap_or_else(|error| panic!("{title}: {error:?}"));

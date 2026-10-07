@@ -1,7 +1,16 @@
 syntax = "proto3";
 package semio.s_stdio_bmp.snapshot;
 
-message BmpSnapshot {
-  string schema = 1;
-  bytes bytes = 2;
+message BmpSnapshot { string schema = 1; BmpImage image = 2; }
+message BmpImage {
+  uint32 width = 1; uint32 height = 2; BmpRowOrder row_order = 3; BmpProfile profile = 4; repeated uint32 masks = 5;
+  repeated BmpPaletteEntry palette = 6; BmpPixels pixels = 7; sint32 x_pixels_per_meter = 8; sint32 y_pixels_per_meter = 9;
+  uint32 colors_used = 10; uint32 colors_important = 11; uint32 reserved_1 = 12; uint32 reserved_2 = 13; bytes opaque_gap = 14; bytes opaque_trailer = 15;
 }
+enum BmpRowOrder { BOTTOM_UP = 0; TOP_DOWN = 1; }
+enum BmpProfile { INDEXED_RGB_1 = 0; INDEXED_RGB_4 = 1; INDEXED_RGB_8 = 2; DIRECT_RGB_16 = 3; DIRECT_RGB_24 = 4; DIRECT_RGB_32 = 5; DIRECT_BITFIELDS_16 = 6; DIRECT_BITFIELDS_32 = 7; }
+message BmpPaletteEntry { uint32 b = 1; uint32 g = 2; uint32 r = 3; uint32 reserved = 4; }
+message BmpNativeSample { uint32 red = 1; uint32 green = 2; uint32 blue = 3; uint32 alpha = 4; uint32 reserved = 5; }
+message BmpIndexedPixels { bytes indices = 1; }
+message BmpDirectPixels { repeated BmpNativeSample samples = 1; }
+message BmpPixels { oneof storage { BmpIndexedPixels indexed = 1; BmpDirectPixels direct = 2; } }

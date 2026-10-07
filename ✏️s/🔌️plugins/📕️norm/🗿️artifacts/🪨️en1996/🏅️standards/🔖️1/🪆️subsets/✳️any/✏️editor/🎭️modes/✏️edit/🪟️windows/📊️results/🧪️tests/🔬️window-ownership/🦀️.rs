@@ -119,7 +119,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
             let right = all.for_window_instance("norm-results-right").expect("right Results window");
             let left_panel = panel_view(&roster, "norm-results-left");
             let right_panel = panel_view(&roster, "norm-results-right");
-            let mut app = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest).await));
+            let mut app = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await));
             app.bind_instance_id(204).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -163,7 +163,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
                 }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                 if packs.len() != 2 { return Err(format!("Norm persisted {} Results packs instead of two", packs.len())); }
-                let mut reopened = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest).await));
+                let mut reopened = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await));
                 reopened.bind_instance_id(205).await;
                 let reopened_outcome: Result<(NormResultsWindowConfig, NormResultsWindowConfig), String> = async {
                     for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }

@@ -9,7 +9,7 @@ pub(crate) fn producer()->semio_framework_dsl_record::RecordSpecProducer{Terrain
 pub(crate) fn encode_record_controlled(snapshot:&GisTerrainSnapshot,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{controlled_output::project(snapshot,c)}
 impl Terrain{
  pub(crate) fn from_snapshot(value:&GisTerrainSnapshot)->Self{Self{exaggeration:value.exaggeration,imported_map:value.imported_map.clone(),mesh:value.mesh.as_ref().map(|c|Child{child_id:c.child_id.clone(),artifact_id:c.target.artifact_id.clone(),artifact_kind:c.target.dialect.artifact_kind.clone(),standard:c.target.dialect.standard.clone(),subset:c.target.dialect.subset.clone()})}}
- pub(crate) fn into_snapshot(self)->GisTerrainSnapshot{GisTerrainSnapshot{exaggeration:self.exaggeration,imported_map:self.imported_map,mesh:self.mesh.map(|c|store::ArtifactChild::new(c.child_id,store::os_io::ArtifactRef{artifact_id:c.artifact_id,dialect:store::os_io::ArtifactDialect{artifact_kind:c.artifact_kind,standard:c.standard,subset:c.subset}}))}}
+ pub(crate) fn into_snapshot(self)->GisTerrainSnapshot{GisTerrainSnapshot{exaggeration:self.exaggeration,imported_map:self.imported_map,mesh:self.mesh.map(|c|store::ArtifactChild::new(c.child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:c.artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:c.artifact_kind,standard:c.standard,subset:c.subset}}))}}
 }
 
 impl store::ArtifactPack for GisTerrainSnapshot{

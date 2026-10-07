@@ -1977,6 +1977,9 @@ pub struct HistoryTimeTravel {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub total: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub processed: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none", with = "history_severity_serde::option")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub worst: Option<Severity>,
@@ -2101,6 +2104,9 @@ pub enum HistoryReprojectionKind {
 pub struct HistoryReprojection {
     pub done: u32,
     pub total: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub processed: Option<u32>,
     #[serde(default)]
     #[value(default)]
     pub kind: HistoryReprojectionKind,
@@ -2322,7 +2328,7 @@ mod framework_notices_tests;
 /// titles its reprojection section with it (design §16.6, gap N17, audit W1E-3). `{done}`/`{total}` are replayed
 /// operations, `{reason}` a refusal's notice. Fixture `🧫️fixtures/🧫️history-reprojection/🔣️.json`; TS twin
 /// `HISTORY_REPROJECTION_LABELS`.
-pub const HISTORY_REPROJECTION_LABELS: [(&str, &str, &str); 11] = [
+pub const HISTORY_REPROJECTION_LABELS: [(&str, &str, &str); 12] = [
     ("remote.title", "Remote history change", "Entfernte Verlaufsänderung"),
     ("remote.progress", "Replaying a remote history change: {done} of {total} mutations", "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Mutationen"),
     ("remote.paused", "Remote history change paused: this replica still shows the history before it", "Entfernte Verlaufsänderung pausiert: dieses Replikat zeigt noch den Verlauf davor"),
@@ -2334,6 +2340,7 @@ pub const HISTORY_REPROJECTION_LABELS: [(&str, &str, &str); 11] = [
     ("load.progress", "Loading document: {done} of {total}", "Dokument wird geladen: {done} von {total}"),
     ("load.refused", "Document load refused: {reason}", "Laden des Dokuments abgelehnt: {reason}"),
     ("reason.unnamed", "the change could not be applied", "die Änderung konnte nicht angewendet werden"),
+    ("work.processed", "Work completed: {processed}", "Arbeitsfortschritt: {processed}"),
 ];
 
 /// 📢️ What a shell announces while a history change replays before adoption ([`history_reprojection_status`]): the kind's
@@ -2363,7 +2370,7 @@ pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminolo
         HistoryReprojectionKind::Load => "load",
     };
     let paused = reprojection.paused && reprojection.kind == HistoryReprojectionKind::Remote;
-    let text = match reprojection.fault.as_deref() {
+    let mut text = match reprojection.fault.as_deref() {
         Some(code) if reprojection.total == 0 => {
             let reason = history_notice(code).filter(|(en, de)| !en.contains('{') && !de.contains('{')).map_or_else(|| label("reason.unnamed".to_string()), |(en, de)| localized(en, de));
             label(format!("{kind}.refused")).replace("{reason}", &reason)
@@ -2371,6 +2378,10 @@ pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminolo
         _ if paused => label("remote.paused".to_string()),
         _ => label(format!("{kind}.progress")).replace("{done}", &reprojection.done.to_string()).replace("{total}", &reprojection.total.to_string()),
     };
+    if let Some(processed) = reprojection.processed.filter(|_| !paused && reprojection.total > 0) {
+        text.push_str(" · ");
+        text.push_str(&label("work.processed".to_string()).replace("{processed}", &processed.to_string()));
+    }
     HistoryReprojectionStatus { title: label(format!("{kind}.title")), text, done: reprojection.done, total: reprojection.total, paused, fault: reprojection.fault.clone() }
 }
 

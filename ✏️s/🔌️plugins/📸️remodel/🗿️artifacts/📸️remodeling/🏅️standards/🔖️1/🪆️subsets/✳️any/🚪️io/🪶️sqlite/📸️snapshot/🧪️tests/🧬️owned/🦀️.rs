@@ -7,7 +7,7 @@ fn sqlite_snapshot_remodeling_authored_schema_limit_precedes_native_ownership(){
 }
 #[test]
 fn sqlite_snapshot_remodeling_erased_binary_and_text_capability_preserves_exact_typed_parent(){
- use store::ArtifactSqliteSnapshot;use store::sqlite_snapshot::*;let codec=store::ArtifactCodec::bare::<super::super::RemodelingSnapshot,crate::RemodelingMutation>(crate::REMODELING_DOCUMENT_SCHEMA);let capability=codec.snapshot_sqlite.expect("owning factory must expose the authored parent");let expected=fixture();let dialect=store::io_schema::ArtifactDialect{artifact_kind:"s.remodel.remodeling".into(),standard:"1".into(),subset:"*".into()};
+ use store::ArtifactSqliteSnapshot;use store::sqlite_snapshot::*;let codec=store::ArtifactCodec::bare::<super::super::RemodelingSnapshot,crate::RemodelingMutation>(crate::REMODELING_DOCUMENT_SCHEMA);let capability=codec.snapshot_sqlite.expect("owning factory must expose the authored parent");let expected=fixture();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.remodel.remodeling".into(),standard:"1".into(),subset:"*".into()};
  for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let input=payload(&expected,encoding);let d=(capability.export)(crate::REMODELING_DOCUMENT_SCHEMA,&dialect,&input,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap().value;let output=(capability.import)(crate::REMODELING_DOCUMENT_SCHEMA,&dialect,d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap().value;let actual=super::super::RemodelingSnapshot::decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();same(&actual,&expected);}
 }
 use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
@@ -17,7 +17,7 @@ semio_framework_dispatch_macros::dyn_enum_close!{
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_remodeling_actual_declaration_routes_queryable_files_over_io(){
- use store::sqlite_snapshot::*;semio_framework_plugin::Plugin::<SqliteApps>::builder("remodel").label("Remodel owned SQLite").version("0.0.1").package_id("semio:remodel").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();let codec=store::document_codec(crate::REMODELING_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert!(codec.snapshot_sqlite.is_some());let expected=crate::default_remodeling_scene();let dialect=store::io_schema::ArtifactDialect{artifact_kind:"s.remodel.remodeling".into(),standard:"1".into(),subset:"*".into()};
+ use store::sqlite_snapshot::*;semio_framework_plugin::Plugin::<SqliteApps>::builder("remodel").label("Remodel owned SQLite").version("0.0.1").package_id("semio:remodel").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();let codec=store::document_codec(crate::REMODELING_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert!(codec.snapshot_sqlite.is_some());let expected=crate::default_remodeling_scene();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.remodel.remodeling".into(),standard:"1".into(),subset:"*".into()};
  for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect,&expected,encoding,Default::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));let actual=store::io::io_mechanism::io_import_sqlite_snapshot::<super::super::RemodelingSnapshot>(&dialect,&bytes,Default::default(),&mut |_|true).await.unwrap().value;same(&actual,&expected);}
 }
 
@@ -54,7 +54,7 @@ fn sqlite_snapshot_remodeling_large_unicode_copies_observe_both_budget_and_cance
 fn laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()}
 fn word32()->Vec<f32>{laws()["binary32Words"].as_array().unwrap().iter().map(|v|f32::from_bits(u32::from_str_radix(v.as_str().unwrap(),16).unwrap())).collect()}
 fn word64()->Vec<f64>{laws()["binary64Words"].as_array().unwrap().iter().map(|v|f64::from_bits(u64::from_str_radix(v.as_str().unwrap(),16).unwrap())).collect()}
-fn child<S>(artifact_id:&str)->store::ArtifactChild<S>{let raw=laws()["literalChild"].clone();store::ArtifactChild::new(raw["childId"].as_str().unwrap().into(),store::io_schema::ArtifactRef{artifact_id:artifact_id.into(),dialect:store::io_schema::ArtifactDialect{artifact_kind:raw["artifactKind"].as_str().unwrap().into(),standard:raw["standard"].as_str().unwrap().into(),subset:raw["subset"].as_str().unwrap().into()}})}
+fn child<S>(artifact_id:&str)->store::ArtifactChild<S>{let raw=laws()["literalChild"].clone();store::ArtifactChild::new(raw["childId"].as_str().unwrap().into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:artifact_id.into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:raw["artifactKind"].as_str().unwrap().into(),standard:raw["standard"].as_str().unwrap().into(),subset:raw["subset"].as_str().unwrap().into()}})}
 fn fixture()->super::super::RemodelingSnapshot{
  let f=word32();let d=word64();let mut s=crate::default_remodeling_scene();s.id="世界\0literal".into();
  let raw=laws()["literalChild"].clone();

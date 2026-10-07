@@ -1,7 +1,7 @@
 /** 🔗️ Shared references preserve independent artifact lifetimes and explicit history pins. */
-import { parseArtifactRef, type ArtifactRef } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { parseArtifactRef, type ArtifactRef } from "../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import { parseBlobRef, type BlobRef } from "../../📦️blob/🧬️schema/🟦️.ts";
-export type { ArtifactRef } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+export type { ArtifactRef } from "../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 export type { BlobRef } from "../../📦️blob/🧬️schema/🟦️.ts";
 export type LinkPin = { kind: "head" } | { kind: "checkpoint"; id: string } | { kind: "snapshot"; blob: BlobRef };
 export interface ArtifactLink { target: ArtifactRef; pin: LinkPin; role: string }

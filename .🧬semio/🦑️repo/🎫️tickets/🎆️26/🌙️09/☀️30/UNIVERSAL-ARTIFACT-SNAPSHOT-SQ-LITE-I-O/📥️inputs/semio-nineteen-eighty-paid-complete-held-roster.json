@@ -1,0 +1,24 @@
+{
+  "files": [
+    "📥️inputs/semio-text-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-audio-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-video-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-object-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-value-table-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-flow-image-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-graph-animation-complete-semantic/animation-held-pairs.json",
+    "📥️inputs/semio-graph-animation-complete-semantic/graph-held-pairs.json",
+    "📥️inputs/semio-mesh-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-kit-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-model-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-cad-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-document-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-presentation-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-drawing-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-brep-complete-semantic/held-pairs.json",
+    "📥️inputs/semio-base-complete-semantic/held-pairs.json",
+    "📥️inputs/root-drawing-paid-reconstruction-partial-owner-held-pairs.json"
+  ],
+  "paths": 80,
+  "rowIndex": "📥️inputs/physical-shared-paid-row-index-held-pair.json"
+}

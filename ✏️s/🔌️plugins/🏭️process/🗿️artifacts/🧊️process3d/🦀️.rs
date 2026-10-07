@@ -26,7 +26,7 @@ mod art_process3d_concrete_forest_tests;
 
 use protocol::{Identified, Patchable};
 use semio_framework_dispatch_macros::dyn_enum;
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::{
@@ -781,8 +781,8 @@ pub fn working_solid_child_handle(slug: &str, solid: &WorkingSolid) -> store::Ar
 
 fn brep_child_handle_for_text(slug: &str, content: &str) -> store::ArtifactChild<SemioBrepSnapshot> {
     let child_id = store::content_id(&format!("{slug}-brep"), content.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️BrepConverters
@@ -894,8 +894,8 @@ pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
 /// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.flow` CHILD HANDLE from `content`.
 pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<SemioFlowSnapshot> {
     let child_id = store::content_id("steps-flow", semio_framework_pack_json::to_json_string(content).as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -1615,3 +1615,9 @@ pub use crate::standards::v1::subsets::any::io::binary::snapshot::{Process3dMoun
 
 pub use crate::standards::v1::subsets::any::io::binary::snapshot::{Process3dMountedPackSession};
 pub use crate::standards::v1::subsets::any::io::text::snapshot::{process3d_mounted_pack_session};
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

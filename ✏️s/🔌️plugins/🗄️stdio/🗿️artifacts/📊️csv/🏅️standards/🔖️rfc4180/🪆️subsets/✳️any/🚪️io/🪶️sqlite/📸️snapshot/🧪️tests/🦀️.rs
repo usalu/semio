@@ -1,4 +1,5 @@
 use crate::standards::v_rfc4180::subsets::any::io::sqlite::snapshot::*;
+use crate::standards::v_rfc4180::subsets::any::io::{text::snapshot::read_csv_source_text,binary::snapshot::read_csv_source_binary};
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, ArtifactSqliteSnapshot};
 
 #[test]
@@ -65,7 +66,7 @@ fn csv_native_control_snapshot()->CsvSnapshot{let input=csv_native_control_fixtu
 fn csv_native_payload(snapshot:&CsvSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io_schema::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(<CsvSnapshot as store::ArtifactPack>::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(<CsvSnapshot as store::ArtifactDsl>::print_dsl(snapshot))}}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_csv_actual_factory_canonical_external_carrier(){
- use semio_framework_os_kernel::io::ArtifactDialect;
+ use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Csv full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::document_codec(crate::STDIO_CSV_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().expect("actual owning declaration publishes semantic SQLite");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<CsvSnapshot>()));
@@ -102,7 +103,7 @@ fn csv_canonical_carrier_snapshot()->CsvSnapshot{let count=usize::try_from(csv_n
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_csv_actual_typed_file_preserves_complete_literal_owned_fields(){
- use semio_framework_os_kernel::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Csv typed SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.csv".into(),standard:"rfc4180".into(),subset:"*".into()};
@@ -146,7 +147,7 @@ fn sqlite_snapshot_csv_literal_long_field_copies_cancel_at_paid_utf8_boundary() 
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_csv_complete_logical_owner_erased_factory_preserves_every_literal_field(){
- use semio_framework_os_kernel::io::ArtifactDialect;
+ use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧠️logical-owner/🔣️.json")).unwrap();
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Csv complete logical owner").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
@@ -199,6 +200,6 @@ fn sqlite_snapshot_csv_complete_borrowed_gate_isolated_exact_and_one_short_befor
  let defaults=SqliteDatabaseLimits::default();let columns=plan["tableWidths"].as_object().unwrap().values().map(|v|v.as_u64().unwrap()as usize).max().unwrap();let tables=plan["tableWidths"].as_object().unwrap().len();
  for sample in plan["cases"].as_array().unwrap(){let snapshot=csv_semantic_corpus_snapshot(&sample["snapshot"]);let rows=sample["rows"].as_u64().unwrap()as usize;let bytes=sample["bytes"].as_u64().unwrap()as usize;
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=csv_native_payload(&snapshot,encoding);
- for(field,maximum)in[("columns",columns),("tables",tables),("schema",CsvSnapshot::SQLITE_SCHEMA.len()),("rows",rows),("bytes",bytes)]{for success in[true,false]{let max=maximum-usize::from(!success);let limits=match field{"columns"=>SqliteDatabaseLimits{max_columns:max,..defaults},"tables"=>SqliteDatabaseLimits{max_tables:max,..defaults},"schema"=>SqliteDatabaseLimits{max_schema_bytes:max,..defaults},"rows"=>SqliteDatabaseLimits{max_rows:max,..defaults},"bytes"=>SqliteDatabaseLimits{max_value_bytes:max,..defaults},_=>unreachable!()};let result=store::decode_sqlite_snapshot_record_native(&input,<CsvSnapshot as store::ArtifactDsl>::envelope_id(),CsvSnapshot::__dsl_spec_producer(),|record,native|{crate::standards::v_rfc4180::subsets::any::io::sqlite::snapshot::sqlite::admission::admit(record,native,limits)},&mut SqliteSnapshotControl::new(&mut |_|true,defaults));assert_eq!(result.is_ok(),success,"{} isolated copied {} full semantic limit",sample["id"],field);}}
+ for(field,maximum)in[("columns",columns),("tables",tables),("schema",CsvSnapshot::SQLITE_SCHEMA.len()),("rows",rows),("bytes",bytes)]{for success in[true,false]{let max=maximum-usize::from(!success);let limits=match field{"columns"=>SqliteDatabaseLimits{max_columns:max,..defaults},"tables"=>SqliteDatabaseLimits{max_tables:max,..defaults},"schema"=>SqliteDatabaseLimits{max_schema_bytes:max,..defaults},"rows"=>SqliteDatabaseLimits{max_rows:max,..defaults},"bytes"=>SqliteDatabaseLimits{max_value_bytes:max,..defaults},_=>unreachable!()};let result=store::decode_sqlite_snapshot_record_native(&input,<CsvSnapshot as store::ArtifactDsl>::envelope_id(),CsvSnapshot::__dsl_spec_producer(),|record,native|{crate::standards::v_rfc4180::subsets::any::io::sqlite::snapshot::admission::admit(record,native,limits)},&mut SqliteSnapshotControl::new(&mut |_|true,defaults));assert_eq!(result.is_ok(),success,"{} isolated copied {} full semantic limit",sample["id"],field);}}
  }snapshot.retire_sqlite_snapshot();}
 }

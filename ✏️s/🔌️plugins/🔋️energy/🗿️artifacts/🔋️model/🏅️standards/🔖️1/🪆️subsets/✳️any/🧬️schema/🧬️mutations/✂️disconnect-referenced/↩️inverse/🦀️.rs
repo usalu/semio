@@ -10,7 +10,7 @@ pub fn inverse(payload: &super::DisconnectReferencedModel, base: &EnergyModelSna
     Ok((|| {
     let _ = payload;
     match &base.referenced_model {
-        Some(existing) => vec![vocabulary::connect_referenced_model(existing.target.to_uri())],
+        Some(existing) => vec![vocabulary::connect_referenced_model(existing.target.clone())],
         None => Vec::new(),
     }
 

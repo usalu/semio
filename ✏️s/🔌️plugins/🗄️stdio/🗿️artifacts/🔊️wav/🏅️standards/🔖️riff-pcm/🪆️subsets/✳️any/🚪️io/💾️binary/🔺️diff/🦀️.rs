@@ -5,6 +5,7 @@ pub const BINARY_MAGIC: &str = "stdio.wav.diff";
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
+use protocol::DiffText;
 use crate::standards::riff_pcm::subsets::any::schema::diff::*;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavChunkRef, WavData, WavFmt, WavSnapshot};
 use protocol::command::DiffAlgebra;

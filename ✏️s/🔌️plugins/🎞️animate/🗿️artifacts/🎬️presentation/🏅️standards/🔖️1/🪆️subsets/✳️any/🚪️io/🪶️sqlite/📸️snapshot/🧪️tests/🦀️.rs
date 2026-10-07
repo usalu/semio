@@ -44,7 +44,7 @@ fn database(snapshot:&PresentationSnapshot)->SqliteDatabase{snapshot.to_sqlite_d
 fn restore(database:&SqliteDatabase)->PresentationSnapshot{PresentationSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(snapshot:&PresentationSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
 fn native(snapshot:&PresentationSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot))}}
-fn dialect()->store::io_schema::ArtifactDialect{store::io_schema::ArtifactDialect{artifact_kind:"s.animate.presentation".into(),standard:"1".into(),subset:"*".into()}}
+fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.animate.presentation".into(),standard:"1".into(),subset:"*".into()}}
 fn geometry(snapshot:&PresentationSnapshot)->[u64;9]{let s=&snapshot.source;let t=&snapshot.tiles[0].crop;[s.frame.x,s.frame.y,s.frame.width,s.frame.height,s.source_aspect.unwrap(),t.x,t.y,t.width,t.height].map(f64::to_bits)}
 
 #[test]

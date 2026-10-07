@@ -106,8 +106,8 @@ pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
     use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
     const STYLES_PART: &str = "xl/styles.xml";
     const STYLES_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml";
     let workbook = XlsxWorkbook {
@@ -132,7 +132,7 @@ pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
     snap.xml_parts.push(XlsxXmlPart {
         path: STYLES_PART.into(),
         content_type: STYLES_CONTENT_TYPE.into(),
-        document: xml_document_from_text("<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>").expect("valid demo styles XML"),
+        document: XmlDocument { root: Some(XmlNode::Element { name: "styleSheet".into(), attrs: vec![crate::schema::vocabulary::attr("xmlns", crate::schema::vocabulary::SML_NS)], children: Vec::new() }), ..XmlDocument::default() },
     });
     snap.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
     snap

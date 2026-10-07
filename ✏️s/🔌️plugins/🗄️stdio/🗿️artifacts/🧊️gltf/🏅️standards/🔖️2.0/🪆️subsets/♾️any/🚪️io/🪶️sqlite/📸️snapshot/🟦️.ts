@@ -1,7 +1,7 @@
 /** 🧊️ Schema-first GLTF semantic SQLite projection and complete typed reconstruction. */
 import {artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {validateSqliteDatabaseSchemaControlled,type SqliteDatabase} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactDialect} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type {GltfSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {Write,Read} from "./🧩️control/🟦️.ts";
 import * as document from "./📄️document/🟦️.ts";

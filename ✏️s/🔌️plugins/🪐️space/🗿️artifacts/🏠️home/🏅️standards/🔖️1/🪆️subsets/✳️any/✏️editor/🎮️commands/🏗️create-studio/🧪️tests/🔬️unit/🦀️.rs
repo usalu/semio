@@ -27,7 +27,7 @@ async fn home_command_op_text_round_trips_every_variant() {
 async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
     let definition = crate::editor::home::create_home_app().await;
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry).await;
+    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let routes = [
         crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }),
         crate::editor::home::HomeCommand::ApplyDirectoryEventPage(crate::editor::home::commands::apply_directory_event_page::ApplyDirectoryEventPage { page_json: "{}".into() }),
@@ -81,5 +81,5 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
     let document = crate::resolve_studio_document(space_id).await.expect("ephemeral studio");
     assert_eq!(document.name, "Temp Studio");
     assert!(document.backbone.is_none());
-    assert!(document.vcs.initial_snapshot.collections.is_empty());
+    assert!(document.vcs.genesis.snapshot().collections.is_empty());
 }

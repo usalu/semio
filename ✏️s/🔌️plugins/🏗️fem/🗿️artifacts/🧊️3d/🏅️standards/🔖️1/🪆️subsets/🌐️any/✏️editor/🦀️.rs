@@ -45,7 +45,7 @@ use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigSpec;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -335,7 +335,7 @@ impl ArtifactCommandWork<EditorApp<Fem3dPlayApp>> for Fem3dCommandWork {
             return Err(Fault::from("retained-command-bounded-work-repeated"));
         }
         self.consumed = true;
-        let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
+        let ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
         let selected = || fem3d_interaction_selection_ids(interaction);
         match command {
             Fem3dCommand::TranslateSelection(payload) => {

@@ -1,0 +1,25 @@
+{
+  "heldOwner": "🧰️framework/🔨️modules/🖱️ui/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+  "heldFixture": "🧰️framework/🔨️modules/🖱️ui/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay.json",
+  "heldTest": "🧰️framework/🔨️modules/🖱️ui/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+  "heldValue": "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+  "heldJson": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+  "heldDag": "🧰️framework/🔨️modules/🕸️graph/🕸️dag/🦀️.rs",
+  "fields": [
+    "value",
+    "min",
+    "max",
+    "step"
+  ],
+  "primaryPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/📸️snapshot/🦀️.rs",
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🫳️borrowed/🦀️.rs"
+  ],
+  "heldTrait": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🫳️borrowed/🦀️.rs"
+}

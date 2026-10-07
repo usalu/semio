@@ -2,7 +2,8 @@
 //! position; a widget without a stored position or without a widget is skipped (`mutation.partial`).
 
 use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_partial, generation2d_targets_invariant, widget_index};
+use crate::standards::v1::subsets::any::schema::mutations::{generation2d_partial,generation2d_targets_invariant,widget_index};
+
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;
 

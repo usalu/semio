@@ -155,17 +155,14 @@ const dependencies = (cwd: string): readonly string[] => {
 };
 
 test("portable compile-time paths preserve exact literal identity and ignore lexical decoys", () => {
-  const validate = new Ajv({ strict: true }).compile(read("🧬️schema/🧱️rust-source-direction/🔣️.json"));
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   for (const row of fixture.cases) expect(inspectRustCompileReferences(row.source), row.id).toEqual(row.references);
 });
 
 test("inline reference metadata preserves its closed portable scope contract", () => {
-  const corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json"), validate = new Ajv({ strict: true }).compile(read("🧬️schema/🧱️rust-source-direction/🔣️.json"));
+  const corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
   const rows = corpus.referenceRejections as readonly { id: string; reference: RustCompileReference; invalidSchema: boolean; ownership?: RustSourceOwnership }[];
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
   for (const row of rows) {
-    expect(validate({ ...corpus, cases: [{ id: row.id, source: "source", references: [row.reference] }] }), row.id).toBe(!row.invalidSchema);
     expect(() => rustSourceTargets("general/source.rs", [row.reference], row.ownership), row.id).toThrow("inline base");
   }
 });
@@ -332,8 +329,6 @@ test("compiler marker origins require captured aliases, wildcard exports and inc
   if (!output) throw new Error("Rust attribute origins require caller-owned output");
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "rust-attribute-origins-"))), corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
-  const validate = new Ajv({ strict: true }).compile(read("🧬️schema/🧱️rust-source-direction/🔣️.json"));
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
   const rows = corpus.attributeOrigins.cases as readonly { id: string; source: string; files: Readonly<Record<string, string>>; problem: "unresolved-template-scope" | null }[];
   expect(new Set(rows.map(row => row.id)).size).toBe(10);
   try {

@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-06T14:06:59.506Z",
+  "status": "Terminal exit1 compiler-only actual9 errors, no Nextest",
+  "sessionId": 9411,
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-after-shared-derive-native-artifacts' bun run nx run @semio-tech/stdio-pdf-rs:test '--args=--lib --features component-app-assembly --no-fail-fast --status-level all --final-status-level all' --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-current-plugin-actor-boundaries.log' 2>&1",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-current-plugin-actor-boundaries.log",
+  "scope": "Original whole-owner all-status route; quick; unchanged300000ms grant and controls; actual current PluginActorId boundaries",
+  "qualification": "Pending, no credit",
+  "receipt": "physical-resumed-pdf-current-plugin-actor-boundaries-terminal-receipt.json"
+}

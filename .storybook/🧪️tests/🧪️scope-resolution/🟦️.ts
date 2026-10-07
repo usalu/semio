@@ -22,7 +22,7 @@ describe("resolveActiveScopes", () => {
 
 describe("Storybook scope projections", () => {
   it("dedupes a child glob subsumed by an active parent", () => {
-    expect(buildScopeStoryGlobs(resolveActiveScopes("puzzle"))).toEqual(["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/**/🧪️.story.tsx"]);
+    expect(buildScopeStoryGlobs(resolveActiveScopes("puzzle"))).toEqual(["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/**/🧪️.story.tsx", "../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/*/📖️stories/**/🧪️.story.tsx"]);
   });
   it("merges workspace and scope aliases without conflict", () => {
     const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript" });

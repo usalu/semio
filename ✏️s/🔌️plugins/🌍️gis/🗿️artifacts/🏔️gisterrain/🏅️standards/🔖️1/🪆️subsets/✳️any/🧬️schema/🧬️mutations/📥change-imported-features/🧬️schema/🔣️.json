@@ -6,7 +6,14 @@
   "additionalProperties": false,
   "properties": {
     "newImportedMap": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/imported-map.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/imported-map.json",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Imported map",
+          "de": "Importierte Karte"
+        }
+      }
     }
   }
 }

@@ -7,26 +7,6 @@ const atom = /^[a-z][a-z0-9-]*$/;
 const rust = /^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$/;
 const variant = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-/** 🗑️ Admits one physically removed owner while retaining each exact remaining owner. */
-export function admitCompositionParentRemovalV1(value: unknown): string[] {
-  const row = object(value, ["schema", "expected", "absent", "present"]);
-  if (row.schema !== "semio.stdio.parent-removal-admission/v1") throw new Error("Unsupported parent removal admission");
-  const identity = (value: unknown): string => {
-    if (typeof value !== "string" || !value.length || value.length > 4096) throw new Error("Invalid parent removal owner identity");
-    return value;
-  };
-  const expected = array(row.expected).map(identity), absent = identity(row.absent), present = array(row.present);
-  if (!expected.length || expected.length > 1024 || present.length > 1024 || new Set(expected).size !== expected.length || !expected.includes(absent)) throw new Error("Invalid parent removal authority");
-  const actual = present.map(value => {
-    const owner = object(value, ["identity", "kind", "complete"]);
-    if (owner.kind !== "directory" || owner.complete !== true) throw new Error("Retained owner is partial or follows a symlink");
-    return identity(owner.identity);
-  }).sort();
-  const retained = expected.filter(name => name !== absent).sort();
-  if (actual.length !== retained.length || actual.some((name, index) => name !== retained[index])) throw new Error("Retained owners differ from the exact removal authority");
-  return retained;
-}
-
 function object(value: unknown, fields: readonly string[]): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== fields.length || fields.some((field) => !Object.hasOwn(value, field))) throw new Error("composition contribution has an invalid closed object");
   return value as Record<string, unknown>;

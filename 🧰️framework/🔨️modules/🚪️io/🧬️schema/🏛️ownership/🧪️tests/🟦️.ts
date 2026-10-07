@@ -5,8 +5,9 @@ import * as toml from "@iarna/toml";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import Parser from "web-tree-sitter";
-import {parseArtifactRef} from "../../🟦️.ts";
+import {parseArtifactRef} from "../../../../🧬️schema/🗿️artifact-reference/🟦️.ts";
 import vocabulary from "../../🔣️.json";
+import references from "../../../../🧬️schema/🗿️artifact-reference/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
 const owner=resolve(import.meta.dir,"../..");
@@ -26,7 +27,7 @@ const ownerSources=async(entry:string,dependencies:readonly string[]):Promise<{p
 
 
 test("neutral vocabulary corpus matches closed schema and independent literal SQLite rows",()=>{
-  const ajv=new Ajv({strict:false});ajv.addSchema(vocabulary);const admit=ajv.compile(schema);expect(admit(corpus)).toBe(true);
+  const ajv=new Ajv({strict:false});ajv.addSchema(vocabulary);ajv.addSchema(references);const admit=ajv.compile(schema);expect(admit(corpus)).toBe(true);
   for(const invalid of [{...corpus,unknown:true},{...corpus,normalDependencies:[...corpus.normalDependencies,"semio-framework-os-kernel"]}])expect(admit(invalid)).toBe(false);
   const db=new Database(":memory:");db.run("CREATE TABLE identity(artifact_id TEXT,kind TEXT,standard TEXT,subset TEXT)");
   try{for(const value of corpus.references){const actual=parseArtifactRef(value);db.run("DELETE FROM identity");db.run("INSERT INTO identity VALUES(?,?,?,?)",[actual.artifactId,actual.dialect.artifactKind,actual.dialect.standard,actual.dialect.subset]);expect(db.query("SELECT artifact_id AS artifactId,kind AS artifactKind,standard,subset FROM identity").get()).toEqual({artifactId:value.artifactId,...value.dialect});}}finally{db.close();}
@@ -45,7 +46,7 @@ test("actual package has only owned general dependencies and an explicit complet
   const entry=await Bun.file(join(pkg,"🦀️.rs")).text();await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",process.cwd())),"out","tree-sitter-rust.wasm")));
   expect(parser.parse(entry).rootNode.hasError()).toBe(false);expect(entry.includes("::*")).toBe(false);
   const exports=entry.slice(entry.indexOf("pub use vocabulary::{")+"pub use vocabulary::{".length,entry.lastIndexOf("};")).split(",").map(value=>value.trim()).filter(Boolean);
-  expect(exports.sort()).toEqual([...corpus.exports].sort());console.error("[DEBUG] Nineteen explicit vocabulary exports and four general dependency owners");
+  expect(exports.sort()).toEqual([...corpus.exports].sort());console.error("[DEBUG] Twelve explicit IO vocabulary exports and six first-party dependency owners");
 });
 
 test("neutral vocabulary namespace closure resolves only its actual owned dependencies",async()=>{

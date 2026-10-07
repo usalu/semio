@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateObject {
     pub child_id: String,
-    pub target: store::os_io::ArtifactRef,
+    pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for CreateObject {

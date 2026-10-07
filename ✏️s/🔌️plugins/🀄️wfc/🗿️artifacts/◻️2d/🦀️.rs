@@ -15,7 +15,7 @@ extern crate semio_framework_os_kernel as vcs;
 
 pub use crate::schema::snapshot::{WFC_2D_DEFAULT_RELATION, WFC_2D_DOCUMENT_SCHEMA};
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 //#region 🔖️Dialect
 /// 🪪️ The one `Dialect` coordinate every surface of the `✳️any` subset binds — `s.wfc.wfc2d@1/*`.
@@ -103,7 +103,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.wfc2d").expect("canonical wfc2d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 //#endregion 🔖️Declaration

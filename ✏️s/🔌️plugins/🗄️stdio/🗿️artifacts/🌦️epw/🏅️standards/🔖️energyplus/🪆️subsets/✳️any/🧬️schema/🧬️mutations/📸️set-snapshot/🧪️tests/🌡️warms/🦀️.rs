@@ -17,7 +17,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::energyplus::subsets::any::schema::diff::EpwDiff;
-use crate::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, EpwMutation};
+use crate::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation,EpwMutation};
+
 use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms/📸️snapshot/⬅️before/🔣️.json");

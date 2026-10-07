@@ -6,11 +6,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::cad::schema::diff::*;
+use crate::standards::v1::subsets::cad::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -169,6 +170,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::cad::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, parse_i32, enc_list, dec_list, enc_point2, dec_point2, enc_entity, dec_entity, enc_layer, dec_layer, enc_entity_record, dec_entity_record, enc_block, dec_block, enc_layer_diff, dec_layer_diff, enc_entity_record_diff, dec_entity_record_diff, enc_block_diff, dec_block_diff};
+use crate::standards::v1::subsets::cad::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, parse_i32, enc_list, dec_list, enc_point2, dec_point2, enc_entity, dec_entity, enc_layer, dec_layer, enc_entity_record, dec_entity_record, enc_block, dec_block, enc_layer_diff, dec_layer_diff, enc_entity_record_diff, dec_entity_record_diff, enc_block_diff, dec_block_diff};
 }
 pub use diff_codec::*;

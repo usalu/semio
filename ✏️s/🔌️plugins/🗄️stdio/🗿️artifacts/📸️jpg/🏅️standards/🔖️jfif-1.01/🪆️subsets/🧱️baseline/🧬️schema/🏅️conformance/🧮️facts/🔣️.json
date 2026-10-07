@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.semio.dev/s/stdio/jpg/baseline/conformance/facts",
+  "title": "JPEG Baseline Conformance Facts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hasFrame",
+    "baselineSequential",
+    "samplePrecision",
+    "arithmeticConditioning",
+    "dcTableCount",
+    "acTableCount",
+    "components"
+  ],
+  "properties": {
+    "hasFrame": {
+      "type": "boolean"
+    },
+    "baselineSequential": {
+      "type": "boolean"
+    },
+    "samplePrecision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "arithmeticConditioning": {
+      "type": "boolean"
+    },
+    "dcTableCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "acTableCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "horizontal",
+          "vertical"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "horizontal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "vertical": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

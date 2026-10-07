@@ -16,9 +16,9 @@ fn child<S>(n: usize) -> store::ArtifactChild<S> {
     let v = &l["childAddresses"][n];
     store::ArtifactChild::new(
         v["childId"].as_str().unwrap().into(),
-        store::os_io::ArtifactRef {
+        semio_framework_artifact_reference::ArtifactRef {
             artifact_id: v["artifactId"].as_str().unwrap().into(),
-            dialect: store::os_io::ArtifactDialect { artifact_kind: v["artifactKind"].as_str().unwrap().into(), standard: v["standard"].as_str().unwrap().into(), subset: v["subset"].as_str().unwrap().into() },
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: v["artifactKind"].as_str().unwrap().into(), standard: v["standard"].as_str().unwrap().into(), subset: v["subset"].as_str().unwrap().into() },
         },
     )
 }
@@ -175,7 +175,7 @@ fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_
     use store::sqlite_snapshot::*;
     let codec = store::ArtifactCodec::bare::<Process3dSnapshot, crate::Process3dMutation>(crate::PROCESS_3D_SCHEMA);
     let capability = codec.snapshot_sqlite.expect("Process3d parent owned relational capability");
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.process.process3d".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.process.process3d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
         let expected = full(word);
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -258,7 +258,7 @@ async fn sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_
     semio_framework_plugin::Plugin::<SqliteProcessApps>::builder("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(crate::declaration().unwrap()).try_build().unwrap();
     let corpus = laws();
     let declared = &corpus["dialect"];
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: declared["artifactKind"].as_str().unwrap().into(), standard: declared["standard"].as_str().unwrap().into(), subset: declared["subset"].as_str().unwrap().into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: declared["artifactKind"].as_str().unwrap().into(), standard: declared["standard"].as_str().unwrap().into(), subset: declared["subset"].as_str().unwrap().into() };
     for word in words() {
         let expected = public_cohort::Owned::new(full(word));
         for encoding in [store::sqlite_snapshot::SnapshotEncoding::Binary, store::sqlite_snapshot::SnapshotEncoding::Text] {

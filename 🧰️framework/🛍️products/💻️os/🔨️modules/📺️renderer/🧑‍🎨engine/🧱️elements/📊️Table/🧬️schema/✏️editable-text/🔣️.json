@@ -38,57 +38,5 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": false,
-  "$defs": {
-    "acknowledgements": {
-      "type": "object",
-      "required": [
-        "initial",
-        "first",
-        "latest",
-        "remote",
-        "unsubmitted",
-        "commandsAfterEnterAndBlur",
-        "commandsAfterNextBlur",
-        "draftAfterFirstEcho",
-        "conflictAfterFirstEcho",
-        "dirtyAfterFinalEcho"
-      ],
-      "properties": {
-        "initial": {
-          "type": "string"
-        },
-        "first": {
-          "type": "string"
-        },
-        "latest": {
-          "type": "string"
-        },
-        "remote": {
-          "type": "string"
-        },
-        "unsubmitted": {
-          "type": "string"
-        },
-        "draftAfterFirstEcho": {
-          "type": "string"
-        },
-        "commandsAfterEnterAndBlur": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "commandsAfterNextBlur": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "conflictAfterFirstEcho": {
-          "type": "boolean"
-        },
-        "dirtyAfterFinalEcho": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    }
-  }
+  "additionalProperties": false
 }

@@ -1212,7 +1212,7 @@ pub(crate) fn xml_node(name: &str) -> XmlNode {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_a() -> DocxSnapshot {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(DocxDocument {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![DocxBlock::Paragraph(DocxParagraph { runs: vec![DocxRun { text: "old".into(), bold: false, extra_run_properties: vec![xml_node("rPr")], ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() })],
         styles: vec![DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) }],
     });
@@ -1223,7 +1223,7 @@ pub(crate) fn snapshot_a() -> DocxSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn snapshot_b() -> DocxSnapshot {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(DocxDocument {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![DocxBlock::Paragraph(DocxParagraph {
             runs: vec![DocxRun { text: "new".into(), bold: true, italic: true, ..Default::default() }, DocxRun { text: "second".into(), underline: true, ..Default::default() }],
             style: Some("keep".into()),

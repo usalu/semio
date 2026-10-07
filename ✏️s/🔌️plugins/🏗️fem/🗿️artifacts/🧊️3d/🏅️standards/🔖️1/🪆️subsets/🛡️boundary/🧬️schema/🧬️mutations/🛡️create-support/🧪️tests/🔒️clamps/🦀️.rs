@@ -8,7 +8,8 @@
 //! A full 3D fixity restrains all six DOFs at once — the whole `FemDof` vocabulary has to round-trip in one list.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/📸️snapshot/⬅️before/🔣️.json");

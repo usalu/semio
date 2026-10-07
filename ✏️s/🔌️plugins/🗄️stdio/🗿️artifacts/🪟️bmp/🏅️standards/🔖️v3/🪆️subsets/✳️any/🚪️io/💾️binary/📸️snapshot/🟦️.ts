@@ -1,7 +1,21 @@
-/** 💾️ Binary representation for `stdio.bmp` (snapshot): the shared `.semio` binary
- * envelope — 8-byte magic, u32 LE token length, UTF-8 token `"stdio.bmp.pack v1"` — wrapping
- * a payload that IS the real on-disk BMP bytes (BITMAPFILEHEADER + BITMAPINFOHEADER +
- * optional BI_BITFIELDS masks + optional palette + pixel data), the SAME bytes
- * `engine::decode_bmp`/`encode_bmp` read and write
- * (`store::semio_format::wrap_binary`/`unwrap_binary`). */
-export type BmpSnapshotBinary = Uint8Array;
+/** 💾️ BMP v3 admission and canonical emission of precise owned samples. */
+import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {validateBmpImage,bmpBitsPerPixel,bmpMaskShift,type BmpSnapshot,type BmpProfile,type BmpPaletteEntry,type BmpNativeSample} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
+import {bmpByteLayout,bmpWord} from "../../🧩️layout/🟦️.ts";
+export type BmpSnapshotBinary=Uint8Array;
+export async function decodeBmpSnapshot(source:Uint8Array,control=new NativeDecodeControl(512*1024*1024,()=>true)):Promise<BmpSnapshot>{
+ await control.beginStage(source.length);const state=bmpByteLayout(source);if(state.state!=="valid_layout")throw new Error(state.diagnostic);const l=state.layout,depth=l.bitsPerPixel,count=l.width*l.height;
+ await control.admitSlots(count,depth<=8?1:20);await control.charge(l.paletteEntries*4+l.dataOffset-l.metadataEnd+source.length-l.pixelEnd+512);const palette:BmpPaletteEntry[]=[],samples:BmpNativeSample[]=[],indices:number[]=[];
+ for(let i=0;i<l.paletteEntries;i++){const at=l.paletteOffset+i*4;palette.push({b:source[at]!,g:source[at+1]!,r:source[at+2]!,reserved:source[at+3]!});}
+ const union=(l.masks[0]|l.masks[1]|l.masks[2])>>>0;
+ for(let y=0;y<l.height;y++){const row=l.dataOffset+(l.signedHeight<0?y:l.height-1-y)*l.rowStride;for(let x=0;x<l.width;x++){if(depth<=8){const bit=x*depth;indices.push((source[row+Math.floor(bit/8)]!>>>(8-depth-bit%8))&(2**depth-1));}else{const word=bmpWord(source,row+x*depth/8,depth/8),components=l.masks.map(mask=>((word&mask)>>>0)/2**bmpMaskShift(mask));samples.push({red:components[0]!,green:components[1]!,blue:components[2]!,alpha:0,reserved:(word&~union)>>>0});}}await control.checkpoint();}
+ const profile=(depth<=8?`indexedRgb${depth}`:l.compression===3?`directBitfields${depth}`:`directRgb${depth}`) as BmpProfile;
+ const snapshot:BmpSnapshot={schema:"stdio.bmp",image:{width:l.width,height:l.height,rowOrder:l.signedHeight<0?"topDown":"bottomUp",profile,masks:[...l.masks,0],palette,pixels:depth<=8?{storage:"indexed",indices}:{storage:"direct",samples},xPixelsPerMeter:l.xPixelsPerMeter,yPixelsPerMeter:l.yPixelsPerMeter,colorsUsed:l.colorsUsed,colorsImportant:l.colorsImportant,reserved1:l.reserved1,reserved2:l.reserved2,opaqueGap:Array.from(source.subarray(l.metadataEnd,l.dataOffset)),opaqueTrailer:Array.from(source.subarray(l.pixelEnd))}};
+ validateBmpImage(snapshot.image);await control.advance(source.length);return snapshot;
+}
+export async function encodeBmpSnapshot(snapshot:BmpSnapshot,control=new NativeDecodeControl(512*1024*1024,()=>true)):Promise<Uint8Array>{
+ validateBmpImage(snapshot.image);if(snapshot.schema!=="stdio.bmp")throw new Error("bmp: undeclared schema");const i=snapshot.image,depth=bmpBitsPerPixel(i.profile),bitfields=i.profile.startsWith("directBitfields"),rowStride=Math.floor((i.width*depth+31)/32)*4,dataOffset=54+(bitfields?12:0)+i.palette.length*4+i.opaqueGap.length,pixelEnd=dataOffset+rowStride*i.height,total=pixelEnd+i.opaqueTrailer.length;
+ if(!Number.isSafeInteger(total)||total>4294967295)throw new Error("bmp: native extent exceeds u32");await control.beginStage(i.height);await control.charge(total);const bytes=new Uint8Array(total),view=new DataView(bytes.buffer);bytes[0]=66;bytes[1]=77;view.setUint32(2,total,true);view.setUint16(6,i.reserved1,true);view.setUint16(8,i.reserved2,true);view.setUint32(10,dataOffset,true);view.setUint32(14,40,true);view.setInt32(18,i.width,true);view.setInt32(22,i.rowOrder==="topDown"?-i.height:i.height,true);view.setUint16(26,1,true);view.setUint16(28,depth,true);view.setUint32(30,bitfields?3:0,true);view.setUint32(34,rowStride*i.height,true);view.setInt32(38,i.xPixelsPerMeter,true);view.setInt32(42,i.yPixelsPerMeter,true);view.setUint32(46,i.colorsUsed,true);view.setUint32(50,i.colorsImportant,true);
+ if(bitfields)for(let c=0;c<3;c++)view.setUint32(54+c*4,i.masks[c]!,true);for(const[index,p]of i.palette.entries())bytes.set([p.b,p.g,p.r,p.reserved],54+(bitfields?12:0)+index*4);bytes.set(i.opaqueGap,dataOffset-i.opaqueGap.length);bytes.set(i.opaqueTrailer,pixelEnd);
+ for(let y=0;y<i.height;y++){const row=dataOffset+(i.rowOrder==="topDown"?y:i.height-1-y)*rowStride;for(let x=0;x<i.width;x++){const index=y*i.width+x;if(i.pixels.storage==="indexed"){const bit=x*depth;bytes[row+Math.floor(bit/8)]!|=i.pixels.indices[index]!*2**(8-depth-bit%8);}else{const sample=i.pixels.samples[index]!;let word=sample.reserved;for(const[c,value]of [sample.red,sample.green,sample.blue,sample.alpha].entries())word+=value*2**bmpMaskShift(i.masks[c]!);for(let b=0;b<depth/8;b++){bytes[row+x*depth/8+b]=word%256;word=Math.floor(word/256);}}}await control.step();}return bytes;
+}

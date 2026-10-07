@@ -34,7 +34,8 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation_outcome, inverse_playbook_mutation_steps, PlaybookMutation};
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation_outcome,inverse_playbook_mutation_steps,PlaybookMutation};
+
     use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::snapshot::{encode_playbook_snapshot_json};
     use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::snapshot::{decode_playbook_snapshot_json};
     use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::mutations::{decode_playbook_mutation_json};

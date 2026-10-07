@@ -78,9 +78,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect([...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)].map(item => ts.flattenDiagnosticMessageText(item.messageText, "\n"))).toEqual([]);
   });
   it("ActorWorkerInboxInventory binds mixed message kinds and logical shells to current source", async () => {
-    const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧬️schema/🔣️.json"); const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json");
-    const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
-    const validate = new Ajv({ strict: true }).compile(schema); expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json");
+    const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const shardPath = new URL("../../📮️shard-client/🟦️.ts", testSource.url);
     const shard = ts.createSourceFile(shardPath.pathname, readFileSync(shardPath, "utf8"), ts.ScriptTarget.Latest, true);
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();

@@ -6,7 +6,7 @@ comment none
 
 document = artifact-mark payload
 artifact-mark = "stdio.jpg"
-payload = "schema" "=" text "width" "=" uint "height" "=" uint "pixels" "=" text "jfifXDensity" "=" uint "jfifYDensity" "=" uint "sofMarker" "=" uint "arithmetic" "=" bool "reEncodeQuality" "=" optional-uint "jfifVersion" "=" version "jfifDensityUnits" "=" text "jfifThumbnail" "=" thumbnail "frame" "=" frame "quantTables" "=" "[" quantizer* "]" "huffmanTables" "=" "[" huffman* "]" "restartInterval" "=" optional-uint "otherSegments" "=" "[" segment* "]"
+payload = "schema" "=" text "width" "=" uint "height" "=" uint "pixels" "=" text "jfifXDensity" "=" uint "jfifYDensity" "=" uint "sofMarker" "=" uint "arithmetic" "=" bool "jfifVersion" "=" version "jfifDensityUnits" "=" text "jfifThumbnail" "=" thumbnail "frame" "=" frame "quantTables" "=" "[" quantizer* "]" "huffmanTables" "=" "[" huffman* "]" "restartInterval" "=" optional-uint "otherSegments" "=" "[" segment* "]"
 optional-uint = "null" / uint
 version = "[" uint uint "]"
 octets = "bytes64" "(" text ")"

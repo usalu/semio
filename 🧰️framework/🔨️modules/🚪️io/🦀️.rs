@@ -10,24 +10,9 @@ use semio_framework_diagnostic::Diagnostic;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
 
-//#region 🔖️Dialect
-/// 🧬️ `StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect` moved verbatim to
-/// `🚪️io/🧬️schema/🦀️.rs` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A
-/// task 1) so the vocabulary — and `ArtifactDialect::to_coordinate`/`parse_coordinate`, the ONE
-/// dialect-coordinate codec in the repo — has a single definition site regardless of which crate
-/// mounts this file. Re-exported here unchanged so every existing reference in this file (and
-/// every downstream `io::Dialect`/`io::ArtifactDialect` import) keeps resolving to the exact same
-/// type.
-pub use crate::io_schema::{ArtifactDialect, Dialect, StandardId, SubsetId};
+use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 
-pub use crate::sqlite_snapshot;
-//#endregion 🔖️Dialect
-
-//#region 🔖️ArtifactRef
-/// 🧬️ `ArtifactKindId`/`is_canonical_artifact_kind`/`ArtifactRef` moved verbatim to
-/// `🚪️io/🧬️schema/🦀️.rs` alongside `🔖️Dialect` above — see that region's doc comment.
-pub use crate::io_schema::{is_canonical_artifact_kind, ArtifactKindId, ArtifactRef};
-//#endregion 🔖️ArtifactRef
 
 //#region 🔐️CodecContracts
 //#region 🔒️Diagnostics
@@ -1051,6 +1036,8 @@ pub async fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveErr
 
 /// 📚️ Lists every dialect one artifact can move data through in a given direction.
 pub async fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Dialect>, IoRegistryUnavailable> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut dialects: Vec<Dialect> = reg.iter().filter(|(k, _)| k.artifact_kind == artifact_kind && k.direction == direction).map(|(_, entry)| entry.writes).collect();
     dialects.sort_by_key(|dialect| ArtifactDialect::from(*dialect).to_coordinate());
@@ -1071,6 +1058,8 @@ pub async fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Result<
 /// `list-artifact-dialects` guest export mirrors verbatim (one row per distinct `writes` entry
 /// registered locally, each carrying the full `reads` list).
 pub async fn list_composer_entries() -> Result<Vec<(ArtifactDialect, Vec<ArtifactDialect>)>, IoRegistryUnavailable> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut seen: BTreeMap<String, &'static ComposerEntry> = BTreeMap::new();
     for entry in reg.values() {
@@ -1587,6 +1576,8 @@ pub async fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
 /// other fallible call on this ABI surfaces errors (a `Fault`, not structured data) — see
 /// `migrate-artifact`'s `plugin-error` for the existing precedent.
 pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, IoWireError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     ensure_wire_bytes("io-key", key_bytes)?;
     ensure_wire_bytes("compose-source", sources_bytes)?;
     let key: IoKey = decode_wire_json("io-key", key_bytes).await?;
@@ -1998,8 +1989,9 @@ mod tests;
 /// OLD registry above (`ComposerEntry`/`IoKey`/`io_dispatch`/`SubsetValidator`/`FormatCatalog`)
 /// is untouched and keeps working; this region is purely additive until W6 deletes the old one.
 pub mod io_mechanism {
-    use crate::io_schema::{ArtifactDialect, Confidence, Dialect, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute, CARRIER_BINARY, CARRIER_TEXT, SQLITE_SNAPSHOT};
-    use super::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteTable, SqliteValue, SqliteSnapshotProgress, SqliteSnapshotControl, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database, export_sqlite_database_controlled, import_sqlite_database_controlled};
+    use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
+    use {semio_framework_artifact_reference::ArtifactDialect,crate::io_schema::Confidence,semio_framework_artifact_reference::Dialect,crate::io_schema::IoEntryDescriptor,crate::io_schema::IoError,crate::io_schema::IoFidelity,crate::io_schema::IoOutcome,crate::io_schema::IoPayload,crate::io_schema::IoResult,crate::io_schema::IoRoute,crate::io_schema::CARRIER_BINARY,crate::io_schema::CARRIER_TEXT,crate::io_schema::SQLITE_SNAPSHOT};
+    use semio_framework_io_sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteTable, SqliteValue, SqliteSnapshotProgress, SqliteSnapshotControl, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database, export_sqlite_database_controlled, import_sqlite_database_controlled};
     use semio_framework_diagnostic::Diagnostic;
     use semio_framework_value::{ValueError, ValueRefusalKind};
     use std::collections::{BTreeMap, BTreeSet};
@@ -2195,6 +2187,8 @@ pub mod io_mechanism {
     }
 
     pub(super) fn propose_native_snapshots(existing: &NativeSnapshotMap, registrations: &[NativeSnapshotRegistration]) -> Result<NativeSnapshotMap, IoRegistryError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let mut proposed = NativeSnapshotMap::new();
         for registration in registrations {
             let dialect = &registration.dialect;
@@ -2376,6 +2370,8 @@ pub mod io_mechanism {
         // like every other forced-sync call site in this file (`to_coordinate` never truly
         // suspends).
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             match self {
                 Self::Duplicate { from, into } => write!(f, "io entry already registered for {} -> {}", from.to_coordinate(), into.to_coordinate()),
                 Self::InvalidSnapshotDialect(dialect) => write!(f, "invalid native snapshot dialect {}", dialect.to_coordinate()),
@@ -2465,6 +2461,8 @@ pub mod io_mechanism {
     }
 
     async fn route_rank(route: &[&'static IoEntry]) -> (std::cmp::Reverse<u8>, usize, String) {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let min_fidelity = route.iter().map(|entry| entry.fidelity.rank()).min().unwrap_or(0);
         let joined = route.iter().map(|entry| ArtifactDialect::from(entry.into).to_coordinate()).collect::<Vec<_>>().join(",");
         (std::cmp::Reverse(min_fidelity), route.len(), joined)
@@ -2491,6 +2489,8 @@ pub mod io_mechanism {
     // regular helpers, not fn-pointer slots) and this function awaits them into plain values FIRST,
     // then sorts/maps over the already-resolved data synchronously.
     async fn resolve_route(registry: &EntryMap, from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let max_hops = max_hops.min(3);
         if max_hops == 0 {
             return Err(refusal(ValueRefusalKind::InvalidValue, format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate())));
@@ -2531,6 +2531,8 @@ pub mod io_mechanism {
     }
 
     fn typed_snapshot_codec<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect) -> Result<store::ArtifactCodec, IoError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let codec = native_snapshot_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "native snapshot registry unavailable"))?.get(dialect).cloned().ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, format!("unregistered typed snapshot dialect {}", dialect.to_coordinate())))?;
         let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, "artifact has no semantic SQLite provider"))?;
         if provider.snapshot_type != Some(std::any::TypeId::of::<P>()) || provider.schema != P::SQLITE_SCHEMA {
@@ -2570,6 +2572,8 @@ pub mod io_mechanism {
     }
 
     fn run_snapshot_hop(snapshots: &NativeSnapshotMap, hop: &IoEntryDescriptor, payload: IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<IoPayload> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
         let mut control = SqliteSnapshotControl::new(progress, limits);
         control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 1).map_err(IoError::from_value_error)?;
@@ -2608,6 +2612,8 @@ pub mod io_mechanism {
     }
 
     async fn resolve_run(registry: &EntryMap, route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let mut current = payload;
         let mut diagnostics = Vec::new();
         for hop in &route.hops {
@@ -2652,6 +2658,8 @@ pub mod io_mechanism {
 
     //#region 🔖️Identify
     async fn resolve_identify(registry: &EntryMap, payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let carrier = ArtifactDialect::from(match payload {
             IoPayload::Binary(_) => CARRIER_BINARY,
             IoPayload::Text(_) => CARRIER_TEXT,
@@ -2825,3 +2833,7 @@ pub mod io_mechanism {
 }
 //#endregion 🔖️IoMechanism
 // #endregion io
+
+/// 📝️ Physical text ownership for framework IO operations.
+#[path = "📝️text/🦀️.rs"]
+pub mod text;

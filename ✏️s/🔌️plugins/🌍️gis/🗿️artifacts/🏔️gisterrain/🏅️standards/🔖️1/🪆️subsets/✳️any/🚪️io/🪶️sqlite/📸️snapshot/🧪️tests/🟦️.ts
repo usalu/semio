@@ -70,7 +70,8 @@ test("complete imported relational trees reject kind mismatches sharing orphan r
  const bytes=await exportSqliteDatabase(await gisTerrainSnapshotToSqliteDatabase(completeSnapshot()));
  for(const mutation of["UPDATE gis_terrain_route SET value_id=(SELECT value_id FROM gis_terrain_position LIMIT 1)","UPDATE gis_terrain_value SET kind='text' WHERE id=(SELECT value_id FROM gis_terrain_position LIMIT 1)","INSERT INTO gis_terrain_boolean SELECT id,1 FROM gis_terrain_value WHERE kind='null' LIMIT 1","UPDATE gis_terrain_member SET ordinal=ordinal+1","UPDATE gis_terrain_position SET ordinal=1","INSERT INTO gis_terrain_value VALUES(100000,'null')","UPDATE gis_terrain_array SET value_id=parent_id","INSERT INTO gis_terrain_document VALUES(8)"]){const oracle=Database.deserialize(bytes);try{oracle.run(mutation);await expect(gisTerrainSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()))).rejects.toThrow();}finally{oracle.close();}}
 });
-import {importedMapFromMedia,intrinsicFromJson,intrinsicToJson} from "../../../../🧬️schema/🗺️imported-map/🟦️.ts";
+import {importedMapFromMedia} from "../../../../🧬️schema/🗺️imported-map/🟦️.ts";
+import {intrinsicFromJson,intrinsicToJson} from "../../../📝️text/📸️snapshot/🗺️imported-map/🔣️json/🟦️.ts";
 test("typed map admission retains broad records repeated IDs unknown properties and every intrinsic domain",async()=>{
  const value=completeSnapshot(),map=value.importedMap!,all=map.properties.map(m=>m.value);for(const role of["positions","routes","regions"]as const){map[role][0]!.members.push({name:"all domains",value:{kind:"array",items:structuredClone(all)}});map[role].push(structuredClone(map[role][0]!));}
  map.positions.push({kind:"object",members:[{name:"lon",value:{kind:"unsigned",value:1n}},{name:"lat",value:{kind:"signed",value:-1n}}]});expect(await gisTerrainSnapshotFromSqliteDatabase(await gisTerrainSnapshotToSqliteDatabase(value))).toEqual(value);

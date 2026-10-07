@@ -19,7 +19,7 @@ mod art_playbook_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 use semio_framework_artifact_playbook_playbook as playbook;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, set_node_param, SemioFlowMutation};
@@ -70,8 +70,8 @@ const PLAYBOOK_STEP_SPACING: f64 = 220.0;
 /// 🧷️ The `flow` child handle named `child_id` — minted once per document and kept by every edit, since every content edit is a
 /// child-lane leaf in that child's own store (`child_id` is also the child's artifact id, as `ChildRestoreProjection` requires).
 pub fn playbook_flow_child(child_id: &str) -> PlaybookFlowChild {
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    store::ArtifactChild::new(child_id.to_string(), store::os_io::ArtifactRef { artifact_id: child_id.to_string(), dialect })
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    store::ArtifactChild::new(child_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.to_string(), dialect })
 }
 
 /// 🧱️ One step as its flow node at chain position `index`: `label` = title, `blocks` JSON-encoded wholesale into the
@@ -370,7 +370,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
 pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.playbook.playbook").expect("canonical playbook kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
@@ -629,7 +629,8 @@ pub mod schema {
 }
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation, PlaybookMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation,PlaybookMutation};
+
 }
 
 

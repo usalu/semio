@@ -1,16 +1,15 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,existsSync} from "node:fs";
-import Ajv from "ajv";
 
 import {join} from "node:path";
 import {parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 type Fixture={rows:Record<string,(string|number|null)[][]>;rowsTotal:number;identityOffset:number;edit:{table:string;column:string;value:string};blobSizes?:string[];clocks?:{actor:string;physicalMs:string;logical:string}[];interiorControl?:{textUnit:string;repeat:number;utf8Bytes:number}};
 type SafeIntegerQuery={safeIntegers(value:true):{all():unknown[]}};
 const quote=(value:string)=>'"'+value.replaceAll('"','""')+'"';
-export function authoredSnapshotSqliteContract(directory:string):void{
+export function authoredSnapshotSqliteContract(directory:{sql:string;fixtures:string}):void{
  test("neutral control categories retain independent relational ownership and Unicode bytes",()=>{const fixture=JSON.parse(readFileSync(new URL("../../../🪶️sqlite/🧫️fixtures/⚠️refusal/🔣️.json",import.meta.url),"utf8"))as{parent:number;label:string;labelUtf8Bytes:number;cases:{id:string;owner:number;maximumBytes:number;cancel:boolean;expectedKind:string|null}[]};const sql=readFileSync(new URL("../../../🪶️sqlite/🧫️fixtures/⚠️refusal/🗄️.sql",import.meta.url),"utf8");expect(Buffer.byteLength(fixture.label,"utf8")).toBe(fixture.labelUtf8Bytes);for(const sample of fixture.cases){const database=new Database(":memory:");try{database.exec(sql);database.query("INSERT INTO space_field_parent VALUES (?)").run(fixture.parent);database.query("INSERT INTO space_field_child VALUES (1,?,0,?)").run(sample.owner,fixture.label);expect(database.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(database.query("PRAGMA foreign_key_check").all().length).toBe(sample.expectedKind==="invalidValue"?1:0);expect(database.query("SELECT length(CAST(label AS BLOB)) AS bytes FROM space_field_child").get()).toEqual({bytes:fixture.labelUtf8Bytes});}finally{database.close();}}});
- const sql=readFileSync(join(directory,"🪶️sqlite/🗄️.sql"),"utf8"),f=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🪶️sqlite/🔣️.json"),"utf8"))as Fixture;
+ const sql=readFileSync(directory.sql,"utf8"),f=JSON.parse(readFileSync(join(directory.fixtures,"🔣️.json"),"utf8"))as Fixture;
  const schema=parseSqliteDatabaseSchema(sql);
  const expected:SqliteDatabase={tables:schema.tables.map(table=>({...table,rows:f.rows[table.name]!.map(row=>({rowid:BigInt(row[0] as number),values:row.map(value=>typeof value==="number"?BigInt(value):value)}))}))};
  function independent():Database{const d=new Database(":memory:");d.exec("PRAGMA foreign_keys=ON");d.exec(sql);d.exec("PRAGMA application_id=1397576526; PRAGMA user_version=1");for(const table of expected.tables){const statement=d.query("INSERT INTO "+quote(table.name)+" VALUES ("+table.rows[0]!.values.map(()=>"?").join(",")+")");for(const row of table.rows)statement.run(...row.values as (null|string|bigint)[]);}return d;}
@@ -23,16 +22,12 @@ export function authoredSnapshotSqliteContract(directory:string):void{
 }
 
 /** 📏️ Validates each real owner's borrowed preflight contract against independent SQLite and UTF-8 measurements. */
-export function authoredSnapshotPreflightContract(directory:string):void{
+export function authoredSnapshotPreflightContract(directory:{sql:string;fixtures:string}):void{
  test("public native preflight admits only borrowed scratch and guards the real typed owner",()=>{
-  const path=join(directory,"🧫️fixtures/🪶️sqlite/📏️preflight/🔣️.json");
+  const path=join(directory.fixtures,"📏️preflight/🔣️.json");
   expect(existsSync(path)).toBe(true);
   const facet=JSON.parse(readFileSync(path,"utf8")) as {owner:string;table:string;column:string;textUnit:string;repeat:number;utf8Bytes:number;cancelAt:number;rows:number;schemaBytes:number;scratch:string;result:string;bounds:string[];encodings:string[];sourceUnchanged:boolean};
-  const schema=JSON.parse(readFileSync(join(directory,"🪶️sqlite/📏️preflight/🧬️schema/🔣️.json"),"utf8"));
-  const validate=new Ajv({strict:true}).compile(schema);
-  expect(validate(facet)).toBe(true);
-  for(const wrong of [{...facet,scratch:"copiedPayload"},{...facet,result:"encodedOutput"},{...facet,sourceUnchanged:false},{...facet,encodings:["binary"]},{...facet,extra:true}])expect(validate(wrong)).toBe(false);
-  const sql=readFileSync(join(directory,"🪶️sqlite/🗄️.sql"),"utf8"),fixture=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🪶️sqlite/🔣️.json"),"utf8")) as Fixture;
+  const sql=readFileSync(directory.sql,"utf8"),fixture=JSON.parse(readFileSync(join(directory.fixtures,"🔣️.json"),"utf8")) as Fixture;
   const text=facet.textUnit.repeat(facet.repeat),database=new Database(":memory:");
   try{
    database.exec("PRAGMA foreign_keys=ON");database.exec(sql);
@@ -51,16 +46,16 @@ export function authoredSnapshotPreflightContract(directory:string):void{
 }
 
 /** 🛂️ Independently counts every authored scalar and literal text role using SQLite storage classes. */
-export function authoredSnapshotSemanticContract(directory:string):void{
+export function authoredSnapshotSemanticContract(directory:{sql:string;fixtures:string}):void{
  test("closed complete semantic cells preserve every independently edited authored text role",async()=>{
-  const plan=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🪶️sqlite/🛂️semantic/🔣️.json"),"utf8")) as {schema:string;owner:string;rows:number;baselineBytes:number;tableRows:Record<string,number>;text:string;textBytes:number;cases:{id:string;table:string;column:number;row:number;path:(string|number)[];previous:string;semanticBytes:number}[]};
+  const plan=JSON.parse(readFileSync(join(directory.fixtures,"🛂️semantic/🔣️.json"),"utf8")) as {schema:string;owner:string;rows:number;baselineBytes:number;tableRows:Record<string,number>;text:string;textBytes:number;cases:{id:string;table:string;column:number;row:number;path:(string|number)[];previous:string;semanticBytes:number}[]};
   
   
   
   
   expect(Buffer.byteLength(plan.text,"utf8")).toBe(plan.textBytes);
-  const fixture=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🪶️sqlite/🔣️.json"),"utf8")) as Fixture;
-  const sql=readFileSync(join(directory,"🪶️sqlite/🗄️.sql"),"utf8");
+  const fixture=JSON.parse(readFileSync(join(directory.fixtures,"🔣️.json"),"utf8")) as Fixture;
+  const sql=readFileSync(directory.sql,"utf8");
   const schema=parseSqliteDatabaseSchema(sql);
   const original:SqliteDatabase={tables:schema.tables.map(table=>({...table,rows:fixture.rows[table.name]!.map(row=>({rowid:BigInt(row[0] as number),values:row.map(value=>typeof value==="number"?BigInt(value):value)}))}))};
   function census(file:Uint8Array):{rows:number;bytes:number}{

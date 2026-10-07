@@ -2,15 +2,12 @@
 import {test,expect} from "bun:test";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
-import Ajv from "ajv/dist/2020.js";
 import TOML from "@iarna/toml";
 import fixture from "../../🧫️fixtures/🧩️ownership/🔣️.json";
-import schema from "../../🧬️schema/🧩️ownership/🔣️.json";
 type Ownership={package:string;module:string;manifest:string;library:{name:string;path:string};mount:string;dependencies:string[];publicEntries:string[];forbiddenProviders:string[]};
 const contract=fixture as unknown as Ownership,owner=resolve(import.meta.dir,"../.."),read=(path:string)=>readFileSync(resolve(owner,path),"utf8");
 
-test("the closed Record contract names its actual package and public module",()=>{
- expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
+test("Record ownership examples name the actual package and public module",()=>{
  expect(contract.package).toBe("semio-framework-pack");expect(contract.module).toBe("record");
  expect(new Set(contract.dependencies).intersection(new Set(contract.forbiddenProviders)).size).toBe(0);
  for(const entry of contract.publicEntries)expect(read("🦀️.rs")).toContain("pub fn "+entry+"(");

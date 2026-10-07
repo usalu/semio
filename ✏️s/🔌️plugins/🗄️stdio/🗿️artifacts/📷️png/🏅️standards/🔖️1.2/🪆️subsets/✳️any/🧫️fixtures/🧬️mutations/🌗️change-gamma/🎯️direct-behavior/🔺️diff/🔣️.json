@@ -1,3 +1,41 @@
 {
-  "gama": 45455
+  "image": {
+    "width": 2,
+    "height": 1,
+    "bitDepth": 16,
+    "colorType": "grayscale",
+    "interlace": false,
+    "samples": [
+      257,
+      32769
+    ],
+    "palette": null,
+    "transparency": {
+      "colorType": "grayscale",
+      "gray": 257
+    },
+    "gamma": 100000,
+    "chromaticities": null,
+    "srgb": null,
+    "physicalDims": null,
+    "timestamp": null,
+    "background": null,
+    "textChunks": [],
+    "ancillaryChunks": [
+      {
+        "kind": [
+          118,
+          112,
+          65,
+          103
+        ],
+        "data": [
+          0,
+          255,
+          17
+        ],
+        "afterRaster": true
+      }
+    ]
+  }
 }

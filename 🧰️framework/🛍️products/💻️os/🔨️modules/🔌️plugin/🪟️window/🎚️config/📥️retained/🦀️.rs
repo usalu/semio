@@ -1,7 +1,7 @@
 //! 📥️ Retained typed Pack and SPR loading for one exact window-config partition.
 
 use super::{PluginCloseStep, WindowConfigOwner, WindowConfigPack, WindowConfigPartition};
-use crate::store;
+use crate::{protocol, store};
 use std::any::Any;
 use std::collections::{BTreeMap, HashMap};
 use std::mem::ManuallyDrop;
@@ -85,6 +85,12 @@ pub struct WindowConfigPackLoad {
 }
 
 impl WindowConfigPackLoad {
+    #[cfg(test)]
+    pub(super) fn candidate_actor_for_test<O: WindowConfigOwner>(&mut self) -> Option<protocol::ActorId> {
+        let typed = self.inner.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>()?;
+        typed.candidate.as_ref().map(|candidate| candidate.store.local_actor_id().clone())
+    }
+
     pub fn phase(&self) -> WindowConfigPackLoadPhase {
         self.inner.phase()
     }
@@ -999,12 +1005,14 @@ impl<O: WindowConfigOwner> Drop for RetainedWindowConfigStateDecode<O> {
 }
 
 struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
+    opened_actor: ManuallyDrop<Option<protocol::ActorId>>,
     window_id: ManuallyDrop<Option<String>>,
     window_kind_id: ManuallyDrop<Option<String>>,
     expected_id: ManuallyDrop<Option<String>>,
     files: ManuallyDrop<Option<store::ArtifactPackFiles>>,
     state_decode: ManuallyDrop<Option<RetainedWindowConfigStateDecode<O>>>,
     initial: ManuallyDrop<Option<O::State>>,
+
     validation: ManuallyDrop<Option<O::State>>,
     current: ManuallyDrop<Option<O::State>>,
     initial_digest: Option<[u8; 32]>,
@@ -1027,17 +1035,19 @@ struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
 }
 
 impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
-    fn new(registry_lifetime: u64, partition_generation: Option<u64>, pack: WindowConfigPack) -> Self {
+    fn new(registry_lifetime: u64, partition_generation: Option<u64>, pack: WindowConfigPack, opened_actor: protocol::ActorId) -> Self {
         let WindowConfigPack { window_id, window_kind_id, files } = pack;
         let total_bytes = files.pack.len().saturating_mul(3).saturating_add(files.spr.len()).saturating_add(files.ops.len()) as u64;
         let expected_id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
         Self {
+            opened_actor: ManuallyDrop::new(Some(opened_actor)),
             window_id: ManuallyDrop::new(Some(window_id)),
             window_kind_id: ManuallyDrop::new(Some(window_kind_id)),
             expected_id: ManuallyDrop::new(Some(expected_id)),
             files: ManuallyDrop::new(Some(files)),
             state_decode: ManuallyDrop::new(Some(RetainedWindowConfigStateDecode::new())),
             initial: ManuallyDrop::new(None),
+
             validation: ManuallyDrop::new(None),
             current: ManuallyDrop::new(None),
             initial_digest: None,
@@ -1234,30 +1244,36 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             Ok(false) => {}
             Err(diagnostic) => return self.reject(diagnostic),
         }
-        if self.retire_files(grant).is_some() {
+        if self.hydration.is_none() {
+            if grant.maximum_items == 0 {
+                return self.pending();
+            }
+            let initial = self.initial.take().expect("decoded initial window config state remains");
+            let pack = std::mem::take(&mut self.files.as_mut().expect("verified window config Pack remains").pack);
+            let digest = self.initial_digest.take().expect("decoded window config digest remains");
+            let genesis = store::ArtifactGenesis::from_verified_pack(initial, pack, digest);
+            let validation = self.validation.take().expect("decoded validation window config state remains");
+            let current = self.current.take().expect("decoded current window config state remains");
+            let history = self.history.take().expect("decoded window config history remains");
+            let expected_id = self.expected_id.take().expect("exact window config partition id remains");
+            let owners = self.owners.take().expect("window config store owners remain");
+            *self.hydration = Some(store::RetainedConfigStoreHydration::from_snapshots(
+                genesis,
+                validation,
+                current,
+                history,
+                expected_id,
+                O::SCHEMA.to_string(),
+                owners,
+                self.partition_generation.map_or(0, |generation| generation.saturating_add(1)),
+                O::MAXIMUM_PUBLICATION_BYTES,
+                self.opened_actor.take().expect("retained window load retains its opened actor before hydration"),
+            ));
             return self.pending();
         }
-        if self.files.is_some() {
+        if self.retire_files(grant).is_some() || self.files.is_some() {
             return self.pending();
         }
-        let initial = self.initial.take().expect("decoded initial window config state remains");
-        let validation = self.validation.take().expect("decoded validation window config state remains");
-        let current = self.current.take().expect("decoded current window config state remains");
-        let history = self.history.take().expect("decoded window config history remains");
-        let expected_id = self.expected_id.take().expect("exact window config partition id remains");
-        let owners = self.owners.take().expect("window config store owners remain");
-        *self.hydration = Some(store::RetainedConfigStoreHydration::from_snapshots(
-            initial,
-            validation,
-            current,
-            history,
-            expected_id,
-            O::SCHEMA.to_string(),
-            self.initial_digest.take().expect("decoded window config digest remains"),
-            owners,
-            self.partition_generation.map_or(0, |generation| generation.saturating_add(1)),
-            O::MAXIMUM_PUBLICATION_BYTES,
-        ));
         self.phase = WindowConfigPackLoadPhase::StoreHydration;
         self.pending()
     }
@@ -1434,6 +1450,10 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                 store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
             };
         }
+        if let Some(actor) = self.opened_actor.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(actor.0));
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if let Some((released_items, released_bytes)) = self.close_metadata(grant) {
             return Ok(PluginCloseStep::Pending { released_items, released_bytes });
         }
@@ -1445,12 +1465,14 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
 
     fn ownership_is_empty(&self) -> bool {
         self.terminal
+            && self.opened_actor.is_none()
             && self.window_id.is_none()
             && self.window_kind_id.is_none()
             && self.expected_id.is_none()
             && self.files.is_none()
             && self.state_decode.is_none()
             && self.initial.is_none()
+
             && self.validation.is_none()
             && self.current.is_none()
             && self.initial_digest.is_none()
@@ -1520,9 +1542,9 @@ impl<O: WindowConfigOwner> Drop for TypedWindowConfigPackLoad<O> {
     }
 }
 
-pub(super) fn begin_typed_window_config_pack_load<O: WindowConfigOwner>(registry_lifetime: u64, partition_generation: Option<u64>, pack: WindowConfigPack) -> WindowConfigPackLoad {
+pub(super) fn begin_typed_window_config_pack_load<O: WindowConfigOwner>(registry_lifetime: u64, partition_generation: Option<u64>, pack: WindowConfigPack, opened_actor: protocol::ActorId) -> WindowConfigPackLoad {
     let over_bound = pack.files.pack.len() > O::MAXIMUM_PUBLICATION_BYTES;
-    let mut load = TypedWindowConfigPackLoad::<O>::new(registry_lifetime, partition_generation, pack);
+    let mut load = TypedWindowConfigPackLoad::<O>::new(registry_lifetime, partition_generation, pack, opened_actor);
     if over_bound {
         load.reject(WindowConfigPackLoadDiagnostic::Capacity);
     }

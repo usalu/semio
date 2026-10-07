@@ -1,0 +1,7 @@
+# Board Canonical Document Identity Source Thirteen Audit
+
+{"ready":true,"sourceHash":"e20ebc316f69259fd2dcc04169c7ed26d8bfc2257785d0c9824ab0ab7e4fdbf9","helperHash":"ea460ece4408754471a635cb22b1be843975b5e63af0bd4205ddabdd81ef2058","codecHash":"d4a62d95cc4e9a633276470aa2032a11ce5aebe3117e3572e17bf162d40d8494","planHash":"6a782255a65764451311f97bfe136a6e8b8cf1b4ed3f4aa743c02cf35fdfcf47","failedTerminalHash":"977691a361196cba591ad013481b63f6f1c87236b3d097ca0a04de685264c55c","pairs":6,"occurrences":38,"census":2957,"endpointChecks":3794,"heldNulls":2,"originalSelectedRequestUnchanged":true,"sourceWritesOutsideTicket":false,"nativeExecuted":false,"scope":"Frozen canonical document identity source cohort only"}
+
+Current canonical JSON schema, Rust default, demo DSL and identity fixture bodies/hashes match and agree on dag.hostDocument. Full field shapes are equal. All 3794 held endpoint hashes and two explicit nulls independently match; filtered text census membership matches all2957 rows. Six full source pairs conserve every byte except38 exact schema identity tokens, with complete inverses. Six current Root unknown pairs remain explicit and are not restored or equated.
+
+Six actual semantic/schema observations match canonical fixture node/edge ownership and closed identity refusals. Original failure and request stay bound. Admission covers only a distinct frozen successor identity cohort; current Root acceptance, full runtime, compiler and publication remain unadmitted.

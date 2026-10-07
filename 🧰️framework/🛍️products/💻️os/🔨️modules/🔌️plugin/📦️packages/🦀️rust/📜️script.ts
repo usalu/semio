@@ -56,6 +56,7 @@ class TestScript extends BundleScript {
     const { historyLabelReloadOracle } = await import("../../🧪️tests/🧪️history-label-reload/🟦️.ts");
     const { folderReloadRouteOracle } = await import("../../🧪️tests/🧪️folder-reload-route/🟦️.ts");
     const { composedChildHistoryOracle } = await import("../../🧪️tests/🧪️composed-child-history/🟦️.ts");
+    const { checkpointActorOracle } = await import("../../⚛️reactor/📸️checkpoint/🧪️tests/🔬️unit/🟦️.ts");
     console.log(`[DEBUG] plugin-runner-oracle cases=${await pluginTestRunnerSelfTests()}`);
     console.log(`artifact-admission-oracle cases=${artifactAdmissionOracle(this.repoRoot)} firstParty=39`);
     console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
@@ -70,6 +71,7 @@ class TestScript extends BundleScript {
     console.log(`history-label-reload-oracle cases=${historyLabelReloadOracle(this.repoRoot)}`);
     console.log(`folder-reload-route-oracle steps=${folderReloadRouteOracle(this.repoRoot)}`);
     console.log(`composed-child-history-oracle cases=${composedChildHistoryOracle(this.repoRoot)}`);
+    console.log(`checkpoint-actor-oracle cases=${checkpointActorOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,

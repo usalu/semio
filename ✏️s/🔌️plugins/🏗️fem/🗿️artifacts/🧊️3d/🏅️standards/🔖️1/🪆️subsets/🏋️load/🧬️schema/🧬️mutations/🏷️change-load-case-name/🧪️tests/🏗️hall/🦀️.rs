@@ -13,7 +13,8 @@
 //! The spare crane case gets its human-readable label; its loads and its self-weight flag stay exactly as they were.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏗️hall/📸️snapshot/⬅️before/🔣️.json");

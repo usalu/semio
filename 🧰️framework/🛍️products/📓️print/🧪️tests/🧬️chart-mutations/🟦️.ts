@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import fixture from "../../🧫️fixtures/🧬️chart-mutations/🔣️.json";
 import nativeGrammar from "../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json";
 import schema from "../../🧬️schema/🔣️.json";
-import resultSchema from "../../🧬️schema/💡️inferences/🔣️.json";
+import resultSchema from "../../🚪️io/📝️text/💡️inferences/🔣️.json";
 import paintFixture from "../../🧫️fixtures/🧬️chart-mutations/🎨️paint.json";
 import { changeVizChartValue } from "../../🧬️schema/🧬️mutations/🟦️.ts";
 import { applyVizChartDiff, absorbVizChartDiff, inverseVizChartDiff, equalVizChartValue, type VizChartDiff } from "../../🧬️schema/🔀️diff/🟦️.ts";

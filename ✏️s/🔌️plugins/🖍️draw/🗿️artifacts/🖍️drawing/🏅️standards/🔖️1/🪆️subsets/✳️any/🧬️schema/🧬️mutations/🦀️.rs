@@ -8,7 +8,7 @@ use crate::schema::{find_drawing_layer, hex_to_rgba, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -196,7 +196,7 @@ mod tests;
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<(DrawingSnapshot, Vec<String>), String> {
+pub(crate) fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<(DrawingSnapshot, Vec<String>), String> {
     use protocol::{Mutation, MutationDiff};
     let outcome = <DrawingMutation as Mutation<DrawingSnapshot>>::diff(mutation, snapshot);
     let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -206,38 +206,6 @@ fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result
     }
 }
 
-
-
-/// 🌉️ Applies one committed mutation payload to one committed before-document and answers
-/// `{"snapshot": …, "messages": [ … ]}`.
-///
-/// The bridge exists because the generated Rust test host links only `semio-repo-test-host` and,
-/// behind its `sut` feature, this crate — `dsl`, `protocol` and `store` are private
-/// extern-crate aliases (`🦀️.rs`) and cannot be named from a case adapter. Same shape and same
-/// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (applied, messages) = bridge_step(&snapshot, &mutation)?;
-    Ok(bridge_render(&applied, &messages))
-}
-
-/// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
-/// answering in the same shape — the metamorphic half of the evidence the `drawing-mutation-semantics` no-oracle
-/// decision rests on. The inverse is computed against the PRE-mutation document, which is the only
-/// state that carries what a delete removed.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn undo_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
-    let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <DrawingMutation as Mutation<DrawingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
-        let (next, raised) = bridge_step(&current, &undo)?;
-        current = next;
-        messages.extend(raised);
-    }
-    Ok(bridge_render(&current, &messages))
-}
 
 
 //#endregion 🌉️ExternalCodecBridge
@@ -418,7 +386,7 @@ pub fn drawing_scaling_matrix(pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y:
 /// forward outcome patches — absolute setters, never a negated motion that would accumulate float error.
 pub fn drawing_selection_inverse(base: &DrawingSnapshot, outcome: protocol::MutationOutcome<crate::diff::DrawingDiff>) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    outcome.diff().layers.iter().flat_map(|delta| delta.patched.iter()).filter_map(|entry| find_drawing_layer(base, &entry.id).map(|layer| update_layer_transform(entry.id.clone(), layer_base(layer).transform.clone()))).collect()
+    outcome.diff().layers.iter().flat_map(|delta| delta.patched.iter()).filter_map(|entry| find_drawing_layer(base, &entry.id).map(|layer| update_layer_transform(entry.id.clone().into(), layer_base(layer).transform.clone()))).collect()
 
     })())
 }

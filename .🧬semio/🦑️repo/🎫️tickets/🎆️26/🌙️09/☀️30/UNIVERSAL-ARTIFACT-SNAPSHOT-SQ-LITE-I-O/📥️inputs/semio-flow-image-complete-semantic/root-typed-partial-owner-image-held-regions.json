@@ -1,0 +1,40 @@
+{
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+  "beforeHeldSha256": "da9dd4a9b29a5813ffd9c10e65a3247da0a43505852b09e6cf7be72f8a046eb3",
+  "afterHeldSha256": "edfd19c27612397101f9c60a7338b968681e1e3500c4a0eaadb104d455998927",
+  "regions": [
+    {
+      "before": "let icc=match &document.values[6]",
+      "after": "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;\nlet mut result=Owned::new(Self{schema:String::new(),width,height,colorspace,bit_depth,frames:Vec::new(),icc:None,metadata:Vec::new()});result.get_mut().icc=match &document.values[6]"
+    },
+    {
+      "before": "let mut frames=transfer::reserve(frame_rows.len(),control)?;",
+      "after": "result.get_mut().frames=transfer::reserve(frame_rows.len(),control)?;"
+    },
+    {
+      "before": "let mut rgba8=transfer::reserve(end-start,control)?;",
+      "after": "let mut frame=Owned::new(SemioImageFrame{delay_ms:u32::try_from(row.integer(3)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?,rgba8:Vec::new()});frame.get_mut().rgba8=transfer::reserve(end-start,control)?;"
+    },
+    {
+      "before": "rgba8.push(u8::try_from",
+      "after": "frame.get_mut().rgba8.push(u8::try_from"
+    },
+    {
+      "before": "frames.push(SemioImageFrame{delay_ms:u32::try_from(row.integer(3)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?,rgba8});",
+      "after": "result.get_mut().frames.push(frame.take());"
+    },
+    {
+      "before": "let mut metadata=transfer::reserve(metadata_rows.len(),control)?;",
+      "after": "result.get_mut().metadata=transfer::reserve(metadata_rows.len(),control)?;"
+    },
+    {
+      "before": "metadata.push(SemioImageMetadataEntry{key:reconstruct_text(control,row.text(3)?)?,value:reconstruct_text(control,row.text(4)?)?});",
+      "after": "let mut entry=Owned::new(SemioImageMetadataEntry{key:String::new(),value:String::new()});entry.get_mut().key=reconstruct_text(control,row.text(3)?)?;entry.get_mut().value=reconstruct_text(control,row.text(4)?)?;result.get_mut().metadata.push(entry.take());"
+    },
+    {
+      "before": "control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(Self{schema:reconstruct_text(control,document.text(1)?)?,width,height,colorspace,bit_depth,frames,icc,metadata})",
+      "after": "result.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(result.take())"
+    }
+  ],
+  "productionMounted": false
+}

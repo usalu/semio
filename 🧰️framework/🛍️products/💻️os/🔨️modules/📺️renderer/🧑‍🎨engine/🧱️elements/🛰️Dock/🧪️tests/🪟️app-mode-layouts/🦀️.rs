@@ -7,7 +7,7 @@
 //! a mode whose second window has no engine surface.
 
 use super::*;
-use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, Modes, WindowKindDefinition, WindowKinds};
+use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 use serde_json::Value;
 use semio_framework_ui_locale::LocalizedLabel;
 use ui_wgpu::wgpu::NamedLayout;

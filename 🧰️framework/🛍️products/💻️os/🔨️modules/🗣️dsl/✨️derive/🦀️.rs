@@ -850,7 +850,7 @@ fn diff_text_tokens(name: &syn::Type) -> proc_macro2::TokenStream {
                 ::semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), ::semio_framework_dsl_record::JoinMode::Inline)
             }
             fn parse_diff(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
-                let record = ::semio_framework_dsl_record::parse(line, &Self::__dsl_spec(), &::semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: ::semio_framework_dsl_record::SourceMode::Inline })?;
+                let record = ::semio_framework_dsl_record::parse_exact(line, &Self::__dsl_spec(), &::semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: ::semio_framework_dsl_record::SourceMode::Inline })?;
                 Self::__dsl_from_record(&record)
             }
         }

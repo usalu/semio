@@ -43,8 +43,10 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_io_descriptors_match_the_neutral_fixture() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     use semio_framework::io::io_mechanism::{io_entries, io_register, io_route};
-    use semio_framework::io_schema::{ArtifactDialect, IoEntryDescriptor, IoRoute};
+    use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::IoEntryDescriptor,semio_framework::io_schema::IoRoute};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📇️descriptor-parity.json")).expect("neutral descriptors");
     let declaration = super::io();
     let actual = declaration.entries.iter().map(|entry| IoEntryDescriptor { from: ArtifactDialect::from(entry.from), into: ArtifactDialect::from(entry.into), fidelity: entry.fidelity, sniffs: entry.sniff.is_some() }).collect::<Vec<_>>();
@@ -75,7 +77,7 @@ async fn artifact_io_descriptors_match_the_neutral_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native_snapshot() {
     use semio_framework::io::io_mechanism::{io_register, io_route, io_run};
-    use semio_framework::io_schema::{ArtifactDialect, CARRIER_TEXT};
+    use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::CARRIER_TEXT};
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral native snapshots");
     io_register(super::io().entries).expect("sequence IO registration");
     let native = ArtifactDialect::from(crate::SEQUENCE_DIALECT);

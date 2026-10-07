@@ -5,19 +5,19 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// ✏️ `rename-layer` payload — `new_name` per the taxonomy's naming convention for identity fields.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "rename-layer")]
 pub struct RenameLayer {
-    pub layer_id: String,
-    pub new_name: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub new_name: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_layer(layer_id: String, new_name: String) -> DrawingMutation {
+pub fn rename_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, new_name: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
     DrawingMutation::RenameLayer(RenameLayer { layer_id, new_name })
 }
 
@@ -37,7 +37,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for RenameLayer {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename layer \"{}\" to \"{}\"", self.layer_id, self.new_name), &format!("Ebene \"{}\" in \"{}\" umbenennen", self.layer_id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

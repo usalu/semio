@@ -993,7 +993,7 @@ impl JackSnapshotCloneAuthority {
     }
 
     fn with_local_owner(retain_local_owner: bool) -> Self {
-        let content = store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
+        let content = store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
         Self {
             value: std::mem::ManuallyDrop::new(Some(JackSnapshot { schema: String::new(), name: String::new(), manifest_id: None, manifest: Default::default(), camera: Default::default(), content, root_node_id: None, query: String::new() })),
             active: std::mem::ManuallyDrop::new(None),
@@ -1287,6 +1287,7 @@ pub fn jack_document_store_owners() -> store::DocumentStoreOwners<JackSnapshot, 
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum JackStoreInitializationPhase {
+    BindGenesis,
     ValidateEnvelope,
     ValidateEdit { index: usize },
     CloneInitial,
@@ -1306,6 +1307,7 @@ enum JackStoreInitializationPhase {
 }
 
 struct JackStoreInitializationAuthority {
+    actor: protocol::ActorId,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>>>,
@@ -1316,14 +1318,16 @@ struct JackStoreInitializationAuthority {
     clone: std::mem::ManuallyDrop<Option<JackSnapshotCloneAuthority>>,
     edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: JackStoreInitializationPhase,
+    resume_phase: Option<JackStoreInitializationPhase>,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
     terminal_handoff: bool,
 }
 
 impl JackStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
+    fn new(envelope: store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
         Self {
+            actor,
             operation,
             generation,
             envelope: std::mem::ManuallyDrop::new(Some(envelope)),
@@ -1331,8 +1335,9 @@ impl JackStoreInitializationAuthority {
             candidate: std::mem::ManuallyDrop::new(None),
             active: std::mem::ManuallyDrop::new(None),
             envelope_retirement: std::mem::ManuallyDrop::new(None),
-            clone: std::mem::ManuallyDrop::new(Some(JackSnapshotCloneAuthority::new())),
+            clone: std::mem::ManuallyDrop::new(None),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
+            resume_phase: None,
             phase: JackStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
             fault: None,
@@ -1439,7 +1444,23 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
         } else if self.active.is_some() {
             return semio_framework_job::StepOutcome::Yield;
         }
+        if !matches!(self.phase, JackStoreInitializationPhase::RetireCancelled | JackStoreInitializationPhase::RetireFault | JackStoreInitializationPhase::Cancelled | JackStoreInitializationPhase::Fault | JackStoreInitializationPhase::Complete) {
+            if let Some(runtime) = self.runtime.as_mut() {
+                match runtime.settle_current_retirement_step(1, JACK_OWNED_FIELD_BYTES) {
+                    Ok(store::SnapshotRetirementStep::Complete) => {}
+                    Ok(_) => { cx.consume_fuel(1); return semio_framework_job::StepOutcome::Yield; }
+                    Err(error) => { self.fault = Some(error.into_message().into_bytes()); self.phase = JackStoreInitializationPhase::RetireFault; }
+                }
+            }
+        }
         match self.phase {
+            JackStoreInitializationPhase::BindGenesis => {
+                let envelope = self.envelope.as_ref().expect("retained initializer genesis");
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
+                self.phase = JackStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                cx.consume_fuel(1);
+                semio_framework_job::StepOutcome::Yield
+            }
             JackStoreInitializationPhase::ValidateEnvelope => {
                 let Some(envelope) = self.envelope.as_ref() else {
                     self.fail(b"jack-store.initializer-envelope-missing");
@@ -1456,7 +1477,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             JackStoreInitializationPhase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("validated Jack envelope remains retained");
                 match self.edit_index.admit(&envelope.vcs.edits, index, JACK_OWNED_FIELD_BYTES) {
-                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = JackStoreInitializationPhase::CloneInitial,
+                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = JackStoreInitializationPhase::BindGenesis,
                     store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = JackStoreInitializationPhase::ValidateEdit { index: index + 1 },
                     store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"jack-store.initializer-duplicate-or-hostile-edit"),
                 }
@@ -1464,7 +1485,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 semio_framework_job::StepOutcome::Yield
             }
             JackStoreInitializationPhase::CloneInitial => {
-                let source = &self.envelope.as_ref().expect("Jack envelope remains retained during initial clone").vcs.initial_snapshot;
+                let source = &self.envelope.as_ref().expect("Jack envelope remains retained during initial clone").vcs.genesis.snapshot();
                 let clone = self.clone.as_mut().expect("Jack initial clone authority remains retained");
                 let complete = match clone.step(source, cx) {
                     Ok(complete) => complete,
@@ -1476,10 +1497,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 if complete {
                     let initial = clone.take_value().expect("Jack initial snapshot was built one semantic field at a time");
                     drop(self.clone.take());
-                    let initial_digest = store::artifact_initial_digest(&initial);
-                    let envelope = self.envelope.as_ref().expect("Jack envelope remains retained during runtime construction");
-                    *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, initial_digest));
-                    self.phase = JackStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                    match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(JackSnapshotRetirementFactory)) {
+                        Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
+                        Err(initial) => {
+                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, initial));
+                            self.fail(b"initializer-owned-workspace-adoption");
+                        }
+                    }
                 }
                 semio_framework_job::StepOutcome::Yield
             }
@@ -1554,6 +1578,18 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 semio_framework_job::StepOutcome::Yield
             }
             JackStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
+                let needs_workspace = {
+                    let envelope = self.envelope.as_ref().expect("retained initializer envelope");
+                    let runtime = self.runtime.as_ref().expect("retained initializer runtime");
+                    envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
+                };
+                if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
+                    self.resume_phase = Some(self.phase);
+                    *self.clone = Some(JackSnapshotCloneAuthority::new());
+                    self.phase = JackStoreInitializationPhase::CloneInitial;
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
                 let envelope = self.envelope.as_ref().expect("Jack envelope remains retained while its forwards fold");
                 let entry = envelope.vcs.edits.get(edit).expect("Jack applied edit remains retained");
                 match self.runtime.as_mut().expect("Jack runtime remains retained while its forwards fold").fold_forward(entry, mutation, &envelope.schema, JACK_OWNED_FIELD_BYTES) {
@@ -1571,13 +1607,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             }
             JackStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack applied edit remains retained");
-                let actor = entry.actor.clone();
+
                 let runtime = self.runtime.as_mut().expect("Writer runtime remains retained");
-                if let Err(error) = runtime.push_applied_edit(entry) {
+                if let Err(error) = runtime.push_applied_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
                     self.fault = Some(error.into_bytes());
                     self.phase = JackStoreInitializationPhase::RetireFault;
                 } else {
-                    runtime.set_local_actor_id(actor);
+
                     self.phase = JackStoreInitializationPhase::FindApplied { position: position + 1 };
                 }
                 cx.consume_fuel(1);
@@ -1605,7 +1641,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             }
             JackStoreInitializationPhase::CommitRedo { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack redo edit remains retained");
-                if let Err(error) = self.runtime.as_mut().expect("Writer runtime remains retained").push_redo_edit(entry) {
+                if let Err(error) = self.runtime.as_mut().expect("Writer runtime remains retained").push_redo_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
                     self.fault = Some(error.into_bytes());
                     self.phase = JackStoreInitializationPhase::RetireFault;
                 } else {
@@ -1711,8 +1747,9 @@ pub fn jack_document_store_initialization_job(
     envelope: store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
+    actor: protocol::ActorId,
 ) -> semio_framework_plugin::ArtifactStoreInitializationJob<JackSnapshot, TrinityGraphMutation> {
-    semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(JackStoreInitializationAuthority::new(envelope, operation, generation)))
+    semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(JackStoreInitializationAuthority::new(envelope, operation, generation, actor)))
 }
 
 //#endregion 🔖️RetainedStoreInitialization

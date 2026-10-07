@@ -1,0 +1,17 @@
+{
+  "schema": "semio.store.opened-hydration-actor.v1",
+  "openedActor": "actor:opened-loader",
+  "historyAuthor": "actor:stored-author",
+  "initial": 0,
+  "stored": 4,
+  "grant": {
+    "items": 1,
+    "bytes": 3
+  },
+  "maximumTurns": 100000,
+  "retiredActors": [
+    "actor:opened-loader",
+    "actor:opened-loader-with-longer-explicit-authority"
+  ],
+  "retiredActorByteDifference": 31
+}

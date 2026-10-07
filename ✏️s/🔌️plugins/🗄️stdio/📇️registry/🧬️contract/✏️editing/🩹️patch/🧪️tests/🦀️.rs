@@ -387,6 +387,8 @@ fn every_operation_round_trips_its_wire_and_labels_itself_in_every_locale() {
         for wire in [&row["patch"], &row["inverse"]] {
             let patch = SnapshotPatch::parse_op(&wire.to_string()).unwrap_or_else(|error| panic!("{id}: {error}"));
             assert_eq!(serde_json::Value::from(patch.to_value()), *wire, "{id}");
+            assert!(matches!(<SnapshotPatch as semio_framework_dsl_record::BorrowedDslField>::SHAPE,semio_framework_dsl_record::BorrowedShape::Value));
+            let field=<SnapshotPatch as semio_framework_dsl_record::DslField>::to_value(&patch);assert_eq!(<SnapshotPatch as semio_framework_dsl_record::DslField>::from_value(&field).unwrap(),patch,"{id}: borrowed value carrier");
             assert_eq!(SnapshotPatch::decode_op(&patch.encode_op().unwrap()).unwrap(), patch, "{id}");
             let label = snapshot_patch_label(&patch);
             for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {

@@ -5,7 +5,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::kit::schema::diff::*;
+use crate::standards::v1::subsets::kit::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
 use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
@@ -29,7 +29,7 @@ impl protocol::DiffBinary for SemioKitDiff {
 /// bit2=objects, bit3=models, bit4=properties, bit5=representations), then each present
 /// field's own real encoding in bit order.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-    use crate::standards::v1::subsets::kit::schema::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};
+    use crate::standards::v1::subsets::kit::io::binary::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};
     const DIFF_BINARY_FORMAT: u8 = 1;
     let mut presence: u8 = 0;
     if self.types.is_some() {
@@ -72,7 +72,7 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     Ok(out)
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-    use crate::standards::v1::subsets::kit::schema::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};
+    use crate::standards::v1::subsets::kit::io::binary::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};
     const DIFF_BINARY_FORMAT: u8 = 1;
     if bytes.len() < 2 {
         return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });

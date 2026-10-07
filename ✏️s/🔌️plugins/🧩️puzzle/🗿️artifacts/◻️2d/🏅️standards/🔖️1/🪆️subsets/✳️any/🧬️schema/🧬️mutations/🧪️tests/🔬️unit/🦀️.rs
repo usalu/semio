@@ -69,7 +69,7 @@ fn move_node_inverse_and_absorb_law() {
 fn node_field_mutations_inverse_law() {
     use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
     let base = empty_puzzle2d_snapshot();
-    let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }], ..Default::default() };
+    let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }].into(), ..Default::default() };
     let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &replace_node_geometry("n1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0))));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_kind("n1".into(), Some("core.capsule".into()))));
@@ -89,8 +89,8 @@ fn node_field_mutations_inverse_law() {
 fn connect_disconnect_handles_inverse_law() {
     use crate::{Puzzle2dHandle, Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
-    let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
-    let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
+    let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }].into(), ..Default::default() };
+    let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }].into(), ..Default::default() };
     let mut projection = base.clone();
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
@@ -110,7 +110,7 @@ fn connect_disconnect_handles_inverse_law() {
 #[test]
 fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
     use crate::{Puzzle2dHandle, Puzzle2dNode};
-    let node = |id: &str, x: f64, handle: &str, angle: f64| Puzzle2dNode { id: id.into(), x, radius: Some(24.0), handles: vec![Puzzle2dHandle { id: handle.into(), angle, ..Default::default() }], ..Default::default() };
+    let node = |id: &str, x: f64, handle: &str, angle: f64| Puzzle2dNode { id: id.into(), x, radius: Some(24.0), handles: vec![Puzzle2dHandle { id: handle.into(), angle, ..Default::default() }].into(), ..Default::default() };
     let mut base = empty_puzzle2d_snapshot();
     base.nodes = vec![node("a", 0.0, "ha", 0.0), node("b", 56.0, "hb", std::f64::consts::PI)];
     assert_eq!(puzzle2d_handle_position(&base, "ha"), Some((24.0, 0.0)), "a circle's handle sits on the rim at its east-zero angle");
@@ -152,8 +152,8 @@ fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
 fn delete_node_severs_and_reconnects_edges() {
     use crate::{Puzzle2dHandle, Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
-    let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
-    let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
+    let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }].into(), ..Default::default() };
+    let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }].into(), ..Default::default() };
     let mut projection = base;
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
@@ -227,7 +227,7 @@ fn selection_board() -> Puzzle2dSnapshot {
     use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dTargetRegion};
     let mut base = empty_puzzle2d_snapshot();
     base.nodes = vec![
-        Puzzle2dNode { id: "a".into(), x: 0.1, y: 0.2, handles: vec![Puzzle2dHandle { id: "ha".into(), angle: 0.3, ..Default::default() }], ..Default::default() },
+        Puzzle2dNode { id: "a".into(), x: 0.1, y: 0.2, handles: vec![Puzzle2dHandle { id: "ha".into(), angle: 0.3, ..Default::default() }].into(), ..Default::default() },
         Puzzle2dNode { id: "b".into(), x: 7.3, y: -2.9, locked: Some(true), ..Default::default() },
     ];
     base.target_regions = vec![Puzzle2dTargetRegion { id: "r".into(), x: 1.7, y: 2.3, width: 3.1, height: 4.9, ..Default::default() }];
@@ -341,7 +341,7 @@ fn every_bounded_leaf_refuses_what_its_schema_forbids() {
     };
     let region = |x: f64, width: f64| Puzzle2dTargetRegion { id: "rn".into(), x, width, ..Default::default() };
     let template = |t: Option<f64>, radius: Option<f64>, angle: f64| Puzzle2dKindCatalogs {
-        nodes: vec![Puzzle2dCatalogNodeKind { id: "k".into(), handles: vec![Puzzle2dHandleTemplate { id: "tpl".into(), angle, t, radius, ..Default::default() }], ..Default::default() }],
+        nodes: vec![Puzzle2dCatalogNodeKind { id: "k".into(), handles: vec![Puzzle2dHandleTemplate { id: "tpl".into(), angle, t, radius, ..Default::default() }].into(), ..Default::default() }].into(),
         ..Default::default()
     };
     let forbidden = [
@@ -374,7 +374,7 @@ fn every_bounded_leaf_refuses_what_its_schema_forbids() {
         replace_kind_catalogs(Some(template(Some(-0.1), None, 0.0))),
         replace_kind_catalogs(Some(template(None, Some(0.0), 0.0))),
         replace_kind_catalogs(Some(template(None, None, f64::NAN))),
-        replace_kind_catalogs(Some(Puzzle2dKindCatalogs { handles: vec![Puzzle2dCatalogHandleKind { id: "hk".into(), order: Some(-1), ..Default::default() }], ..Default::default() })),
+        replace_kind_catalogs(Some(Puzzle2dKindCatalogs { handles: vec![Puzzle2dCatalogHandleKind { id: "hk".into(), order: Some(-1), ..Default::default() }].into(), ..Default::default() })),
     ];
     for mutation in forbidden {
         let outcome = mutation.diff(&base);

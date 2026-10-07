@@ -4,7 +4,7 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
 use semio_s_artifact_stdio_json::JsonSnapshot;
 

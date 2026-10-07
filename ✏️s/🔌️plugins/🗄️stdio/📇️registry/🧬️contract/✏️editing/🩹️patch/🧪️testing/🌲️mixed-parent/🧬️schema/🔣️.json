@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/editing/patch/testing/mixed-parent/schema.json",
+  "type": "array",
+  "items": {
+    "anyOf": [
+      {
+        "type": "integer"
+      },
+      {
+        "type": "object",
+        "required": [
+          "children"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

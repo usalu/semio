@@ -9,8 +9,8 @@ fn fixture() -> SemioObjectSnapshot {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }
+fn ref_of(subset: &str, id: &str) -> semio_framework_artifact_reference::ArtifactRef {
+    semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }
 }
 
 /// 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the

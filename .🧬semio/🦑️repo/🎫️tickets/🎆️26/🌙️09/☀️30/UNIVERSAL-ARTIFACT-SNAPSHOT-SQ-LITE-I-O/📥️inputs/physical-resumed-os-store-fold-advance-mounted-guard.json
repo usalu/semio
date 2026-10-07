@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-06T12:07:17.568294+00:00",
+  "scope": "Canonical current FoldProjection<P, Mutation> specialization; no mutation behavior, signatures, allocations, progress or cancellation changes",
+  "beforeSha256": "06cb10083afcadd015b0a76fe1731d26fcefdf4120e9d963b11580d66619249a",
+  "afterSha256": "deb377e1deda6b51acbb2f02c57b7c2bf4ae02ce01810c3c3f6bce25107ab48f",
+  "decisions": [
+    {
+      "region": {
+        "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+        "before": "                    running.advance(next);",
+        "after": "                    <Arc<P> as FoldProjection<P, Mutation>>::advance(running, next);"
+      },
+      "decision": "Mounted narrow existing-trait UFCS qualification"
+    },
+    {
+      "region": {
+        "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+        "before": "if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { state.advance(next); }",
+        "after": "if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { <Arc<P> as FoldProjection<P, Mutation>>::advance(state, next); }"
+      },
+      "decision": "Mounted narrow existing-trait UFCS qualification"
+    }
+  ]
+}

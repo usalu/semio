@@ -1,0 +1,5 @@
+# Block2D Taxonomy Publication One Actual Observation
+
+{"ready":true,"terminalHash":"8915fa0244a1b35f3bc2af53868040071a0e4e3bb6e1a40316580b77b1cbea11","planHash":"aaebd23f6870c8c43ddf21613862b2b1e396e1329e54b68d54cb377e22ab2536","modelHash":"1123f810cbc57d26097573d275b746aba0f31b5e30a2d267fc7249ef490d292c","producerHash":"7322c00135efd6b689151a18c2f90b84ce9f8fea4c8a8b09cbf210686fdfbbb4","physicalWrites":2,"journalRows":4,"currentAftersExact":true,"providersExact":true,"wholeRootAccepted":false}
+
+Completed terminal has two physical writes and four ordered intent/written journal records with exact plan hashes and full bodies. Sealed model, gate, producer and current pair afters match; the self-owned snapshot provider now correctly matches its published after. Independent admission remains limited to four representation lookup changes. Fsync is observed in reviewed producer source, without a crash-durability or atomic-batch claim. No diff contract, runtime grammar or whole compiler readiness is inferred.

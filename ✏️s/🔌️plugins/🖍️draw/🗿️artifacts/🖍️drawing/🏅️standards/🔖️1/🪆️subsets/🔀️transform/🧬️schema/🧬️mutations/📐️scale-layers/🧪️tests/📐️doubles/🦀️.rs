@@ -53,7 +53,7 @@ fn equals_the_resize_handle_matrix() {
         let crate::schema::geometry::handles::HandleMotion::Scale { pivot, scale } = handle_motion else { panic!("a resize handle scales") };
         let motion = handle_motion.matrix();
         let mut snapshot = before();
-        apply_drawing_mutation(&mut snapshot, &scale_layers(vec!["shape-a".into()], pivot[0], pivot[1], scale[0], scale[1])).unwrap();
+        apply_drawing_mutation(&mut snapshot, &scale_layers(vec!["shape-a".into()].into(), pivot[0], pivot[1], scale[0], scale[1])).unwrap();
         let actual = crate::schema::drawing_transform_to_matrix(&crate::schema::layer_base(&snapshot.layers[0]).transform);
         let wanted = crate::schema::geometry::multiply(motion, crate::schema::drawing_transform_to_matrix(&crate::schema::layer_base(&before().layers[0]).transform));
         for index in 0..6 {
@@ -67,9 +67,9 @@ fn equals_the_resize_handle_matrix() {
 fn outcome_laws() {
     let base = before();
     let codes = |mutation: DrawingMutation| mutation.diff(&base).messages().iter().map(|message| (format!("{:?}", message.level), message.code.0.clone())).collect::<Vec<_>>();
-    assert_eq!(codes(scale_layers(vec!["shape-a".into()], 0.0, 0.0, 0.0, 1.0)), vec![("Fatal".into(), "mutation.invariant".into())]);
-    assert_eq!(codes(scale_layers(vec!["shape-a".into()], 0.0, 0.0, 1.0, 1.0)), vec![("Warning".into(), "mutation.no-op".into())]);
-    assert_eq!(codes(scale_layers(vec!["ghost".into()], 0.0, 0.0, 2.0, 2.0)), vec![("Error".into(), "mutation.target-missing".into())]);
+    assert_eq!(codes(scale_layers(vec!["shape-a".into()].into(), 0.0, 0.0, 0.0, 1.0)), vec![("Fatal".into(), "mutation.invariant".into())]);
+    assert_eq!(codes(scale_layers(vec!["shape-a".into()].into(), 0.0, 0.0, 1.0, 1.0)), vec![("Warning".into(), "mutation.no-op".into())]);
+    assert_eq!(codes(scale_layers(vec!["ghost".into()].into(), 0.0, 0.0, 2.0, 2.0)), vec![("Error".into(), "mutation.target-missing".into())]);
 }
 
 /// 🗣️ The history row label reads both factors, in English and German.

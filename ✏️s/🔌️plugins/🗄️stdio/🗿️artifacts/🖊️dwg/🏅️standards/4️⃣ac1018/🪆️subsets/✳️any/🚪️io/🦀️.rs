@@ -7,9 +7,9 @@
 //! unions both standards' `io_registry::entries()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ac1018::subsets::any::schema::DwgAnalyzer;
+    use super::DwgAnalyzer;
     use crate::DwgSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -54,7 +54,7 @@ pub use derived_composition::*;
 /// unioned with ac1024's own `io_registry::entries()` by the root `crate::
 /// declaration()`'s `dwg_combined_composer_entries()`.
 pub mod io_registry {
-    use crate::standards::v_ac1018::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
+    use super::DwgComposer as DwgRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -72,3 +72,14 @@ pub mod binary;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec DwgBuilderFacets {
+        construction: crate::standards::v_ac1024::subsets::any::io::DwgBuilderConstruction,
+        analysis: crate::standards::v_ac1024::subsets::any::io::DwgAnalyzerAnalysis,
+        composition: derived_composition::DwgComposerComposition,
+    }
+    builder: DwgBuilder,
+    analyzer: DwgAnalyzer,
+    composer: DwgComposer,
+);

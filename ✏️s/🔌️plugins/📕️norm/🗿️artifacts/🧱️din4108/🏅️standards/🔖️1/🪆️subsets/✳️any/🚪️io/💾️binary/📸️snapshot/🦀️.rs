@@ -44,3 +44,5 @@ pub fn encode_din4108_pack(snapshot: &Din4108Snapshot) -> Vec<u8> {
 }
 }
 pub use native_snapshot_codec::*;
+
+crate::impl_norm_artifact_record!(@binary crate::Din4108Snapshot, extension="din4108", envelope_id="norm.din4108", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);

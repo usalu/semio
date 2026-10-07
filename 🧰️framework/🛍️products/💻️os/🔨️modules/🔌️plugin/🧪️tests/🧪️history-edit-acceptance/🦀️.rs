@@ -253,6 +253,7 @@ pub fn acceptance_change_buckets(inputs: &[ActionArgDef], value: &DslValue) -> [
     }
     fn collect(inputs: &[ActionArgDef], value: &DslValue, prefix: &str, buckets: &mut [Vec<(String, DslValue)>; 5]) {
         for input in inputs {
+            if input.presentation == Some(semio_framework::ArgPresentation::Hidden) { continue; }
             let pointer = format!("{prefix}{}", input.id);
             let current = at(value, &pointer);
             match &input.schema {
@@ -349,10 +350,10 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest).await;
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
-        app.store.set_local_actor_id(Some(ACCEPTANCE_ACTOR.to_string())).map_err(|error| AcceptanceSeedFault::Base(format!("the actor is refused: {error:?}")))?;
+        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
         let mut files = app.document_text().await.map_err(|fault| AcceptanceSeedFault::Base(format!("the document does not print: {fault:?}")))?;
         if files.dsl != base {
             files.dsl = base.to_string();
@@ -1056,10 +1057,10 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let archive = PluginApp::document_archive(app).await.map_err(|fault| format!("the document does not archive: {fault:?}"))?;
-    let mut reloaded = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest).await;
+    let mut reloaded = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
     reloaded.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let loaded = async {
-        reloaded.store.set_local_actor_id(Some(ACCEPTANCE_ACTOR.to_string())).map_err(|error| format!("the actor is refused: {error:?}"))?;
+        assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
         PluginApp::begin_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, archive).map_err(|fault| format!("the archive is refused: {fault:?}"))?;
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
         loop {
@@ -1159,11 +1160,11 @@ where
     documents.extend(examples.iter().map(|example| (format!("example {}", example.id()), Some(example.id().to_string()))));
     let mut reloaded_documents = 0;
     for (name, example) in documents {
-        let mut saved = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest).await;
+        let mut saved = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
         saved.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
         let outcome = async {
             if let Some(example) = example {
-                saved.store.set_local_actor_id(Some(ACCEPTANCE_ACTOR.to_string())).map_err(|error| format!("the actor is refused: {error:?}"))?;
+                assert_eq!(saved.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
                 acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))]).await.map_err(|refusal| format!("the app's own example route does not load it: {refusal}"))?;
                 artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id).await.map_err(|fault| format!("the example does not finish loading: {fault:?}"))?;
             }
@@ -1216,10 +1217,10 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest).await;
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
-        app.store.set_local_actor_id(Some(ACCEPTANCE_ACTOR.to_string())).map_err(|error| format!("the actor is refused: {error:?}"))?;
+        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
         for (action, args) in seed {
             let args = semio_framework_pack_json::parse(args, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the seed args of {action} are not JSON: {error:?}"))?;
             let DslValue::Object(args) = semio_framework_pack_json::to_dsl_value(&args) else {
@@ -1407,7 +1408,7 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest).await;
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
     let declared = acceptance_withdraw_only_kinds(fixtures);
     let failures = input_schema_resolution_failures::<A>(&declared);
     acceptance_close(&mut app).await;

@@ -18,7 +18,7 @@
 //!   as a readable-but-not-machine-parseable representation).
 
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_tiff::{
     schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS},
     TiffSnapshot,
@@ -51,7 +51,7 @@ impl ArtifactDeserializer for SemioImageFromTiff {
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let width = from.width().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "tiff→semio/image: missing ImageWidth tag in ifds[0]")))?;
         let height = from.height().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "tiff→semio/image: missing ImageLength tag in ifds[0]")))?;
-        let page = semio_s_artifact_stdio_tiff::engine::decode_tiff_page_rgba(from, 0).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("tiff→semio/image: {error}"))))?;
+        let page = semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::decode_tiff_page_rgba(from, 0).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("tiff→semio/image: {error}"))))?;
         let samples_per_pixel = from.tag(TAG_SAMPLES_PER_PIXEL).and_then(|t| t.values.first_u32());
         let photometric = from.tag(TAG_PHOTOMETRIC).and_then(|t| t.values.first_u32());
         let colorspace = match (photometric, samples_per_pixel) {

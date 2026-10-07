@@ -18,7 +18,7 @@ fn manifest() -> semio_framework_plugin::App {
 }
 
 async fn replica() -> Replica {
-    let mut app = new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
+    let mut app = new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(meta("local").instance_id).await;
     app
 }

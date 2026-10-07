@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "schema": "semio.cargo.budget-refusal/v1",
+    "positionUnit": "utf16-code-unit",
+    "rows": [
+      {
+        "id": "unit-refusal",
+        "completed": 3,
+        "ownedBytes": 4,
+        "maximumUnits": 3,
+        "maximumOwnedBytes": 32,
+        "requestedUnits": 1,
+        "requestedOwnedBytes": 0
+      },
+      {
+        "id": "ownership-refusal",
+        "completed": 2,
+        "ownedBytes": 32,
+        "maximumUnits": 8,
+        "maximumOwnedBytes": 32,
+        "requestedUnits": 1,
+        "requestedOwnedBytes": 1
+      },
+      {
+        "id": "both-refused",
+        "completed": 3,
+        "ownedBytes": 20,
+        "maximumUnits": 4,
+        "maximumOwnedBytes": 32,
+        "requestedUnits": 2,
+        "requestedOwnedBytes": 13
+      }
+    ],
+    "parser": {
+      "chunks": [
+        "[package]\nname=\"",
+        "🧬xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "\"\n"
+      ],
+      "maximumUnits": 4096,
+      "maximumOwnedBytes": 2048,
+      "maximumDepth": 64
+    }
+  }
+}

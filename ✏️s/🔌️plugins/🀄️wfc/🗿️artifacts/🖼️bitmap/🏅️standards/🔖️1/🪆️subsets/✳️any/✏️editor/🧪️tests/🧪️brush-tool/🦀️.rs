@@ -30,7 +30,7 @@ const SEED: &str = "authoring-seed-brush";
 /// 🗄️ One dispatch of the brush against `ledger`'s slot of the input window — what `GestureSlot::drive` does for a
 /// mounted dispatch that publishes.
 fn drive(ledger: &mut GestureLedger<BitmapMutation>, phase: GesturePhase, tick: Option<BrushToolRequest>, seed: &str) -> Option<(protocol::TransactionRef, Vec<BitmapMutation>)> {
-    ledger.drive::<BitmapBrush>(WFC_BITMAP_WINDOW_INPUT, BITMAP_PAINT_STROKE_VERB, phase, tick, seed, "").expect("the brush accepts the dispatch")
+    ledger.drive::<BitmapBrush>(WFC_BITMAP_WINDOW_INPUT, None, BITMAP_PAINT_STROKE_VERB, phase, tick, seed, "").expect("the brush accepts the dispatch")
 }
 
 //#region 🛠️Tool
@@ -198,7 +198,7 @@ fn manifest() -> App {
 }
 
 fn app() -> BitmapApp {
-    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<BitmapEditor>>(manifest));
+    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<BitmapEditor>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
     block_on(app.bind_instance_id(1));
     app
 }
@@ -362,7 +362,7 @@ fn a_mounted_blur_ends_the_open_stroke_with_zero_trace() {
 fn a_stroke_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
-        let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new(store::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None)).await.expect("the store opens");
+        let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new(store::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<BitmapSnapshot, BitmapMutation>());
         let log = [paint_input_stroke(vec![point(0, 0), point(3, 2)], 1), set_input_pixels(0, 0, 1, 1, ([0]).to_vec())];
         for mutation in &log {

@@ -4,7 +4,7 @@
 use crate::editor::cad::engine::picking;
 use crate::editor::cad::terminology::{typology_label, CadLabels};
 use crate::editor::cad::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
-use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::standards::v1::subsets::any::schema::geometry::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::object_scale_json;
 use crate::{CadNode, CadPaneId};
 use semio_framework_plugin::tree_item;

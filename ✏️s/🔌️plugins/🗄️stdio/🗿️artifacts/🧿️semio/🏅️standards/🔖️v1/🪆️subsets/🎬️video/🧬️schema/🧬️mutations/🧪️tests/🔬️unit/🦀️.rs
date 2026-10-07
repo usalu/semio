@@ -1,4 +1,7 @@
 use super::*;
+use crate::standards::v1::subsets::video::io::binary::mutations::wire_tag;
+use crate::standards::v1::subsets::video::io::text::mutations::print_semio_video_mutation;
+use crate::standards::v1::subsets::video::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 

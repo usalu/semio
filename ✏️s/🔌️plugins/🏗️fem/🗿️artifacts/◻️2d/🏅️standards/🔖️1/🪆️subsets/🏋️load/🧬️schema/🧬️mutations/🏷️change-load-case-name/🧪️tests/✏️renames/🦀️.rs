@@ -13,7 +13,8 @@
 //! ✏️ Naming the wind case after the code clause it was derived from is exactly the kind of edit an inspector makes — and there was no verb for it before this kind.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames/📸️snapshot/⬅️before/🔣️.json");

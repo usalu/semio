@@ -4,18 +4,7 @@
     "patch": {
       "operation": "set",
       "path": "/value",
-      "value": {
-        "kind": "object",
-        "members": [
-          {
-            "key": "revision",
-            "value": {
-              "kind": "number",
-              "lexeme": "2"
-            }
-          }
-        ]
-      }
+      "value": {"kind": "string", "value": "revision 2"}
     }
   }
 }

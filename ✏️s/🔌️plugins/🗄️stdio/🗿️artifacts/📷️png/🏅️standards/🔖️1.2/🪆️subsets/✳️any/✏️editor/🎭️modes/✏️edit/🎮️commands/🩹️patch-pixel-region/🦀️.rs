@@ -2,7 +2,7 @@
 use super::{PngEditCommand, PngEditor, PngNativeEditCommand};
 use crate::schema::mutations::{PatchPixelsMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
-use crate::standards::v1_2::subsets::any::io::{png_layout, png_revision, project_png};
+use crate::schema::operations::png_revision;
 use semio_s_artifact_stdio_contract::editing::raster::{RasterRegion, RasterRegionError, RasterRegionLimits, RasterRegionPlan};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
@@ -75,12 +75,12 @@ impl PatchPixelRegion {
     }
 
     fn validate(&self, snapshot: &PngSnapshot) -> Result<RasterRegionPlan, Fault> {
-        let layout = png_layout(snapshot).map_err(|message| fault("stdio.png.pixel-region.invalid-snapshot", message))?;
-        if layout.color_type != crate::schema::snapshot::PngColorType::Rgba || layout.bit_depth != 8 || layout.interlace {
-            return Err(fault("stdio.png.pixel-region.profile-mismatch", "Pixel region painting requires an 8-bit non-interlaced RGBA PNG"));
+        snapshot.validate().map_err(|message| fault("stdio.png.pixel-region.invalid-snapshot", message))?;
+        let layout = &snapshot.image;
+        if layout.color_type != crate::schema::snapshot::PngColorType::Rgba || layout.bit_depth != 8 {
+            return Err(fault("stdio.png.pixel-region.profile-mismatch", "Pixel region painting requires an 8-bit RGBA PNG"));
         }
-        let projection = project_png(&snapshot.bytes).map_err(|message| fault("stdio.png.pixel-region.invalid-snapshot", message))?;
-        RasterRegionPlan::new(layout.width, layout.height, projection.pixels.len(),
+        RasterRegionPlan::new(layout.width, layout.height, layout.samples.len(),
             RasterRegion { x: self.x, y: self.y, width: self.width, height: self.height, color: [self.red, self.green, self.blue, self.alpha] },
             RasterRegionLimits { maximum_raster_bytes: MAXIMUM_RASTER_BYTES, maximum_patch_bytes: PATCH_PAYLOAD_BYTES, maximum_patches: CAPACITY.invertible_items() }
         ).map_err(region_fault)

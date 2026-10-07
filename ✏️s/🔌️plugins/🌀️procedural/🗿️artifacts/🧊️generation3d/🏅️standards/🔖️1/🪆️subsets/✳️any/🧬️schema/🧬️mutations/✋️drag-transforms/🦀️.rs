@@ -3,7 +3,8 @@
 //! absolute rows; this leaf carries what the user did, so editing it in history re-derives the operator on any base.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_items, generation3d_label_number, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_items,generation3d_label_number,Generation3dMutation};
+
 use crate::Generation3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 

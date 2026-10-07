@@ -4,41 +4,24 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type BmpSnapshotText = String;
+//#endregion 🚚️Carrier
+
 #[allow(unused_imports)]
-mod snapshot_codec {
-use super::*;
-use crate::standards::v_v3::subsets::any::schema::snapshot::*;
-use crate::STDIO_BMP_DOCUMENT_SCHEMA;
-use framework_schema::ArtifactSchema;
+mod pack_codec {
+use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
+use crate::store;
 
-impl store::ArtifactDsl for BmpSnapshot {
-    const EXTENSION: &'static str = "bmp";
-    fn envelope_id() -> &'static str {
-        "stdio.bmp"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BMP source requires complete ASCII hexadecimal byte pairs", semio_framework_diagnostic::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        for i in (0..hex.len()).step_by(2) {
-            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?);
-        }
-        crate::standards::v_v3::subsets::any::io::decode_bmp(&bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-
-    fn print_dsl(&self) -> String {
-        crate::standards::v_v3::subsets::any::io::bmp_layout(self).expect("BmpSnapshot invariant");
-        let body: String = self.bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
+impl store::ArtifactDsl for BmpSnapshot{
+ const EXTENSION:&'static str="bmp";
+ fn envelope_id()->&'static str{"stdio.bmp"}
+ fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"BMP logical Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}let snapshot=Self::__dsl_from_record(&semio_framework_dsl_record::parse_exact(body,&Self::__dsl_spec(),&semio_framework_dsl_record::ParseOptions::default())?)?;snapshot.validate().map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,semio_framework_diagnostic::TextSpan::at(1,1)))?;Ok(snapshot)}
+ fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared BMP logical envelope");store::semio_format::wrap_text(&envelope,&body)}
 }
 }
-pub use snapshot_codec::*;
+
+#[cfg(test)]
+#[path="🧪️tests/🔤️native-fixture-admission/🦀️.rs"]
+mod native_fixture_admission_tests;

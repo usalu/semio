@@ -9,7 +9,7 @@ use crate::{LowpolyMutation, LowpolySnapshot};
 pub struct CreateMesh {
     pub id: String,
     pub child_id: String,
-    pub target: store::os_io::ArtifactRef,
+    pub target: semio_framework_artifact_reference::ArtifactRef,
     pub mesh_workspace: String,
     #[value(with="crate::managed_mesh::json")]
     pub mesh_state: Option<crate::LowpolyMeshState>,

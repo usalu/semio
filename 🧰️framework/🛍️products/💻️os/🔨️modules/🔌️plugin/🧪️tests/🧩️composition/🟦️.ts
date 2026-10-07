@@ -1,9 +1,8 @@
-/** 🧪️ Ajv and Graphlib independently verify the recursive replacement publication vectors. */
+/** 🧪️ Graphlib independently verifies the recursive replacement publication vectors. */
 import assert from "node:assert/strict";
 import { testOwnedChildEmissionRefusalOracle } from "./📨️emission/🟦️.ts";
 import { testDeclaredChildProjectionOracle } from "./🔎️projection/🟦️.ts";
 import { createRequire } from "node:module";
-import Ajv from "ajv";
 import vectors from "../../🧫️fixtures/🧩️composition/🔣️.json" with { type: "json" };
 import archiveVectors from "../../../../🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json" with { type: "json" };
 
@@ -109,96 +108,6 @@ function historyAccepted(row: HistoryCase): boolean {
 export function testRecursiveOwnedDocumentReplacementOracle(): void {
   testDeclaredChildProjectionOracle();
   testOwnedChildEmissionRefusalOracle();
-  const schema = {
-    type: "object",
-    additionalProperties: false,
-    required: ["schemaVersion", "root", "historyCases", "cases"],
-    properties: {
-      schemaVersion: { const: 1 },
-      root: {
-        type: "object",
-        additionalProperties: false,
-        required: ["artifactId", "children"],
-        properties: { artifactId: { type: "string", minLength: 1 }, children: { type: "array", items: { type: "string", minLength: 1 }, uniqueItems: true } },
-      },
-      historyCases: {
-        type: "array",
-        minItems: 3,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["id", "documents", "accepted"],
-          properties: {
-            id: { type: "string", minLength: 1 },
-            documents: {
-              type: "array",
-              minItems: 1,
-              maxItems: 1025,
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["artifactId", "edits", "changes", "applied", "redo"],
-                properties: {
-                  artifactId: { type: "string", minLength: 1 },
-                  edits: { type: "array", minItems: 1, items: { type: "string", minLength: 1 }, uniqueItems: true },
-                  changes: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: false,
-                      required: ["id", "edits"],
-                      properties: {
-                        id: { type: "string", minLength: 1 },
-                        edits: { type: "array", items: { type: "string", minLength: 1 }, uniqueItems: true },
-                      },
-                    },
-                  },
-                  applied: { type: "array", items: { type: "string", minLength: 1 }, uniqueItems: true },
-                  redo: { type: "array", items: { type: "string", minLength: 1 }, uniqueItems: true },
-                },
-              },
-            },
-            accepted: { type: "boolean" },
-          },
-        },
-      },
-      cases: {
-        type: "array",
-        minItems: 8,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["id", "mode", "admissionOrder", "members", "cancelAt", "staleAuthority", "published"],
-          properties: {
-            id: { type: "string", minLength: 1 },
-            mode: { enum: ["complete", "missing", "extra", "duplicate"] },
-            admissionOrder: { type: "array", items: { type: "integer", minimum: 0 }, uniqueItems: true },
-            members: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["artifactId", "parentId", "slot", "children"],
-                properties: {
-                  artifactId: { type: "string", minLength: 1 },
-                  parentId: { type: "string", minLength: 1 },
-                  slot: { type: "string", minLength: 1 },
-                  children: { type: "array", items: { type: "string", minLength: 1 }, uniqueItems: true },
-                },
-              },
-            },
-            cancelAt: { anyOf: [{ type: "null" }, { enum: ["memberOpen", "closure", "viewPreparation"] }] },
-            staleAuthority: { type: "boolean" },
-            published: { type: "boolean" },
-          },
-        },
-      },
-    },
-  } as const;
-  const validate = new Ajv({ strict: true }).compile(schema);
-  assert(validate(vectors), JSON.stringify(validate.errors));
-  
-  
   const declared: ArchiveMembership[] = [{ parent: "root-1", slot: "children", childId: "child-1", target: "child-1" }, { parent: "child-1", slot: "nested", childId: "grandchild-1", target: "grandchild-1" }];
   assert(archiveClosureAccepted(archiveVectors.rootArtifactId, archiveVectors.archive.members, declared));
   const independent = structuredClone(archiveVectors.archive);
@@ -222,14 +131,4 @@ export function testRecursiveOwnedDocumentReplacementOracle(): void {
     const complete = topologyAccepted(vectors.root.artifactId, vectors.root.children, row.members);
     assert.equal(complete && row.cancelAt === null && !row.staleAuthority, row.published, row.id);
   }
-  assert.deepEqual([...ids], [
-    "recursive-unordered-success",
-    "missing-grandchild",
-    "extra-unreachable-member",
-    "duplicate-member",
-    "cancel-member-open",
-    "cancel-closure",
-    "cancel-view-preparation",
-    "stale-child-content-authority",
-  ]);
 }

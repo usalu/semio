@@ -59,15 +59,15 @@ fn every_variant_carries_a_label_and_a_descriptor_that_agree_with_its_kind() {
 #[test]
 fn every_variant_round_trips_its_single_line_text_op() {
     for mutation in every_variant() {
-        let line = crate::io::text::mutations::print_op(&mutation);
+        let line = crate::standards::v1::subsets::any::io::text::mutations::print_op(&mutation);
         assert!(!line.is_empty());
-        assert_eq!(crate::io::text::mutations::parse_op(&line).expect("op line parses"), mutation, "op line: {line}");
+        assert_eq!(crate::standards::v1::subsets::any::io::text::mutations::parse_op(&line).expect("op line parses"), mutation, "op line: {line}");
     }
 }
 
 #[test]
 fn an_unknown_op_line_is_refused() {
-    assert!(crate::io::text::mutations::parse_op("collapse-everything now").is_err());
+    assert!(crate::standards::v1::subsets::any::io::text::mutations::parse_op("collapse-everything now").is_err());
 }
 
 #[test]

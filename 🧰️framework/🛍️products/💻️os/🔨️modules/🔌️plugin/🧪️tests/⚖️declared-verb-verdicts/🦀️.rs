@@ -8,6 +8,7 @@ mod declared_verb_verdict_tests {
     fn declared_bridge_required_arguments_match_neutral_schemas() {
         use semio_framework::{ActionArgDef, ActionArgOption, DslValue};
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️declared-bridge-arguments.json")).unwrap();
+        let policies: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/⚖️declared-verb-verdicts/🧬️schema/🔣️.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let args = case["args"].as_array().unwrap().iter().map(|argument| {
                 let mut schema = argument["schema"].clone();
@@ -27,7 +28,7 @@ mod declared_verb_verdict_tests {
             } else {
                 let actual = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&actual.unwrap())).unwrap();
                 assert_eq!(actual, case["expected"], "{}", case["name"]);
-                let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&case["valueSchema"].to_string()).unwrap();
+                let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&policies["$defs"][case["name"].as_str().unwrap()].to_string()).unwrap();
                 validator.validate_json(&actual.to_string()).unwrap();
                 for invalid in case["invalid"].as_array().unwrap() { assert!(validator.validate_json(&invalid.to_string()).is_err(), "{} rejects {invalid}", case["name"]); }
             }

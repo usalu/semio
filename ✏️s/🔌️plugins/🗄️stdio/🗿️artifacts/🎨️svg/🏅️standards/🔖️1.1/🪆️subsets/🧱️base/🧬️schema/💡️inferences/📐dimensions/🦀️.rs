@@ -5,9 +5,7 @@
 //! raster stdio formats this intentionally has no `bitDepth`/`hasAlpha`/`pixelCount` — those
 //! concepts don't apply here.
 
-use crate::schema::snapshot::{svg_element_from_xml_node, SvgElement};
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
 //#region 🔖️Dimensions
 /// 📐️ Root `<svg>` intrinsic size. `width`/`height` prefer the element's own `width`/`height`
@@ -20,32 +18,14 @@ pub struct SvgDimensions {
     pub height: f64,
 }
 
-/// 🔢️ Strips a trailing CSS length unit (`px`/`%`/`pt`/...) and parses the leading numeric run —
-/// SVG 1.1 §7.10's `<length>` grammar allows either a bare number or a number+unit pair.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_length(s: &str) -> Option<f64> {
-    let trimmed = s.trim();
-    let end = trimmed.find(|c: char| !(c.is_ascii_digit() || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')).unwrap_or(trimmed.len());
-    if end == 0 {
-        return None;
-    }
-    trimmed[..end].parse::<f64>().ok()
-}
-
-/// 📐️ Computes [`SvgDimensions`] from a snapshot's root element — pure, total (never panics),
-/// `SvgDimensions::default()` for a document with no root or a non-`<svg>` root.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
-    let Some(root @ XmlNode::Element { .. }) = &snapshot.doc.root else {
-        return SvgDimensions::default();
-    };
-    let Ok(SvgElement::Svg { view_box, width, height, .. }) = svg_element_from_xml_node(root) else {
-        return SvgDimensions::default();
-    };
-    let (view_box_width, view_box_height) = view_box.map_or((0.0, 0.0), |vb| (vb.width, vb.height));
-    let width = width.as_deref().and_then(parse_length).unwrap_or(view_box_width);
-    let height = height.as_deref().and_then(parse_length).unwrap_or(view_box_height);
-    SvgDimensions { width, height }
+/// 📐️ Computes intrinsic size directly from decoded attribute owners.
+pub fn compute_svg_dimensions(snapshot:&crate::SvgSnapshot)->SvgDimensions {
+    use crate::schema::snapshot::{SvgNode,SvgAttributeValue as V};
+    let Some(SvgNode::Element{name,attrs,..})=&snapshot.doc.root else{return SvgDimensions::default()};
+    if name!="svg"&&!name.ends_with(":svg"){return SvgDimensions::default()}
+    let view_box=attrs.iter().find(|a|a.name=="viewBox").and_then(|a|match &a.value{V::ViewBox(value)=>Some(value),_=>None});
+    let length=|name:&str,fallback:f64|attrs.iter().find(|a|a.name==name).and_then(|a|match &a.value{V::Length(value)=>Some(value.magnitude),V::Number(value)=>Some(*value),_=>None}).unwrap_or(fallback);
+    SvgDimensions{width:length("width",view_box.map_or(0.0,|v|v.width)),height:length("height",view_box.map_or(0.0,|v|v.height))}
 }
 //#endregion 🔖️Dimensions
 

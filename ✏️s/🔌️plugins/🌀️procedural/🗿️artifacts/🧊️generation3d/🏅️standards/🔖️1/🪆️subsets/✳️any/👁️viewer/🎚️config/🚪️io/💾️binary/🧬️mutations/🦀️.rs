@@ -5,11 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::viewer::generation3d::config::component::mutations::*;
 use crate::viewer::generation3d::config::component::{Generation3dViewCamera, Generation3dViewConfig};
-use set_active_example::SetActiveExample;
-use set_lod_mode::SetLodMode;
-use set_preview_camera::SetPreviewCamera;
-use set_show_mode::SetShowMode;
-use set_sun::SetSun;
 
 impl protocol::OpBinary for Generation3dViewConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

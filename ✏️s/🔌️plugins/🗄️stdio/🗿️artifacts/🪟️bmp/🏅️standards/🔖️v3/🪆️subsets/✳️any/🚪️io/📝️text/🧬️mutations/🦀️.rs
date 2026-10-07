@@ -1,5 +1,5 @@
 //! 📝️ Framing and direct codec registry for BmpMutation.
-use crate::schema::mutations::BmpMutation;
+use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
 
 //#region Registry
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -9,7 +9,7 @@ pub struct Entry {
     pub print: fn(&BmpMutation) -> Option<String>,
     pub parse: fn(&str) -> Result<BmpMutation, semio_framework_diagnostic::TextError>,
 }
-pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::schema::mutations::set_snapshot::CODEC, crate::standards::v_v3::subsets::any::schema::mutations::patch_snapshot::CODEC, crate::standards::v_v3::subsets::any::schema::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::schema::mutations::paint_direct_region::CODEC];
+pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::text::mutations::set_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::patch_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::paint_direct_region::CODEC];
 //#endregion Registry
 
 //#region Framing

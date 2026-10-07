@@ -1,9 +1,10 @@
 //! 🖋️ Borrowed operator operands account for their literal relational cells.
 use super::*;
 #[derive(Clone,Copy)]
-enum O{LineWidth,LineCap,LineJoin,MiterLimit,DashPhase,RenderingIntent,Flatness,ExtGState,X1,Y1,X2,Y2,X3,Y3,Width,Height,CharSpacing,WordSpacing,HorizontalScale,Leading,FontName,FontSize,TextRenderingMode,TextRise,Tx,Ty,TextKind,TextValue,TextCodes,GlyphWx,GlyphWy,BboxLlx,BboxLly,BboxUrx,BboxUry,ColorSpaceName,PatternName,Gray,Red,Green,Blue,Cyan,Magenta,Yellow,Black,ShadingName,XobjectName,MarkedTag,PropertyKind,PropertyName,PropertyDictionary,InlineImage,UnknownOperator}
+enum O{LineWidth,LineCap,LineJoin,MiterLimit,DashPhase,RenderingIntent,Flatness,ExtGState,X1,Y1,X2,Y2,X3,Y3,Width,Height,CharSpacing,WordSpacing,HorizontalScale,Leading,FontName,FontSize,TextRenderingMode,TextRise,Tx,Ty,TextKind,TextValue,TextCodeCount,GlyphWx,GlyphWy,BboxLlx,BboxLly,BboxUrx,BboxUry,ColorSpaceName,PatternName,Gray,Red,Green,Blue,Cyan,Magenta,Yellow,Black,ShadingName,XobjectName,MarkedTag,PropertyKind,PropertyName,PropertyDictionary,InlineImage,UnknownOperator}
 const WIDTH:usize=O::UnknownOperator as usize+1;
-fn operand_text<'a>(c:&mut Census<'_,'_>,f:&mut[Cell<'a>;WIDTH],v:&'a D)->Result<(),ValueError>{let tag=kind(v)?;f[O::TextKind as usize]=Text(tag);match tag{"text"=>f[O::TextValue as usize]=Text(text(field(v,"text")?)?),"codes"=>f[O::TextCodes as usize]=c.blob(field(v,"bytes")?)?,_=>return Err(invalid())}Ok(())}
+fn logical_codes(c:&mut Census<'_ ,'_>,table:&str,value:&D)->Result<(),ValueError> {for code in list(value)? {if !code.as_u64().is_some_and(|code|code<=u32::MAX as u64) {return Err(invalid());}c.row(table,&[Int,Int,Int])?;}Ok(())}
+fn operand_text<'a>(c:&mut Census<'_,'_>,f:&mut[Cell<'a>;WIDTH],v:&'a D)->Result<(),ValueError>{let tag=kind(v)?;f[O::TextKind as usize]=Text(tag);match tag{"text"=>f[O::TextValue as usize]=Text(text(field(v,"text")?)?),"codes"=>{logical_codes(c,"pdf_operation_code",field(v,"codes")?)?;f[O::TextCodeCount as usize]=Int;},_=>return Err(invalid())}Ok(())}
 fn inline(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{let color=field(v,"colorSpace")?;if !matches!(color,D::Null){colors::color(c,color)?;}objects::filters(c,field(v,"filters")?)?;objects::dictionary(c,field(v,"extra")?)?;let data=c.blob(field(v,"data")?)?;c.row("pdf_inline_image",&[Int,Int,Int,if matches!(color,D::Null){Null}else{Int},Int,Int,Int,data,Int])?;colors::sequence(c,"pdf_inline_decode",field(v,"decode")?)}
 pub(super) fn ops(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  c.row("pdf_content",&[])?;
@@ -23,7 +24,7 @@ pub(super) fn ops(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  match tag{
  "transform"|"setTextMatrix"=>{let a=list(field(v,"matrix")?)?;let cells=resources::rect(field(v,"matrix")?,6)?;c.row("pdf_operation_matrix",&cells)?;},
  "setDash"|"setStrokeColor"|"setFillColor"|"setStrokeColorN"|"setFillColorN"=>colors::sequence(c,"pdf_operation_component",field(v,if tag=="setDash"{"array"}else{"components"})?)?,
- "showTextArray"=>{for item in list(field(v,"items")?)?{let k=kind(item)?;let (t,b,a)=match k{"text"=>(Text(text(field(item,"text")?)?),Null,Null),"codes"=>(Null,c.blob(field(item,"bytes")?)?,Null),"adjust"=>(Null,Null,real(field(item,"amount")?)?),_=>return Err(invalid())};c.row("pdf_text_array_item",&[Int,Int,Text(k),t,b,a])?;}},
+ "showTextArray"=>{for item in list(field(v,"items")?)?{let k=kind(item)?;let (t,b,a)=match k{"text"=>(Text(text(field(item,"text")?)?),Null,Null),"codes"=>{logical_codes(c,"pdf_array_item_code",field(item,"codes")?)?;(Null,Int,Null)},"adjust"=>(Null,Null,real(field(item,"amount")?)?),_=>return Err(invalid())};c.row("pdf_text_array_item",&[Int,Int,Text(k),t,b,a])?;}},
  "unknown"=>{for operand in list(field(v,"operands")?)?{objects::object(c,operand)?;c.relation("pdf_unknown_operand")?;}},_=>{}
  }
  }Ok(())

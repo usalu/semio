@@ -1747,3 +1747,5 @@ it stays idle (no fleet, no activation, no edits). Stamps below come from `date`
   `🔁️wait-green-then-batch.sh` keeps checking every ten minutes and launches the acceptance batch on the first green base.
 - COORDINATOR CONTEXT NOTE (03:35): this session's context is nearly full; everything needed to continue is in this log (see the
   NEXT entry of 03:11), `📓️fleet-5-agents.md` § State 01:55, `📋️design.md` §23, `📓️s5-summary.md`, `📓️s5-every-editor-faults.md`.
+- 04:28 S5-TEXT-STDIO's turn had died on an API error (HTTP 403 for the model) while fixing the stdio base; no lock left, last
+  line 03:40:52 `p1-patch-schema-inverse-rows`; resumed 04:29. Base check 04:20: 1655 errors (from 2923). Weekly usage 91%.

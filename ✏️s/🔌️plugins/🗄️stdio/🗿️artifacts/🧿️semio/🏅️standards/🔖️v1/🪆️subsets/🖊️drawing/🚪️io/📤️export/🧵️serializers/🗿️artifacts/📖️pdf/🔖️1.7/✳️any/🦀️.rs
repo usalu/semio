@@ -12,9 +12,9 @@
 //! @see https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioRgba;
-use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{arc_to_cubics, semio_transform_affine};
+use crate::standards::v1::subsets::drawing::schema::geometry::{arc_to_cubics, semio_transform_affine};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfExtGState, PdfFont, PdfLineCap, PdfLineJoin, PdfOp, PdfPage, PdfTextString};
 use semio_s_artifact_stdio_pdf::PdfSnapshot;
 

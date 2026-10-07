@@ -1,6 +1,6 @@
 //! 🚫️ Direct text codec for `remove-javascript-action`.
 
-use super::RemoveJavascriptAction;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveJavascriptAction;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-javascript-action";

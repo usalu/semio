@@ -17,7 +17,7 @@ pub fn inverse(payload: &super::AddLayerAsset, base: &RasterSnapshot) -> Result<
     if base.assets.get(&payload.asset_id).is_none() {
         return vec![RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: payload.asset_id.clone() })];
     }
-    match crate::raster_asset(&base.assets, &payload.asset_id) {
+    match crate::raster_image(&base.assets, &payload.asset_id) {
         Some(prior) => vec![RasterMutation::AddLayerAsset(super::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: prior })],
         None => Vec::new(),
     }

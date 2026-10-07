@@ -14,7 +14,7 @@ pub(crate) mod context {
     
     /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
-        let mut app = new_app_with_registry::<EditorApp<En1997PlayApp>>(en1997_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<En1997PlayApp>>(en1997_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }

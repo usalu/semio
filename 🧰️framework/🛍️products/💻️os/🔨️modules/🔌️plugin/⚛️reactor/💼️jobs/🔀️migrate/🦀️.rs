@@ -46,15 +46,19 @@ fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     super::settle_in_step("job.migrate", execute(input))
 }
 
-async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect), semio_framework::Fault> {
-    let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.from).map_err(|message| super::fault("job.migrate", message))?;
-    let to = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.to).map_err(|message| super::fault("job.migrate", message))?;
+async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+    let from = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&input.from).map_err(|message| super::fault("job.migrate", message))?;
+    let to = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&input.to).map_err(|message| super::fault("job.migrate", message))?;
     Ok((from, to))
 }
 
 /// 🔎️ Validates `input` decodes as `{from, to, pack}` with two parseable dialect coordinates, and
 /// reports `"{from}->{to}"` as the first slice's progress bytes.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let parsed: MigrateInput =
         semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;

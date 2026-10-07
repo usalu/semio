@@ -72,7 +72,78 @@
       ] },
       { "seal": "0b43c775ed020418f913cc56ac276cc871472f3467ccb4b37573237c79bc47e7", "recordedBy": "2026/09/30/NON-DESTRUCTIVE-HISTORY-EDITING", "evidence": { "revision": "fe7c8a8f8bd", "date": "2026-09-05" }, "reason": "The 09-05 emoji-presentation pass moved the renderer engine directory from `🧑️‍🎨️engine` (U+FE0F inside the ZWJ sequence) to `🧑‍🎨engine` (115 tracked files before, 123 after, none left at the old spelling); every catalog path under it follows, so the wgpu and jco roots name the live directory again.", "renames": [
         { "from": "🧑️‍🎨️engine", "to": "🧑‍🎨engine" }
-      ] }
+      ] },
+      {
+        "seal": "2c3f40479689fb2348cc4d3f94a45a3e046ef0bf26b74dc5df1867979c432cee",
+        "recordedBy": "2026/05/30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY",
+        "evidence": {
+          "revision": "d4597d0410a",
+          "date": "2026-10-06"
+        },
+        "reason": "Executable JCO probe guest testing implementation moved from fixture input ownership to the semantic testing owner; exact catalog paths follow, while source preimages, mappings, adapters and canonical counts remain byte-for-byte unchanged.",
+        "moves": [
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/Cargo.lock",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/Cargo.lock",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/Cargo.toml",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/Cargo.toml",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🦀️component.rs",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🦀️component.rs",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🦀️.rs",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/🦀️.rs",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs",
+            "revision": "d4597d0410a"
+          },
+          {
+            "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧬️schema/🧪️world/📜️.wit",
+            "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/🧬️schema/🧪️world/📜️.wit",
+            "revision": "d4597d0410a"
+          }
+        ]
+      }
     ] },
     "readme-license-owner-leaves-v1": { "family": "semanticOwnedFileProjectionContracts", "seal": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9", "sealedBy": "8add1df1473" }
   }

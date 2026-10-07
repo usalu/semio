@@ -18,7 +18,7 @@ export function abstractionOwnershipChecks(root: string, operations: PolicySourc
   const fixture = JSON.parse(fixtureSource.text) as {
       cases: (AbstractionOwnership & { name: string; expected: string[] })[];
       artifactSchemas: string[];
-      schemaCases: { name: string; schema: Record<string, unknown>; expected: string[] }[];
+      schemaCases: { name: string; input: { schema: Record<string, unknown> }; expected: string[] }[];
       sourceCases: { name: string; source: string; expected: string[] }[];
     },
     Ajv = createRequire(import.meta.url)("ajv"),
@@ -31,7 +31,7 @@ export function abstractionOwnershipChecks(root: string, operations: PolicySourc
   }
   console.log(`[verify abstraction-ownership] ${fixture.cases.length} ownership vectors agree with Ajv.`);
   for (const row of fixture.schemaCases) {
-    const declaration: AbstractionOwnership = { owner: "surface", fields: abstractionOwnershipSchemaFields(row.schema), commands: [] },
+    const declaration: AbstractionOwnership = { owner: "surface", fields: abstractionOwnershipSchemaFields(row.input.schema), commands: [] },
       actual = abstractionOwnershipViolations(declaration, schema);
     if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
     if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: schema discovery disagrees with Ajv.`);

@@ -17,6 +17,42 @@ use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::oracl
 use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_png_mutation};
 use semio_repo_test_host::law;
+use semio_repo_test_host::Json;
+use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{oracle_encode_owned, project_png_owned, owned_png_revision};
+
+fn owned_vectors() -> Result<Json, String> { semio_repo_test_host::parse_json(include_str!("../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")) }
+fn painted_vector(row: &Json) -> Result<Json, String> {
+    let mut snapshot = row.get("snapshot").ok_or("neutral PNG snapshot missing")?.clone();
+    let Json::Object(fields) = &mut snapshot else { return Err("neutral PNG snapshot object missing".into()) };
+    let Json::Object(image) = &mut fields.iter_mut().find(|(key, _)| key == "image").ok_or("neutral PNG image missing")?.1 else { return Err("neutral PNG image object missing".into()) };
+    image.iter_mut().find(|(key, _)| key == "samples").ok_or("neutral PNG samples missing")?.1 = row.get("expectedSamples").ok_or("neutral PNG expected samples missing")?.clone();
+    Ok(snapshot)
+}
+fn vector_paint_spec(row: &Json, revision: String, result: Json) -> Result<Json, String> {
+    let paint = row.get("paint").ok_or("neutral PNG paint missing")?;
+    let region = Json::Object(["x", "y", "width", "height"].into_iter().map(|key| (key.into(), paint.get(key).cloned().unwrap_or(Json::Null))).collect());
+    let paint = Json::Object(["profile", "first", "second", "third", "fourth"].into_iter().map(|key| (key.into(), paint.get(key).cloned().unwrap_or(Json::Null))).collect());
+    Ok(Json::Object(vec![("kind".into(), Json::String("paint-native-samples".into())), ("params".into(), Json::Object(vec![("revision".into(), Json::String(revision)), ("region".into(), region), ("paint".into(), paint), ("result".into(), result)]))]))
+}
+/// 🧪️ Independently reads, paints and restores all neutral precise sample profiles.
+fn owned_native_samples_oracle(_ctx: &Context) -> Result<Outcome, String> {
+    let mut observations = Vec::new();
+    for row in owned_vectors()?.array("cases") {
+        let original = row.get("snapshot").ok_or("neutral PNG snapshot missing")?;
+        let bytes = oracle_encode_owned(original)?;
+        law::round_trip_preserves(&project_png_owned(&bytes)?, original)?;
+        let expected = painted_vector(&row)?;
+        let spec = vector_paint_spec(&row, owned_png_revision(original)?, expected.clone())?;
+        let painted = oracle_apply_mutation(&bytes, &spec)?;
+        let observation = project_png_owned(&painted)?;
+        law::round_trip_preserves(&observation, &expected)?;
+        let restored = oracle_undo_mutation(&bytes, &spec, &painted)?;
+        law::inverse_restores("neutral native paint", &project_png_owned(&restored)?, original)?;
+        observations.push(Json::Object(vec![("name".into(), Json::String(row.str("name"))), ("painted".into(), observation)]));
+    }
+    eprintln!("[DEBUG] independent PNG owned vectors preserve 16-bit precision and interlaced duplicate palette indices");
+    Ok(Outcome::projection(Json::Array(observations)))
+}
 
 
 //#region 🔖️Input
@@ -62,9 +98,8 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// 🔁️ The no-byte-pass-through law on the ORACLE side: the reference `png` codec decodes the real
-/// document and re-encodes it from its own RGBA buffer alone, so the bytes must move (its filter
-/// choices, deflate level and chunk layout are not this fixture's) while the semantic projection —
-/// geometry plus the decoded-sample digest — must not.
+/// document and re-encodes its precise samples and metadata. Native compression may change;
+/// exact owned sample values, precision, profile and ancillary metadata must survive.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_identity_round_trip(&input)?;
@@ -79,15 +114,16 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::mutable_input;
+    use super::{mutable_input, owned_vectors, painted_vector, vector_paint_spec};
     use semio_repo_test_host::law;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::project_png_mutation;
+    use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{project_png_mutation, project_png_owned, owned_png_revision};
     use semio_s_artifact_stdio_png::ArtifactDsl;
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_png::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
-    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, PngMutation};
+    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation,PngMutation};
+
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 
     //#region 🔖️MutationFromSpec
@@ -96,13 +132,43 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<PngMutation, String> {
         wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
+    /// 🧬️ Exercises typed admission, native I/O, actual paint and algebraic inversion.
+    pub fn owned_native_samples(_ctx: &Context) -> Result<Outcome, String> {
+        let mut observations = Vec::new();
+        for row in owned_vectors()?.array("cases") {
+            let original = row.get("snapshot").ok_or("neutral PNG snapshot missing")?;
+            let payload = Json::Object(vec![("snapshot".into(), original.clone())]);
+            let PngMutation::SetSnapshot(set) = wire_operation("set-snapshot", &payload, mutation_from_payload_json, mutation_payload_json)? else { return Err("neutral PNG snapshot admission changed mutation kind".into()) };
+            let base = set.snapshot;
+            let revision = semio_s_artifact_stdio_png::schema::operations::png_revision(&base);
+            if revision != owned_png_revision(original)? { return Err("native sample structural revision differs from independent oracle".into()) }
+            let text = <PngSnapshot as ArtifactDsl>::print_dsl(&base);
+            let mut snapshot = <PngSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("neutral owned PNG DSL: {error:?}"))?;
+            law::round_trip_preserves(&project_png_owned(&encode_png(&snapshot).map_err(|error| error.to_string())?)?, original)?;
+            let expected = painted_vector(&row)?;
+            let mutation = mutation_from_spec(&vector_paint_spec(&row, revision, expected.clone())?)?;
+            let outcome = apply_png_mutation(&mut snapshot, &mutation);
+            if !outcome.is_applicable(Default::default()) { return Err(format!("neutral PNG paint refused: {:?}", outcome.messages())); }
+            let observation = project_png_owned(&encode_png(&snapshot).map_err(|error| error.to_string())?)?;
+            law::round_trip_preserves(&observation, &expected)?;
+            for inverse in mutation_inverse(&mutation, &base).map_err(|error| error.to_string())? {
+                let outcome = apply_png_mutation(&mut snapshot, &inverse);
+                if !outcome.is_applicable(Default::default()) { return Err(format!("neutral PNG inverse refused: {:?}", outcome.messages())); }
+            }
+            law::inverse_restores("neutral native paint", &project_png_owned(&encode_png(&snapshot).map_err(|error| error.to_string())?)?, original)?;
+            observations.push(Json::Object(vec![("name".into(), Json::String(row.str("name"))), ("painted".into(), observation)]));
+        }
+        eprintln!("[DEBUG] actual PNG typed mutations preserve precise native values through physical I/O");
+        Ok(Outcome::projection(Json::Array(observations)))
+    }
     //#endregion 🔖️MutationFromSpec
 
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
-        let _ = apply_png_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
+        let outcome = apply_png_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
+        if !outcome.is_applicable(Default::default()) { return Err(format!("PNG mutation refused: {:?}", outcome.messages())); }
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;
         let projection = project_png_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -116,9 +182,11 @@ mod subject {
         let base = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
-        let _ = apply_png_mutation(&mut snapshot, &mutation);
+        let outcome = apply_png_mutation(&mut snapshot, &mutation);
+        if !outcome.is_applicable(Default::default()) { return Err(format!("PNG forward mutation refused: {:?}", outcome.messages())); }
         for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            let _ = apply_png_mutation(&mut snapshot, &inverse);
+            let outcome = apply_png_mutation(&mut snapshot, &inverse);
+            if !outcome.is_applicable(Default::default()) { return Err(format!("PNG inverse mutation refused: {:?}", outcome.messages())); }
         }
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;
         let projection = project_png_mutation(&bytes)?;
@@ -126,16 +194,15 @@ mod subject {
     }
 
     /// 🔁️ `decode_png` → `print_dsl` (the subset's own text codec) → `parse_dsl` → `encode_png` is the ONLY channel
-    /// from input to output, and `PngSnapshot` is byte-authoritative, so the law is EXACT bytes: a byte that moves is a
-    /// codec defect, and one that survives did so by being modelled.
+    /// from input to output. Exact native samples, profile and metadata must survive.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_png(&input).map_err(|error| format!("decode_png failed: {error}"))?;
         let text = <PngSnapshot as ArtifactDsl>::print_dsl(&snapshot);
         let reparsed = <PngSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
         let output = encode_png(&reparsed).map_err(|error| format!("encode_png failed: {error}"))?;
-        law::carrier_is_exact(&output, &input)?;
         let projection = project_png_mutation(&output)?;
+        law::round_trip_preserves(&projection, &project_png_mutation(&input)?)?;
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers
@@ -149,10 +216,12 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     built = built.oracle("mutate", mutate_oracle);
     built = built.oracle("inverse", inverse_oracle);
+    built = built.oracle("owned-native-samples", owned_native_samples_oracle);
     #[cfg(feature = "sut")]
     {
         built = built.subject("mutate", subject::mutate);
         built = built.subject("inverse", subject::undo);
+        built = built.subject("owned-native-samples", subject::owned_native_samples);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

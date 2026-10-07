@@ -405,7 +405,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
     assert_eq!(rows.len(), 7, "the law covers every publication lane");
     assert_eq!(fixture["law"]["incompleteRetirementTurnIsOk"], true);
     let operation = semio_framework_job::OperationId(1);
-    let mut app = artifact_app_laws::new_app::<RetirementApp>().await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into())).await;
     let view = retirement_view();
     let window_config_authority = app.window_config_store.capture(Some(&view)).await.expect("window config capture").expect("registered window config owner");
     let window_transient_authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
@@ -540,7 +540,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     assert_eq!(expected["windowKindId"], RETIREMENT_WINDOW_KIND);
     let window_id = expected["windowId"].as_str().expect("fixture window id");
     let operation = semio_framework_job::OperationId(2);
-    let mut app = artifact_app_laws::new_app::<RetirementApp>().await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into())).await;
     let view = retirement_view();
     let mut authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
     let captured_generation = authority.generation;
@@ -599,7 +599,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
 /// (the refusal used to consume the mutation, and the retry then completed without it).
 #[semio_framework_async_macros::async_test]
 async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
-    let mut app = artifact_app_laws::new_app::<RetirementApp>().await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into())).await;
     let authority = app.window_transient_store.capture(Some(&retirement_view())).expect("window transient capture").expect("registered window transient owner");
     let generation = authority.generation;
     let revision = app.store.content_revision_now();

@@ -1,1 +1,9 @@
-424d460000000000000042000000280000000300000001000000010008000000000004000000130b0000130b00000300000000000000ff00005100ff0052ff000053010100c1
+semio stdio.bmp.dsl v1
+schema=stdio.bmp
+image {
+  width=2 height=1 row-order=bottom-up profile=indexed-rgb4 masks=0,0,0,0 x-pixels-per-meter=0 y-pixels-per-meter=0 colors-used=2 colors-important=0 reserved-1=0 reserved-2=0 palette=[ { b=60 g=40 r=20 reserved=7 } { b=60 g=40 r=20 reserved=11 } ]
+  pixels {
+    indexed indices=[ 1 1 ]
+  }
+  opaque-gap=[ ] opaque-trailer=[ ]
+}

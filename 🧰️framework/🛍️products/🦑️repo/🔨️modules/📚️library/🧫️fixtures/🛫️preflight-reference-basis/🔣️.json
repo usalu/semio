@@ -66,16 +66,5 @@
     "launchCommand": "bun nx run @semio-tech/repo-lib:test-preflight-reference-basis --skip-nx-cache",
     "launchGroup": "4_gate",
     "launchOrder": 410.16
-  },
-  "caseSchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": ["id", "targets", "ignored", "expected"],
-    "properties": {
-      "id": { "type": "string", "minLength": 1 },
-      "targets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-      "ignored": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-      "expected": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^text\\u0000" } }
-    }
   }
 }

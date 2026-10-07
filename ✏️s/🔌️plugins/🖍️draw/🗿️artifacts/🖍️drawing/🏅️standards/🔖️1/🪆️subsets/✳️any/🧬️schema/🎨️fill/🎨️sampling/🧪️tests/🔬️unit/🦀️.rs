@@ -22,14 +22,14 @@ fn shared_fill_samples() {
 
 #[test]
 fn preparation_owns_stops_and_rejects_invalid_numbers() {
-    let mut fill=FillStyle::LinearGradient {x1:0.0,y1:0.0,x2:100.0,y2:0.0,stops:vec![GradientStop {offset:0.0,color:[1.0,0.0,0.0,1.0]},GradientStop {offset:1.0,color:[0.0,0.0,1.0,1.0]}]};
+    let mut fill=FillStyle::LinearGradient {x1:0.0,y1:0.0,x2:100.0,y2:0.0,stops:vec![GradientStop {offset:0.0,color:[1.0,0.0,0.0,1.0]},GradientStop {offset:1.0,color:[0.0,0.0,1.0,1.0]}].into()};
     let prepared=PreparedFill::new(&fill).unwrap();
     if let FillStyle::LinearGradient {stops,..}=&mut fill {stops[0].color[0]=0.0;}
     assert_eq!(prepared.sample([0.0,0.0]).unwrap(),[1.0,0.0,0.0,1.0]);
     for value in [f64::NAN,f64::INFINITY,f64::NEG_INFINITY] {
         assert!(prepared.sample([value,0.0]).is_err());
         assert!(PreparedFill::new(&FillStyle::Solid {color:[0.0,0.0,0.0,value]}).is_err());
-        assert!(PreparedFill::new(&FillStyle::RadialGradient {cx:value,cy:0.0,r:1.0,stops:vec![]}).is_err());
+        assert!(PreparedFill::new(&FillStyle::RadialGradient {cx:value,cy:0.0,r:1.0,stops:vec![].into()}).is_err());
     }
 }
 
@@ -38,7 +38,7 @@ fn prepared_paint_retirement_drains_actual_stop_owners_and_composes_the_real_ram
     let sources:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap(){for grant in [1,7,4096]{
         let source=sources.as_array().unwrap().iter().find(|source|source["name"]==row["source"]).unwrap();let mut fill:FillStyle=serde_json::from_value(source["fill"].clone()).unwrap();
-        if let Some(repeat)=row["repeat"].as_u64(){match &mut fill {FillStyle::LinearGradient{stops,..}|FillStyle::RadialGradient{stops,..}=>*stops=vec![stops[0].clone();repeat as usize],_=>panic!("gradient required")}}
+        if let Some(repeat)=row["repeat"].as_u64(){match &mut fill {FillStyle::LinearGradient{stops,..}|FillStyle::RadialGradient{stops,..}=>*stops=vec![stops[0].clone();repeat as usize].into(),_=>panic!("gradient required")}}
         let paint=PreparedFill::new(&fill).unwrap();let samples:Vec<[f64;4]>=source["samples"].as_array().unwrap().iter().map(|sample|paint.sample(serde_json::from_value(sample["point"].clone()).unwrap()).unwrap()).collect();
         let mut owner=paint.into_retirement();assert!(owner.advance(0).is_err());if usize::BITS>53{assert!(owner.advance(usize::MAX).is_err());}let mut work=0;
         for _ in 0..5000{let p=owner.advance(grant).unwrap();assert!(p.work>work&&p.work-work<=grant as u64);assert_eq!(p.phase,if p.done{"complete"}else{"closing"});work=p.work;if p.done{break;}}

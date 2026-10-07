@@ -1,4 +1,11 @@
 {
   "mutation": "connectReferencedModel",
-  "targetUri": "doc-2!s.stdio.semio@v1/model"
+  "target": {
+    "artifactId": "doc-2",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model"
+    }
+  }
 }

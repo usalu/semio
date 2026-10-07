@@ -1,24 +1,26 @@
 //! ✏️️ Puzzle2d mutation — `EditNodeText`: replaces a node's authored display text.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// ✏️️ `edit-node-text` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "edit-node-text")]
 pub struct EditNodeText {
-    pub id: String,
-    pub new_text: Option<String>,
+    pub id: PagedUtf8<{ usize::MAX }>,
+    pub new_text: Option<PagedUtf8<{ usize::MAX }>>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_node_text(id: String, new_text: Option<String>) -> Puzzle2dMutation {
+pub fn edit_node_text(id: PagedUtf8<{ usize::MAX }>, new_text: Option<PagedUtf8<{ usize::MAX }>>) -> Puzzle2dMutation {
     Puzzle2dMutation::EditNodeText(EditNodeText { id, new_text })
 }
 
@@ -38,7 +40,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for EditNodeText
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit node \"{}\" text", self.id), &format!("Text von Knoten \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
+        vec![self.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

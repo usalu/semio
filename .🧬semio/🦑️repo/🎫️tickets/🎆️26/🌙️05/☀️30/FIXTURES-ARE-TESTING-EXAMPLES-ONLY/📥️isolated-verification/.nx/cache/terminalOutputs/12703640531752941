@@ -1,0 +1,44 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts" pptx-verify
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧭️transform/🧪️tests/🟦️.ts:
+[0m
+[1m[2m#[0m [31m[1mUnhandled error[0m[2m between tests[0m
+[2m-------------------------------[0m
+[0m[1m169 |[0m [0m[35mfunction[0m checkStrictMode(it, msg, mode = it.opts.strictSchema) {
+[0m[1m170 |[0m     [0m[35mif[0m (!mode)
+[0m[1m171 |[0m         [0m[35mreturn[0m[0m[2m;[0m
+[0m[1m172 |[0m     msg = [0m[32m`strict mode: [0m${msg}[0m[32m`[0m[0m[2m;[0m
+[0m[1m173 |[0m     [0m[35mif[0m (mode === [0m[33mtrue[0m)
+[0m[1m174 |[0m         [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m(msg)[0m[2m;[0m
+                        [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mstrict mode: unknown keyword: "x-semio-ui"[0m
+[0m      [2mat [0m[0m[1m[3mcheckStrictMode[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/compile/util.js[0m[2m:[0m[33m174[0m[2m:[33m19[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mcheckUnknownRules[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/compile/util.js[0m[2m:[0m[33m32[0m[2m:[33m13[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3malwaysValidSchema[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/compile/util.js[0m[2m:[0m[33m19[0m[2m:[33m5[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/vocabularies/applicator/properties.js[0m[2m:[0m[33m23[0m[2m:[33m63[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mfilter[0m[2m ([0m[0m[36m[0m[33m1[0m[2m:[33m11[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mcode[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/vocabularies/applicator/properties.js[0m[2m:[0m[33m23[0m[2m:[33m37[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mkeywordCode[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/compile/validate/index.js[0m[2m:[0m[33m464[0m[2m:[33m13[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/compile/validate/index.js[0m[2m:[0m[33m222[0m[2m:[33m17[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mcode[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/compile/codegen/index.js[0m[2m:[0m[33m439[0m[2m:[33m13[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mblock[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36mnode_modules/ajv/dist/compile/codegen/index.js[0m[2m:[0m[33m568[0m[2m:[33m18[0m[2m)[0m
+[0m[2m-------------------------------[0m
+
+
+ 0 pass[0m
+[0m[31m 1 fail[0m
+ [0m[31m1 error[0m
+Ran 1 test across 1 file. [0m[2m[[1m81.00ms[0m[2m][0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts" pptx-verify" exited with non-zero status code

@@ -32,7 +32,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
     // `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = crate::standards::v1::subsets::any::io::binary::mutations::new_writer_store(create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = crate::host::owned::new_writer_store(create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(schema::mutations::EditText { text: "hello".into() })], transaction: None }).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

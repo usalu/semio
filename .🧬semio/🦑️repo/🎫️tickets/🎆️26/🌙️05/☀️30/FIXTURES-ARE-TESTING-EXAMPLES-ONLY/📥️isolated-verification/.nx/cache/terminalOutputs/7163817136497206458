@@ -1,0 +1,5 @@
+> bun ./📜️script.ts test-owner-command "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📜️script.ts" canonical-architecture
+
+[DEBUG] isolated Nx verification test-owner-command
+artifact-contribution: gltf-definition checks=10
+artifact-contribution: gltf-borrowed-carriers checks=8

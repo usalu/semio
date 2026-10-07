@@ -73,31 +73,6 @@
         "requestMs": 30000,
         "templateTtlMs": 604800000
       }
-    },
-    "TileProxyCasesV1": {
-      "type": "array",
-      "minItems": 1,
-      "maxItems": 256,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "value",
-          "accepted"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128
-          },
-          "value": {},
-          "accepted": {
-            "type": "boolean"
-          }
-        }
-      }
     }
   }
 }

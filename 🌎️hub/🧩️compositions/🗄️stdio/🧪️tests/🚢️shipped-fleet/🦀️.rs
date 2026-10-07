@@ -183,7 +183,7 @@ async fn the_shipped_assembly_publishes_every_editor_document_schema_and_a_json_
     }
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<semio_framework_plugin::EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>, _>(async {
         semio_framework_plugin::App { definition: semio_s_artifact_stdio_json::editor::json_any::create_json_editor(), examples: Vec::new() }
-    })
+    }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into()))
     .await;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());

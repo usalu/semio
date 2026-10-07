@@ -1,14 +1,14 @@
 /** 🌈️ Independent complete scanline, packing and compression ownership laws. */
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
+import {decodePngSnapshot,encodePngSnapshot} from "../../../../💾️binary/📸️snapshot/🟦️.ts";
 import {deflateSync,inflateSync} from "node:zlib";
 import {PNG} from "pngjs";
 import fixture from "../../🧫️fixtures/🌈️scanline/🔣️.json";
 
 import {pngSnapshotToSqliteDatabase,pngSnapshotFromSqliteDatabase} from "../../🟦️.ts";
 import {parsePngNative,encodePngNative} from "../../🧩️chunks/🟦️.ts";
-import {parseCompression,encodeCompression} from "../../🗜️compression/🟦️.ts";
+import {parseCompression,encodeCompression} from "../../../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
 import dynamicFixture from "../../🧫️fixtures/🗜️compression/🔣️.json";
 
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -20,20 +20,5 @@ test("PNG native relational ownership interprets all filters, Adam7, packed rema
  const dynamicRaw=Buffer.from(Array.from({length:dynamicFixture.length},(_,index)=>dynamicFixture.pattern[index%dynamicFixture.pattern.length]));expect(dynamicRaw.length).toBe(dynamicFixture.pattern.length*dynamicFixture.repeat);const dynamicWire=deflateSync(dynamicRaw,{level:dynamicFixture.level});expect((dynamicWire[2]>>>1)&3).toBe(dynamicFixture.blockKind);expect([dynamicWire[0],dynamicWire[1],dynamicWire.readUInt32BE(dynamicWire.length-4)]).toEqual([dynamicFixture.cmf,dynamicFixture.flg,dynamicFixture.adler]);const dynamic=await parseCompression([...dynamicWire],async()=>{});expect(dynamic.stream.blocks[0].kind).toBe(2);expect(dynamic.raw).toEqual([...inflateSync(dynamicWire)]);expect((await encodeCompression(dynamic.stream,async()=>{})).bytes).toEqual([...dynamicWire]);
  expect(fixture["role"]).toEqual("interpretedNativeScanlines");expect(fixture["compressionAuthority"]).toEqual("completeBlockCodeTokenPadding");
  for(const item of fixture.cases)for(const level of [0,6]){const compressed=deflateSync(Buffer.from(item.raw),{level}),recipe=await parseCompression([...compressed],async()=>{});expect(recipe.raw).toEqual(item.raw);expect((await encodeCompression(recipe.stream,async()=>{})).bytes).toEqual([...compressed]);const visible={...item,raw:item.raw.slice(0,item.raw.length-item.tail.length)};expect([...PNG.sync.read(native(visible,level)).data]).toEqual(item.rgba);const source=native(item,level),model=await parsePngNative([...source],async()=>{});expect(model).not.toBeNull();expect(model!.scanlines.rows.flatMap(row=>row.samples)).toEqual(item.samples);expect(model!.scanlines.tail).toEqual(item.tail);expect(await encodePngNative(model!,async()=>{})).toEqual([...source]);}
- for(const item of fixture.cases)for(const level of [0,6]){
-  const compressed=deflateSync(Buffer.from(item.raw),{level}),recipe=await parseCompression([...compressed],async()=>{});expect(recipe.raw).toEqual(item.raw);expect((await encodeCompression(recipe.stream,async()=>{})).bytes).toEqual([...compressed]);
-  const source=native(item,level),owner={schema:"stdio.png",bytes:[...source]},db=Database.deserialize(await exportSqliteDatabase(await pngSnapshotToSqliteDatabase(owner)));
-  try{
-   expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
-   expect(db.query("SELECT filter FROM png_scanline ORDER BY ordinal").all().map((r:any)=>r.filter)).toEqual(item.filters);
-   expect(db.query("SELECT value FROM png_sample ORDER BY scanline_id,ordinal").all().map((r:any)=>r.value)).toEqual(item.samples);
-   expect(db.query("SELECT value FROM png_packed_remainder ORDER BY id").all().map((r:any)=>r.value)).toEqual(item.unusedBits);
-   expect(db.query("SELECT value FROM png_inflated_tail ORDER BY ordinal").all().map((r:any)=>r.value)).toEqual(item.tail);
-   expect(db.query("SELECT COUNT(*) AS count FROM png_deflate_block").get()).toMatchObject({count:expect.any(Number)});
-   expect(db.query("SELECT kind FROM png_chunk ORDER BY ordinal").all().map((r:any)=>r.kind)).toEqual(["IHDR","IDAT","IDAT","abCd","abCd","IEND"]);
-   const restored=await pngSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()));expect(restored).toEqual(owner);
-   const idat:Buffer[]=[];for(let at=8;at<source.length;){const length=source.readUInt32BE(at);if(source.toString("ascii",at+4,at+8)==="IDAT")idat.push(source.subarray(at+8,at+8+length));at+=length+12}expect([...inflateSync(Buffer.concat(idat))]).toEqual(item.raw);
-   if(item.tail.length===0){const independent=PNG.sync.read(source);expect(independent.width).toBe(item.width);expect(independent.height).toBe(item.height)}
-  }finally{db.close()}
- }
+ for(const item of fixture.cases)for(const level of [0,6]){const visible={...item,raw:item.raw.slice(0,item.raw.length-item.tail.length)},source=native(visible,level),snapshot=await decodePngSnapshot(source),restored=await pngSnapshotFromSqliteDatabase(await pngSnapshotToSqliteDatabase(snapshot));expect(restored).toEqual(snapshot);expect([...PNG.sync.read(Buffer.from(await encodePngSnapshot(restored))).data]).toEqual(item.rgba);}
 });

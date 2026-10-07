@@ -82,7 +82,7 @@ fn manifest() -> App {
 }
 
 fn app() -> Wfc2dApp {
-    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Wfc2dEditor>>(manifest));
+    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Wfc2dEditor>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
     block_on(app.bind_instance_id(1));
     app
 }
@@ -181,7 +181,7 @@ fn a_mounted_release_that_moves_nothing_and_two_drags_keep_their_shape() {
 fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
-        let mut store = store::ArtifactStore::<Wfc2dSnapshot, crate::Wfc2dMutation>::new(store::create_document_envelope::<Wfc2dSnapshot, crate::Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None)).await.expect("the store opens");
+        let mut store = store::ArtifactStore::<Wfc2dSnapshot, crate::Wfc2dMutation>::new(store::create_document_envelope::<Wfc2dSnapshot, crate::Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Wfc2dSnapshot, crate::Wfc2dMutation>());
         let log = [drag_slots(vec!["room-a".into()], 1.0, 0.0), drag_slots(vec!["room-a".into(), "room-b".into()], 0.0, 2.0), resize_slot("room-a".into(), 3.0, 1.5)];
         for mutation in &log {

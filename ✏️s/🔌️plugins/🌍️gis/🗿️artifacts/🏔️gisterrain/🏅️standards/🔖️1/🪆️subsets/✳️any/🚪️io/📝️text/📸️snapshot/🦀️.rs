@@ -52,7 +52,7 @@ use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 
@@ -75,7 +75,7 @@ use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
@@ -97,12 +97,16 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+pub(crate) fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     enc_str(&r.to_uri())
 }
 
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+pub(crate) fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    semio_framework_artifact_reference::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
 /// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete, never content.
@@ -218,3 +222,14 @@ pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
 }
 }
 pub use snapshot_wire2_codec::*;
+
+mod imported_map_json {
+use crate::schema::{ImportedMap,ImportedProperty};
+use semio_framework_value::{DslValue,Number};
+impl ImportedMap {
+ /// 📥️ JSON boundary normalizes missing collections to empty and rejects explicit null.
+ pub fn from_json(text:&str)->Result<Self,String>{let value=semio_framework_pack_json::parse(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e|e.to_string())?;let root=semio_framework_pack_json::to_dsl_value(&value);let DslValue::Object(members)=root else{return Err("map JSON object required".into())};let mut map=Self::default();for(name,value)in members{match name.as_str(){"positions"|"routes"|"regions"=>{let DslValue::Array(records)=value else{return Err("map collection array required".into())};match name.as_str(){"positions"=>map.positions=records,"routes"=>map.routes=records,_=>map.regions=records}},_=>map.properties.push(ImportedProperty{name,value})}}map.validate()?;Ok(map)}
+ /// 📤️ Media refuses intrinsic values whose variant or exact word would be lost in JSON.
+ pub fn to_json(&self)->Result<String,String>{self.validate()?;let mut pending:Vec<&DslValue>=self.positions.iter().chain(&self.routes).chain(&self.regions).chain(self.properties.iter().map(|m|&m.value)).collect();while let Some(value)=pending.pop(){match value{DslValue::Bytes(_)=>return Err("map JSON cannot represent octets".into()),DslValue::Number(Number::Float(v))if !v.is_finite()=>return Err("map JSON cannot represent nonfinite IEEE words".into()),DslValue::Number(Number::Int(v))if *v>=0=>return Err("map JSON cannot represent signed positive integer tagging".into()),DslValue::Array(items)=>pending.extend(items),DslValue::Object(members)=>{let mut names=std::collections::HashSet::new();for(name,value)in members{if !names.insert(name){return Err("map JSON cannot represent duplicate object members".into())}pending.push(value)}},_=>()}}let mut members=vec![("positions".into(),DslValue::Array(self.positions.clone())),("routes".into(),DslValue::Array(self.routes.clone())),("regions".into(),DslValue::Array(self.regions.clone()))];let mut names=std::collections::HashSet::new();for property in &self.properties{if !names.insert(&property.name){return Err("map JSON cannot represent duplicate root properties".into())}members.push((property.name.clone(),property.value.clone()));}Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&DslValue::Object(members))))}
+}
+}

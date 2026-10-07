@@ -13,48 +13,6 @@
     "target": "exact-repository-relative-physical-leaf",
     "lifetime": "one-source-buffer"
   },
-  "scanBoundarySchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "prefix",
-      "repeat",
-      "count",
-      "suffix",
-      "expected",
-      "maxMilliseconds"
-    ],
-    "properties": {
-      "id": {
-        "type": "string",
-        "minLength": 1
-      },
-      "prefix": {
-        "type": "string"
-      },
-      "repeat": {
-        "type": "string",
-        "minLength": 1
-      },
-      "count": {
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 3000000
-      },
-      "suffix": {
-        "type": "string"
-      },
-      "expected": {
-        "type": "boolean"
-      },
-      "maxMilliseconds": {
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 2000
-      }
-    }
-  },
   "scanBoundaryCases": [
     {
       "id": "large-comment-after-real-for-of",
@@ -111,58 +69,6 @@
       "maxMilliseconds": 2000
     }
   ],
-  "caseSchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "source",
-      "expected"
-    ],
-    "properties": {
-      "id": {
-        "type": "string",
-        "minLength": 1
-      },
-      "source": {
-        "type": "string"
-      },
-      "expected": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "value",
-            "start",
-            "end",
-            "physicalTargets"
-          ],
-          "properties": {
-            "value": {
-              "type": "string"
-            },
-            "start": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "end": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "physicalTargets": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 1,
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "cases": [
     {
       "id": "direct-reader",
@@ -171,7 +77,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 122,
-          "end": 142,
+          "end": 138,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -185,7 +91,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 122,
-          "end": 142,
+          "end": 138,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -199,7 +105,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 183,
-          "end": 203,
+          "end": 199,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -213,7 +119,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 122,
-          "end": 142,
+          "end": 138,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -227,7 +133,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 141,
-          "end": 161,
+          "end": 157,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -241,7 +147,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 137,
-          "end": 157,
+          "end": 153,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -255,7 +161,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 177,
-          "end": 197,
+          "end": 193,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -269,7 +175,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 122,
-          "end": 142,
+          "end": 138,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -283,7 +189,7 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 122,
-          "end": 142,
+          "end": 138,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -297,15 +203,15 @@
         {
           "value": "🟦️targetsold.ts",
           "start": 122,
-          "end": 142,
+          "end": 138,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
         },
         {
           "value": "🟦️targetsold.ts",
-          "start": 146,
-          "end": 166,
+          "start": 142,
+          "end": 158,
           "physicalTargets": [
             "🟦️targetsold.ts"
           ]
@@ -593,7 +499,7 @@
     "target": "test-typescript-path-collection",
     "command": "bun ./📜️script.ts test typescript-path-collection",
     "route": "typescript-path-collection",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️typescript-path-collection.ts",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛤️typescript-path-collection/🟦️.ts",
     "launchName": "🧹clean🧩️taxonomy🛤️typescript-path-collection",
     "launchCommand": "bun nx run @semio-tech/repo-lib:test-typescript-path-collection --skip-nx-cache",
     "launchGroup": "4_gate",

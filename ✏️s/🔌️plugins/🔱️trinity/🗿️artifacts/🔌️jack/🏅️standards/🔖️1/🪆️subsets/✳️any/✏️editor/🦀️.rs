@@ -29,7 +29,7 @@ use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::ContextMenuItemSpec;
 use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DomainTopology;
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
@@ -919,15 +919,16 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::jack_document_store_owners())
+        Some(crate::standards::v1::subsets::any::schema::operations::jack_document_store_owners())
     }
 
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::standards::v1::subsets::any::io::binary::mutations::jack_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::standards::v1::subsets::any::io::binary::mutations::jack_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

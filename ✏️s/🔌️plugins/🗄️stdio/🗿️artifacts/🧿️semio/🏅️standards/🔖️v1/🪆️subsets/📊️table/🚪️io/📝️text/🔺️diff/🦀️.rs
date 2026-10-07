@@ -5,8 +5,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::table::schema::diff::*;
-use crate::standards::v_rfc8259::subsets::base::io::text::diff::split_top_level;
+use crate::standards::v1::subsets::table::schema::diff::*;
+use crate::standards::v1::subsets::base::io::text::snapshot::split_top_level;
 use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
@@ -16,8 +16,8 @@ use protocol::MutationDiff;
 /// both present). `split_top_level(line, ';')` parses back (bracket-nesting aware, so a `;` can
 /// never appear inside an encoded column/row's own hex/bracket payload — there is none — this is
 /// purely a top-level field separator).
-use crate::document::io::text::diff::{dec_row};
-use crate::document::io::text::diff::{enc_row};
+use crate::standards::v1::subsets::table::io::text::snapshot::{dec_row};
+use crate::standards::v1::subsets::table::io::text::snapshot::{enc_row};
 use crate::standards::v1::subsets::table::io::text::snapshot::{dec_column};
 use crate::standards::v1::subsets::table::io::text::snapshot::{enc_column};
 
@@ -28,7 +28,7 @@ pub(crate) fn enc_columns(list: &SemioTableColumnList) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
-    use crate::standards::v_rfc8259::subsets::base::io::text::diff::strip_brackets;
+    use crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableColumnList { values })
 }
@@ -40,7 +40,7 @@ pub(crate) fn enc_rows(list: &SemioTableRowList) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
-    use crate::standards::v_rfc8259::subsets::base::io::text::diff::strip_brackets;
+    use crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableRowList { values })
 }

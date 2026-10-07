@@ -24,7 +24,7 @@ pub fn parse_json_text(text: &str) -> Result<JsonValue, TextError> {
     let mut parser = Parser::new(text);
     let value = parser.parse_value()?;
     parser.skip_ws();
-    if parser.pos != parser.bytes.len() {
+    if parser.peek().is_some() {
         return Err(parser.err("trailing characters after JSON value"));
     }
     Ok(value)
@@ -438,3 +438,145 @@ pub(crate) fn write_string_escaped(s: &str, out: &mut String) {
 }
 }
 pub use snapshot_wire_codec::*;
+
+mod json_value_boundary {
+use crate::schema::snapshot::{JsonMember,JsonValue,JsonSnapshot};
+impl From<serde_json::Value> for JsonValue {
+    fn from(v: serde_json::Value) -> Self {
+        match v {
+            serde_json::Value::Null => JsonValue::Null,
+            serde_json::Value::Bool(b) => JsonValue::Bool { value: b },
+            serde_json::Value::Number(n) => JsonValue::Number { lexeme: n.to_string() },
+            serde_json::Value::String(s) => JsonValue::String { value: s },
+            serde_json::Value::Array(arr) => JsonValue::Array { items: arr.into_iter().map(JsonValue::from).collect() },
+            serde_json::Value::Object(map) => JsonValue::Object { members: map.into_iter().map(|(k, v)| JsonMember { key: k, value: JsonValue::from(v) }).collect() },
+        }
+    }
+}
+
+/// 🌉️ `pack::json::Value` → this module's own key-order/lexeme-preserving `JsonValue` — the
+/// cross-plugin bridge the fan-out playbook flagged as needed (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`, §`🔱️trinity` batch):
+/// callers converting off `ToValue`/`FromValue` (never `serde_json::Value`) still need to reach
+/// this artifact's own `JsonSnapshot::from_value`. `pack::json::Number` has no independent lexeme
+/// (unlike this crate's own arbitrary-precision `Number { lexeme }`), so it round-trips through
+/// `pack::json_to_string` on a lone `Number` value — the exact bytes `pack`'s own writer would
+/// have emitted for that number inline, not a re-implementation of its float/int formatting.
+impl From<semio_framework_pack_json::Value> for JsonValue {
+    fn from(v: semio_framework_pack_json::Value) -> Self {
+        JsonValue::from(&v)
+    }
+}
+
+impl From<&semio_framework_pack_json::Value> for JsonValue {
+    fn from(v: &semio_framework_pack_json::Value) -> Self {
+        match v {
+            semio_framework_pack_json::Value::Null => JsonValue::Null,
+            semio_framework_pack_json::Value::Bool(b) => JsonValue::Bool { value: *b },
+            semio_framework_pack_json::Value::Number(n) => JsonValue::Number { lexeme: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Number(*n)) },
+            semio_framework_pack_json::Value::String(s) => JsonValue::String { value: s.clone() },
+            semio_framework_pack_json::Value::Array(items) => JsonValue::Array { items: items.iter().map(JsonValue::from).collect() },
+            semio_framework_pack_json::Value::Object(members) => JsonValue::Object { members: members.iter().map(|(k, v)| JsonMember { key: k.to_string(), value: JsonValue::from(v) }).collect() },
+        }
+    }
+}
+
+/// 🌉️ The reverse of the impl above — `JsonSnapshot::to_pack_value`'s bridge back into
+/// `pack::json::Value` for a caller that needs the value tree, not the wire bytes. The original
+/// arbitrary-precision `lexeme` re-parses through `pack::parse_json` (a full round trip through
+/// the exact writer/reader pair `pack::json_to_string`/`pack::parse_json` already exercise
+/// elsewhere in this crate) rather than a second hand-rolled number lexer.
+impl From<&JsonValue> for semio_framework_pack_json::Value {
+    fn from(v: &JsonValue) -> Self {
+        match v {
+            JsonValue::Null => semio_framework_pack_json::Value::Null,
+            JsonValue::Bool { value } => semio_framework_pack_json::Value::Bool(*value),
+            JsonValue::Number { lexeme } => semio_framework_pack_json::parse(lexeme, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::Value::Null),
+            JsonValue::String { value } => semio_framework_pack_json::Value::String(value.clone()),
+            JsonValue::Array { items } => semio_framework_pack_json::Value::Array(items.iter().map(semio_framework_pack_json::Value::from).collect()),
+            JsonValue::Object { members } => semio_framework_pack_json::object(members.iter().map(|member| (member.key.clone(), semio_framework_pack_json::Value::from(&member.value)))),
+        }
+    }
+}
+
+impl From<&serde_json::Value> for JsonValue {
+    fn from(v: &serde_json::Value) -> Self {
+        match v {
+            serde_json::Value::Null => JsonValue::Null,
+            serde_json::Value::Bool(b) => JsonValue::Bool { value: *b },
+            serde_json::Value::Number(n) => JsonValue::Number { lexeme: n.to_string() },
+            serde_json::Value::String(s) => JsonValue::String { value: s.clone() },
+            serde_json::Value::Array(arr) => JsonValue::Array { items: arr.iter().map(JsonValue::from).collect() },
+            serde_json::Value::Object(map) => JsonValue::Object { members: map.iter().map(|(k, v)| JsonMember { key: k.clone(), value: JsonValue::from(v) }).collect() },
+        }
+    }
+}
+
+impl From<JsonValue> for serde_json::Value {
+    fn from(v: JsonValue) -> Self {
+        match v {
+            JsonValue::Null => serde_json::Value::Null,
+            JsonValue::Bool { value } => serde_json::Value::Bool(value),
+            JsonValue::Number { lexeme } => {
+                if let Ok(n) = lexeme.parse::<serde_json::Number>() {
+                    serde_json::Value::Number(n)
+                } else if let Ok(val) = serde_json::from_str::<serde_json::Value>(&lexeme) {
+                    val
+                } else {
+                    serde_json::Value::String(lexeme)
+                }
+            }
+            JsonValue::String { value } => serde_json::Value::String(value),
+            JsonValue::Array { items } => serde_json::Value::Array(items.into_iter().map(serde_json::Value::from).collect()),
+            JsonValue::Object { members } => {
+                let mut map = serde_json::Map::with_capacity(members.len());
+                for m in members {
+                    map.insert(m.key, serde_json::Value::from(m.value));
+                }
+                serde_json::Value::Object(map)
+            }
+        }
+    }
+}
+
+impl From<&JsonValue> for serde_json::Value {
+    fn from(v: &JsonValue) -> Self {
+        match v {
+            JsonValue::Null => serde_json::Value::Null,
+            JsonValue::Bool { value } => serde_json::Value::Bool(*value),
+            JsonValue::Number { lexeme } => {
+                if let Ok(n) = lexeme.parse::<serde_json::Number>() {
+                    serde_json::Value::Number(n)
+                } else if let Ok(val) = serde_json::from_str::<serde_json::Value>(lexeme) {
+                    val
+                } else {
+                    serde_json::Value::String(lexeme.clone())
+                }
+            }
+            JsonValue::String { value } => serde_json::Value::String(value.clone()),
+            JsonValue::Array { items } => serde_json::Value::Array(items.iter().map(serde_json::Value::from).collect()),
+            JsonValue::Object { members } => {
+                let mut map = serde_json::Map::with_capacity(members.len());
+                for m in members {
+                    map.insert(m.key.clone(), serde_json::Value::from(&m.value));
+                }
+                serde_json::Value::Object(map)
+            }
+        }
+    }
+}
+
+impl JsonSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_serde_value(&self) -> serde_json::Value {
+        serde_json::Value::from(&self.value)
+    }
+
+    /// 🌉️ `to_serde_value`'s first-party analog — for a caller that has stopped depending on
+    /// `serde_json` and only wants `pack::json::Value`.
+    // 🚫️async: E1 pure inherent-impl helper, same reason as `to_serde_value` above — see R9
+    pub fn to_pack_value(&self) -> semio_framework_pack_json::Value {
+        semio_framework_pack_json::Value::from(&self.value)
+    }
+}
+}

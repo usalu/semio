@@ -38,7 +38,7 @@ mod subject {
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let reference = oracle_create_image(&spec(ctx)?, FORMAT)?;
         let snapshot = decode_jpg(&reference).map_err(|error| format!("decode_jpg failed: {:?}", error))?;
-        let bytes = encode_jpg(&snapshot).map_err(|error| format!("encode_jpg failed: {:?}", error))?;
+        let bytes = encode_jpg(&snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).map_err(|error| format!("encode_jpg failed: {:?}", error))?;
         let projection = project_image(&bytes, FORMAT)?;
         Ok(Outcome::with_raw(bytes, projection))
     }

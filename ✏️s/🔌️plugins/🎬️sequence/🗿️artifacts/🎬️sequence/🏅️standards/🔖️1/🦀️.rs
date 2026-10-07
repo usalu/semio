@@ -8,7 +8,7 @@
 
 use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
-use semio_framework_plugin::StandardId;
+use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<A: crate::SequenceApplication>() -> StandardDeclaration<A> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.sequence+json"], extensions: &["sequence"] }, subsets: vec![subsets::any::subset()] }

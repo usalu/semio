@@ -5,8 +5,8 @@ use crate::schema;
 /// `reserve_edit_history_slot` then refuses every `Apply` with
 /// `edit history insertion requires its exact mutation retirement factory` — the fixture could be
 /// read but never mutated or undone (fleet-brief stale-test bucket 2).
-async fn seeded_store() -> crate::standards::v1::subsets::any::io::binary::mutations::OwnedWriterStore {
-    crate::standards::v1::subsets::any::io::binary::mutations::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture")
+async fn seeded_store() -> crate::host::owned::OwnedWriterStore {
+    crate::host::owned::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture")
 }
 
 #[semio_framework_async_macros::async_test]

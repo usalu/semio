@@ -15,11 +15,11 @@ impl ArtifactSqliteSnapshot for GisTerrainSnapshot{
   if Self::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"terrain schema byte limit exceeded"))}
   let maximum_rows=control.limits().max_rows;crate::standards::v1::subsets::any::schema::snapshot::row_admission::snapshot(self,maximum_rows,||control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0))?;
   if let Some(map)=&self.imported_map{map.validate().map_err(invalid)?;}control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
-  store::encode_sqlite_snapshot_record_native(encoding,"gis.gisterrain",crate::standards::v1::subsets::any::schema::snapshot::owned_pack::producer(),|native|crate::standards::v1::subsets::any::schema::snapshot::owned_pack::encode_record_controlled(self,native),control)
+  store::encode_sqlite_snapshot_record_native(encoding,"gis.gisterrain",crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::producer(),|native|crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::encode_record_controlled(self,native),control)
  }
  fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   let maximum_rows=control.limits().max_rows;let maximum_value_bytes=control.limits().max_value_bytes;control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
-  store::decode_sqlite_snapshot_record_native(payload,"gis.gisterrain",crate::standards::v1::subsets::any::schema::snapshot::owned_pack::producer(),|record,native|crate::standards::v1::subsets::any::schema::snapshot::owned_pack::reconstruct_record_controlled(record,native,maximum_rows,maximum_value_bytes),control)
+  store::decode_sqlite_snapshot_record_native(payload,"gis.gisterrain",crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::producer(),|record,native|crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::reconstruct_record_controlled(record,native,maximum_rows,maximum_value_bytes),control)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   let mut bound=NativeEncodingBound::new(control)?;bound.add(4096)?;
@@ -28,7 +28,7 @@ impl ArtifactSqliteSnapshot for GisTerrainSnapshot{
  }
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{owned_projection::project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{owned_reconstruction::reconstruct(database,control)}
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.gis.gisterrain"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"GIS terrain does not own this semantic subset")))}let restored=Self::from_sqlite_database(database,control).map_err(store::io_schema::IoError::from_value_error)?;let maps=match(&self.imported_map,&restored.imported_map){(None,None)=>true,(Some(a),Some(b))=>a.same(b),_=>false};if self.exaggeration.to_bits()!=restored.exaggeration.to_bits()||!maps||self.mesh!=restored.mesh{return Err(store::io_schema::IoError::from_value_error(invalid("GIS terrain owned identity differs")))}Ok(store::io_schema::IoOutcome::clean(()))
  }
 }

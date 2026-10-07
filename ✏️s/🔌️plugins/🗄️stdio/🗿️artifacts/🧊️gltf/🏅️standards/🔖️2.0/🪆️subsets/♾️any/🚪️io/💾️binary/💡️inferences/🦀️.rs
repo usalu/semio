@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::standards::v2_0::subsets::any::io::text::inferences::{self, GltfInferenceLeafEnvelope};
+use crate::standards::v2_0::subsets::any::io::text::inferences::{self as text, GltfInferenceLeafEnvelope};
 
 //#region 📡️SemioProtocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");

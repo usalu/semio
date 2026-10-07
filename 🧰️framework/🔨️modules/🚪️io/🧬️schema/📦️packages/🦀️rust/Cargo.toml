@@ -18,6 +18,7 @@ name = "semio_framework_io_schema"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-artifact-reference = { path = "../../../../🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }

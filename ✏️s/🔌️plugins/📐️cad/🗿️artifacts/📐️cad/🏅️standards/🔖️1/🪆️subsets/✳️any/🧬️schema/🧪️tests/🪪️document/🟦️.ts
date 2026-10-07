@@ -1,4 +1,5 @@
 /** 🧪️ CAD document facets compose exact model and drawing child identities. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
@@ -30,7 +31,7 @@ export function testCadDocumentContractOracle(): void {
     return candidate;
   });
   assertDocumentContractOracle({
-    name: "CAD", dependencies: [ioSchema, childSchema],
+    name: "CAD", dependencies: [ioSchema, childSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: parseCadArtifact },
     snapshot: { schema: snapshotSchema, parse: parseCadSnapshot },
     diff: { schema: diffSchema, parse: parseCadDiff },

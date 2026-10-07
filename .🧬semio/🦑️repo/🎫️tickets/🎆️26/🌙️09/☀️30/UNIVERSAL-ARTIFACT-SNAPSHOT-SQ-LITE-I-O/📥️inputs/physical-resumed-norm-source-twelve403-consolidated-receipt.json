@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-06T12:03:04.250692+00:00",
+  "classification": "Union of genuine current registered owning Source receipts, twelve distinct owners403/403; no new single whole-twelve run claimed",
+  "owners": {
+    "EN1999": 9,
+    "EN1994": 21,
+    "DIN16798": 22,
+    "DIN18599": 36,
+    "EN1993": 31,
+    "EN1997": 10,
+    "VDI3805": 118,
+    "EN1995": 29,
+    "DIN4108": 24,
+    "EN1991": 30,
+    "EN1990": 18,
+    "EN1996": 55
+  },
+  "total": 403,
+  "sourceAuthority": [
+    "physical-current-norm-twelve-relocated-source-terminal-receipt.json",
+    "physical-resumed-original-terminal-readback.json",
+    "physical-resumed-en1990-source18-owning-receipt.json",
+    "physical-resumed-en1996-source55-owning-receipt.json"
+  ],
+  "nativeInference": false
+}

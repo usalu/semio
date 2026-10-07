@@ -23,8 +23,8 @@ struct Expression{next_label:u64,nodes:Vec<Node>}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(extension="equation")]
 struct EquationPackRecord{notation:Child,results:Child,computed:Child,equation:Expression,graph:crate::EquationGraph,geometry:crate::EquationGeometry}
-fn child(child_id:&str,target:&store::os_io::ArtifactRef)->Child{Child{child_id:child_id.into(),artifact_id:target.artifact_id.clone(),artifact_kind:target.dialect.artifact_kind.clone(),standard:target.dialect.standard.clone(),subset:target.dialect.subset.clone()}}
-fn target(value:Child)->(String,store::os_io::ArtifactRef){(value.child_id,store::os_io::ArtifactRef{artifact_id:value.artifact_id,dialect:store::os_io::ArtifactDialect{artifact_kind:value.artifact_kind,standard:value.standard,subset:value.subset}})}
+fn child(child_id:&str,target:&semio_framework_artifact_reference::ArtifactRef)->Child{Child{child_id:child_id.into(),artifact_id:target.artifact_id.clone(),artifact_kind:target.dialect.artifact_kind.clone(),standard:target.dialect.standard.clone(),subset:target.dialect.subset.clone()}}
+fn target(value:Child)->(String,semio_framework_artifact_reference::ArtifactRef){(value.child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:value.artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value.artifact_kind,standard:value.standard,subset:value.subset}})}
 fn retire_node(node:EquationNode){let mut pending=vec![node];while let Some(node)=pending.pop(){match node.kind{EquationNodeKind::Add{terms}=>pending.extend(terms),EquationNodeKind::Mul{factors}=>pending.extend(factors),EquationNodeKind::Pow{base,exponent}=>{pending.push(*base);pending.push(*exponent);},_=>{}}}}
 struct Values(Vec<Option<EquationNode>>);
 impl Drop for Values{fn drop(&mut self){for value in self.0.iter_mut().filter_map(Option::take){retire_node(value);}}}
@@ -57,55 +57,20 @@ pub fn encode(snapshot:&EquationSnapshot)->Vec<u8>{store::ArtifactPack::encode_p
 pub fn decode(bytes:&[u8])->Result<EquationSnapshot,PackError>{<EquationSnapshot as store::ArtifactPack>::decode_pack(bytes)}
 
 //#region 🔖️Store
-pub type EquationEnvelope = store::ArtifactEnvelope<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>;
-pub type EquationStore = store::ArtifactStore<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>;
 
-/// 🔐️ Opens a Equation store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
-/// catalog, and `reserve_edit_history_slot` refuses every `Apply` without one (`edit history
-/// insertion requires its exact mutation retirement factory`) — so a bare `EquationStore::new` can be
-/// read but never mutated, undone or closed. The app installs the same catalog through
-/// `build_document_store_owners`; every standalone store goes through here instead.
-pub async fn new_equation_store(envelope: EquationEnvelope) -> Result<OwnedEquationStore, store::VcsError> {
-    let mut store = EquationStore::new(envelope).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>());
-    Ok(OwnedEquationStore(store))
-}
 
-/// 🔚 A standalone Equation store that retires itself: `ArtifactStore::drop` panics `artifact store
-/// reached Drop without its exact terminal-empty shallow-shell witness` unless the store walked its
-/// bounded close loop first, so the guard runs that loop on drop (skipped while unwinding, where the
-/// original panic is the report worth keeping). Derefs to the bare store for every read and dispatch.
-pub struct OwnedEquationStore(EquationStore);
 
-impl OwnedEquationStore {
-    /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
-    pub fn close(&mut self) {
-        while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Equation document store closes through its exact bounded owners");
-        }
-    }
-}
 
-impl std::ops::Deref for OwnedEquationStore {
-    type Target = EquationStore;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
-impl std::ops::DerefMut for OwnedEquationStore {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 
-impl Drop for OwnedEquationStore {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            self.close();
-        }
-    }
-}
+
+
+
+
+
+
+
+
 //#endregion 🔖️Store
 
 //#region 🧪️Tests

@@ -14,7 +14,7 @@ use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map,
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::ArtifactDsl;
+
 //#region 🔖️Generation2dArtifact
 /// 🧬️ Generation2dArtifact facet type.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default)]
@@ -177,13 +177,7 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
 
 
 
-#[cfg(feature = "component-app-assembly")]
-pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
-    let mut host = generation_preview_host(host_snapshot, values);
-    let evaluated = host.evaluate().unwrap_or_default();
-    host.retire_cold();
-    evaluated
-}
+
 
 
 

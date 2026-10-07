@@ -1,5 +1,5 @@
 //! 🗺️ GIS map viewer — the Map window: a read-only tiled-map render of the document's
-//! positions/routes/regions, built from the same `crate::schema::gis_map_descriptor_json`
+//! positions/routes/regions, built from the same `crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json`
 //! pure snapshot→descriptor helper the editor's own Map window uses — this file itself imports
 //! nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright). No
 //! layer toggles and no selection: a viewer has no utilities that edit and emits no document mutation.
@@ -13,7 +13,7 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use crate::schema::gis_map_descriptor_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;

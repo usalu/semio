@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { backboneFolderHop, createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
 
@@ -9,7 +8,7 @@ import { backboneFolderHop, createWgpuPageHostIo } from "../../🎯️targets/�
  * `🧫️fixtures/🧫️wgpu-backbone-folder-door` that the Rust half (`🐚️Shell/🧪️tests/🧪️wgpu-local-folders`) reads too: every
  * request the shell sends becomes exactly the corpus's one fetch against the dev host's backbone route, and every HTTP
  * outcome is answered exactly as the corpus says — the stored archive as base64, nothing-written-yet, a status, or the
- * transport refusal. The corpus itself is checked by Ajv against its schema. */
+ * transport refusal. */
 type DoorRequest = { readonly name: string; readonly json: Record<string, string>; readonly fetch: { readonly method: string; readonly url: string; readonly body: boolean } };
 type DoorAnswer = { readonly name: string; readonly verb: "read" | "write"; readonly response: { readonly status?: number; readonly body?: string; readonly error?: string }; readonly page: Record<string, unknown> };
 
@@ -21,10 +20,6 @@ const archive = new Uint8Array([1, 2, 3]);
 const base64Bytes = (value: string): Uint8Array => Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
 
 describe("wgpu backbone folder door", () => {
-  it("the shared corpus is valid against its schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: false }).compile(readJson(join(engine, "🧬️schema", "🔣️wgpu-backbone-folder-door", "🔣️.json")) as object);
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-  });
 
   it("turns every request of the corpus into exactly its one fetch on the backbone route", async () => {
     for (const request of corpus.requests) {

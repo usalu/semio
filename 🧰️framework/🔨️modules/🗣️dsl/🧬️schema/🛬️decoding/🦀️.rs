@@ -32,9 +32,8 @@ impl<'s,'c,'p> Reader<'s,'c,'p>{
             while !self.source[self.position..].starts_with("```"){if self.character().is_none(){return Err(self.error(semio_framework_value::ValueRefusalKind::InvalidValue,"unterminated native text fence"));}self.consume()?;}
             content_end=self.position;for _ in 0..3{self.consume()?;}TokenKind::Fence
         }else if c=='"'{
-            self.consume()?;content_start=self.position;
-            while self.character()!=Some('"'){if self.character().is_none(){return Err(self.error(semio_framework_value::ValueRefusalKind::InvalidValue,"unterminated native quoted text"));}if self.consume()?=='\\'{self.consume()?;}}
-            content_end=self.position;self.consume()?;TokenKind::Text
+            let mut cursor=NativeQuotedTextScan::default();
+            loop{if let Some(token)=self.scan_quoted_text_step(&mut cursor,1)?{return Ok(token)}}
         }else{
             let punctuation=match c{'='=>Some(TokenKind::Equals),','=>Some(TokenKind::Comma),':'=>Some(TokenKind::Colon),'@'=>Some(TokenKind::At),'^'=>Some(TokenKind::Caret),'{'=>Some(TokenKind::LBrace),'}'=>Some(TokenKind::RBrace),'['=>Some(TokenKind::LBracket),']'=>Some(TokenKind::RBracket),'('=>Some(TokenKind::LParen),')'=>Some(TokenKind::RParen),'+' =>Some(TokenKind::Plus),'*'=>Some(TokenKind::Star),'/' =>Some(TokenKind::Slash),_=>None};
             let kind=if self.source[start..].starts_with(".."){self.consume()?;self.consume()?;TokenKind::DotDot}
@@ -197,3 +196,104 @@ pub fn parse_exact_controlled(text:&str,spec:&RecordSpec,options:&ParseOptions,c
 
 /// 🧮️ Parses a bare semantic expression under the same owned native allocation and input work control.
 pub fn parse_expr_text_controlled(text:&str,limits:&Limits,control:&mut NativeDecodeControl<'_>)->Result<ExprValue,TextError>{limits.check_bytes(text.len())?;control.scoped_stage(|control|{control.begin_stage(text.len()).map_err(|error|TextError::from_value_error(error,TextSpan::at(1,1)))?;let mut reader=Reader{source:text,position:0,line:1,column:1,lookahead:[None,None],limits:*limits,tokens:0,nodes:0,control};let value=reader.expression(0,0)?;reader.expect(TokenKind::Eof)?;Ok(value)})}
+
+#[derive(Default)]
+struct NativeQuotedTextScan {
+    source_identity: Option<(usize, usize)>,
+    phase: u8,
+    start: usize,
+    content_start: usize,
+    span: Option<TextSpan>,
+}
+
+impl<'s, 'c, 'p> Reader<'s, 'c, 'p> {
+    fn scan_quoted_text_step(&mut self, cursor: &mut NativeQuotedTextScan, maximum_units: usize) -> Result<Option<Token<'s>>, TextError> {
+        let identity=(self.source.as_ptr() as usize,self.source.len());
+        if cursor.source_identity.is_some_and(|source|source!=identity){return Err(self.error(semio_framework_value::ValueRefusalKind::InvariantViolated,"native quoted text source changed"))}
+        for _ in 0..maximum_units {
+            self.control.checkpoint().map_err(|error|self.refusal(error))?;
+            match cursor.phase {
+                0=>{
+                    if self.character()!=Some('"'){return Err(self.error(semio_framework_value::ValueRefusalKind::InvalidValue,"expected native quoted text"))}
+                    cursor.source_identity=Some(identity);cursor.start=self.position;cursor.span=Some(TextSpan::at(self.line,self.column));
+                    self.consume()?;cursor.content_start=self.position;cursor.phase=1;
+                },
+                1=>{
+                    let Some(character)=self.character()else{return Err(self.error(semio_framework_value::ValueRefusalKind::InvalidValue,"unterminated native quoted text"))};
+                    let content_end=self.position;self.consume()?;
+                    if character=='"'{
+                        let span=cursor.span.unwrap();
+                        self.tokens=self.tokens.checked_add(1).ok_or_else(||self.error(semio_framework_value::ValueRefusalKind::WorkLimit,"native token count overflow"))?;
+                        self.limits.check_tokens(self.tokens,span)?;cursor.phase=3;
+                        return Ok(Some(Token{kind:TokenKind::Text,text:&self.source[cursor.content_start..content_end],start:cursor.start,end:self.position,span}));
+                    }
+                    if character=='\\'{cursor.phase=2;}
+                },
+                2=>{self.consume()?;cursor.phase=1;},
+                _=>return Err(self.error(semio_framework_value::ValueRefusalKind::InvariantViolated,"native quoted text token already transferred")),
+            }
+        }
+        Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod continuation_tests {
+    use super::*;
+
+    #[test]
+    fn original_native_quoted_scanner_retains_unicode_grants_and_exact_source_identity() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+        let semantic = fixture["textUnit"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize);
+        let source = serde_json::to_string(&semantic).unwrap();
+        let maximum = fixture["maximumBytes"].as_u64().unwrap() as usize;
+        for budget in fixture["budgets"].as_array().unwrap() {
+            let units = budget.as_u64().unwrap() as usize;
+            let mut accepted = |_| true;
+            let mut control = NativeDecodeControl::new(maximum, &mut accepted);
+            control.begin_stage(source.len()).unwrap();
+            let mut reader = Reader { source: &source, position: 0, line: 1, column: 1, lookahead: [None, None], limits: Limits::default(), tokens: 0, nodes: 0, control: &mut control };
+            let mut cursor = NativeQuotedTextScan::default();
+            let mut hops = 0;
+            let token = loop {
+                let before = reader.position;
+                assert!(reader.scan_quoted_text_step(&mut cursor, 0).unwrap().is_none());
+                assert_eq!(reader.position, before);
+                hops += 1;
+                let step = reader.scan_quoted_text_step(&mut cursor, units).unwrap();
+                assert!(reader.position - before <= units * 4, "one original scanner hop cannot consume the whole quoted source");
+                if hops == 1 { assert!(step.is_none(), "a quoted source wider than its grant must yield before token completion"); }
+                if let Some(token) = step { break token; }
+                assert!(hops < source.len() + 2);
+            };
+            assert_eq!(token.kind, TokenKind::Text);
+            assert_eq!(token.start, 0);
+            assert_eq!(token.end, source.len());
+            assert_eq!(reader.text(token).unwrap(), semantic);
+            assert!(hops > 1);
+        }
+        let changed = format!("{source} ");
+        let mut accepted = |_| true;
+        let mut control = NativeDecodeControl::new(maximum, &mut accepted);
+        control.begin_stage(source.len()).unwrap();
+        let mut reader = Reader { source: &source, position: 0, line: 1, column: 1, lookahead: [None, None], limits: Limits::default(), tokens: 0, nodes: 0, control: &mut control };
+        let mut cursor = NativeQuotedTextScan::default();
+        assert!(reader.scan_quoted_text_step(&mut cursor, 1).unwrap().is_none());
+        let before = reader.position;
+        reader.source = &changed;
+        assert_eq!(reader.scan_quoted_text_step(&mut cursor, 1).err().unwrap().kind, semio_framework_value::ValueRefusalKind::InvariantViolated);
+        assert_eq!(reader.position, before);
+        let accepted = std::cell::Cell::new(true);
+        let mut callback = |_| accepted.get();
+        let mut control = NativeDecodeControl::new(maximum, &mut callback);
+        control.begin_stage(source.len()).unwrap();
+        let mut reader = Reader { source: &source, position: 0, line: 1, column: 1, lookahead: [None, None], limits: Limits::default(), tokens: 0, nodes: 0, control: &mut control };
+        let mut cursor = NativeQuotedTextScan::default();
+        assert!(reader.scan_quoted_text_step(&mut cursor, 1).unwrap().is_none());
+        let before = reader.position;
+        accepted.set(false);
+        assert_eq!(reader.scan_quoted_text_step(&mut cursor, 1).err().unwrap().kind, semio_framework_value::ValueRefusalKind::Canceled);
+        assert_eq!(reader.position, before);
+        eprintln!("[DEBUG] original quoted scanner1/8/256 unicode-scalar grants preserve serde_json text semantics and source identity");
+    }
+}

@@ -17,7 +17,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1_0::subsets::any::schema::diff::LasDiff;
-use crate::standards::v1_0::subsets::any::schema::mutations::{apply_las_mutation, LasMutation};
+use crate::standards::v1_0::subsets::any::schema::mutations::{apply_las_mutation,LasMutation};
+
 use crate::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/📈️lifts/📸️snapshot/⬅️before/🔣️.json");

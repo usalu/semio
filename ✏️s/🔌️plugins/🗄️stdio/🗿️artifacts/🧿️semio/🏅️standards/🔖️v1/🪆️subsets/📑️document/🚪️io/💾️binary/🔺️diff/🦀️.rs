@@ -5,10 +5,11 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::document::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::document::schema::diff::*;
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -268,6 +269,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::document::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_bool, dec_bool, enc_u8, dec_u8, enc_f64, dec_f64, enc_list, dec_list, enc_run_style, dec_run_style, enc_run, dec_run, enc_block, dec_block, enc_list_item, dec_list_item, enc_cell, dec_cell, enc_row, dec_row, enc_style, dec_style, enc_image, dec_image, enc_runs_diff, dec_runs_diff, enc_blocks_diff, dec_blocks_diff, enc_list_items_diff, dec_list_items_diff, enc_table_rows_diff, dec_table_rows_diff, enc_table_cells_diff, dec_table_cells_diff, enc_styles_diff, dec_styles_diff, enc_images_diff, dec_images_diff, enc_run_style_diff, dec_run_style_diff, enc_run_diff, dec_run_diff, enc_list_item_diff, dec_list_item_diff, enc_cell_diff, dec_cell_diff, enc_row_diff, dec_row_diff, enc_style_diff, dec_style_diff, enc_image_diff, dec_image_diff, enc_paragraph_diff, dec_paragraph_diff, enc_heading_diff, dec_heading_diff, enc_list_diff, dec_list_diff, enc_table_diff, dec_table_diff, enc_code_diff, dec_code_diff, enc_quote_diff, dec_quote_diff, enc_image_block_diff, dec_image_block_diff, enc_block_diff, dec_block_diff};
+use crate::standards::v1::subsets::document::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_bool, dec_bool, enc_u8, dec_u8, enc_f64, dec_f64, enc_list, dec_list, enc_run_style, dec_run_style, enc_run, dec_run, enc_block, dec_block, enc_list_item, dec_list_item, enc_cell, dec_cell, enc_row, dec_row, enc_style, dec_style, enc_image, dec_image, enc_runs_diff, dec_runs_diff, enc_blocks_diff, dec_blocks_diff, enc_list_items_diff, dec_list_items_diff, enc_table_rows_diff, dec_table_rows_diff, enc_table_cells_diff, dec_table_cells_diff, enc_styles_diff, dec_styles_diff, enc_images_diff, dec_images_diff, enc_run_style_diff, dec_run_style_diff, enc_run_diff, dec_run_diff, enc_list_item_diff, dec_list_item_diff, enc_cell_diff, dec_cell_diff, enc_row_diff, dec_row_diff, enc_style_diff, dec_style_diff, enc_image_diff, dec_image_diff, enc_paragraph_diff, dec_paragraph_diff, enc_heading_diff, dec_heading_diff, enc_list_diff, dec_list_diff, enc_table_diff, dec_table_diff, enc_code_diff, dec_code_diff, enc_quote_diff, dec_quote_diff, enc_image_block_diff, dec_image_block_diff, enc_block_diff, dec_block_diff};
 }
 pub use diff_codec::*;

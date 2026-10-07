@@ -8,9 +8,8 @@ use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobRequest};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::tools::fill as fill3d;
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{
-    change_target_volume_hidden, change_target_volume_locked, connect_vortices, create_object, create_target_volume, delete_target_volume, move_target_volume, rotate_target_volume, scale_target_volume, Puzzle3dMutation,
-};
+use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{change_target_volume_hidden,change_target_volume_locked,connect_vortices,create_object,create_target_volume,delete_target_volume,move_target_volume,rotate_target_volume,scale_target_volume,Puzzle3dMutation};
+
 use std::sync::Arc;
 
 //#region 🔖️Build

@@ -8,7 +8,8 @@
 //! `live` is not a load case of this model, so the first guard refuses on the case id before any load is looked up.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/📸️snapshot/⬅️before/🔣️.json");

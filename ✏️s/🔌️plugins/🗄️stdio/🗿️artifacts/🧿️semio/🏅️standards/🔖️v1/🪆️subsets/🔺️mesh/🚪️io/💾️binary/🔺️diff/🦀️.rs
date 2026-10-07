@@ -5,11 +5,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::mesh::schema::diff::*;
+use crate::standards::v1::subsets::mesh::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -211,6 +212,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::mesh::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_bytes, dec_bytes, parse_f32, parse_f64, parse_u32, enc_list, dec_list, enc_point3, dec_point3, enc_uv, dec_uv, enc_rgba, dec_rgba, enc_topology, dec_topology, enc_primitive, dec_primitive, enc_mesh, dec_mesh, enc_material, dec_material, enc_texture, dec_texture, enc_named_added_mesh, dec_named_added_mesh, enc_named_added_primitive, dec_named_added_primitive, enc_named_added_material, dec_named_added_material, enc_named_added_texture, dec_named_added_texture, enc_primitive_diff, dec_primitive_diff, enc_mesh_item_diff, dec_mesh_item_diff, enc_material_diff, dec_material_diff, enc_texture_diff, dec_texture_diff, enc_meshes_diff, dec_meshes_diff, enc_materials_diff, dec_materials_diff, enc_textures_diff, dec_textures_diff};
+use crate::standards::v1::subsets::mesh::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_bytes, dec_bytes, parse_f32, parse_f64, parse_u32, enc_list, dec_list, enc_point3, dec_point3, enc_uv, dec_uv, enc_rgba, dec_rgba, enc_topology, dec_topology, enc_primitive, dec_primitive, enc_mesh, dec_mesh, enc_material, dec_material, enc_texture, dec_texture, enc_named_added_mesh, dec_named_added_mesh, enc_named_added_primitive, dec_named_added_primitive, enc_named_added_material, dec_named_added_material, enc_named_added_texture, dec_named_added_texture, enc_primitive_diff, dec_primitive_diff, enc_mesh_item_diff, dec_mesh_item_diff, enc_material_diff, dec_material_diff, enc_texture_diff, dec_texture_diff, enc_meshes_diff, dec_meshes_diff, enc_materials_diff, dec_materials_diff, enc_textures_diff, dec_textures_diff};
 }
 pub use diff_codec::*;

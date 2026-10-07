@@ -1,0 +1,17 @@
+{
+  "session": 86476,
+  "exitCode": 0,
+  "nativePass": 21,
+  "nativeFail": 0,
+  "nativeSkip": 230,
+  "seconds": 1.324,
+  "rust": "1m38s",
+  "nextestRunId": "d874f5ad-8136-4683-ba57-9eb9b8aeec79",
+  "before": {
+    "session": 26642,
+    "pass": 20,
+    "fail": 1,
+    "skip": 230,
+    "seconds": 2.976
+  }
+}

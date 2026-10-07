@@ -41,17 +41,21 @@ fn hex(bytes: &[u8]) -> String {
 }
 
 fn child(row: &serde_json::Value) -> ArtifactChild<()> {
-    ArtifactChild::new(row["childId"].as_str().unwrap().into(), crate::os_io::ArtifactRef::parse_uri(row["target"].as_str().unwrap()).unwrap())
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    ArtifactChild::new(row["childId"].as_str().unwrap().into(), semio_framework_artifact_reference::ArtifactRef::parse_uri(row["target"].as_str().unwrap()).unwrap())
 }
 
 fn link(row: &serde_json::Value) -> ArtifactLink {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let pin = match row["pin"]["kind"].as_str().unwrap() {
         "head" => LinkPin::Head,
         "checkpoint" => LinkPin::Checkpoint { id: row["pin"]["id"].as_str().unwrap().into() },
         "snapshot" => LinkPin::Snapshot { blob: BlobRef { hash: row["pin"]["hash"].as_str().unwrap().into(), size: row["pin"]["size"].as_u64().unwrap(), media_type: row["pin"]["mediaType"].as_str().unwrap().into() } },
         other => panic!("unknown pin kind {other}"),
     };
-    ArtifactLink { target: crate::os_io::ArtifactRef::parse_uri(row["target"].as_str().unwrap()).unwrap(), pin, role: row["role"].as_str().unwrap().into() }
+    ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri(row["target"].as_str().unwrap()).unwrap(), pin, role: row["role"].as_str().unwrap().into() }
 }
 
 fn snapshot(row: &serde_json::Value) -> ComposedSnapshot {

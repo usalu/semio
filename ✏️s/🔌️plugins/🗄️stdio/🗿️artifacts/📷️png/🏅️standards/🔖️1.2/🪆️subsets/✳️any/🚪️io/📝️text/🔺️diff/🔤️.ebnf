@@ -1,27 +1,33 @@
-(* PngDiff's wire text IS its JSON serialization (serde camelCase, sparse fields), per
-   🦀️.rs; this documents the real top-level shape, not RFC 8259's own JSON grammar. *)
-diff = "{", [ member, { ",", member } ], "}" ;
-member = '"width"', ":", integer
-       | '"height"', ":", integer
-       | '"bitDepth"', ":", integer
-       | '"colorType"', ":", string
-       | '"interlace"', ":", bool
-       | '"plte"', ":", ( "null" | plte diff )
-       | '"trns"', ":", ( "null" | json value )
-       | '"gama"', ":", ( "null" | integer )
-       | '"chrm"', ":", ( "null" | json value )
-       | '"srgb"', ":", ( "null" | string )
-       | '"phys"', ":", ( "null" | json value )
-       | '"time"', ":", ( "null" | json value )
-       | '"bkgd"', ":", ( "null" | json value )
-       | '"textChunks"', ":", triple
-       | '"pixels"', ":", "[", { integer }, "]"
-       | '"chunkOrder"', ":", triple
-       | '"unknownChunks"', ":", triple ;
-plte diff = "{", [ '"removed"', ":", "[", { integer }, "]"
-                  , [ ",", '"modified"', ":", "[", { json value }, "]" ]
-                  , [ ",", '"added"', ":", "[", { json value }, "]" ] ], "}" ;
-triple = "{", [ '"removed"', ":", "[", { integer }, "]"
-              , [ ",", '"modified"', ":", "[", { json value }, "]" ]
-              , [ ",", '"added"', ":", "[", { json value }, "]" ] ], "}" ;
-bool = "true" | "false" ;
+(* 🧬️ Owned image record syntax. Whitespace separates tokens; semantic admission validates field cardinality and native precision. *)
+diff = [ image ] ;
+image = "image", "{", { image_field }, "}" ;
+image_field = integer_field | boolean_field | color_field | samples_field | palette_field | gamma_field | chromaticities_field | srgb_field | physical_field | timestamp_field | text_field | ancillary_field | transparency_block | background_block ;
+integer_field = ( "width" | "height" | "bit-depth" ), "=", INT ;
+boolean_field = "interlace", "=", boolean ;
+color_field = "color-type", "=", ( "grayscale" | "rgb" | "palette" | "grayscale-alpha" | "rgba" ) ;
+samples_field = "samples", "=", "[", { INT }, "]" ;
+palette_field = "palette", "=", "[", { rgb_record }, "]" ;
+rgb_record = "{", "r", "=", INT, "g", "=", INT, "b", "=", INT, "}" ;
+gamma_field = "gamma", "=", INT ;
+chromaticities_field = "chromaticities", "=", "white-x", "=", INT, "white-y", "=", INT, "red-x", "=", INT, "red-y", "=", INT, "green-x", "=", INT, "green-y", "=", INT, "blue-x", "=", INT, "blue-y", "=", INT ;
+srgb_field = "srgb", "=", ( "perceptual" | "relative-colorimetric" | "saturation" | "absolute-colorimetric" ) ;
+physical_field = "physical-dims", "=", "ppu-x", "=", INT, "ppu-y", "=", INT, "unit-is-meter", "=", boolean ;
+timestamp_field = "timestamp", "=", "year", "=", INT, "month", "=", INT, "day", "=", INT, "hour", "=", INT, "minute", "=", INT, "second", "=", INT ;
+text_field = "text-chunks", "=", "[", { text_record }, "]" ;
+text_record = "{", "keyword", "=", text, "value", "=", text, "compressed", "=", boolean, "kind", "=", ( "text" | "z-text" | "i-text" ), "language-tag", "=", text, "translated-keyword", "=", text, "}" ;
+ancillary_field = "ancillary-chunks", "=", "[", { ancillary_record }, "]" ;
+ancillary_record = "{", "kind", "=", INT, ",", INT, ",", INT, ",", INT, "after-raster", "=", boolean, "data", "=", "[", { INT }, "]", "}" ;
+transparency_block = "transparency", "{", [ transparency ], "}" ;
+transparency = "indexed", "alpha", "=", "[", { INT }, "]" | "grayscale", "gray", "=", INT | "rgb", "r", "=", INT, "g", "=", INT, "b", "=", INT ;
+background_block = "background", "{", [ background ], "}" ;
+background = "indexed", "index", "=", INT | "grayscale", "gray", "=", INT | "rgb", "r", "=", INT, "g", "=", INT, "b", "=", INT ;
+boolean = "true" | "false" ;
+text = STRING | IDENT | INT | FLOAT ;
+INT = [ "-" ], digit, { digit } ;
+FLOAT = INT, ".", digit, { digit } ;
+IDENT = letter, { letter | digit | "_" | "." | "-" } ;
+STRING = "\"", { escaped_character | unescaped_character }, "\"" ;
+escaped_character = "\\", ? any Unicode scalar value ? ;
+unescaped_character = ? Unicode scalar value except quote and backslash ? ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+letter = ? ASCII letter or underscore ? ;

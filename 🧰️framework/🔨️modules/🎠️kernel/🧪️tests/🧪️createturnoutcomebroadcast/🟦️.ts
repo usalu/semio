@@ -61,7 +61,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   type AppRef = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRef;
   type AppRole = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRole;
   type AppRouterManifest = import("../../🟦️.ts").AppRouterManifest;
-  type ArtifactDialect = import("../../../🚪️io/🧬️schema/🟦️.ts").ArtifactDialect;
+  type ArtifactDialect = import("../../../🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect;
 
   const { describe, expect, it } = vitest;
 
@@ -605,7 +605,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🟦️.ts"), "IoEntryGraph" | "ioIdentify" | "ioRun">, source: TestSource): Promise<void> {
   const { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun } = dependencies;
-  type ArtifactDialect = import("../../../🚪️io/🧬️schema/🟦️.ts").ArtifactDialect;
+  type ArtifactDialect = import("../../../🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect;
   type IoEntryGraphPlugin = import("../../🟦️.ts").IoEntryGraphPlugin;
 
   const { describe, expect, it } = vitest;

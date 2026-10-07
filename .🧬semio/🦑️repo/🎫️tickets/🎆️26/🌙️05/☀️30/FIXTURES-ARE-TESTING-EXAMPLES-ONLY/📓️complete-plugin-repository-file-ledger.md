@@ -1,6 +1,6 @@
 # Complete Plugin, Hub, OS and Repository Consumer File Ledger
 
-1173 distinct authored paths across all assigned phases. Exact original bodies and reasons remain in the cited input ledgers. Current existence reflects the shared workspace including later team taxonomy changes.
+1175 distinct authored paths across all assigned phases. Exact original bodies and reasons remain in the cited input ledgers. Current existence reflects the shared workspace including later team taxonomy changes. Late embedded-selection wrapper and consumer plus latest-wins source-oracle changes are included. Ticket verification script and durable reports are separately preserved under this ticket.
 
 - `.vscode/🧩️launch.seed.jsonc` — present
 - `✏️s/Cargo.toml` — present
@@ -976,8 +976,10 @@
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts` — present
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts` — present
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts` — present
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️embedded-selection/🟦️.ts` — present
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts` — present
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts` — present
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧪️tests/🧩️embedded-selection/🧬️schema/🔣️.json` — removed-or-reowned-by-team
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/📊️table/🟦️.tsx` — present
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🪟️tree-windows/🟦️.tsx` — present
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🪪️container-node-ids/🟦️.tsx` — present

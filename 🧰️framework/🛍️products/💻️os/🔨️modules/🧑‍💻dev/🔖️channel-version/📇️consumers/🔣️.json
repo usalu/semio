@@ -127,15 +127,11 @@
       "arbitrary": true
     },
     {
-      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🪪️document-identity-wire/🔣️.json",
+      "path": "🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🪪️document-identity-wire/🔣️.json",
       "occurrences": 1
     },
     {
-      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🔣️.json",
-      "occurrences": 1
-    },
-    {
-      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🧬️schema/🔣️.json",
+      "path": "🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🎬️media-export-wire/🔣️.json",
       "occurrences": 1
     },
     {

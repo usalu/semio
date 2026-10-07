@@ -16,8 +16,8 @@ pub fn create_rewrite_rule_envelope(id: &str, state: RewritingSnapshot) -> Rewri
 /// catalog, and `reserve_edit_history_slot` refuses every `Apply` without one (`edit history
 /// insertion requires its exact mutation retirement factory`); the editor app installs the same
 /// catalog through `build_document_store_owners`, every standalone store goes through here.
-pub async fn new_rewrite_rule_store(envelope: RewriteRuleEnvelope) -> Result<OwnedRewriteRuleStore, store::VcsError> {
-    let mut store = RewriteRuleStore::new(envelope).await?;
+pub async fn new_rewrite_rule_store(envelope: RewriteRuleEnvelope, actor: protocol::ActorId) -> Result<OwnedRewriteRuleStore, store::VcsError> {
+    let mut store = RewriteRuleStore::new(envelope, actor).await?;
     store.install_document_store_owners_exact(crate::standards::v1::subsets::any::schema::retirement::document_store_owners());
     Ok(OwnedRewriteRuleStore(store))
 }

@@ -13,3 +13,7 @@ pub struct PatchSnapshot {
 }
 
 semio_s_artifact_stdio_contract::snapshot_patch_leaf! { leaf: PatchSnapshot, snapshot: GltfSnapshot, mutation: GltfMutation, diff: GltfDiff, snapshot_schema: "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json" }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧾️wire-witness/🦀️.rs"]
+mod case_wire_witness;

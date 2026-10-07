@@ -1,11 +1,14 @@
-import {vizChartInferenceToJsonValue} from "../../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
+import type { VizChartTextOutput } from "../../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
+import {vizChartTextOutputToJsonValue} from "../../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
 /** 🧵️ Owned chart inference worker; the canonical pure planners also serve numerical probes. */
 import type { VizChartSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type { VizChartInference, VizChartInferenceProgress } from "../../../../🧬️schema/💡️inferences/🟦️.ts";
-import { planVizChart, renderVizTikzPlan, renderVizScenePlan } from "../../../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
-import { admitVizChartSpecification, validateVizChartInference } from "../../../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
-import { inferVizPresetTikz } from "../../../../🧬️schema/💡️inferences/📚️catalogue/🟦️.ts";
-type Message = { readonly kind: "progress"; readonly progress: VizChartInferenceProgress } | { readonly kind: "result"; readonly result: VizChartInference };
+import type {  VizChartInferenceProgress } from "../../../../🧬️schema/💡️inferences/🟦️.ts";
+import { planVizChart, renderVizScenePlan } from "../../../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
+import { renderVizTikzPlan } from "../../../../🚪️io/📝️text/💡️inferences/🖋️latex/🟦️.ts";
+import { admitVizChartSpecification } from "../../../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
+import { validateVizChartTextOutput } from "../../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
+import { renderVizPresetTikz } from "../../../../🚪️io/📝️text/💡️inferences/📚️catalogue/🟦️.ts";
+type Message = { readonly kind: "progress"; readonly progress: VizChartInferenceProgress } | { readonly kind: "result"; readonly result: VizChartTextOutput };
 type Endpoint = { postMessage(value: Message): void; onmessage: ((event: { readonly data: VizChartSnapshot }) => void) | null };
 
 function infer(snapshot: VizChartSnapshot, post: (message: Message) => void): void {
@@ -21,14 +24,14 @@ function infer(snapshot: VizChartSnapshot, post: (message: Message) => void): vo
     const chart = { ...admission.chart, presets: [], ...((spec.presets?.length ?? 0) > 0 ? { title: undefined } : {}) };
     const plan = planVizChart(chart, { onProgress: (done, layers) => progress(1 + Math.floor(done / Math.max(1, layers) * (total - 4))) });
     progress(total - 2);
-    const tikz = inferVizPresetTikz(admission.chart, renderVizTikzPlan(plan), () => progress(total - 2));
+    const tikz = renderVizPresetTikz(admission.chart, renderVizTikzPlan(plan), () => progress(total - 2));
     progress(total - 1);
     const scene = (spec.presets?.length ?? 0) > 0 ? undefined : renderVizScenePlan(plan);
-    const result: VizChartInference = (spec.presets?.length ?? 0) > 0
+    const result: VizChartTextOutput = (spec.presets?.length ?? 0) > 0
       ? { tikz, diagnostics: [{ code: "print.chart.scene-unavailable", path: "chart/presets", message: "Catalogue geometry is inferred by the LaTeX implementation; a numerical scene is unavailable for this figure." }], complete: true }
       : { plan, tikz, scene, diagnostics: [], complete: true };
-    const output = vizChartInferenceToJsonValue(result);
-    const errors = validateVizChartInference(output);
+    const output = vizChartTextOutputToJsonValue(result);
+    const errors = validateVizChartTextOutput(output);
     if (errors.length > 0) { post({ kind: "result", result: { tikz: "", diagnostics: errors, complete: false } }); return; }
     progress(total);
     post({ kind: "result", result: output });

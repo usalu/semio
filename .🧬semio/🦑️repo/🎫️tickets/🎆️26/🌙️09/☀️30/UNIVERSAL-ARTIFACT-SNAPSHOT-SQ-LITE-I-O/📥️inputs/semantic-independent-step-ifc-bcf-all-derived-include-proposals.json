@@ -1,0 +1,119 @@
+{
+  "qualification": "Read-only current source path existence; no compiler replay",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs",
+      "sha256": "219626868e8731c3c136a8f2a906ce5790a83d1dfde4bfb095185b7ddb3666ea",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        },
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/🦀️.rs",
+      "sha256": "0ca637fc15ec5a5eb6be94c622a07fa45a258cb9eee1d77ffc5080490ae8c368",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        },
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/🦀️.rs",
+      "sha256": "81c40eaa2281e4e19c1e7c56dab4441c9feb3bab3c5e73a996b4e678288b4cbe",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        },
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/🦀️.rs",
+      "sha256": "3cfb40306df58a9997db7769970383b473355d170029e90403c5c9e382da31a7",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        },
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/🦀️.rs",
+      "sha256": "53895904212f5cfbaf86a70f25e48c6da984550b47728370951500956590e320",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        },
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/🦀️.rs",
+      "sha256": "85875ab151b8e72fbeffa8ac82b8777bd253140fe10aaef3100b3a127c968cb6",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        },
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🚪️io/🦀️.rs",
+      "sha256": "aca6c86f1a510fa66cb9eb5ad977434bf3e13d0671a8ce3013855e6963b393b7",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🚪️io/🦀️.rs",
+      "sha256": "99d159c7477294fa468c4cfee039368c27c2a3f4d2ffa0e6ce296698ac2c39d4",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🚪️io/🦀️.rs",
+      "sha256": "cd0ce060ea37979d4932d33b3edaefe15924254f41351c978ad84d598cbc0464",
+      "regions": [
+        {
+          "before": "include!(\"🧪️tests/🔬️derived-construction-unit/🦀️.rs\");",
+          "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs\");"
+        }
+      ]
+    }
+  ]
+}

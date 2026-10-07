@@ -1,0 +1,99 @@
+{
+  "cases": [
+    {
+      "name": "modified Huffman terminating runs",
+      "compression": 2,
+      "width": 8,
+      "height": 1,
+      "fill": 1,
+      "options": 0,
+      "compressed": [
+        182
+      ],
+      "expected": [
+        15
+      ]
+    },
+    {
+      "name": "Group3 EOL",
+      "compression": 3,
+      "width": 8,
+      "height": 1,
+      "fill": 1,
+      "options": 0,
+      "compressed": [
+        0,
+        27,
+        96
+      ],
+      "expected": [
+        15
+      ]
+    },
+    {
+      "name": "Group4 horizontal and vertical",
+      "compression": 4,
+      "width": 8,
+      "height": 2,
+      "fill": 1,
+      "options": 0,
+      "compressed": [
+        54,
+        240
+      ],
+      "expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "Group4 pass over reference black run",
+      "compression": 4,
+      "width": 8,
+      "height": 2,
+      "fill": 1,
+      "options": 0,
+      "compressed": [
+        54,
+        196
+      ],
+      "expected": [
+        15,
+        0
+      ]
+    },
+    {
+      "name": "Group3 mixed dimensional row selectors",
+      "compression": 3,
+      "width": 8,
+      "height": 2,
+      "fill": 1,
+      "options": 1,
+      "compressed": [
+        0,
+        29,
+        176,
+        1,
+        96
+      ],
+      "expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "modified Huffman least significant coded bits",
+      "compression": 2,
+      "width": 8,
+      "height": 1,
+      "fill": 2,
+      "options": 0,
+      "compressed": [
+        109
+      ],
+      "expected": [
+        15
+      ]
+    }
+  ]
+}

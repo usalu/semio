@@ -1,3 +1,4 @@
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 //! 🌍️ gismap ← GeoJSON (RFC 7946, and GJ2008 files under stdio's CRS policy: CRS84/EPSG:4326 read as
 //! lon/lat, spherical Web Mercator inverse projected, every other CRS refused) — `Point`s become
 //! positions (`lon`, `lat`, and `alt` from a third coordinate), `LineString`s routes (`points`),
@@ -13,7 +14,7 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::geojson::GEOMETRY_MEMBERS;
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
-use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::{read_geojson_text, GeoJsonFeature, GeoJsonGeometry, GeoJsonId, GeoJsonPosition};
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::{ GeoJsonFeature, GeoJsonGeometry, GeoJsonId, GeoJsonPosition};
 use serde_json::{json, Map, Value};
 use std::collections::HashSet;
 
@@ -103,10 +104,10 @@ pub fn gis_map_snapshot_from_geojson(features: &[GeoJsonFeature]) -> GisMapSnaps
         let Some(geometry) = &feature.geometry else { continue };
         let id = match &feature.id {
             Some(GeoJsonId::Text(text)) => text.clone(),
-            Some(GeoJsonId::Number(number)) => number.to_string(),
+            Some(GeoJsonId::Number(number)) => semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::text::snapshot::exact_serde_value(number).to_string(),
             None => format!("feature-{index}"),
         };
-        let properties = feature.properties.clone().unwrap_or_default().into_iter().filter(|(key, _)| !GEOMETRY_MEMBERS.contains(&key.as_str())).collect();
+        let properties = feature.properties.clone().unwrap_or_default().into_iter().filter(|(key, _)| !GEOMETRY_MEMBERS.contains(&key.as_str())).map(|(key,value)|(key,semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::text::snapshot::exact_serde_value(&value))).collect();
         families.geometry(geometry, &id, &properties);
     }
     gis_map_snapshot_with_derived_children(families.document)

@@ -42,3 +42,5 @@ pub fn decode_din16798_pack(bytes: &[u8]) -> Result<Din16798Snapshot, String> {
 }
 }
 pub use native_snapshot_codec::*;
+
+crate::impl_norm_artifact_record!(@binary crate::Din16798Snapshot, extension="din16798", envelope_id="norm.din16798", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);

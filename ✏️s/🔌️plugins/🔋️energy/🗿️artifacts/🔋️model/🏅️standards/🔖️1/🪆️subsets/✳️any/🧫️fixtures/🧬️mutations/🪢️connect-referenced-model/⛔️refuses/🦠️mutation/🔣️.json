@@ -1,4 +1,11 @@
 {
   "mutation": "connectReferencedModel",
-  "targetUri": ""
+  "target": {
+    "artifactId": "",
+    "dialect": {
+      "artifactKind": "",
+      "standard": "",
+      "subset": ""
+    }
+  }
 }

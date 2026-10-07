@@ -3,9 +3,45 @@
   "assets": {
     "entries": {
       "pixels-paint-01ea8a91d34c90b8": null,
-      "pixels-paint-529109edeea8775b": {
-        "data": "iVNFTQ0KGgobAAAAcy5zdGRpby5zZW1pby5pbWFnZS5wYWNrIHYxARNzLnN0ZGlvLnNlbWlvLmltYWdlAwAAAAIAAAABCAABAAAAABgAAAAA/wAAgAAAAAAAAAAA/wAAgAAAAAAA",
-        "mime": "application/x-semio-image"
+      "pixels-paint-f0d22d88ca427fd3": {
+        "schema": "s.stdio.semio.image",
+        "width": 3,
+        "height": 2,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 0,
+            "rgba8": [
+              0,
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              128,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              255,
+              0,
+              0,
+              128,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "icc": null,
+        "metadata": []
       }
     }
   },
@@ -25,7 +61,7 @@
           "opacity": null,
           "pixelContent": {
             "height": 2,
-            "imageKey": "pixels-paint-529109edeea8775b",
+            "imageKey": "pixels-paint-f0d22d88ca427fd3",
             "width": 3
           },
           "transform": {

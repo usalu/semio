@@ -2,37 +2,28 @@
   "snapshot": {
     "schema": "test.collection-tree-shape",
     "records": [
-      { "value": "Alpha" },
-      { "value": "Beta" }
+      {
+        "value": "Alpha"
+      },
+      {
+        "value": "Beta"
+      }
     ]
   },
-  "schema": {
-    "type": "object",
-    "required": ["schema", "records"],
-    "additionalProperties": false,
-    "properties": {
-      "schema": { "const": "test.collection-tree-shape" },
-      "records": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": ["value"],
-          "additionalProperties": false,
-          "properties": {
-            "value": { "type": "string", "minLength": 1 }
-          }
-        }
-      }
-    }
-  },
   "collectionKey": "records",
-  "expectedValues": ["Alpha", "Beta"],
+  "expectedValues": [
+    "Alpha",
+    "Beta"
+  ],
   "windowSuffix": "-children",
   "rendererHierarchy": {
     "key": "sd-b8b69f216b371f28",
     "label": "Records [records]",
     "defaultOpen": true,
-    "window": { "total": 2, "offset": 0 },
+    "window": {
+      "total": 2,
+      "offset": 0
+    },
     "entries": [
       {
         "key": "sd-160eaeda4a6511ef",
@@ -67,5 +58,36 @@
         }
       }
     ]
+  },
+  "input": {
+    "schema": {
+      "type": "object",
+      "required": [
+        "schema",
+        "records"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "test.collection-tree-shape"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

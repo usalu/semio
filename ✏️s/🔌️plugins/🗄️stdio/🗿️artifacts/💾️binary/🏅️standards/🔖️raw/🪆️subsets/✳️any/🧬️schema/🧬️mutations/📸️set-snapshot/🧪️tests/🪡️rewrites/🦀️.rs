@@ -15,7 +15,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
-use crate::standards::v_raw::subsets::any::schema::mutations::{apply_binary_mutation, BinaryMutation};
+use crate::standards::v_raw::subsets::any::schema::mutations::{apply_binary_mutation,BinaryMutation};
+
 use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪡️rewrites/📸️snapshot/⬅️before/🔣️.json");

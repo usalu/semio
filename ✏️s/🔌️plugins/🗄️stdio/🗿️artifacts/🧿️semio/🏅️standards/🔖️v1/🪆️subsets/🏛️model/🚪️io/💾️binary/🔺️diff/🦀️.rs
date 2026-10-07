@@ -6,11 +6,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::model::schema::diff::*;
+use crate::standards::v1::subsets::model::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
@@ -214,6 +215,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::model::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, enc_list, dec_list, enc_point3, dec_point3, enc_quat, dec_quat, enc_transform, dec_transform, enc_spatial_kind, dec_spatial_kind, enc_element_class, dec_element_class, enc_geometry_ref, dec_geometry_ref, enc_pset_value, dec_pset_value, enc_property, dec_property, enc_property_set, dec_property_set, enc_spatial_node, dec_spatial_node, enc_element, dec_element, enc_relation_kind, dec_relation_kind, enc_relation, dec_relation, enc_spatial_node_diff, dec_spatial_node_diff, enc_element_diff, dec_element_diff, enc_relation_diff, dec_relation_diff, enc_spatial_diff, dec_spatial_diff, enc_elements_diff, dec_elements_diff, enc_relations_diff, dec_relations_diff};
+use crate::standards::v1::subsets::model::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, enc_list, dec_list, enc_point3, dec_point3, enc_quat, dec_quat, enc_transform, dec_transform, enc_spatial_kind, dec_spatial_kind, enc_element_class, dec_element_class, enc_geometry_ref, dec_geometry_ref, enc_pset_value, dec_pset_value, enc_property, dec_property, enc_property_set, dec_property_set, enc_spatial_node, dec_spatial_node, enc_element, dec_element, enc_relation_kind, dec_relation_kind, enc_relation, dec_relation, enc_spatial_node_diff, dec_spatial_node_diff, enc_element_diff, dec_element_diff, enc_relation_diff, dec_relation_diff, enc_spatial_diff, dec_spatial_diff, enc_elements_diff, dec_elements_diff, enc_relations_diff, dec_relations_diff};
 }
 pub use diff_codec::*;

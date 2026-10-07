@@ -1,4 +1,4 @@
-import type { ArtifactDialect } from "../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type { AppRef, AppRole } from "../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 import type { WindowLayout } from "../../../../🔨️modules/🛂️manifest/🟦️.ts";
 /** 🧬️ Canonical OS configuration schemas. */

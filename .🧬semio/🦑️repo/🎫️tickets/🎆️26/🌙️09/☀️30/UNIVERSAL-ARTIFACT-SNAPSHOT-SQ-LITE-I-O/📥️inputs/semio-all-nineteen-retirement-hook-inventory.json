@@ -1,0 +1,238 @@
+{
+  "rosterPaths": 78,
+  "snapshots": [
+    {
+      "subsetDirectory": "🔤️text",
+      "snapshotType": "SemioTextSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 482,
+      "heldSha256": "3c15060c153f4c93f6235be53c5263cd3b7f40d2bf0bbf7476dd2b043122d491"
+    },
+    {
+      "subsetDirectory": "🔊️audio",
+      "snapshotType": "SemioAudioSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 254,
+      "heldSha256": "2f531dd81c15ee1e89ae070827fb0160264c68849796ef1668b5eee22d675784"
+    },
+    {
+      "subsetDirectory": "🎬️video",
+      "snapshotType": "SemioVideoSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 485,
+      "heldSha256": "39263dc394e7245c386b95d7a70ba14501150485d7e724a1e88b53b78c4ece9c"
+    },
+    {
+      "subsetDirectory": "📦️object",
+      "snapshotType": "SemioObjectSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 451,
+      "heldSha256": "46601e4e4cffc0d17ce791a42428b9fca7907631eda6bfd40d05b527942646b2"
+    },
+    {
+      "subsetDirectory": "🔢️value",
+      "snapshotType": "SemioValueSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 376,
+      "heldSha256": "02f0cac705c3ddea01b9734df9ede048a1fd1c1e33665c62af487e42f27f7aac"
+    },
+    {
+      "subsetDirectory": "📊️table",
+      "snapshotType": "SemioTableSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 479,
+      "heldSha256": "42e700df33c88d3bc7a3bfb6e5627682e3784c53a2e41172ec13f16d724047fe"
+    },
+    {
+      "subsetDirectory": "🕸️graph",
+      "snapshotType": "SemioGraphSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 397,
+      "heldSha256": "ab5131279e05a54c661f0f405709c2df368dd9f7323d82503266751ea64b4db9"
+    },
+    {
+      "subsetDirectory": "🌊️flow",
+      "snapshotType": "SemioFlowSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 371,
+      "heldSha256": "b6a7c958f6b67ce620b56f03f255c266b2c887565fd7812639f32ebe6bd2001f"
+    },
+    {
+      "subsetDirectory": "🖼️image",
+      "snapshotType": "SemioImageSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 400,
+      "heldSha256": "f07f5571e5cf80012b96a4280856d34a97027713d6a0b063a4d89e47bd1a3abb"
+    },
+    {
+      "subsetDirectory": "🎞️animation",
+      "snapshotType": "SemioAnimationSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 232,
+      "heldSha256": "a68c70fcbe5bee075ad2f4ec370f7400e627924a768dd4816d0348ac244461fe"
+    },
+    {
+      "subsetDirectory": "🔺️mesh",
+      "snapshotType": "SemioMeshSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 410,
+      "heldSha256": "c165e2b075995936fb5798bf8818b6a58e3f8f65b674a41c28c459c39e61fe4a"
+    },
+    {
+      "subsetDirectory": "🧰️kit",
+      "snapshotType": "SemioKitSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 405,
+      "heldSha256": "c51fe83afeac9bec8f2f4d4ba380037b976c30614ae28f507fada2a8e967ac14"
+    },
+    {
+      "subsetDirectory": "🏛️model",
+      "snapshotType": "SemioModelSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 416,
+      "heldSha256": "024d5be78c9e319493e2e274dd1e4a042f691af262914fae6a630e6bdb73634e"
+    },
+    {
+      "subsetDirectory": "📐️cad",
+      "snapshotType": "SemioCadSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "inherited drop(self)",
+      "declaredRetireOwnedLine": 303,
+      "heldSha256": "072fb98aaf5ccd4238a2b7872980664b6c42a395db8478156c45a005bbeb5432"
+    },
+    {
+      "subsetDirectory": "📑️document",
+      "snapshotType": "SemioDocumentSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 327,
+      "heldSha256": "180bbc04ccaa39dfe47c68fc975bfb9000f2185309c490fbbf0d8778bc8dfc1f"
+    },
+    {
+      "subsetDirectory": "📽️presentation",
+      "snapshotType": "SemioPresentationSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 458,
+      "heldSha256": "736033a4c34a1d2970aa7fb46c56939c417e73777f2af59bf66d84827cd60735"
+    },
+    {
+      "subsetDirectory": "🖊️drawing",
+      "snapshotType": "SemioDrawingSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 344,
+      "heldSha256": "f80403951a147f8dc1cbfc8999d167e6be4955d0e2b0f9cdb177087836235cec"
+    },
+    {
+      "subsetDirectory": "🧊️brep",
+      "snapshotType": "SemioBrepSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 266,
+      "heldSha256": "ca45e295981e056b6e052c245f5ff9db544132c6d276f4b26b8bb01b7262b47c"
+    },
+    {
+      "subsetDirectory": "✉️base",
+      "snapshotType": "SemioSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "retirementHook": "actual native Owned override",
+      "declaredRetireOwnedLine": 160,
+      "heldSha256": "351f68284544e98b26cb120d96928a25da0803ea050a6c9e6e0dc8a01a1cda2f"
+    }
+  ],
+  "regions": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioTextSnapshot {",
+      "after": "impl ArtifactSqliteSnapshot for SemioTextSnapshot {\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "3c15060c153f4c93f6235be53c5263cd3b7f40d2bf0bbf7476dd2b043122d491"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioAudioSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioAudioSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "2f531dd81c15ee1e89ae070827fb0160264c68849796ef1668b5eee22d675784"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioVideoSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioVideoSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "39263dc394e7245c386b95d7a70ba14501150485d7e724a1e88b53b78c4ece9c"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioObjectSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioObjectSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "46601e4e4cffc0d17ce791a42428b9fca7907631eda6bfd40d05b527942646b2"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioFlowSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioFlowSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "b6a7c958f6b67ce620b56f03f255c266b2c887565fd7812639f32ebe6bd2001f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioImageSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioImageSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "f07f5571e5cf80012b96a4280856d34a97027713d6a0b063a4d89e47bd1a3abb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioAnimationSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioAnimationSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "a68c70fcbe5bee075ad2f4ec370f7400e627924a768dd4816d0348ac244461fe"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioMeshSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioMeshSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "c165e2b075995936fb5798bf8818b6a58e3f8f65b674a41c28c459c39e61fe4a"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioKitSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioKitSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "c51fe83afeac9bec8f2f4d4ba380037b976c30614ae28f507fada2a8e967ac14"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioModelSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioModelSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "024d5be78c9e319493e2e274dd1e4a042f691af262914fae6a630e6bdb73634e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "impl ArtifactSqliteSnapshot for SemioCadSnapshot{",
+      "after": "impl ArtifactSqliteSnapshot for SemioCadSnapshot{\nfn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+      "scope": "held only; exact unique trait impl anchor; no production edits",
+      "heldSha256": "072fb98aaf5ccd4238a2b7872980664b6c42a395db8478156c45a005bbeb5432"
+    }
+  ],
+  "template": "fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}",
+  "physicalRetirementCredit": false
+}

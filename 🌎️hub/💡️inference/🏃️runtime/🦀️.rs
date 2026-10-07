@@ -983,34 +983,30 @@ impl RetainedGisMapApprovalCommitterV1 {
         }
     }
 
-    fn parent_store(id: &str, snapshot: GisMapParentSnapshotV1) -> GisMapParentStoreV1 {
-        use directory::ArtifactPack;
-        let mut envelope = directory::os_store::create_document_envelope::<GisMapParentSnapshotV1, GisMapParentMutationV1>(GIS_DOCUMENT_SCHEMA, id, snapshot.clone(), None);
+    fn parent_store(id: &str, snapshot: GisMapParentSnapshotV1, actor: protocol::ActorId) -> GisMapParentStoreV1 {
+        let mut envelope = directory::os_store::create_document_envelope::<GisMapParentSnapshotV1, GisMapParentMutationV1>(GIS_DOCUMENT_SCHEMA, id, snapshot, None);
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() });
-        let digest = *semio_framework_hash::hash(&snapshot.encode_pack()).as_bytes();
-        let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, GIS_DOCUMENT_SCHEMA, snapshot, digest);
+        let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, GIS_DOCUMENT_SCHEMA, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), actor);
         directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_owners())
     }
 
-    fn drawing_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapDrawingSnapshotV1) -> GisMapDrawingStoreV1 {
-        use directory::{os_store::MemberStoreOwner, ArtifactPack};
+    fn drawing_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapDrawingSnapshotV1, actor: protocol::ActorId) -> GisMapDrawingStoreV1 {
+        use directory::os_store::MemberStoreOwner;
         let schema = semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
-        let mut envelope = directory::os_store::create_document_envelope::<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>(schema, id, snapshot.clone(), None);
+        let mut envelope = directory::os_store::create_document_envelope::<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>(schema, id, snapshot, None);
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() });
         envelope.owner = Some(directory::os_store::OwnerRef { parent, slot: "drawing".into(), child_id: id.into() });
-        let digest = *semio_framework_hash::hash(&snapshot.encode_pack()).as_bytes();
-        let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, schema, snapshot, digest);
+        let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), actor);
         directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <GisMapDrawingSnapshotV1 as MemberStoreOwner<GisMapDrawingMutationV1>>::member_store_owners())
     }
 
-    fn value_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapValueSnapshotV1) -> GisMapValueStoreV1 {
-        use directory::{os_store::MemberStoreOwner, ArtifactPack};
+    fn value_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapValueSnapshotV1, actor: protocol::ActorId) -> GisMapValueStoreV1 {
+        use directory::os_store::MemberStoreOwner;
         let schema = semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
-        let mut envelope = directory::os_store::create_document_envelope::<GisMapValueSnapshotV1, GisMapValueMutationV1>(schema, id, snapshot.clone(), None);
+        let mut envelope = directory::os_store::create_document_envelope::<GisMapValueSnapshotV1, GisMapValueMutationV1>(schema, id, snapshot, None);
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() });
         envelope.owner = Some(directory::os_store::OwnerRef { parent, slot: "value".into(), child_id: id.into() });
-        let digest = *semio_framework_hash::hash(&snapshot.encode_pack()).as_bytes();
-        let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, schema, snapshot, digest);
+        let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), actor);
         directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <GisMapValueSnapshotV1 as MemberStoreOwner<GisMapValueMutationV1>>::member_store_owners())
     }
 
@@ -1245,7 +1241,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     /// 📍 Installs one exact document actor and an actor-owned committed-Event recovery before any
     /// approval can enter.
-    async fn mount_document(&self, scope: DocumentScope, handle: db::ArtifactHandle, base: &InferenceMapBaseV1, document_write: GisMapDocumentWriteLeaseV1) -> Result<bool, GisMapApprovalCommitErrorV1> {
+    async fn mount_document(&self, scope: DocumentScope, handle: db::ArtifactHandle, base: &InferenceMapBaseV1, document_write: GisMapDocumentWriteLeaseV1, actor: &str) -> Result<bool, GisMapApprovalCommitErrorV1> {
         let snapshot = <GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let observed = handle.checkpoint_publication_snapshot().await.map_err(|error| gis_map_storage_refusal(&error))?;
         if !Self::checkpoint_matches(&observed, observed.authority_generation, base, &scope) {
@@ -1274,9 +1270,10 @@ impl RetainedGisMapApprovalCommitterV1 {
         let parent_id = key.clone();
         let drawing_id = snapshot.drawing.child_id.clone();
         let value_id = snapshot.value.child_id.clone();
-        let parent = Self::parent_store(&parent_id, snapshot);
+        let actor = protocol::ActorId(actor.to_owned());
+        let parent = Self::parent_store(&parent_id, snapshot, actor.clone());
         let parent_reference = directory::os_io::ArtifactRef { artifact_id: parent_id, dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } };
-        let admission = directory::os_store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(parent, Self::drawing_store(&drawing_id, parent_reference.clone(), drawing), Self::value_store(&value_id, parent_reference, value));
+        let admission = directory::os_store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(parent, Self::drawing_store(&drawing_id, parent_reference.clone(), drawing, actor.clone()), Self::value_store(&value_id, parent_reference, value, actor));
         let recovery = handle.durable_group_recovery_retained(admission);
         documents.insert(key, RetainedGisMapDocumentStateV1::Recovery { owner: Arc::new(tokio::sync::Mutex::new(recovery)), handle, scope, generation: observed.authority_generation, document_write, fence });
         Ok(true)
@@ -1427,7 +1424,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         }
     }
 
-    async fn prepare_retained_document(&self, scope: &DocumentScope, base: &InferenceMapBaseV1, gate: Arc<tokio::sync::Mutex<()>>, request: Arc<GisMapApprovalRequestTokenV1>) -> Result<(), GisMapApprovalCommitErrorV1> {
+    async fn prepare_retained_document(&self, scope: &DocumentScope, base: &InferenceMapBaseV1, gate: Arc<tokio::sync::Mutex<()>>, request: Arc<GisMapApprovalRequestTokenV1>, actor: &str) -> Result<(), GisMapApprovalCommitErrorV1> {
         let key = document_key(scope);
         let mut state_changes = self.state_epoch.subscribe();
         loop {
@@ -1591,7 +1588,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     None => {
                         drop(documents);
                         let handle = self.database.document(&protocol::ArtifactId(key.clone())).await.map_err(|error| gis_map_storage_refusal(&error))?;
-                        self.mount_document(scope.clone(), handle, base, document_write).await?;
+                        self.mount_document(scope.clone(), handle, base, document_write, actor).await?;
                         self.finish_document_recovery(&key).await?;
                         return Ok(());
                     }
@@ -2365,7 +2362,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         let mut live_ingress = Some(request.ingress);
         let key = document_key(&identity.scope);
         let request_token = owner.request.clone();
-        self.prepare_retained_document(&identity.scope, base, document_write, request_token).await?;
+        self.prepare_retained_document(&identity.scope, base, document_write, request_token, &identity.actor).await?;
         let result = loop {
             let turn = self.drive_turn(&key, &identity, &snapshot).await;
             self.announce_state_change();
@@ -2413,7 +2410,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         let key = document_key(&identity.scope);
         let request_token = owner.request.clone();
         let mut live_ingress = Some(request.ingress);
-        self.prepare_retained_document(&identity.scope, request.base, request.document_write, request_token).await?;
+        self.prepare_retained_document(&identity.scope, request.base, request.document_write, request_token, &identity.actor).await?;
         let result = loop {
             let turn = self.drive_turn(&key, &identity, &snapshot).await;
             self.announce_state_change();

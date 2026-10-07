@@ -685,9 +685,9 @@ describe("🧬️ structural validation agrees with ajv", () => {
   test("every declared validation case gets the same verdict from both implementations", async () => {
     const oracle = await ajv();
     for (const row of cases.validationCases) {
-      const ours = validateAgainstJsonSchema(row.schema, row.instance).length === 0;
+      const ours = validateAgainstJsonSchema(row.input.schema, row.instance).length === 0;
       expect(`${row.id}:${ours}`).toBe(`${row.id}:${row.valid}`);
-      expect(`${row.id}:${oracle.validate(row.schema, row.instance)}`).toBe(`${row.id}:${row.valid}`);
+      expect(`${row.id}:${oracle.validate(row.input.schema, row.instance)}`).toBe(`${row.id}:${row.valid}`);
     }
   });
 

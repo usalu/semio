@@ -9,23 +9,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub type GifDiffText = String;
 //#endregion 🚚️Carrier
 
-#[allow(unused_imports)]
-mod diff_codec {
-use super::*;
-use crate::standards::v89a::subsets::any::schema::diff::*;
-use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot};
-use framework_schema::ArtifactSchema;
-use protocol::os_spr::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-
-
-
-
-
-
-}
-pub use diff_codec::*;
 
 #[allow(unused_imports)]
 mod diff_codec {
@@ -466,11 +449,3 @@ fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError>
 }
 pub use diff_codec::*;
 
-#[allow(unused_imports)]
-mod diff_codec {
-use super::*;
-use crate::standards::v89a::subsets::any::schema::snapshot::*;
-use framework_schema::ArtifactSchema;
-
-}
-pub use diff_codec::*;

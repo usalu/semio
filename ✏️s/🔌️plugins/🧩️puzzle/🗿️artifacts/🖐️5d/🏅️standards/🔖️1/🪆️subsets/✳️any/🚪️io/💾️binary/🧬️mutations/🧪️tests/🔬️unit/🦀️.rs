@@ -8,7 +8,7 @@ async fn puzzle5d_document_vcs_replays_granular_operations() {
     use crate::{PUZZLE_5D_SCHEMA, Puzzle5dPart};
     use store::{ArtifactCommand, create_document_envelope};
 
-    let mut store = (puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None))).await.expect("store");
+    let mut store = (puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     (store.dispatch(ArtifactCommand::Apply { mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)], transaction: None })).await.expect("apply");
     let projection = store.snapshot().expect("projection");
     assert_eq!(projection.parts.len(), 1);

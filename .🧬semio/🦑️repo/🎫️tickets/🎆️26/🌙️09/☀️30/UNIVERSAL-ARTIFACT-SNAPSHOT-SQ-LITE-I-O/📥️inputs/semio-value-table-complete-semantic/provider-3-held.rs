@@ -3,9 +3,9 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-use crate::graph::schema::snapshot::{SemioGraphSnapshot,SemioGraphNode,SemioGraphEdge,SemioGraphPort,SemioGraphPortKind,GraphNodeId,GraphEdgeId};
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot,SemioGraphNode,SemioGraphEdge,SemioGraphPort,SemioGraphPortKind,GraphNodeId,GraphEdgeId};
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::value::schema::snapshot::SemioValueEntry;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 use crate::standards::v1::subsets::value::io::sqlite::snapshot::{project_value_tree,reconstruct_value_forest,ValueSqliteTables};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer::{reserve,heap_sort,compare_text};
@@ -13,7 +13,7 @@ const VALUES:ValueSqliteTables=ValueSqliteTables{value:"semio_graph_value",list_
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits the exact Graph and property forest through one owned or borrowed writer.
-fn visit_rows(snapshot:&SemioGraphSnapshot,projection:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioGraphSnapshot,projection:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  projection.check_rows(snapshot.nodes.len().checked_add(snapshot.edges.len()).and_then(|count|count.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio graph row count overflow"))?)?;
  let phase=projection.phase();
  let mut nodes=projection.allocate_frontier(snapshot.nodes.len())?;
@@ -147,7 +147,7 @@ fn project_properties(properties:&[SemioValueEntry],table:&str,owner:i64,project
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

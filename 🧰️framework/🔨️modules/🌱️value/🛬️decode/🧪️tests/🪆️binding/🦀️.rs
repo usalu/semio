@@ -120,10 +120,10 @@ fn sqlite_snapshot_native_binding_controlled_document_cancels_during_inflation()
 
 #[test]
 fn sqlite_snapshot_native_binding_controls_artifact_child_identity() {
-    use semio_framework_os_kernel::{ArtifactChild,io_schema::ArtifactRef};
+    use {semio_framework_os_kernel::ArtifactChild,semio_framework_artifact_reference::ArtifactRef};
     use std::{io::Write,process::{Command,Stdio}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔗️child/🔣️.json")).unwrap();
-    let strings=["childId","artifactId","artifactKind","standard","subset"].map(|key|fixture[key].as_str().unwrap());let total=strings.iter().map(|text|text.len()).sum::<usize>();let expected=ArtifactRef{artifact_id:strings[1].into(),dialect:semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:strings[2].into(),standard:strings[3].into(),subset:strings[4].into()}};
+    let strings=["childId","artifactId","artifactKind","standard","subset"].map(|key|fixture[key].as_str().unwrap());let total=strings.iter().map(|text|text.len()).sum::<usize>();let expected=ArtifactRef{artifact_id:strings[1].into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:strings[2].into(),standard:strings[3].into(),subset:strings[4].into()}};
     let mut record=semio_framework_dsl_record::RecordValue::default();record.fields.insert(0,semio_framework_dsl_record::FieldValue::Text(strings[0].into()));record.fields.insert(1,<ArtifactRef as semio_framework_dsl_record::DslField>::to_value(&expected));let value=semio_framework_dsl_record::FieldValue::Record(record);
     let mut accepted=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(total,&mut accepted);let actual=ArtifactChild::<()>::from_value_controlled(&value,&mut control).unwrap();assert_eq!(actual.child_id,strings[0]);assert_eq!(actual.target,expected);assert_eq!(control.owned_bytes(),total);
     let mut control=NativeDecodeControl::new(total-1,&mut accepted);assert!(ArtifactChild::<()>::from_value_controlled(&value,&mut control).is_err());assert!(control.owned_bytes()<=total-1);

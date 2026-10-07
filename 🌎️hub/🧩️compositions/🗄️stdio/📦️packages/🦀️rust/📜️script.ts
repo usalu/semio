@@ -20,9 +20,10 @@ import { repoCacheDirectory } from "../../../../../🧰️framework/🛍️produ
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { FRESH_COMPONENT_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { projectNativeCodecReceiptPublicationV1, type NativeCodecPublicationReceiptV1 } from "../../📇️publication/♻️native-receipt/🟦️.ts";
 
 import { prepareStdioComposition } from "../../🧩️composition/🟦️.ts";
-import { admitCompositionParentRemovalV1 } from "../../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
 
 const PACKAGE_NAME = "semio-hub-stdio";
 const PLUGIN_ID = "stdio";
@@ -880,17 +881,13 @@ class HomeIoSurfaceScript extends BundleScript {
   }
 }
 
-/** 🧪️ Checks the neutral editor acceptance fixture with an independent JSON Schema validator: every stdio editor ships in
+/** 🧪️ Checks the editor catalogue with independent native and manifest oracles: every stdio editor ships in
  * exactly one stdio package (the stdio component or one `🧩️extensions` family), the packages together ship every catalogue
  * format, and every editor owns exactly one launchable playground row across them. */
 async function testEditorCatalogContract(packageRoot: string): Promise<void> {
   const root = resolve(packageRoot, "../..");
   prepareStdioComposition(resolve(root, "../../.."), root);
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/✏️editor-catalog/🔣️.json"), "utf8")) as { editorCount: number; formatCount: number; editorApps: string[]; actions: { id: string }[]; deployedComponents: { id: string; package: string; path: string; role: string; componentKind: string }[] };
-  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/✏️editor-catalog/🔣️.json"), "utf8"));
-  const { default: Ajv } = await import("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(`editor catalogue fixture: ${JSON.stringify(validate.errors)}`);
   const { parse: parseToml } = await import("@iarna/toml");
   for (const row of fixture.deployedComponents) {
     const path = resolve(root, "../../..", row.path);
@@ -1003,7 +1000,10 @@ class CompositionScript extends BundleScript {
     const reference = scan(this.repoRoot);
     if (reference.some(owner => owner.kind !== "directory" || !owner.complete)) throw new Error("Live Stdio owner authority is partial or follows a symlink");
     const identities = reference.map(owner => owner.identity);
-    const retained = admitCompositionParentRemovalV1({ schema: "semio.stdio.parent-removal-admission/v1", expected: identities, absent: "📼️avi", present: scan(snapshot, identities) });
+    const present = scan(snapshot, identities);
+    if (present.some(owner => owner.kind !== "directory" || !owner.complete)) throw new Error("Removed-parent snapshot owner authority is partial or follows a symlink");
+    const retained = present.map(owner => owner.identity).sort();
+    assert.deepEqual(retained, identities.filter(identity => identity !== "📼️avi").sort(), "Removed-parent snapshot retains every actual sibling owner exactly once");
     const owners = retained.length;
     const started = Date.now();
     let interrupted = false, compiled = false, testsCompiled = false;
@@ -1261,10 +1261,48 @@ class CatalogRootScript extends BundleScript {
   }
 }
 
-/** 🧬️ Regenerates this plugin's committed native-codec projection `packSchemaHash` column from the live Rust
- * receipts (`os_pack::schema_hash`); the same test, run without the write mode, is the projection-equals-receipts law. */
+/** 🧬️ Publishes current artifact-scoped native receipts or the complete live codec pack-hash column. */
 class NativeCodecProjectionScript extends BundleScript {
-  run(): void {
+  async run(segments: string[]): Promise<void> {
+    if (segments[0] === "refresh") {
+      const artifact = segments[1];
+      if (!artifact || segments.length !== 2 || !/^[a-z][a-z0-9-]*$/.test(artifact)) throw new Error("native-codec-projection refresh requires one authored artifact identity");
+      const factoryPath = resolve(this.root, "../../🔌️plugin/📇️catalog/📜️native-codec-factories.json");
+      const catalogPath = resolve(this.root, "../../📇️publication/📜️native-catalog.json");
+      const selected = JSON.parse(readFileSync(factoryPath, "utf8")).receipts.filter((row: any) => row.artifact === artifact);
+      if (selected.length !== 1) throw new Error("native-codec-projection requires exactly one authored factory");
+      const authored = selected[0];
+      const control = new AbortController();
+      const interrupt = () => control.abort();
+      process.on("SIGINT", interrupt);
+      process.on("SIGTERM", interrupt);
+      try {
+        const receipts: NativeCodecPublicationReceiptV1[] = [];
+        console.log(`[DEBUG] native-codec-projection proving current ${artifact} compiled carrier and live codec`);
+        await runRepositoryCommand(process.execPath, ["nx", "run", `@semio-tech/stdio-${artifact}-rs:test`, "--excludeTaskDependencies", "--skip-nx-cache", "--", "long", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"], this.repoRoot, "native-codec-publication", buildBudgetMs(), {
+          signal: control.signal,
+          onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); },
+        });
+        if (control.signal.aborted || receipts.length !== 1) throw new Error("native-codec-projection requires one successful current native receipt");
+        const receipt = receipts[0];
+        if (receipt.factoryId !== authored.factory_id) throw new Error("native-codec-projection native factory disagrees with its owner");
+        const definitionPath = resolve(this.repoRoot, authored.definition_path);
+        const protocolPath = resolve(this.repoRoot, authored.protocol_path);
+        const paths = [factoryPath, definitionPath, catalogPath];
+        const originals = paths.map(path => readFileSync(path, "utf8"));
+        const protocol = readFileSync(protocolPath, "utf8");
+        const projected = projectNativeCodecReceiptPublicationV1({ receipt, protocol, factories: JSON.parse(originals[0]), definition: JSON.parse(originals[1]), catalog: JSON.parse(originals[2]) });
+        const documents = [projected.factories, projected.definition, projected.catalog];
+        if (control.signal.aborted || readFileSync(protocolPath, "utf8") !== protocol || paths.some((path, index) => readFileSync(path, "utf8") !== originals[index])) throw new Error("native-codec-projection source changed before publication");
+        for (let index = 0; index < paths.length; index++) writeFileSync(paths[index], `${JSON.stringify(documents[index], null, 2)}\n`);
+        console.log(`[DEBUG] native-codec-projection published ${receipt.factoryId} pack=${receipt.packSchemaHash} protocol=${receipt.protocolSourceSha256}`);
+      } finally {
+        process.off("SIGINT", interrupt);
+        process.off("SIGTERM", interrupt);
+      }
+      return;
+    }
+    if (segments.length) throw new Error("native-codec-projection accepts refresh <artifact>");
     runCmd("cargo", ["test", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub-stdio", "--features", "full-artifact-catalog", "--test", "native_openable_provider", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });
   }
 }

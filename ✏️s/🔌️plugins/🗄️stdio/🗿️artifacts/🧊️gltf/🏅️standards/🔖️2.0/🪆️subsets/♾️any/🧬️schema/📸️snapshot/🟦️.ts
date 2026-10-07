@@ -1,4 +1,4 @@
-import {binary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ GltfSnapshot twin: the typed glTF 2.0 document model exactly as its Rust `ToValue` wire writes it, and the
  * readers that decode that wire. A member the wire omits when empty or default is optional here, as in `🔣️.json`.
  * @see ./🔣️.json
@@ -36,10 +36,10 @@ const gltfWireRecord = (value: unknown, at: string): Readonly<Record<string, unk
 
 export const gltfWireString: GltfWireReader<string> = (value, at = "$") => (typeof value === "string" ? value : gltfWireRefuse(at, "value is not a string"));
 export const gltfWireBoolean: GltfWireReader<boolean> = (value, at = "$") => (typeof value === "boolean" ? value : gltfWireRefuse(at, "value is not a boolean"));
-export const gltfWireNumber: GltfWireReader<Binary64> = (value, at = "$") => (typeof value === "number" && Number.isFinite(value) ? binary64(value) : gltfWireRefuse(at, "value is not a finite native-wire number"));
+export const gltfWireNumber: GltfWireReader<Binary64> = (value, at = "$") => parseBinary64(value);
 export const gltfWireInteger = (maximum = Number.MAX_SAFE_INTEGER): GltfWireReader<number> => (value, at = "$") =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= maximum ? value : gltfWireRefuse(at, `value is not an integer in 0..=${maximum}`);
-export const gltfWireIndex: GltfWireReader<bigint> = (value, at = "$") => BigInt(gltfWireInteger()(value,at));
+export const gltfWireIndex: GltfWireReader<bigint> = (value, at = "$") => typeof value === "bigint" && value >= 0n && value <= 0xffffffffffffffffn ? value : gltfWireRefuse(at, "unsigned owned index required");
 export const gltfWireByte = gltfWireInteger(255);
 export const gltfWireLiteral = <const T extends readonly (string | number)[]>(...members: T): GltfWireReader<T[number]> => (value, at = "$") =>
   members.includes(value as T[number]) ? (value as T[number]) : gltfWireRefuse(at, `value is not one of ${members.join(", ")}`);
@@ -54,7 +54,7 @@ export const gltfWireTuple = <T extends readonly unknown[]>(...items: { readonly
   return value.map((entry, index) => (items[index] as GltfWireReader<unknown>)(entry, `${at}[${index}]`)) as [...T];
 };
 export const gltfWireMap = <T>(read: GltfWireReader<T>): GltfWireReader<[string,T][]> => (value, at = "$") =>
-  Object.entries(gltfWireRecord(value, at)).map(([key, entry]) => [key, read(entry, `${at}.${key}`)]);
+  gltfWireArray(gltfWireTuple(gltfWireString, read))(value, at);
 export const gltfWireRequired = <T>(read: GltfWireReader<T>): GltfWireMember<T, false> => ({ read, optional: false });
 export const gltfWireDefault = <T>(read: GltfWireReader<T>, missing: () => T): GltfWireMember<T,false> => ({read,optional:false,missing});
 export const gltfWireOptional = <T>(read: GltfWireReader<T>): GltfWireMember<T, true> => ({ read, optional: true });
@@ -348,12 +348,16 @@ export interface GltfSnapshot {
 //#region 📥️Parsers
 /** 🧩️ Decodes any JSON value into a fresh `GltfJson`, keeping member order. */
 export function parseGltfJson(value: unknown, at = "$"): GltfJson {
- if(value===null)return{kind:"null"};
- if(typeof value==="boolean")return{kind:"boolean",value};
- if(typeof value==="string")return{kind:"string",value};
- if(typeof value==="number")return{kind:"number",value:gltfWireNumber(value,at)};
- if(Array.isArray(value))return{kind:"array",values:value.map((value,index)=>parseGltfJson(value,at+"["+index+"]"))};
- return{kind:"object",members:Object.entries(gltfWireRecord(value,at)).map(([key,value])=>[key,parseGltfJson(value,at+"."+key)])};
+ const row=gltfWireRecord(value,at);
+ switch(row.kind){
+ case "null": return gltfWireObject<{kind:"null"}>({kind:gltfWireRequired(gltfWireLiteral("null"))})(value,at);
+ case "boolean": return gltfWireObject<{kind:"boolean";value:boolean}>({kind:gltfWireRequired(gltfWireLiteral("boolean")),value:gltfWireRequired(gltfWireBoolean)})(value,at);
+ case "number": return gltfWireObject<{kind:"number";value:Binary64}>({kind:gltfWireRequired(gltfWireLiteral("number")),value:gltfWireRequired(gltfWireNumber)})(value,at);
+ case "string": return gltfWireObject<{kind:"string";value:string}>({kind:gltfWireRequired(gltfWireLiteral("string")),value:gltfWireRequired(gltfWireString)})(value,at);
+ case "array": return gltfWireObject<{kind:"array";values:GltfJson[]}>({kind:gltfWireRequired(gltfWireLiteral("array")),values:gltfWireRequired(gltfWireArray(parseGltfJson))})(value,at);
+ case "object": return gltfWireObject<{kind:"object";members:[string,GltfJson][]}>({kind:gltfWireRequired(gltfWireLiteral("object")),members:gltfWireRequired(gltfWireMap(parseGltfJson))})(value,at);
+ default:return gltfWireRefuse(at,"owned JSON variant required");
+ }
 }
 
 const json = gltfWireOptional(parseGltfJson);

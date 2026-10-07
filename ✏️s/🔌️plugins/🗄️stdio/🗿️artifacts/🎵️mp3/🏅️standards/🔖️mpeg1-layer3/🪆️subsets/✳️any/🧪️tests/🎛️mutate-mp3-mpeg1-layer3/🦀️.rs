@@ -89,7 +89,8 @@ mod subject {
     use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3, Mp3EncodeAdvance, Mp3EncodeCursor};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_mp3::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, Mp3Mutation};
+    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation,Mp3Mutation};
+
     use semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     use semio_repo_test_host::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
 

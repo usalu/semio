@@ -27,7 +27,7 @@ use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioFlowMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
 /// scope in production code too, not merely under `#[cfg(test)]` (W2b closer fix).
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutations
 #[path = "🌉️insert-edge/🦀️.rs"]
@@ -255,8 +255,7 @@ pub(crate) fn agg_inverse(this: &SemioFlowMutation, base: &SemioFlowSnapshot) ->
 /// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_flow_mutation`/`parse_flow_mutation` text codec rather than re-deriving a second
 /// independent encoding.
-#[path = "📦️codec/🫳️borrowed/🦀️.rs"]
-mod borrowed_operation_source;
+
 
 
 //#endregion OpCodecs
@@ -327,3 +326,6 @@ pub(crate) fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> FlowNod
 pub(crate) fn edge(id: &str, from_node: &str, to_node: &str, kind: &str) -> FlowEdge {
     FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: "out".into() }, to: PortRef { node: to_node.into(), port: "in".into() }, kind: kind.into() }
 }
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

@@ -13,7 +13,7 @@ use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
@@ -26,8 +26,8 @@ use semio_framework_plugin::NoPresence;
 use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::StandardId;
-use semio_framework_plugin::SubsetId;
+use {semio_framework_artifact_reference::StandardId};
+use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_ui_locale::Label;
 
 //#region 🔖️Dialect

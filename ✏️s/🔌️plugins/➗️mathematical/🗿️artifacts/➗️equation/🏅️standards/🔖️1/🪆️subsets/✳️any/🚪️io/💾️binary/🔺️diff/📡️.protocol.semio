@@ -3,14 +3,24 @@ protocol equation.diff
 version 1
 schema mathematical.equation.diff
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+
+record = symbols field_count field_id value_tag intrinsic_value
+symbols = symbol_count (utf8_length utf8_bytes)*
+field symbol_count varint_u64
+field utf8_length varint_u64
+field field_count varint_u64 constant 1
+field field_id varint_u64 constant 1
+field value_tag u8 constant 0x11
+
+intrinsic_value = null | false | true | signed | unsigned | float | text | bytes | array | object
+null = 0x12
+false = 0x01
+true = 0x02
+signed = 0x03 zigzag_leb128_i64
+unsigned = 0x04 leb128_u64
+float = 0x05 ieee754_f64le
+text = 0x06 symbol_index | 0x07 utf8_length utf8_bytes
+bytes = 0x08 octet_length octets
+array = 0x0c element_count intrinsic_value*
+object = 0x10 member_count (inline_text intrinsic_value)*
+inline_text = 0x07 utf8_length utf8_bytes

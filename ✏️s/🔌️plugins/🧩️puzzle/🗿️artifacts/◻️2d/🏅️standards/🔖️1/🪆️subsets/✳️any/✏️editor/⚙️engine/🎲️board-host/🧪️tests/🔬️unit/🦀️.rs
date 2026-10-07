@@ -106,7 +106,7 @@ pub(crate) mod context {
                 width: None,
                 height: None,
                 scale: None,
-            }],
+            }].into(),
             handles: vec![
                 HandleDescJson { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("port".into()), color: None, icon_kind: None, user_data: None, visible: None, locked: None, scale: None },
                 HandleDescJson {
@@ -124,9 +124,9 @@ pub(crate) mod context {
                     locked: None,
                     scale: None,
                 },
-            ],
-            edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }],
-            wires: vec![],
+            ].into(),
+            edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }].into(),
+            wires: vec![].into(),
             regions: vec![],
             selection_exit_highlight_ids: vec![],
         }
@@ -175,7 +175,7 @@ pub(crate) mod context {
                     height: None,
                     scale: None,
                 },
-            ],
+            ].into(),
             handles: vec![
                 HandleDescJson { id: "a:h0".into(), node_id: "a".into(), angle: 0.0, radius: None, selected: None, style: None, handle_kind: Some("parent".into()), color: None, icon_kind: None, user_data: None, visible: None, locked: None, scale: None },
                 HandleDescJson {
@@ -193,9 +193,9 @@ pub(crate) mod context {
                     locked: None,
                     scale: None,
                 },
-            ],
-            edges: vec![],
-            wires: vec![],
+            ].into(),
+            edges: vec![].into(),
+            wires: vec![].into(),
             regions: vec![],
             selection_exit_highlight_ids: vec![],
         }

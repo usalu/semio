@@ -1,4 +1,5 @@
 /** 🧪️ Independent JSON Schema checks for shared artifact addressing and child wire identity. */
+import artifactReferenceSchema from "../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
@@ -19,7 +20,7 @@ import clearDefaultSchema from "../../../../🎚️config/🧬️schema/🧬️m
 import { surfaceAppId, parseSurfaceAppId } from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 
 export function testSharedArtifactAddressingOracle(): void {
-  const ajv = new Ajv({ strict: false, allErrors: true });
+  const ajv = new Ajv({ strict: false, allErrors: true }).addSchema(artifactReferenceSchema);
   ajv.addSchema(ioSchema).addSchema(manifestSchema).addSchema(blobSchema);
   const validateLink = ajv.compile(linkSchema);
   for (const row of fixture.validLinks) {
@@ -62,7 +63,7 @@ export function testSharedArtifactAddressingOracle(): void {
  * schema `ContentId`, and the first-party synchronous SHA-256 equals Node's `crypto` (third-party) on every vector and on
  * inputs that cross the 55/56/64-byte padding boundaries. */
 export function testContentIdOracle(): void {
-  const ajv = new Ajv({ strict: false, allErrors: true });
+  const ajv = new Ajv({ strict: false, allErrors: true }).addSchema(artifactReferenceSchema);
   ajv.addSchema(ioSchema).addSchema(childSchema);
   const validateContentId = ajv.compile({ $ref: `${childSchema.$id}#/$defs/ContentId` });
   const encoder = new TextEncoder();

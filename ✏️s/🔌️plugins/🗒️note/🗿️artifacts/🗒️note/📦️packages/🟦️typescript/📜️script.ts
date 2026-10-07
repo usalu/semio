@@ -24,7 +24,7 @@ class ContractTestScript extends BundleScript {
 class CheckScript extends BundleScript {
   run(): void {
     const schema = "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema";
-    runCmd(process.execPath, [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(schema, "🟦️.ts"), join(schema, "📸️snapshot/🟦️.ts"), join(schema, "🔺️diff/🟦️.ts"), join(schema, "📸️snapshot/🪶️sqlite/🟦️.ts"), join(schema, "📸️snapshot/🪶️sqlite/🧪️tests/🟦️.ts"), "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts"], { cwd: this.repoRoot });
+    runCmd(process.execPath, [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(schema, "🟦️.ts"), join(schema, "📸️snapshot/🟦️.ts"), join(schema, "🔺️diff/🟦️.ts"), join(schema, "../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"), join(schema, "../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"), "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts"], { cwd: this.repoRoot });
   }
 }
 /** 🛂️ Validates artifact document behavior and its authored TypeScript surfaces. */

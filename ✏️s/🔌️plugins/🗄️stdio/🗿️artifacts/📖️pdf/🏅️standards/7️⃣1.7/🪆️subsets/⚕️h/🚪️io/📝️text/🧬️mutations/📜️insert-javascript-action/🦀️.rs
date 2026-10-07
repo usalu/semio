@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "insert-javascript-action";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::InsertJavascriptAction;
+use crate::standards::v1_7::subsets::h::schema::mutations::InsertJavascriptAction;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &InsertJavascriptAction) -> Result<String, String> {

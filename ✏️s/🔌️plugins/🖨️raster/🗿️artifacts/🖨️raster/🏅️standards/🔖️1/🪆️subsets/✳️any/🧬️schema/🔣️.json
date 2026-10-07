@@ -40,24 +40,6 @@
     }
   },
   "$defs": {
-    "RasterImageAsset": {
-      "title": "RasterImageAsset",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mime",
-        "data"
-      ],
-      "properties": {
-        "mime": {
-          "type": "string"
-        },
-        "data": {
-          "type": "string",
-          "contentEncoding": "base64"
-        }
-      }
-    },
     "RasterLayerNode": {
       "title": "RasterLayerNode",
       "oneOf": [

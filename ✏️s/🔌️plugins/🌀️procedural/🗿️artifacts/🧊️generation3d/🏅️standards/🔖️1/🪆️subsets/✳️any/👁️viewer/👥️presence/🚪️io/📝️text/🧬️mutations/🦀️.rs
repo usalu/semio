@@ -6,8 +6,6 @@ use super::*;
 use crate::viewer::generation3d::presence::component::mutations::*;
 use crate::viewer::generation3d::presence::component::Generation3dViewPresence;
 use crate::viewer::generation3d::config::Generation3dViewCamera;
-use set_preview_camera::SetPreviewCamera;
-use set_show_mode::SetShowMode;
 
 impl protocol::OpText for Generation3dViewPresenceMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -37,8 +35,6 @@ use super::*;
 use crate::viewer::generation3d::presence::component::mutations::*;
 use crate::viewer::generation3d::presence::component::Generation3dViewPresence;
 use crate::viewer::generation3d::config::Generation3dViewCamera;
-use set_preview_camera::SetPreviewCamera;
-use set_show_mode::SetShowMode;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Generation3dViewPresence`.

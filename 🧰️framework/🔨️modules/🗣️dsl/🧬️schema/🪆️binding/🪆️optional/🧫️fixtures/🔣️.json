@@ -1,0 +1,53 @@
+{
+  "field": "label",
+  "samples": [
+    {
+      "state": "omitted",
+      "physical": {},
+      "json": {},
+      "document": ""
+    },
+    {
+      "state": "clear",
+      "physical": {
+        "label": {}
+      },
+      "json": {
+        "label": null
+      },
+      "document": "label {}"
+    },
+    {
+      "state": "replace",
+      "physical": {
+        "label": {
+          "value": "new label"
+        }
+      },
+      "json": {
+        "label": "new label"
+      },
+      "document": "label { value=\"new label\" }"
+    }
+  ],
+  "invalid": [
+    {
+      "label": {
+        "value": 12
+      }
+    },
+    {
+      "label": {
+        "other": "new"
+      }
+    },
+    {
+      "label": null
+    }
+  ],
+  "invalidDocuments": [
+    "label { value=12 }",
+    "label { other=new }",
+    "label=null"
+  ]
+}

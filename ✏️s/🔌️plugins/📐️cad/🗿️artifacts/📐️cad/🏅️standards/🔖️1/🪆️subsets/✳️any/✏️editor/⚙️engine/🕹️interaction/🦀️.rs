@@ -5,7 +5,7 @@
 //! statechart any more: the four `aec.building` placements that used to be bespoke are the
 //! `placeWall`/`placeBeam`/`placeColumn`/`placeSlab` assets like every other interaction.
 
-use crate::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
+use crate::standards::v1::subsets::any::schema::geometry::{CadObject, CadPrimitiveSlot};
 use crate::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 
 use semio_framework_value::DslValue;

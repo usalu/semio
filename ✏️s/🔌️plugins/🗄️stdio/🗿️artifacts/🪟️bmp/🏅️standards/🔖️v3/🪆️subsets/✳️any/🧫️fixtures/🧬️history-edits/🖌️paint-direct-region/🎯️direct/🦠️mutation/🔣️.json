@@ -1,14 +1,14 @@
 {
   "mutation": "paint-direct-region",
   "payload": {
-    "revision": "7535c8f95fe04297",
+    "revision": "04e2c62489e89c18",
     "x": 0,
     "y": 0,
     "width": 1,
     "height": 1,
-    "red": 17,
-    "green": 34,
-    "blue": 51,
-    "alpha": 255
+    "red": 9,
+    "green": 8,
+    "blue": 7,
+    "alpha": 6
   }
 }

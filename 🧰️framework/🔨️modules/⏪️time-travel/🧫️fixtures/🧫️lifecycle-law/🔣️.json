@@ -43,7 +43,8 @@
     "timeTravel.illegal",
     "timeTravel.stale",
     "timeTravel.blocked",
-    "timeTravel.empty"
+    "timeTravel.empty",
+    "timeTravel.unchanged"
   ],
   "guards": [
     "always",
@@ -1983,34 +1984,21 @@
       "event": "accept",
       "when": "unchangedReturnInactive",
       "context": "editing.fromInactive.unchanged",
-      "to": "inactive",
-      "effects": [
-        "close"
-      ],
-      "generation": "increment",
-      "session": "keep"
+      "rejection": "timeTravel.unchanged"
     },
     {
       "from": "editing",
       "event": "accept",
       "when": "unchangedReturnReviewing",
       "context": "editing.fromReviewing.unchanged",
-      "to": "reviewing",
-      "effects": [],
-      "generation": "keep",
-      "session": "keep"
+      "rejection": "timeTravel.unchanged"
     },
     {
       "from": "editing",
       "event": "accept",
       "when": "unchangedReturnReplaying",
       "context": "editing.fromReviewing.unchanged.reportLost",
-      "to": "replaying",
-      "effects": [
-        "startReplay"
-      ],
-      "generation": "increment",
-      "session": "keep"
+      "rejection": "timeTravel.unchanged"
     },
     {
       "from": "editing",
@@ -3952,7 +3940,7 @@
       }
     },
     {
-      "name": "accepting a withdrawal begun on an already accepted withdrawal changes nothing",
+      "name": "accepting a withdrawal begun on an already accepted withdrawal is refused without changing the session",
       "session": {
         "id": 3,
         "generation": 5,
@@ -4041,75 +4029,7 @@
         "generation": 5
       },
       "expect": {
-        "transition": {
-          "session": {
-            "id": 3,
-            "generation": 5,
-            "base": {
-              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
-            },
-            "stage": "reviewing",
-            "accepted": [
-              {
-                "target": {
-                  "mutation": "a",
-                  "position": 2
-                },
-                "replacement": {
-                  "kind": "withdrawn"
-                }
-              }
-            ],
-            "pending": null,
-            "report": {
-              "fromPosition": 2,
-              "outcomes": [
-                {
-                  "mutationId": "a",
-                  "editId": "edit-a",
-                  "opIndex": 0,
-                  "worst": null,
-                  "messages": [],
-                  "superseded": true,
-                  "withdrawn": false
-                },
-                {
-                  "mutationId": "b",
-                  "editId": "edit-b",
-                  "opIndex": 0,
-                  "worst": "warning",
-                  "messages": [
-                    {
-                      "level": "warning",
-                      "code": "mutation.partial",
-                      "message": "1 of 2 targets is missing",
-                      "target": [
-                        "node",
-                        "7"
-                      ],
-                      "opIndex": 0
-                    }
-                  ],
-                  "superseded": false,
-                  "withdrawn": false
-                },
-                {
-                  "mutationId": "c",
-                  "editId": "edit-c",
-                  "opIndex": 0,
-                  "worst": null,
-                  "messages": [],
-                  "superseded": false,
-                  "withdrawn": false
-                }
-              ],
-              "worst": "warning"
-            },
-            "progress": null,
-            "fault": null
-          },
-          "effects": []
-        }
+        "rejection": "timeTravel.unchanged"
       }
     },
     {
@@ -4838,7 +4758,7 @@
       }
     },
     {
-      "name": "accepting an unchanged draft from reviewing returns to the kept report",
+      "name": "accepting an unchanged draft from reviewing is refused and keeps the draft and report",
       "session": {
         "id": 3,
         "generation": 5,
@@ -4937,80 +4857,7 @@
         "generation": 5
       },
       "expect": {
-        "transition": {
-          "session": {
-            "id": 3,
-            "generation": 5,
-            "base": {
-              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
-            },
-            "stage": "reviewing",
-            "accepted": [
-              {
-                "target": {
-                  "mutation": "b",
-                  "position": 5
-                },
-                "replacement": {
-                  "kind": "input",
-                  "schema": "s.demo.op",
-                  "payload": [
-                    11,
-                    2
-                  ]
-                }
-              }
-            ],
-            "pending": null,
-            "report": {
-              "fromPosition": 2,
-              "outcomes": [
-                {
-                  "mutationId": "a",
-                  "editId": "edit-a",
-                  "opIndex": 0,
-                  "worst": null,
-                  "messages": [],
-                  "superseded": true,
-                  "withdrawn": false
-                },
-                {
-                  "mutationId": "b",
-                  "editId": "edit-b",
-                  "opIndex": 0,
-                  "worst": "warning",
-                  "messages": [
-                    {
-                      "level": "warning",
-                      "code": "mutation.partial",
-                      "message": "1 of 2 targets is missing",
-                      "target": [
-                        "node",
-                        "7"
-                      ],
-                      "opIndex": 0
-                    }
-                  ],
-                  "superseded": false,
-                  "withdrawn": false
-                },
-                {
-                  "mutationId": "c",
-                  "editId": "edit-c",
-                  "opIndex": 0,
-                  "worst": null,
-                  "messages": [],
-                  "superseded": false,
-                  "withdrawn": false
-                }
-              ],
-              "worst": "warning"
-            },
-            "progress": null,
-            "fault": null
-          },
-          "effects": []
-        }
+        "rejection": "timeTravel.unchanged"
       }
     },
     {
@@ -13262,6 +13109,11 @@
       "de": "Nichts abzuschließen: keine übernommenen Änderungen"
     },
     {
+      "key": "refusalUnchanged",
+      "en": "Change an input before accepting",
+      "de": "Vor dem Übernehmen eine Eingabe ändern"
+    },
+    {
       "key": "frozen",
       "en": "Editing is paused while history is being edited",
       "de": "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird"
@@ -13322,9 +13174,24 @@
       "de": "Erneut anwenden"
     },
     {
+      "key": "preparationProgress",
+      "en": "Preparing history preview",
+      "de": "Verlaufsvorschau wird vorbereitet"
+    },
+    {
+      "key": "preparationProgressValueText",
+      "en": "Preparing history preview: {done} of {total} steps",
+      "de": "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten"
+    },
+    {
       "key": "replayProgressValueText",
       "en": "Replaying {done} of {total} mutations",
       "de": "{done} von {total} Mutationen werden neu angewendet"
+    },
+    {
+      "key": "processed",
+      "en": "Work completed: {processed}",
+      "de": "Arbeitsfortschritt: {processed}"
     },
     {
       "key": "refusalBusy",
@@ -13432,6 +13299,10 @@
     {
       "code": "timeTravel.empty",
       "key": "refusalEmpty"
+    },
+    {
+      "code": "timeTravel.unchanged",
+      "key": "refusalUnchanged"
     },
     {
       "code": "timeTravel.cancelled",

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:repo:cargo:manifest-selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest",
+    "name"
+  ],
+  "properties": {
+    "manifest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    }
+  }
+}

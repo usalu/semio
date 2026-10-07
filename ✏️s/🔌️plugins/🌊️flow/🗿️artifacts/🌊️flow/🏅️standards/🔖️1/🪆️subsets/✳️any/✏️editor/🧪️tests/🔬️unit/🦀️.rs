@@ -46,7 +46,7 @@ pub(crate) mod context {
         install_first_party_light_flow_extensions_for_tests();
         let definition = create_flow_app();
         let registry = AppActionRegistry::from_definition(&definition);
-        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
+        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         FlowAppFixture(app)
     }
@@ -109,7 +109,7 @@ pub(crate) mod context {
         install_first_party_light_flow_extensions_for_tests();
         let definition = create_flow_app();
         let registry = AppActionRegistry::from_definition(&definition);
-        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
+        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         FlowAppFixture(app)
     }

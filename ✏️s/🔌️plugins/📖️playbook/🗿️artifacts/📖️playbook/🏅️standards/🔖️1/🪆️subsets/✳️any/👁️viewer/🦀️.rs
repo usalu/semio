@@ -9,7 +9,7 @@ use crate::viewer::playbook::modes::view::windows::steps;
 use crate::{PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;

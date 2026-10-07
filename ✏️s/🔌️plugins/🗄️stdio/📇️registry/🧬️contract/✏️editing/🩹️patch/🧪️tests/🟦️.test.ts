@@ -15,7 +15,7 @@ const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import
   rejected: { id: string; event: SnapshotEditEvent }[];
   large: { bytes: number; fill: number; metadataPath: string; value: string; maximumPatchBytes: number };
   payload: { before: number[]; cases: { id: string; event: SnapshotEditEvent; expected: number[] }[] };
-  shiftedParent: { schema: object; before: SnapshotValue; event: SnapshotEditEvent; oracle: Operation[]; expected: SnapshotValue };
+  shiftedParent: { before: SnapshotValue; event: SnapshotEditEvent; oracle: Operation[]; expected: SnapshotValue };
   patches: Record<string, { patch: SnapshotPatch; inverse: SnapshotPatch }>;
   chunkedInverses: { budget: number; cases: { id: string; base: SnapshotValue; patch: SnapshotPatch; parts: SnapshotPatch[] }[] };
   locations: { snapshot: string; documents: { $id: string }[]; instance: SnapshotValue; cases: { id: string; path: string; insert?: boolean; expected: string | null; valid?: SnapshotValue; invalid?: SnapshotValue }[] };
@@ -103,7 +103,7 @@ describe("compact snapshot patches", () => {
     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
-    const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+    const protocol = await Bun.file(new URL("../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio", root)).text();
     const branch = aggregate.oneOf.find((entry: { $ref?: string }) => entry.$ref === leaf.$id || JSON.stringify(entry).includes(JSON.stringify(row.discriminator)));
     expect(branch).toBeDefined();
     expect(leaf.properties.patch.$ref).toBe(patchRef);
@@ -127,13 +127,13 @@ describe("compact snapshot patches", () => {
     for (const index of fixture.invalidPositions) expect(() => applySnapshotPatch(fixture.base, { operation: "insert", path: "/metadata/bad", value: "Rejected", index })).toThrow();
     expect(() => applySnapshotPatch(fixture.base, { operation: "insert", path: "/list/0", value: "Rejected", index: 0 })).toThrow();
   });
-  test("moves resolve the destination parent after removal", () => {
+  test("moves resolve the destination parent after removal", async () => {
     const row = fixture.shiftedParent;
     const patch = prepareSnapshotPatch(row.before, row.event);
     const result = applySnapshotPatch(row.before, patch);
     expect(result).toEqual(row.expected);
     expect(result).toEqual(applyPatch(structuredClone(row.before), row.oracle, true, true, false).newDocument);
-    expect(new Ajv({ strict: true }).compile(row.schema)(result)).toBe(true);
+    expect(new Ajv({ strict: true }).compile(await Bun.file(new URL("../🧪️testing/🌲️mixed-parent/🧬️schema/🔣️.json", import.meta.url)).json())(result)).toBe(true);
     expect(applySnapshotPatch(result, inverseSnapshotPatch(row.before, patch))).toEqual(row.before);
   });
   for (const row of fixture.payload.cases) test(row.id, () => {

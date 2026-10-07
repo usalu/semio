@@ -1,0 +1,35 @@
+# Current Native Owner Repair
+
+Exact MemberOpen native selection failed compilation with20 IO schema errors before assertions (Nx2m1s, Cargo101). Actual Stdio3law retry failed before assertions (Nx22.6s): meanwhile new actual artifact-reference Cargo dependency had been authored concurrently, but IO still lacked ValueError/ValueRefusalKind and attempted foreign-type retirement. Full logs retained under generated/current-runtime-member-open-native-final.log and current-runtime-parser-native-stdio-retry.log.
+
+The current actual type owner is framework/schema/artifact-reference, mounted by framework/artifact-reference Cargo. Added only the missing genuine value error imports in IO. Moved both unchanged retirement macros for ArtifactDialect/ArtifactRef to their actual defining schema owner; removed obsolete IO retirement module. No aliases or compatibility reexports added. Value artifact-reference dependency is dev-only, so the initially suspected runtime dependency cycle does not exist.
+
+Original bodies retained in 📥️current-runtime-native-owner-preimages.json. Exact serial retries pending.
+
+Changed paths:
+
+- `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/🧬️schema/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🦀️.rs`
+- `🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/♻️retirement/🦀️.rs`
+
+The first minimal owner retry reduced compile errors to two duplicate ValueError/ValueRefusalKind imports: a concurrent owner added the same imports while the fix was applied. Removed only the duplicate line, retaining a single genuine import; unchanged moved retirement macros compiled without those initial ownership errors. Retained duplicate-red log `current-runtime-member-open-native-owner-retry.log` (Nx28.5s). Exact current actor retry is active; no native assertions claimed.
+
+IO crate compiled after duplicate correction. Exact actor retry then failed before assertions on OS kernel test compilation:3malformed `$semio_framework_artifact_reference` macro type paths caused cascading missing factory parameters/SpaceMember implementations, and IO unit tests lacked the now-extracted identity/text imports. Corrected only the3macro paths to the actual absolute crate and added explicit current identity types/predicate plus ArtifactReferenceText to unchanged test logic. No trait methods removed or defaulted. Concurrent owner had already corrected IO sqlite_snapshot to the current actual crate, so that source was left unchanged. Full original store macro and IO test source retained.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/🧪️tests/🔬️unit/🦀️.rs`
+
+The next kernel compile reduced28errors to2missing DialectCoordinateText trait scope errors in exported macro diagnostic formatting. Macro now invokes the actual text owner trait explicitly with fully qualified calls, preserving identical output and avoiding caller-scope assumptions. No trait defaults/API aliases were added. Retained2m45s red at current-runtime-member-open-native-semantic-final.log.
+
+Latest exact actor retry current-runtime-member-open-native-qualified-final.log failed after3m1s at rustc LLVM output: No space left on device. No remaining source errors were reported before backend output failed; no Rust assertion executed and no native pass is claimed. The full log is retained. Disk fell to116MiB; final factory oracle recheck failed shell log redirection before launch. No own native command remains active. Corrected-source Stdio retry is queued pending writable space; prior22.6s IO compile red remains retained.
+
+Final fully qualified macro source recheck subsequently ran through Nx by appending to the existing retained host log (new log creation had failed). Actual MemberFactory source/independent semantic owner oracle passed1wrapper/0 in236ms. Evidence appended at current-runtime-host-semantic-repair.log; prior8wrapper run remains preserved in the same file. Current native actor remains failed at LLVM ENOSPC,0Rust assertions; Stdio corrected-source retry still unlaunched.
+
+Corrected-source Stdio first guarded run was cancelled with owned terminal SIGINT at 222,972 KiB free, below the original 250 MiB guard. Nx terminal exit130 after1m54s; no Rust test result emitted. Headroom samples in KiB:1790912,1282532,521336,267388,222972; after cancellation192712. Process inspection found no owned descendants. Temporary output subsequently settled: fresh snapshot3,487,068 KiB free with no cargo/rustc/Stdio descendant. Root authorized serialized same-profile retry with500MiB guard; actor remains deferred. Log retained: generated/current-runtime-parser-native-stdio-corrected.log.
+
+Corrected-source Stdio second guarded run PASS: canonical runtime-parser-native-stdio Nx target exit0 in2m32s. Native nextest executed exactly3 tests,3passed,103skipped, assertion runtime0.037s. Exact selected laws: schema_constraints_reject_an_addressed_value_atomically; collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls; table_details_first_paint_keeps_fields_reachable_across_repeated_projection. Full17,143-line log retained at generated/current-runtime-parser-native-stdio-corrected-2.log. Headroom KiB observations3487068,3486344,3446244,3398664,3389540,2941400,2871280,2865616; minimum observed2,865,616KiB, safely above500MiB guard. No owned Stdio/Nx/Cargo/rustc descendants remain. Actor exactlaw retry is next, serialized per root instruction.
+
+Actor guarded current-source run cancelled: same canonical MemberOpen exact-law target reached shared preparation then native relay; observed free-space KiB2764856,2747380,2538196,2223540,1906808,1660328,1420016,779868,640860,557408,562560,412276. At412276KiB below500MiB threshold, only owned terminal received SIGINT; exit130 after4m54s. No Rust assertion verdict emitted; no current compiler/source error reported. Post-cancellation process scan found no owned Nx/kernel/relay descendants. Available420216KiB after signal. Full terminal log retained: generated/current-runtime-member-open-native-confirmed.log. Native actor policy remains awaiting proof, production fix and independent8owner checks retained.
+
+Current Actor native proof PASS: exact MemberOpen law ran1test,1passed,0failed,1209filtered, assertion runtime0.00s. All14 plain rows include original expected-identity negatives plus empty/control/oversized actor rejection; exact retained pages/identity/owner and bounded terminal retirement assertions executed. Nx canonical runtime-member-open-native exit0 in3m48s, actual test-profile compile1m41s. Full log retained: generated/current-runtime-member-open-native-proof.log. Observed headroom KiB10387172,10178520,10504576,10350620,10208888,10199080,10071380; minimum10,071,380KiB, safely above500MiB guard. No owned Actor descendants remain. Producer6laws now launched serially. Prior compilation/LLVM/disk cancellation reds remain distinct retained receipts; they are superseded by this actual runtime proof, never relabeled as passes.

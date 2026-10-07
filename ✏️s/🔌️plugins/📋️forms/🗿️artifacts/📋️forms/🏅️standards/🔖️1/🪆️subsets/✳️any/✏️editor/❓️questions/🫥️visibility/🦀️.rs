@@ -1,6 +1,6 @@
 //! 🫥️ Visual condition edits preserve the closed expression tree and sibling rules.
 use crate::FormExpr;
-use crate::schema::value_to_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use semio_framework_pack_json::Value;
 
 fn create_condition(kind: &str) -> Result<FormExpr, String> {

@@ -56,7 +56,7 @@ use protocol::OpText;
 
 //#region 🔖️OpText
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-enum Din4108MutationDsl {
+pub(crate) enum Din4108MutationDsl {
     ChangeClimateZone {
         new_climate_zone: crate::document::ClimateZoneDe,
     },
@@ -261,14 +261,7 @@ impl OpText for Din4108MutationDsl {
     }
 }
 
-impl protocol::OpBinary for Din4108MutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 
 impl OpText for Din4108Mutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -279,18 +272,11 @@ impl OpText for Din4108Mutation {
     }
 }
 
-impl protocol::OpBinary for Din4108Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        din4108_mutation_to_dsl(self).encode_op()
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(din4108_mutation_from_dsl(Din4108MutationDsl::decode_op(bytes)?))
-    }
-}
+
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn din4108_mutation_to_dsl(mutation: &Din4108Mutation) -> Din4108MutationDsl {
+pub(crate) fn din4108_mutation_to_dsl(mutation: &Din4108Mutation) -> Din4108MutationDsl {
     match mutation {
         Din4108Mutation::ChangeClimateZone(payload) => Din4108MutationDsl::ChangeClimateZone { new_climate_zone: payload.new_climate_zone },
         Din4108Mutation::ChangeUsage(payload) => Din4108MutationDsl::ChangeUsage { new_usage: payload.new_usage.clone() },
@@ -339,7 +325,7 @@ fn din4108_mutation_to_dsl(mutation: &Din4108Mutation) -> Din4108MutationDsl {
     }
 }
 
-fn din4108_mutation_from_dsl(dsl: Din4108MutationDsl) -> Din4108Mutation {
+pub(crate) fn din4108_mutation_from_dsl(dsl: Din4108MutationDsl) -> Din4108Mutation {
     match dsl {
         Din4108MutationDsl::ChangeClimateZone { new_climate_zone } => Din4108Mutation::ChangeClimateZone(change_climate_zone::ChangeClimateZone { new_climate_zone }),
         Din4108MutationDsl::ChangeUsage { new_usage } => Din4108Mutation::ChangeUsage(change_usage::ChangeUsage { new_usage }),

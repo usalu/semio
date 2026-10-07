@@ -1,7 +1,7 @@
 /** 📝️ Explicit CommonMark domain and ownership tables. */
 import type {MdSnapshot,MdBlock,MdInline} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactDialect} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 /** 🏛️ The same individually authored CommonMark SQL declaration as the native owner. */
 export const MD_SQLITE_SCHEMA=String.raw`CREATE TABLE md_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);

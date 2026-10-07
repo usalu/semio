@@ -10,11 +10,11 @@ use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 use records::Document;
 pub(crate) fn record_spec()->semio_framework_dsl_record::RecordSpec{Document::__dsl_spec()}
 pub(crate) fn record_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{Document::__dsl_spec_producer()}
-pub(crate) fn record_controlled(snapshot:&FormsSnapshot,counts:&crate::standards::v1::subsets::any::schema::snapshot::sqlite::admission::Counts,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+pub(crate) fn record_controlled(snapshot:&FormsSnapshot,counts:&crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::Counts,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
  projection::project(snapshot,counts,c)?.__dsl_to_record_controlled(c)
 }
 pub(crate) fn record(snapshot:&FormsSnapshot)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
- let mut callback=|_|true;let mut sqlite=SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_file_bytes:usize::MAX,max_value_bytes:usize::MAX,max_rows:usize::MAX,..Default::default()});let counts=crate::standards::v1::subsets::any::schema::snapshot::sqlite::admission::forecast(snapshot,&mut sqlite,SqliteSnapshotPhase::EncodeNative)?;
+ let mut callback=|_|true;let mut sqlite=SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_file_bytes:usize::MAX,max_value_bytes:usize::MAX,max_rows:usize::MAX,..Default::default()});let counts=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::forecast(snapshot,&mut sqlite,SqliteSnapshotPhase::EncodeNative)?;
  let mut callback=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut c=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut callback);record_controlled(snapshot,&counts,&mut c)
 }
 fn list(source:&semio_framework_dsl_record::RecordValue,key:u16)->Result<&[semio_framework_dsl_record::FieldValue],ValueError>{match source.fields.get(&key){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>Ok(&[]),Some(semio_framework_dsl_record::FieldValue::List(values))=>Ok(values),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms native ordered record list differs"))}}
@@ -30,7 +30,7 @@ pub(crate) fn borrowed_rows(source:&semio_framework_dsl_record::RecordValue,c:&m
  for condition in conditions{c.step()?;add(&mut rows,list(view(condition)?,6)?.len(),maximum)?;}Ok(rows)})
 }
 pub(crate) fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,c:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<FormsSnapshot,ValueError>{
- let result=(||{borrowed_rows(source,c,maximum)?;let document=Document::__dsl_from_record_controlled(source,c)?;let snapshot=reconstruction::reconstruct(document,c)?;let validation=crate::standards::v1::subsets::any::schema::snapshot::sqlite::admission::identities::snapshot(&snapshot,c).and_then(|()|validate(&snapshot,c));if let Err(error)=validation{crate::standards::v1::subsets::any::schema::snapshot::sqlite::reconstruction::retire_snapshot(snapshot);return Err(error)}Ok(snapshot)})();result
+ let result=(||{borrowed_rows(source,c,maximum)?;let document=Document::__dsl_from_record_controlled(source,c)?;let snapshot=reconstruction::reconstruct(document,c)?;let validation=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::identities::snapshot(&snapshot,c).and_then(|()|validate(&snapshot,c));if let Err(error)=validation{crate::standards::v1::subsets::any::io::sqlite::snapshot::reconstruction::retire_snapshot(snapshot);return Err(error)}Ok(snapshot)})();result
 }
 fn validate(s:&FormsSnapshot,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{
  c.begin_stage(0)?;if s.schema!="forms.form"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms marker differs"))}for(target,subset)in[(&s.structure.target,"value"),(&s.results.target,"table")]{if target.dialect.artifact_kind!="s.stdio.semio"||target.dialect.standard!="v1"||target.dialect.subset!=subset{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms child coordinate differs"))}}

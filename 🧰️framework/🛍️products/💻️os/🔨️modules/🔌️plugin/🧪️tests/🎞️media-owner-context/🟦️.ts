@@ -5,7 +5,7 @@ import Ajv from "ajv";
 /** 🎞️ Independent JSON Schema admission for supplied-owner media witnesses. */
 export function mediaOwnerContextOracle(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎞️media-owner-context.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true }).compile(fixture.valueSchema);
+  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../../🧪️testing/🎞️media-owner-context/🧬️schema/🔣️.json", import.meta.url), "utf8")));
   assert.equal(fixture.cases.length, 2);
   assert.deepEqual(fixture.refusals, ["foreign-owner", "closed-owner", "unknown-port"]);
   let assertions = 0;

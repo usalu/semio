@@ -70,7 +70,7 @@ impl RawTextKind {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn from_tag_name(name: &str) -> Option<Self> {
+    pub(crate) fn from_tag_name(name: &str) -> Option<Self> {
         if name.eq_ignore_ascii_case("script") {
             Some(RawTextKind::Script)
         } else if name.eq_ignore_ascii_case("style") {
@@ -148,7 +148,7 @@ impl Default for HtmlSnapshot {
 //#region 🔖️VoidElements
 /// 🚪️ The HTML5/WHATWG void-element set (14 elements) — these never have a closing tag and never
 /// carry children; the encoder must not emit `</tag>` (or self-close `/>`) for them.
-const VOID_ELEMENTS: &[&str] = &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
+pub(crate) const VOID_ELEMENTS: &[&str] = &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
 
 
 //#endregion 🔖️VoidElements

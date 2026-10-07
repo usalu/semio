@@ -2,7 +2,9 @@
 fn collect_fixture_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("fixture action authority remains live") {
-        actions.push(action.into_descriptor().expect("bounded fixture action materializes"));
+        let queued = action.into_envelope().expect("bounded fixture action materializes");
+        if let Some(receipt) = queued.receipt { settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Accepted); }
+        actions.push(queued.descriptor);
     }
     actions
 }

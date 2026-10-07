@@ -3,6 +3,7 @@
 //! board, a gesture that moves nothing leaves zero trace.
 
 use super::*;
+use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
 use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
 use crate::{Puzzle5dGrip, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dTargetVolume};
 
@@ -29,7 +30,7 @@ fn clock(physical_ms: u64) -> protocol::HybridLogicalTimestamp {
 }
 
 fn commit(verb: &str, base: &Puzzle5dSnapshot, records: Vec<Puzzle5dSelectionRecord>) -> Option<(protocol::TransactionRef, Vec<Puzzle5dMutation>)> {
-    puzzle5d_transform_tool_commit(verb, "seed", clock(7), TransformToolRequest { base: Arc::new(base.clone()), records })
+    puzzle5d_transform_tool_commit(verb, "seed", TransformToolRequest { base: Arc::new(base.clone()), records })
 }
 
 #[test]
@@ -40,7 +41,7 @@ fn a_gumball_delta_is_one_transaction_of_its_parametric_leaf() {
     let (transaction, mutations) = commit("translateSelection", &base, vec![record.clone()]).expect("a moving record commits");
     assert_eq!(mutations, vec![drag_selection_3d(vec!["a".into(), "box".into()], [2.0, 0.0, -1.0])], "one leaf over the deduplicated targets");
     assert_eq!(transaction.tool, "s.puzzle.puzzle5d@1/*#editor#translateSelection");
-    assert_eq!(commit("translateSelection", &base, vec![record]).map(|(again, _)| again), Some(transaction), "the same admission, clock and verb mint the same ref");
+    assert_ne!(commit("translateSelection", &base, vec![record]).map(|(again, _)| again), Some(transaction), "each released gesture mints its own transaction even within one clock millisecond");
 }
 
 #[test]
@@ -132,5 +133,25 @@ fn a_paged_world_drop_scan_finds_exactly_what_the_one_call_scan_finds() {
         }
         assert_eq!(steps + 1, base.parts.len().div_ceil(page), "page {page}: one step per page");
         assert_eq!(scan.finish(), whole, "page {page}: the paged scan ends on the one-call record");
+    }
+}
+
+#[test]
+fn the_transform_chart_obeys_the_shared_phase_fixture() {
+    let fixture = semio_framework_pack_json::parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧫️fixtures/🛠️transform-gesture/🔣️.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    for case in fixture.get("cases").unwrap().as_array().unwrap() {
+        let values = case.get("offset").unwrap().as_array().unwrap();
+        let offset = [values[0].as_f64().unwrap(), values[1].as_f64().unwrap(), values[2].as_f64().unwrap()];
+        let phase = match case.get("phase").unwrap().as_str().unwrap() {
+            "once" => GesturePhase::Once,
+            "stream" => GesturePhase::Stream,
+            "commit" => GesturePhase::Commit,
+            "abort" => GesturePhase::Abort(semio_framework_tool_machine::ToolAbortReason::Frozen),
+            _ => unreachable!(),
+        };
+        let request = TransformToolRequest { base: Arc::new(scene()), records: vec![Puzzle5dSelectionRecord::new(["a".to_string()], Puzzle5dSelectionMotion::Drag { offset })] };
+        let drive = semio_framework_tool_machine::drive_chart_gesture::<transform_tool::TransformTool>(None, "translateSelection", phase, Some(request), "seed", "base").expect("one dispatch");
+        assert_eq!(drive.committed.as_ref().map_or(0, |(_, leaves)| leaves.len()), case.get("committed").unwrap().as_u64().unwrap() as usize);
+        assert!(drive.next.is_none(), "the release-only chart holds no transaction");
     }
 }

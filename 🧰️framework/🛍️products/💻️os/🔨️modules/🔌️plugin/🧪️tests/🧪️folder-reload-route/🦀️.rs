@@ -161,8 +161,8 @@ async fn bind_document_port(app: &mut ToyApp, uri: &str) -> MemoryBackbone {
 
 /// 🧩️ A fresh registered program of the toy app authoring as `actor`.
 async fn fresh_program(actor: &str) -> ToyApp {
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    app.store.set_local_actor_id(Some(actor.to_string())).expect("the program's actor");
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into())).await;
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.to_string()));
     app
 }
 

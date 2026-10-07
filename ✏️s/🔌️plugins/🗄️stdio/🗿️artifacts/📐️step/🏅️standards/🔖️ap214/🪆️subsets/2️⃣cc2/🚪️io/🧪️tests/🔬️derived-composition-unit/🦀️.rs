@@ -31,6 +31,6 @@ mod tests {
         // skipped this subset's own composer genuinely lacks the injection.
         let bytes = clean_bytes();
         let diagnostics = StepCc2Validator::validate(&IoPayload::Binary(bytes)).await;
-        assert!(diagnostics.iter().any(|d| d.code.0 == crate::standards::v_ap214::subsets::cc2::schema::CODE_FILE_SCHEMA), "got {diagnostics:?}");
+        assert!(diagnostics.iter().any(|d| d.code.0 == crate::standards::v_ap214::subsets::cc2::io::CODE_FILE_SCHEMA), "got {diagnostics:?}");
     }
 }

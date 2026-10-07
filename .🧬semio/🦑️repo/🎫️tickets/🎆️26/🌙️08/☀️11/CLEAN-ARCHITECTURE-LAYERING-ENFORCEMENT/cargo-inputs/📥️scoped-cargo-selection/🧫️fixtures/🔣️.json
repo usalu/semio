@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "declared-root-member",
+      "manifest": "packages/core/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/core"
+      ],
+      "exclude": [],
+      "declaredName": "core-one",
+      "expected": "accepted"
+    },
+    {
+      "id": "glob-root-member",
+      "manifest": "packages/core/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/*"
+      ],
+      "exclude": [],
+      "declaredName": "core-one",
+      "expected": "accepted"
+    },
+    {
+      "id": "canonical-name-mismatch",
+      "manifest": "packages/core/Cargo.toml",
+      "name": "alias-core",
+      "members": [
+        "packages/core"
+      ],
+      "exclude": [],
+      "declaredName": "core-one",
+      "expected": "refused"
+    },
+    {
+      "id": "undeclared-member",
+      "manifest": "packages/core/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/other"
+      ],
+      "exclude": [],
+      "declaredName": "core-one",
+      "expected": "refused"
+    },
+    {
+      "id": "excluded-member",
+      "manifest": "packages/core/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/*"
+      ],
+      "exclude": [
+        "packages/core"
+      ],
+      "declaredName": "core-one",
+      "expected": "refused"
+    },
+    {
+      "id": "escaped-manifest",
+      "manifest": "../core/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/core"
+      ],
+      "exclude": [],
+      "declaredName": "core-one",
+      "expected": "refused"
+    },
+    {
+      "id": "unicode-exact-member",
+      "manifest": "packages/🧬️core/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/🧬️core"
+      ],
+      "exclude": [],
+      "declaredName": "core-one",
+      "expected": "accepted"
+    },
+    {
+      "id": "ancestor-excluded",
+      "manifest": "packages/core/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/*"
+      ],
+      "exclude": [
+        "packages"
+      ],
+      "declaredName": "core-one",
+      "expected": "refused"
+    },
+    {
+      "id": "class-exact-member",
+      "manifest": "packages/a/Cargo.toml",
+      "name": "core-one",
+      "members": [
+        "packages/[ab]"
+      ],
+      "exclude": [],
+      "declaredName": "core-one",
+      "expected": "accepted"
+    }
+  ]
+}

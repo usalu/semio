@@ -13,7 +13,8 @@
 //! A 250 mm plant-room slab is extruded north of the hall on the concrete already in the catalogue.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧊️create-solid/🏗️hall-new-slab-d79da4/📸️snapshot/⬅️before/🔣️.json");

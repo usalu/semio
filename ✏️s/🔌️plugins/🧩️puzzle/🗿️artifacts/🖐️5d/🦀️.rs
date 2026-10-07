@@ -158,6 +158,10 @@ impl semio_framework_value::FromValue for Puzzle5dScale {
 /// column`, the engine's own `validate_table_columns`), so it binds through the bracketed
 /// `Shape::List(Float)` the sibling `puzzle_3d::Puzzle3dScale` already uses: `scale=[2]` (uniform) /
 /// `scale=[2 3 4]` (per-axis), self-delimiting regardless of item count.
+impl semio_framework_dsl_record::BorrowedDslField for Puzzle5dScale {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = <Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE;
+}
+
 impl semio_framework_dsl_record::DslField for Puzzle5dScale {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::List(Box::new(semio_framework_dsl_record::Shape::Float))
@@ -1028,8 +1032,8 @@ pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::Art
     let types = kind_catalogs_kit_types(catalogs);
     let canonical = semio_framework_pack_json::to_json_string(&types);
     let child_id = store::content_id("kind-catalogs", canonical.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️WholeListConverters
@@ -1199,7 +1203,7 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle5d").expect("canonical puzzle5d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 
@@ -1237,8 +1241,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "puzzle.puzzle5d.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("puzzle.puzzle5d.diff"),
@@ -2452,3 +2456,9 @@ pub mod config {
 }
 
 pub use crate::standards::v1::subsets::any::io::{Puzzle5dBuilderConstruction, Puzzle5dParts, Puzzle5dAnalyzerAnalysis, Puzzle5dBuilderFacets, Puzzle5dBuilder, Puzzle5dAnalyzer, Puzzle5dComposer};
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

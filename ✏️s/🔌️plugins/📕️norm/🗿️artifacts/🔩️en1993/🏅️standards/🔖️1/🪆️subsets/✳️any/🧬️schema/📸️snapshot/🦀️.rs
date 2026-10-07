@@ -68,7 +68,7 @@ pub struct En1993Snapshot {
     pub crane_runways: Vec<CraneRunway>,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1993Snapshot, extension = "en1993", envelope_id = "norm.en1993", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1993Snapshot {

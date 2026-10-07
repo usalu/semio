@@ -138,11 +138,11 @@ impl<'a> Lowering<'a> {
         let mut use_text = |lowering: &mut Self, font: &Option<String>, text: &PdfTextString| {
             let Some(font) = font else { return };
             let Some(codec) = lowering.codecs.get(font) else { return };
-            let bytes = match text {
-                PdfTextString::Codes { bytes } => bytes.clone(),
-                PdfTextString::Text { text } => codec.encode(text).unwrap_or_default(),
+            let decoded = match text {
+                PdfTextString::Codes { codes } => codec.decode_codes(codes),
+                PdfTextString::Text { text } => codec.decode(&codec.encode(text).unwrap_or_default()),
             };
-            let glyphs: Vec<u16> = codec.decode(&bytes).iter().filter_map(|glyph| glyph.glyph_id).collect();
+            let glyphs: Vec<u16> = decoded.iter().filter_map(|glyph| glyph.glyph_id).collect();
             lowering.used_glyphs.entry(font.clone()).or_default().extend(glyphs);
         };
         for op in ops {
@@ -159,7 +159,7 @@ impl<'a> Lowering<'a> {
                     for item in items {
                         match item {
                             PdfTextArrayItem::Text { text } => use_text(self, &current, &PdfTextString::Text { text: text.clone() }),
-                            PdfTextArrayItem::Codes { bytes } => use_text(self, &current, &PdfTextString::Codes { bytes: bytes.clone() }),
+                            PdfTextArrayItem::Codes { codes } => use_text(self, &current, &PdfTextString::Codes { codes: codes.clone() }),
                             PdfTextArrayItem::Adjust { .. } => {}
                         }
                     }
@@ -714,8 +714,8 @@ impl Lowering<'_> {
         for file in &self.snapshot.embedded_files {
             let reference = self.refs[&(Category::EmbeddedFile, file.id.clone())];
             let mut params = vec![entry("Size", PdfObject::Int(file.data.len() as i64))];
-            push_opt(&mut params, "CreationDate", file.creation_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
-            push_opt(&mut params, "ModDate", file.modification_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
+            push_opt(&mut params, "CreationDate", file.creation_date.as_ref().map(|d| PdfObject::Str(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(d).into_bytes())));
+            push_opt(&mut params, "ModDate", file.modification_date.as_ref().map(|d| PdfObject::Str(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(d).into_bytes())));
             let mut stream_dict = vec![entry("Type", PdfObject::name("EmbeddedFile"))];
             push_opt(&mut stream_dict, "Subtype", file.mime_type.as_ref().map(PdfObject::name));
             stream_dict.push(entry("Params", PdfObject::Dict(params)));
@@ -1192,7 +1192,7 @@ impl Lowering<'_> {
             push_opt(&mut dict, "Popup", annotation_ref(self, markup.popup));
             push_opt(&mut dict, "CA", markup.opacity.map(PdfObject::number));
             push_opt(&mut dict, "RC", markup.rich_contents.as_ref().map(|t| text(t)));
-            push_opt(&mut dict, "CreationDate", markup.creation_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
+            push_opt(&mut dict, "CreationDate", markup.creation_date.as_ref().map(|d| PdfObject::Str(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(d).into_bytes())));
             push_opt(&mut dict, "IRT", annotation_ref(self, markup.in_reply_to));
             push_opt(&mut dict, "Subj", markup.subject.as_ref().map(|t| text(t)));
             push_opt(&mut dict, "RT", markup.reply_type.as_ref().map(PdfObject::name));
@@ -1473,8 +1473,8 @@ pub fn lower_info(info: &PdfInfo) -> Vec<PdfDictEntry> {
     push_opt(&mut dict, "Keywords", text(&info.keywords));
     push_opt(&mut dict, "Creator", text(&info.creator));
     push_opt(&mut dict, "Producer", text(&info.producer));
-    push_opt(&mut dict, "CreationDate", info.creation_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
-    push_opt(&mut dict, "ModDate", info.modification_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
+    push_opt(&mut dict, "CreationDate", info.creation_date.as_ref().map(|d| PdfObject::Str(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(d).into_bytes())));
+    push_opt(&mut dict, "ModDate", info.modification_date.as_ref().map(|d| PdfObject::Str(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(d).into_bytes())));
     push_opt(&mut dict, "Trapped", info.trapped.as_ref().map(PdfObject::name));
     dict.extend(info.extra.iter().cloned());
     dict

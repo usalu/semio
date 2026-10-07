@@ -1,0 +1,13 @@
+{
+  "control": {"maximumItems":1,"maximumBytes":4,"largePrefix":"😀\u0000界","largeRepeats":2050},
+  "cases": [
+    {"id":"empty","scope":"node","nodes":[],"handles":[],"edges":[],"regions":[],"target":"missing","expected":null},
+    {"id":"first-duplicate","scope":"node","nodes":["same","same"],"handles":[[],[]],"edges":[],"regions":[],"target":"same","expected":{"outer":0,"inner":null}},
+    {"id":"unicode-edge","scope":"edge","nodes":[],"handles":[],"edges":["plain","😀\u0000世界"],"regions":[],"target":"😀\u0000世界","expected":{"outer":1,"inner":null}},
+    {"id":"missing-region","scope":"region","nodes":[],"handles":[],"edges":[],"regions":["region"],"target":"other","expected":null},
+    {"id":"nested-handles","scope":"handle","nodes":["empty","owner","later"],"handles":[[],["first","😀\u0000世界"],["😀\u0000世界"]],"edges":[],"regions":[],"target":"😀\u0000世界","expected":{"outer":1,"inner":1}},
+    {"id":"large-prefix","scope":"node","nodes":["$large:a","$large:b"],"handles":[[],[]],"edges":[],"regions":[],"target":"$large:b","expected":{"outer":1,"inner":null}}
+  ],
+  "journeys":["zeroGrant","allScopes","firstDuplicate","largePrefix","sourceSwap","cancelDuringComparison","takeOnce","boundedClose"],
+  "allocation":{"advance":0,"close":0}
+}

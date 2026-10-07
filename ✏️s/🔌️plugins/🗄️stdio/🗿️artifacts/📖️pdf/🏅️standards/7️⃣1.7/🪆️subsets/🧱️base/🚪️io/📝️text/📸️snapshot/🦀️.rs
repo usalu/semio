@@ -38,7 +38,7 @@ const FIELDS:[(u16,&str,semio_framework_dsl_record::Shape,bool);31]=[
     (30,"objects",semio_framework_dsl_record::Shape::Value,false),
     (31,"trailer",semio_framework_dsl_record::Shape::Value,false),
 ];
-pub(super) fn spec()->semio_framework_dsl_record::RecordSpec{
+pub(crate) fn spec()->semio_framework_dsl_record::RecordSpec{
     semio_framework_dsl_record::RecordSpec::new(None,semio_framework_dsl_record::RecordLayout::Lines,FIELDS.into_iter().map(|(id,key,shape,optional)|{let mut field=semio_framework_dsl_record::FieldSpec::new(id,key,shape);field.optional=optional;field}).collect())
 }
 fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{
@@ -49,9 +49,9 @@ fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&m
     })
 }
 /// 🏭️ Owns literal snapshot metadata independently under either native allocation controller.
-pub(super) fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
+pub(crate) fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
 
-pub(super) fn to_record(value:&PdfSnapshot)->semio_framework_dsl_record::RecordValue{
+pub(crate) fn to_record(value:&PdfSnapshot)->semio_framework_dsl_record::RecordValue{
     use semio_framework_dsl_record::FieldValue as V;
     semio_framework_dsl_record::RecordValue{fields:[
         (1,V::Text(value.schema.clone())),(2,V::Text(value.declared_version.clone())),
@@ -61,7 +61,7 @@ pub(super) fn to_record(value:&PdfSnapshot)->semio_framework_dsl_record::RecordV
     ].into_iter().collect()}
 }
 /// 🛫️ Projects each literal root slot with bounded allocation and partial-record retirement.
-pub(super) fn to_record_controlled(value:&PdfSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+pub(crate) fn to_record_controlled(value:&PdfSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
     control.scoped_depth(64,|control|control.scoped_stage(|control|->Result<semio_framework_dsl_record::RecordValue,ValueError>{
         control.begin_stage(FIELDS.len())?;
         let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(FIELDS.len(),control)?;
@@ -101,7 +101,7 @@ pub(super) fn to_record_controlled(value:&PdfSnapshot,control:&mut semio_framewo
     }))
 }
 fn field(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<DslValue,semio_framework_diagnostic::TextError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Text(value))if id<=2=>Ok(DslValue::String(value.clone())),Some(semio_framework_dsl_record::FieldValue::Value(value))if id>2=>Ok(value.clone()),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(DslValue::Null),_=>Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)))}}
-pub(super) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<PdfSnapshot,semio_framework_diagnostic::TextError>{
+pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<PdfSnapshot,semio_framework_diagnostic::TextError>{
     if record.fields.keys().any(|id|!(1..=31).contains(id)){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field",semio_framework_diagnostic::TextSpan::at(1,1)));}
     PdfSnapshot::from_value(DslValue::object([
         ("schema".into(),field(record,1,"schema")?),("declaredVersion".into(),field(record,2,"declaredVersion")?),
@@ -113,7 +113,7 @@ pub(super) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Resu
 
 fn borrowed_field<'a>(record:&'a semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<&'a DslValue,ValueError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Value(value))=>Ok(value),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(&DslValue::Null),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))}}
 fn owned<T:FromValue>(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,ValueError>{let value=T::from_value_controlled(borrowed_field(record,id,key)?,control).map_err(|error|error.under(key))?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)}
-pub(super)fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PdfSnapshot,ValueError>{
+pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PdfSnapshot,ValueError>{
     control.scoped_stage(|control|->Result<_,ValueError>{
         control.begin_stage(31)?;if record.fields.keys().any(|id|!(1..=31).contains(id)){return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field"));}
         let text=|id,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>|{let Some(semio_framework_dsl_record::FieldValue::Text(value))=record.get(id)else{return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))};let value=control.copy_text(value)?;control.step()?;Ok::<_,ValueError>(value)};
@@ -187,3 +187,36 @@ impl store::ArtifactDsl for PdfSnapshot {
 }
 }
 pub use snapshot_codec::*;
+
+mod source_fixtures {
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
+/// 🆕️ A new pdf document: the empty 1.7 document as the real codec round-trips it — its retained object graph
+/// (`objects`/`trailer`) is what a fresh write produced, read back, exactly like [`demo_pdf17_snapshot`]; the empty
+/// `Default` carries no graph, so it saved as a document that reopened as a different one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn blank_pdf_snapshot() -> PdfSnapshot {
+    use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    encode_pdf(&PdfSnapshot::default()).and_then(|bytes| decode_pdf(&bytes)).expect("blank_pdf_snapshot: the empty document round-trips through the real codec")
+}
+/// 📄️ The demo `stdio.pdf.1.7` document -- the single source of truth for `🏅️standards/7️⃣1.7/
+/// 📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this
+/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`).
+///
+/// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT: the typed lanes survive the
+/// round trip by the `lift(lower(t)) == t` law, and `objects`/`trailer` are whatever the fresh
+/// write produced, read back — a hand-built snapshot with empty `objects` would not equal its
+/// own decoded print.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_pdf17_snapshot() -> PdfSnapshot {
+    let seed = crate::standards::v1_7::subsets::base::io::text_document(&[(200.0, 300.0, "Semio")]);
+    let bytes = crate::standards::v1_7::subsets::base::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
+    crate::standards::v1_7::subsets::base::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
+}
+}
+pub use source_fixtures::*;
+
+#[path="📅️date/🦀️.rs"]
+pub mod date;
+
+#[path="🪪️retained-text/🦀️.rs"]
+pub mod retained_text;

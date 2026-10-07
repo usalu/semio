@@ -1,0 +1,17 @@
+{
+  "weights": {
+    "root": 1,
+    "leaf_a": 2,
+    "leaf_b": 3,
+    "leaf_both": 4
+  },
+  "expected": {
+    "root": 1,
+    "leaf_a": 3,
+    "leaf_b": 4,
+    "leaf_both": 11
+  },
+  "dependency": [
+    2
+  ]
+}

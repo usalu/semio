@@ -30,10 +30,24 @@
               "routes",
               "regions"
             ]
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
           }
         },
         "value": {
-          "$ref": "#/definitions/intrinsic"
+          "$ref": "#/definitions/intrinsic",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
         }
       }
     },
@@ -51,24 +65,52 @@
           "type": "array",
           "items": {
             "type": "object"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Positions",
+              "de": "Positionen"
+            }
           }
         },
         "routes": {
           "type": "array",
           "items": {
             "type": "object"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Routes",
+              "de": "Routen"
+            }
           }
         },
         "regions": {
           "type": "array",
           "items": {
             "type": "object"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Regions",
+              "de": "Regionen"
+            }
           }
         },
         "properties": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/member"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Properties",
+              "de": "Eigenschaften"
+            }
           }
         }
       }

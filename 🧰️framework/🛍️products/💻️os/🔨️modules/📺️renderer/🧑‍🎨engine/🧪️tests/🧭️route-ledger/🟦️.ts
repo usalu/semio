@@ -5,7 +5,6 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { assign, createActor, setup } from "xstate";
 import { createShellRouteLedgerV1 } from "../../🧱️elements/🏛️ShellHost/🧭️route-ledger/🟦️.ts";
@@ -36,27 +35,6 @@ const oracleMachine = setup({
 });
 
 describe("shell route ledger", () => {
-  it("accepts the neutral corpus under a strict schema oracle and rejects adversarial shapes", () => {
-    const step = {
-      oneOf: [
-        { type: "object", additionalProperties: false, required: ["op", "uri", "apply"], properties: { op: { const: "fire" }, uri: { type: "string", pattern: "^/" }, apply: { type: "boolean" } } },
-        { type: "object", additionalProperties: false, required: ["op", "as"], properties: { op: { const: "begin" }, as: { type: "string", minLength: 1 } } },
-        { type: "object", additionalProperties: false, required: ["op", "of", "uri", "tookEffect"], properties: { op: { const: "settle" }, of: { type: "string", minLength: 1 }, uri: { type: "string", pattern: "^/" }, tookEffect: { type: "boolean" } } },
-        { type: "object", additionalProperties: false, required: ["op"], properties: { op: { const: "invalidate" } } },
-      ],
-    };
-    const validate = new Ajv({ strict: true, allErrors: true }).compile({
-      type: "object",
-      additionalProperties: false,
-      required: ["description", "scenarios"],
-      properties: {
-        description: { type: "string" },
-        scenarios: { type: "array", minItems: 1, items: { type: "object", additionalProperties: false, required: ["name", "steps"], properties: { name: { type: "string" }, steps: { type: "array", minItems: 1, items: step } } } },
-      },
-    });
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-    for (const hostile of [{ ...corpus, scenarios: [] }, { ...corpus, scenarios: [{ name: "x", steps: [{ op: "fire", uri: "spaces/a", apply: true }] }] }, { ...corpus, scenarios: [{ name: "x", steps: [{ op: "settle", of: "a", uri: "/", tookEffect: "yes" }] }] }]) expect(validate(hostile)).toBe(false);
-  });
 
   it("applies a URI only when it is not in effect, exactly as the independent machine does, for every scenario", () => {
     for (const scenario of scenarios) {

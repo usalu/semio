@@ -1,0 +1,577 @@
+{
+  "rootSemioCurrentRootReceiptsAt": "2026-10-06 16:23 UTC",
+  "rootSemio19CompleteIndividualSource": {
+    "session": 8265,
+    "command": "SEMIO_TEST_LEVEL='quick' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='true' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-source-data' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-source-cache' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current' bun nx run @semio-tech/stdio-semio-rs:test-snapshot-sqlite-source --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-full-empty-individual-original-source.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-full-empty-individual-original-source.log",
+    "started": "2026-10-06 13:54:03 UTC",
+    "providerMounted": false,
+    "exit": 0,
+    "pass": 151,
+    "fail": 0,
+    "expects": 3098,
+    "cohorts": [
+      6,
+      6,
+      6,
+      43,
+      39,
+      29,
+      22
+    ],
+    "baseDebug": 37,
+    "drawingDebug": 1
+  },
+  "rootSemioModelOwnedBeforeNative": {
+    "session": 37268,
+    "command": "SEMIO_TEST_LEVEL='quick' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='true' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-data' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-cache' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current' RUST_BACKTRACE='1' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' SEMIO_TEST_RETAIN_ARTIFACTS='true' NEXTEST_SUCCESS_OUTPUT='immediate' bun nx run @semio-tech/stdio-semio-rs:test-snapshot-sqlite-native --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-nonempty-model-owned-original-before-native.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-nonempty-model-owned-original-before-native.log",
+    "started": "2026-10-06 14:27:28 UTC",
+    "providerMounted": false,
+    "exit": 1
+  },
+  "rootSemioOwnNative240PrerequisiteMount": {
+    "session": 82614,
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts' semio-current-own-native-compiler-prerequisites > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-current-own-native-compiler-prerequisite-mount.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-current-own-native-compiler-prerequisite-mount.log",
+    "paths": 45,
+    "providerMounted": false,
+    "exit": 0
+  },
+  "rootSemioOwnNativePrerequisitesBeforeReplay": {
+    "session": 29778,
+    "command": "SEMIO_TEST_LEVEL='quick' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='true' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-data' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-cache' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current' RUST_BACKTRACE='1' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' SEMIO_TEST_RETAIN_ARTIFACTS='true' NEXTEST_SUCCESS_OUTPUT='immediate' bun nx run @semio-tech/stdio-semio-rs:test-snapshot-sqlite-native --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-after-current-own-native-prerequisites-original-before-native.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-after-current-own-native-prerequisites-original-before-native.log",
+    "started": "2026-10-06 15:00:21 UTC",
+    "providerMounted": false,
+    "exit": 1,
+    "compilerErrors": 55,
+    "errorCounts": {
+      "E0433": 28,
+      "E0425": 11,
+      "E0308": 11,
+      "E0631": 5
+    },
+    "nextest": false
+  },
+  "rootModelLateOracle": {
+    "chunk_id": "7f86ec",
+    "wall_time_seconds": 1.006193792,
+    "session_id": 20012,
+    "original_token_count": 0,
+    "output": "",
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts' semio-model-independent-late-owned-oracle > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-model-independent-late-owned-oracle.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-model-independent-late-owned-oracle.log",
+    "exit": 0,
+    "rows": 99,
+    "valueBytes": 137552,
+    "schemaBytes": 3230,
+    "tables": 9
+  },
+  "rootModelLateDemandMount": {
+    "chunk_id": "6cffca",
+    "wall_time_seconds": 1.005929584,
+    "session_id": 1056,
+    "original_token_count": 0,
+    "output": "",
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts' semio-model-nonempty-late-owned-demand > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-model-nonempty-late-owned-demand-mount.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-model-nonempty-late-owned-demand-mount.log",
+    "exit": 0,
+    "paths": 3,
+    "laws": 2,
+    "providerMounted": false
+  },
+  "rootSemioComplete80Held": {
+    "paths": 80,
+    "owners": 19,
+    "semanticProvidersMounted": true,
+    "mountedSession": 82715,
+    "actualAfterMatches": 80,
+    "changed": 79,
+    "noOp": 1,
+    "pendingHelperBefore": null,
+    "signedTextCallerPending": false,
+    "registeredPhase": "semio-nineteen-owners-eighty-paid-complete-semantic-providers",
+    "runtimeAfterQualified": false
+  },
+  "rootSharedRowIndexNativeAfter": {
+    "session": 57745,
+    "exit": 0,
+    "pass": 45,
+    "fail": 0,
+    "skip": 0,
+    "seconds": 0.26,
+    "rustSeconds": 1.59
+  },
+  "rootSharedRowIndexOperationAfter": {
+    "session": 34331,
+    "exit": 0,
+    "pass": 57,
+    "fail": 0,
+    "expects": 899,
+    "files": 4,
+    "seconds": 1.331,
+    "independentRows": 4,
+    "groups": 2,
+    "foreign": 0
+  },
+  "rootSignedRowIdentityBefore": {
+    "session": 18819,
+    "exit": 1,
+    "apiOnlyErrors": 6,
+    "nextest": false
+  },
+  "rootSignedRowIdentityOperation": {
+    "session": 67894,
+    "exit": 0,
+    "passed": 58,
+    "expects": 903,
+    "strict": true,
+    "before": true
+  },
+  "rootPhysicalVdiActualBefore": {
+    "session": 26642,
+    "exit": 1,
+    "run": 21,
+    "pass": 20,
+    "fail": 1,
+    "skip": 230,
+    "seconds": 2.976,
+    "failure": "new duplicated map WorkLimit rows"
+  },
+  "rootPhysicalVdiActualAfter": {
+    "session": 86476,
+    "exit": 0,
+    "pass": 21,
+    "fail": 0,
+    "skip": 230,
+    "seconds": 1.324,
+    "rust": "1m38s",
+    "nativeDistinctNormOwners": 7,
+    "nativeDistinctNormLaws": 107
+  },
+  "rootPhysicalNormFiveOriginal": {
+    "session": 38717,
+    "exit": 1,
+    "greenOwners": [
+      "en1990",
+      "en1994",
+      "en1996"
+    ],
+    "greenOwnerLaws": 42,
+    "en1997": {
+      "run": 15,
+      "passed": 14,
+      "failed": 1,
+      "reason": "missing independent fixture URL/closed schema",
+      "repaired": true,
+      "replayPending": true
+    },
+    "din18599": {
+      "compilerOnly": true,
+      "errors": 8,
+      "repaired": true,
+      "owningAfter": 62216,
+      "sharedCompilerOnly": true,
+      "semioErrors": 12,
+      "sharedSevenRegionsRepaired": true
+    },
+    "totalDistinctOwners": 10,
+    "totalDistinctNativeLaws": 149,
+    "wholeTwelveQualified": false
+  },
+  "rootImmutableAuthoredCurrentReplay": {
+    "session": 38872,
+    "active": false,
+    "exit": 0,
+    "run": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 1053,
+    "seconds": 0.077,
+    "rustSeconds": 1304,
+    "nxSeconds": 1477,
+    "nextest": "e9eb5883-57d4-4483-9c63-ac1d665ff97b",
+    "originalSelector": true,
+    "priorRuntimeRed": 26223,
+    "priorRedReason": "Authored fixture field ID1 invalid; actual sole field ID0",
+    "neutralCorrection": 32054,
+    "independentOracle": {
+      "session": 80497,
+      "exit": 0,
+      "strict": true,
+      "payloadBytes": 8194,
+      "frameBytes": 8202,
+      "fieldId": 0
+    },
+    "typedCallerPhysicalRetirementUnqualified": true
+  },
+  "rootDurableSemioLaunchGenerate": {
+    "session": 8809,
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx run @semio-tech/plugin-registry:generate --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-durable-semio-native55-current-seed-generate.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-durable-semio-native55-current-seed-generate.log",
+    "exit": 0,
+    "registeredPhases": 60,
+    "runSeconds": 60.3,
+    "currentSeedSemioPhases": 60,
+    "currentGeneratedNewPrerequisitePhase": true
+  },
+  "rootSemanticAbsentReadbackCorrected": {
+    "absentPaths": 19,
+    "beforeNull": true,
+    "previousAuditMappedAbsentToEmptyString": true,
+    "currentNullComparisonCorrect": true,
+    "productionChanged": false
+  },
+  "rootCurrentTime": "2026-10-06 16:23 UTC",
+  "rootSemioNative55PrerequisiteMount": {
+    "session": 79886,
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts' semio-next-own-native-compiler-prerequisites > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-native55-current-compiler-prerequisite-mount.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-native55-current-compiler-prerequisite-mount.log",
+    "exit": 0,
+    "productionFiles": 15,
+    "heldInputs": 1,
+    "regions": 26
+  },
+  "rootSemioNative55PrerequisitesOriginalBefore": {
+    "session": 29347,
+    "command": "SEMIO_TEST_LEVEL='quick' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='true' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-data' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-cache' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current' RUST_BACKTRACE='1' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' SEMIO_TEST_RETAIN_ARTIFACTS='true' NEXTEST_SUCCESS_OUTPUT='immediate' bun nx run @semio-tech/stdio-semio-rs:test-snapshot-sqlite-native --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-after-current55-prerequisites-original-before-native.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-after-current55-prerequisites-original-before-native.log",
+    "started": "2026-10-06 15:25:40 UTC",
+    "semanticProvidersMounted": false,
+    "previousCompilerSession": 29778,
+    "exit": 1,
+    "nativeCompilerSeconds": 362,
+    "compilerErrors": 0,
+    "passed": 229,
+    "failed": 42,
+    "run": 271,
+    "skipped": 2181,
+    "seconds": 107.572,
+    "nextest": "6a0c572e-ee4c-44ea-b299-6d67d26eec2b",
+    "lateCancelAlreadyGreenBefore": true
+  },
+  "rootSignedRowIdentityNativeAfter": {
+    "session": 95110,
+    "exit": 0,
+    "passed": 46,
+    "skipped": 0,
+    "seconds": 0.361,
+    "compilerSeconds": 4.52
+  },
+  "rootSignedRowIdentityOperationAfter": {
+    "session": 2974,
+    "exit": 0,
+    "passed": 58,
+    "expects": 903,
+    "files": 4,
+    "seconds": 0.667,
+    "strict": true
+  },
+  "rootComplete80CurrentBeforeReadback": {
+    "productionBeforeExact": 80,
+    "distinct": 80,
+    "absentNull": 19,
+    "semanticProvidersMounted": false,
+    "signedHelperQualified": true,
+    "signedHelperSha256": "09c8f1a4a9cfc33b903f92e56bd250202daf8326519e71968f3cd60a6e3ff7c0",
+    "textSignedHeldJoined": {
+      "session": 36696,
+      "exit": 0,
+      "regions": 3
+    },
+    "modelSliceHeldCorrection": true
+  },
+  "rootDurableSemioLaunchCheck": {
+    "session": 1293,
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx run @semio-tech/plugin-registry:check --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-durable-semio-ticket-launch-own-prerequisites-current-check.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-durable-semio-ticket-launch-own-prerequisites-current-check.log",
+    "exit": 1,
+    "reason": "Stale-channel plugin descriptors refused for host app channel23 outside snapshot and launch changes; no check success"
+  },
+  "rootSemio80QualifiedBeforeProviderMount": {
+    "session": 82715,
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts' semio-nineteen-owners-eighty-paid-complete-semantic-providers > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-eighty-qualified-before-provider-mount.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-eighty-qualified-before-provider-mount.log",
+    "qualifiedBefore": 29347,
+    "afterPaths": 80,
+    "exit": 0,
+    "changed": 79,
+    "noOp": 1,
+    "readback": 80
+  },
+  "rootSemio80MountedOriginalAfterNative": {
+    "session": 85936,
+    "command": "SEMIO_TEST_LEVEL='quick' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='true' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-data' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-cache' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current' RUST_BACKTRACE='1' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' SEMIO_TEST_RETAIN_ARTIFACTS='true' NEXTEST_SUCCESS_OUTPUT='immediate' bun nx run @semio-tech/stdio-semio-rs:test-snapshot-sqlite-native --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-eighty-mounted-original-after-native.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-nineteen-eighty-mounted-original-after-native.log",
+    "started": "2026-10-06 15:40:45 UTC",
+    "originalSelector": true,
+    "providerMount": 82715
+  },
+  "rootSixDedicatedOriginalCurrentNative": {
+    "session": 6833,
+    "exit": 1,
+    "nextestOwners": 1,
+    "las": {
+      "run": 16,
+      "passed": 15,
+      "failed": 1,
+      "skipped": 46,
+      "reason": "Independent canonical fixture module missing"
+    },
+    "compilerOnlyOwners": [
+      "step",
+      "ifc",
+      "bcf",
+      "md",
+      "vcs"
+    ],
+    "wholeQualified": false
+  },
+  "rootSemioMountedCurrentCompilerRepairs": {
+    "originalSharedDINCompilerSession": 62216,
+    "diagnostics": 12,
+    "uniqueRegions": 7,
+    "physical": 6,
+    "rootMesh": 1,
+    "mounted": true,
+    "fixtureChanges": false,
+    "grantsChanged": false,
+    "runtimeQualified": false
+  },
+  "rootSemioControlledSchemaProposal": {
+    "paths": 18,
+    "regions": 18,
+    "drawingAlreadyControlled": true,
+    "prepared": true,
+    "mounted": false,
+    "modelBeforeAdmittedBytes": 132045,
+    "modelBeforeActualRequests": 707120,
+    "exactAfterRuntimeUnproven": true
+  },
+  "rootDurableSixOwningLaunchGenerate": {
+    "session": 10400,
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx run @semio-tech/plugin-registry:generate --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-durable-six-owning-current-seed-generate.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-durable-six-owning-current-seed-generate.log",
+    "exit": 0,
+    "generatedNewOriginalSixRow": true
+  },
+  "rootSemioOriginalMountedAfter": {
+    "session": 85936,
+    "exit": 1,
+    "run": 271,
+    "passed": 255,
+    "failed": 16,
+    "skipped": 2181,
+    "leaky": 1,
+    "seconds": 93.336,
+    "nextest": "af4aebf1-aa17-483f-ac6b-7cb072a8da7b",
+    "qualified": false
+  },
+  "rootSemioControlledSchema18Mount": {
+    "session": 79965,
+    "exit": 0,
+    "productionPaths": 18,
+    "heldCarries": 15,
+    "changedPaths": 33,
+    "wholeNativeAfterPending": true
+  },
+  "rootSemioDrawingImageRegressions": {
+    "session": 44537,
+    "exit": 0,
+    "productionPaths": 2,
+    "regions": 3,
+    "drawingHistoricalBeforePreserved": true,
+    "imageInvalidNegativePremiseCorrected": true,
+    "publicNegative4Preserved": true,
+    "owningAfterPending": true
+  },
+  "rootSemioNativeOutputsDistinctExtents": {
+    "paths": 6,
+    "regions": 9,
+    "mounted": true,
+    "originalHelperAndCallerAssertionsPreserved": true,
+    "invalidOutputSemanticConflationCorrected": true,
+    "owningAfterPending": true
+  },
+  "rootSemioValuePhantomRootRows": {
+    "session": 75156,
+    "exit": 0,
+    "rowsFull": 22,
+    "rowsEmpty": 2,
+    "graphFull": 19,
+    "graphEmpty": 1,
+    "owningAfterPending": true
+  },
+  "rootSemioFlowNegativeTables": {
+    "session": 66629,
+    "exit": 0,
+    "onlyInvalidNegative4To3": true,
+    "publicPositive5Negative4Preserved": true,
+    "owningAfterPending": true
+  },
+  "rootPhysicalNormTwelveQualified": {
+    "distinctOwners": 12,
+    "distinctLaws": 178,
+    "din": {
+      "session": 58654,
+      "exit": 0,
+      "passed": 14,
+      "skip": 126,
+      "seconds": 0.35,
+      "rustSeconds": 215,
+      "nextest": "8d532561-a7b2-409d-9283-127d4023b271"
+    },
+    "en1997": {
+      "session": 67352,
+      "exit": 0,
+      "passed": 15,
+      "skip": 190,
+      "seconds": 2.797,
+      "rustSeconds": 101,
+      "nextest": "75fb587d-491f-4fe5-b03e-d551723f34d3"
+    },
+    "priorDistinctOwners": 10,
+    "priorDistinctLaws": 149
+  },
+  "rootSemio80CurrentReadback": {
+    "paths": 80,
+    "mismatches": 0,
+    "historicalBeforePreserved": true
+  },
+  "rootSemioBaseInlineCorrection": {
+    "session": 68074,
+    "exit": 0,
+    "paths": 3,
+    "regions": 6,
+    "nativePositiveGrantsUnchanged": true,
+    "originalCancellationPredicatesUnchanged": true,
+    "wholeOwningAfterPending": true
+  },
+  "rootSemio16RepairedOriginalAfterNative": {
+    "session": 66676,
+    "command": "SEMIO_TEST_LEVEL='quick' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='true' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-data' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-semio-text-complete-before-cache' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current' RUST_BACKTRACE='1' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' SEMIO_TEST_RETAIN_ARTIFACTS='true' NEXTEST_SUCCESS_OUTPUT='immediate' bun nx run @semio-tech/stdio-semio-rs:test-snapshot-sqlite-native --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-current16-repaired-original-after-native.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-current16-repaired-original-after-native.log",
+    "started": "2026-10-06 16:07 UTC",
+    "originalSelector": true,
+    "originalGrants": true,
+    "originalEnvironment": true,
+    "predecessor": 85936,
+    "active": false,
+    "exit": 1,
+    "run": 271,
+    "passed": 270,
+    "failed": 1,
+    "skipped": 2181,
+    "seconds": 69.412,
+    "rustSeconds": 139,
+    "nextest": "4a057a80-5af3-4657-8ebb-3e349a839f8a",
+    "qualified": false,
+    "soleFailure": "Base complete full-empty native decode ownership cap",
+    "all19IndividualCompleteSemanticLawsPassed": true,
+    "all18DefaultBranchesBothEncodingsPassed": true,
+    "originalPaidRootCancellationPassed": true,
+    "modelExactBackingPassed": true,
+    "modelFinalSchemaCancellationPassed": true,
+    "fiveControlledNativeOutputPassed": true
+  },
+  "rootSixDedicatedCurrentTestPrerequisiteMount": {
+    "session": 2226,
+    "exit": 0,
+    "paths": 9,
+    "regions": 14,
+    "originalGrantsUnchanged": true
+  },
+  "rootDurableCurrentBaseLaunchGenerate": {
+    "session": 62041,
+    "exit": 0
+  },
+  "rootSixDedicatedPostPrerequisiteOriginalAfter": {
+    "session": 81779,
+    "command": "bun -e 'import{readFileSync as r}from'\\''node:fs'\\'';const x=JSON.parse(r(\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/root-six-dedicated-original-current-native-command.json\",'\\''utf8'\\''));const log=\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-six-dedicated-current-test-prerequisites-original-after-native.log\";const command=x.command.replace(x.log,log);if(command===x.command)throw Error('\\''Six replay destination authority absent'\\'');const p=Bun.spawn(['\\''/bin/zsh'\\'','\\''-c'\\'',command],{cwd:\"/Users/ueli/Documents/semio\",stdout:'\\''inherit'\\'',stderr:'\\''inherit'\\''});process.exit(await p.exited);'",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-six-dedicated-current-test-prerequisites-original-after-native.log",
+    "started": "2026-10-06 16:12 UTC",
+    "originalTargets": 6,
+    "originalGrants": true,
+    "originalEnvironment": true,
+    "predecessor": 6833,
+    "prerequisiteMount": 2226
+  },
+  "rootDurableSixCurrentPrerequisiteLaunchGenerate": {
+    "session": 51270,
+    "exit": 0,
+    "registered": [
+      {
+        "phase": "semio-mounted-owned-controlled-schema-validation",
+        "seed": true,
+        "generated": true
+      },
+      {
+        "phase": "semio-mounted-drawing-node-stage-and-image-negative-tables",
+        "seed": true,
+        "generated": true
+      },
+      {
+        "phase": "semio-mounted-base-retained-schema-and-inline-root",
+        "seed": true,
+        "generated": true
+      },
+      {
+        "phase": "six-dedicated-current-owning-test-prerequisites",
+        "seed": true,
+        "generated": true
+      }
+    ]
+  },
+  "rootSemioSixAfterPending": true,
+  "rootPhysicalOriginalCsvJsonReplay": {
+    "session": 72660,
+    "active": false,
+    "exit": 0,
+    "json": {
+      "run": 20,
+      "passed": 20,
+      "skipped": 148,
+      "seconds": 5.205,
+      "rustSeconds": 22.8,
+      "nextest": "8b5edbee-d100-465e-853f-9bc66bc8e6fa"
+    },
+    "csv": {
+      "run": 15,
+      "passed": 15,
+      "skipped": 70,
+      "seconds": 1.378,
+      "rustSeconds": 152,
+      "nextest": "2104bad8-7892-4885-9b3f-cb6d457c2194"
+    },
+    "originalTargets": true,
+    "originalGrants": true
+  },
+  "rootCoverageCurrentReconciliation": "📓️semantic-independent-universal-coverage-current-proof-reconciliation.md",
+  "rootSemioBaseDecoderContextMount": {
+    "chunk_id": "0f0ac3",
+    "wall_time_seconds": 1.00579875,
+    "session_id": 77493,
+    "original_token_count": 0,
+    "output": "",
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts' semio-base-full-empty-native-decoder-context > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-base-full-empty-native-decoder-context-mount.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-base-full-empty-native-decoder-context-mount.log"
+  },
+  "rootSemioNativeDecodeOwnedLedgerMount": {
+    "chunk_id": "c4451e",
+    "wall_time_seconds": 1.003547625,
+    "session_id": 82072,
+    "original_token_count": 0,
+    "output": "",
+    "command": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts' semio-shared-native-decode-owned-ledger > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-shared-native-decode-owned-ledger-mount.log' 2>&1",
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-shared-native-decode-owned-ledger-mount.log"
+  },
+  "rootPhysicalFreshPdfOriginalAfter": {
+    "session": 15649,
+    "active": true,
+    "originalSelector": "--lib/component-app-assembly/no-fail-fast/allstatuses",
+    "originalBudgetMs": 300000,
+    "historicalCachedCredit": false
+  },
+  "rootConcrete60Framework7CurrentAudit": "📓️semantic-independent-concrete-sixty-framework-seven-current-owning-selectors.md"
+}

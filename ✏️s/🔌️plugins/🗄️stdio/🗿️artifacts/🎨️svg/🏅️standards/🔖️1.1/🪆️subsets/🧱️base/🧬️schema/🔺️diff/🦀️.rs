@@ -1,14 +1,13 @@
-//! 🔺️ SvgDiff — handcrafted recursive tree diff over `SvgSnapshot.doc` (an `XmlDocument`).
+//! 🔺️ SvgDiff — handcrafted recursive tree diff over `SvgSnapshot.doc` (an `SvgDocument`).
 //! `declaration`/`doctype` are tri-state top-level scalars (`Some(None)` = cleared); `root` nests
-//! the recursive `SvgNodeDiff` tree, itself shaped like the `XmlNode` it targets
-//! (`XmlNode::Element` <-> `SvgElementDiff`, `XmlNode::Text` <-> `Text{text}`, everything else --
+//! the recursive `SvgNodeDiff` tree, itself shaped like the `SvgNode` it targets
+//! (`SvgNode::Element` <-> `SvgElementDiff`, `SvgNode::Text` <-> `Text{text}`, everything else --
 //! CData/Comment/ProcessingInstruction, plus any node-KIND change -- via the `Replace` fallback).
 //! Builds on the xml/svg node-diff pattern originated by `📰️xml`'s own `XmlDiff`
 //! (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/
 //! 🧬️schema-design.md`) but declares its OWN diff types (per the spec-mandated-reuse rule: svg
 //! embeds xml's *node* model, never xml's *diff* model).
 
-pub(crate) use semio_s_artifact_stdio_xml::schema::diff::{enc_xml_node, enc_xml_node_bin};
 use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -32,11 +31,11 @@ pub struct SvgDiff {
     /// 🧭 Tri-state logical document-prolog nodes.
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub prolog: Option<Vec<XmlNode>>,
+    pub prolog: Option<Vec<SvgNode>>,
     /// 🧹 Tri-state logical document-epilog nodes.
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub epilog: Option<Vec<XmlNode>>,
+    pub epilog: Option<Vec<SvgNode>>,
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = declaration removed, `Some(Some(d))` = set.
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -55,7 +54,7 @@ pub struct SvgDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️NodeDiff
-/// 🌳 Recursive per-node diff, shaped like the `XmlNode` it targets.
+/// 🌳 Recursive per-node diff, shaped like the `SvgNode` it targets.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum SvgNodeDiff {
@@ -68,7 +67,7 @@ pub enum SvgNodeDiff {
     /// is `CData`/`Comment`/`ProcessingInstruction`) and, uniquely at the document ROOT, root
     /// presence/absence itself (`node: None` = root removed).
     Replace {
-        node: Option<XmlNode>,
+        node: Option<SvgNode>,
     },
 }
 
@@ -102,7 +101,7 @@ pub struct SvgAttributesDiff {
 #[value(rename_all = "camelCase")]
 pub struct SvgAttrModified {
     pub name: String,
-    pub value: String,
+    pub value: crate::schema::snapshot::SvgAttributeValue,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -110,7 +109,7 @@ pub struct SvgAttrModified {
 pub struct SvgAttrAdded {
     pub index: usize,
     pub name: String,
-    pub value: String,
+    pub value: crate::schema::snapshot::SvgAttributeValue,
 }
 
 /// 🌳 Index-keyed, recursive children triple. `removed`/`modified` indices refer to BASE state
@@ -137,7 +136,7 @@ pub struct SvgChildModified {
 #[value(rename_all = "camelCase")]
 pub struct SvgChildAdded {
     pub index: usize,
-    pub item: XmlNode,
+    pub item: SvgNode,
 }
 //#endregion 🔖️NodeDiff
 
@@ -179,7 +178,7 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
         if let Some(node_diff) = &self.root {
             next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff);
         }
-        semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&next.doc)
+        next.doc.validate_attribute_owners().and_then(|_|next.doc.validate_boundaries())
             .map_err(|detail| MutationApplyError::new("mutation.apply.invalid-document-boundary", detail))?;
         Ok(next)
     }
@@ -206,16 +205,16 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn validate_svg_node(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> MutationApplyResult<()> {
+fn validate_svg_node(current: Option<&SvgNode>, diff: &SvgNodeDiff) -> MutationApplyResult<()> {
     match diff {
         SvgNodeDiff::Replace { .. } => Ok(()),
         SvgNodeDiff::Text { .. } => match current {
-            Some(XmlNode::Text { .. }) => Ok(()),
+            Some(SvgNode::Text { .. }) => Ok(()),
             Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text diff targets a non-text node")),
             None => Err(MutationApplyError::new("mutation.apply.missing-target", "text diff targets a missing root")),
         },
         SvgNodeDiff::Element(element) => match current {
-            Some(XmlNode::Element { attrs, children, .. }) => {
+            Some(SvgNode::Element { attrs, children, .. }) => {
                 if let Some(attributes) = &element.attributes {
                     validate_svg_attrs(attrs, attributes)?;
                 }
@@ -231,7 +230,7 @@ fn validate_svg_node(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> MutationA
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn validate_svg_attrs(base: &[XmlAttr], diff: &SvgAttributesDiff) -> MutationApplyResult<()> {
+fn validate_svg_attrs(base: &[SvgAttr], diff: &SvgAttributesDiff) -> MutationApplyResult<()> {
     for (position, name) in diff.removed.iter().enumerate() {
         if !base.iter().any(|attr| attr.name == *name) {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute removal target does not exist"));
@@ -263,7 +262,7 @@ fn validate_svg_attrs(base: &[XmlAttr], diff: &SvgAttributesDiff) -> MutationApp
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn validate_svg_children(base: &[XmlNode], diff: &SvgChildrenDiff) -> MutationApplyResult<()> {
+fn validate_svg_children(base: &[SvgNode], diff: &SvgChildrenDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
@@ -297,7 +296,7 @@ fn validate_svg_children(base: &[XmlNode], diff: &SvgChildrenDiff) -> MutationAp
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_root_diff(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> Option<XmlNode> {
+fn apply_root_diff(current: Option<&SvgNode>, diff: &SvgNodeDiff) -> Option<SvgNode> {
     match diff {
         SvgNodeDiff::Replace { node } => node.clone(),
         _ => current.map(|n| apply_node_diff(n, diff)),
@@ -305,15 +304,15 @@ fn apply_root_diff(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> Option<XmlN
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_node_diff(node: &XmlNode, diff: &SvgNodeDiff) -> XmlNode {
+fn apply_node_diff(node: &SvgNode, diff: &SvgNodeDiff) -> SvgNode {
     match diff {
         SvgNodeDiff::Replace { node: replacement } => replacement.clone().unwrap_or_else(|| node.clone()),
         SvgNodeDiff::Text { text } => match node {
-            XmlNode::Text { text: current } => XmlNode::Text { text: text.clone().unwrap_or_else(|| current.clone()) },
+            SvgNode::Text { text: current } => SvgNode::Text { text: text.clone().unwrap_or_else(|| current.clone()) },
             other => other.clone(),
         },
         SvgNodeDiff::Element(element_diff) => match node {
-            XmlNode::Element { name, attrs, children } => XmlNode::Element {
+            SvgNode::Element { name, attrs, children } => SvgNode::Element {
                 name: element_diff.name.clone().unwrap_or_else(|| name.clone()),
                 attrs: match &element_diff.attributes {
                     Some(attrs_diff) => apply_attrs_diff(attrs, attrs_diff),
@@ -330,12 +329,12 @@ fn apply_node_diff(node: &XmlNode, diff: &SvgNodeDiff) -> XmlNode {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_attrs_diff(attrs: &[XmlAttr], diff: &SvgAttributesDiff) -> Vec<XmlAttr> {
-    let mut out: Vec<XmlAttr> = attrs
+fn apply_attrs_diff(attrs: &[SvgAttr], diff: &SvgAttributesDiff) -> Vec<SvgAttr> {
+    let mut out: Vec<SvgAttr> = attrs
         .iter()
         .filter(|a| !diff.removed.contains(&a.name))
         .map(|a| match diff.modified.iter().find(|m| m.name == a.name) {
-            Some(m) => XmlAttr { name: a.name.clone(), value: m.value.clone() },
+            Some(m) => SvgAttr { name: a.name.clone(), value: m.value.clone() },
             None => a.clone(),
         })
         .collect();
@@ -343,14 +342,14 @@ fn apply_attrs_diff(attrs: &[XmlAttr], diff: &SvgAttributesDiff) -> Vec<XmlAttr>
     additions.sort_by_key(|a| a.index);
     for add in additions {
         let at = add.index.min(out.len());
-        out.insert(at, XmlAttr { name: add.name.clone(), value: add.value.clone() });
+        out.insert(at, SvgAttr { name: add.name.clone(), value: add.value.clone() });
     }
     out
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_children_diff(children: &[XmlNode], diff: &SvgChildrenDiff) -> Vec<XmlNode> {
-    let mut slots: Vec<Option<XmlNode>> = children.iter().cloned().map(Some).collect();
+fn apply_children_diff(children: &[SvgNode], diff: &SvgChildrenDiff) -> Vec<SvgNode> {
+    let mut slots: Vec<Option<SvgNode>> = children.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(node)) = slots.get(m.index) {
             let patched = apply_node_diff(node, &m.diff);
@@ -365,7 +364,7 @@ fn apply_children_diff(children: &[XmlNode], diff: &SvgChildrenDiff) -> Vec<XmlN
             slots.remove(idx);
         }
     }
-    let mut out: Vec<XmlNode> = slots.into_iter().flatten().collect();
+    let mut out: Vec<SvgNode> = slots.into_iter().flatten().collect();
     let mut additions: Vec<&SvgChildAdded> = diff.added.iter().collect();
     additions.sort_by_key(|a| a.index);
     for add in additions {
@@ -404,16 +403,16 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_node_diff(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> SvgNodeDiff {
+fn inverse_node_diff(current: Option<&SvgNode>, diff: &SvgNodeDiff) -> SvgNodeDiff {
     match diff {
         SvgNodeDiff::Replace { .. } => SvgNodeDiff::Replace { node: current.cloned() },
         SvgNodeDiff::Text { .. } => match current {
-            Some(XmlNode::Text { text }) => SvgNodeDiff::Text { text: Some(text.clone()) },
+            Some(SvgNode::Text { text }) => SvgNodeDiff::Text { text: Some(text.clone()) },
             Some(other) => SvgNodeDiff::Replace { node: Some(other.clone()) },
             None => SvgNodeDiff::Replace { node: None },
         },
         SvgNodeDiff::Element(element_diff) => match current {
-            Some(XmlNode::Element { name, attrs, children }) => SvgNodeDiff::Element(SvgElementDiff {
+            Some(SvgNode::Element { name, attrs, children }) => SvgNodeDiff::Element(SvgElementDiff {
                 name: element_diff.name.as_ref().map(|_| name.clone()),
                 attributes: element_diff.attributes.as_ref().map(|ad| inverse_attrs_diff(attrs, ad)),
                 children: element_diff.children.as_ref().map(|cd| inverse_children_diff(children, cd)),
@@ -425,7 +424,7 @@ fn inverse_node_diff(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> SvgNodeDi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_attrs_diff(base_attrs: &[XmlAttr], diff: &SvgAttributesDiff) -> SvgAttributesDiff {
+fn inverse_attrs_diff(base_attrs: &[SvgAttr], diff: &SvgAttributesDiff) -> SvgAttributesDiff {
     let removed: Vec<String> = diff.added.iter().map(|a| a.name.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -445,7 +444,7 @@ fn inverse_attrs_diff(base_attrs: &[XmlAttr], diff: &SvgAttributesDiff) -> SvgAt
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_children_diff(base_children: &[XmlNode], diff: &SvgChildrenDiff) -> SvgChildrenDiff {
+fn inverse_children_diff(base_children: &[SvgNode], diff: &SvgChildrenDiff) -> SvgChildrenDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -465,7 +464,7 @@ fn inverse_children_diff(base_children: &[XmlNode], diff: &SvgChildrenDiff) -> S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_root(base: Option<&XmlNode>, other: Option<&XmlNode>) -> Option<SvgNodeDiff> {
+fn between_root(base: Option<&SvgNode>, other: Option<&SvgNode>) -> Option<SvgNodeDiff> {
     match (base, other) {
         (None, None) => None,
         (None, Some(n)) => Some(SvgNodeDiff::Replace { node: Some(n.clone()) }),
@@ -475,13 +474,13 @@ fn between_root(base: Option<&XmlNode>, other: Option<&XmlNode>) -> Option<SvgNo
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_node(base: &XmlNode, other: &XmlNode) -> Option<SvgNodeDiff> {
+fn between_node(base: &SvgNode, other: &SvgNode) -> Option<SvgNodeDiff> {
     if base == other {
         return None;
     }
     match (base, other) {
-        (XmlNode::Text { .. }, XmlNode::Text { text: ot }) => Some(SvgNodeDiff::Text { text: Some(ot.clone()) }),
-        (XmlNode::Element { name: bn, attrs: ba, children: bc }, XmlNode::Element { name: on, attrs: oa, children: oc }) => {
+        (SvgNode::Text { .. }, SvgNode::Text { text: ot }) => Some(SvgNodeDiff::Text { text: Some(ot.clone()) }),
+        (SvgNode::Element { name: bn, attrs: ba, children: bc }, SvgNode::Element { name: on, attrs: oa, children: oc }) => {
             let name = if bn != on { Some(on.clone()) } else { None };
             let attributes = between_attrs(ba, oa);
             let children = between_children(bc, oc);
@@ -496,7 +495,7 @@ fn between_node(base: &XmlNode, other: &XmlNode) -> Option<SvgNodeDiff> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<SvgAttributesDiff> {
+fn between_attrs(base: &[SvgAttr], other: &[SvgAttr]) -> Option<SvgAttributesDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for b in base {
@@ -523,7 +522,7 @@ fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<SvgAttributesDif
 /// collections: pairwise-compare `0..min(base.len(), other.len())` as `modified`, the base tail
 /// as `removed`, the other tail as `added`. Not an LCS-based diff (no move/reorder detection).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<SvgChildrenDiff> {
+fn between_children(base: &[SvgNode], other: &[SvgNode]) -> Option<SvgChildrenDiff> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -784,26 +783,26 @@ pub fn diff_set_snapshot(base: &SvgSnapshot, next: &SvgSnapshot) -> SvgDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
-    use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;
+    use crate::schema::snapshot::SvgDocument;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {
-        XmlNode::Element { name: name.to_string(), attrs: attrs.into_iter().map(|(n, v)| XmlAttr { name: n.to_string(), value: v.to_string() }).collect(), children }
+    fn elem(name: &str, attrs: Vec<(&str, crate::schema::snapshot::SvgAttributeValue)>, children: Vec<SvgNode>) -> SvgNode {
+        SvgNode::Element { name: name.to_string(), attrs: attrs.into_iter().map(|(n, v)| SvgAttr { name: n.to_string(), value: v }).collect(), children }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn snapshot(doc: XmlDocument) -> SvgSnapshot {
+    fn snapshot(doc: SvgDocument) -> SvgSnapshot {
         SvgSnapshot { doc, ..Default::default() }
     }
 
-    let a = snapshot(XmlDocument {
-        root: Some(elem("svg", vec![("width", "10")], vec![elem("rect", vec![("x", "0")], vec![])])),
-        doctype: Some("<!DOCTYPE svg>".into()),
+    let a = snapshot(SvgDocument {
+        root: Some(elem("svg", vec![("width", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:10.0,unit:"".into()}))], vec![elem("rect", vec![("x", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:0.0,unit:"".into()}))], vec![])])),
+        doctype: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype{name:"svg".into(),..Default::default()}),
         declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single }),
         prolog: Vec::new(),
         epilog: Vec::new(),
     });
-    let b = snapshot(XmlDocument { root: Some(elem("svg", vec![("width", "20"), ("height", "30")], vec![elem("circle", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
-    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
+    let b = snapshot(SvgDocument { root: Some(elem("svg", vec![("width", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:20.0,unit:"".into()})), ("height", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:30.0,unit:"".into()}))], vec![elem("circle", vec![("r", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:5.0,unit:"".into()}))], vec![]), SvgNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
+    let c = snapshot(SvgDocument { root: None, doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() });
 
     vec![SvgDiff::default(), SvgDiff::between(&a, &b), SvgDiff::between(&b, &a), SvgDiff::between(&a, &c), SvgDiff::between(&c, &a)]
 }
@@ -818,7 +817,7 @@ mod handcrafted_diff_codec_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+pub use crate::schema::snapshot::SvgAttr;
 pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
-pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+pub use crate::schema::snapshot::SvgNode;
 //#endregion 🔁️Re-exports

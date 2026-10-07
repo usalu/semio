@@ -1,6 +1,58 @@
 //! 🪆️ Generic record field and variant construction under explicit owned controls.
 use crate::*;
 use semio_framework_dsl::{UnitSpec,unit_by_symbol};
+
+/// 📋️ Constructs the declared native sequence directly from semantic field owners.
+pub trait DslSequence<T>: Default + IntoIterator<Item = T> {
+    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError>;
+    fn begin_controlled(length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError>;
+    fn ensure_controlled_slot(&mut self, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError>;
+    fn push_controlled(&mut self, value: T) -> Result<(), ValueError>;
+}
+
+impl<T> DslSequence<T> for Vec<T> {
+    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError> { values.into_iter().collect() }
+    fn begin_controlled(length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.allocate_vec(length) }
+    fn ensure_controlled_slot(&mut self, _control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> { Ok(()) }
+    fn push_controlled(&mut self, value: T) -> Result<(), ValueError> { self.push(value); Ok(()) }
+}
+
+impl<T, const N: usize> DslSequence<T> for semio_framework_value::list::PagedList<T, N> {
+    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError> {
+        let mut output = Self::default();
+        for value in values { output.try_push(value?).map_err(|error| TextError::new(ValueRefusalKind::OwnershipLimit, error.to_string(), TextSpan::at(1, 1)))?; }
+        Ok(output)
+    }
+    fn begin_controlled(_length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::default()) }
+    fn ensure_controlled_slot(&mut self, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
+        while !self.has_reserved_slot() {
+            let bytes = self.next_allocation_bytes().map_err(ValueError::from)?;
+            control.charge(bytes)?;
+            self.reserve_one(bytes).map_err(|error| ValueError::from(error.refusal()))?;
+        }
+        Ok(())
+    }
+    fn push_controlled(&mut self, value: T) -> Result<(), ValueError> { self.push_reserved(value).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "paged DSL sequence rejected an admitted slot")) }
+}
+
+/// 🧭️ Projects semantic sequences through their actual borrowed native owners.
+pub trait DslSequenceView<T> {
+    type Iter<'a>: ExactSizeIterator<Item = &'a T> where Self: 'a, T: 'a;
+    fn field_items(&self) -> Self::Iter<'_>;
+}
+
+impl<T> DslSequenceView<T> for [T] {
+    type Iter<'a> = std::slice::Iter<'a, T> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
+impl<T> DslSequenceView<T> for Vec<T> {
+    type Iter<'a> = std::slice::Iter<'a, T> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
+impl<T, const N: usize> DslSequenceView<T> for semio_framework_value::list::PagedList<T, N> {
+    type Iter<'a> = semio_framework_value::list::PagedIter<'a, T, N> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
 //#region 🔖️Field
 /// 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
 /// primitive implements it directly; `#[derive(DslRecord)]`/`#[derive(DslScalar)]` implement it
@@ -190,6 +242,49 @@ impl DslField for String {
     }
 }
 
+impl<const N: usize> DslField for semio_framework_value::paged::PagedUtf8<N> {
+    fn shape() -> Shape { Shape::Text }
+    fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.checkpoint()?; Ok(Shape::Text) }
+    fn to_value(&self) -> FieldValue { FieldValue::Text(self.to_string_owner()) }
+    fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> { Ok(FieldValue::Text(self.to_string_owner_controlled(control)?)) }
+    fn from_value(value: &FieldValue) -> Result<Self, String> { match value { FieldValue::Text(text) => Self::try_from_str(text).map_err(ValueError::into_message), _ => Err("expected Text".into()) } }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { match value { FieldValue::Text(text) => Self::try_from_str_controlled(text, control), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected Text")) } }
+}
+
+impl<T: DslField, const N: usize> DslField for semio_framework_value::list::PagedList<T, N> {
+    fn shape() -> Shape { Shape::List(Box::new(T::shape())) }
+    fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::List(crate::producer::boxed(T::shape_controlled(control)?, control)?))) }
+    fn to_value(&self) -> FieldValue { FieldValue::List(self.iter().map(T::to_value).collect()) }
+    fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> { Ok(FieldValue::List(native_encoding::project_list(self, control)?)) }
+    fn from_value(value: &FieldValue) -> Result<Self, String> { let FieldValue::List(items) = value else { return Err("expected List".into()); }; let mut output = Self::default(); for value in items { output.try_push(T::from_value(value)?).map_err(|error| error.to_string())?; } Ok(output) }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { match value { FieldValue::List(items) => __rt::decode_list_controlled(items, control), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected List")) } }
+    fn projection_view(&self, path: &[usize]) -> Result<native_encoding::FieldProjectionView<'_>, ValueError> { if path.is_empty() { return Ok(native_encoding::FieldProjectionView::List(self.len())); } self.get(path[0]).ok_or_else(native_encoding::projection_path_error)?.projection_view(&path[1..]) }
+    fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, ValueError> { let (row, rest) = path.split_first().ok_or_else(native_encoding::projection_path_error)?; self.get(*row).ok_or_else(native_encoding::projection_path_error)?.projection_key(rest, index) }
+    fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
+}
+
+impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::PagedMap<T, N> {
+    fn shape() -> Shape { Shape::Map(Box::new(T::shape())) }
+    fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::Map(crate::producer::boxed(T::shape_controlled(control)?, control)?))) }
+    fn to_value(&self) -> FieldValue { FieldValue::Map(self.iter().map(|(key, value)| (key.to_string_owner(), value.to_value())).collect()) }
+    fn from_value(value: &FieldValue) -> Result<Self, String> { match value { FieldValue::Map(entries) => Self::try_from_fallible_entries(entries.iter().map(|(key, value)| Ok((semio_framework_value::paged::PagedUtf8::try_from_str(key)?, T::from_value(value).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?)))).map_err(ValueError::into_message), _ => Err("expected Map".into()) } }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        let FieldValue::Map(entries) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected Map")); };
+        let mut output = __rt::DecodedFieldOwner::new(semio_framework_value::list::PagedList::<(semio_framework_value::paged::PagedUtf8<{usize::MAX}>, T), N>::default(), |entries| { for (_, value) in entries { T::retire_decoded(value); } });
+        for (key, value) in entries {
+            control.step()?;
+            if output.as_mut().iter().any(|entry| entry.0.eq_str(key)) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "duplicate paged map field key")); }
+            while !output.as_mut().has_reserved_slot() { let bytes = output.as_mut().next_allocation_bytes()?; control.charge(bytes)?; output.as_mut().reserve_one(bytes).map_err(|error| ValueError::from(error.refusal()))?; }
+            let key = semio_framework_value::paged::PagedUtf8::try_from_str_controlled(key, control)?;
+            let value = T::from_value_controlled(value, control)?;
+            output.as_mut().push_reserved((key, value)).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "paged map decoder lost its admitted slot"))?;
+        }
+        Self::from_retained_entries(output.take())
+    }
+    fn projection_view(&self, path: &[usize]) -> Result<native_encoding::FieldProjectionView<'_>, ValueError> { if path.is_empty() { return Ok(native_encoding::FieldProjectionView::Map(self.len())); } self.entry_at(path[0]).ok_or_else(native_encoding::projection_path_error)?.1.projection_view(&path[1..]) }
+    fn retire_decoded(self) { for (_, value) in self.into_retained_entries() { T::retire_decoded(value); } }
+}
+
 /// 🔌️ A wire literal as a plain struct field (or inside a `#[dsl(table)]` `Vec` as a
 /// `WIRE`-typed column) — thin `DslField` wrapper around `crate::WireValue` so adopter
 /// technologies never need to hand-roll their own `Shape::Wire` binding.
@@ -277,6 +372,8 @@ impl<T: DslField> DslField for Vec<T> {
 /// classifies a *bare* `BTreeMap<String, T>` field directly via its own dedicated `FieldKind`
 /// (same `Shape::Map` this produces), so the two never conflict.
 impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
+    fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){return Ok(native_encoding::FieldProjectionView::Map(self.len()))}self.iter().nth(path[0]).map(|(_,value)|value).ok_or_else(native_encoding::projection_path_error)?.projection_view(&path[1..])}
+    fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path.is_empty(){return self.keys().nth(index).map(String::as_str).ok_or_else(native_encoding::projection_path_error)}self.iter().nth(path[0]).map(|(_,value)|value).ok_or_else(native_encoding::projection_path_error)?.projection_key(&path[1..],index)}
     fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{native_encoding::project_map(self,control)}
 
     fn retire_decoded(self) { for (_,value) in self { T::retire_decoded(value); } }
@@ -324,7 +421,7 @@ impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
 impl<T: DslField, const N: usize> DslField for [T; N] {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){return Ok(native_encoding::FieldProjectionView::Tuple(N))}self.get(path[0]).ok_or_else(native_encoding::projection_path_error)?.projection_view(&path[1..])}
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{let child=*path.first().ok_or_else(native_encoding::projection_path_error)?;self.get(child).ok_or_else(native_encoding::projection_path_error)?.projection_key(&path[1..],index)}
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{native_encoding::project_list(self,control).map(FieldValue::Tuple)}
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{native_encoding::project_list(self.as_slice(),control).map(FieldValue::Tuple)}
 
     fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
     // 🚫️async: E4 — see `DslField::shape`'s tag above.
@@ -442,12 +539,12 @@ pub mod __rt {
     impl<T> Drop for DecodedFieldOwner<T> { fn drop(&mut self){if let Some(value)=self.value.take(){(self.retire)(value);}} }
 
     /// 📋️ Binds declared list elements with one known collection workload and cumulative ownership.
-    pub fn decode_list_controlled<T:DslField>(items:&[FieldValue],control:&mut NativeDecodeControl<'_>)->Result<Vec<T>,ValueError>{
-        control.scoped_stage(|control|{control.begin_stage(items.len())?;let mut output=DecodedFieldOwner::new(control.allocate_vec::<T>(items.len())?,<Vec<T> as DslField>::retire_decoded);for item in items{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(item,control)})?);control.step()?;}Ok(output.take())})
+    pub fn decode_list_controlled<T:DslField,C:DslSequence<T>>(items:&[FieldValue],control:&mut NativeDecodeControl<'_>)->Result<C,ValueError>{
+        control.scoped_stage(|control|{control.begin_stage(items.len())?;let mut output=DecodedFieldOwner::new(C::begin_controlled(items.len(),control)?,|values:C|{for value in values{T::retire_decoded(value);}});for item in items{output.as_mut().ensure_controlled_slot(control)?;let value=control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(item,control)})?;output.as_mut().push_controlled(value)?;control.step()?;}Ok(output.take())})
     }
     /// 🌿️ Binds tagged variants with exact collection progress and declared variant retirement.
-    pub fn decode_statements_controlled<T:DslVariants>(items:&[(String,RecordValue)],control:&mut NativeDecodeControl<'_>)->Result<Vec<T>,ValueError>{
-        control.scoped_stage(|control|{control.begin_stage(items.len())?;let mut output=DecodedFieldOwner::new(control.allocate_vec::<T>(items.len())?,|values:Vec<T>|{for value in values{T::retire_decoded_variant(value);}});for(keyword,record)in items{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;T::from_named_record_controlled(keyword,record,control)})?);control.step()?;}Ok(output.take())})
+    pub fn decode_statements_controlled<T:DslVariants,C:DslSequence<T>>(items:&[(String,RecordValue)],control:&mut NativeDecodeControl<'_>)->Result<C,ValueError>{
+        control.scoped_stage(|control|{control.begin_stage(items.len())?;let mut output=DecodedFieldOwner::new(C::begin_controlled(items.len(),control)?,|values:C|{for value in values{T::retire_decoded_variant(value);}});for(keyword,record)in items{output.as_mut().ensure_controlled_slot(control)?;let value=control.scoped_stage(|control|{control.begin_stage(0)?;T::from_named_record_controlled(keyword,record,control)})?;output.as_mut().push_controlled(value)?;control.step()?;}Ok(output.take())})
     }
 
     /// 📐️ Resolves a `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` symbol at spec-build
@@ -526,3 +623,6 @@ pub mod variants_text {
 
 #[path = "🏷️type/🦀️.rs"]
 mod value_type_binding;
+
+#[path = "🪆️optional/🦀️.rs"]
+mod optional_field;

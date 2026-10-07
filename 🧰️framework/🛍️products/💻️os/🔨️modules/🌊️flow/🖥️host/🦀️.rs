@@ -3,12 +3,13 @@
 use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas;
 use neural_engine as neural;
+use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
 use dag::{fit_node_size, would_create_cycle, DagHost, DagLayoutOptions};
-use semio_framework_artifact_infinite_dag::{dag_host_snapshot_execution_rows, dag_host_snapshot_to_wire_literal, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, EdgeRouteStyle, IoPortSpec};
+use semio_framework_artifact_infinite_dag::{dag_host_snapshot_execution_rows, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, EdgeRouteStyle, IoPortSpec};
 use semio_framework_artifact_flow_flow::{widget_id_for, FlowMutation, FlowStore, ReplaceFlowHostSnapshot, FLOW_DOCUMENT_SCHEMA};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
@@ -1608,10 +1609,7 @@ impl FlowHost {
     }
 
     fn cluster_tree_from_node(node: &WireNode) -> Option<Tree> {
-        let PropertyValue::String(json) = node.properties.get("clusterTree")? else {
-            return None;
-        };
-        semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
+        semio_framework_artifact_flow_flow::cluster_tree_from_property(node.properties.get("clusterTree")?).ok()
     }
 
     fn dictionary_from_property_bag(bag: &PropertyBag) -> Dictionary {
@@ -2427,7 +2425,7 @@ impl FlowHost {
             retirement.retire_cold();
             return self.history_store.as_mut();
         }
-        let mut store = ::semio_framework_async::poll::resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
+        let mut store = ::semio_framework_async::poll::resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None), crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()))).ok()?;
         store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
         self.history_store = Some(store);
         self.history_store.as_mut()

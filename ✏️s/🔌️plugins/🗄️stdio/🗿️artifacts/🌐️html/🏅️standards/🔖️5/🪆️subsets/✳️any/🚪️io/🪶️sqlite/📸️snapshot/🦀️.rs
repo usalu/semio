@@ -10,11 +10,11 @@ const TABLES: [&str; 8] = ["html_document", "html_node", "html_element", "html_t
 struct OwnedNodeMap(BTreeMap<i64,HtmlNode>);
 impl std::ops::Deref for OwnedNodeMap{type Target=BTreeMap<i64,HtmlNode>;fn deref(&self)->&Self::Target{&self.0}}
 impl std::ops::DerefMut for OwnedNodeMap{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
-impl Drop for OwnedNodeMap{fn drop(&mut self){for node in std::mem::take(&mut self.0).into_values(){crate::standards::v5::subsets::any::schema::snapshot::controlled_native::retire_node(node)}}}
+impl Drop for OwnedNodeMap{fn drop(&mut self){for node in std::mem::take(&mut self.0).into_values(){crate::standards::v5::subsets::any::io::sqlite::snapshot::native::retire_node(node)}}}
 struct OwnedChildren(Vec<HtmlNode>);
 impl std::ops::Deref for OwnedChildren{type Target=Vec<HtmlNode>;fn deref(&self)->&Self::Target{&self.0}}
 impl std::ops::DerefMut for OwnedChildren{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
-impl Drop for OwnedChildren{fn drop(&mut self){while let Some(node)=self.0.pop(){crate::standards::v5::subsets::any::schema::snapshot::controlled_native::retire_node(node)}}}
+impl Drop for OwnedChildren{fn drop(&mut self){while let Some(node)=self.0.pop(){crate::standards::v5::subsets::any::io::sqlite::snapshot::native::retire_node(node)}}}
 fn integer(value: usize) -> Result<i64, ValueError> { i64::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"HTML ordinal exceeds SQLite integer range")) }
 fn index(value: i64) -> Result<usize, ValueError> { usize::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"HTML ordinal must be nonnegative")) }
 fn add(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML relational size overflow"))?; Ok(()) }
@@ -47,9 +47,9 @@ fn measure(snapshot: &HtmlSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 }
 
 impl ArtifactSqliteSnapshot for HtmlSnapshot {
-    fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v5::subsets::any::schema::snapshot::controlled_native::decode(payload,control)}
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{crate::standards::v5::subsets::any::schema::snapshot::controlled_native::encode(self,encoding,control)}
-    fn retire_sqlite_snapshot(self){crate::standards::v5::subsets::any::schema::snapshot::controlled_native::retire(self)}
+    fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v5::subsets::any::io::sqlite::snapshot::native::decode(payload,control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{crate::standards::v5::subsets::any::io::sqlite::snapshot::native::encode(self,encoding,control)}
+    fn retire_sqlite_snapshot(self){crate::standards::v5::subsets::any::io::sqlite::snapshot::native::retire(self)}
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         use semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
         let mut bound = NativeEncodingBound::new(control)?; bound.add(1024)?;
@@ -71,7 +71,7 @@ impl ArtifactSqliteSnapshot for HtmlSnapshot {
         bound.finish()
     }
 
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.html"||dialect.standard!="5"{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"owned html snapshot dialect differs from its semantic standard")));}
         let row=database.table("html_document").map_err(IoError::from_value_error)?.single_row().map_err(IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(IoError::from_value_error)?!=self.schema{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"owned html document identity differs from semantic projection")));}
@@ -131,7 +131,7 @@ impl ArtifactSqliteSnapshot for HtmlSnapshot {
             }; built.insert(id, node); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?;
         }
         if visited.len() != nodes.len() || !children.is_empty() || !attributes.is_empty() { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML node graph is disconnected or cyclic")); }
-        #[cfg(test)]let _late_scope=crate::standards::v5::subsets::any::schema::snapshot::sqlite_lifecycle_tests::SqlLateCopyScope::enter();
+        #[cfg(test)]let _late_scope=crate::standards::v5::subsets::any::io::sqlite::snapshot::lifecycle_tests::SqlLateCopyScope::enter();
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, total, total)?; Ok(Self { schema: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,document.text(1)?)?, doctype: document.optional_text(2)?.map(|v|semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,v)).transpose()?, root: built.remove(&root).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"HTML root was not reconstructed"))? })
     }
 }

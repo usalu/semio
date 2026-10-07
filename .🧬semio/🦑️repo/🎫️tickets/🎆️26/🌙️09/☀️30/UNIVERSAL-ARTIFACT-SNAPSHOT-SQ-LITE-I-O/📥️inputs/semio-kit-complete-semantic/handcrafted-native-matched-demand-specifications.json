@@ -1,0 +1,290 @@
+[
+  {
+    "name": "kit",
+    "cap": "Kit",
+    "tables": 11,
+    "maxColumns": 35,
+    "contract": {
+      "schemaBytes": 3641,
+      "tableWidths": {
+        "semio_kit_blob": 4,
+        "semio_kit_connection": 8,
+        "semio_kit_design": 5,
+        "semio_kit_document": 2,
+        "semio_kit_model_child": 5,
+        "semio_kit_object_child": 5,
+        "semio_kit_piece": 35,
+        "semio_kit_reference": 5,
+        "semio_kit_representation": 8,
+        "semio_kit_type": 6,
+        "semio_kit_value_child": 4
+      },
+      "cases": [
+        {
+          "id": "full",
+          "sourceSnapshot": {
+            "schema": "stdio.semio.kit",
+            "types": [
+              {
+                "id": "chair",
+                "name": "Chair 世界",
+                "category": "furniture"
+              }
+            ],
+            "designs": [
+              {
+                "id": "layout",
+                "name": "Design",
+                "pieces": [
+                  {
+                    "id": "left",
+                    "typeId": "chair",
+                    "transform": {
+                      "translation": {
+                        "x": {
+                          "bits": "0000000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        }
+                      },
+                      "rotation": {
+                        "x": {
+                          "bits": "0000000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        },
+                        "w": {
+                          "bits": "3ff0000000000000"
+                        }
+                      },
+                      "scale": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "z": {
+                          "bits": "3ff0000000000000"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "id": "right",
+                    "typeId": "chair",
+                    "transform": {
+                      "translation": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        }
+                      },
+                      "rotation": {
+                        "x": {
+                          "bits": "0000000000000000"
+                        },
+                        "y": {
+                          "bits": "0000000000000000"
+                        },
+                        "z": {
+                          "bits": "0000000000000000"
+                        },
+                        "w": {
+                          "bits": "3ff0000000000000"
+                        }
+                      },
+                      "scale": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "z": {
+                          "bits": "3ff0000000000000"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "connections": [
+                  {
+                    "id": "joint",
+                    "connectingPieceId": "left",
+                    "connectingPort": "a",
+                    "connectedPieceId": "right",
+                    "connectedPort": "b"
+                  }
+                ]
+              }
+            ],
+            "objects": [
+              {
+                "childId": "object-one",
+                "target": {
+                  "artifactId": "object-one",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
+                }
+              },
+              {
+                "childId": "object-two",
+                "target": {
+                  "artifactId": "object-two",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "object"
+                  }
+                }
+              }
+            ],
+            "models": [
+              {
+                "childId": "model-one",
+                "target": {
+                  "artifactId": "model-one",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "model"
+                  }
+                }
+              }
+            ],
+            "properties": {
+              "childId": "value-one",
+              "target": {
+                "artifactId": "value-one",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "value"
+                }
+              }
+            },
+            "representations": [
+              {
+                "target": {
+                  "artifactId": "representation-0",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                },
+                "role": "chair",
+                "pin": {
+                  "kind": "head"
+                }
+              },
+              {
+                "target": {
+                  "artifactId": "representation-1",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                },
+                "role": "chair",
+                "pin": {
+                  "kind": "checkpoint",
+                  "id": "checkpoint-世界"
+                }
+              },
+              {
+                "target": {
+                  "artifactId": "representation-2",
+                  "dialect": {
+                    "artifactKind": "s.stdio.semio",
+                    "standard": "v1",
+                    "subset": "mesh"
+                  }
+                },
+                "role": "chair",
+                "pin": {
+                  "kind": "snapshot",
+                  "blob": {
+                    "hash": "content-address",
+                    "size": "18446744073709551615",
+                    "mediaType": "application/octet-stream"
+                  }
+                }
+              }
+            ]
+          },
+          "rows": 21,
+          "valueBytes": 1342
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "sourceSnapshot": {
+            "schema": "stdio.semio.kit",
+            "types": [],
+            "designs": [],
+            "objects": [],
+            "models": [],
+            "representations": []
+          },
+          "rows": 1,
+          "valueBytes": 23
+        }
+      ],
+      "publicIo": {
+        "schemaBytes": 3934,
+        "tableWidths": {
+          "semio_kit_blob": 4,
+          "semio_kit_connection": 8,
+          "semio_kit_design": 5,
+          "semio_kit_document": 2,
+          "semio_kit_model_child": 5,
+          "semio_kit_object_child": 5,
+          "semio_kit_piece": 35,
+          "semio_kit_reference": 5,
+          "semio_kit_representation": 8,
+          "semio_kit_type": 6,
+          "semio_kit_value_child": 4,
+          "semio_snapshot": 6
+        },
+        "cases": [
+          {
+            "id": "full",
+            "rows": 22,
+            "valueBytes": {
+              "binary": 1382,
+              "text": 1380
+            }
+          },
+          {
+            "id": "metadataRetainingEmpty",
+            "rows": 2,
+            "valueBytes": {
+              "binary": 63,
+              "text": 61
+            }
+          }
+        ]
+      }
+    },
+    "rustBody": "let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.types.clear();source.designs.clear();source.objects.clear();source.models.clear();source.properties=None;source.representations.clear();}source",
+    "hydrate": "const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value===\"object\"?(\"bits\"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt(\"0x\"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source));for(const link of source.representations){if(link.pin.kind===\"snapshot\")link.pin.blob.size=BigInt(link.pin.blob.size)}"
+  }
+]

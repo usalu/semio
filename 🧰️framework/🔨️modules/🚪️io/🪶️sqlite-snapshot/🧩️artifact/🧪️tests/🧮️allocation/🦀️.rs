@@ -67,3 +67,18 @@ fn shared_provider_allocation_ieee_cells_exact_refused_duplicate_and_canceled(){
  let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,n(&f,"allocationBytes")));let mut projection=Projection::new(sql,&mut control).unwrap();assert_eq!(insert_ieee754(&mut projection,table,&cells,&[columns[0],columns[0]]).unwrap_err().kind,ValueRefusalKind::InvalidValue);
  eprintln!("[DEBUG] Shared IEEE companion requested backing {cost}");
 }
+
+
+#[test]
+fn history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_free_and_cancel_owned_copy(){
+ use semio_framework_value::paged::PagedUtf8;
+ let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
+ let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits::default());let mut projection=Projection::new(f["schemaSql"].as_str().unwrap(),&mut control).unwrap();
+ for sample in f["samples"].as_array().unwrap(){let text=sample["text"].as_str().unwrap();let owner=PagedUtf8::<{usize::MAX}>::from(text);assert_eq!(owner.len(),n(sample,"bytes"));projection.insert(f["table"].as_str().unwrap(),&[Cell::PagedText(&owner)]).unwrap();}
+ let database=projection.finish().unwrap();let rows=&database.table(f["table"].as_str().unwrap()).unwrap().rows;
+ for(row,sample)in rows.iter().zip(f["samples"].as_array().unwrap()){assert_eq!(row.text(1).unwrap(),sample["text"].as_str().unwrap());assert_eq!(row.text(1).unwrap().len(),n(sample,"bytes"));}
+ let text=f["large"]["unit"].as_str().unwrap().repeat(n(&f["large"],"repeats"));let owner=PagedUtf8::<{usize::MAX}>::from(text.as_str());assert_eq!(owner.len(),n(&f["large"],"bytes"));
+ for exact in [true,false]{let maximum=owner.len()+n(&f,"semanticIdentityBytes")-usize::from(!exact);let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits{max_value_bytes:maximum,..Default::default()});let before=control.allocation_remaining_bytes();let(result,requested)=observe(||{let mut out=super::row_writer::RowWriter::borrowed(&mut control,Phase::EncodeNative)?;out.insert(f["table"].as_str().unwrap(),&[Cell::PagedText(&owner)])?;out.finish_borrowed()});if exact{result.unwrap();assert_eq!(requested,n(&f,"borrowedAllocationBytes"));assert_eq!(control.allocation_remaining_bytes(),before);}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);}}
+ let cancelled=Local::new(false);let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==Phase::ProjectSnapshot&&event.total==owner.len()&&event.completed>=n(&f["large"],"cancelAfterBytes")&&event.completed<owner.len();cancelled.set(cancelled.get()||stop);!stop};let mut control=Control::new(&mut callback,SqliteDatabaseLimits::default());let before=control.allocation_remaining_bytes();let(result,requested)=observe(||Cell::PagedText(&owner).owned(&mut control));let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert!(cancelled.get());assert_eq!(before-control.allocation_remaining_bytes(),owner.len());assert_eq!(requested,owner.len()+error.message.capacity());
+ eprintln!("[DEBUG] Native paged SQLite TEXT: three authored cells, zero allocation borrowed160000-byte text, exact semantic refusal and interior owned-copy cancellation");
+}

@@ -1,0 +1,129 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts" source-followup-verify
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts:
+[0m[32m✓[0m[0m[1m PDF1.4 complete concrete backing contract keeps all page words and literal text[0m [0m[2m[[1m75.96ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF1.4 native-neutral fixture is complete and independently editable[0m [0m[2m[4.64ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF1.4 preserves every neutral IEEE word without numeric canonicalization[0m [0m[2m[6.00ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF1.4 rejects noncontiguous pages, weakened schema and bounded cancellation[0m [0m[2m[3.29ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF14 own Set literal frame independently retains all accepted page words[0m [0m[2m[1.73ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF14 snapshot path contract independently agrees with fast-json-patch and exact owner words[0m [0m[2m[6.46ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF14 populated page UI corpus is closed and independently SQL editable[0m [0m[2m[2.02ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts:
+[0m[32m✓[0m[0m[1m PDF metadata preserves files, all encryption kinds, profiles and complete viewer preferences[0m [0m[2m[[1m71.69ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF dates and document info preserve all native fields without wire normalization[0m [0m[2m[[1m61.83ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF UA initial neutral preserves literal raw references and typed marks[0m [0m[2m[[1m62.49ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF X real initial profile preserves typed and raw intrinsic ICC bytes[0m [0m[2m[[1m91.40ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m PDF VT real initial profile preserves one page and genuine DPart references[0m [0m[2m[[1m82.42ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts:
+[0m[32m✓[0m[0m[1m durable geometry inputs and canonical identities agree with the independent schema oracle[0m [0m[2m[[1m20.20ms[0m[2m][0m
+[0m
+🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts:
+[0m[32m✓[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m retained original shared source digest remains exact[0m [0m[2m[0.09ms[0m[2m][0m
+[0m[32m✓[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m actual shared law source has no concrete artifact dependency and preserves every other assertion[0m [0m[2m[7.69ms[0m[2m][0m
+[0m[1m36 |[0m   [0m[35mfor[0m ([0m[35mconst[0m artifact of contract.artifacts) {
+[0m[1m37 |[0m     test([0m[32m`[0m${artifact.name}[0m[32m local native wiring law retains its original assertions`[0m, () => {
+[0m[1m38 |[0m       expect(existsSync(resolve(root, artifact.leaf)))[0m[3m[1m.toBe[0m([0m[33mtrue[0m)[0m[2m;[0m
+[0m[1m39 |[0m       [0m[35mconst[0m source = read(artifact.leaf), editor = read(artifact.editor)[0m[2m;[0m
+[0m[1m40 |[0m       expect(editor[0m[3m[1m.endsWith[0m(contract.leafMount))[0m[3m[1m.toBe[0m([0m[33mtrue[0m)[0m[2m;[0m
+[0m[1m41 |[0m       expect(digest(editor[0m[3m[1m.slice[0m([0m[33m0[0m, -contract.leafMount.length)))[0m[3m[1m.toBe[0m(artifact.editorSha256)[0m[2m;[0m
+                                                                       [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1m[2mexpect([0m[31mreceived[0m[2m).[0mtoBe[2m([0m[32mexpected[0m[2m)[0m
+
+Expected: [0m[32m"6bf8ad2b5286a12b0773f41d1d0f4bc59469351abbe2fa746e730f849fa24a2d"[0m
+Received: [0m[31m"a9c8b4d68c39627e6874fde8f59093811c32a9d371cfac383c5e96155af2d919"[0m
+[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts[0m[2m:[0m[33m41[0m[2m:[33m67[0m[2m)[0m
+[0m[31m✗[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 2d local native wiring law retains its original assertions[0m [0m[2m[0.76ms[0m[2m][0m
+[0m[1m43 |[0m       [0m[35mfor[0m ([0m[35mconst[0m assertion of artifact.positive) expect(source)[0m[3m[1m.toContain[0m([0m[32m`assert!(source.contains([0m${JSON[0m[3m[1m.stringify[0m(assertion)}[0m[32m));`[0m)[0m[2m;[0m
+[0m[1m44 |[0m       [0m[35mfor[0m ([0m[35mconst[0m assertion of artifact.negative) expect(source)[0m[3m[1m.toContain[0m([0m[32m`assert!(!source.contains([0m${JSON[0m[3m[1m.stringify[0m(assertion)}[0m[32m));`[0m)[0m[2m;[0m
+[0m[1m45 |[0m     })[0m[2m;[0m
+[0m[1m46 |[0m 
+[0m[1m47 |[0m     test([0m[32m`[0m${artifact.name}[0m[32m retains its actual fixture, native catalog, mounted cohorts and full package route`[0m, () => {
+[0m[1m48 |[0m       [0m[35mfor[0m ([0m[35mconst[0m [path, hash] of [[artifact.fixture, artifact.fixtureSha256], [artifact.root, artifact.rootSha256], [artifact.manifest, artifact.manifestSha256], [artifact.script, artifact.scriptSha256]]) expect(digest(read(path)), path)[0m[3m[1m.toBe[0m(hash)[0m[2m;[0m
+                                                                                                                                                                                                                                                   [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1m✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json
+
+Expected: [0m[32m"c2f6161a2a6263007296e9ef99209bfcc0cbdac47c4bb37ec5178878bc37110a"[0m
+Received: [0m[31m"19fc635e53d20856676d244931b00f11d533ea3763741d1bf24502790810bf12"[0m
+[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts[0m[2m:[0m[33m48[0m[2m:[33m239[0m[2m)[0m
+[0m[31m✗[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 2d retains its actual fixture, native catalog, mounted cohorts and full package route[0m [0m[2m[0.62ms[0m[2m][0m
+[0m[32m✓[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 2d every original hostile category changes real bytes and semantic oracle output[0m [0m[2m[5.70ms[0m[2m][0m
+[0m[1m36 |[0m   [0m[35mfor[0m ([0m[35mconst[0m artifact of contract.artifacts) {
+[0m[1m37 |[0m     test([0m[32m`[0m${artifact.name}[0m[32m local native wiring law retains its original assertions`[0m, () => {
+[0m[1m38 |[0m       expect(existsSync(resolve(root, artifact.leaf)))[0m[3m[1m.toBe[0m([0m[33mtrue[0m)[0m[2m;[0m
+[0m[1m39 |[0m       [0m[35mconst[0m source = read(artifact.leaf), editor = read(artifact.editor)[0m[2m;[0m
+[0m[1m40 |[0m       expect(editor[0m[3m[1m.endsWith[0m(contract.leafMount))[0m[3m[1m.toBe[0m([0m[33mtrue[0m)[0m[2m;[0m
+[0m[1m41 |[0m       expect(digest(editor[0m[3m[1m.slice[0m([0m[33m0[0m, -contract.leafMount.length)))[0m[3m[1m.toBe[0m(artifact.editorSha256)[0m[2m;[0m
+                                                                       [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1m[2mexpect([0m[31mreceived[0m[2m).[0mtoBe[2m([0m[32mexpected[0m[2m)[0m
+
+Expected: [0m[32m"7d6a3678c6dfe87df1a30f4f5e9a59670a7b9ce5f6c515ae96af66535b313885"[0m
+Received: [0m[31m"a98f563c53dd6249e2e4bf58430bdeb53d2542acfc40af1c40f491b3201b83cd"[0m
+[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts[0m[2m:[0m[33m41[0m[2m:[33m67[0m[2m)[0m
+[0m[31m✗[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 3d local native wiring law retains its original assertions[0m [0m[2m[0.92ms[0m[2m][0m
+[0m[1m43 |[0m       [0m[35mfor[0m ([0m[35mconst[0m assertion of artifact.positive) expect(source)[0m[3m[1m.toContain[0m([0m[32m`assert!(source.contains([0m${JSON[0m[3m[1m.stringify[0m(assertion)}[0m[32m));`[0m)[0m[2m;[0m
+[0m[1m44 |[0m       [0m[35mfor[0m ([0m[35mconst[0m assertion of artifact.negative) expect(source)[0m[3m[1m.toContain[0m([0m[32m`assert!(!source.contains([0m${JSON[0m[3m[1m.stringify[0m(assertion)}[0m[32m));`[0m)[0m[2m;[0m
+[0m[1m45 |[0m     })[0m[2m;[0m
+[0m[1m46 |[0m 
+[0m[1m47 |[0m     test([0m[32m`[0m${artifact.name}[0m[32m retains its actual fixture, native catalog, mounted cohorts and full package route`[0m, () => {
+[0m[1m48 |[0m       [0m[35mfor[0m ([0m[35mconst[0m [path, hash] of [[artifact.fixture, artifact.fixtureSha256], [artifact.root, artifact.rootSha256], [artifact.manifest, artifact.manifestSha256], [artifact.script, artifact.scriptSha256]]) expect(digest(read(path)), path)[0m[3m[1m.toBe[0m(hash)[0m[2m;[0m
+                                                                                                                                                                                                                                                   [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1m✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json
+
+Expected: [0m[32m"2cea877c1c2ce9ae154cddc4611597423da6930aaae40fe65381fc8d6ae6d459"[0m
+Received: [0m[31m"dcd1d7203cfedaace9f0ab696a67da440b12139527f027db13f9ccaf2cc71cc7"[0m
+[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts[0m[2m:[0m[33m48[0m[2m:[33m239[0m[2m)[0m
+[0m[31m✗[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 3d retains its actual fixture, native catalog, mounted cohorts and full package route[0m [0m[2m[0.44ms[0m[2m][0m
+[0m[32m✓[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 3d every original hostile category changes real bytes and semantic oracle output[0m [0m[2m[[1m16.24ms[0m[2m][0m
+[0m[1m36 |[0m   [0m[35mfor[0m ([0m[35mconst[0m artifact of contract.artifacts) {
+[0m[1m37 |[0m     test([0m[32m`[0m${artifact.name}[0m[32m local native wiring law retains its original assertions`[0m, () => {
+[0m[1m38 |[0m       expect(existsSync(resolve(root, artifact.leaf)))[0m[3m[1m.toBe[0m([0m[33mtrue[0m)[0m[2m;[0m
+[0m[1m39 |[0m       [0m[35mconst[0m source = read(artifact.leaf), editor = read(artifact.editor)[0m[2m;[0m
+[0m[1m40 |[0m       expect(editor[0m[3m[1m.endsWith[0m(contract.leafMount))[0m[3m[1m.toBe[0m([0m[33mtrue[0m)[0m[2m;[0m
+[0m[1m41 |[0m       expect(digest(editor[0m[3m[1m.slice[0m([0m[33m0[0m, -contract.leafMount.length)))[0m[3m[1m.toBe[0m(artifact.editorSha256)[0m[2m;[0m
+                                                                       [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1m[2mexpect([0m[31mreceived[0m[2m).[0mtoBe[2m([0m[32mexpected[0m[2m)[0m
+
+Expected: [0m[32m"0ec549ff06f5ab534fe3039bb4e9bb2732db9216cc9dd0f4098b28700fdf57f7"[0m
+Received: [0m[31m"3e05aa4bbb7c521744bf3dd077e93657f0102287f39116158c09265d0d002a64"[0m
+[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts[0m[2m:[0m[33m41[0m[2m:[33m67[0m[2m)[0m
+[0m[31m✗[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 5d local native wiring law retains its original assertions[0m [0m[2m[0.86ms[0m[2m][0m
+[0m[1m43 |[0m       [0m[35mfor[0m ([0m[35mconst[0m assertion of artifact.positive) expect(source)[0m[3m[1m.toContain[0m([0m[32m`assert!(source.contains([0m${JSON[0m[3m[1m.stringify[0m(assertion)}[0m[32m));`[0m)[0m[2m;[0m
+[0m[1m44 |[0m       [0m[35mfor[0m ([0m[35mconst[0m assertion of artifact.negative) expect(source)[0m[3m[1m.toContain[0m([0m[32m`assert!(!source.contains([0m${JSON[0m[3m[1m.stringify[0m(assertion)}[0m[32m));`[0m)[0m[2m;[0m
+[0m[1m45 |[0m     })[0m[2m;[0m
+[0m[1m46 |[0m 
+[0m[1m47 |[0m     test([0m[32m`[0m${artifact.name}[0m[32m retains its actual fixture, native catalog, mounted cohorts and full package route`[0m, () => {
+[0m[1m48 |[0m       [0m[35mfor[0m ([0m[35mconst[0m [path, hash] of [[artifact.fixture, artifact.fixtureSha256], [artifact.root, artifact.rootSha256], [artifact.manifest, artifact.manifestSha256], [artifact.script, artifact.scriptSha256]]) expect(digest(read(path)), path)[0m[3m[1m.toBe[0m(hash)[0m[2m;[0m
+                                                                                                                                                                                                                                                   [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1m✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json
+
+Expected: [0m[32m"ccdbe5d8bc118b8f26d3b2720f3ae744e5a49968431e1525a362fc402beee163"[0m
+Received: [0m[31m"179cf1703aaf20e17b1b1d1df89dd668c29efbc47cbfcebcb458679261da2b88"[0m
+[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts[0m[2m:[0m[33m48[0m[2m:[33m239[0m[2m)[0m
+[0m[31m✗[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 5d retains its actual fixture, native catalog, mounted cohorts and full package route[0m [0m[2m[0.54ms[0m[2m][0m
+[0m[32m✓[0m [0mPuzzle retained laws belong to their actual selected owner[2m >[0m[1m 5d every original hostile category changes real bytes and semantic oracle output[0m [0m[2m[[1m23.28ms[0m[2m][0m
+
+[0m[32m 18 pass[0m
+[0m[31m 6 fail[0m
+ 1034 expect() calls
+Ran 24 tests across 4 files. [0m[2m[[1m580.00ms[0m[2m][0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts" source-followup-verify" exited with non-zero status code

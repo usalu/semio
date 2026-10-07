@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️rekinds-edge-1/📸️snapshot/⬅️before/🔣️.json");
@@ -36,7 +37,7 @@ fn applies_to_committed_after() {
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("change-edge-kind applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-edge-kind/rekinds-edge-1: applied state differs from committed after-snapshot");
     let edge = snapshot.edges.iter().find(|edge| edge.id == "edge-1").expect("edge-1 survives its kind change");
-    assert_eq!(edge.edge_kind.as_deref(), Some("edge-kind-c"), "change-edge-kind/rekinds-edge-1: edge-1 still points at its old catalog row");
+    assert_eq!(edge.edge_kind.as_ref().map(|text| text.eq_str("edge-kind-c")), Some(true), "change-edge-kind/rekinds-edge-1: edge-1 still points at its old catalog row");
     assert_eq!((edge.source_tip.clone(), edge.target_tip.clone()), (before().edges[0].source_tip.clone(), before().edges[0].target_tip.clone()), "change-edge-kind/rekinds-edge-1: a kind change must not redraw the tips");
 }
 

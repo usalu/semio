@@ -78,10 +78,6 @@ message RasterLayerAdjustment {
   bool locked = 9;
 }
 
-message RasterImageAsset {
-  string mime = 1;
-  bytes data = 2;
-}
 
 message RasterViewportSize {
   double width = 1;

@@ -92,13 +92,7 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
-/// 🧪️ Hand-rolled `protocol::DiffCodec`. Unlike `🔤️text` (one mutable field), `table` has TWO —
-/// `print_diff` MUST stay ONE PHYSICAL LINE: present fields are joined with `;` (empty string when
-/// neither present, `columns=[...]` alone, `rows=[...]` alone, or `columns=[...];rows=[...]` when
-/// both present). `split_top_level(line, ';')` parses back (bracket-nesting aware, so a `;` can
-/// never appear inside an encoded column/row's own hex/bracket payload — there is none — this is
-/// purely a top-level field separator).
-use crate::document::io::text::diff::{dec_row};
+
 
 
 

@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-artifact-reference"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Owned artifact identities with physical text extensions at the IO boundary"
+
+[package.metadata.semio]
+role = "framework"
+id = "artifact-reference"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-async-macros = { workspace = true }

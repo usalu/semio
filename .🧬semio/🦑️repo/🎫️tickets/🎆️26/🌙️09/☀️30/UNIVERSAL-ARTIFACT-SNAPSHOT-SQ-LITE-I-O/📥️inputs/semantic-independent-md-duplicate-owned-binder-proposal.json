@@ -1,0 +1,15 @@
+{
+  "qualification": "Read-only exact source proposal; requires original runtime replay",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+      "sha256": "207328976795150e0bb55ec1e19b76a95138f53dde2d89e83dccc8b8ff18b05f",
+      "regions": [
+        {
+          "before": "if *owner!=0{return Err(invalid())}*owner=1;self.row(32,native)?;",
+          "after": "*owner=1;self.row(32,native)?;"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+  "beforeSha": "ad8784d65bea9cb246ecf8dd8c7fd38dc4bdfc01d4b5db0052bdd83b747941fe",
+  "afterSha": "8a8e6ef5d9f1cd3cf406d85275c1ba8d0179b2e18a03cb5083034088208471ec",
+  "edits": [
+    {
+      "before": "WorldComponentKind::Vertex => admitted.vertices,",
+      "after": "WorldComponentKind::Vertex => if schema.vertex_ids == schema.vertices { admitted.vertices } else { 0 },",
+      "count": 2
+    },
+    {
+      "before": "        let count = match self.kind {\n            WorldComponentKind::Vertex => if schema.vertex_ids == schema.vertices { admitted.vertices } else { 0 },",
+      "after": "        let Ok(schema) = mesh.schema() else { return WorldInteractionStep::Stale; };\n        let count = match self.kind {\n            WorldComponentKind::Vertex => if schema.vertex_ids == schema.vertices { admitted.vertices } else { 0 },",
+      "count": 1
+    },
+    {
+      "before": "mesh.u32(field, index).unwrap_or(index)",
+      "after": "mesh.u32(field, index).unwrap_or(if field == Mesh3dField::VertexIds { u32::MAX } else { index })",
+      "count": 1
+    },
+    {
+      "before": "            let primary_point = schema.indices == 0 && schema.edges == 0 && schema.vertex_ids == schema.vertices;\n            if !primary_point",
+      "after": "            if schema.vertex_ids != schema.vertices { continue; }\n            let primary_point = schema.indices == 0 && schema.edges == 0;\n            if !primary_point",
+      "count": 1
+    },
+    {
+      "before": "MeshStyleState {\n                disabled: state.disabled_instance_ids.contains(&source.id),\n                provisional: state.provisional_instance_ids.contains(&source.id),\n                celebrating: state.celebrating_instance_ids.contains(&source.id),\n                selected: source.selected,\n                highlighted: state.highlighted_instance_ids.contains(&source.id),\n                hovered: source.hovered,\n            }",
+      "after": "world_instance_style(state, source)",
+      "count": 1
+    },
+    {
+      "before": "/// 🎨️ What an instance is, before a row is chosen for it",
+      "after": "/// 🖍️ Resolves an original instance's semantic object flags for surface and primary geometry paint.\nfn world_instance_style(state: &World3dState, instance: &Instance3d) -> MeshStyleState {\n    MeshStyleState {\n        disabled: state.disabled_instance_ids.contains(&instance.id),\n        provisional: state.provisional_instance_ids.contains(&instance.id),\n        celebrating: state.celebrating_instance_ids.contains(&instance.id),\n        selected: instance.selected,\n        highlighted: state.highlighted_instance_ids.contains(&instance.id),\n        hovered: instance.hovered,\n    }\n}\n\n/// 🎨️ What an instance is, before a row is chosen for it",
+      "count": 1
+    },
+    {
+      "before": "            let color = outline_color.unwrap_or(wire_color);\n            for instance in &draw.instances {\n                for edge_index in 0..schema.edges {",
+      "after": "            for instance in &draw.instances {\n                let color = if primary_wire { mesh_style_paint(theme, resolve_mesh_style(world_instance_style(state, instance))).line } else { outline_color.unwrap_or(wire_color) };\n                for edge_index in 0..schema.edges {",
+      "count": 1
+    },
+    {
+      "before": "                    let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered).unwrap_or((wire_color, VERTEX_BASE_SCALE));",
+      "after": "                    let base_color = if primary_point { mesh_style_paint(theme, resolve_mesh_style(world_instance_style(state, instance))).line } else { wire_color };\n                    let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered).unwrap_or((base_color, VERTEX_BASE_SCALE));",
+      "count": 1
+    }
+  ],
+  "exactReversal": true
+}

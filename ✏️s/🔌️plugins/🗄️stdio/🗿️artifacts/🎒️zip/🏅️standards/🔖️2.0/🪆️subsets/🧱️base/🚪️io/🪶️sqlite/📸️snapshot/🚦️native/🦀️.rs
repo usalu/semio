@@ -1,5 +1,5 @@
 //! 🚦️ ZIP native ownership and literal semantic row admission under one caller control.
-use super::super::{ZipSnapshot,ZipExtraField};
+use crate::standards::v2_0::subsets::base::schema::snapshot::{ZipSnapshot,ZipExtraField};
 use semio_framework_os_kernel as store;
 use store::ArtifactSqliteSnapshot as _;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};

@@ -61,7 +61,6 @@ const RECIPES: readonly Recipe[] = [
   { id: "insert-other-segment-applied", directoryName: "📥️insert-other-segment-applied", mutation: "insert-other-segment", witnessable: true, notes: "An APP1 XMP segment is spliced in after APP0 — the one generic-segment payload shape `image`'s public `xmp_metadata()` accessor actually surfaces." },
   { id: "remove-other-segment-applied", directoryName: "🗑️remove-other-segment-applied", mutation: "remove-other-segment", witnessable: true, notes: "The inverse of insert-other-segment: before carries the spliced APP1 XMP segment, after does not." },
   { id: "replace-pixels-applied", directoryName: "🔲️replace-pixels-applied", mutation: "replace-pixels", witnessable: true, notes: "The gradient/checkerboard base raster is replaced with a uniform mid-grey fill — the decoded raster digest changes." },
-  { id: "change-re-encode-quality-applied", directoryName: "🎚️change-re-encode-quality-applied", mutation: "change-re-encode-quality", witnessable: true, notes: "The same textured base raster re-encoded at quality 90 then quality 20 — quantization noise moves the decoded raster digest." },
 ];
 //#endregion 🧬️Contract
 

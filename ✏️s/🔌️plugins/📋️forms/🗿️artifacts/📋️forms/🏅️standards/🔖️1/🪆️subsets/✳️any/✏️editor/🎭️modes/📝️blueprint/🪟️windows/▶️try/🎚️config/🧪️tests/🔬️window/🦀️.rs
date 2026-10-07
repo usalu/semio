@@ -61,7 +61,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
             };
             let left = all.for_window_instance("forms-try-left").expect("left Forms Try window");
             let right = all.for_window_instance("forms-try-right").expect("right Forms Try window");
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
             app.bind_instance_id(91).await;
             let outcome: Result<(), String> = async {
                 dispatch(
@@ -103,7 +103,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                 }
 
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 reopened.bind_instance_id(92).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let restored = artifact_app_laws::capture_fixture_window_config::<FormsTryWindowConfigOwner, _, _>(&mut *reopened, &left)

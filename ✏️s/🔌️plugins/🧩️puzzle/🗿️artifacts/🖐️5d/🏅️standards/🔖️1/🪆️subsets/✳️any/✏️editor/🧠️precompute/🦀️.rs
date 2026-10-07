@@ -13,14 +13,16 @@ use crate::editor::puzzle5d::{
     Puzzle5dPart3d, PUZZLE5D_BOARD_PLACEMENT_GAP, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_FALLBACK_MESH_KIND,
 };
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::{connect_grips, create_part, Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{connect_grips,create_part,Puzzle5dMutation};
+
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_plugin::{Fault, ToolRunJob};
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTick, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_TRACE_PAGE_OPS_MAX};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dConfig;
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main as world3d;
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::puzzle3d_scene_snapshot_from_document;
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{ConnectVortices, Puzzle3dMutation};
+use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{ConnectVortices,Puzzle3dMutation};
+
 use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::BrushPreviewState;
 use semio_s_artifact_puzzle_3d::{Puzzle3dAttraction, Puzzle3dCatalogObjectKind, Puzzle3dCatalogVortexKind, Puzzle3dCatalogVortexTemplate, Puzzle3dKindCatalogs, Puzzle3dMeta, Puzzle3dObject, Puzzle3dPlaySnapshot, Puzzle3dRepresentation, Puzzle3dScale, Puzzle3dSnapshot, Puzzle3dVortex, PUZZLE_3D_SCHEMA};
 use std::collections::{HashMap, VecDeque};

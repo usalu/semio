@@ -904,7 +904,18 @@
             "volume": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -1183,7 +1194,18 @@
         "rect": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
           "maxItems": 4,
@@ -1285,7 +1307,18 @@
         "color": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           }
         },
         "appearance": {
@@ -1486,7 +1519,18 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -1513,7 +1557,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1557,7 +1612,18 @@
             "points": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -1582,7 +1648,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1593,7 +1670,18 @@
             "leaderLength": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -1621,7 +1709,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1634,7 +1733,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1660,7 +1770,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1673,7 +1794,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1697,7 +1829,18 @@
             "vertices": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "interiorColor": {
@@ -1705,7 +1848,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1728,7 +1882,18 @@
             "vertices": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "lineEndings": {
@@ -1751,7 +1916,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1774,7 +1950,18 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -1792,7 +1979,18 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -1810,7 +2008,18 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -1828,7 +2037,18 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -1869,7 +2089,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1905,7 +2136,18 @@
               "items": {
                 "type": "array",
                 "items": {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -1925,7 +2167,9 @@
               "anyOf": [
                 {
                   "type": "integer",
-                  "minimum": 0
+                  "minimum": 0,
+                  "semioPrimitive": "u64",
+                  "maximum": 18446744073709551615
                 },
                 {
                   "type": "null"
@@ -2232,7 +2476,18 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "interiorColor": {
@@ -2240,7 +2495,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -2415,7 +2681,18 @@
       "type": "object",
       "properties": {
         "width": {
-          "type": "number"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "style": {
           "anyOf": [
@@ -2432,7 +2709,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             {
@@ -2455,7 +2743,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 2,
               "maxItems": 2
@@ -2582,7 +2881,18 @@
           "$ref": "#/$defs/PdfFontDescriptor"
         },
         "defaultWidth": {
-          "type": "number"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "widths": {
           "type": "array",
@@ -2595,7 +2905,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 2,
               "maxItems": 2
@@ -2761,7 +3082,18 @@
           "items": {
             "type": "array",
             "items": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "minItems": 3,
             "maxItems": 3
@@ -2783,7 +3115,18 @@
         "widths": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           }
         }
       },
@@ -2858,7 +3201,18 @@
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -2868,7 +3222,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -2881,7 +3246,18 @@
             "gamma": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -2903,7 +3279,18 @@
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -2913,7 +3300,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -2928,7 +3326,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -2943,7 +3352,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 9,
                   "maxItems": 9
@@ -2968,7 +3388,18 @@
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -2978,7 +3409,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -2993,7 +3435,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -3041,7 +3494,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -3362,7 +3826,18 @@
             "left": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3372,7 +3847,18 @@
             "top": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3382,7 +3868,18 @@
             "zoom": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3414,7 +3911,18 @@
             "top": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3435,7 +3943,18 @@
             "left": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3456,7 +3975,18 @@
             "rect": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -3487,7 +4017,18 @@
             "top": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3508,7 +4049,18 @@
             "left": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3804,7 +4356,18 @@
         "lineWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -3887,7 +4450,18 @@
         "miterLimit": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -3909,11 +4483,33 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 }
               ],
               "minItems": 2,
@@ -4016,7 +4612,18 @@
                   "type": "string"
                 },
                 {
-                  "type": "number"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 }
               ],
               "minItems": 2,
@@ -4079,7 +4686,18 @@
         "strokeAlpha": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4100,7 +4718,18 @@
         "fillAlpha": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4159,7 +4788,18 @@
         "flatness": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4180,7 +4820,18 @@
         "smoothness": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4334,30 +4985,107 @@
         "fontBbox": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
           "maxItems": 4
         },
         "italicAngle": {
-          "type": "number"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "ascent": {
-          "type": "number"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "descent": {
-          "type": "number"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "capHeight": {
-          "type": "number"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "stemV": {
-          "type": "number"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "stemH": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4367,7 +5095,18 @@
         "xHeight": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4377,7 +5116,18 @@
         "leading": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4387,7 +5137,18 @@
         "avgWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4397,7 +5158,18 @@
         "maxWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4407,7 +5179,18 @@
         "missingWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4437,7 +5220,18 @@
         "fontWeight": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4486,7 +5280,18 @@
             "widths": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "descriptor": {
@@ -4537,7 +5342,18 @@
             "widths": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "descriptor": {
@@ -4578,7 +5394,18 @@
             "fontMatrix": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -4586,7 +5413,18 @@
             "fontBbox": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -4601,7 +5439,18 @@
             "widths": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "charProcs": {
@@ -5138,7 +5987,18 @@
         "bbox": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
           "maxItems": 4,
@@ -5157,7 +6017,18 @@
         "matrix": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 6,
           "maxItems": 6,
@@ -5270,13 +6141,35 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "size": {
@@ -5306,7 +6199,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5319,7 +6223,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5353,7 +6268,18 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
@@ -5361,7 +6287,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5372,17 +6309,50 @@
             "c0": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "c1": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "n": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -5402,7 +6372,18 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
@@ -5410,7 +6391,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5427,13 +6419,35 @@
             "bounds": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "encode": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -5454,13 +6468,35 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "code": {
@@ -5553,7 +6589,18 @@
         "decode": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "x-semio-ui": {
             "label": {
@@ -5656,7 +6703,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             {
@@ -6100,7 +7158,18 @@
         "decode": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           }
         },
         "interpolate": {
@@ -6208,7 +7277,9 @@
           "anyOf": [
             {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "semioPrimitive": "u64",
+              "maximum": 18446744073709551615
             },
             {
               "type": "null"
@@ -6229,7 +7300,18 @@
         "opacity": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -6277,7 +7359,9 @@
           "anyOf": [
             {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "semioPrimitive": "u64",
+              "maximum": 18446744073709551615
             },
             {
               "type": "null"
@@ -6457,7 +7541,10 @@
               "const": "int"
             },
             "value": {
-              "type": "integer"
+              "type": "integer",
+              "semioPrimitive": "i64",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
             }
           },
           "required": [
@@ -6603,6 +7690,38 @@
             "data",
             "filters"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "date"
+            },
+            "value": {
+              "$ref": "#/$defs/PdfDate"
+            }
+          }
         }
       ]
     },
@@ -6615,7 +7734,18 @@
               "const": "setLineWidth"
             },
             "width": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6660,7 +7790,18 @@
               "const": "setMiterLimit"
             },
             "limit": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6677,11 +7818,33 @@
             "array": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "phase": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6712,7 +7875,18 @@
               "const": "setFlatness"
             },
             "flatness": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6766,7 +7940,18 @@
             "matrix": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -6784,10 +7969,32 @@
               "const": "moveTo"
             },
             "x": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6803,10 +8010,32 @@
               "const": "lineTo"
             },
             "x": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6822,22 +8051,88 @@
               "const": "curveTo"
             },
             "x1": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y1": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x2": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y2": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x3": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y3": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6857,16 +8152,60 @@
               "const": "curveToInitial"
             },
             "x2": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y2": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x3": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y3": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6884,16 +8223,60 @@
               "const": "curveToFinal"
             },
             "x1": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y1": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x3": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y3": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6922,16 +8305,60 @@
               "const": "rectangle"
             },
             "x": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "width": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "height": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7092,7 +8519,18 @@
               "const": "setCharSpacing"
             },
             "spacing": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7107,7 +8545,18 @@
               "const": "setWordSpacing"
             },
             "spacing": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7122,7 +8571,18 @@
               "const": "setHorizontalScale"
             },
             "scale": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7137,7 +8597,18 @@
               "const": "setLeading"
             },
             "leading": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7155,7 +8626,18 @@
               "type": "string"
             },
             "size": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7187,7 +8669,18 @@
               "const": "setTextRise"
             },
             "rise": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7202,10 +8695,32 @@
               "const": "moveText"
             },
             "tx": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "ty": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7221,10 +8736,32 @@
               "const": "moveTextSetLeading"
             },
             "tx": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "ty": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7242,7 +8779,18 @@
             "matrix": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -7319,10 +8867,32 @@
               "const": "nextLineShowTextSpaced"
             },
             "wordSpacing": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "charSpacing": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "text": {
               "$ref": "#/$defs/PdfTextString"
@@ -7342,10 +8912,32 @@
               "const": "setGlyphWidth"
             },
             "wx": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "wy": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7361,22 +8953,88 @@
               "const": "setGlyphWidthAndBox"
             },
             "wx": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "wy": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "llx": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "lly": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "urx": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "ury": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7428,7 +9086,18 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -7446,7 +9115,18 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "pattern": {
@@ -7474,7 +9154,18 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -7492,7 +9183,18 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "pattern": {
@@ -7518,7 +9220,18 @@
               "const": "setStrokeGray"
             },
             "gray": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7533,7 +9246,18 @@
               "const": "setFillGray"
             },
             "gray": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7548,13 +9272,46 @@
               "const": "setStrokeRgb"
             },
             "r": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "g": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "b": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7571,13 +9328,46 @@
               "const": "setFillRgb"
             },
             "r": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "g": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "b": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7594,16 +9384,60 @@
               "const": "setStrokeCmyk"
             },
             "c": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "m": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "k": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7621,16 +9455,60 @@
               "const": "setFillCmyk"
             },
             "c": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "m": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "k": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -8012,7 +9890,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -8196,7 +10085,18 @@
         "mediaBox": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
           "maxItems": 4,
@@ -8218,7 +10118,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -8245,7 +10156,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -8272,7 +10194,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -8299,7 +10232,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -8340,7 +10284,18 @@
         "userUnit": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -8453,7 +10408,18 @@
         "duration": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -8656,7 +10622,18 @@
         "matrix": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 6,
           "maxItems": 6,
@@ -8715,16 +10692,49 @@
             "bbox": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
             },
             "xStep": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "yStep": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "content": {
               "type": "array",
@@ -8857,7 +10867,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             {
@@ -8880,7 +10901,18 @@
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -8947,7 +10979,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -8962,7 +11005,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 6,
                   "maxItems": 6
@@ -8990,7 +11044,18 @@
             "coords": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -9000,7 +11065,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -9038,7 +11114,18 @@
             "coords": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -9048,7 +11135,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -9120,7 +11218,18 @@
             "decode": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "function": {
@@ -9225,7 +11334,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -9451,17 +11571,18 @@
             "kind": {
               "const": "codes"
             },
-            "bytes": {
+            "codes": {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 4294967295
               }
             }
           },
           "required": [
             "kind",
-            "bytes"
+            "codes"
           ]
         },
         {
@@ -9471,7 +11592,18 @@
               "const": "adjust"
             },
             "amount": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -9504,17 +11636,18 @@
             "kind": {
               "const": "codes"
             },
-            "bytes": {
+            "codes": {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 4294967295
               }
             }
           },
           "required": [
             "kind",
-            "bytes"
+            "codes"
           ]
         }
       ]

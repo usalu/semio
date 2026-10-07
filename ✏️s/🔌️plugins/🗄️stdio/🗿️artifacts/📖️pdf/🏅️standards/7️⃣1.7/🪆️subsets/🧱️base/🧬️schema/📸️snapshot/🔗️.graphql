@@ -1,5 +1,13 @@
 # 🧬️ PdfSnapshot — GraphQL facet of s.stdio.pdf.1.7 (snapshot), generated from the Rust model.
 scalar JSON
+"Exact signed 64-bit integer."
+scalar Int64
+"Unsigned 16-bit value."
+scalar UInt16
+"Unsigned octet value."
+scalar UInt8
+"Logical unsigned32 character code."
+scalar UInt
 
 type PdfSnapshot {
   schema: String!
@@ -41,13 +49,20 @@ type PdfDictEntry {
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
-type PdfObject {
-  kind: String!
-  value: Boolean
-  dict: [PdfDictEntry!]
-  data: [Int!]
-  filters: [PdfStreamFilter!]
-}
+union PdfObject = PdfNullObject | PdfBooleanObject | PdfIntegerObject | PdfDecimalObject | PdfOctetObject | PdfTextObject | PdfDateObject | PdfNameObject | PdfArrayObject | PdfDictionaryObject | PdfReferenceObject | PdfStreamObject
+type PdfNullObject { kind: String! }
+type PdfBooleanObject { value: Boolean! }
+type PdfIntegerObject { value: Int64! }
+type PdfDecimalObject { negative: Boolean! coefficient: String! scale: UInt! }
+type PdfOctetObject { value: [UInt8!]! }
+type PdfTextObject { value: String! }
+type PdfDateObject { value: PdfDate! }
+type PdfNameObject { value: String! }
+type PdfArrayObject { value: [PdfObject!]! }
+type PdfDictionaryObject { value: [PdfDictEntry!]! }
+type PdfReferenceObject { num: UInt! gen: UInt16! }
+type PdfStreamObject { dict: [PdfDictEntry!]! data: [UInt8!]! filters: [PdfStreamFilter!]! }
+
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 type PdfStreamFilter {
@@ -498,14 +513,14 @@ type PdfInlineImage {
 type PdfTextString {
   kind: String!
   text: String
-  bytes: [Int!]
+  codes: [UInt!]
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 type PdfTextArrayItem {
   kind: String!
   text: String
-  bytes: [Int!]
+  codes: [UInt!]
   amount: Float
 }
 
@@ -946,13 +961,22 @@ input PdfDictEntryInput {
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
-input PdfObjectInput {
-  kind: String!
-  value: Boolean
-  dict: [PdfDictEntryInput!]
-  data: [Int!]
-  filters: [PdfStreamFilterInput!]
+input PdfObjectInput @oneOf {
+  nullValue: Boolean
+  booleanValue: Boolean
+  integerValue: Int64
+  decimalValue: PdfDecimalInput
+  opaqueOctets: [UInt8!]
+  textValue: String
+  dateValue: PdfDateInput
+  nameValue: String
+  arrayValue: [PdfObjectInput!]
+  dictionaryValue: [PdfDictEntryInput!]
+  referenceValue: ObjRefInput
+  streamValue: PdfStreamObjectInput
 }
+input PdfStreamObjectInput { dict: [PdfDictEntryInput!]! data: [UInt8!]! filters: [PdfStreamFilterInput!]! }
+
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 input PdfStreamFilterInput {
@@ -1370,14 +1394,14 @@ input PdfInlineImageInput {
 input PdfTextStringInput {
   kind: String!
   text: String
-  bytes: [Int!]
+  codes: [UInt!]
 }
 
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 input PdfTextArrayItemInput {
   kind: String!
   text: String
-  bytes: [Int!]
+  codes: [UInt!]
   amount: Float
 }
 

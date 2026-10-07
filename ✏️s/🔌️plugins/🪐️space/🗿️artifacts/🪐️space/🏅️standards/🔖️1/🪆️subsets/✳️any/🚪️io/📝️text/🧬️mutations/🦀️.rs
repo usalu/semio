@@ -3,10 +3,10 @@
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("create-artifact", crate::standards::v1::subsets::any::schema::mutations::create_artifact::TEXT_OPCODE),
-    ("delete-artifact", crate::standards::v1::subsets::any::schema::mutations::delete_artifact::TEXT_OPCODE),
-    ("rename-artifact", crate::standards::v1::subsets::any::schema::mutations::rename_artifact::TEXT_OPCODE),
-    ("touch-artifact", crate::standards::v1::subsets::any::schema::mutations::touch_artifact::TEXT_OPCODE),
+    ("create-artifact", crate::standards::v1::subsets::any::io::text::mutations::create_artifact::TEXT_OPCODE),
+    ("delete-artifact", crate::standards::v1::subsets::any::io::text::mutations::delete_artifact::TEXT_OPCODE),
+    ("rename-artifact", crate::standards::v1::subsets::any::io::text::mutations::rename_artifact::TEXT_OPCODE),
+    ("touch-artifact", crate::standards::v1::subsets::any::io::text::mutations::touch_artifact::TEXT_OPCODE),
 ];
 
 //#region 📖️SemioGrammar
@@ -36,14 +36,7 @@ impl protocol::OpText for SSpaceMutation {
     }
 }
 
-impl protocol::OpBinary for SSpaceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 #[path = "🏷️rename-artifact/🦀️.rs"]
@@ -66,7 +59,8 @@ use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 #[cfg(test)]
-use crate::standards::v1::subsets::any::schema::mutations::{create_artifact as semantic_create_artifact, delete_artifact as semantic_delete_artifact, register_s_space_mutation_descriptors, rename_artifact as semantic_rename_artifact, touch_artifact as semantic_touch_artifact};
+use crate::standards::v1::subsets::any::schema::mutations::{create_artifact as semantic_create_artifact,delete_artifact as semantic_delete_artifact,register_s_space_mutation_descriptors,rename_artifact as semantic_rename_artifact,touch_artifact as semantic_touch_artifact};
+
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.

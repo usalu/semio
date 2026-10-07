@@ -89,6 +89,7 @@ fn component_of(graph: &UndirectedGraph) -> BTreeMap<NodeId, u32> {
 pub struct NodeConnectivity;
 
 impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = SemioGraphNodeConnectivity;
     const FIELD_ID: &'static str = "s.stdio.semio.graph.inference.connectivity";
@@ -111,15 +112,14 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     /// node's value back for another. Keying every entry with its own `key` up front is therefore
     /// load-bearing correctness, not a style choice; `changing_the_key_alone_produces_a_different_hash`
     /// below is the regression test for exactly this trap.
-    fn dep_input(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         let mut node_ids: Vec<&str> = snapshot.nodes.iter().map(|n| n.id.value.as_str()).collect();
         node_ids.sort_unstable();
         let mut edge_pairs: Vec<(&str, &str)> = snapshot.edges.iter().map(|e| (e.source.value.as_str(), e.target.value.as_str())).collect();
         edge_pairs.sort_unstable();
-        let node_ids_json: Vec<semio_framework_pack_json::Value> = node_ids.iter().map(|s| semio_framework_pack_json::Value::from(*s)).collect();
-        let edge_pairs_json: Vec<semio_framework_pack_json::Value> = edge_pairs.iter().map(|(a, b)| semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::from(*a), semio_framework_pack_json::Value::from(*b)])).collect();
-        let value = semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::from(key.as_str()), semio_framework_pack_json::Value::Array(node_ids_json), semio_framework_pack_json::Value::Array(edge_pairs_json)]);
-        semio_framework_pack_json::to_string(&value).into_bytes()
+        let nodes = semio_framework_value::DslValue::Array(node_ids.into_iter().map(|value|semio_framework_value::DslValue::String(value.into())).collect());
+        let edges = semio_framework_value::DslValue::Array(edge_pairs.into_iter().map(|(a,b)|semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String(a.into()),semio_framework_value::DslValue::String(b.into())])).collect());
+        semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String(key.clone()),nodes,edges])
     }
 
     fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

@@ -10,7 +10,7 @@ pub fn inverse(payload: &super::UnbindWeatherFile, base: &EnergyModelSnapshot) -
     Ok((|| {
     let _ = payload;
     match &base.weather_link {
-        Some(existing) => vec![vocabulary::bind_weather_file(existing.target.to_uri())],
+        Some(existing) => vec![vocabulary::bind_weather_file(existing.target.clone())],
         None => Vec::new(),
     }
 

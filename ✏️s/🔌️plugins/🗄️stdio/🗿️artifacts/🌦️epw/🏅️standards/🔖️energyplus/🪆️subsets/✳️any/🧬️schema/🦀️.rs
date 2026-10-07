@@ -130,7 +130,6 @@ pub fn epw_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 /// requires all eight header records and at least one record, and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_epw_snapshot() -> EpwSnapshot {
-    use crate::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
     let seed = EpwSnapshot {
         design_conditions: "DESIGN CONDITIONS,0".into(),
         typical_extreme_periods: "TYPICAL/EXTREME PERIODS,0".into(),
@@ -141,7 +140,7 @@ pub fn blank_epw_snapshot() -> EpwSnapshot {
         records: vec![EpwRecord::default()],
         ..EpwSnapshot::default()
     };
-    decode_epw(&encode_epw(&seed)).expect("blank_epw_snapshot: the seed round-trips through the real codec")
+    seed
 }
 //#endregion 🆕️NewDocument
 

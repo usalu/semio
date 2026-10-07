@@ -1,7 +1,7 @@
 /** 🗒️ Authored Note fields and block payloads, using shared Store child and link identities. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 
@@ -61,7 +61,7 @@ export function parseNoteRecord(value: unknown, parsers: Readonly<Record<string,
 }
 
 export const noteString: NoteValueParser = (value, at) => { if (typeof value !== "string") throw new Error(`${at}: expected a string`); return value; };
-export const noteNumber: NoteValueParser = (value, at) => { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: expected a finite native JSON number`); return binary64(value); };
+export const noteNumber: NoteValueParser = (value, at) => parseBinary64(value);
 export const noteBoolean: NoteValueParser = (value, at) => { if (typeof value !== "boolean") throw new Error(`${at}: expected a boolean`); return value; };
 export const noteNullable = (parse: NoteValueParser): NoteValueParser => (value, at) => value === null ? null : parse(value, at);
 export const noteArray = (parse: NoteValueParser): NoteValueParser => (value, at) => {

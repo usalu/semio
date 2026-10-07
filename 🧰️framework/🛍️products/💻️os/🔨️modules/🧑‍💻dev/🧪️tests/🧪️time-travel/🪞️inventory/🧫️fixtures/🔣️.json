@@ -1,0 +1,264 @@
+{
+  "description": "Retained accessibility controls and Actions rail inventory for a domain-neutral history editing journey.",
+  "cases": [
+    {
+      "name": "native controls share authored pointer identities and accessible roles",
+      "nodes": [
+        {
+          "key": "w/framework.history.editor.input.dx.row",
+          "role": "treeitem",
+          "label": "Horizontal movement"
+        },
+        {
+          "key": "w/framework.history.editor.input.dx",
+          "role": "spinbutton",
+          "label": "Horizontal movement",
+          "value": "7",
+          "step": "1",
+          "min": "-20",
+          "max": "20"
+        },
+        {
+          "key": "w/framework.history.editor.input.name",
+          "role": "textbox",
+          "label": "Name",
+          "value": "Draft"
+        },
+        {
+          "key": "w/framework.history.editor.input.factor",
+          "role": "slider",
+          "label": "Factor",
+          "valueNow": "2",
+          "valueMin": "1",
+          "valueMax": "8"
+        },
+        {
+          "key": "w/framework.history.editor.input.visible",
+          "role": "switch",
+          "label": "Visible",
+          "checked": "true"
+        },
+        {
+          "key": "w/framework.history.editor.input.mode",
+          "role": "combobox",
+          "label": "Mode",
+          "value": "normal"
+        },
+        {
+          "key": "w/framework.history.editor.input.targets.row",
+          "role": "treeitem",
+          "label": "Targets"
+        },
+        {
+          "key": "w/framework.history.editor.input.targets.chip.0.row",
+          "role": "treeitem",
+          "label": "First"
+        },
+        {
+          "key": "w/framework.history.editor.input.targets.useSelection",
+          "role": "button",
+          "label": "Use selection"
+        },
+        {
+          "key": "w/framework.history.editor.input.frozen",
+          "role": "textbox",
+          "label": "Frozen",
+          "value": "Fixed",
+          "readonly": true
+        },
+        {
+          "key": "w/framework.history.editor.input.dx::increase",
+          "role": "button",
+          "label": "Increase"
+        },
+        {
+          "key": "w/action.category.create",
+          "role": "treeitem",
+          "label": "Create"
+        },
+        {
+          "key": "w/action.addNode",
+          "role": "treeitem",
+          "label": "Add node",
+          "disabled": false
+        },
+        {
+          "key": "w/action.category.transform",
+          "role": "treeitem",
+          "label": "Transform"
+        },
+        {
+          "key": "w/action.move",
+          "role": "treeitem",
+          "label": "Move",
+          "disabled": true
+        },
+        {
+          "key": "w/action.move.arg.dx",
+          "role": "spinbutton",
+          "label": "Move X",
+          "value": "1"
+        }
+      ],
+      "controls": [
+        {
+          "pointer": "dx",
+          "role": "spinbutton",
+          "name": "Horizontal movement",
+          "value": "7",
+          "min": "-20",
+          "max": "20",
+          "step": "1",
+          "options": null,
+          "disabled": false
+        },
+        {
+          "pointer": "name",
+          "role": "textbox",
+          "name": "Name",
+          "value": "Draft",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "disabled": false
+        },
+        {
+          "pointer": "factor",
+          "role": "slider",
+          "name": "Factor",
+          "value": "2",
+          "min": "1",
+          "max": "8",
+          "step": null,
+          "options": null,
+          "disabled": false
+        },
+        {
+          "pointer": "visible",
+          "role": "switch",
+          "name": "Visible",
+          "value": "true",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "disabled": false
+        },
+        {
+          "pointer": "mode",
+          "role": "combobox",
+          "name": "Mode",
+          "value": "normal",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "disabled": false
+        },
+        {
+          "pointer": "targets",
+          "role": "reference list",
+          "name": "Targets",
+          "value": "1",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "disabled": false
+        },
+        {
+          "pointer": "frozen",
+          "role": "textbox",
+          "name": "Frozen",
+          "value": "Fixed",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "disabled": true
+        }
+      ],
+      "verbs": [
+        {
+          "id": "w/action.addNode",
+          "verb": "addNode",
+          "category": "create",
+          "label": "Add node",
+          "disabled": false
+        },
+        {
+          "id": "w/action.move",
+          "verb": "move",
+          "category": "transform",
+          "label": "Move",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "name": "native radios and lists preserve nested pointer values and available choices",
+      "nodes": [
+        {
+          "key": "w/framework.history.editor.input.layer.kind",
+          "role": "radiogroup",
+          "label": "Layer kind"
+        },
+        {
+          "key": "w/framework.history.editor.input.layer.kind::option::path",
+          "role": "radio",
+          "label": "Path",
+          "checked": "true"
+        },
+        {
+          "key": "w/framework.history.editor.input.layer.kind::option::rectangle",
+          "role": "radio",
+          "label": "Rectangle",
+          "checked": "false"
+        },
+        {
+          "key": "w/framework.history.editor.input.styles",
+          "role": "listbox",
+          "label": "Styles"
+        },
+        {
+          "key": "w/framework.history.editor.input.styles::option::first",
+          "role": "option",
+          "label": "First style",
+          "selected": "true"
+        },
+        {
+          "key": "w/framework.history.editor.input.styles::option::second",
+          "role": "option",
+          "label": "Second style",
+          "selected": "false"
+        }
+      ],
+      "controls": [
+        {
+          "pointer": "layer.kind",
+          "role": "radiogroup",
+          "name": "Layer kind",
+          "value": "Path",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": 2,
+          "disabled": false
+        },
+        {
+          "pointer": "styles",
+          "role": "listbox",
+          "name": "Styles",
+          "value": "First style",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": 2,
+          "disabled": false
+        }
+      ],
+      "verbs": []
+    }
+  ]
+}

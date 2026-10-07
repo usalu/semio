@@ -1,3 +1,4 @@
+import { pdfFontFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/🔤️font/🟦️.ts";
 /** 🔤️ Neutral font entities and independent SQLite Unicode, byte and numeric interpretation. */
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
@@ -43,7 +44,7 @@ test("PDF every font variant preserves typed ownership and Type3 content without
   const fonts: PdfFont[]=[
     {id:"Type1",kind:{kind:"type1",baseFont:"One",encoding:input.encodings[0]!,firstChar:255,widths:[zero,unusual],descriptor:input.descriptor,program:input.programs[0]!},toUnicode:input.unicode,extra:[]},
     {id:"TrueType",kind:{kind:"trueType",baseFont:"True",encoding:input.encodings[1]!,firstChar:0,widths:[],descriptor:null,program:null},toUnicode:null,extra:[]},
-    {id:"Type3",kind:{kind:"type3",fontMatrix:[zero,unusual,zero,unusual,zero,unusual],fontBbox:[zero,unusual,zero,unusual],encoding:input.encodings[2]!,firstChar:1,widths:[unusual],charProcs:[{name:"Ω Glyph",content:[{op:"setLineWidth",width:unusual},{op:"showText",text:{kind:"codes",bytes:[0,255]}}]}],descriptor:null},toUnicode:null,extra:[]},
+    {id:"Type3",kind:{kind:"type3",fontMatrix:[zero,unusual,zero,unusual,zero,unusual],fontBbox:[zero,unusual,zero,unusual],encoding:input.encodings[2]!,firstChar:1,widths:[unusual],charProcs:[{name:"Ω Glyph",content:[{op:"setLineWidth",width:unusual},{op:"showText",text:{kind:"codes",codes:[0,255]}}]}],descriptor:null},toUnicode:null,extra:[]},
     {id:"Type0",kind:{kind:"type0",baseFont:"Composite",cmap:input.cmaps[1]!,descendant},toUnicode:input.unicode,extra:[]}
   ];
   for (const value of fonts) {
@@ -54,7 +55,7 @@ test("PDF every font variant preserves typed ownership and Type3 content without
 }, { timeout:30_000 });
 
 test("PDF native font JSON admission constructs the same owned Binary64 and content model", async () => {
-  const value=parsePdfFont(await Bun.file(new URL("../../../../../🧬️schema/📸️snapshot/🪪️native-json/🔤️font/🧫️fixtures/🔣️.json",import.meta.url)).json());
+  const value=parsePdfFont(pdfFontFromNativeJson(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🔤️font/🧫️fixtures/🔣️.json",import.meta.url)).json()));
   expect(value.kind.kind).toBe("type3");if(value.kind.kind!=="type3")throw new Error("Incorrect owned font");
   expect(value.kind.fontMatrix[0]).toEqual({bits:0x3ff0000000000000n});expect(value.kind.widths[0]).toEqual({bits:0x3ff0000000000000n});expect(value.kind.charProcs[0]!.content).toEqual([{op:"setLineWidth",width:{bits:0x3ff0000000000000n}}]);
 });

@@ -6,18 +6,18 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-layer` payload.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "delete-layer")]
 pub struct DeleteLayer {
-    pub layer_id: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_layer(layer_id: String) -> DrawingMutation {
+pub fn delete_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
     DrawingMutation::DeleteLayer(DeleteLayer { layer_id })
 }
 
@@ -37,7 +37,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DeleteLayer {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" löschen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

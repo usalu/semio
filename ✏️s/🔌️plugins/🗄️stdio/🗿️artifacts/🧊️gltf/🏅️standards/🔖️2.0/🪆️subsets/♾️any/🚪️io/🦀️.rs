@@ -19,7 +19,7 @@
 //! `GltfSnapshot`'s own doc comment in the sibling `📸️snapshot` module.
 #[cfg(test)]
 use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMesh, GltfPrimitive, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
-use crate::schema::snapshot::{GltfDocument, GltfSourceForm};
+use crate::schema::snapshot::{GltfDocument, GltfSourceForm, GltfAccessorType, GltfComponentType, GltfDecodedAccessor};
 use crate::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 
@@ -88,17 +88,6 @@ pub fn encode_data_uri(media_type: &str, bytes: &[u8]) -> String {
 //#endregion 🔖️Base64
 
 //#region 🔖️AccessorModel
-/// 🔢️ `accessor.componentType` — the 6 values glTF 2.0 permits (§5.1.1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
-pub enum GltfComponentType {
-    Byte,
-    UnsignedByte,
-    Short,
-    UnsignedShort,
-    UnsignedInt,
-    Float,
-}
 
 impl GltfComponentType {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -126,14 +115,7 @@ impl GltfComponentType {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn byte_size(self) -> usize {
-        match self {
-            Self::Byte | Self::UnsignedByte => 1,
-            Self::Short | Self::UnsignedShort => 2,
-            Self::UnsignedInt | Self::Float => 4,
-        }
-    }
+
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn read_at(self, bytes: &[u8], offset: usize) -> Result<f64, String> {
@@ -152,18 +134,6 @@ impl GltfComponentType {
     }
 }
 
-/// 🔢️ `accessor.type` — the 7 shapes glTF 2.0 permits (§5.1.2).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
-pub enum GltfAccessorType {
-    Scalar,
-    Vec2,
-    Vec3,
-    Vec4,
-    Mat2,
-    Mat3,
-    Mat4,
-}
 
 impl std::str::FromStr for GltfAccessorType {
     type Err = String;
@@ -196,17 +166,7 @@ impl GltfAccessorType {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn components(self) -> usize {
-        match self {
-            Self::Scalar => 1,
-            Self::Vec2 => 2,
-            Self::Vec3 => 3,
-            Self::Vec4 | Self::Mat2 => 4,
-            Self::Mat3 => 9,
-            Self::Mat4 => 16,
-        }
-    }
+
 }
 
 //#region 🔖️AccessorModelSerde
@@ -278,16 +238,6 @@ impl semio_framework_value::FromValue for GltfAccessorType {
 }
 //#endregion 🔖️AccessorModelSerde
 
-/// 📦️ One decoded accessor: flat row-major `count * accessor_type.components()` values, widened
-/// to `f64` and normalized when requested by the accessor before any consumer observes them.
-#[derive(Clone, Debug, PartialEq)]
-pub struct GltfDecodedAccessor {
-    pub component_type: GltfComponentType,
-    pub accessor_type: GltfAccessorType,
-    pub count: usize,
-    pub normalized: bool,
-    pub components: Vec<f64>,
-}
 
 /// 📖️ Reads `count` `accessor_type` elements starting at `base_offset` in `bytes`, honoring an
 /// explicit `byte_stride` (bufferView.byteStride, element pitch for interleaved data) when given,
@@ -601,7 +551,7 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 pub mod derived_composition {
     use crate::standards::v2_0::subsets::any::io::GltfAnalyzer;
     use crate::GltfSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -688,7 +638,7 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::engine::{GltfAccessorType, GltfComponentType};
+    use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType, GltfDecodedAccessor};
     use crate::schema::mutations::GltfMutation;
     use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
     use crate::{GltfDiff, GltfSnapshot};
@@ -916,14 +866,14 @@ pub mod derived_construction {
 
     //#region 🧪️Tests
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::GltfSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.gltf` parts.
@@ -1024,7 +974,7 @@ pub mod derived_analysis {
 
     //#region 🧪️Tests
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_analysis::*;
@@ -1039,3 +989,6 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: GltfAnalyzer,
     composer: GltfComposer,
 );
+
+#[path = "💾️binary/📸️snapshot/🧮️decoded-accessors/🦀️.rs"]
+pub mod inference_projection;

@@ -5,6 +5,7 @@
  * on first call and had therefore never been executed. This pins both halves: the owned parser and
  * Ajv reading the sibling schema must admit and refuse exactly the same documents.
  * @see https://ajv.js.org/json-schema.html */
+import artifactReferenceSchema from "../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv, { type ValidateFunction } from "ajv";
 import { describe, expect, it } from "vitest";
@@ -80,7 +81,7 @@ function parserOf(module: DiffModule, name: string): (value: unknown, at?: strin
  * turn, so every sibling that exists is registered before compilation. */
 function oracleOf(schemaUrl: URL, def: string): ValidateFunction {
   const document = JSON.parse(readFileSync(schemaUrl, "utf8")) as { $id: string };
-  const ajv = new Ajv({ strict: false, allErrors: true });
+  const ajv = new Ajv({ strict: false, allErrors: true }).addSchema(artifactReferenceSchema);
   for (const sibling of [frameworkIoSchema, "../📸️snapshot/🔣️.json", "../🔣️.json"]) {
     const path = new URL(sibling, schemaUrl);
     if (existsSync(path)) ajv.addSchema(JSON.parse(readFileSync(path, "utf8")) as object);

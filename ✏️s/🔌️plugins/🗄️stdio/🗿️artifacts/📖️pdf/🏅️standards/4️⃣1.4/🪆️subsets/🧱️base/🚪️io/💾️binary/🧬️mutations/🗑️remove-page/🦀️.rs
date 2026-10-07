@@ -1,9 +1,7 @@
 //! 💾️ remove-page native binary payload owner.
 
-use crate::standards::v1_4::subsets::base::schema::mutations::{
-    binary::{put_index, Reader},
-    PdfMutation,
-};
+use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
+use crate::standards::v1_4::subsets::base::io::binary::mutations::{put_index, Reader};
 use crate::standards::v1_4::subsets::base::schema::mutations::RemovePage;
 
 //#region 🔖️Codec

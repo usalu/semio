@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -45,7 +46,7 @@ const assertChild = (child: JsonObject, label: string): void => {
 };
 
 const compile = (schema: JsonObject, dependencies: JsonObject[] = []) => {
-  const ajv = semioSchemaAjvV1({ allErrors: true });
+  const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   for (const dependency of dependencies) ajv.addSchema(dependency);
   return ajv.compile(schema);
 };

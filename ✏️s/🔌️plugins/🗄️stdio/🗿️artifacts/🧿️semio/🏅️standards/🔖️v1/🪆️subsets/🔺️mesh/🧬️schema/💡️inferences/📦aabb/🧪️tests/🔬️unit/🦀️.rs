@@ -87,3 +87,16 @@ async fn changing_an_unrelated_field_on_the_same_primitive_does_not_miss() {
     assert_eq!(after.misses, before.misses, "material_id has no bearing on the aabb dep chain");
 }
 //#endregion 🧪️IncrementalityLaw
+
+#[test]
+fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
+    use store::InferredField;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let points:Vec<[f64;3]>=serde_json::from_value(fixture["points"].clone()).unwrap(); let snapshot=SemioMeshSnapshot{meshes:vec![SemioMesh{id:"mesh-a".into(),primitives:vec![SemioPrimitive{id:"prim-1".into(),positions:points.iter().map(|[x,y,z]|SemioPoint3{x:*x,y:*y,z:*z}).collect(),..Default::default()}]}],..Default::default()};
+    let dependency=MeshAabb::dep_input(&snapshot,&aabb_key("mesh-a","prim-1"),&[]);
+    let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
+    let oracle=serde_json::Value::Array(points.iter().map(|[x,y,z]|serde_json::json!({"x":x,"y":y,"z":z})).collect());
+    assert_eq!(actual,oracle);
+    assert_eq!(actual,fixture["expected"]);
+    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
+}

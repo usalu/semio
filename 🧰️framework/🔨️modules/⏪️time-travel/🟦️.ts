@@ -227,7 +227,7 @@ export type TimeTravelEffectKind = (typeof TIME_TRAVEL_EFFECT_KINDS)[number];
 //#endregion 🔖️Effects
 
 //#region 🔖️Refusals
-export const TIME_TRAVEL_REFUSALS = ["timeTravel.illegal", "timeTravel.stale", "timeTravel.blocked", "timeTravel.empty"] as const;
+export const TIME_TRAVEL_REFUSALS = ["timeTravel.illegal", "timeTravel.stale", "timeTravel.blocked", "timeTravel.empty", "timeTravel.unchanged"] as const;
 export type TimeTravelRefusal = (typeof TIME_TRAVEL_REFUSALS)[number];
 
 export type TimeTravelApplyResult = { readonly ok: true; readonly session: TimeTravelSession; readonly effects: readonly TimeTravelEffect[] } | { readonly ok: false; readonly rejection: TimeTravelRefusal };
@@ -252,6 +252,12 @@ export function timeTravelStartOf(session: TimeTravelSession, pending: TimeTrave
 /** 🪞️ Whether `pending` still equals the value it started from. */
 export function timeTravelUnchanged(session: TimeTravelSession, pending: TimeTravelPending): boolean {
   return inputReplacementEquals(pending.replacement, timeTravelStartOf(session, pending));
+}
+
+/** 🧾️ Why `accept` would be refused; an unchanged input keeps the draft open. */
+export function timeTravelAcceptRefusal(session: TimeTravelSession): TimeTravelRefusal | null {
+  if (session.stage !== "editing" || session.pending === null) return "timeTravel.illegal";
+  return timeTravelUnchanged(session, session.pending) ? "timeTravel.unchanged" : null;
 }
 
 /** 🚧️ Why `requestFinalize` would be refused, `null` when it would open the prompt. */
@@ -335,7 +341,6 @@ function resume(session: TimeTravelSession, returnStage: TimeTravelStage): Step 
 }
 
 function accept(session: TimeTravelSession, pending: TimeTravelPending): Step {
-  if (timeTravelUnchanged(session, pending)) return resume(session, pending.returnStage);
   const kept = session.accepted.filter((draft) => draft.target.mutation !== pending.target.mutation);
   const accepted = inputReplacementEquals(pending.replacement, pending.original) ? kept : [...kept, { target: pending.target, replacement: pending.replacement }].sort((left, right) => compareTimeTravelTargets(left.target, right.target));
   return settle({ ...session, accepted });
@@ -379,8 +384,10 @@ export function applyTimeTravel(session: TimeTravelSession, event: TimeTravelEve
       const replacement: InputReplacement = event.type === "draft" ? event.replacement : { kind: "withdrawn" };
       return admit({ session: { ...session, pending: { ...pending, replacement } }, effects: [{ type: "showPreview", target: pending.target.mutation, replacement }] });
     }
-    case "accept":
-      return stage === "editing" && pending !== null ? admit(accept({ ...session, pending: null }, pending)) : refuse("timeTravel.illegal");
+    case "accept": {
+      const refusal = timeTravelAcceptRefusal(session);
+      return refusal === null ? admit(accept({ ...session, pending: null }, pending!)) : refuse(refusal);
+    }
     case "discard":
       return stage === "editing" && pending !== null ? admit(resume({ ...session, pending: null }, pending.returnStage)) : refuse("timeTravel.illegal");
     case "restore": {
@@ -530,6 +537,7 @@ export const TIME_TRAVEL_LABELS = {
   refusalStale: { en: "Outdated request ignored", de: "Veraltete Anfrage ignoriert" },
   refusalBlocked: { en: "Blocked: resolve the pending change or the errors first", de: "Blockiert: zuerst die offene Änderung oder die Fehler auflösen" },
   refusalEmpty: { en: "Nothing to finalize: no accepted changes", de: "Nichts abzuschließen: keine übernommenen Änderungen" },
+  refusalUnchanged: { en: "Change an input before accepting", de: "Vor dem Übernehmen eine Eingabe ändern" },
   frozen: { en: "Editing is paused while history is being edited", de: "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird" },
   choiceOverwrite: { en: "Overwrite history", de: "Verlauf überschreiben" },
   choiceOverwriteDescription: { en: "Replaces the inputs in every alternative that contains these mutations", de: "Ersetzt die Eingaben in jeder Alternative, die diese Mutationen enthält" },
@@ -542,7 +550,10 @@ export const TIME_TRAVEL_LABELS = {
   readyToFinalize: { en: "Ready to finalize", de: "Bereit zum Abschließen" },
   replayCancelled: { en: "Replay cancelled", de: "Neu anwenden abgebrochen" },
   actionRerun: { en: "Replay again", de: "Erneut anwenden" },
+  preparationProgress: { en: "Preparing history preview", de: "Verlaufsvorschau wird vorbereitet" },
+  preparationProgressValueText: { en: "Preparing history preview: {done} of {total} steps", de: "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten" },
   replayProgressValueText: { en: "Replaying {done} of {total} mutations", de: "{done} von {total} Mutationen werden neu angewendet" },
+  processed: { en: "Work completed: {processed}", de: "Arbeitsfortschritt: {processed}" },
   refusalBusy: { en: "History editing is busy: finish the running tool or the other history edit first", de: "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen" },
   refusalUnknownMutation: { en: "This mutation is no longer in the history", de: "Diese Mutation ist nicht mehr im Verlauf" },
   refusalNotEditable: { en: "The inputs of this mutation cannot be edited", de: "Die Eingaben dieser Mutation können nicht bearbeitet werden" },
@@ -580,6 +591,7 @@ export const TIME_TRAVEL_CODE_LABELS = [
   ["timeTravel.stale", "refusalStale"],
   ["timeTravel.blocked", "refusalBlocked"],
   ["timeTravel.empty", "refusalEmpty"],
+  ["timeTravel.unchanged", "refusalUnchanged"],
   [TIME_TRAVEL_CANCELLED_CODE, "replayCancelled"],
   [TIME_TRAVEL_BUSY_CODE, "refusalBusy"],
   [TIME_TRAVEL_UNKNOWN_MUTATION_CODE, "refusalUnknownMutation"],

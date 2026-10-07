@@ -897,6 +897,16 @@
       },
       "cache": true
     },
+    "schema-fixture-boundary": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "schemaSources"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts schema check --fixture-boundary"
+      }
+    },
     "schema-verify": {
       "executor": "nx:run-commands",
       "inputs": [

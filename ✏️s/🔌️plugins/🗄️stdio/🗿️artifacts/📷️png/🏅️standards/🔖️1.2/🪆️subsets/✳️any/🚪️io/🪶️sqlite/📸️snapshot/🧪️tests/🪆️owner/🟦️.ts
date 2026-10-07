@@ -1,14 +1,8 @@
-/** 🪆️ Actual schema and arbitrary octets belong to the logical owner before raw PNG publication. */
+/** 🪆️ PNG owns decoded fields rather than native carrier recipes. */
 import {test,expect} from "bun:test";
-import {Database} from "bun:sqlite";
-import Ajv from "ajv";
-import corpus from "../../🧫️fixtures/🪆️owner/🔣️.json";
-
-import {parsePngSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import {parsePngSnapshot,defaultPngSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {pngSnapshotToSqliteDatabase,pngSnapshotFromSqliteDatabase} from "../../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
-import {PNG as IndependentPng} from "pngjs";
-test("PNG logical owner preserves arbitrary literal schema and octets through interpreted SQLite",async()=>{
- expect(corpus["role"]).toEqual("completeLogicalOwnerAndSeparateRawPublication");expect(corpus["encodings"]).toEqual(["binary","text"]);
- for(const item of corpus.cases){expect(()=>IndependentPng.sync.read(Buffer.from(item.bytes))).toThrow();expect(parsePngSnapshot(item)).toEqual(item);const source=await pngSnapshotToSqliteDatabase(item),database=Database.deserialize(await exportSqliteDatabase(source));try{expect(database.query("SELECT schema,role FROM png_document").get()).toEqual({schema:item.schema,role:"literal"});expect(database.query("SELECT value FROM png_literal_octet ORDER BY ordinal").all().map((row:any)=>row.value)).toEqual(item.bytes);expect(database.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await pngSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(database.serialize())))).toEqual(item);if(item.bytes.length){database.run("UPDATE png_literal_octet SET value=? WHERE ordinal=0",[corpus.editedOctet]);expect(await pngSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(database.serialize())))).toEqual({schema:item.schema,bytes:[corpus.editedOctet,...item.bytes.slice(1)]});}}finally{database.close();}}
+test("PNG decoded owner rejects source bytes and preserves arbitrary decoded metadata occurrences",async()=>{
+ for(const value of [{schema:"stdio.png",bytes:[]},{...defaultPngSnapshot(),schema:"invented"},{...defaultPngSnapshot(),bytes:[1]}])expect(()=>parsePngSnapshot(value)).toThrow();
+ const snapshot=defaultPngSnapshot();snapshot.image.ancillaryChunks=[{kind:[97,98,67,100],data:[0,255,0],afterRaster:false},{kind:[97,98,67,100],data:[17],afterRaster:true}];snapshot.image.textChunks=[{keyword:"Caption",value:"世界",kind:"iText",compressed:true,languageTag:"de",translatedKeyword:"Beschriftung"}];expect(await pngSnapshotFromSqliteDatabase(await pngSnapshotToSqliteDatabase(snapshot))).toEqual(snapshot);
 });

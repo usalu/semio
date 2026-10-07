@@ -1,1 +1,9 @@
-424d550000003412785639000000280000000300000002000000010018000000000018000000130b0000130b00000000000000000000deadbe00ffffff00ffffffffaabbcc0000ff00ff00ff0000112233feedface
+semio stdio.bmp.dsl v1
+schema=stdio.bmp
+image {
+  width=1 height=1 row-order=bottom-up profile=direct-rgb32 masks=16711680,65280,255,0 x-pixels-per-meter=0 y-pixels-per-meter=0 colors-used=0 colors-important=0 reserved-1=0 reserved-2=0 palette=[ ]
+  pixels {
+    direct samples=[ { red=17 green=33 blue=9 alpha=0 reserved=2147483648 } ]
+  }
+  opaque-gap=[ ] opaque-trailer=[ ]
+}

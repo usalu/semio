@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 //#region 🔖️Artifact
 /// 🧬️ puzzle5d document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dArtifact {

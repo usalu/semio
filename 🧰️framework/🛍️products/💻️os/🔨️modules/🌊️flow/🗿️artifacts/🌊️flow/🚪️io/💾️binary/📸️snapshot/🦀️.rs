@@ -30,12 +30,12 @@ impl crate::os_store::ArtifactPack for FlowHostSnapshotDsl {
 /// `__dsl_from_record`.
 impl crate::os_store::ArtifactPack for FlowHostSnapshot {
     /// 🌊️ Publishes the actual persisted Flow owner when its Store opens or hydrates.
-    fn native_snapshot_registration() -> Option<(store::io::Dialect, crate::os_store::ArtifactCodec)> {
-        Some((store::io::Dialect { artifact_kind: "flow.host_snapshot", standard: store::io::StandardId("1"), subset: store::io::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, FlowMutation>(FLOW_DOCUMENT_SCHEMA)))
+    fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, crate::os_store::ArtifactCodec)> {
+        Some((semio_framework_artifact_reference::Dialect { artifact_kind: "flow.host_snapshot", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, FlowMutation>(FLOW_DOCUMENT_SCHEMA)))
     }
     /// 📣️ Publishes this artifact-owned native codec at its declared lifecycle boundary.
     fn publish_native_snapshot() -> Result<(),store::io::ArtifactAssemblyRegistryError> {
-        store::io::register_native_snapshot_codec(store::io::Dialect { artifact_kind: "flow.host_snapshot", standard: store::io::StandardId("1"), subset: store::io::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, FlowMutation>(FLOW_DOCUMENT_SCHEMA))
+        store::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "flow.host_snapshot", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, FlowMutation>(FLOW_DOCUMENT_SCHEMA))
     }
     fn sqlite_snapshot_codec() -> Option<crate::os_store::ArtifactSqliteSnapshotCodec> { Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {

@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-06T13:16:05.954Z",
+  "session": 2733,
+  "exitCode": 1,
+  "originalLog": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-eight-norm-native.log",
+  "actualSummaryLines": [
+    "> nx run @semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-vdi3805-rs: error: could not compile `semio-s-artifact-norm-vdi3805` (lib test) due to 7 previous errors; 116 warnings emitted",
+    "> nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-en1990-rs: error: could not compile `semio-framework-os-kernel` (lib) due to 4 previous errors; 572 warnings emitted",
+    "> nx run @semio-tech/norm-en1994-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-en1994-rs: error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 578 warnings emitted",
+    "> nx run @semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-din16798-rs:      Summary [   0.226s] 14 tests run: 14 passed, 95 skipped",
+    "> nx run @semio-tech/norm-din18599-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-din18599-rs: error: could not compile `semio-s-artifact-stdio-semio` (lib) due to 1557 previous errors; 467 warnings emitted",
+    "> nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-en1993-rs:      Summary [   1.952s] 14 tests run: 14 passed, 358 skipped",
+    "> nx run @semio-tech/norm-en1996-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-en1996-rs: error: could not compile `semio-s-artifact-norm-en1996` (lib test) due to 3 previous errors; 45 warnings emitted",
+    "> nx run @semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+    "@semio-tech/norm-en1997-rs: error: could not compile `semio-s-artifact-norm-en1997` (lib test) due to 12 previous errors; 20 warnings emitted"
+  ],
+  "scope": "Original eight prepared project arguments; actual invoked owner list and terminal summaries, no missing-owner credit"
+}

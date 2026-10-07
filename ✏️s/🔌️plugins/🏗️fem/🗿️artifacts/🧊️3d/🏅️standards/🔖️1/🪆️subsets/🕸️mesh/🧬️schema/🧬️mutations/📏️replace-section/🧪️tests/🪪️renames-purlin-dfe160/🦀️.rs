@@ -14,7 +14,8 @@
 //! vocabulary carries no verb that re-points them, so the rename is refused.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️replace-section/🪪️renames-purlin-dfe160/📸️snapshot/⬅️before/🔣️.json");

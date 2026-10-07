@@ -1,5 +1,5 @@
 """ 🧬️ Full logical SVG artifact state. """
 type SvgArtifact {
   schema: String!
-  doc: XmlDocument!
+  doc: SvgDocument!
 }

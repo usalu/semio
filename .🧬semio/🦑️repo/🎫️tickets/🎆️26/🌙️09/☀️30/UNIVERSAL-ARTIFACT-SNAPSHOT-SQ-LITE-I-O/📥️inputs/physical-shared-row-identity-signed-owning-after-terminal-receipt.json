@@ -1,0 +1,28 @@
+{
+  "status": "genuine unchanged whole framework Native and strict independent SQLite oracle After complete",
+  "native": {
+    "session": 95110,
+    "exitCode": 0,
+    "run": 46,
+    "passed": 46,
+    "skipped": 0,
+    "seconds": 0.361,
+    "compileSeconds": 4.52,
+    "nextestId": "a0f12368-43f6-4eed-af99-7c222aed3461",
+    "log": "physical-shared-row-identity-signed-original-native-after.log"
+  },
+  "oracle": {
+    "session": 2974,
+    "exitCode": 0,
+    "run": 58,
+    "failed": 0,
+    "expects": 903,
+    "files": 4,
+    "milliseconds": 667,
+    "debug": "signed native row oracle ids=-7,-3,0,4 zeroParent=present",
+    "log": "physical-shared-row-identity-signed-sqlite-oracle-after.log"
+  },
+  "beforeReceipt": "physical-shared-row-identity-signed-genuine-before-receipt.json",
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🦀️.rs",
+  "sourceSha256": "09c8f1a4a9cfc33b903f92e56bd250202daf8326519e71968f3cd60a6e3ff7c0"
+}

@@ -494,3 +494,108 @@ for (const disabled of [false, true]) it(`retained buttons read the current publ
   expect(intents).toHaveLength(disabled ? 0 : 1);
   if (!disabled) expect(intents[0].args.revision).toBe(crossInputs.firstRevision);
 });
+
+import dispositionLaw from "../../🧫️fixtures/🚦️input-draft-disposition/🔣️.json";
+
+for (const law of dispositionLaw.cases) it(law.name, async () => {
+  const store = new UiDocumentStore("history-refusal");
+  const intents: unknown[] = [];
+  let complete: (value: any) => void = () => {};
+  const context = { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); return new Promise<any>((resolve) => { complete = resolve; }); } };
+  store.loadSnapshot({ surface: "history-refusal", revision: 1, root: 1, layoutEpoch: 0n, nodes: [{ id: 1, key: "cell", component: { type: "input", kind: law.kind, value: law.base, commit: "blur", draftTarget: "cell" }, disabled: false, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label: "Cell" }, bindings: [{ trigger: "commit", action: { scope: "draw", name: "rename", version: 1 }, args: {} }] }] } as any);
+  const view = render(createElement(UiNodeView, { store, id: 1, context }));
+  const control = view.container.querySelector<HTMLInputElement | HTMLTextAreaElement>("input,textarea")!;
+  fireEvent.change(control, { target: { value: law.submitted } });
+  fireEvent.blur(control);
+  if ("cancelled" in law && law.cancelled) fireEvent.keyDown(control, { key: "Escape" });
+  if (law.draft !== law.submitted) fireEvent.change(control, { target: { value: law.draft } });
+  await act(async () => complete({ kind: "refused", inputSeq: 1, reason: "dispatch-failed", retryable: false, draftDisposition: law.disposition, diagnostic: { code: "timeTravel.frozen", message: "unparsed diagnostic" } }));
+  expect(control.value).toBe(law.expected);
+  expect(control.hasAttribute("aria-invalid")).toBe(law.conflicted);
+  expect(computeAccessibleName(control)).toBe("Cell");
+  expect(intents).toHaveLength(1);
+});
+
+import inspectorControls from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json";
+import widgetEdits from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json";
+import inspectorTerminology from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗣️terminology.json";
+import Ajv from "ajv";
+import widgetInputSchema from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧬️schema/🔣️.json";
+import { editInputValue, editCollectionValue } from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🟦️.ts";
+ 
+for (const locale of ["en", "de"] as const) for (const gesture of inspectorControls.reactCommits.gestures) it(`retains inspector scalar and selected BRep labels and commands in ${locale} on ${gesture}`, () => {
+  const law = inspectorControls.reactCommits;
+  const scalarRows = inspectorControls.controls.map((control) => ({ ...control, widgetId: "typed", channel: control.port, draft: law.drafts[control.type === "toggle" ? "toggle" : control.kind as "number" | "longText"], current: inspectorControls.ports.find((port) => port.name === control.port)!.default, types: inspectorControls.ports.find((port) => port.name === control.port)!.valueTypes }));
+  const selectedRows = inspectorControls.selectedBrepControls.cases.flatMap((entry) => entry.controls.map((control) => ({ ...control, type: "input", component: null, widgetId: entry.id, draft: String(control.committedValue), current: { $schema: "number", value: control.value }, types: ["number"] })));
+  for (const control of [...scalarRows, ...selectedRows]) {
+    const args = { widgetId: control.widgetId, channel: control.channel, ...(control.component ? { component: control.component } : {}) };
+    const component = control.type === "toggle" ? { type: "toggle", appearance: "checkbox", on: true } : { type: "input", kind: control.kind, value: String(control.value), commit: "blur" };
+    const record = { id: 1, key: "inspector-control", component, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label: control[locale] }, bindings: [{ trigger: control.trigger, action: { scope: law.scope, name: law.action, version: 1 }, args }] };
+    const store = new UiDocumentStore("inspector-controls");
+    store.loadSnapshot({ surface: "inspector-controls", revision: 1, root: 1, layoutEpoch: 0n, nodes: [record] } as any);
+    const intents: any[] = [];
+    const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
+    const element = view.getByRole(control.type === "toggle" ? "checkbox" : control.kind === "number" ? "spinbutton" : "textbox", { name: control[locale] }) as HTMLInputElement;
+    expect(computeAccessibleName(element)).toBe(control[locale]);
+    element.focus();
+    expect(document.activeElement).toBe(element);
+    if (control.type === "toggle") fireEvent.click(element);
+    else {
+      fireEvent.blur(element);
+      expect(intents).toHaveLength(law.counts.untouched);
+      fireEvent.change(element, { target: { value: control.draft } });
+      expect(intents).toHaveLength(law.counts.draft);
+      if (gesture === "enter") fireEvent.keyDown(element, { key: "Enter", ctrlKey: control.kind === "longText" });
+      else fireEvent.blur(element);
+    }
+    expect(intents).toHaveLength(law.counts.committed);
+    expect(intents[0].trigger).toBe(control.trigger);
+    expect(intents[0].action).toEqual({ scope: law.scope, name: law.action, version: 1 });
+    expect(intents[0].args).toEqual(args);
+    expect(intents[0].input).toBe(control.type === "toggle" ? control.draft : control.kind === "number" ? Number(control.draft) : control.draft);
+    const edited = editInputValue(control.types, control.current, String(intents[0].input), control.component ?? undefined);
+    expect(JSON.parse(JSON.stringify(edited))).toEqual(control.component ? { ...control.current, [control.component]: Number(control.draft) } : { $schema: control.type === "toggle" ? "boolean" : control.kind === "number" ? "number" : "text", value: control.type === "toggle" ? control.draft : control.kind === "number" ? JSON.parse(String(control.draft)) : control.draft });
+    fireEvent.blur(element);
+    expect(intents).toHaveLength(law.counts.repeated);
+    view.unmount();
+  }
+  console.log(`[DEBUG] inspector scalar ${locale}/${gesture}: controls=${scalarRows.length + selectedRows.length} actualUiNodeView=true independentAccessibleNames=true`);
+});
+
+for (const locale of ["en", "de"] as const) it(`retains ordered inspector collection commands and independent expected values in ${locale}`, () => {
+  const validate = new Ajv({ strict: false }).compile(widgetInputSchema);
+  const law = inspectorControls.reactCommits;
+  const cases = widgetEdits.collections.filter((entry) => !("error" in entry) && (entry.command.operation === "set" || entry.command.value === "") && (entry.command.operation !== "move" || Math.abs(entry.command.destination! - entry.command.index) === 1));
+  for (const entry of cases) {
+    const port = inspectorControls.ports.find((port) => port.itemTypes?.[0] === entry.types[0])!;
+    const editable = entry.command.operation === "set";
+    const labelRow = inspectorControls.collectionControls.find((control) => control.port === port.name && (!editable || (control.component ?? undefined) === ("component" in entry.command ? entry.command.component : undefined)))!;
+    const itemLabel = (editable ? labelRow[locale] : labelRow[locale].replace(/ [xyz]$/, "")).replace(" 1", ` ${entry.command.index + 1}`);
+    const termKey = entry.command.operation === "move" ? entry.command.destination! < entry.command.index ? "input_list_up" : "input_list_down" : entry.command.operation === "add" ? "input_list_add" : "input_list_remove";
+    const title = itemLabel.split(` ${inspectorTerminology.labels.input_list_item[locale === "en" ? "nativeEn" : "nativeDe"]} `)[0];
+    const label = editable ? itemLabel : `${entry.command.operation === "add" ? title : itemLabel}: ${inspectorTerminology.labels[termKey][locale === "en" ? "nativeEn" : "nativeDe"]}`;
+    const kind = labelRow.type === "toggle" ? "toggle" : labelRow.kind;
+    const current = (entry.current as any)?.[String(entry.command.index)];
+    const args = { widgetId: "typed", channel: port.name, ...entry.command };
+    const component = editable ? kind === "toggle" ? { type: "toggle", appearance: "checkbox", on: current.value } : { type: "input", kind, value: String(labelRow.component ? current[labelRow.component] : current.value), commit: "blur" } : { type: "button", label, icon: "" };
+    const record = { id: 1, key: entry.id, component, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label }, bindings: [{ trigger: editable ? kind === "toggle" ? "change" : "commit" : "activate", action: { scope: law.scope, name: law.action, version: 1 }, args }] };
+    const store = new UiDocumentStore("inspector-collection");
+    store.loadSnapshot({ surface: "inspector-collection", revision: 1, root: 1, layoutEpoch: 0n, nodes: [record] } as any);
+    const intents: any[] = [];
+    const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
+    const element = view.getByRole(!editable ? "button" : kind === "toggle" ? "checkbox" : kind === "number" ? "spinbutton" : "textbox", { name: label });
+    expect(computeAccessibleName(element)).toBe(label);
+    element.focus();
+    expect(document.activeElement).toBe(element);
+    if (!editable || kind === "toggle") fireEvent.click(element);
+    else { fireEvent.change(element, { target: { value: entry.command.value } }); fireEvent.keyDown(element, { key: "Enter", ctrlKey: kind === "longText" }); }
+    expect(intents).toHaveLength(1);
+    expect(intents[0].args).toEqual(args);
+    const command = { ...intents[0].args, value: editable ? String(intents[0].input) : entry.command.value };
+    expect(validate(command), JSON.stringify(validate.errors)).toBe(true);
+    expect(editCollectionValue(entry.types, entry.current, command, entry.cardinality)).toEqual(entry.expected);
+    expect(JSON.parse(JSON.stringify(entry.expected))).toEqual(entry.expected);
+    view.unmount();
+  }
+  console.log(`[DEBUG] inspector collections ${locale}: cases=${cases.length} actualUiNodeView=true independentAjvJson=true`);
+});

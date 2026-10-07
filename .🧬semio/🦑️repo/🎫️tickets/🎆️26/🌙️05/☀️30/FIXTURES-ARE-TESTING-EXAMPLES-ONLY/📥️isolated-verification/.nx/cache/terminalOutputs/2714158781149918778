@@ -1,0 +1,21 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" value-ghost-proof
+
+[DEBUG] isolated Nx verification test-owner-command
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  01:23:30
+   Duration  3.22s (transform 95ms, setup 0ms, import 391ms, tests 75ms, environment 2.11s)
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  01:23:33
+   Duration  528ms (transform 131ms, setup 0ms, import 211ms, tests 6ms, environment 0ms)
+

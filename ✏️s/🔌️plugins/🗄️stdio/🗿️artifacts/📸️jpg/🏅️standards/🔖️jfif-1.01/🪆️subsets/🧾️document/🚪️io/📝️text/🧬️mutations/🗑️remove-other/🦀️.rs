@@ -1,4 +1,7 @@
 //! 📝️ Direct remove-other-segment text codec.
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::*;
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
+use crate::standards::v_jfif_1_01::subsets::document::io::text::diff::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::Entry;
 pub const TEXT_OPCODE: &str = "remove-other-segment";
@@ -20,3 +23,7 @@ pub fn parse(line: &str) -> Result<JpgMutation, semio_framework_diagnostic::Text
 };
     parse().map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🎯️direct/🦀️.rs"]
+mod tests_direct_behavior;

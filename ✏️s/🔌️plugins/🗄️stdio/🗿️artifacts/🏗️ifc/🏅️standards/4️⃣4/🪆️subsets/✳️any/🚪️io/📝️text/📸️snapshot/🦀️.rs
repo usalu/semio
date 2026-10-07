@@ -11,6 +11,7 @@ pub type IfcSnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
+use crate::standards::v4::subsets::any::io::sqlite::snapshot::native;
 use super::*;
 use crate::standards::v4::subsets::any::schema::snapshot::*;
 use crate::STDIO_IFC_DOCUMENT_SCHEMA;

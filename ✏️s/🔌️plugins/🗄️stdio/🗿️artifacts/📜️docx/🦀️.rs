@@ -88,9 +88,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(engine::io_registry::entries())
         .subset_validators(docx_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("strict") })
-        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("transitional") })
+        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("strict") })
+        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("transitional") })
         .try_build()
 }
 
@@ -123,28 +123,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.docx",
                     extension: Some("docx"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.docx.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.docx.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.diff"),
@@ -155,8 +155,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -165,8 +165,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.spr"),
                 },
             ]
@@ -198,7 +198,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -281,8 +281,6 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🏷️namespaces/🦀️.rs"]
-                    pub(crate) mod namespaces;
                     #[path = "."]
                     pub mod import {
                         #[path = "."]

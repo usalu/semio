@@ -1,0 +1,90 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "747c722f1dfc371ef40fdb6d9a79310694258a3b9413777dd58a9db5271295a4",
+    "before": "use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;",
+    "after": "use crate::standards::v1::subsets::flow::io::binary::mutations::wire_tag;",
+    "occurrences": 1,
+    "authority": "Actual same-owner pub(crate) wire_tag and existing public protocol constant"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "ece91ea4d275834feb877c39a03121492b7ba8979d3f90971df54d9e09cfc080",
+    "before": "use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;",
+    "after": "use crate::standards::v1::subsets::audio::io::binary::mutations::{wire_tag,COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL};",
+    "occurrences": 1,
+    "authority": "Actual same-owner pub(crate) wire_tag and existing public protocol constant"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "512755db1df6d1f68e5940796fb9b6e44784a08a98837491223a032062cc338a",
+    "before": "use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;",
+    "after": "use crate::standards::v1::subsets::cad::io::binary::mutations::wire_tag;",
+    "occurrences": 1,
+    "authority": "Actual same-owner pub(crate) wire_tag and existing public protocol constant"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "55e55023e2957153f0a54153f1922570819dd1c4285f208f8dfe495829b222a0",
+    "before": "use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;",
+    "after": "use crate::standards::v1::subsets::document::io::binary::mutations::wire_tag;",
+    "occurrences": 1,
+    "authority": "Actual same-owner pub(crate) wire_tag and existing public protocol constant"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "238ccbfd3bb81bba30e4556af3459544d3035782248bb625b4db1e21523929d8",
+    "before": "use super::*;",
+    "after": "use super::*;\nuse crate::standards::v1::subsets::model::io::binary::mutations::wire_tag;",
+    "occurrences": 1,
+    "authority": "Existing same-owner pub(crate) wire_tag"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "9b80bb47843274007f42e208e19eb64445afe86bf3814be572aa475ac8b27c82",
+    "before": "use super::*;",
+    "after": "use super::*;\nuse crate::standards::v1::subsets::presentation::io::binary::mutations::wire_tag;",
+    "occurrences": 1,
+    "authority": "Existing same-owner pub(crate) wire_tag"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "87f35c0b65e647038249f756e2221486c3627fc8dfd4ae4ba6aa8926312c049a",
+    "before": "use super::*;",
+    "after": "use super::*;\nuse crate::standards::v1::subsets::video::io::binary::mutations::wire_tag;\nuse crate::standards::v1::subsets::video::io::text::mutations::print_semio_video_mutation;",
+    "occurrences": 1,
+    "authority": "Existing Video binary tag and Text print function"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "747c722f1dfc371ef40fdb6d9a79310694258a3b9413777dd58a9db5271295a4",
+    "before": "use protocol::io::binary::operation_bytes::",
+    "after": "use semio_framework_os_kernel::os_spr::operation_bytes::",
+    "occurrences": 1,
+    "authority": "Actual os_spr canonical public operation_bytes reexport"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "1000b5d47c085d67befd4c32fbb5d019b77f153d8c85dacf93826387d9d6718d",
+    "before": "use super::*;",
+    "after": "use super::*;\nuse crate::standards::v1::subsets::audio::io::text::snapshot::{enc_snapshot,dec_snapshot};",
+    "occurrences": 1,
+    "authority": "Actual Audio Text snapshot functions"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "512efbf1443485b1fb6971d2f3361bf56d620af3bfd90743736fb054483ef079",
+    "before": "crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json",
+    "after": "crate::standards::v1::subsets::brep::io::text::diff::decode_semio_brep_diff_json",
+    "occurrences": 1,
+    "authority": "Actual BRep Text Diff public JSON decoder"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "beforeSha256": "789dbe99341710c649ba5ba9afb38cd2f6e3fc9cdc1bdf7bbe068b00132fb001",
+    "before": "use crate::standards::v1::subsets::presentation::io::sqlite::snapshot::*;",
+    "after": "use crate::standards::v1::subsets::presentation::io::sqlite::snapshot::*;\nuse crate::standards::v1::subsets::document::schema::snapshot::DocBlock;",
+    "occurrences": 1,
+    "authority": "Actual Document schema DocBlock enum used by authored Presentation fixture"
+  }
+]

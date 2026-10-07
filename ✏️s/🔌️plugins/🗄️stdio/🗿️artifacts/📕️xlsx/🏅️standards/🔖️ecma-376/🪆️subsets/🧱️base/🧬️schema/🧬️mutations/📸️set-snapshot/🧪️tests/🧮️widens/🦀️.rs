@@ -14,7 +14,7 @@
 //! `.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and
 //! are asserted by the shared codec-matrix harness, not here.
 
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_address, set_snapshot::SetSnapshot, XlsxMutation};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook};

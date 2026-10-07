@@ -8,7 +8,6 @@
       "type": "object",
       "required": [
         "tag",
-        "kind",
         "values"
       ],
       "properties": {
@@ -17,19 +16,16 @@
           "minimum": 0,
           "maximum": 65535
         },
-        "kind": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
-        },
         "values": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "TiffTagAdded": {
       "type": "object",
       "required": [
         "tag",
-        "kind",
         "values"
       ],
       "properties": {
@@ -38,13 +34,11 @@
           "minimum": 0,
           "maximum": 65535
         },
-        "kind": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
-        },
         "values": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "TiffTagsDiff": {
       "type": "object",
@@ -79,15 +73,14 @@
         "entries": {
           "$ref": "#/$defs/TiffTagsDiff"
         },
-        "pixels": {
+        "blocks": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffSampleBlock"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "TiffIfdModified": {
       "type": "object",
@@ -149,22 +142,10 @@
   },
   "description": "Sparse diff for stdio.tiff. Every field present = changed to a value. No tri-state fields at this level.",
   "properties": {
-    "byteOrder": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffByteOrder",
-      "x-semio-state": "artifact"
-    },
     "ifds": {
       "$ref": "#/$defs/TiffIfdsDiff",
       "x-semio-state": "artifact"
-    },
-    "pixels": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 255
-      },
-      "x-semio-state": "artifact"
     }
-  }
+  },
+  "additionalProperties": false
 }

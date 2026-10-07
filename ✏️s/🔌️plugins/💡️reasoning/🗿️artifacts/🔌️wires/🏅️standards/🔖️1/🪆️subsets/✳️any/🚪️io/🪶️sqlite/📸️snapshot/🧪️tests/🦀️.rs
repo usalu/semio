@@ -5,7 +5,7 @@ mod semantic;
 fn native_fixture()->WiresSnapshot{
  let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
  let child=&f["content"];let target=&child["target"];let dialect=&target["dialect"];
- WiresSnapshot{content:store::ArtifactChild::new(child["childId"].as_str().unwrap().into(),store::os_io::ArtifactRef{artifact_id:target["artifactId"].as_str().unwrap().into(),dialect:store::os_io::ArtifactDialect{artifact_kind:dialect["artifactKind"].as_str().unwrap().into(),standard:dialect["standard"].as_str().unwrap().into(),subset:dialect["subset"].as_str().unwrap().into()}}),
+ WiresSnapshot{content:store::ArtifactChild::new(child["childId"].as_str().unwrap().into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:target["artifactId"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:dialect["artifactKind"].as_str().unwrap().into(),standard:dialect["standard"].as_str().unwrap().into(),subset:dialect["subset"].as_str().unwrap().into()}}),
  wires_snapshot:semio_framework_value::DslValue::Object(vec![
  ("same".into(),semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(f["unsigned"][2].as_str().unwrap().parse().unwrap()))),
  ("same".into(),semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(f["signed"][0].as_str().unwrap().parse().unwrap()))),
@@ -57,7 +57,7 @@ fn sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_
  let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
  let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native_fixture(),<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);
  for _ in 0..f["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}
- let dialect=store::os_io::ArtifactDialect{artifact_kind:"s.reasoning.wires".into(),standard:"1".into(),subset:"*".into()};let limits=SqliteDatabaseLimits::default();let mut reference=None;
+ let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.reasoning.wires".into(),standard:"1".into(),subset:"*".into()};let limits=SqliteDatabaseLimits::default();let mut reference=None;
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))};
   let database=(codec.export)("s.reasoning.wires",&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;

@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "owner": "semio-framework-artifact-reference",
+  "entry": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/🦀️.rs",
+  "manifest": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/Cargo.toml",
+  "binding": "🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🦀️.rs",
+  "types": [
+    "ArtifactRef"
+  ],
+  "fields": {
+    "ArtifactRef": [
+      {
+        "id": 0,
+        "key": "artifact-id",
+        "shape": "Text",
+        "optional": false
+      },
+      {
+        "id": 1,
+        "key": "artifact-kind",
+        "shape": "Text",
+        "optional": false
+      },
+      {
+        "id": 2,
+        "key": "standard",
+        "shape": "Text",
+        "optional": false
+      },
+      {
+        "id": 3,
+        "key": "subset",
+        "shape": "Text",
+        "optional": false
+      }
+    ]
+  },
+  "controls": {
+    "initialCancel": "canceled",
+    "metadataZero": "ownershipLimit",
+    "projection": "ownershipLimit",
+    "construction": "ownershipLimit"
+  },
+  "cases": [
+    {
+      "id": "literal-0",
+      "type": "ArtifactRef",
+      "value": {
+        "artifactId": "",
+        "dialect": {
+          "artifactKind": "",
+          "standard": "",
+          "subset": ""
+        }
+      },
+      "expectedFields": [
+        [
+          0,
+          ""
+        ],
+        [
+          1,
+          ""
+        ],
+        [
+          2,
+          ""
+        ],
+        [
+          3,
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "literal-1",
+      "type": "ArtifactRef",
+      "value": {
+        "artifactId": "!@/世界\u0000",
+        "dialect": {
+          "artifactKind": "kind!@/\u0000",
+          "standard": "standard/@!",
+          "subset": "subset/@!世界"
+        }
+      },
+      "expectedFields": [
+        [
+          0,
+          "!@/世界\u0000"
+        ],
+        [
+          1,
+          "kind!@/\u0000"
+        ],
+        [
+          2,
+          "standard/@!"
+        ],
+        [
+          3,
+          "subset/@!世界"
+        ]
+      ]
+    },
+    {
+      "id": "literal-2",
+      "type": "ArtifactRef",
+      "value": {
+        "artifactId": "a!b",
+        "dialect": {
+          "artifactKind": "s.sample.kind",
+          "standard": "",
+          "subset": "*"
+        }
+      },
+      "expectedFields": [
+        [
+          0,
+          "a!b"
+        ],
+        [
+          1,
+          "s.sample.kind"
+        ],
+        [
+          2,
+          ""
+        ],
+        [
+          3,
+          "*"
+        ]
+      ]
+    }
+  ],
+  "sourceCases": [
+    {
+      "id": "formatting",
+      "accepted": true
+    },
+    {
+      "id": "private-extension",
+      "accepted": true
+    },
+    {
+      "id": "missing-type-owner",
+      "accepted": false
+    },
+    {
+      "id": "hostile-dependency",
+      "accepted": false
+    }
+  ]
+}

@@ -11,7 +11,8 @@
 //! implementation instead of two near-duplicates.
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+
 
 
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};

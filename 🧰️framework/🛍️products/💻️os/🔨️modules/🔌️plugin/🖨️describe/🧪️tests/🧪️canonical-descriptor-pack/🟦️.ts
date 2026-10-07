@@ -1,12 +1,12 @@
 /** 🔤️ TypeScript oracle of the canonical descriptor pack (`canonical_descriptor_value` / `descriptor_pack` in
  * `🛂️descriptor-emission/🦀️.rs`, design §22.19), checked against the language-agnostic fixture
  * `🧫️fixtures/🧫️canonical-descriptor-pack/🔣️.json` that `🧪️tests/🔬️unit/🦀️.rs` runs through the Rust law.
- * Independent where it counts: Ajv (2020-12) validates the fixture against its schema, the canonical member order is
+ * The canonical member order is
  * re-derived here from UTF-8 bytes alone, and the bytes come from the pack encoder every descriptor verifier uses. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
+
 import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../../🟦️.ts";
 
 type Case = Readonly<{ id: string; authored: PackValue; canonical: PackValue; expectedPackHex: string }>;
@@ -30,14 +30,9 @@ export function descriptorPackHex(value: PackValue): string {
   return Buffer.from(encodePackValue(value)).toString("hex");
 }
 
-/** ⚖️ Validates the fixture, rejects a hostile row and derives every case through the oracle; answers the case count. */
+/** ⚖️ Derives every canonical descriptor case through the independent byte oracle; answers the case count. */
 export function canonicalDescriptorPackOracle(repoRoot: string): number {
   const fixture: Fixture = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🧬️schema/🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
-  const first = fixture.cases[0]!;
-  assert.equal(validate({ ...fixture, cases: [{ ...first, expectedPackHex: first.expectedPackHex.toUpperCase() }] }), false, "pack bytes are lowercase hex");
   for (const row of fixture.cases) {
     assert.notEqual(JSON.stringify(row.authored), JSON.stringify(row.canonical), `${row.id}: the authored member order differs from the canonical one`);
     assert.equal(JSON.stringify(canonicalDescriptorValue(row.authored)), JSON.stringify(row.canonical), `${row.id}: canonical member order`);

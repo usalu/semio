@@ -28,7 +28,7 @@ use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresent
 /// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
 /// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs both traits in scope.
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "🧩insert-layout/🦀️.rs"]
@@ -307,3 +307,6 @@ mod set_snapshot_rewrites_the_second_slides_textbox_and_adds_a_speaker_note;
 #[path = "📸️set-snapshot/🧪️tests/🔃️reverses-the-slide-order/🦀️.rs"]
 mod set_snapshot_reverses_the_slide_order;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

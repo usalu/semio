@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "name": "child-alias-keeps-distinct-target",
+      "subset": "model",
+      "payload": {
+        "childId": "owned-slot",
+        "target": {
+          "artifactId": "model-target",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "model"
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "drawing-owned-target",
+      "subset": "drawing",
+      "payload": {
+        "childId": "drawing-slot",
+        "target": {
+          "artifactId": "drawing-target",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "model-rejects-drawing-dialect",
+      "subset": "model",
+      "payload": {
+        "childId": "model-slot",
+        "target": {
+          "artifactId": "drawing-target",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "native-uri-is-not-a-semantic-target",
+      "subset": "model",
+      "payload": {
+        "childId": "model-slot",
+        "target": "model!s.stdio.semio@v1/model"
+      },
+      "valid": false
+    }
+  ]
+}

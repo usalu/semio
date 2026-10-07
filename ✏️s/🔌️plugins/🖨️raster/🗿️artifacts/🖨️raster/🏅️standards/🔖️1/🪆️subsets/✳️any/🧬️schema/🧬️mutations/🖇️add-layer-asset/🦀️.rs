@@ -1,4 +1,4 @@
-//! 🖇️ `add-layer-asset` — attaches a real `RasterImageAsset` (event-log content) to the document's
+//! 🖇️ `add-layer-asset` — attaches a real `SemioImageSnapshot` (event-log content) to the document's
 //! id-keyed asset collection. NOT one of the coordinator's ten mandated derivations; added so
 //! `image:in` media import (`crate::editor::raster::wasm`/the app's `import_media`) can stay a real,
 //! undoable operation now that whole-document replace is gone — `assets: BTreeMap<String,
@@ -12,7 +12,7 @@
 pub mod mutation {
     use crate::diff::RasterDiff;
     use crate::mutations::RasterMutation;
-    use crate::{RasterImageAsset, RasterSnapshot};
+    use crate::{SemioImageSnapshot, RasterSnapshot};
 
     //#region 🔖️AddLayerAsset
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
@@ -20,7 +20,7 @@ pub mod mutation {
     #[value(rename_all = "camelCase")]
     pub struct AddLayerAsset {
         pub asset_id: String,
-        pub asset: RasterImageAsset,
+        pub asset: SemioImageSnapshot,
     }
 
     impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {

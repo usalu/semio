@@ -1,4 +1,4 @@
-//! 🧬️ Byte-authoritative PNG mutation aggregate.
+//! 🧬️ PNG mutation aggregate over precise owned image values.
 
 use crate::schema::diff::PngDiff;
 use crate::PngSnapshot;
@@ -10,7 +10,7 @@ pub use super::patch_snapshot::PatchSnapshot;
 pub use super::set_snapshot::SetSnapshot;
 pub use crate::schema::operations::apply_png_mutation;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = PngSnapshot, diff = PngDiff, schema = "s.stdio.png")]
 pub enum PngMutation {

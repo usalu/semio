@@ -14,7 +14,7 @@ extern crate semio_framework_os_kernel as vcs;
 pub use crate::schema::snapshot::WFC3D_DOCUMENT_SCHEMA;
 
 use crate::schema::snapshot::{Color, TileMedia3d};
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 //#region 🔖️Dialect
 /// 🪪️ The canonical surface-id coordinate for this artifact's ONE subset (`✳️any`) —
@@ -52,8 +52,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// the `TileMedia3d::MeshChild` variant's handle. A tile catalogue small enough to author inline
 /// uses `TileMedia3d::Mesh` instead and mints no handle at all.
 pub fn mesh_child_handle(tile_id: &str) -> store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot> {
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    store::ArtifactChild::new(tile_id.to_string(), store::os_io::ArtifactRef { artifact_id: tile_id.to_string(), dialect })
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    store::ArtifactChild::new(tile_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: tile_id.to_string(), dialect })
 }
 /// 📦️ An axis-aligned unit box in tile space (`0..1` on every axis), as inline media. Twelve
 /// triangles over eight corners — the honest default body for a tile that fills its slot's box, and
@@ -130,7 +130,7 @@ impl<PA> ArtifactApps for PA where
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.wfc3d").expect("canonical wfc3d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 

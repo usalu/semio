@@ -21,7 +21,7 @@ use crate::mutations::change_data_fields::ChangeDataFields;
 use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use semio_framework::kernel::Effect;
-use semio_framework::{Dialect, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use {semio_framework_artifact_reference::Dialect,semio_framework::InteractiveJobClassification,semio_framework::ToolExecutionContract,semio_framework::ToolFactoryKey,semio_framework::ToolJobFactoryError};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry};

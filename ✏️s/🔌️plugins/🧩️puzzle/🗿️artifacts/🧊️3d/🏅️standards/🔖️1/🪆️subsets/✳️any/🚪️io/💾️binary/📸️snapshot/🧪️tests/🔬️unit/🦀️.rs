@@ -16,13 +16,13 @@ fn pack_round_trips_and_agrees_with_dsl() {
 /// `command_envelope_round_trip_holds_for_an_applied_operation`).
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::io::binary::mutations::{close_puzzle3d_store, puzzle3d_store};
+    use crate::host::owned::{close_puzzle3d_store,puzzle3d_store};
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
     use crate::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store = (puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None))).await.expect("store");
+    let mut store = (puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
     (store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], transaction: None })).await.expect("apply");
     let envelope = store.envelope();

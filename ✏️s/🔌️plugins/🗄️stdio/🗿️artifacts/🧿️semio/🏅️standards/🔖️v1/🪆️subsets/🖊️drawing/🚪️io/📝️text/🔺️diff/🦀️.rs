@@ -8,26 +8,28 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::drawing::schema::diff::*;
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option, decode_option};
+use crate::standards::v1::subsets::drawing::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, IndexAdded, IndexModified, NamedModified};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use crate::document::io::text::diff::{dec_style};
-use crate::document::io::text::diff::{enc_style};
-use crate::mesh::io::text::diff::{dec_rgba};
-use crate::mesh::io::text::diff::{enc_rgba};
-use crate::cad::io::text::diff::{dec_layer};
-use crate::cad::io::text::diff::{enc_layer};
-use crate::flow::io::text::diff::{dec_node};
-use crate::flow::io::text::diff::{enc_node};
-use crate::cad::io::text::diff::{dec_point2};
-use crate::cad::io::text::diff::{enc_point2};
-use crate::model::io::text::diff::{dec_transform};
-use crate::model::io::text::diff::{enc_transform};
-use crate::model::io::text::diff::{dec_list};
-use crate::model::io::text::diff::{enc_list};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};
+use crate::standards::v1::subsets::mesh::io::text::diff::{dec_rgba};
+use crate::standards::v1::subsets::mesh::io::text::diff::{enc_rgba};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_layer};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_layer};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_node};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_node};
+use crate::standards::v1::subsets::cad::io::text::diff::{dec_point2};
+use crate::standards::v1::subsets::cad::io::text::diff::{enc_point2};
+use crate::standards::v1::subsets::model::io::text::diff::{dec_transform};
+use crate::standards::v1::subsets::model::io::text::diff::{enc_transform};
+use crate::standards::v1::subsets::model::io::text::diff::{dec_list};
+use crate::standards::v1::subsets::model::io::text::diff::{enc_list};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_path_segment};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_path_segment};
 use framework_schema::ArtifactSchema;
@@ -36,10 +38,6 @@ use protocol::MutationDiff;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
 use crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::enc_str;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::dec_str;
-use crate::standards::v1::subsets::drawing::io::text::snapshot::enc_canvas;
-use crate::standards::v1::subsets::drawing::io::text::snapshot::dec_canvas;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_drawing_diff(d: &SemioDrawingDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();

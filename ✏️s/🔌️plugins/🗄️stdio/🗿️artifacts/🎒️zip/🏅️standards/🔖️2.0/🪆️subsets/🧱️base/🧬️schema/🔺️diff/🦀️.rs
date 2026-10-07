@@ -185,8 +185,6 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
                 next.entries = order.iter().map(|name| entries.remove(name).expect("validated ZIP order")).collect();
             }
         }
-        crate::standards::v2_0::subsets::base::io::validate_zip_snapshot_serialization(&next)
-            .map_err(|error| MutationApplyError::new("mutation.apply.invalid-state", error.to_string()).at(["entries"]))?;
         Ok(next)
     }
 
@@ -340,3 +338,17 @@ pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::schema::snapshot::ZipEntry;
 //#endregion 🔁️Re-exports
+
+#[cfg(test)]
+#[test]
+fn logical_diff_does_not_require_native_comment_encoding(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
+    let base=ZipSnapshot{comment_utf8:fixture["before"]["commentUtf8"].as_bool().unwrap(),..ZipSnapshot::default()};
+    let diff=ZipDiff{comment:Some(fixture["mutation"]["comment"].as_str().unwrap().into()),..ZipDiff::default()};
+    let after=diff.apply(&base).expect("logical comment edit must not materialize native ZIP");
+    let actual=serde_json::json!({"comment":after.comment,"commentUtf8":after.comment_utf8});
+    let mut reference=fixture["before"].clone();reference["comment"]=fixture["mutation"]["comment"].clone();
+    assert_eq!(reference,fixture["after"]);assert_eq!(actual,reference);
+    assert_eq!(crate::standards::v2_0::subsets::base::io::encode_zip(&after).is_ok(),fixture["nativeEncode"].as_bool().unwrap());
+    eprintln!("[DEBUG] ZIP logical diff and separate native admission oracle=serde_json");
+}

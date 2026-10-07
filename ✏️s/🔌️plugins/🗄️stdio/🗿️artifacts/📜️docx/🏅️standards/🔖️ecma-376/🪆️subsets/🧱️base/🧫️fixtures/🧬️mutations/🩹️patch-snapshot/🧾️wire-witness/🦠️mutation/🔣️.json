@@ -1,8 +1,8 @@
 {
   "mutation": "patchSnapshot",
   "patch": {
-    "operation": "set",
-    "path": "/schema",
-    "value": "stdio.patch-snapshot.witness"
+    "operation": "rename",
+    "path": "/opc/relationships/custom~1source.xml",
+    "key": "custom/destination.xml"
   }
 }

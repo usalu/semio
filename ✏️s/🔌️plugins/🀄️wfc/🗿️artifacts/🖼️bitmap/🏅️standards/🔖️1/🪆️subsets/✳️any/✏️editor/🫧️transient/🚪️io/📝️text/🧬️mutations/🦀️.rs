@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::bitmap::transient::component::mutations::*;
 use crate::editor::bitmap::transient::component::BitmapTransient;
-use set_solve::SetSolve;
 
 impl protocol::OpText for BitmapTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -34,7 +33,6 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::bitmap::transient::component::mutations::*;
 use crate::editor::bitmap::transient::component::BitmapTransient;
-use set_solve::SetSolve;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `BitmapTransient`.

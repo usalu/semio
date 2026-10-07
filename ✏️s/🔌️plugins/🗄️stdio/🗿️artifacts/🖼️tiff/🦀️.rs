@@ -13,7 +13,7 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_
 
 pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::TiffDiff;
 pub use schema::mutations::TiffMutation;
@@ -114,11 +114,11 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .schema(standards::v6_0::subsets::document::schema::tiff_artifact_schema_descriptor())
         .formats(formats)
         .inferences([standards::v6_0::subsets::document::schema::inferences::tiff_artifact_inference_descriptor()])
-        .composers(standards::v6_0::engine::io_registry::entries())
+        .composers(standards::v6_0::subsets::document::io::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.tiff", standard: semio_framework_plugin::StandardId("6.0"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.tiff", standard: semio_framework_plugin::StandardId("6.0"), subset: semio_framework_plugin::SubsetId("baseline") })
+        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tiff", standard: semio_framework_artifact_reference::StandardId("6.0"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tiff", standard: semio_framework_artifact_reference::StandardId("6.0"), subset: semio_framework_artifact_reference::SubsetId("baseline") })
         .try_build()
 }
 
@@ -199,8 +199,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v6_0::engine::io_registry as v6_0;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use crate::standards::v6_0::subsets::document::io::io_registry as v6_0;
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -284,8 +284,6 @@ pub mod standards {
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
                         pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧭️change-byte-order/🦀️.rs"]
-                        pub mod change_byte_order;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-ifd/🦀️.rs"]
                         pub mod insert_ifd;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📤️remove-ifd/🦀️.rs"]
@@ -363,12 +361,7 @@ pub mod standards {
                 #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🦀️.rs"]
                 pub mod schema;
             
-#[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🚪️io/🦀️.rs"]
-pub mod io;
 }
-        }
-        pub mod engine {
-            pub use super::subsets::document::engine::*;
         }
     }
 }
@@ -376,9 +369,6 @@ pub mod io;
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
 pub mod schema {
     pub use super::standards::v6_0::subsets::document::schema::*;
-}
-pub mod engine {
-    pub use super::standards::v6_0::subsets::document::engine::*;
 }
 
 

@@ -12,7 +12,7 @@ fn stack_tabs(ids: &[&str], active: &str) -> DockNode {
 }
 
 use crate::shell::ShellState;
-use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
+use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::WindowKindDefinition};
 use semio_framework_ui_locale::LocalizedLabel;
 use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
 

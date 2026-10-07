@@ -11,7 +11,7 @@
 //! timing, never a fabricated playable video, matching the ticket's "honest boundary" rule.
 
 use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
 use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 

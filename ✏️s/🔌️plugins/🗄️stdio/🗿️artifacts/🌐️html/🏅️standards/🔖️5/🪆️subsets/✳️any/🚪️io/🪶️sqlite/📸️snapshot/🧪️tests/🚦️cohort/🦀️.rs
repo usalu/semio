@@ -1,6 +1,6 @@
 //! 🌐️ Public HTML factory, typed file and external markup controls share the neutral cohort.
-use crate::standards::v5::subsets::any::io::sqlite::snapshot::tests::*;
-use semio_framework_os_kernel::{io_schema::{ArtifactDialect,IoPayload,IoFidelity,SQLITE_SNAPSHOT},io::io_mechanism::{io_route,io_run_with_snapshot_control,io_export_sqlite_snapshot,io_import_sqlite_snapshot,native_snapshot_sqlite_schema}};
+use super::*;
+use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io_schema::IoPayload,semio_framework_os_kernel::io_schema::IoFidelity,semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT,semio_framework_os_kernel::io::io_mechanism::io_route,semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::native_snapshot_sqlite_schema};
 use semio_framework_async_macros::async_test;
 use std::{any::TypeId,io::Write,process::{Command,Stdio}};
 fn cohort()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🚦️cohort/🔣️.json")).unwrap()}

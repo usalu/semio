@@ -83,13 +83,16 @@
     },
     "native-codec-projection": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-codec-projection",
         "forwardAllArgs": true
       },
       "outputs": [
-        "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json"
       ]
     },
     "catalog-root": {

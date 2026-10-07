@@ -82,7 +82,7 @@ async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
     let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![MapFeature { id: value["id"].as_str().expect("position id").into(), data: semio_framework_os_kernel::DslValue::from(value) }], ..Default::default() });
     let envelope = semio_framework_os_kernel::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);
     let files = semio_framework_os_kernel::print_document_pack(&envelope).await.expect("canonical GIS pack pair");
-    assert_eq!(files.pack, envelope.vcs.initial_snapshot.encode_pack());
+    assert_eq!(files.pack.as_slice(), envelope.vcs.genesis.pack());
     let mut retirement = semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     let mut retired = false;
     for _ in 0..100_000 {

@@ -1723,7 +1723,11 @@ impl ArtifactEditor for ArchitectPlayApp {
             "exportProgram" => Ok(ArchitectCommand::ExportProgram(export_program::ExportProgram {})),
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
-            "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), semio_framework_pack_json::to_json_string) })),
+            "nodeGraphEdit" => {
+                let args = args.ok_or_else(|| Fault::from("nodeGraphEdit needs its operation rows"))?;
+                semio_framework_tool_machine::node_graph_edit_rows(args).map_err(Fault::from)?;
+                Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(args.get("operations").expect("the row decoder requires operations")) }))
+            },
             // 🖼️ An ABSENT `viewport` is the Graph window's own default, not a fault: this action carries
             // no `action_args` row, so a palette/keybinding dispatch (and the framework's own
             // `assert_declared_actions_bridge_to_commands` law) hands the bridge no payload at all.

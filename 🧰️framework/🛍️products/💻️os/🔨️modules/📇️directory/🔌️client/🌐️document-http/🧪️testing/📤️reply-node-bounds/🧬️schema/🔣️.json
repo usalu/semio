@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/directory/document-http/testing/reply-node-bounds/schema.json",
+  "$defs": {
+    "OwnerReply": {
+      "$id": "neutral:reply-list",
+      "type": "array",
+      "items": {
+        "type": "null"
+      }
+    },
+    "BoundedReply": {
+      "type": "array",
+      "items": {
+        "type": "null"
+      },
+      "maxItems": 4095
+    }
+  }
+}

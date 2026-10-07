@@ -1687,7 +1687,7 @@ pub struct Edit<Op> {
     /// 🌿️ Authored branch identity; explicit null identifies trunk or unknown provenance.
     pub line: Option<String>,
     pub forwards: Vec<Op>,
-    pub inverse: Vec<Op>,
+    pub inverse: crate::value::list::PagedList<Op, {usize::MAX}>,
     pub mutation_meta: Vec<MutationMeta>,
     /// 🏷️ The id of the action or command that authored this edit — never display text: history resolves it through
     /// the authoring app's registry to its label in every locale at projection time, so a reload or a peer keeps it.
@@ -1751,7 +1751,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
                 }
                 "actor" => actor = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("actor"))?,
                 "forwards" => forwards = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("forwards"))?),
-                "inverse" => inverse = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
+                "inverse" => inverse = Some(<crate::value::list::PagedList<Op, {usize::MAX}> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
                 "mutationMeta" => mutation_meta = <Vec<MutationMeta> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationMeta"))?,
                 "verb" => verb = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("verb"))?,
                 "sequenceNumber" => sequence_number = Some(<i32 as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("sequenceNumber"))?),

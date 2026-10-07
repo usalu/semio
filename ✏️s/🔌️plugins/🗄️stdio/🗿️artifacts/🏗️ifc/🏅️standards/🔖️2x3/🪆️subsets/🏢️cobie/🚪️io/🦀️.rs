@@ -4,12 +4,12 @@
 pub mod derived_composition {
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::base::io::Ifc2x3Composer as Ifc2x3AnyComposer;
-    use crate::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
+    use crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_COBIE: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
@@ -100,7 +100,7 @@ pub mod derived_construction {
     use crate::standards::v2x3::subsets::base::schema::mutations::set_snapshot;
     use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
+    use crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -202,19 +202,19 @@ use semio_framework_diagnostic::Severity;
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::standards::v2x3::subsets::base::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
+    use crate::standards::v2x3::subsets::base::io::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
 
@@ -286,7 +286,7 @@ use semio_framework_diagnostic::TextSpan;
     /// 🛡️ Checks the actual COBie fields with controlled borrowed relationships.
     pub fn check_cobie_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
         use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
-        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_nonempty_name,mvd_entity,MvdDiagnostics};
+        use crate::standards::v2x3::subsets::base::io::sqlite::snapshot::{mvd_header,mvd_instances,mvd_nonempty_name,mvd_entity,MvdDiagnostics};
         use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
         let mut out=MvdDiagnostics::default();let(schema,view)=mvd_header(snapshot,"FMHandOverView",control)?;
         for(condition,code,message)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3"),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name FMHandOverView")]{if condition{out.emit(code,Severity::Error,format_args!("{message}"),control)?;}}
@@ -327,7 +327,7 @@ use semio_framework_diagnostic::TextSpan;
 
     //#region 🧪️Tests
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_analysis::*;

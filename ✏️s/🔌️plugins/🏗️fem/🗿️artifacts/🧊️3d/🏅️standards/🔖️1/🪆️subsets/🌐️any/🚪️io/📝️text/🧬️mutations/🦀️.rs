@@ -1,6 +1,7 @@
 //! ⚡️ Fem3d artifact — OpText/OpBinary codecs + grammar for `Fem3dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation, Fem3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation,Fem3dMutation};
+
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -18,14 +19,7 @@ impl protocol::OpText for Fem3dMutation {
     }
 }
 
-impl protocol::OpBinary for Fem3dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📜️ Describes the artifact mutation dialect.
@@ -46,7 +40,7 @@ use crate::Fem3dSnapshot;
 use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemMaterial, FemNode, FemSection, FemSolid};
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::ArtifactEnvelope;
 /// 🌉️ Brings every triad leaf's `mutation` submodule into this file's own scope (declared as
 /// siblings back in `🦀️.rs`, not inside this file) — required for the dispatch enum's bare
 /// `create_node::CreateNode`-style variant field paths above to resolve.

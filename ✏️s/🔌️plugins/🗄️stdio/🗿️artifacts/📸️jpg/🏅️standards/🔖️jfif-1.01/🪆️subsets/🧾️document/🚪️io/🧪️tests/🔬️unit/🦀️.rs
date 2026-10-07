@@ -1,6 +1,80 @@
 use super::*;
 use crate::schema::demo_jpg_snapshot;
 
+#[test]
+fn controlled_components_preserve_gray_and_ycbcr_samples_before_color_conversion() {
+    use super::binary::snapshot::decoded_components::JpgComponentDecoder;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🧮️decoded-components/🧫️fixtures/🔣️.json")).unwrap();
+    let (width,height,sample) = (fixture["width"].as_u64().unwrap() as u32,fixture["height"].as_u64().unwrap() as u32,fixture["sample"].as_u64().unwrap() as u8);
+    for case in fixture["cases"].as_array().unwrap() {
+        let ids = case["componentIds"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
+        let mut snapshot = JpgSnapshot { width,height,pixels:vec![sample;(width*height*4) as usize],..Default::default() };
+        snapshot.frame = Some(JpgFrameHeader { precision:8,width:width as u16,height:height as u16,components:ids.iter().map(|id|JpgFrameComponent { id:*id,h_sampling:1,v_sampling:1,quant_table_id:0 }).collect() });
+        let bytes=encode_jpg(&snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).unwrap();
+        let mut decoder=JpgComponentDecoder::new(&bytes.as_slice(),1024*1024,&mut ||false).unwrap();
+        let before=decoder.progress();assert!(decoder.step(&bytes.as_slice(),0,&mut ||false).unwrap().is_none());assert_eq!(decoder.progress(),before);
+        let projected=loop {let before=decoder.progress().0;if let Some(value)=decoder.step(&bytes.as_slice(),1,&mut ||false).unwrap(){break value;}assert!(decoder.progress().0<=before+1);};
+        assert_eq!((projected.width,projected.height),(width,height));assert_eq!(projected.component_ids,ids);
+        assert_eq!(projected.samples,vec![sample;(width*height) as usize*case["samplesPerPixel"].as_u64().unwrap() as usize]);
+        let (oracle_width,oracle_height,oracle)=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_decode_luma(&bytes).unwrap();
+        assert_eq!((oracle_width,oracle_height),(width,height));assert_eq!(oracle,vec![sample;(width*height) as usize]);
+        if projected.component_ids.len()==1 {assert_eq!(projected.samples,oracle);}
+        assert_eq!(decoder.progress().0,decoder.progress().1);
+        let mut cancelled=JpgComponentDecoder::new(&bytes.as_slice(),1024*1024,&mut ||false).unwrap();
+        assert_eq!(cancelled.step(&bytes.as_slice(),1,&mut ||true).unwrap_err().kind,semio_framework_value::ValueRefusalKind::Canceled);
+        assert!(JpgComponentDecoder::new(&bytes.as_slice(),1,&mut ||false).is_err());
+        assert_eq!(JpgComponentDecoder::new(&bytes.as_slice(),1024*1024,&mut ||true).err().unwrap().kind,semio_framework_value::ValueRefusalKind::Canceled);
+        eprintln!("[DEBUG] physical JPEG component projection retained {} native channels with exact gray oracle and bounded cancellation",projected.component_ids.len());
+    }
+}
+
+#[test]
+fn controlled_components_accept_authored_native_bytes_with_independent_reader() {
+    use super::binary::snapshot::decoded_components::JpgComponentDecoder;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🧮️decoded-components/🧫️fixtures/🧮️owned-exact-components/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let hex=case["jpegHex"].as_str().unwrap();
+        let bytes=(0..hex.len()).step_by(2).map(|index|u8::from_str_radix(&hex[index..index+2],16).unwrap()).collect::<Vec<_>>();
+        let mut decoder=JpgComponentDecoder::new(&bytes.as_slice(),1024*1024,&mut ||false).unwrap();
+        assert!(decoder.working_bytes()>=bytes.len()*8);
+        let actual=loop {if let Some(value)=decoder.step(&bytes.as_slice(),1,&mut ||false).unwrap(){break value;}};
+        assert_eq!(actual.width,u32::try_from(case["width"].as_u64().unwrap()).unwrap());
+        assert_eq!(actual.height,u32::try_from(case["height"].as_u64().unwrap()).unwrap());
+        assert_eq!(actual.component_ids,case["componentIds"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>());
+        assert_eq!(actual.samples,case["samples"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>());
+        let (width,height,oracle)=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_decode_luma(&bytes).unwrap();
+        assert_eq!((width,height),(actual.width,actual.height));
+        if actual.component_ids.len()==1 {assert_eq!(actual.samples,oracle);}
+        if actual.samples.iter().all(|sample|*sample==128) {assert_eq!(oracle,vec![128;(width*height) as usize]);}
+        eprintln!("[DEBUG] authored JPEG component case={} samples={} independent image dimensions={}x{}",case["name"],actual.samples.len(),width,height);
+    }
+}
+
+#[test]
+fn export_quality_is_physical_policy_with_independent_quantization_witness() {
+    use semio_framework_value::ToValue;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🎛️encode-options/🧫️fixtures/🔣️.json")).unwrap();
+    let snapshot=demo_jpg_snapshot();let owned=snapshot.to_value();
+    assert!(!semio_framework_pack_json::to_json_string(&owned).contains("reEncodeQuality"));
+    let mut encoded=Vec::new();
+    for case in fixture["cases"].as_array().unwrap() {
+        let quality=case["quality"].as_u64().unwrap() as u8;
+        let options=JpgEncodeOptions{quality,..JpgEncodeOptions::from_frame(snapshot.frame.as_ref())};
+        let bytes=encode_jpg(&snapshot,&options).unwrap();
+        let header=parse_jpg_header(&bytes.as_slice()).unwrap();
+        let reference=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_encode_rgba(snapshot.width,snapshot.height,&snapshot.pixels,quality).unwrap();
+        let reference_header=parse_jpg_header(&reference.as_slice()).unwrap();
+        let expected=case["firstLumaQuantizer"].as_u64().unwrap() as u16;
+        assert_eq!(header.quant_tables.iter().find(|table|table.id==0).unwrap().values[0],expected);
+        assert_eq!(reference_header.quant_tables.iter().find(|table|table.id==0).unwrap().values[0],expected);
+        assert_eq!(snapshot.to_value(),owned);
+        encoded.push(bytes);
+        eprintln!("[DEBUG] JPEG export quality={quality} independent image luma quantizer={expected}; owned raster is unchanged");
+    }
+    assert_ne!(encoded[0],encoded[1]);
+    for quality in [0,101,255] {assert!(encode_jpg(&snapshot,&JpgEncodeOptions{quality,..Default::default()}).is_err());}
+}
+
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn gradient_image(w: u32, h: u32) -> Vec<u8> {
     let mut out = vec![0u8; (w * h * 4) as usize];
@@ -104,7 +178,7 @@ async fn gradient_round_trip_under_mae_threshold() {
     let (w, h) = (48u32, 40u32);
     let img = gradient_image(w, h);
     let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
-    let bytes = encode_jpg(&snap).expect("encode");
+    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
     assert!(bytes.starts_with(&[0xFF, 0xD8]));
     assert!(bytes.ends_with(&[0xFF, 0xD9]));
     let decoded = decode_jpg(&bytes).expect("decode");
@@ -122,7 +196,7 @@ async fn checkerboard_round_trip_under_mae_threshold() {
     let (w, h) = (32u32, 32u32);
     let img = checkerboard_image(w, h);
     let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
-    let bytes = encode_jpg(&snap).expect("encode");
+    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
     let decoded = decode_jpg(&bytes).expect("decode");
     let err = mae(&img, &decoded.pixels);
     println!("checkerboard round-trip MAE = {err}");
@@ -140,7 +214,7 @@ async fn solid_color_still_round_trips() {
         px[3] = 255;
     }
     let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
-    let bytes = encode_jpg(&snap).expect("encode");
+    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
     let decoded = decode_jpg(&bytes).expect("decode");
     let err = mae(&img, &decoded.pixels);
     assert!(err < 5.0, "solid MAE too high: {err}");
@@ -174,8 +248,38 @@ async fn non_jpeg_input_is_malformed_not_panic() {
 /// near-identical).
 mod conformance_laws {
     use super::*;
-    use crate::schema::{diff, mutations, snapshot};
+    use crate::schema::{diff, snapshot};
+    use crate::JpgMutation;
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
+
+    /// 🧫️ Admits the committed native mutation corpus and covers every declared variant.
+    fn demo_mutation_cases() -> Vec<JpgMutation> {
+        use semio_s_artifact_stdio_contract::editing;
+        let base = demo_jpg_snapshot();
+        let event = editing::SnapshotEditEvent::SetValue { path: "/jfifXDensity".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(73)) };
+        let patch = editing::prepare_snapshot_patch(&base, &event).expect("prepare committed quality case");
+        let mut cases = vec![
+            JpgMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: base }),
+            JpgMutation::PatchSnapshot(crate::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
+        ];
+        for text in [
+            include_str!("../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/📊️replace-quant/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🧹️remove-quant/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🌳️replace-huffman/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🪓️remove-huffman/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🔁️change-restart/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-other/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json"),
+        ] {
+            cases.push(semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("admit committed mutation case"));
+        }
+        let actual = cases.iter().map(|case| <JpgMutation as protocol::SemanticMutation<JpgSnapshot>>::semantics(case).kind).collect::<Vec<_>>();
+        let declared = <JpgMutation as protocol::SemanticMutation<JpgSnapshot>>::kinds().iter().map(|kind| kind.kind).collect::<Vec<_>>();
+        assert_eq!(actual, declared, "native cases cover every declared variant in order");
+        cases
+    }
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
     /// parse under the real dialect — independent of, and cheaper than, the two
@@ -208,12 +312,12 @@ mod conformance_laws {
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
-    /// output for every `JpgMutation` variant (`mutations::demo_mutation_cases()`).
+    /// output for every `JpgMutation` variant (`demo_mutation_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        for mutation in mutations::demo_mutation_cases() {
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
         }
@@ -245,7 +349,7 @@ mod conformance_laws {
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
         let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
-        for mutation in mutations::demo_mutation_cases() {
+        for mutation in demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");

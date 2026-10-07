@@ -41,14 +41,14 @@ pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) ->
 
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
-    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+    use crate::schema::snapshot::SvgNode;
     vec![
         SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: None })),
         SvgMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: None })),
-        SvgMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload { parent: Vec::new(), index: 0, node: XmlNode::Text { text: "inserted".into() } })),
+        SvgMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload { parent: Vec::new(), index: 0, node: SvgNode::Text { text: "inserted".into() } })),
         SvgMutation::RemoveElement(RemoveElementMutation::Apply(RemoveElementPayload { parent: Vec::new(), index: 0 })),
         SvgMutation::SetElementName(SetElementNameMutation::Apply(SetElementNamePayload { path: Vec::new(), name: "svg".into() })),
-        SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: Vec::new(), name: "attribute".into(), value: Some("value".into()) })),
+        SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: Vec::new(), name: "attribute".into(), value: Some(crate::schema::snapshot::SvgAttributeValue::Text("value".into())) })),
         SvgMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: Vec::new(), text: "text".into() })),
         SvgMutation::SetViewBox(SetViewBoxMutation::Apply(SetViewBoxPayload { path: Vec::new(), view_box: None })),
         SvgMutation::SetTransform(SetTransformMutation::Apply(SetTransformPayload { path: Vec::new(), transform: None })),

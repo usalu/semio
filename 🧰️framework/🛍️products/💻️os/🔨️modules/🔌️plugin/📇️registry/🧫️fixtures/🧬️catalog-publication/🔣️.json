@@ -123,40 +123,48 @@
     {
       "id": "one-supplementary-codepoint",
       "value": "🧩",
-      "schema": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 1
-      },
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1
+        }
+      }
     },
     {
       "id": "short-supplementary-codepoint",
       "value": "🧩",
-      "schema": {
-        "type": "string",
-        "minLength": 2
-      },
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "string",
+          "minLength": 2
+        }
+      }
     },
     {
       "id": "two-supplementary-codepoints",
       "value": "🧩🧩",
-      "schema": {
-        "type": "string",
-        "maxLength": 1
-      },
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "string",
+          "maxLength": 1
+        }
+      }
     },
     {
       "id": "combining-codepoints",
       "value": "é",
-      "schema": {
-        "type": "string",
-        "minLength": 2,
-        "maxLength": 2
-      },
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2
+        }
+      }
     }
   ],
   "descriptorInputs": [

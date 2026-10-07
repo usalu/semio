@@ -47,7 +47,7 @@ pub(crate) fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_csv_mutation(m: &CsvMutation) -> String {
     match m {
-        CsvMutation::PatchSnapshot(_) => patch_snapshot::text::print(m).expect("patch snapshot variant"),
+        CsvMutation::PatchSnapshot(_) => super::patch_snapshot::print(m).expect("patch snapshot variant"),
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_csv_snapshot(snapshot)),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header }) => format!("set-has-header has-header={}", if *has_header { 1 } else { 0 }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index, record }) => format!("insert-record index={index} record={}", enc_record(record)),
@@ -58,8 +58,8 @@ pub(crate) fn print_csv_mutation(m: &CsvMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
-    if line.split_once(' ').map_or(line, |(kind, _)| kind) == patch_snapshot::text::TEXT_OPCODE {
-        return patch_snapshot::text::parse(line);
+    if line.split_once(' ').map_or(line, |(kind, _)| kind) == super::patch_snapshot::TEXT_OPCODE {
+        return super::patch_snapshot::parse(line);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("csv mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();

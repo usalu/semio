@@ -351,18 +351,15 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
     let probe = store.begin_report_replay(&entries, None).expect("probe");
     let total = probe.progress().total;
     probe.cancel();
-    assert_eq!(total, 4);
+    assert_eq!(total, 7);
     for stop in 0..=total {
         let (generation, revision, snapshot, applied, transitions, outcomes) =
             (store.generation(), store.0.content_revision(), store.snapshot().unwrap(), store.applied_edit_ids().to_vec(), store.envelope().transitions.len(), store.mutation_outcomes().unwrap());
         let mut replay = store.begin_report_replay(&entries, None).expect("replay");
         if stop > 0 {
-            let mut done = 0;
-            let step = replay.step(store.replay_edits(), &mut || {
-                done += 1;
-                done >= stop
-            });
-            assert!(step.is_ok());
+            while replay.progress().done < stop {
+                assert!(replay.step(store.replay_edits(), &mut || true).is_ok());
+            }
             assert_eq!(replay.progress().done, stop);
         }
         replay.cancel();
@@ -556,7 +553,7 @@ fn remote_supersession(document: &str, target: &MutationId, replacement: protoco
 
 /// 🧵️ Every edit's inverse by edit id: what a load recomputes and every fold site must agree on.
 fn inverses(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> BTreeMap<String, Vec<DemoMutation>> {
-    store.envelope().vcs.edits.iter().map(|edit| (edit.id.clone(), edit.inverse.clone())).collect()
+    store.envelope().vcs.edits.iter().map(|edit| (edit.id.clone(), edit.inverse.iter().cloned().collect())).collect()
 }
 
 /// 💧️ A member document whose history holds supersessions hydrates — the retained composition member open — to exactly
@@ -564,7 +561,7 @@ fn inverses(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> BTreeMap<Strin
 /// the durable outcomes and the content revision. The `.ops` text mirror round-trips the same history (audit F-C1).
 #[semio_framework_async_macros::async_test]
 async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state() {
-    let dialect = crate::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() };
     let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-superseded", DemoSnapshot { n: Some(0) }, None);
     envelope.dialect = Some(dialect.clone());
     let mut store = ArtifactStore::new(envelope).await;
@@ -577,7 +574,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
     let reference = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pair parses").into_envelope()).await;
     let history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.expect("history decodes");
-    let expected = crate::os_io::ArtifactRef { artifact_id: "member-superseded".into(), dialect };
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "member-superseded".into(), dialect };
     let (operation, generation) = (semio_framework_job::OperationId(3), semio_framework_job::Generation(5));
     let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(
         files.pack.clone(),
@@ -590,6 +587,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
         generation,
         u64::MAX,
         PersistedDocumentHydrationTarget::Store { generation: 0 },
+        store.local_actor_id().clone(),
     );
     let mut sequence = 0;
     let mut member = None;
@@ -618,6 +616,87 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     assert_eq!(mirrored.snapshot_ref().n, Some(16));
     assert_eq!(mirrored.supersessions(), store.supersessions());
     assert_eq!(mirrored.0.content_revision(), store.0.content_revision());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_hydration_preserves_the_original_opened_actor_across_stored_authors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️opened-hydration-actor/🔣️.json")).unwrap();
+    let opened = fixture["openedActor"].as_str().unwrap();
+    let author = fixture["historyAuthor"].as_str().unwrap();
+    assert_ne!(opened, author);
+    for config in [false, true] {
+        let initial = DemoSnapshot { n: Some(fixture["initial"].as_i64().unwrap() as i32) };
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "opened-actor-hydration", initial.clone(), None);
+        if config { envelope.history_shape = crate::os_spr::HistoryShape::Config; }
+        else { envelope.dialect = Some(semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() }); }
+        let mut source = super::super::ArtifactStore::new(envelope, ActorId(author.into())).await.unwrap();
+        source.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+        let mut source = ArtifactStore(source, Some(close_test_store::<DemoSnapshot, DemoMutation>));
+        apply(&mut source, vec![set(fixture["stored"].as_i64().unwrap() as i32)]).await;
+        let files = print_document_pack(source.envelope()).await.unwrap();
+        let history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.unwrap();
+        assert_eq!(history.edits.last().unwrap().actor.as_deref(), Some(author));
+        let mut hydrated = None;
+        if config {
+            let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(source.envelope().vcs.genesis.clone(), initial.clone(), initial, history, source.envelope().id.clone(), "demo/v1".into(), DemoSnapshot::member_store_owners(), 0, 65536, ActorId(opened.into()));
+            for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
+                match hydration.advance(1, 65536) {
+                    ConfigStoreHydrationStep::Pending(_) => {}
+                    ConfigStoreHydrationStep::Ready(store) => { hydrated = Some(*store); break; }
+                    ConfigStoreHydrationStep::Rejected(diagnostic) => panic!("original config actor hydration refused: {diagnostic:?}"),
+                }
+            }
+            assert!(hydration.terminal_is_empty());
+        } else {
+            let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: source.envelope().id.clone(), dialect: source.envelope().dialect.clone().unwrap() };
+            let (operation, generation) = (semio_framework_job::OperationId(700), semio_framework_job::Generation(1));
+            let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack, history, expected, None, "demo/v1".into(), DemoSnapshot::member_store_owners(), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, ActorId(opened.into()));
+            let mut sequence = 0;
+            for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
+                let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);
+                match hydration.step(&mut cx) {
+                    PersistedDocumentHydrationStep::Pending(_) => {}
+                    PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Store(store)) => { hydrated = Some(*store); break; }
+                    _ => panic!("original member actor hydration refused"),
+                }
+            }
+            assert!(hydration.terminal_is_empty());
+        }
+        let hydrated = ArtifactStore(hydrated.expect("original actor hydration converges"), Some(close_test_store::<DemoSnapshot, DemoMutation>));
+        assert_eq!(hydrated.snapshot_ref().n, source.snapshot_ref().n);
+        assert_eq!(serde_json::to_value(hydrated.local_actor_id()).unwrap(), fixture["openedActor"]);
+        assert_eq!(semio_framework_pack_json::to_json_string(hydrated.local_actor_id()), serde_json::to_string(&fixture["openedActor"]).unwrap());
+        assert_eq!(hydrated.envelope().vcs.edits.last().unwrap().actor.as_deref(), Some(author));
+    }
+    println!("[DEBUG] Original persisted/config hydrators preserve opened actor={opened} independently of stored author={author}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn cancelled_hydration_retires_the_same_original_opened_actor_owner() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️opened-hydration-actor/🔣️.json")).unwrap();
+    let source = demo_store("cancelled-opened-actor", Some(0)).await;
+    let files = print_document_pack(source.envelope()).await.unwrap();
+    let history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.unwrap();
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: source.envelope().id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
+    let mut receipts = Vec::new();
+    for actor in fixture["retiredActors"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()) {
+        let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack.clone(), history.clone(), expected.clone(), None, "demo/v1".into(), DemoSnapshot::member_store_owners(), semio_framework_job::OperationId(701), semio_framework_job::Generation(1), u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, ActorId(actor.into()));
+        assert_eq!(hydration.close_step(0, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let mut charged = 0;
+        for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
+            match hydration.close_step(fixture["grant"]["items"].as_u64().unwrap() as usize, fixture["grant"]["bytes"].as_u64().unwrap() as usize).unwrap() {
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 3); charged += released_bytes; }
+                SnapshotRetirementStep::Complete => break,
+                SnapshotRetirementStep::Blocked => panic!("opened actor owner retirement blocked"),
+            }
+        }
+        assert!(hydration.terminal_is_empty());
+        receipts.push(charged);
+    }
+    assert_eq!(receipts[1] - receipts[0], fixture["retiredActorByteDifference"].as_u64().unwrap() as usize);
+    let oracle: Vec<String> = serde_json::from_value(fixture["retiredActors"].clone()).unwrap();
+    assert_eq!(oracle[1].len() - oracle[0].len(), receipts[1] - receipts[0]);
+    println!("[DEBUG] Original cancelled hydration actor byte receipts={receipts:?}, exact actor-only difference={}", receipts[1] - receipts[0]);
 }
 
 /// 🧯️ A replacement input breaking the supersede law — garbage bytes and a foreign schema from a remote replica — folds
@@ -1172,3 +1251,119 @@ async fn a_refused_local_transition_retracts_and_the_author_converges_with_the_h
     assert_eq!(persisted(spr).await, persisted(before_refusal.spr).await);
 }
 //#endregion 🧪️RetractionLaws
+
+/// ⌛️ Planning, prefix folding and replay each yield after one unit; cancelled and stale cursors never publish.
+#[semio_framework_async_macros::async_test]
+async fn bounded_history_read_cursors_obey_the_neutral_law() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️supersede-replay/🔣️.json")).unwrap();
+    let law = &corpus["boundedHistoryRead"];
+    let mut store = demo_store("bounded-history-read", Some(law["initial"]["n"].as_i64().unwrap() as i32)).await;
+    for edit in law["edits"].as_array().unwrap() {
+        apply(&mut store, edit.as_array().unwrap().iter().map(|op| DemoMutation::from_value(op.clone().into()).unwrap()).collect()).await;
+    }
+    let ids = store.mutation_ops().unwrap();
+    let id_of = |position: &serde_json::Value| ids.iter().find(|op| op.position == position["edit"].as_u64().unwrap() as usize && op.op_index == position["op"].as_u64().unwrap() as u32).unwrap().mutation_id.clone();
+    let target = id_of(&law["target"]);
+    let accepted: BTreeMap<_, _> = law["accepted"].as_array().unwrap().iter().map(|input| (id_of(input), draft(Some(DemoMutation::from_value(input["replacement"].clone().into()).unwrap())))).collect();
+    for row in &ids { assert_eq!(store.mutation_position(&row.mutation_id).unwrap(), (row.position, row.op_index as usize)); }
+    let head = store.snapshot_ref().n;
+    hot_path_census::take();
+    let mut preview = Some(store.begin_derived_history_preview(target.clone(), accepted.clone()).unwrap());
+    assert_eq!(hot_path_census::take(), hot_path_census::HotPathCensus::default(), "starting does not scan/hash/fold history");
+    let mut pending_steps = 0;
+    loop {
+        let mut work = 0;
+        let step = store.step_derived_history_preview(preview.as_mut().unwrap(), &mut || { work += 1; true }).unwrap();
+        assert!(work <= law["maximumWorkPerStep"].as_u64().unwrap() as usize);
+        assert_eq!(hot_path_census::take().digested, 0, "trusted prefixes need no history digest scan");
+        assert_eq!(store.snapshot_ref().n, head);
+        if matches!(step, ReplayStep::Finished(_)) { break; }
+        pending_steps += 1;
+    }
+    assert!(pending_steps > 2, "planning and same-edit prefix operations yield separately");
+    let before = store.finish_derived_history_preview(&mut preview).unwrap();
+    assert_eq!(before.snapshot().n, Some(law["expected"]["before"].as_i64().unwrap() as i32));
+    let replacement = DemoMutation::from_value(law["replacement"].clone().into()).unwrap();
+    let (next, _) = store.derive_history_snapshot(&before, &replacement).unwrap();
+    assert_eq!(next.unwrap().snapshot().n, Some(law["expected"]["preview"].as_i64().unwrap() as i32));
+    let mut changed = accepted.clone();
+    changed.insert(target.clone(), draft(Some(replacement)));
+    let mut replay = Some(store.begin_derived_report_replay(changed, Some(target.clone())).unwrap());
+    let mut slices = 0;
+    loop {
+        let mut work = 0;
+        let step = store.step_derived_report_replay(replay.as_mut().unwrap(), &mut || { work += 1; true }).unwrap();
+        assert!(work <= 1);
+        assert_eq!(store.snapshot_ref().n, head);
+        slices += 1;
+        if matches!(step, ReplayStep::Finished(_)) { break; }
+    }
+    assert!(slices > 5, "the planner and replay are both sliced");
+    let (result, head) = store.finish_derived_report_replay(&mut replay).unwrap();
+    let head = head.unwrap();
+    assert_eq!(head.snapshot().n, Some(law["expected"]["head"].as_i64().unwrap() as i32));
+    let mut result = Some(result);
+    let mut retirement = store.retire_finished_history_replay(&mut result).unwrap().unwrap();
+    assert!(result.is_none());
+    let mut turns = 0;
+    loop {
+        turns += 1;
+        assert!(turns < 100_000);
+        match retirement.close_step(1, 1).unwrap() {
+            SnapshotRetirementStep::Complete => { assert!(retirement.terminal_is_empty()); break; }
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); }
+            SnapshotRetirementStep::Blocked => panic!("finished review owns no outstanding read lease"),
+        }
+    }
+    assert!(turns > 1 && law["expected"]["cancelRetirementCompletes"].as_bool().unwrap());
+    drive_retirement_terminal(store.retire_snapshot_alias(head.into_snapshot_owner()).unwrap());
+    for stop in law["cancelAfterSteps"].as_array().unwrap() {
+        let mut cancelled = Some(store.begin_derived_history_preview(target.clone(), accepted.clone()).unwrap());
+        for _ in 0..stop.as_u64().unwrap() {
+            if matches!(store.step_derived_history_preview(cancelled.as_mut().unwrap(), &mut || true).unwrap(), ReplayStep::Finished(_)) { break; }
+        }
+        let mut retirement = store.retire_derived_history_preview(&mut cancelled).unwrap().unwrap();
+        assert!(cancelled.is_none(), "cancellation transfers ownership before any metadata drain");
+        let mut turns = 0;
+        loop {
+            turns += 1;
+            assert!(turns < 100_000);
+            match retirement.close_step(1, 1).unwrap() {
+                SnapshotRetirementStep::Complete => { assert!(retirement.terminal_is_empty()); break; }
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); }
+                SnapshotRetirementStep::Blocked => panic!("unpublished preview owns no outstanding reads"),
+            }
+            assert_eq!(store.snapshot_ref().n, Some(99));
+        }
+        assert!(turns > 1 && law["expected"]["cancelRetirementCompletes"].as_bool().unwrap());
+        let mut cancelled = Some(store.begin_derived_report_replay(accepted.clone(), Some(target.clone())).unwrap());
+        for _ in 0..stop.as_u64().unwrap() {
+            if matches!(store.step_derived_report_replay(cancelled.as_mut().unwrap(), &mut || true).unwrap(), ReplayStep::Finished(_)) { break; }
+        }
+        let mut retirement = store.retire_derived_report_replay(&mut cancelled).unwrap().unwrap();
+        assert!(cancelled.is_none());
+        let mut turns = 0;
+        loop {
+            turns += 1;
+            assert!(turns < 100_000);
+            match retirement.close_step(1, 1).unwrap() {
+                SnapshotRetirementStep::Complete => { assert!(retirement.terminal_is_empty()); break; }
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); }
+                SnapshotRetirementStep::Blocked => panic!("unpublished replay owns no outstanding reads"),
+            }
+            assert_eq!(store.snapshot_ref().n, Some(99));
+        }
+        assert!(turns > 1);
+    }
+    assert_eq!(store.snapshot_ref().n, Some(99));
+    let mut stale = store.begin_derived_history_preview(target, accepted).unwrap();
+    apply(&mut store, vec![add(1)]).await;
+    assert!(store.step_derived_history_preview(&mut stale, &mut || true).is_err());
+    let tail = operation_ids(&store).last().unwrap().clone();
+    assert_eq!(store.mutation_position(&tail).unwrap(), (2, 0));
+    store.dispatch(ArtifactCommand::Undo).await.unwrap();
+    assert!(store.mutation_position(&tail).is_err(), "the exact authority refuses an undone identity");
+    store.dispatch(ArtifactCommand::Redo).await.unwrap();
+    assert_eq!(store.mutation_position(&tail).unwrap(), (2, 0));
+    eprintln!("[DEBUG] Bounded history planning, prefix folding, replay and cancelled ownership retirement match the neutral law without publishing");
+}

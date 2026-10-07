@@ -13,7 +13,8 @@
 //! There is no ninth frame, so the strike addresses nothing and the grid is left exactly as it was.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️delete-node/🚨️no-such-node-4027a8/📸️snapshot/⬅️before/🔣️.json");

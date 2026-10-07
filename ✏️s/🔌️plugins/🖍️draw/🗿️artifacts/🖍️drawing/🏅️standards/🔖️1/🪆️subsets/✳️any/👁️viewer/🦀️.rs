@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::standards::v1::subsets::any::io::text::snapshot::default_drawing_document;
+use crate::standards::v1::subsets::any::schema::default_drawing_document;
 use crate::viewer::drawing::modes::view;
 use crate::viewer::drawing::modes::view::windows::canvas;
 use crate::{DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
@@ -201,7 +201,7 @@ impl ArtifactViewer for DrawingViewer {
     type TransientMutation = NoTransientMutation;
     type Command = DrawingViewCommand;
 
-    const DIALECT: semio_framework::Dialect = DRAWING_DIALECT;
+    const DIALECT: semio_framework_artifact_reference::Dialect = DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -212,8 +212,9 @@ impl ArtifactViewer for DrawingViewer {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;

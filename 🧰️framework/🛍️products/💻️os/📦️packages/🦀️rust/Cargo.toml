@@ -54,6 +54,7 @@ typegen = []
 native-bin = []
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-io-sqlite-snapshot = { path = "../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

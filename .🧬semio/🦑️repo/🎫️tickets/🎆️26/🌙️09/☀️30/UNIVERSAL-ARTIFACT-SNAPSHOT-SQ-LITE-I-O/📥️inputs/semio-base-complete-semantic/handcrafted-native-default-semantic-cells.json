@@ -1,0 +1,873 @@
+[
+  {
+    "id": "brep",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "brep",
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_brep_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.brep",
+          "0"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "mesh",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "mesh",
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_mesh_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.mesh"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "model",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "model",
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_model_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.model"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "value",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "value",
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_value_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.value",
+          {
+            "integerDecimal": "1"
+          }
+        ]
+      ],
+      "semio_value_value": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "null",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    }
+  },
+  {
+    "id": "document",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "document",
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_document_collection": [
+        [
+          {
+            "integerDecimal": "1"
+          }
+        ]
+      ],
+      "semio_document_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "s.stdio.semio.document",
+          {
+            "integerDecimal": "1"
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "id": "cad",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "cad",
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_cad_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.cad"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "drawing",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "drawing",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_drawing_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.drawing",
+          0,
+          0,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    }
+  },
+  {
+    "id": "image",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "image",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_image_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "s.stdio.semio.image",
+          {
+            "integerDecimal": "0"
+          },
+          {
+            "integerDecimal": "0"
+          },
+          "rgb",
+          {
+            "integerDecimal": "0"
+          },
+          null
+        ]
+      ]
+    }
+  },
+  {
+    "id": "video",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "video",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_video_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.video"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "audio",
+    "tables": {
+      "semio_audio_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.audio",
+          {
+            "integerDecimal": "0"
+          },
+          "pcm16"
+        ]
+      ],
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "audio",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    }
+  },
+  {
+    "id": "animation",
+    "tables": {
+      "semio_animation_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "s.stdio.semio.animation"
+        ]
+      ],
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "animation",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ]
+    }
+  },
+  {
+    "id": "presentation",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "presentation",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_presentation_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "s.stdio.semio.presentation"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "flow",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "flow",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_flow_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.flow"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "text",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "text",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_text_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "s.stdio.semio.text"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "table",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "table",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null,
+          null
+        ]
+      ],
+      "semio_table_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "s.stdio.semio.table"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "graph",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "graph",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null,
+          null
+        ]
+      ],
+      "semio_graph_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "s.stdio.semio.graph"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "object",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "object",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          },
+          null
+        ]
+      ],
+      "semio_object_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.object",
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          {
+            "integerDecimal": "0"
+          },
+          "finite",
+          {
+            "integerDecimal": "4607182418800017408"
+          },
+          "finite",
+          {
+            "integerDecimal": "4607182418800017408"
+          },
+          "finite",
+          {
+            "integerDecimal": "4607182418800017408"
+          },
+          "finite",
+          {
+            "integerDecimal": "4607182418800017408"
+          },
+          "finite"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "kit",
+    "tables": {
+      "semio_base_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio",
+          "kit",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "integerDecimal": "1"
+          }
+        ]
+      ],
+      "semio_kit_document": [
+        [
+          {
+            "integerDecimal": "1"
+          },
+          "stdio.semio.kit"
+        ]
+      ]
+    }
+  }
+]

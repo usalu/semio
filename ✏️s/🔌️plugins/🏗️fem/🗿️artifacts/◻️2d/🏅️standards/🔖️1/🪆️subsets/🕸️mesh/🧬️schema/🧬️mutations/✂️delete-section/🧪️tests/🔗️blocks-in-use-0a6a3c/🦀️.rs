@@ -16,7 +16,8 @@
 //! through `c4`.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-section/🔗️blocks-in-use-0a6a3c/📸️snapshot/⬅️before/🔣️.json");

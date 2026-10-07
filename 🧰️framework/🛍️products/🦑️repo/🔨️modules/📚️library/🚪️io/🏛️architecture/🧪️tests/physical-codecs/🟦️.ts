@@ -62,7 +62,7 @@ test("Block 3D physical JSON resolves words before canonical snapshot admission"
  expect(oracle.compile({const:json})(JSON.parse(block3dSnapshotToJsonText(owned)))).toBe(true);
 });
 
-afterAll(()=>console.log("[DEBUG] Physical TypeScript codecs: eight neutral transport laws and independent scalar/schema oracles completed"));
+afterAll(()=>console.log("[DEBUG] Physical TypeScript codecs: neutral transport laws and independent scalar/schema oracles completed"));
 
 test("Program snapshot and diff codecs retain the independent document corpus",()=>testProgramDocumentContract(),{timeout:60000});
 test("Layout snapshot and diff codecs retain the independent document and Drawing corpus",()=>testLayoutDocumentContractOracle());

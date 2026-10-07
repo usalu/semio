@@ -368,22 +368,6 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📖️stories/🎭️3d-world/🧪️.story.tsx",
-      "title": "🧩️puzzle🧊️3d",
-      "stories": [
-        {
-          "exportName": "ConcreteForest",
-          "id": "🧩️puzzle🧊️3d--concrete-forest",
-          "name": "Concrete Forest"
-        },
-        {
-          "exportName": "NakaginCapsuleTower",
-          "id": "🧩️puzzle🧊️3d--nakagin-capsule-tower",
-          "name": "Nakagin Capsule Tower"
-        }
-      ]
-    },
-    {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
       "title": "🧩️puzzle🕐️5d",
       "stories": [
@@ -401,6 +385,22 @@
           "exportName": "CapsuleDream",
           "id": "🧩️puzzle🕐️5d--capsule-dream",
           "name": "Capsule Dream"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📖️stories/🎭️3d-world/🧪️.story.tsx",
+      "title": "🧩️puzzle🧊️3d",
+      "stories": [
+        {
+          "exportName": "ConcreteForest",
+          "id": "🧩️puzzle🧊️3d--concrete-forest",
+          "name": "Concrete Forest"
+        },
+        {
+          "exportName": "NakaginCapsuleTower",
+          "id": "🧩️puzzle🧊️3d--nakagin-capsule-tower",
+          "name": "Nakagin Capsule Tower"
         }
       ]
     },
@@ -817,6 +817,11 @@
           "name": "Even Split"
         },
         {
+          "exportName": "GeometryOracle",
+          "id": "🖱️ui⚛️react-mode--geometry-oracle",
+          "name": "Geometry Oracle"
+        },
+        {
           "exportName": "ContentThroughGlass",
           "id": "🖱️ui⚛️react-mode--content-through-glass",
           "name": "Content Through Glass"
@@ -1105,6 +1110,22 @@
       ]
     },
     {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/OverviewCard",
+      "stories": [
+        {
+          "exportName": "Section",
+          "id": "🖱️ui⚛️react-overviewcard--section",
+          "name": "Section"
+        },
+        {
+          "exportName": "Button",
+          "id": "🖱️ui⚛️react-overviewcard--button",
+          "name": "Button"
+        }
+      ]
+    },
+    {
       "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📖️stories/🧪️.story.tsx",
       "title": "🖱️ui⚛️react/Tree",
       "stories": [
@@ -1117,6 +1138,11 @@
           "exportName": "ControlTreeStory",
           "id": "🖱️ui⚛️react-tree--control-tree-story",
           "name": "Control Tree Story"
+        },
+        {
+          "exportName": "WindowedSection",
+          "id": "🖱️ui⚛️react-tree--windowed-section",
+          "name": "Windowed Section"
         },
         {
           "exportName": "Alternatives",
@@ -1401,12 +1427,22 @@
         {
           "exportName": "StagedForm",
           "id": "🖱️ui⚛️react-uidialog--staged-form",
-          "name": "Staged form (quantity / label / toggle)"
+          "name": "Staged form (quantity stepper / label / toggle)"
+        },
+        {
+          "exportName": "MutationInputs",
+          "id": "🖱️ui⚛️react-uidialog--mutation-inputs",
+          "name": "Mutation inputs (stepper / dial / segmented / vector / reference)"
         },
         {
           "exportName": "ConfirmOnly",
           "id": "🖱️ui⚛️react-uidialog--confirm-only",
           "name": "Message/confirm (no args)"
+        },
+        {
+          "exportName": "Choices",
+          "id": "🖱️ui⚛️react-uidialog--choices",
+          "name": "Choices (new alternative / destructive overwrite)"
         }
       ]
     },
@@ -1676,6 +1712,32 @@
           "exportName": "Default",
           "id": "🖱️ui⚛️react-popover--default",
           "name": "Default"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/📖️stories/🧪️.story.tsx",
+      "title": "🖱️ui⚛️react/LayeredOverview",
+      "stories": [
+        {
+          "exportName": "Strip",
+          "id": "🖱️ui⚛️react-layeredoverview--strip",
+          "name": "Strip"
+        },
+        {
+          "exportName": "Swipe",
+          "id": "🖱️ui⚛️react-layeredoverview--swipe",
+          "name": "Swipe"
+        },
+        {
+          "exportName": "Opened",
+          "id": "🖱️ui⚛️react-layeredoverview--opened",
+          "name": "Opened"
+        },
+        {
+          "exportName": "ReducedMotion",
+          "id": "🖱️ui⚛️react-layeredoverview--reduced-motion",
+          "name": "Reduced Motion"
         }
       ]
     },
@@ -2050,6 +2112,11 @@
           "exportName": "PdfOnly",
           "id": "♾️infinite-referencemedia--pdf-only",
           "name": "Pdf Only"
+        },
+        {
+          "exportName": "RasterDecodeParity",
+          "id": "♾️infinite-referencemedia--raster-decode-parity",
+          "name": "Raster Decode Parity"
         }
       ]
     },
@@ -2128,6 +2195,88 @@
       ]
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎓️HubFirstRun/📖️stories/🧪️.story.tsx",
+      "title": "💻️os⚛️react/HubFirstRun",
+      "stories": [
+        {
+          "exportName": "Welcome",
+          "id": "💻️os⚛️react-hubfirstrun--welcome",
+          "name": "Welcome (forced first step)"
+        },
+        {
+          "exportName": "SignedOut",
+          "id": "💻️os⚛️react-hubfirstrun--signed-out",
+          "name": "Signed Out"
+        },
+        {
+          "exportName": "NoSpaceYet",
+          "id": "💻️os⚛️react-hubfirstrun--no-space-yet",
+          "name": "No Space Yet"
+        },
+        {
+          "exportName": "InASpace",
+          "id": "💻️os⚛️react-hubfirstrun--in-a-space",
+          "name": "In A Space"
+        },
+        {
+          "exportName": "ViewerInASpace",
+          "id": "💻️os⚛️react-hubfirstrun--viewer-in-a-space",
+          "name": "Viewer In A Space"
+        },
+        {
+          "exportName": "German",
+          "id": "💻️os⚛️react-hubfirstrun--german",
+          "name": "German"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/📖️stories/🧪️.story.tsx",
+      "title": "💻️os⚛️react/SpaceBrowser",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "💻️os⚛️react-spacebrowser--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "FirstRun",
+          "id": "💻️os⚛️react-spacebrowser--first-run",
+          "name": "First Run"
+        },
+        {
+          "exportName": "Loading",
+          "id": "💻️os⚛️react-spacebrowser--loading",
+          "name": "Loading"
+        },
+        {
+          "exportName": "StaleAfterConnectionLoss",
+          "id": "💻️os⚛️react-spacebrowser--stale-after-connection-loss",
+          "name": "Stale After Connection Loss"
+        },
+        {
+          "exportName": "InvitationReady",
+          "id": "💻️os⚛️react-spacebrowser--invitation-ready",
+          "name": "Invitation Ready"
+        },
+        {
+          "exportName": "RedemptionRefused",
+          "id": "💻️os⚛️react-spacebrowser--redemption-refused",
+          "name": "Redemption Refused"
+        },
+        {
+          "exportName": "SignedOutSpectator",
+          "id": "💻️os⚛️react-spacebrowser--signed-out-spectator",
+          "name": "Signed Out Spectator"
+        },
+        {
+          "exportName": "Phone",
+          "id": "💻️os⚛️react-spacebrowser--phone",
+          "name": "Phone"
+        }
+      ]
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/📖️stories/🧪️.story.tsx",
       "title": "🛠️framework🔌️hosts/TableHost",
       "stories": [
@@ -2135,6 +2284,11 @@
           "exportName": "SortableWithActions",
           "id": "🛠️framework🔌️hosts-tablehost--sortable-with-actions",
           "name": "Sortable With Actions"
+        },
+        {
+          "exportName": "StepperBounds",
+          "id": "🛠️framework🔌️hosts-tablehost--stepper-bounds",
+          "name": "Stepper Bounds"
         },
         {
           "exportName": "EmptyScene",
@@ -2156,6 +2310,62 @@
           "exportName": "EmptyCanvas",
           "id": "🛠️framework🔌️hosts-canvas2dhost--empty-canvas",
           "name": "Empty Canvas"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/📖️stories/🧪️.story.tsx",
+      "title": "💻️os⚛️react/HubSignIn",
+      "stories": [
+        {
+          "exportName": "SignedOut",
+          "id": "💻️os⚛️react-hubsignin--signed-out",
+          "name": "Signed Out"
+        },
+        {
+          "exportName": "SigningIn",
+          "id": "💻️os⚛️react-hubsignin--signing-in",
+          "name": "Signing In"
+        },
+        {
+          "exportName": "SignedIn",
+          "id": "💻️os⚛️react-hubsignin--signed-in",
+          "name": "Signed In"
+        },
+        {
+          "exportName": "WrongCredentials",
+          "id": "💻️os⚛️react-hubsignin--wrong-credentials",
+          "name": "Wrong Credentials"
+        },
+        {
+          "exportName": "RateLimited",
+          "id": "💻️os⚛️react-hubsignin--rate-limited",
+          "name": "Rate Limited"
+        },
+        {
+          "exportName": "HubUnreachable",
+          "id": "💻️os⚛️react-hubsignin--hub-unreachable",
+          "name": "Hub Unreachable"
+        },
+        {
+          "exportName": "PasswordSignInDisabled",
+          "id": "💻️os⚛️react-hubsignin--password-sign-in-disabled",
+          "name": "Password Sign In Disabled"
+        },
+        {
+          "exportName": "SessionExpired",
+          "id": "💻️os⚛️react-hubsignin--session-expired",
+          "name": "Session Expired"
+        },
+        {
+          "exportName": "German",
+          "id": "💻️os⚛️react-hubsignin--german",
+          "name": "German"
+        },
+        {
+          "exportName": "Phone",
+          "id": "💻️os⚛️react-hubsignin--phone",
+          "name": "Phone"
         }
       ]
     },
@@ -2257,6 +2467,72 @@
           "exportName": "HypsometricRamp",
           "id": "🛠️framework🔌️hosts-worldterrainlayer--hypsometric-ramp",
           "name": "Hypsometric Ramp"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentDelegations/📖️stories/🧪️.story.tsx",
+      "title": "💻️os⚛️react/AgentDelegations",
+      "stories": [
+        {
+          "exportName": "Default",
+          "id": "💻️os⚛️react-agentdelegations--default",
+          "name": "Default"
+        },
+        {
+          "exportName": "FirstRun",
+          "id": "💻️os⚛️react-agentdelegations--first-run",
+          "name": "First Run"
+        },
+        {
+          "exportName": "Loading",
+          "id": "💻️os⚛️react-agentdelegations--loading",
+          "name": "Loading"
+        },
+        {
+          "exportName": "CredentialShownOnce",
+          "id": "💻️os⚛️react-agentdelegations--credential-shown-once",
+          "name": "Credential Shown Once"
+        },
+        {
+          "exportName": "DownloadRefused",
+          "id": "💻️os⚛️react-agentdelegations--download-refused",
+          "name": "Download Refused"
+        },
+        {
+          "exportName": "McpClientReady",
+          "id": "💻️os⚛️react-agentdelegations--mcp-client-ready",
+          "name": "Mcp Client Ready"
+        },
+        {
+          "exportName": "McpClientUnavailable",
+          "id": "💻️os⚛️react-agentdelegations--mcp-client-unavailable",
+          "name": "Mcp Client Unavailable"
+        },
+        {
+          "exportName": "SpectatorCannotDelegate",
+          "id": "💻️os⚛️react-agentdelegations--spectator-cannot-delegate",
+          "name": "Spectator Cannot Delegate"
+        },
+        {
+          "exportName": "NoSpaceOpen",
+          "id": "💻️os⚛️react-agentdelegations--no-space-open",
+          "name": "No Space Open"
+        },
+        {
+          "exportName": "HubRefused",
+          "id": "💻️os⚛️react-agentdelegations--hub-refused",
+          "name": "Hub Refused"
+        },
+        {
+          "exportName": "SignedOut",
+          "id": "💻️os⚛️react-agentdelegations--signed-out",
+          "name": "Signed Out"
+        },
+        {
+          "exportName": "Phone",
+          "id": "💻️os⚛️react-agentdelegations--phone",
+          "name": "Phone"
         }
       ]
     },

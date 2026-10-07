@@ -21,7 +21,7 @@ mod tests {
     async fn engine_encoded_jpeg_composes_and_stamps_baseline() {
         let (w, h) = (32u32, 32u32);
         let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-        let decoded=crate::engine::decode_jpg(&crate::engine::encode_jpg(&snap).unwrap()).unwrap();
+        let decoded=crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).unwrap()).unwrap();
         let bytes=<JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
         let sources=vec![ComposeSource{dialect:DIALECT_ANY,payload:AnalyzeSource::Binary(&bytes)}];
         let composed = JpgBaselineComposerComposition::compose(&sources).expect("real baseline JPEG must compose and stamp baseline");
@@ -34,8 +34,8 @@ mod tests {
     async fn subset_validator_recheck_flags_no_hard_diagnostics_for_a_real_encode() {
         let (w, h) = (16u32, 16u32);
         let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-        let bytes = crate::subsets::document::io::encode_jpg(&snap).expect("encode");
-        let decoded = crate::subsets::document::io::decode_jpg(&bytes).expect("decode");
+        let bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
+        let decoded = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&bytes).expect("decode");
         let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
         let diagnostics = JpgBaselineValidator::validate(&IoPayload::Binary(packed)).await;
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a real baseline encode: {diagnostics:?}");

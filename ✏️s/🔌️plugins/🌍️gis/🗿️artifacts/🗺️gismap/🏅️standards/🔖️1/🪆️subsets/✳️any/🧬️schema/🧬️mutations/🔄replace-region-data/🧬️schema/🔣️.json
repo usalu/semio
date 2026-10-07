@@ -28,7 +28,14 @@
       }
     },
     "newData": {
-      "description": "any JSON value"
+      "description": "any JSON value",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Feature data",
+          "de": "Kartenobjektdaten"
+        }
+      }
     }
   }
 }

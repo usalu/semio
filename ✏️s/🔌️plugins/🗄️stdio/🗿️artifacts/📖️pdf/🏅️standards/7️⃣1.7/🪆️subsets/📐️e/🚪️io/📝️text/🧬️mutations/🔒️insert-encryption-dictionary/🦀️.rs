@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "insert-encryption-dictionary";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::InsertEncryptionDictionary;
+use crate::standards::v1_7::subsets::e::schema::mutations::InsertEncryptionDictionary;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &InsertEncryptionDictionary) -> Result<String, String> {

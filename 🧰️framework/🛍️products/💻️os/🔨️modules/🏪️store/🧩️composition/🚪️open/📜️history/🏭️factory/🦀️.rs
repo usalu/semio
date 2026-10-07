@@ -105,7 +105,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
         match self.phase {
             Phase::Validate => {
                 let text = |value: &str| !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control);
-                if ![declaration.kind, declaration.standard, declaration.subset, declaration.schema].into_iter().all(text) || !crate::os_io::is_canonical_artifact_kind(declaration.kind) {
+                if ![declaration.kind, declaration.standard, declaration.subset, declaration.schema].into_iter().all(text) || !semio_framework_artifact_reference::is_canonical_artifact_kind(declaration.kind) {
                     return Err(MemberOpenDiagnostic::Identity);
                 }
                 self.earlier = 0;
@@ -308,12 +308,12 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
     }
 
-    pub(crate) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(crate::os_io::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str), MemberOpenDiagnostic> {
-        let (expected, owner, schema) = self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.clone_initial_identity(cx)?;
+    pub(crate) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str, crate::os_spr::ActorId), MemberOpenDiagnostic> {
+        let (expected, owner, schema, actor) = self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.clone_initial_identity(cx)?;
         if schema != self.declaration.schema {
             return Err(MemberOpenDiagnostic::Identity);
         }
-        Ok((expected, owner, schema))
+        Ok((expected, owner, schema, actor))
     }
 }
 

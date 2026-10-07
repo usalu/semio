@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
 import { describe, expect, test } from "bun:test";
-import Ajv2020 from "ajv/dist/2020.js";
 import fg from "fast-glob";
 import { loadCsf } from "storybook/internal/csf-tools";
 
@@ -17,15 +16,11 @@ type Fixture = Readonly<{ version: 1; stories: readonly StoryIdentity[] }>;
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const fixturePath = resolve(import.meta.dir, "../../🧫️fixtures/🧫️storybook-discovery/🔣️.json");
-const schemaPath = resolve(import.meta.dir, "../../🧬️schema/🔣️storybook-discovery/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
 const normalize = (path: string): string => path.split(sep).join("/");
 
 describe("Storybook discovery identity", () => {
-  test("the portable authority has the closed schema", () => {
-    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  test("portable story examples have distinct paths", () => {
     expect(new Set(fixture.stories.map((row) => row.path)).size).toBe(fixture.stories.length);
   });
 

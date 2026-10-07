@@ -39,8 +39,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 fn snapshot_languages()->&'static[semio_framework_dsl::LanguageSpec]{
  static LANGUAGES:std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>>=std::sync::OnceLock::new();
  LANGUAGES.get_or_init(||vec![
- semio_framework_dsl::LanguageSpec{id:"reasoning.wires",extension:Some("wires"),role:semio_framework_dsl::LanguageRole::Document,grammar:Some(super::snapshot::text::COMPONENT_GRAMMAR_SEMIO),grammar_path:Some(super::snapshot::text::COMPONENT_GRAMMAR_PATH),protocol:Some(super::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),protocol_path:Some(super::snapshot::binary::COMPONENT_PROTOCOL_PATH),hooks:semio_framework_dsl::passthrough_hooks("reasoning.wires")},
- semio_framework_dsl::LanguageSpec{id:"reasoning.wires.pack",extension:None,role:semio_framework_dsl::LanguageRole::Pack,grammar:None,grammar_path:None,protocol:Some(super::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),protocol_path:Some(super::snapshot::binary::COMPONENT_PROTOCOL_PATH),hooks:semio_framework_dsl::passthrough_hooks("reasoning.wires.pack")}
+ semio_framework_dsl::LanguageSpec{id:"reasoning.wires",extension:Some("wires"),role:semio_framework_dsl::LanguageRole::Document,grammar:Some(self::text::snapshot::COMPONENT_GRAMMAR_SEMIO),grammar_path:Some(self::text::snapshot::COMPONENT_GRAMMAR_PATH),protocol:Some(self::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),protocol_path:Some(self::binary::snapshot::COMPONENT_PROTOCOL_PATH),hooks:semio_framework_dsl::passthrough_hooks("reasoning.wires")},
+ semio_framework_dsl::LanguageSpec{id:"reasoning.wires.pack",extension:None,role:semio_framework_dsl::LanguageRole::Pack,grammar:None,grammar_path:None,protocol:Some(self::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),protocol_path:Some(self::binary::snapshot::COMPONENT_PROTOCOL_PATH),hooks:semio_framework_dsl::passthrough_hooks("reasoning.wires.pack")}
  ]).as_slice()
 }
 

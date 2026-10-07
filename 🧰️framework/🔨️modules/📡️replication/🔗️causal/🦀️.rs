@@ -818,6 +818,11 @@ pub fn mutation_ids_for_edit<P, Op: crate::mutation::Mutation<P>>(edit: &crate::
     edit.forwards.iter().enumerate().map(|(index, op)| edit_operation_mutation_id(edit, index, op)).collect()
 }
 
+/// 🪪️ One operation's wire identity without materializing its edit's other identities.
+pub fn mutation_id_for_edit_operation<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>, index: usize) -> Option<crate::ids::MutationId> {
+    edit.forwards.get(index).map(|op| edit_operation_mutation_id(edit, index, op))
+}
+
 fn edit_operation_mutation_id<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>, index: usize, op: &Op) -> crate::ids::MutationId {
     match edit.mutation_meta.get(index).and_then(|m| m.mutation_id.clone()) {
         Some(id) => id,

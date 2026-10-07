@@ -130,7 +130,7 @@ mod tests {
                     height: Some(56.0),
                     scale: None,
                 },
-            ],
+            ].into(),
             handles: vec![
                 HandleDescJson {
                     id: "a:h0".into(),
@@ -162,9 +162,9 @@ mod tests {
                     locked: None,
                     scale: None,
                 },
-            ],
-            edges: vec![],
-            wires: vec![],
+            ].into(),
+            edges: vec![].into(),
+            wires: vec![].into(),
             regions: vec![],
             selection_exit_highlight_ids: vec![],
         };
@@ -315,10 +315,10 @@ mod tests {
                     height: Some(40.0),
                     scale: None,
                 },
-            ],
-            handles: vec![],
-            edges: vec![EdgeDescJson { id: "e1".into(), source: "a".into(), target: "b".into(), edge_kind: Some("wires.owns".into()), source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }],
-            wires: vec![],
+            ].into(),
+            handles: vec![].into(),
+            edges: vec![EdgeDescJson { id: "e1".into(), source: "a".into(), target: "b".into(), edge_kind: Some("wires.owns".into()), source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }].into(),
+            wires: vec![].into(),
             regions: vec![],
             selection_exit_highlight_ids: vec![],
         };

@@ -1,6 +1,9 @@
 //! 🔬️ Scene projection laws — one instance per cell, one mesh per distinct look, and a cell's world
 //! box is exactly the non-uniform offsets its own document declares.
 
+use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::*;
+use semio_framework_pack_json as json;
+
 use super::*;
 use crate::schema::inferences::Grid3dAssignment;
 

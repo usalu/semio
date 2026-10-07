@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_framework_plugin::{IoDirection, IoKey, IoPayload, StandardId, SubsetId, io_resolve};
+    use {semio_framework_plugin::IoDirection,semio_framework_plugin::IoKey,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io_resolve};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 

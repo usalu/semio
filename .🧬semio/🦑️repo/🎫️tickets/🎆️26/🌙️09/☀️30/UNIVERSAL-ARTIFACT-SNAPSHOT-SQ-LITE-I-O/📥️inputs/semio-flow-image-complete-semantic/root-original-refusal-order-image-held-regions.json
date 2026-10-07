@@ -1,0 +1,15 @@
+{
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+  "beforeHeldSha256": "edfd19c27612397101f9c60a7338b968681e1e3500c4a0eaadb104d455998927",
+  "afterHeldSha256": "263650798d3a1fb7db1003e79fa10f267088ac713633d999c55db641a9961a1e",
+  "regions": [
+    {
+      "before": "SemioImageFrame{delay_ms:u32::try_from(row.integer(3)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?,rgba8:Vec::new()}",
+      "after": "SemioImageFrame{delay_ms:0,rgba8:Vec::new()}"
+    },
+    {
+      "before": "result.get_mut().frames.push(frame.take());",
+      "after": "frame.get_mut().delay_ms=u32::try_from(row.integer(3)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;result.get_mut().frames.push(frame.take());"
+    }
+  ]
+}

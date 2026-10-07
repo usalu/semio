@@ -7,20 +7,17 @@ pub mod feature;
 #[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;
 
-use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_MAP_EXAMPLE_TEXT;
+
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_plugin::{io_dispatch,  ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
+
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use semio_s_artifact_stdio_svg::SvgSnapshot;
-use serde_json::Value;
+use semio_framework_value::{DslValue,Number};
 use std::collections::HashSet;
 
 //#region 🔹Artifact
@@ -133,27 +130,6 @@ pub fn gismap_artifact_schema_descriptor() -> ::semio_framework_schema_registry:
 //#region 🔖️DocumentHelpers
 
 
-pub(crate) fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
-    Value::from(value)
-}
-
-
-
-
-
-/// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
-/// emitting each feature's opaque payload.
-pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
-    let payloads = |features: &[MapFeature]| -> Vec<Value> { features.iter().map(|feature| dsl_to_value(&feature.data)).collect() };
-    serde_json::json!({
-        "positions": payloads(&document.positions),
-        "routes": payloads(&document.routes),
-        "regions": payloads(&document.regions),
-    })
-    .to_string()
-}
-
-
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️CollectionDiffing
@@ -226,16 +202,16 @@ const GIS_LINE_STYLE: &str = "gis-line";
 /// 📍️ Reads `{ lon, lat }` off a position feature's opaque payload (the shape both
 /// `gis_map_document_from_descriptor_json` and the reuse-map DSL fixture use).
 fn feature_lon_lat(data: &semio_framework_value::DslValue) -> Option<(f64, f64)> {
-    let value = dsl_to_value(data);
-    let lon = value.get("lon").and_then(Value::as_f64)?;
-    let lat = value.get("lat").and_then(Value::as_f64)?;
+    let value = data;
+    let lon = value.get("lon").and_then(DslValue::as_f64)?;
+    let lat = value.get("lat").and_then(DslValue::as_f64)?;
     Some((lon, lat))
 }
 
 /// 〰️ Reads a `{ points: [[lon, lat], …] }` route or `{ ring: [[lon, lat], …] }` region chain.
 fn feature_line(data: &semio_framework_value::DslValue) -> Option<Vec<SemioPoint2>> {
-    let value = dsl_to_value(data);
-    let points = value.get("points").or_else(|| value.get("ring")).and_then(Value::as_array)?;
+    let value = data;
+    let points = value.get("points").or_else(|| value.get("ring")).and_then(DslValue::as_array)?;
     let vertices: Vec<SemioPoint2> = points
         .iter()
         .filter_map(|entry| {
@@ -357,14 +333,14 @@ pub fn gis_map_snapshot_from_drawing(drawing: &SemioDrawingSnapshot) -> GisMapSn
                 if let Some((centre, _)) = circle_normal_form(segments) {
                     let [lon, lat] = apply(centre);
                     let id = format!("position-{}", document.positions.len());
-                    document.positions.push(MapFeature { id: id.clone(), data: value_to_dsl(&serde_json::json!({ "id": id, "lon": lon, "lat": lat })) });
+                    document.positions.push(MapFeature { id: id.clone(), data: DslValue::object([("id".into(),DslValue::String(id)),("lon".into(),DslValue::Number(Number::Float(lon))),("lat".into(),DslValue::Number(Number::Float(lat)))]) });
                     return;
                 }
                 for (points, closed) in flatten_segments(segments, 1.0) {
-                    let points: Vec<Value> = points.iter().map(|p| apply(*p)).map(|[x, y]| serde_json::json!([x, y])).collect();
+                    let points: Vec<DslValue> = points.iter().map(|p| apply(*p)).map(|[x,y]| DslValue::Array(vec![DslValue::Number(Number::Float(x)),DslValue::Number(Number::Float(y))])).collect();
                     let (family, kind) = if closed { (&mut document.regions, "region") } else { (&mut document.routes, "route") };
                     let id = format!("{kind}-{}", family.len());
-                    family.push(MapFeature { id: id.clone(), data: value_to_dsl(&serde_json::json!({ "id": id, "points": points })) });
+                    family.push(MapFeature { id: id.clone(), data: DslValue::object([("id".into(),DslValue::String(id)),("points".into(),DslValue::Array(points))]) });
                 }
             }
             DrawNode::Text { .. } | DrawNode::Image { .. } => {}
@@ -383,14 +359,6 @@ pub fn gis_map_snapshot_from_drawing(drawing: &SemioDrawingSnapshot) -> GisMapSn
 //#endregion 🔖️DrawingBridge
 
 //#region 🔖️MediaExport
-/// 🗺️ Builds a real `SemioDrawingSnapshot` from the map document (positions/routes/regions →
-/// markers/polylines, `gis_map_snapshot_to_drawing`) and renders it through stdio's real
-/// drawing↔svg bridge (`io_dispatch`) — replaces the old hand-rolled `map_points_svg` delegate.
-pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let document = GisMapSnapshot::from_value(value_to_dsl(value)).unwrap_or_default();
-    let drawing = gis_map_snapshot_to_drawing(&document);
-    render_drawing_to_svg(&drawing)
-}
 //#endregion 🔖️MediaExport
 
 //#region 🧪️Tests
@@ -398,3 +366,6 @@ pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), S
 #[path = "🧪️tests/🔬️relocated-engine/🦀️.rs"]
 mod relocated_engine_tests;
 //#endregion 🧪️Tests
+
+/// 🗺️ Owned descriptor tree for composed value child inference.
+pub fn gis_map_descriptor_value(document:&GisMapSnapshot)->DslValue{let payloads=|features:&[MapFeature]|DslValue::Array(features.iter().map(|feature|feature.data.clone()).collect());DslValue::object([("positions".into(),payloads(&document.positions)),("routes".into(),payloads(&document.routes)),("regions".into(),payloads(&document.regions))])}

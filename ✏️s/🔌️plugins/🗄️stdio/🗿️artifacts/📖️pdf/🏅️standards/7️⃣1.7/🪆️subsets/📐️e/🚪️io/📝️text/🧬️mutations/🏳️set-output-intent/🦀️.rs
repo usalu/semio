@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-output-intent";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::SetOutputIntent;
+use crate::standards::v1_7::subsets::e::schema::mutations::SetOutputIntent;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetOutputIntent) -> Result<String, String> {

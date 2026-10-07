@@ -1,5 +1,5 @@
 import {failTxtProtobufDecode} from "../🔣️protobuf/🟦️.ts";
-import {TxtProtobufReader,txtProtobufKey} from "../🔣️protobuf/🟦️.ts";
+import {TxtProtobufReader, txtProtobufKey} from "../🔣️protobuf/🟦️.ts";
 import {SetTrailingNewlinePayload} from "../../../../🧬️schema/🧬️mutations/↩️set-trailing-newline/🟦️.ts";
 
 export const decodeSetTrailingNewlineProtobuf = (bytes: Uint8Array): SetTrailingNewlinePayload => {

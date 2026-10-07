@@ -55,6 +55,11 @@
       "key": "reason.unnamed",
       "en": "the change could not be applied",
       "de": "die Änderung konnte nicht angewendet werden"
+    },
+    {
+      "key": "work.processed",
+      "en": "Work completed: {processed}",
+      "de": "Arbeitsfortschritt: {processed}"
     }
   ],
   "cases": [
@@ -280,6 +285,44 @@
       },
       "paused": false,
       "fault": "pure.history-unavailable"
+    },
+    {
+      "name": "one remote operation reports 128 completed work",
+      "reprojection": {
+        "done": 0,
+        "total": 1,
+        "kind": "remote",
+        "processed": 128
+      },
+      "title": {
+        "en": "Remote history change",
+        "de": "Entfernte Verlaufsänderung"
+      },
+      "text": {
+        "en": "Replaying a remote history change: 0 of 1 mutations · Work completed: 128",
+        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 1 Mutationen · Arbeitsfortschritt: 128"
+      },
+      "paused": false,
+      "fault": null
+    },
+    {
+      "name": "one remote operation reports 256 completed work",
+      "reprojection": {
+        "done": 0,
+        "total": 1,
+        "kind": "remote",
+        "processed": 256
+      },
+      "title": {
+        "en": "Remote history change",
+        "de": "Entfernte Verlaufsänderung"
+      },
+      "text": {
+        "en": "Replaying a remote history change: 0 of 1 mutations · Work completed: 256",
+        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 1 Mutationen · Arbeitsfortschritt: 256"
+      },
+      "paused": false,
+      "fault": null
     }
   ]
 }

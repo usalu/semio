@@ -1,0 +1,50 @@
+[
+  {
+    "id": "root",
+    "input": "📋️project.json",
+    "accepted": true,
+    "expected": "📜️script.ts"
+  },
+  {
+    "id": "owner",
+    "input": "🧰️framework/owner/📋️project.json",
+    "accepted": true,
+    "expected": "🧰️framework/owner/📜️script.ts"
+  },
+  {
+    "id": "escape",
+    "input": "../📋️project.json",
+    "accepted": false,
+    "expected": null
+  },
+  {
+    "id": "absolute",
+    "input": "/owner/📋️project.json",
+    "accepted": false,
+    "expected": null
+  },
+  {
+    "id": "empty",
+    "input": "owner//📋️project.json",
+    "accepted": false,
+    "expected": null
+  },
+  {
+    "id": "other-basename",
+    "input": "owner/📋️project.json.old",
+    "accepted": false,
+    "expected": null
+  },
+  {
+    "id": "drive",
+    "input": "C:/owner/📋️project.json",
+    "accepted": false,
+    "expected": null
+  },
+  {
+    "id": "backslash",
+    "input": "owner\\📋️project.json",
+    "accepted": false,
+    "expected": null
+  }
+]

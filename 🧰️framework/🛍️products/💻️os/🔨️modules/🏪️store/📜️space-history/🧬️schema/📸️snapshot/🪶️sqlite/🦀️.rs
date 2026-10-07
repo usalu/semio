@@ -17,7 +17,7 @@ pub(crate) use native::decode_with as decode_native_cst;
 #[path = "🛂️admission/🦀️.rs"]
 pub(crate) mod admission;
 /// 🚪️ The new explicitly authored SQLite coordinate of the real persisted history owner.
-pub const SQLITE_SNAPSHOT_DIALECT: crate::os_io::Dialect = crate::os_io::Dialect { artifact_kind: S_SPACE_HISTORY_SCHEMA, standard: crate::os_io::StandardId("1"), subset: crate::os_io::SubsetId("*") };
+pub const SQLITE_SNAPSHOT_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: S_SPACE_HISTORY_SCHEMA, standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
 /// 📣️ Explicit owner registration publishes the history factory and semantic capability atomically.
 /// Call before registry I/O; generic Store construction and retained hydration do not publish codecs.
 pub fn register_sqlite_snapshot() -> Result<(), crate::os_io::ArtifactAssemblyRegistryError> {
@@ -190,7 +190,7 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
             Ok(Self { checkpoints, alternatives, active_alternative_id })
         })
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &crate::io_schema::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
         (|| -> Result<crate::io_schema::IoOutcome<()>, ValueError> {
             control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
             if dialect.artifact_kind != S_SPACE_HISTORY_SCHEMA || dialect.standard != "1" || dialect.subset != "*" {

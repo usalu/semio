@@ -2,6 +2,8 @@ use super::*;
 use crate::{LayoutBounds, Page, PageColumns, PageMargins};
 
 fn sample_with_composition() -> LayoutSnapshot {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let mut snapshot = empty_layout_snapshot();
     snapshot.schema = LAYOUT_DOCUMENT_SCHEMA.into();
     snapshot.name = "Composed".into();
@@ -22,8 +24,8 @@ fn sample_with_composition() -> LayoutSnapshot {
         overrides: Vec::new(),
     }];
     snapshot.background_drawing =
-        Some(LayoutDrawingChild { handle: store::ArtifactChild::new("child-drawing-1".to_string(), store::os_io::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")), content: Default::default() });
-    snapshot.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
+        Some(LayoutDrawingChild { handle: store::ArtifactChild::new("child-drawing-1".to_string(), semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")), content: Default::default() });
+    snapshot.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
     snapshot
 }
 

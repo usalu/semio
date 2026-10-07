@@ -36,9 +36,9 @@ fn borrowed_record_owner_codegen(input:&DeriveInput,field_role:bool)->proc_macro
     let keyword=match container.keyword{Some(keyword)=>quote!{Some(#keyword)},None=>quote!{None}};
     let layout=if container.lines_layout{quote!{::semio_framework_dsl_record::RecordLayout::Lines}}else{quote!{::semio_framework_dsl_record::RecordLayout::Inline}};
     let fields=borrowed_record_codegen(&data.fields,name);
-    let table=quote::format_ident!("__DSL_BORROWED_{}_FIELDS",name);
+    let count=fields.len();let table=quote::format_ident!("__DSL_BORROWED_{}_FIELDS",name);
     let field=if field_role{quote!{impl ::semio_framework_dsl_record::BorrowedDslField for #name{const SHAPE : ::semio_framework_dsl_record::BorrowedShape=::semio_framework_dsl_record::BorrowedShape::Record(::semio_framework_dsl_record::borrowed_record::<Self>);}}}else{quote!{}};
-    quote!{static #table:&[::semio_framework_dsl_record::BorrowedFieldSpec]=&[#(#fields),*];impl ::semio_framework_dsl_record::BorrowedDslRecord for #name{const RECORD : ::semio_framework_dsl_record::BorrowedRecordSpec=::semio_framework_dsl_record::BorrowedRecordSpec{keyword:#keyword,layout:#layout,fields:#table};}#field}
+    quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;#count]=[#(#fields),*];impl ::semio_framework_dsl_record::BorrowedDslRecord for #name{const RECORD : ::semio_framework_dsl_record::BorrowedRecordSpec=::semio_framework_dsl_record::BorrowedRecordSpec{keyword:#keyword,layout:#layout,fields:&#table};}#field}
 }
 
 /// 🏷️ Compiles literal scalar tags into static enum metadata without owned label copies.
@@ -47,8 +47,8 @@ fn borrowed_scalar_owner_codegen(input:&DeriveInput)->proc_macro2::TokenStream{
     let Data::Enum(data)=&input.data else{return syn::Error::new_spanned(input,"borrowed scalar metadata requires an enum").to_compile_error()};
     let mut labels=Vec::new();
     for(index,variant)in data.variants.iter().enumerate(){if !matches!(variant.fields,Fields::Unit){return syn::Error::new_spanned(variant,"borrowed scalar metadata requires unit variants").to_compile_error()}let ordinal=index as u32;let attrs=parse_field_attrs(&variant.attrs);let label=attrs.key.unwrap_or_else(||to_kebab(&variant.ident.to_string()));labels.push(quote!{(#label,#ordinal)});}
-    let table=quote::format_ident!("__DSL_BORROWED_{}_ENUM",name);
-    quote!{static #table:&[(&'static str,u32)]=&[#(#labels),*];impl ::semio_framework_dsl_record::BorrowedDslField for #name{const SHAPE : ::semio_framework_dsl_record::BorrowedShape=::semio_framework_dsl_record::BorrowedShape::Enum(#table);}}
+    let count=labels.len();let table=quote::format_ident!("__DSL_BORROWED_{}_ENUM",name);
+    quote!{static #table:[(&'static str,u32);#count]=[#(#labels),*];impl ::semio_framework_dsl_record::BorrowedDslField for #name{const SHAPE : ::semio_framework_dsl_record::BorrowedShape=::semio_framework_dsl_record::BorrowedShape::Enum(&#table);}}
 }
 
 /// 🌿️ Preserves literal tagged identities and delegates newtypes to their actual static record owner.
@@ -58,12 +58,12 @@ fn borrowed_variants_owner_codegen(name:&syn::Ident,data:&syn::DataEnum)->proc_m
         let tag=&variant.ident;let attrs=parse_field_attrs(&variant.attrs);let keyword=attrs.key.unwrap_or_else(||to_kebab(&tag.to_string()));let make=quote::format_ident!("__dsl_borrowed_variant_{}",index);let spec=quote::format_ident!("__DSL_BORROWED_VARIANT_SPEC_{}",index);
         let(body,pattern)=match &variant.fields{
             Fields::Unnamed(fields)if fields.unnamed.len()==1=>{let inner=borrowed_owner_type(&fields.unnamed[0].ty,name);(quote!{<#inner as ::semio_framework_dsl_record::BorrowedDslRecord>::RECORD},quote!{Self::#tag(_)})},
-            Fields::Named(_)=>{let fields=borrowed_record_codegen(&variant.fields,name);let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANT_{}_FIELDS",name,index);tables.push(quote!{static #table:&[::semio_framework_dsl_record::BorrowedFieldSpec]=&[#(#fields),*];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:#table}},quote!{Self::#tag{..}})},
-            Fields::Unit=>{let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANT_{}_FIELDS",name,index);tables.push(quote!{static #table:&[::semio_framework_dsl_record::BorrowedFieldSpec]=&[];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:#table},quote!{Self::#tag})},
+            Fields::Named(_)=>{let fields=borrowed_record_codegen(&variant.fields,name);let count=fields.len();let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANT_{}_FIELDS",name,index);tables.push(quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;#count]=[#(#fields),*];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:&#table}},quote!{Self::#tag{..}})},
+            Fields::Unit=>{let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANT_{}_FIELDS",name,index);tables.push(quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;0]=[];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:&#table}},quote!{Self::#tag})},
             _=>return syn::Error::new_spanned(variant,"borrowed tagged metadata requires named, unit, or one record newtype variant").to_compile_error(),
         };
         methods.push(quote!{const #spec : ::semio_framework_dsl_record::BorrowedRecordSpec=#body;fn #make()->::semio_framework_dsl_record::BorrowedRecordSpec{Self::#spec}});entries.push(quote!{(#keyword,#name::#make as fn()->::semio_framework_dsl_record::BorrowedRecordSpec)});identities.push(quote!{#pattern=>(#keyword,#index,Self::#make())});
     }
-    let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANTS",name);
-    quote!{#(#tables)*impl #name{#(#methods)*}static #table:&[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec)]=&[#(#entries),*];impl ::semio_framework_dsl_record::BorrowedDslVariants for #name{const VARIANTS:&'static[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec)]=#table;fn projected_borrowed_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::BorrowedRecordSpec){match self{#(#identities),*}}}}
+    let count=entries.len();let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANTS",name);
+    quote!{#(#tables)*impl #name{#(#methods)*}static #table:[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec);#count]=[#(#entries),*];impl ::semio_framework_dsl_record::BorrowedDslVariants for #name{const VARIANTS:&'static[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec)]=&#table;fn projected_borrowed_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::BorrowedRecordSpec){match self{#(#identities),*}}}}
 }

@@ -220,7 +220,7 @@ pub(in super::super) fn reconstruct(database: &SqliteDatabase, ddl: &str, tables
         if let Some(row) = doctypes.children(id, None, control)?.first() {
             doc.doctype = Some(XmlDoctype::default());
             let doctype = doc.doctype.as_mut().ok_or_else(|| invalid("XML doctype owner is empty"))?;
-            doctype.prolog_position = super::super::super::position::parse(row.text(2)?).map_err(|message| invalid(&message))?;
+            doctype.prolog_position = crate::standards::v1_0::subsets::base::schema::snapshot::position::parse(row.text(2)?).map_err(|message| invalid(&message))?;
             doctype.name = restored(row.text(3)?, control)?;
             doctype.external_id = match (row.optional_text(4)?, row.optional_text(5)?, row.optional_text(6)?) {
                 (None, None, None) => None,

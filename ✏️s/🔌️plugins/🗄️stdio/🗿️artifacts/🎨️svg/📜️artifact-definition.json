@@ -64,7 +64,7 @@
         "artifact_kind": "s.stdio.svg",
         "artifact_schema": "stdio.svg",
         "extension": "svg",
-        "pack_schema_hash": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
+        "pack_schema_hash": "ce3f048645a3b7b1ce7910c2d2145528ab1e3e4178c8472116e06bb3d16240a8",
         "runtime_capability_id": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1"
       }
     }
@@ -235,7 +235,12 @@
       "id": "s.stdio.svg.schema.schema-export-s-stdio-svg-xml-document.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema-export:s.stdio.svg#xml-document",
-      "claims": [{ "namespace": "schema-export", "value": "s.stdio.svg#xml-document" }]
+      "claims": [
+        {
+          "namespace": "schema-export",
+          "value": "s.stdio.svg#xml-document"
+        }
+      ]
     },
     {
       "id": "s.stdio.svg.schema.schema-s-stdio-svg.v1",

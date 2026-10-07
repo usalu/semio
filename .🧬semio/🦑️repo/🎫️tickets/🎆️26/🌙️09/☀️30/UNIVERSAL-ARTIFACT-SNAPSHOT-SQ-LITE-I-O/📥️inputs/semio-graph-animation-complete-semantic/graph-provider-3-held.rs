@@ -1,60 +1,20 @@
-//! 🕸️ Controlled rich graph records with exact words and guarded nested property ownership.
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot,SemioGraphNode,SemioGraphEdge,SemioGraphPort,SemioGraphPortKind,GraphNodeId,GraphEdgeId,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
-use crate::standards::v1::subsets::value::io::sqlite::snapshot::native_decoding as values;
-use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
-use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioGraphSnapshot,ValueError>{
- let limits=control.limits();crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_layout(limits)?;
- let size=match payload{store::os_io::IoPayload::Binary(value)=>value.len(),store::os_io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Graph native input exceeds file limit"))}
- control.allocation_stage(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_control=NativeDecodeControl::new(remaining,&mut callback);
-  let result=(||->Result<SemioGraphSnapshot,ValueError>{let result=match payload{
-   store::os_io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,&mut native_control,limits)?},
-   store::os_io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
-  };let result=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();(result,native_control.owned_bytes())
- })?
+//! 🕸️ Writes rich graph fields directly into the admitted native output buffer.
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot,SemioGraphNode,SemioGraphPort,SemioGraphPortKind,SemioGraphEdge};
+use crate::standards::v1::subsets::{base::io::sqlite::snapshot::native_encoding::{self,Writer},value::io::sqlite::snapshot::native_encoding as values};
+use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
+pub(crate) fn encode(snapshot:&SemioGraphSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio s.stdio.semio.graph.dsl v1\n","s.stdio.semio.graph.pack v1",control,|control|crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding))}
+fn optional(value:Option<&str>,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{
+ match(value,encoding){(None,SnapshotEncoding::Binary)=>writer.byte(0),(None,SnapshotEncoding::Text)=>writer.bytes(b"-"),(Some(value),SnapshotEncoding::Binary)=>{writer.byte(1)?;writer.string(value,encoding)},(Some(value),SnapshotEncoding::Text)=>{writer.bytes(b"[")?;writer.string(value,encoding)?;writer.bytes(b"]")}}
 }
-fn invalid(error:impl std::fmt::Display)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())}
-fn kind(tag:u8)->Result<SemioGraphPortKind,ValueError>{Ok(match tag{0=>SemioGraphPortKind::In,1=>SemioGraphPortKind::Out,2=>SemioGraphPortKind::InOut,_=>return Err(invalid("invalid Semio native port kind"))})}
-fn binary_properties(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<Vec<SemioValueEntry>,ValueError>{
- let count=native::length(reader)?;native::entities(entities,count,limits)?;let mut properties=native::Owned::new(control.allocate_vec::<SemioValueEntry>(count)?);
- control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let key=native::text(reader,control)?;let value=values::value_binary(reader,control,limits,entities)?;properties.get_mut().push(SemioValueEntry{key,value});control.step()?;}Ok::<_,ValueError>(())})?;Ok(properties.take())
+fn port(port:&SemioGraphPort,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{
+ writer.delimiter(b"[",encoding)?;writer.string(&port.name,encoding)?;writer.delimiter(b",",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{match port.kind{SemioGraphPortKind::In=>0,SemioGraphPortKind::Out=>1,SemioGraphPortKind::InOut=>2}}else{crate::standards::v1::subsets::graph::io::text::snapshot::enc_port_kind(port.kind) as u8})?;
+ writer.delimiter(b",",encoding)?;writer.string(&port.category,encoding)?;writer.delimiter(b",",encoding)?;writer.list(&port.properties,encoding,|writer,item|values::entry(item,writer,encoding,0))?;writer.delimiter(b"]",encoding)
 }
-fn binary_optional(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<Option<String>,ValueError>{match reader.read_u8().map_err(invalid)?{0=>Ok(None),1=>Ok(Some(native::text(reader,control)?)),_=>Err(invalid("invalid Semio optional text tag"))}}
-pub(crate) fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioGraphSnapshot,ValueError>{
- crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_binary(body,control,limits)?;
- let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(invalid)?!=1{return Err(invalid("unsupported Semio graph native format"))}
- let schema=native::text(&mut reader,control)?;let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut nodes=native::Owned::new(control.allocate_vec::<SemioGraphNode>(count)?);
- control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{
-  let id=GraphNodeId::new(native::text(&mut reader,control)?);let kind=native::text(&mut reader,control)?;let label=native::text(&mut reader,control)?;let position=SemioPoint2{x:reader.read_f64_le().map_err(invalid)?,y:reader.read_f64_le().map_err(invalid)?};let width=reader.read_f64_le().map_err(invalid)?;let height=reader.read_f64_le().map_err(invalid)?;
-  let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut ports=native::Owned::new(control.allocate_vec::<SemioGraphPort>(count)?);
-  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let name=native::text(&mut reader,control)?;let kind=self::kind(reader.read_u8().map_err(invalid)?)?;let category=native::text(&mut reader,control)?;let properties=binary_properties(&mut reader,control,limits,&mut entities)?;ports.get_mut().push(SemioGraphPort{name,kind,category,properties});control.step()?;}Ok::<_,ValueError>(())})?;
-  let properties=binary_properties(&mut reader,control,limits,&mut entities)?;nodes.get_mut().push(SemioGraphNode{id,kind,label,position,width,height,ports:ports.take(),properties});control.step()?;
- }Ok::<_,ValueError>(())})?;
- let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut edges=native::Owned::new(control.allocate_vec::<SemioGraphEdge>(count)?);
- control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let id=GraphEdgeId::new(native::text(&mut reader,control)?);let source=GraphNodeId::new(native::text(&mut reader,control)?);let target=GraphNodeId::new(native::text(&mut reader,control)?);let kind=native::text(&mut reader,control)?;let label=native::text(&mut reader,control)?;let source_port=binary_optional(&mut reader,control)?;let target_port=binary_optional(&mut reader,control)?;let properties=binary_properties(&mut reader,control,limits,&mut entities)?;edges.get_mut().push(SemioGraphEdge{id,source,target,kind,label,source_port,target_port,properties});control.step()?;}Ok::<_,ValueError>(())})?;
- if reader.remaining()!=0{return Err(invalid("Semio graph native trailing bytes"))}Ok(SemioGraphSnapshot{schema,nodes:nodes.take(),edges:edges.take()})
+fn node(node:&SemioGraphNode,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{
+ writer.delimiter(b"[",encoding)?;for field in [&node.id.value,&node.kind,&node.label]{writer.string(field,encoding)?;writer.delimiter(b",",encoding)?;}for value in [node.position.x,node.position.y,node.width,node.height]{writer.hex_number(value,encoding)?;writer.delimiter(b",",encoding)?;}
+ writer.list(&node.ports,encoding,|writer,item|port(item,writer,encoding))?;writer.delimiter(b",",encoding)?;writer.list(&node.properties,encoding,|writer,item|values::entry(item,writer,encoding,0))?;writer.delimiter(b"]",encoding)
 }
-fn number(value:&str,control:&mut NativeDecodeControl<'_>)->Result<f64,ValueError>{let value=native::hex_text(value,control)?;native::float(&value,control)}
-fn text_optional(value:&str,control:&mut NativeDecodeControl<'_>)->Result<Option<String>,ValueError>{if value=="-"{Ok(None)}else{let[value]=native::record(value,control)?;Ok(Some(native::hex_text(value,control)?))}}
-fn text_properties(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<Vec<SemioValueEntry>,ValueError>{
- let mut items=native::Items::new(body)?;let count=items.count(control,limits.max_rows)?;native::entities(entities,count,limits)?;let mut properties=native::Owned::new(control.allocate_vec::<SemioValueEntry>(count)?);
- control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{let(key,value)=item.split_once(':').ok_or_else(||invalid("Semio graph native property requires colon"))?;let key=native::hex_text(key,control)?;let value=values::value_text(value,control,limits,entities)?;properties.get_mut().push(SemioValueEntry{key,value});control.step()?;}Ok::<_,ValueError>(())})?;Ok(properties.take())
+fn edge(edge:&SemioGraphEdge,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{
+ writer.delimiter(b"[",encoding)?;for field in [&edge.id.value,&edge.source.value,&edge.target.value,&edge.kind,&edge.label]{writer.string(field,encoding)?;writer.delimiter(b",",encoding)?;}optional(edge.source_port.as_deref(),writer,encoding)?;writer.delimiter(b",",encoding)?;optional(edge.target_port.as_deref(),writer,encoding)?;writer.delimiter(b",",encoding)?;writer.list(&edge.properties,encoding,|writer,item|values::entry(item,writer,encoding,0))?;writer.delimiter(b"]",encoding)
 }
-pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioGraphSnapshot,ValueError>{
- crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_document(body,control,limits)?;
- let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","nodes","edges"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||invalid("Semio graph native schema missing"))?,control)?;
- let mut items=native::Items::new(fields[1].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut nodes=native::Owned::new(control.allocate_vec::<SemioGraphNode>(count)?);
- control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{
-  let[id,kind,label,x,y,width,height,port_fields,property_fields]=native::record(item,control)?;let id=GraphNodeId::new(native::hex_text(id,control)?);let kind=native::hex_text(kind,control)?;let label=native::hex_text(label,control)?;let position=SemioPoint2{x:number(x,control)?,y:number(y,control)?};let width=number(width,control)?;let height=number(height,control)?;
-  let mut port_items=native::Items::new(port_fields)?;let count=port_items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut ports=native::Owned::new(control.allocate_vec::<SemioGraphPort>(count)?);
-  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=port_items.next(control)?{let[name,tag,category,properties]=native::record(item,control)?;let name=native::hex_text(name,control)?;let tag=match tag{"i"=>0,"o"=>1,"x"=>2,_=>return Err(invalid("invalid Semio native port kind"))};let category=native::hex_text(category,control)?;let properties=text_properties(properties,control,limits,&mut entities)?;ports.get_mut().push(SemioGraphPort{name,kind:self::kind(tag)?,category,properties});control.step()?;}Ok::<_,ValueError>(())})?;
-  let properties=text_properties(property_fields,control,limits,&mut entities)?;nodes.get_mut().push(SemioGraphNode{id,kind,label,position,width,height,ports:ports.take(),properties});control.step()?;
- }Ok::<_,ValueError>(())})?;
- let mut items=native::Items::new(fields[2].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut edges=native::Owned::new(control.allocate_vec::<SemioGraphEdge>(count)?);
- control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{let[id,source,target,kind,label,source_port,target_port,properties]=native::record(item,control)?;let id=GraphEdgeId::new(native::hex_text(id,control)?);let source=GraphNodeId::new(native::hex_text(source,control)?);let target=GraphNodeId::new(native::hex_text(target,control)?);let kind=native::hex_text(kind,control)?;let label=native::hex_text(label,control)?;let source_port=text_optional(source_port,control)?;let target_port=text_optional(target_port,control)?;let properties=text_properties(properties,control,limits,&mut entities)?;edges.get_mut().push(SemioGraphEdge{id,source,target,kind,label,source_port,target_port,properties});control.step()?;}Ok::<_,ValueError>(())})?;
- Ok(SemioGraphSnapshot{schema,nodes:nodes.take(),edges:edges.take()})
-}
+pub(crate) fn fields(snapshot:&SemioGraphSnapshot,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.entities(1)?;if encoding==SnapshotEncoding::Binary{writer.byte(1)?}else{writer.bytes(b"schema=")?}writer.string(&snapshot.schema,encoding)?;writer.delimiter(b"\nnodes=",encoding)?;writer.list(&snapshot.nodes,encoding,|writer,item|node(item,writer,encoding))?;writer.delimiter(b"\nedges=",encoding)?;writer.list(&snapshot.edges,encoding,|writer,item|edge(item,writer,encoding))}

@@ -39,10 +39,12 @@ async fn next_entity_id_advances_only_as_the_collection_grows() {
 /// since it hardcodes `weather_link: None`.
 #[semio_framework_async_macros::async_test]
 async fn a_whole_document_load_carries_both_link_slots() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let model = Model { name: "BESTEST 600".into(), version: "1".into(), ..Model::default() };
     let links = EnergyModelLinkSlots {
-        referenced_model: Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() }),
-        weather_link: Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("denver-tmy!s.stdio.semio@v1/value").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "weather".into() }),
+        referenced_model: Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() }),
+        weather_link: Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("denver-tmy!s.stdio.semio@v1/value").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "weather".into() }),
     };
     let carried = energy_snapshot_with_links(&model, &links);
     assert_eq!(EnergyModelLinkSlots::of(&carried), links);

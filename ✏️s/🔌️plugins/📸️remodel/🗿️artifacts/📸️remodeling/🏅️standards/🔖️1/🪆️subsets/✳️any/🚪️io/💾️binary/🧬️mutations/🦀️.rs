@@ -24,3 +24,19 @@ pub fn decode_op(bytes: &[u8]) -> Result<RemodelingMutation, protocol::ProtocolE
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod native_codec {
+use super::*;
+use crate::schema::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
+pub use mutations_wire_codec::*;
+pub use json_orchestration::{apply_remodeling_mutation_json,undo_remodeling_mutation_json};
+
+impl protocol::OpBinary for RemodelingMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

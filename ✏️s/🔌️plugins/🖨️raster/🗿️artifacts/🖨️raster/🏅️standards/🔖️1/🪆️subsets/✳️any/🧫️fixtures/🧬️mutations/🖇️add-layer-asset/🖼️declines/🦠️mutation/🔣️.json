@@ -2,7 +2,23 @@
   "mutation": "addLayerAsset",
   "assetId": "cover-art",
   "asset": {
-    "mime": "image/png",
-    "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mM4MS3lPwAGrgLC6MV/HQAAAABJRU5ErkJggg=="
+    "schema": "s.stdio.semio.image",
+    "width": 1,
+    "height": 1,
+    "colorspace": "rgba",
+    "bitDepth": 8,
+    "frames": [
+      {
+        "delayMs": 0,
+        "rgba8": [
+          200,
+          150,
+          100,
+          255
+        ]
+      }
+    ],
+    "icc": null,
+    "metadata": []
   }
 }

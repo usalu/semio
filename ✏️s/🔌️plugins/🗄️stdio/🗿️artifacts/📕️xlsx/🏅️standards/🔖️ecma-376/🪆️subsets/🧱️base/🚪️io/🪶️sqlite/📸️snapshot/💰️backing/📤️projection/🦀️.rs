@@ -8,14 +8,15 @@ use semio_framework_os_kernel::{
     },
     ArtifactSqliteSnapshot,
 };
-use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{append_xml_document_views, measure_xml_document_views, XmlDocumentView};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{append_xml_document_views,measure_xml_document_views};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView};
 use semio_s_artifact_stdio_zip::opc::sqlite::{append_opc_package, measure_opc_package};
 
 fn integer(value: usize) -> Result<i64, ValueError> {
     i64::try_from(value).map_err(|_| ValueError::new(ValueRefusalKind::WorkLimit, "XLSX part identity exceeds SQLite integer width"))
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::backing::super) fn project(snapshot: &XlsxSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn project(snapshot: &XlsxSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
     control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
     let (mut rows, mut bytes) = measure_opc_package(&snapshot.opc, control)?;
     add(&mut rows, 1)?;

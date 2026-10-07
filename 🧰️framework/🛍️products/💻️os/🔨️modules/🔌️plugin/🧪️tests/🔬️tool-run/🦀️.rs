@@ -608,7 +608,7 @@ async fn toy_manifest() -> App {
 }
 
 async fn toy_app(target: u64) -> ToyApp {
-    let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
+    let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into())).await;
     set_target(&mut app, target).await;
     app
 }
@@ -871,9 +871,9 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
     let mut probe = attach_probe(&mut app, "tool-run-conflict").await;
     start(&mut app, text(&fixture["toolId"])).await;
     pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
-    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
+    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into())).await;
     let mut remote_probe = attach_probe(&mut remote, "tool-run-conflict-remote").await;
-    remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
+    assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
     remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], transaction: None }).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
@@ -1350,9 +1350,9 @@ async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start(
 //#region 🎯️RetargetAndSettings
 /// 📡️ A remote peer sets the count to `count`; `probe` forwards its mutation batch and `app` ingests it.
 async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, channel: &str, count: u64) {
-    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
+    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into())).await;
     let mut remote_probe = attach_probe(&mut remote, channel).await;
-    remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
+    assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
     remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], transaction: None }).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");

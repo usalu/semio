@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🛰️.proto";
 package semio.s.energy.model.mutation;
 
 // 🧬️ EnergyModel mutation schema - one message per handcrafted semantic mutation kind.
@@ -95,13 +96,13 @@ message RemoveOutputVariable {
 }
 
 message BindWeatherFile {
-  string target_uri = 1;
+  semio.framework.schema.artifact_reference.ArtifactRef target = 1;
 }
 
 message UnbindWeatherFile {}
 
 message ConnectReferencedModel {
-  string target_uri = 1;
+  semio.framework.schema.artifact_reference.ArtifactRef target = 1;
 }
 
 message DisconnectReferencedModel {}

@@ -1,0 +1,218 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "2600297110a090ecccb9cafaa5b3cdd14351936be2609620e36eb7f03f0652bb",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(db,SQL,c.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(db,SQL,SqliteSnapshotPhase::ReconstructSnapshot,c)?;"
+      }
+    ],
+    "line": 49,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "80c2a084ba167712f33275651a8978f0db40b2dd70da7aee385c33614b1b7828",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 67,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "dd5d9bbbf26bdc2aaceb3bc7305147481897d1b92101a3a8a65a74a5cadb5412",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 74,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "3d799d4aa946cdf8ba76d554949671e2c3f60fba76c7e80e982e4e8a4ff52918",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 51,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "bb668eb83d232cc6052e99f57a0572ec2df1bde1590a65373f4ce655427a05ff",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 130,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "03a8b5c9e53dd5c780eb59bd593ee3e972513e215658cb5c64326a69a628a4a3",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 59,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "f3d51af7b7bbaa3c68fe2a110c51e37a6c36fdb179813d88275e31fb6be60fa3",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 114,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "0083ed8a916b716f72d10ac994f250f3c76a8ebce365689e5ff40fb6e637097f",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(db,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(db,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 177,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "57e0ce60ac97bce5f4b49a6414d68c92751d9fca0b9ee6c152fcf4acc9fd3aac",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 62,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "1a887a9aee19770a0d54b7ea419054b0cdabe0591db6f7bd35c4b7820b807bda",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(db,declared_schema,c.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(db,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,c)?;"
+      }
+    ],
+    "line": 100,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "cf7e6987062a13dc2cd0a58e36c02c8342dd2747f03d332dad3790be610b1e4d",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 47,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "709e1da0f74b9ba5b440e3977dbbc78ac90a3d87d6fa875c5f9842fe90a36bb9",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 129,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "c31e4c61dadcbb77fefbada331a497acd6ed64fd7ba2793bf72125c58b2789d2",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 58,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "df966b3dc0272701753390640e33a1f1f03cf70498bcaf33a6dab8e541d324ef",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 75,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "1d2a052e5e17e2cd311e9fe5a9393e2526aa94a9ecf379cfffc9c21f0e3e52cd",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 75,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "263650798d3a1fb7db1003e79fa10f267088ac713633d999c55db641a9961a1e",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 53,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "faff978535fbfa43f698b75b0f17ad4a7c002263487706fe97a0bd2b8b6f6421",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(db,declared_schema,c.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(db,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,c)?;"
+      }
+    ],
+    "line": 131,
+    "owner": "🪆️subsets"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "de724c3aca0bc5692732c3b9c404eff7ef8107ef5e0c8ecedccb7f93ad58740e",
+    "regions": [
+      {
+        "before": "validate_sqlite_database_schema(database,declared_schema,control.limits())?;",
+        "after": "semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;"
+      }
+    ],
+    "line": 134,
+    "owner": "🪆️subsets"
+  }
+]

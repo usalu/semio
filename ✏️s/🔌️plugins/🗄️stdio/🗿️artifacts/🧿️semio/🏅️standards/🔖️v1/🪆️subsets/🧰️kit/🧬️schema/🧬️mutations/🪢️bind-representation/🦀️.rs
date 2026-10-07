@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct BindRepresentation {
-    pub target: store::os_io::ArtifactRef,
+    pub target: semio_framework_artifact_reference::ArtifactRef,
     pub pin: store::LinkPin,
     pub role: String,
 }

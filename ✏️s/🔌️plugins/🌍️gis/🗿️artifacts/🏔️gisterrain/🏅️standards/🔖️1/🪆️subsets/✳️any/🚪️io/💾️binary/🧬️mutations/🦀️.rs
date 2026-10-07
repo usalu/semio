@@ -36,3 +36,17 @@ pub mod change_imported_features;
 
 #[path = "🎚️change-exaggeration/🦀️.rs"]
 pub mod change_exaggeration;
+
+mod native_codec {
+use super::*;
+use crate::schema::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
+
+impl protocol::OpBinary for GisTerrainMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

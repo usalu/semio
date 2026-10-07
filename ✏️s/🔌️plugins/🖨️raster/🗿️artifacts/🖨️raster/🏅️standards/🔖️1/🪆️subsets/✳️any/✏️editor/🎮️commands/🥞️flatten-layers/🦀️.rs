@@ -2,8 +2,8 @@
 use crate::editor::raster::{RasterCommand,RasterPlayApp};
 use crate::editor::raster::config::{RasterConfig,RasterConfigMutation};
 use crate::standards::v1::subsets::any::schema::{layer_node_id};
-use crate::standards::v1::subsets::any::io::text::snapshot::{create_pixel_layer};
-use crate::{RasterImageAsset,RasterLayerNode,RasterMutation,RasterSnapshot};
+use crate::standards::v1::subsets::any::schema::create_pixel_layer;
+use crate::{SemioImageSnapshot,RasterLayerNode,RasterMutation,RasterSnapshot};
 use crate::standards::v1::subsets::any::io::RasterStackPreparation;
 use semio_framework_pixels::{compositing::layers::RasterStackJob,png_encoding::{EncodedPngImage,PngEncodeJob}};
 use semio_framework_plugin::{ArtifactView,ConfigView,EditorApp,Emit,Fault};
@@ -30,13 +30,13 @@ fn publish(image:EncodedPngImage,origin:[f64;2],name:&str,document:&RasterSnapsh
     mutations.push(RasterMutation::CreateLayer(create_layer::CreateLayer {parent_id:None,index:0,layer:Box::new(layer)}));
     Ok(Emit::mutations(mutations))
 }
-pub(crate) fn baked_layer(image:EncodedPngImage,origin:[f64;2],name:&str,prefix:&str)->(RasterLayerNode,String,RasterImageAsset) {
+pub(crate) fn baked_layer(image:EncodedPngImage,origin:[f64;2],name:&str,prefix:&str)->(RasterLayerNode,String,SemioImageSnapshot) {
     let mut layer=create_pixel_layer(name,image.width,image.height);
     let key=format!("{prefix}-{}-{:016x}",layer_node_id(&layer),image.content_hash);
     if let RasterLayerNode::Pixel {image_key,transform,..}=&mut layer {
         *image_key=Some(key.clone());transform.x=origin[0]+f64::from(image.width)/2.0;transform.y=origin[1]+f64::from(image.height)/2.0;
     }
-    (layer,key,RasterImageAsset {mime:"image/png".into(),data:image.data})
+    (layer,key,crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(&image.data).expect("baked PNG decodes"))
 }
 pub(crate) fn asset_keys_except(layers:&[RasterLayerNode],excluded:&std::collections::BTreeSet<&str>)->std::collections::BTreeSet<String> {
     let mut keys=std::collections::BTreeSet::new();

@@ -10,15 +10,15 @@ use crate::standards::v1::subsets::any::schema::operations::{
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("EditWorkingGraph", crate::standards::v1::subsets::any::schema::mutations::edit_working_graph::TEXT_OPCODE),
-    ("EditLhs", crate::standards::v1::subsets::any::schema::mutations::edit_lhs::TEXT_OPCODE),
-    ("EditRhs", crate::standards::v1::subsets::any::schema::mutations::edit_rhs::TEXT_OPCODE),
-    ("ChangeParameterBinding", crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::TEXT_OPCODE),
-    ("RemoveParameterBinding", crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::TEXT_OPCODE),
-    ("ChangeRuleLayoutPoint", crate::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::TEXT_OPCODE),
-    ("RemoveRuleLayoutPoint", crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::TEXT_OPCODE),
-    ("DragRuleNodes", crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::TEXT_OPCODE),
-    ("SetRuleLayoutPoints", crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::TEXT_OPCODE),
+    ("EditWorkingGraph", crate::standards::v1::subsets::any::io::text::mutations::edit_working_graph::TEXT_OPCODE),
+    ("EditLhs", crate::standards::v1::subsets::any::io::text::mutations::edit_lhs::TEXT_OPCODE),
+    ("EditRhs", crate::standards::v1::subsets::any::io::text::mutations::edit_rhs::TEXT_OPCODE),
+    ("ChangeParameterBinding", crate::standards::v1::subsets::any::io::text::mutations::change_parameter_binding::TEXT_OPCODE),
+    ("RemoveParameterBinding", crate::standards::v1::subsets::any::io::text::mutations::remove_parameter_binding::TEXT_OPCODE),
+    ("ChangeRuleLayoutPoint", crate::standards::v1::subsets::any::io::text::mutations::change_rule_layout_point::TEXT_OPCODE),
+    ("RemoveRuleLayoutPoint", crate::standards::v1::subsets::any::io::text::mutations::remove_rule_layout_point::TEXT_OPCODE),
+    ("DragRuleNodes", crate::standards::v1::subsets::any::io::text::mutations::drag_rule_nodes::TEXT_OPCODE),
+    ("SetRuleLayoutPoints", crate::standards::v1::subsets::any::io::text::mutations::set_rule_layout_points::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 
@@ -78,14 +78,7 @@ impl protocol::OpText for RewriteRuleMutation {
     }
 }
 
-impl protocol::OpBinary for RewriteRuleMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 #[path = "📐️change-rule-layout/🦀️.rs"]

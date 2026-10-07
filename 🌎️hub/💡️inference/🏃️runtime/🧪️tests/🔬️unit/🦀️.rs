@@ -137,8 +137,8 @@ fn last_publisher_region_evidence() -> Option<String> {
 }
 
 /// 🧩️ The state an `ArtifactPair` materializes to. The `pack` half of every pair in this product is
-/// the document's GENESIS snapshot, never its current fold: `print_document_pack` encodes
-/// `vcs.initial_snapshot`, the native codec's `apply_ops_binary` reprints exactly that pack while
+/// the document's stored GENESIS pack, never its current fold: `print_document_pack` shares
+/// `vcs.genesis.pack()`, the native codec's `apply_ops_binary` retains exactly those bytes while
 /// appending to the `spr`, and every load path (`parse_decoded_document_spr`, `open_member_store`)
 /// folds the `spr` log back onto it. So a committed mutation is visible in a published checkpoint
 /// only when BOTH halves are folded — reading `pair.pack` alone asks the genesis whether an approval

@@ -118,7 +118,7 @@ pub(crate) fn tour_app(introduction: Option<semio_framework::IntroductionDefinit
     AppDefinition {
         id: "tour-app".into(),
         role: semio_framework::manifest::AppRole::Editor,
-        dialect: semio_framework::ArtifactDialect { artifact_kind: "s.test.tour".into(), standard: "1".into(), subset: "*".into() },
+        dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.tour".into(), standard: "1".into(), subset: "*".into() },
         label: LocalizedLabel::data("Tour App"),
         breadcrumb: vec!["semio".into(), "tour".into()],
         icon_id: None,

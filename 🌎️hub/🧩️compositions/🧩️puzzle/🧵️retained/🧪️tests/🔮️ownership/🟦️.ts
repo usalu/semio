@@ -2,10 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import Ajv from "ajv";
 import contract from "../../🧫️fixtures/🔮️ownership/🔣️.json";
-import schema from "../../🧬️schema/🔮️ownership/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
@@ -14,8 +11,6 @@ const digest = (text: string) => createHash("sha256").update(text).digest("hex")
 const pointer = (value: unknown, path: string): unknown => path.slice(1).split("/").reduce((current, key) => current && typeof current === "object" ? (current as Record<string, unknown>)[key] : undefined, value);
 const vectorIds = ["zero", "max", "maxPlusOne", "malformed", "staleGeneration", "wrongOperation", "abaGeneration", "cancelWirePage", "cancelWireByte", "cancelPreflight", "cancelWork", "cancelPublish", "faultWork", "retry", "close", "replay"];
 const checkpointIds = ["checkpointEmpty", "checkpointSingle", "checkpointMax", "checkpointMaxPlusOne", "checkpointCorrupt", "checkpointInterruptedClose"];
-const baseVectorSchema = { type: "object", required: ["id", "fingerprint"], properties: { id: { type: "string" }, fingerprint: { type: "string" } } };
-const validateVector = new Ajv().compile(baseVectorSchema);
 
 /** 🧫️ Projects the same owned outputs that the retained native fixture interface observes. */
 function evaluate(source: string) {
@@ -26,11 +21,7 @@ function evaluate(source: string) {
 }
 
 describe("Puzzle retained laws belong to their actual selected owner", () => {
-  test("closed neutral ownership fixture agrees with independent Ajv validation", () => {
-    expect(validateJsonSchemaSubset(schema, contract)).toEqual([]);
-    expect(new Ajv().validate(schema, contract)).toBe(true);
-    expect(validateJsonSchemaSubset(schema, { ...contract, foreignOwner: "artifact" }).length).toBeGreaterThan(0);
-    expect(new Ajv().validate(schema, { ...contract, foreignOwner: "artifact" })).toBe(false);
+  test("retained original shared source digest remains exact", () => {
     expect(digest(contract.sharedOriginal)).toBe(contract.sharedSha256);
   });
 
@@ -67,14 +58,12 @@ describe("Puzzle retained laws belong to their actual selected owner", () => {
 
     test(`${artifact.name} every original hostile category changes real bytes and semantic oracle output`, () => {
       const source = read(artifact.fixture), baseline = evaluate(source), parsed = JSON.parse(source);
-      expect(parsed.vectors.slice(0, vectorIds.length).every((vector: unknown) => validateVector(vector))).toBe(true);
       for (const mutation of contract.mutations) {
         const mutated = source.replace(mutation.previous, mutation.current), value = JSON.parse(mutated);
         expect(mutated, mutation.id).not.toBe(source);
         expect(pointer(value, mutation.pointer), mutation.id).not.toEqual(pointer(parsed, mutation.pointer));
         if (mutation.id === "missing-fingerprint") {
           expect(() => evaluate(mutated)).toThrow("missing base fingerprint");
-          expect(validateVector(value.vectors[0])).toBe(false);
         } else expect(evaluate(mutated), mutation.id).not.toEqual(baseline);
       }
       for (const tool of parsed.toolIds as string[]) {

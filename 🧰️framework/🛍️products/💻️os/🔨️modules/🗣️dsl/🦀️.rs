@@ -204,36 +204,28 @@ pub mod variants_binary {
         Ok(out)
     }
 
-    fn encode_with_into<T:DslVariants>(op:&T,tag_of:impl Fn(&str,usize)->Result<u64,ProtocolError>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
-        protocol::io::binary::operation_bytes::with_operation_encode_policy(options,control,|control|{
-        let mut limited=protocol::io::binary::operation_bytes::OperationByteLimitedOutput::new(output,options.limits.max_file_len);
-        let output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput=&mut limited;
-        control.checkpoint().map_err(crate::os_pack::PackRefusal::from)?;
-        let(keyword,ordinal,producer)=op.projected_variant_identity();
-        let source=semio_framework_dsl_record::native_encoding::VariantProjection::new(op);
-        let tag=tag_of(&keyword,ordinal)?;
-        let spec=producer.encode(control).map_err(crate::os_pack::PackRefusal::from)?;
-        output.write_bytes(&[OP_BINARY_FORMAT],control)?;
-        let mut remaining=tag;
-        let mut bytes=[0;10];
-        let mut length=0;
-        loop{bytes[length]=(remaining as u8)&127;remaining>>=7;if remaining!=0{bytes[length]|=128;}length+=1;if remaining==0{break;}}
-        output.write_bytes(&bytes[..length],control)?;
-        crate::os_pack::record::encode_projected_record_body_into(&spec,&source,options,output,control)?;
-        Ok(())
-        })
-    }
+fn encode_with_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(operation:&mut crate::os_pack::record::BorrowedProjectedPackOperation<T>,tag_of:impl Fn(&str,usize)->Result<u64,ProtocolError>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
+ protocol::io::binary::operation_bytes::with_operation_encode_policy(options,control,|control|{
+  let mut limited=protocol::io::binary::operation_bytes::OperationByteLimitedOutput::new(output,options.limits.max_file_len);let output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput=&mut limited;
+  control.checkpoint().map_err(crate::os_pack::PackRefusal::from)?;let(keyword,ordinal)=operation.variant_identity()?;let tag=tag_of(keyword,ordinal)?;
+  output.write_bytes(&[OP_BINARY_FORMAT],control)?;let mut remaining=tag;let mut bytes=[0;10];let mut length=0;
+  loop{bytes[length]=(remaining as u8)&127;remaining>>=7;if remaining!=0{bytes[length]|=128;}length+=1;if remaining==0{break;}}
+  output.write_bytes(&bytes[..length],control)?;operation.write_body(options,output,control)?;Ok(())
+ })
+}
+/// 🏷️ Emits the declared protocol tag from the caller's original retained operation capsule.
+pub fn encode_tagged_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(protocol:&str,operation:&mut crate::os_pack::record::BorrowedProjectedPackOperation<T>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
+ encode_with_into(operation,|keyword,_|protocol_record::records(protocol).find(|(kind,_)|*kind==keyword).map(|(_,tag)|tag).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("📡️.protocol.semio declares no record for '{keyword}'")}),options,output,control)
+}
+/// 🎞️ Emits the exact ordinal header and same-source canonical body while retaining all scratch.
+pub fn encode_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(operation:&mut crate::os_pack::record::BorrowedProjectedPackOperation<T>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
+ encode_with_into(operation,|_,ordinal|u64::try_from(ordinal).map_err(|_|ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} exceeds the u64 wire range")}),options,output,control)
+}
+    /// 📥️ Holds the actual decoded variant and canonical scratch until caller settlement.
+    pub type RetainedDecodedOperation<T:DslVariants> = crate::os_pack::record::BorrowedProjectedPackOperation<crate::os_pack::record::OwnedVariantPackSource<T>>;
 
-    /// 🏷️ Appends a declared tagged operation into the same admitted source prefix.
-    pub fn encode_tagged_op_into<T:DslVariants>(protocol:&str,op:&T,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
-        encode_with_into(op,|keyword,_|protocol_record::records(protocol).find(|(kind,_)|*kind==keyword).map(|(_,tag)|tag).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("📡️.protocol.semio declares no record for '{keyword}'")}),options,output,control)
-    }
-
-    /// 🎞️ Appends the exact ordinal protocol header and direct canonical Record body.
-    pub fn encode_op_into<T:DslVariants>(op:&T,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
-        encode_with_into(op,|_,ordinal|u64::try_from(ordinal).map_err(|_|ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} exceeds the u64 wire range")}),options,output,control)
-    }
-    fn decode_with_span<T:DslVariants>(source:crate::os_pack::ByteSpan<'_>,index_of:impl Fn(u64,&[(String,super::RecordSpecProducer)])->Result<usize,ProtocolError>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,reencode:impl FnOnce(&T,&EncodeOptions,&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>)->Result<T,ProtocolError>{
+    fn decode_with_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:crate::os_pack::ByteSpan<'_>,index_of:impl Fn(u64,&[(String,super::RecordSpecProducer)])->Result<usize,ProtocolError>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>,reencode:impl FnOnce(&mut RetainedDecodedOperation<T>,&EncodeOptions,&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>)->Result<(),ProtocolError>{
+        if retained.is_some(){return Err(crate::os_pack::PackRefusal::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical decoded operation owner is not empty")).into())}
         decoding.checkpoint().map_err(crate::os_pack::PackRefusal::from)?;
         if source.len()as u64>options.limits.max_file_len{return Err(crate::os_pack::PackRefusal::LimitExceeded{kind:semio_framework_value::ValueRefusalKind::OwnershipLimit,limit:"operation source byte length"}.into());}
         let mut reader=ByteReader::from_span(source);
@@ -248,25 +240,26 @@ pub mod variants_binary {
         let record=crate::os_pack::record::decode_record_body_span_exact_controlled(body,&spec,options,decoding)?;
         let decoded=T::from_named_record_controlled(keyword,&record,decoding).map_err(crate::os_pack::PackRefusal::from)?;
         let mut comparison=protocol::io::binary::operation_bytes::OperationByteComparison::new(source);
-        reencode(&decoded,canonical_options,&mut comparison,encoding)?;
+        *retained=Some(crate::os_pack::record::BorrowedProjectedPackOperation::from_owned_variant(decoded));
+        reencode(retained.as_mut().unwrap(),canonical_options,&mut comparison,encoding)?;
         comparison.finish()?;
-        Ok(decoded)
+        Ok(())
     }
 
     /// 🧾️ Decodes the same admitted source and compares its complete canonical tagged wire without a second byte owner.
-    pub fn decode_tagged_op_span<T:DslVariants>(protocol:&str,source:crate::os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,ProtocolError>{
+    pub fn decode_tagged_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(protocol:&str,source:crate::os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
         decode_with_span(source,|tag,variants|{
             let kind=protocol_record::kind(protocol,tag).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("📡️.protocol.semio declares no record with tag {tag}")})?;
             variants.iter().position(|(keyword,_)|keyword==kind).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("record '{kind}' names no variant")})
-        },options,canonical_options,decoding,encoding,|decoded,options,output,control|encode_tagged_op_into(protocol,decoded,options,output,control))
+        },options,canonical_options,decoding,encoding,retained,|decoded,options,output,control|encode_tagged_op_into(protocol,decoded,options,output,control))
     }
 
     /// 🎞️ Decodes a borrowed operation and checks exact ordinal canonical bytes with caller controls.
-    pub fn decode_op_span<T:DslVariants>(source:crate::os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,ProtocolError>{
+    pub fn decode_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:crate::os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
         decode_with_span(source,|ordinal,variants|{
             let index=usize::try_from(ordinal).map_err(|_|ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} exceeds the native index range")})?;
             if index<variants.len(){Ok(index)}else{Err(ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} out of range for {} declared variants",variants.len())})}
-        },options,canonical_options,decoding,encoding,encode_op_into)
+        },options,canonical_options,decoding,encoding,retained,encode_op_into)
     }
 
     fn decode_with<T: DslVariants>(bytes: &[u8], index_of: impl Fn(u64, &[(String, super::RecordSpecProducer)]) -> Result<usize, ProtocolError>, reencode: impl Fn(&T) -> Result<Vec<u8>, ProtocolError>) -> Result<T, ProtocolError> {

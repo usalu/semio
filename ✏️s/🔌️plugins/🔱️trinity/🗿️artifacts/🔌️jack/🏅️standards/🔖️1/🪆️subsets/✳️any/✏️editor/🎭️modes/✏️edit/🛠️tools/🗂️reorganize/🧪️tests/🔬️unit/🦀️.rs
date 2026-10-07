@@ -214,7 +214,7 @@ fn history_len(app: &mut JackApp) -> usize {
 }
 
 fn nakagin_app() -> JackApp {
-    let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }));
+    let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
     ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
     app
 }

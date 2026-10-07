@@ -5,8 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::forms::config::component::mutations::*;
 use crate::editor::forms::config::component::*;
-use replace_config::ReplaceConfig;
-use set_contributions::SetContributions;
 
 impl protocol::OpBinary for FormsConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }

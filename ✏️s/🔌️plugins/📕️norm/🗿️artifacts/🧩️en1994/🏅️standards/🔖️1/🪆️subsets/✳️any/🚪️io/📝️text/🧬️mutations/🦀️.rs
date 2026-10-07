@@ -18,15 +18,7 @@ impl protocol::OpText for En1994Mutation {
     }
 }
 
-impl protocol::OpBinary for En1994Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(text).map_err(|e| protocol::ProtocolError::Malformed { what: "json", offset: 0, detail: e.to_string() })
-    }
-}
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️op-round-trip/🦀️.rs"]
@@ -63,7 +55,7 @@ use crate::standards::v1::subsets::any::schema::mutations::remove_slab;
 use crate::standards::v1::subsets::any::schema::mutations::change_slab_action_q_area_pa;
 use crate::standards::v1::subsets::any::schema::mutations::change_slab_thickness_m;
 #[cfg(test)]
-use tests::demo_mutation_cases;
+use crate::artifact_schema::mutations::demo_mutation_cases;
 
 pub fn decode_en1994_mutation_json(text: &str) -> Result<En1994Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())

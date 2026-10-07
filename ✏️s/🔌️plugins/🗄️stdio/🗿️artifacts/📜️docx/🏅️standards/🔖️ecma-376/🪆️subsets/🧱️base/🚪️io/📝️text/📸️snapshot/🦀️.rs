@@ -11,15 +11,16 @@ pub type DocxSnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
+use crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native;
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
 use crate::{
-    standards::v_ecma_376::subsets::base::io::{DocxError, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES},
+    standards::v_ecma_376::subsets::base::{schema::{refusal::{DocxError},vocabulary::{REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES}}},
     STDIO_DOCX_DOCUMENT_SCHEMA,
 };
 use framework_schema::ArtifactSchema;
 use semio_framework_value::list::PagedList;
-use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, sqlite::{retire_xml_document, retire_xml_document_with_frontier}, xml_document_to_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, ownership::{retire_xml_document, retire_xml_document_with_frontier}, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
 
@@ -32,21 +33,14 @@ impl store::ArtifactDsl for DocxSnapshot {
 }
 pub use snapshot_codec::*;
 
-#[allow(unused_imports)]
-mod snapshot_wire_codec {
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::component::native::*;
-use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,ValueError,ValueRefusalKind};
-use semio_framework_value::DecodedValue;
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::component::{docx_xml_parts_from_iter_controlled,DocxSnapshot,DocxXmlPart};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,SqliteDatabaseLimits},io_schema::IoPayload};
-use semio_s_artifact_stdio_zip::opc::native::{OpcNativeWriter,OpcNativeReader};
-use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
-use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{XmlDocumentView,retire_xml_document};
 
-pub(crate) fn input(bytes:&[u8],binary:bool,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{
- backing::input(bytes,binary,control)
-}
 
-pub(super) fn decode_text(text:&str,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{input(text.as_bytes(),false,control)}
+impl crate::schema::snapshot::DocxSnapshot {
+    pub fn part_text(&self, path: &str) -> Option<String> {
+        let key = path.trim_start_matches('/');
+        self.xml_part(key)
+            .and_then(|part| part.document.materialize_exact().ok())
+            .map(|document| semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&document))
+            .or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec_owner()).ok()))
+    }
 }
-pub use snapshot_wire_codec::*;

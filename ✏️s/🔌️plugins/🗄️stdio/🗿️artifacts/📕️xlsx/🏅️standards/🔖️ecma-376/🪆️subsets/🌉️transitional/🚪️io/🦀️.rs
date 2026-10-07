@@ -12,7 +12,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_TRANSITIONAL: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
@@ -98,37 +98,12 @@ pub mod derived_construction {
     #[cfg(test)]
     use crate::standards::v_ecma_376::subsets::base::schema::mutations::set_snapshot;
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
-    use crate::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, TRANSITIONAL_R_NS, TRANSITIONAL_SML_NS};
+    use crate::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, stamp_transitional_namespace};
     use crate::{XlsxDiff, XlsxMutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
-
-    //#region 🔖️Stamp
-    /// 🖋️ Real-rewrites the main workbook XML part's root attrs to explicit Transitional shape.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn stamp_transitional_namespace(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {
-        let main_path = snapshot.workbook_part_path();
-        if let Some(part) = main_path.as_deref().and_then(|path| snapshot.xml_part_mut(path)) {
-            if let Some(XmlNode::Element { attrs, .. }) = &mut part.document.root {
-                set_attr(attrs, "xmlns", TRANSITIONAL_SML_NS);
-                set_attr(attrs, "xmlns:r", TRANSITIONAL_R_NS);
-                set_attr(attrs, "conformance", "transitional");
-            }
-        }
-        snapshot
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn set_attr(attrs: &mut Vec<XmlAttr>, name: &str, value: &str) {
-        if let Some(existing) = attrs.iter_mut().find(|a| a.name == name) {
-            existing.value = value.into();
-        } else {
-            attrs.push(XmlAttr { name: name.into(), value: value.into() });
-        }
-    }
-    //#endregion 🔖️Stamp
 
     //#region 🔖️Builder
     #[derive(Clone, Debug)]
@@ -141,7 +116,7 @@ use semio_framework_diagnostic::Severity;
         /// ecma-376 engine, then stamps it explicitly Transitional.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(workbook: XlsxWorkbook) -> Self {
-            Self { snapshot: stamp_transitional_namespace(crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(workbook)) }
+            Self { snapshot: stamp_transitional_namespace(crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook)) }
         }
     }
 
@@ -196,6 +171,7 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
+    use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use crate::standards::v_ecma_376::subsets::base::io::XlsxAnalyzer as XlsxAnyAnalyzer;
     pub use crate::standards::v_ecma_376::subsets::base::io::XlsxParts;
@@ -204,90 +180,11 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
-
-    //#region 🔖️Conformance
-    pub const CODE_NAMESPACE_MISMATCH: &str = "stdio.xlsx.transitional.namespace-mismatch";
-    pub const CODE_RELATIONSHIPS_NAMESPACE_MISMATCH: &str = "stdio.xlsx.transitional.relationships-namespace-mismatch";
-    pub const CODE_CONFORMANCE_ATTRIBUTE: &str = "stdio.xlsx.transitional.conformance-attribute";
-    pub const CODE_WORKSHEET_CONTENT_TYPE: &str = "stdio.xlsx.transitional.worksheet-content-type-missing";
-
-    /// 🏷️ ISO/IEC 29500-4 Transitional SpreadsheetML main namespace (same value the shared
-    /// `⚙️engine`'s private `SML_NS` uses -- duplicated here as a `pub` constant since the engine's
-    /// copy isn't exported).
-    pub const TRANSITIONAL_SML_NS: &str = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-    /// 🔗️ ISO/IEC 29500-4 Transitional officeDocument relationships (markup) namespace.
-    pub const TRANSITIONAL_R_NS: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-    const WORKSHEET_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml";
-    const WORKBOOK_PART: &str = "xl/workbook.xml";
-
-    /// 🔎️ Real scan of `xl/workbook.xml`'s root element attrs -- `(xmlns, xmlns:r, conformance)`,
-    /// each `None` when absent. `None` overall only when the part is missing or unparsable as XML.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
-        let path = snapshot.workbook_part_path()?;
-        let XmlNode::Element { name, attrs, .. } = snapshot.xml_part(&path)?.document.root.as_ref()? else { return None };
-        if name.rsplit_once(':').map_or(name.as_str(), |(_, local)| local) != "workbook" {
-            return None;
-        }
-        let get = |n: &str| attrs.iter().find(|a| a.name == n).map(|a| a.value.clone());
-        Some((get("xmlns"), get("xmlns:r"), get("conformance")))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn hard(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn soft(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
-    }
-
-    /// 🩺️ Real worksheet content-type scan over every part the workbook's worksheet relationships target (its role),
-    /// reading the package-declared type -- same check as 🔒️strict's own copy, duplicated (small enough, CODE_* consts
-    /// stay subset-namespaced) rather than a cross-subset dependency.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn worksheet_content_type_gaps(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
-        snapshot
-            .worksheet_part_paths()
-            .into_iter()
-            .filter_map(|path| {
-                let content_type = snapshot.opc.content_types.resolve(&path).map(str::to_string);
-                (content_type.as_deref() != Some(WORKSHEET_CONTENT_TYPE))
-                    .then(|| soft(CODE_WORKSHEET_CONTENT_TYPE, format!("worksheet part {path} resolves content type {content_type:?}, expected {WORKSHEET_CONTENT_TYPE:?} (ECMA-376 Part 1 §12.3.24)")))
-            })
-            .collect()
-    }
-
-    /// 🛡️ Real ISO/IEC 29500-4 (Transitional) conformance checks against one already-decoded
-    /// `XlsxSnapshot`. Same single-source-of-truth role as 🔒️strict's `check_strict_conformance`:
-    /// `XlsxTransitionalComposer::compose` and `XlsxTransitionalBuilder::build` hard-gate on this, and
-    /// the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_transitional_conformance(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
-        let mut out = Vec::new();
-        let Some((xmlns, xmlns_r, conformance)) = workbook_root_attrs(snapshot) else {
-            out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} is missing or unparsable as XML -- cannot verify ISO/IEC 29500-4 Transitional conformance")));
-            return out;
-        };
-        if xmlns.as_deref() != Some(TRANSITIONAL_SML_NS) {
-            out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns is {xmlns:?}, expected the Transitional SpreadsheetML namespace {TRANSITIONAL_SML_NS:?} (ISO/IEC 29500-4)")));
-        }
-        if xmlns_r.as_deref() != Some(TRANSITIONAL_R_NS) {
-            out.push(hard(CODE_RELATIONSHIPS_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns:r is {xmlns_r:?}, expected the Transitional officeDocument relationships namespace {TRANSITIONAL_R_NS:?}")));
-        }
-        if conformance.as_deref() == Some("strict") {
-            out.push(hard(CODE_CONFORMANCE_ATTRIBUTE, format!("{WORKBOOK_PART} workbook@conformance is \"strict\" -- a document that declares Strict conformance cannot be honestly stamped Transitional")));
-        }
-        out.extend(worksheet_content_type_gaps(snapshot));
-        out
-    }
-    //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer
     /// 🧐️ Analyzes `stdio.xlsx` (ecma-376/🌉️transitional): delegates the real parse to the 🧱️base
@@ -319,8 +216,7 @@ use semio_framework_diagnostic::TextSpan;
     }
     //#endregion 🔖️Analyzer
 
-    #[cfg(test)]
-    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+
 }
 pub use derived_analysis::*;
 

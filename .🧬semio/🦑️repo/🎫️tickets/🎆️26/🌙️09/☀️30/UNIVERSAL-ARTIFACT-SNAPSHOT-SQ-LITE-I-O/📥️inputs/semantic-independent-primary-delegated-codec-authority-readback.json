@@ -1,0 +1,2149 @@
+{
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 28,
+          "text": "dialect: crate::WRITER_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 70,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 889,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1088,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "WRITER_DIALECT",
+          "body": " artifact_kind: \"s.writer.writer\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "EquationSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 74,
+          "text": "const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 886,
+          "text": "const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1044,
+          "text": "const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EQUATION_DIALECT",
+          "body": " artifact_kind: \"s.mathematical.equation\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+          "line": 24,
+          "text": "pub const WFC_2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY };"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🔨️modules/🏠️host/💡️inferences/🦀️.rs",
+          "line": 29,
+          "text": "pub const WFC_2D_INFERENCE_JOB_KIND: &str = \"semio.infer\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🔨️modules/🏠️host/💡️inferences/🦀️.rs",
+          "line": 31,
+          "text": "pub const WFC_2D_INFERENCE_TOOL_ID: &str = \"s.wfc.wfc2d.solve\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🔨️modules/🏠️host/💡️inferences/🦀️.rs",
+          "line": 33,
+          "text": "pub const WFC_2D_INFERENCE_PAYLOAD_SCHEMA: &str = \"s.wfc.wfc2d.inference.request.v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🔨️modules/🏠️host/💡️inferences/🦀️.rs",
+          "line": 40,
+          "text": "pub const WFC_2D_INFERENCE_REQUEST_SCHEMA: &str = r#\"{"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🔨️modules/🏠️host/💡️inferences/🦀️.rs",
+          "line": 62,
+          "text": "pub const WFC_2D_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 23,
+          "text": "dialect: crate::WFC_2D_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 21,
+          "text": "pub const WFC_2D_DOCUMENT_SCHEMA: &str = \"s.wfc.wfc2d\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 24,
+          "text": "pub const WFC_2D_DEFAULT_RELATION: &str = \"adjacent\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 59,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+          "line": 9,
+          "text": "pub const WFC_2D_VIEW_MODE_ID: &str = \"view\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs",
+          "line": 20,
+          "text": "pub const WFC_2D_VIEW_WINDOW: &str = \"wfc-2d-board\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs",
+          "line": 21,
+          "text": "pub const WFC_2D_VIEW_BODY: &str = \"wfc.wfc2d.board\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 168,
+          "text": "pub const WFC_2D_SET_ACTIVE_EXAMPLE: &str = \"setActiveExample\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 172,
+          "text": "pub const WFC_2D_NODE_GRAPH_EDIT: &str = \"nodeGraphEdit\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 177,
+          "text": "pub const WFC_2D_RETAINED_TOOL_IDS: &[&str] = &["
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 369,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 381,
+          "text": "pub const WFC_2D_GRAPH_VIEW_SCALE: f64 = 140.0;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 780,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+          "line": 11,
+          "text": "pub const WFC_2D_EDIT_MODE_ID: &str = \"edit\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/✋️drag/🦀️.rs",
+          "line": 14,
+          "text": "pub const WFC_2D_EDITOR_APP_ID: &str = \"s.wfc.wfc2d@1/*#editor\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+          "line": 29,
+          "text": "pub const WFC_2D_PREVIEW_WINDOW: &str = \"wfc-2d-preview\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+          "line": 30,
+          "text": "pub const WFC_2D_PREVIEW_BODY: &str = \"wfc.wfc2d.preview\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 41,
+          "text": "pub const WFC_GRAPH_WINDOW: &str = \"wfc-graph\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 42,
+          "text": "pub const WFC_GRAPH_BODY: &str = \"wfc.graph\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 45,
+          "text": "pub const WFC_GRAPH_PORT_IN: &str = \"adjacent-in\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 46,
+          "text": "pub const WFC_GRAPH_PORT_OUT: &str = \"adjacent-out\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "WFC_2D_DIALECT",
+          "body": " artifact_kind: WFC_2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+          "line": 23,
+          "text": "pub const WFC_GRID2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY };"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 23,
+          "text": "dialect: crate::WFC_GRID2D_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 13,
+          "text": "pub const WFC_GRID2D_DOCUMENT_SCHEMA: &str = \"s.wfc.grid2d\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 215,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 236,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 380,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 614,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "WFC_GRID2D_DIALECT",
+          "body": " artifact_kind: WFC_GRID2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+          "line": 30,
+          "text": "pub const WFC_BITMAP_DIALECT: Dialect = Dialect { artifact_kind: WFC_BITMAP_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY };"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 22,
+          "text": "dialect: crate::WFC_BITMAP_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 13,
+          "text": "pub const WFC_BITMAP_DOCUMENT_SCHEMA: &str = \"s.wfc.bitmap\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 58,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_BITMAP_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+          "line": 10,
+          "text": "pub const WFC_BITMAP_MODE_VIEW: &str = \"view\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧩️output/🦀️.rs",
+          "line": 20,
+          "text": "pub const WFC_BITMAP_VIEW_WINDOW_OUTPUT: &str = \"wfc-bitmap-output\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️input/🦀️.rs",
+          "line": 17,
+          "text": "pub const WFC_BITMAP_VIEW_WINDOW_INPUT: &str = \"wfc-bitmap-input\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 521,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_BITMAP_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 732,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_BITMAP_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+          "line": 11,
+          "text": "pub const WFC_BITMAP_MODE_EDIT: &str = \"edit\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧩️output/🦀️.rs",
+          "line": 26,
+          "text": "pub const WFC_BITMAP_WINDOW_OUTPUT: &str = \"wfc-bitmap-output\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🦀️.rs",
+          "line": 28,
+          "text": "pub const WFC_BITMAP_WINDOW_INPUT: &str = \"wfc-bitmap-input\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "WFC_BITMAP_DIALECT",
+          "body": " artifact_kind: WFC_BITMAP_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 12,
+          "text": "pub const WFC3D_DOCUMENT_SCHEMA: &str = \"s.wfc.wfc3d\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 71,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC3D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+          "line": 9,
+          "text": "pub const WFC_3D_VIEW_MODE_ID: &str = \"view\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️preview/🦀️.rs",
+          "line": 20,
+          "text": "pub const WFC_3D_VIEW_WINDOW: &str = \"wfc-3d-view\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️preview/🦀️.rs",
+          "line": 21,
+          "text": "pub const WFC_3D_VIEW_BODY: &str = \"wfc.3d.view\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 169,
+          "text": "pub const WFC_3D_DEFAULT_RELATION: &str = \"adjacent\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 177,
+          "text": "pub const WFC_3D_GRAPH_UNIT: f64 = 120.0;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 182,
+          "text": "pub const WFC_3D_INTERACTION_GRAPH: &str = \"slot\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 189,
+          "text": "pub const WFC_3D_SET_ACTIVE_EXAMPLE: &str = \"setActiveExample\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 193,
+          "text": "pub const WFC_3D_NODE_GRAPH_EDIT: &str = \"nodeGraphEdit\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 197,
+          "text": "pub const WFC_3D_NODE_GRAPH_VIEWPORT: &str = \"nodeGraphViewport\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 202,
+          "text": "pub const WFC_3D_RETAINED_TOOL_IDS: &[&str] = &["
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 392,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC3D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 457,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC3D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 807,
+          "text": "pub const WFC_3D_EXAMPLE_IDS: [&str; 3] = [crate::examples::two_room_corridor::ID, crate::examples::wall_roof_facade_strip::ID, crate::examples::tower_stack::ID];"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+          "line": 11,
+          "text": "pub const WFC_3D_EDIT_MODE_ID: &str = \"edit\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/✋️drag/🦀️.rs",
+          "line": 14,
+          "text": "pub const WFC_3D_EDITOR_APP_ID: &str = \"s.wfc.wfc3d@1/*#editor\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️preview/🦀️.rs",
+          "line": 42,
+          "text": "pub const WFC_3D_PREVIEW_WINDOW: &str = \"wfc-3d-preview\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️preview/🦀️.rs",
+          "line": 43,
+          "text": "pub const WFC_3D_PREVIEW_BODY: &str = \"wfc.3d.preview\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️preview/🦀️.rs",
+          "line": 51,
+          "text": "pub const WFC_3D_PLACEHOLDER_MESH: &str = \"tile:__placeholder\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 41,
+          "text": "pub const WFC_GRAPH_WINDOW: &str = \"wfc-graph\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 42,
+          "text": "pub const WFC_GRAPH_BODY: &str = \"wfc.graph\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 45,
+          "text": "pub const WFC_GRAPH_PORT_IN: &str = \"adjacent-in\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs",
+          "line": 46,
+          "text": "pub const WFC_GRAPH_PORT_OUT: &str = \"adjacent-out\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "WFC3D_DIALECT",
+          "body": " artifact_kind: WFC3D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs",
+          "line": 23,
+          "text": "pub const WFC_GRID3D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID3D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY };"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "line": 16,
+          "text": "pub const WFC_GRID3D_DOCUMENT_SCHEMA: &str = \"s.wfc.grid3d\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 58,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 528,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 564,
+          "text": "const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "WFC_GRID3D_DIALECT",
+          "body": " artifact_kind: WFC_GRID3D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 75,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 641,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 795,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1494,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "GENERATION2D_DIALECT",
+          "body": " artifact_kind: \"s.procedural.generation2d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 706,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 842,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 937,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 1021,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 1160,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 1221,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1049,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1153,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1414,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1626,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2076,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "GENERATION3D_DIALECT",
+          "body": " artifact_kind: \"s.procedural.generation3d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "FlowSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 73,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1004,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1228,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1444,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1685,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1913,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2017,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "FLOW_DIALECT",
+          "body": " artifact_kind: \"s.flow.flow\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+          "line": 192,
+          "text": ".document_codec_bare::<GisTerrainSnapshot, GisTerrainMutation>(GIS_3D_TERRAIN_SCHEMA, GISTERRAIN_DIALECT)"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 50,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 256,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 448,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "GISTERRAIN_DIALECT",
+          "body": " artifact_kind: \"s.gis.gisterrain\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+          "line": 338,
+          "text": ".document_codec_bare::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, GISMAP_DIALECT)"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 201,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 226,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 515,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 824,
+          "text": "const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "GISMAP_DIALECT",
+          "body": " artifact_kind: \"s.gis.gismap\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "VcsSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 69,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 583,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 641,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 827,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "VCS_DIALECT",
+          "body": " artifact_kind: \"s.vcs.vcs\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 28,
+          "text": "dialect: crate::ANIMATE_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 73,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 466,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 875,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "ANIMATE_DIALECT",
+          "body": " artifact_kind: \"s.animate.presentation\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 63,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 589,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 652,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "SHOOTING_DIALECT",
+          "body": " artifact_kind: \"s.shooting.shooting\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+          "line": 85,
+          "text": ".document_codec_bare::<standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot, standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(PLAYGROUND_DOCUMENT_SCHEMA, PLAYGROUND_DIALECT)"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 70,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 148,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 308,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "PLAYGROUND_DIALECT",
+          "body": " artifact_kind: \"s.demonstrator.playground\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 67,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1411,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2289,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2497,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2696,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 3092,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "SEQUENCE_DIALECT",
+          "body": " artifact_kind: \"s.sequence.sequence\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs",
+          "line": 62,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FEM_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 384,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 668,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_2D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "FEM2D_DIALECT",
+          "body": " artifact_kind: \"s.fem.fem2d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs",
+          "line": 63,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 428,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+          "line": 720,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "FEM3D_DIALECT",
+          "body": " artifact_kind: \"s.fem.fem3d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 75,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1313,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1460,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1529,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "ARCHITECT_DIALECT",
+          "body": " artifact_kind: \"s.architect.program\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 64,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 651,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 744,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1388,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "PROCESS3D_DIALECT",
+          "body": " artifact_kind: \"s.process.process3d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 60,
+          "text": "const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1101,
+          "text": "const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1661,
+          "text": "const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "LOWPOLY_DIALECT",
+          "body": " artifact_kind: \"s.lowpoly.lowpoly\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "WiresSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 72,
+          "text": "const DOCUMENT_SCHEMA: &'static str = MINDMAP_WIRES_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 529,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 559,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "WIRES_DIALECT",
+          "body": " artifact_kind: \"s.reasoning.wires\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "FormsSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 78,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 747,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 971,
+          "text": "const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "FORMS_DIALECT",
+          "body": " artifact_kind: \"s.forms.forms\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 52,
+          "text": "const DOCUMENT_SCHEMA: &'static str = LAYOUT_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 808,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1222,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+          "line": 2665,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+          "line": 2757,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "LAYOUT_DIALECT",
+          "body": " artifact_kind: \"s.layout.layout\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "CadSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 64,
+          "text": "const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1471,
+          "text": "const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1962,
+          "text": "const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "CAD_DIALECT",
+          "body": " artifact_kind: \"s.cad.cad\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1990Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1990_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1990/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1990/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1990_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1990\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 56,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DIN18599_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.din18599/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 95,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.din18599/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "DIN18599_DIALECT",
+          "body": " artifact_kind: \"s.norm.din18599\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1997Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1997_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1997/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1997/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1997_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1997\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DIN16798_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.din16798/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.din16798/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "DIN16798_DIALECT",
+          "body": " artifact_kind: \"s.norm.din16798\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1991Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1991_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1991/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1991/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1991_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1991\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1992Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1992_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1992/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1992/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1992_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1992\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = VDI3805_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.vdi3805/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 116,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.vdi3805/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 263,
+          "text": "const DOCUMENT_SCHEMA: &'static str = <Vdi3805PlayApp as semio_framework_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "VDI3805_DIALECT",
+          "body": " artifact_kind: \"s.norm.vdi3805\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ISO16757_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.iso16757/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.iso16757/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "ISO16757_DIALECT",
+          "body": " artifact_kind: \"s.norm.iso16757\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1993Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1993_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1993/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1993/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1993_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1993\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1994Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1994_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1994/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1994/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1994_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1994\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DIN4108_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.din4108/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.din4108/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "DIN4108_DIALECT",
+          "body": " artifact_kind: \"s.norm.din4108\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1996Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1996_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1996/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1996/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1996_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1996\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1995Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1995_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1995/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1995/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1995_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1995\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1999Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1999_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1999/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 93,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1999/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1999_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1999\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "En1998Snapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 54,
+          "text": "const DOCUMENT_SCHEMA: &'static str = EN1998_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 47,
+          "text": "pub const DOCUMENT_SCHEMA: &str = \"semio.norm.en1998/v1\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 98,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"semio.norm.en1998/v1\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "EN1998_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1998\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 67,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 316,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 493,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "PLAYBOOK_DIALECT",
+          "body": " artifact_kind: \"s.playbook.playbook\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 72,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 341,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 390,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "PROCEDURE_DIALECT",
+          "body": " artifact_kind: \"s.imperative.procedure\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 36,
+          "text": "dialect: crate::REMODELING_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 65,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 772,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 808,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "REMODELING_DIALECT",
+          "body": " artifact_kind: \"s.remodel.remodeling\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+          "line": 649,
+          "text": "/// `register_document_codec()` — folded into this declaration via `.document_codec_bare::<Snapshot,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+          "line": 696,
+          "text": ".document_codec_bare::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.energy.model\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 260,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 285,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1939,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2119,
+          "text": "const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "MODEL_DIALECT",
+          "body": " artifact_kind: ENERGY_MODEL_ARTIFACT_SCHEMA_ID, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 75,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 628,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 708,
+          "text": "const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧵️job/🦀️.rs",
+          "line": 95,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::REWRITE_RULE_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "TRINITY_REWRITING_DIALECT",
+          "body": " artifact_kind: \"s.trinity.rewriting\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "JackSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 69,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 531,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 581,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 717,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 745,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️run-query/🧵️job/🦀️.rs",
+          "line": 70,
+          "text": "const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "TRINITY_JACK_DIALECT",
+          "body": " artifact_kind: \"s.trinity.jack\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "DagSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 33,
+          "text": "dialect: crate::DAG_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 70,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 412,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"dag.dag\";"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 631,
+          "text": "const DOCUMENT_SCHEMA: &'static str = \"dag.dag\";"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "DAG_DIALECT",
+          "body": " artifact_kind: \"s.dag.dag\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 184,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 205,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1097,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1332,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1603,
+          "text": "const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "DRAWING_DIALECT",
+          "body": " artifact_kind: \"s.draw.drawing\", standard: semio_framework::StandardId(\"1\"), subset: semio_framework::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 63,
+          "text": "const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 565,
+          "text": "const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 1098,
+          "text": "const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🦀️.rs",
+          "line": 176,
+          "text": "const DOCUMENT_SCHEMA:&'static str=crate::RASTER_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🦀️.rs",
+          "line": 207,
+          "text": "const DOCUMENT_SCHEMA:&'static str=crate::RASTER_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "RASTER_DIALECT",
+          "body": " artifact_kind: \"s.raster.raster\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "NoteSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+          "line": 29,
+          "text": "dialect: crate::NOTE_DIALECT,"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 69,
+          "text": "const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 476,
+          "text": "const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs",
+          "line": 405,
+          "text": "const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "NOTE_DIALECT",
+          "body": " artifact_kind: \"s.note.note\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 67,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 2362,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 4988,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "PUZZLE2D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle2d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 69,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE_5D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 8499,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 8929,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "PUZZLE5D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle5d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 64,
+          "text": "const DOCUMENT_SCHEMA: &'static str = PUZZLE_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 6679,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PUZZLE_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 7209,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::PUZZLE_3D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "PUZZLE3D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle3d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 51,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 272,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 405,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "BLOCK2D_DIALECT",
+          "body": " artifact_kind: \"s.block.block2d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 64,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 238,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 372,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "BLOCK5D_DIALECT",
+          "body": " artifact_kind: \"s.block.block5d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 63,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 437,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 708,
+          "text": "const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "BLOCK3D_DIALECT",
+          "body": " artifact_kind: \"s.block.block3d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+          "line": 118,
+          "text": ".document_codec_bare::<SHomeSnapshot,SHomeMutation>(S_HOME_DOCUMENT_SCHEMA,HOME_DIALECT)"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 152,
+          "text": "const DOCUMENT_SCHEMA: &'static str = S_HOME_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 177,
+          "text": "const DOCUMENT_SCHEMA: &'static str = S_HOME_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 226,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 364,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "HOME_DIALECT",
+          "body": " artifact_kind: \"s.space.home\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+          "line": 94,
+          "text": ".document_codec_bare::<SSpaceSnapshot,SSpaceMutation>(S_SPACE_INDEX_DOCUMENT_SCHEMA,SPACE_INDEX_DIALECT)"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 51,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 236,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 264,
+          "text": "const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "SPACE_INDEX_DIALECT",
+          "body": " artifact_kind: \"s.space.space\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    },
+    {
+      "owner": "CurationSnapshot",
+      "authority": [
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "line": 62,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 416,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "line": 915,
+          "text": "const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;"
+        }
+      ],
+      "coordinate": [
+        {
+          "name": "SOURCING_DIALECT",
+          "body": " artifact_kind: \"s.sourcing.curation\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "status": "Evidence inventory only; exact selected editor and additional bindings must be joined, not deduced from count"
+    }
+  ]
+}

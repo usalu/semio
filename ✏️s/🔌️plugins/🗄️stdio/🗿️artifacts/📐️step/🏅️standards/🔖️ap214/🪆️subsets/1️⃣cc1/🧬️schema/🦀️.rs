@@ -27,3 +27,6 @@ pub mod mutations;
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+/// 🔢️ Maximum geometry ladder rung admitted by CC1.
+pub const MAX_RUNG: u8 = 1;

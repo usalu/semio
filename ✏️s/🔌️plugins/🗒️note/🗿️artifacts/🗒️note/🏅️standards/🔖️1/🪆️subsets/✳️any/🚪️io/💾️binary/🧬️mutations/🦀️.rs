@@ -32,3 +32,17 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
 mod semio_protocol_conformance;
+
+mod native_codec {
+use super::*;
+use crate::schema::mutations::{apply_note_mutation, NoteMutation};
+
+impl protocol::OpBinary for NoteMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+}

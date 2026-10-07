@@ -44,7 +44,46 @@
       "ownershipSourceMultiples": 32,
       "downloadBytes": 33554432,
       "largeTextRepeats": 2048,
-      "overOwnershipBytes": 1
+      "overOwnershipBytes": 1,
+      "measurementMaximumBytes": 33554432,
+      "scaffoldBytes": 16384,
+      "measurementBeforeCandidate": true,
+      "inheritedRestrictiveAdmission": "preserve",
+      "changedMeasurementSource": "refuse"
+    },
+    "segmentedExport": {
+      "completion": "segmented-download",
+      "maximumChunkBytes": 4096,
+      "maximumTotalBytes": 33554432,
+      "physicalParity": "exact",
+      "publication": "after-sealing",
+      "canceledDownloads": 0
+    },
+    "importContinuation": {
+      "firstStep": "progress",
+      "maximumMutationItems": 32,
+      "maximumStagedRows": 64,
+      "extentAdmission": "before-publication",
+      "changedSource": "refuse",
+      "canceledMutations": 0,
+      "candidateRetirementBytes": 3,
+      "snapshotParity": "all-semantic-fields",
+      "rawSourceCopies": 0,
+      "restoration": {
+        "priorGenerationId": "prior-generation",
+        "generationId": "incoming-generation-é-🧊",
+        "generationName": "Imported generation 😀",
+        "questionId": "original-é-🧊",
+        "value": {"nested": ["Mesh 😀 \\ \" Label\n", {"enabled": true, "nothing": null}], "numbers": [0, 42, -7, 1.5]},
+        "selectedGenerationId": "incoming-generation-é-🧊",
+        "previewText": "Imported preview 😀\n",
+        "camera": {"x": 13.5, "y": -4.25, "zoom": 0.875},
+        "cameraLane": "config",
+        "selectionLanes": ["artifact", "config"],
+        "cancelAfterHops": [0, 1, 8, 64],
+        "staleRoots": ["command", "snapshot"],
+        "publication": "after-checked-mutations"
+      }
     },
     "importAdditionalGroups": 9
   },

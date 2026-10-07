@@ -22,8 +22,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: equal } = await import("fast-deep-equal");
     const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json", source.url), "utf8"));
     for (const field of ["closed", "request", "opened", "refused", "authorityRefused", "indeterminate"]) Object.assign(fixture[field], { owner: "gis", serviceId: "s.gis.gismap.inference" });
-    const schema = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json", source.url), "utf8"));
-    vitest.expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
     for (const kind of fixture.routes) {
       const routes: string[] = [];
       const request = fixture.request;
@@ -227,12 +225,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   vitest.it("refreshes Shell session authority serially and cancels stale callbacks", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: equal } = await import("fast-deep-equal");
-    const directory = "./🔨️modules/📇️directory/🪪️session-refresh";
-    const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
-    vitest.expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
+    const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-refresh/🔣️.json", source.url), "utf8"));
     const { directorySessionAuthorityIsCurrentV1, directorySessionAuthorityTextV1, directorySessionRefreshRetryDelayMsV1, startDirectorySessionRefreshV1, DIRECTORY_SESSION_REFRESH_INTERVAL_MS, DIRECTORY_SESSION_AUTHORITY_TEXT_V1 } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts");
-    const corpus = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
+    const corpus = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
     const first = corpus.rows[0].value;
     const second = corpus.rows[1].value;
     for (const row of fixture.actionAdmission) {
@@ -1155,9 +1150,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFile } = await import("node:fs/promises");
       const { createHash } = await import("node:crypto");
       const corpus = JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/🧵️artifact-bootstrap-owner-v1.json", source.url), "utf8"));
-      const schema = JSON.parse(await readFile(new URL("./🔨️modules/📇️directory/🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
-      const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/DirectoryArtifactBootstrapOwnerV1`)!;
-      expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
       const fixture = await artifactBootstrapFixture(),
         frame = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);
       if (!("Welcome" in frame) || typeof frame.Welcome.bootstrap !== "object" || !("ArtifactBootstrap" in frame.Welcome.bootstrap)) throw new Error("fixture bootstrap");
@@ -5101,8 +5093,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const fixture = await executionTargetLeaseFixture();
       const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const actionFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
-      const schema = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", source.url), "utf8"));
-      expect(semioSchemaAjvV1({ strict: true }).compile(schema)(corpus)).toBe(true);
       const { applyPatch } = await import("fast-json-patch");
       const rendererOracle = applyPatch({ revision: 0, nodeKind: null as string | null }, [
         { op: "replace", path: "/revision", value: corpus.browserRender.revision },
@@ -7288,10 +7278,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const corpus = JSON.parse(await readFile(new URL("./🔨️modules/🏪️store/🧫️fixtures/🔁️document-rebuild-welcome-v1/🔣️.json", source.url), "utf8")) as {
         readonly rows: readonly Readonly<{ name: string; lane: "browser-actor" | "local"; welcome: "None" | "Tail"; accepted: boolean }>[];
       };
-      const schema = JSON.parse(await readFile(new URL("./🔨️modules/🏪️store/🧬️schema/🔁️document-rebuild-welcome/🔣️.json", source.url), "utf8"));
-      const { default: Ajv } = await import("ajv");
-      const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
-      expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
       const fixture = JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
       const posted: BackboneWorkerResponse[] = [];

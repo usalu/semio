@@ -21,7 +21,8 @@
         "description": {
           "en": "Revision-bound sheetData element that owns the vacant cell.",
           "de": "Revisionsgebundenes sheetData-Element, das die freie Zelle enthält."
-        }
+        },
+        "widget": "hidden"
       }
     },
     "row": {

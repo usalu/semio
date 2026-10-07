@@ -24,5 +24,5 @@ pub fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _c
     // `Flat`-hierarchy domains are deliberately never auto-pruned on document change (see the plugin
     // SDK's `validate_state` doc), so a deleted layer's stale id simply stays selected until the next
     // real pick — a documented, accepted gap, not routed around here.
-    Ok(Emit { artifact_mutations: vec![crate::mutations::delete_layer(payload.layer_id.clone())], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![crate::mutations::delete_layer(payload.layer_id.clone().into())], ..Default::default() })
 }

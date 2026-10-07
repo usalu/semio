@@ -1391,7 +1391,7 @@ impl<M> NodeDragEmit<M> {
 /// 🛠️ The ONE node-drag emission of every guest: `leaves` of the press `gesture` through [`node_drag_commit`] as the tool
 /// `<app_id>#<verb>`, minted from the admission's `authoring_seed` and [`authoring_clock`].
 pub fn node_drag_emit<M: Clone + 'static>(app_id: &str, verb: &str, authoring_seed: &str, gesture: &str, leaves: Vec<M>) -> NodeDragEmit<M> {
-    match node_drag_commit(format!("{app_id}#{verb}"), ActorId(authoring_seed.to_string()), gesture, leaves, authoring_clock(0)) {
+    match node_drag_commit(format!("{app_id}#{verb}"), ActorId(authoring_seed.to_string()), gesture, leaves, authoring_clock(GESTURE_CLOCK_TICK.fetch_add(1, std::sync::atomic::Ordering::Relaxed))) {
         Some((transaction, leaves)) if !authoring_seed.is_empty() => NodeDragEmit::Commit(transaction, leaves),
         Some((_, leaves)) => NodeDragEmit::Plain(leaves),
         None => NodeDragEmit::Nothing,

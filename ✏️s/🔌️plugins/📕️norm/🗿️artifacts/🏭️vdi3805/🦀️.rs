@@ -333,6 +333,8 @@ impl SheetId {
 /// 🔗️ Hand `DslField` bridge for `SheetId`: a tuple ("newtype") struct has no named fields for
 /// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::UInt` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
+impl semio_framework_dsl_record::BorrowedDslField for SheetId{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::UInt;}
+
 impl semio_framework_dsl_record::DslField for SheetId {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<u16 as semio_framework_dsl_record::DslField>::shape_controlled(control)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<u16 as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
@@ -695,6 +697,8 @@ pub struct RecordFamilyId(pub String);
 /// 🔗️ Hand `DslField` bridge for `RecordFamilyId`: a tuple ("newtype") struct has no named fields
 /// for `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
+impl semio_framework_dsl_record::BorrowedDslField for RecordFamilyId{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Text;}
+
 impl semio_framework_dsl_record::DslField for RecordFamilyId {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::shape_controlled(control)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
@@ -1072,6 +1076,8 @@ impl SheetAttributes {
         }
     }
 }
+
+impl semio_framework_dsl_record::BorrowedDslField for SheetAttributes{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;}
 
 impl semio_framework_dsl_record::DslField for SheetAttributes {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}

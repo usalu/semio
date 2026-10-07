@@ -6,7 +6,7 @@ const FIELD_BYTES:usize=18+24+16;
 const RECORD_BYTES:usize=16;
 /// 🫳️ Pays only admission scratch while forecasting every actual flat native record field.
 pub(crate) fn preflight(snapshot:&FormsSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
- let counts=super::super::sqlite::admission::forecast(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
+ let counts=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::forecast(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
  let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};
  let prefix=store::semio_format::declared_envelope_prefix_len(<FormsSnapshot as store::ArtifactDsl>::envelope_id(),component,1)?;
  let mut bound=NativeEncodingBound::new(control)?;

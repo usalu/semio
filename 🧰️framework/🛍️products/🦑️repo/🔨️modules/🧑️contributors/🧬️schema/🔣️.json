@@ -68,56 +68,6 @@
         "date": { "type": "string" }
       },
       "required": ["id", "sha", "title", "date"]
-    },
-    "ContributorDocumentVectors": {
-      "$comment": "🧑️ 🧫️fixtures/🧑️‍💻️contributor-documents.json — real documents copied verbatim out of this repository's own devs tree, each with the directory name it sits under.",
-      "type": "object",
-      "properties": {
-        "schema": { "type": "string" },
-        "documents": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": { "directory": { "type": "string" }, "json": { "type": "string" } },
-            "required": ["directory", "json"]
-          }
-        }
-      },
-      "required": ["documents"]
-    },
-    "CheckpointLogVectors": {
-      "$comment": "🏁️ 🧫️fixtures/🏁️checkpoint-log.json — real git output plus the lines a reader has to reject.",
-      "type": "object",
-      "properties": {
-        "schema": { "type": "string" },
-        "log": { "type": "string" },
-        "identities": { "type": "array", "items": { "type": "string" } },
-        "malformed": { "type": "array", "items": { "type": "string" } }
-      },
-      "required": ["log", "identities", "malformed"]
-    },
-    "SessionVectors": {
-      "$comment": "📡️ 🧫️fixtures/📡️session-vectors.json — session directories stated as their own files and the age of their newest write, one per branch of the kind derivation. These are specification vectors, not recorded data: this checkout carries no session directory to copy, which the no-oracle decision states.",
-      "type": "object",
-      "properties": {
-        "schema": { "type": "string" },
-        "sessions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "year": { "type": "integer" },
-              "month": { "type": "integer" },
-              "day": { "type": "integer" },
-              "uuid": { "type": "string" },
-              "ageSeconds": { "type": ["integer", "null"] },
-              "files": { "type": "object", "additionalProperties": { "type": "string" } }
-            },
-            "required": ["year", "month", "day", "uuid", "files"]
-          }
-        }
-      },
-      "required": ["sessions"]
     }
   }
 }

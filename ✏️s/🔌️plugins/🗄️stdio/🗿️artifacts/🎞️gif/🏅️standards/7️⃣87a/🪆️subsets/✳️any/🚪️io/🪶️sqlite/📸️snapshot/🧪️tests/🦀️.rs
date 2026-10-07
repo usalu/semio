@@ -32,7 +32,7 @@ fn sqlite_snapshot_gif87_entity_validation_honors_bounded_cancel_before_palette_
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_gif87_owned_io_preserves_full_source_metadata() {
- use semio_framework_os_kernel::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
  use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  crate::register_sqlite_test_declaration();
  let dialect:ArtifactDialect=crate::GIF_87A_DIALECT.into();let mut snapshot=fixture();snapshot.schema="GIF87 vollständiger Snapshot 世界".into();let mut phases=Vec::new();
@@ -72,7 +72,7 @@ fn sqlite_snapshot_gif87_independent_palette_and_pixel_edits() {
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_gif87_actual_erased_declaration_preserves_owned_state(){
- use store::{ArtifactSqliteSnapshot,ArtifactDsl};use semio_framework_os_kernel::{io_schema::ArtifactDialect,sqlite_snapshot::SnapshotEncoding};
+ use store::{ArtifactSqliteSnapshot,ArtifactDsl};use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
  crate::register_sqlite_test_declaration();let codec=store::document_codec(crate::STDIO_GIF_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.unwrap();let dialect:ArtifactDialect=crate::GIF_87A_DIALECT.into();let mut snapshot=fixture();snapshot.schema="owned GIF87 世界\0".into();snapshot.width=u32::MAX;
  let mut intermediate=snapshot.clone();intermediate.images[0].width=0;intermediate.images[0].height=u32::MAX;intermediate.images[0].indices=vec![0,255,1];for snapshot in [snapshot,GifSnapshot{schema:"empty palette".into(),width:u32::MAX,gct:Some(GifColorTable::default()),..GifSnapshot::default()},intermediate]{let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=(provider.import)(&codec.schema,&dialect,expected.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;let restored=(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(restored,expected);}}
 }

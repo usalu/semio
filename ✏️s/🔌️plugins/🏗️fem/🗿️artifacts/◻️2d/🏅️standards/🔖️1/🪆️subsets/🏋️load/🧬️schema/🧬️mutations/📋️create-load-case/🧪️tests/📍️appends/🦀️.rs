@@ -8,7 +8,8 @@
 //! A case is coined pre-seeded with a load, so the builder's per-load reference check against `n2` has to pass first.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/📸️snapshot/⬅️before/🔣️.json");

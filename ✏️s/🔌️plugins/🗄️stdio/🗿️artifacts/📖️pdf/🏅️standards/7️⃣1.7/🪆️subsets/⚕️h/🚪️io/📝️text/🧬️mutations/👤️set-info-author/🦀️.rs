@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-info-author";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::SetInfoAuthor;
+use crate::standards::v1_7::subsets::h::schema::mutations::SetInfoAuthor;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetInfoAuthor) -> Result<String, String> {

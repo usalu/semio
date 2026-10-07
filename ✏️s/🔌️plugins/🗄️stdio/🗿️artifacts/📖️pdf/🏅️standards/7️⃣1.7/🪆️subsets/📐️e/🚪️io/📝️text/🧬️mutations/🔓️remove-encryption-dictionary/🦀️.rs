@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-encryption-dictionary";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::RemoveEncryptionDictionary;
+use crate::standards::v1_7::subsets::e::schema::mutations::RemoveEncryptionDictionary;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveEncryptionDictionary) -> Result<String, String> {

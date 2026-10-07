@@ -1,0 +1,440 @@
+[
+  {
+    "name": "presentation",
+    "cap": "Presentation",
+    "tables": 26,
+    "maxColumns": 18,
+    "contract": {
+      "schemaBytes": 5669,
+      "tableWidths": {
+        "semio_presentation_block": 2,
+        "semio_presentation_code": 3,
+        "semio_presentation_collection": 1,
+        "semio_presentation_document": 2,
+        "semio_presentation_heading": 3,
+        "semio_presentation_image_block": 9,
+        "semio_presentation_layout": 5,
+        "semio_presentation_list": 2,
+        "semio_presentation_list_item": 4,
+        "semio_presentation_master": 4,
+        "semio_presentation_member": 4,
+        "semio_presentation_page_break": 1,
+        "semio_presentation_paragraph": 2,
+        "semio_presentation_picture": 4,
+        "semio_presentation_placeholder": 3,
+        "semio_presentation_quote": 2,
+        "semio_presentation_run": 13,
+        "semio_presentation_shape": 18,
+        "semio_presentation_shape_table": 1,
+        "semio_presentation_shape_table_cell": 4,
+        "semio_presentation_shape_table_row": 3,
+        "semio_presentation_slide": 6,
+        "semio_presentation_table": 1,
+        "semio_presentation_table_cell": 4,
+        "semio_presentation_table_row": 3,
+        "semio_presentation_text_box": 2
+      },
+      "cases": [
+        {
+          "id": "full",
+          "sourceSnapshot": {
+            "schema": "s.stdio.semio.presentation",
+            "masters": [
+              {
+                "id": "master",
+                "shapes": [
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "title"
+                    }
+                  }
+                ]
+              }
+            ],
+            "layouts": [
+              {
+                "id": "layout",
+                "masterId": "master",
+                "shapes": []
+              }
+            ],
+            "slides": [
+              {
+                "id": "slide-文",
+                "layoutId": "layout",
+                "shapes": [
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "title"
+                    }
+                  },
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "subtitle"
+                    }
+                  },
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "body"
+                    }
+                  },
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "footer"
+                    }
+                  },
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "slideNumber"
+                    }
+                  },
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "dateTime"
+                    }
+                  },
+                  {
+                    "shapeKind": "placeholder",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "kind": {
+                      "kind": "other",
+                      "value": ""
+                    }
+                  },
+                  {
+                    "shapeKind": "textBox",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "blocks": [
+                      {
+                        "kind": "paragraph",
+                        "style_id": "external-style",
+                        "runs": [
+                          {
+                            "text": "English Deutsch\u0000文",
+                            "style": {
+                              "bold": false,
+                              "italic": false,
+                              "underline": false,
+                              "size": null,
+                              "font": null,
+                              "color": null,
+                              "link": null
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "image",
+                        "image_id": "external-image",
+                        "alt": "",
+                        "width": null,
+                        "height": {
+                          "bits": "0000000000000000"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "shapeKind": "picture",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "image": {
+                      "assetId": "",
+                      "mime": "image/png",
+                      "bytes": [
+                        0,
+                        255,
+                        127
+                      ]
+                    }
+                  },
+                  {
+                    "shapeKind": "table",
+                    "frame": {
+                      "origin": {
+                        "x": {
+                          "bits": "bff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "width": {
+                        "bits": "400c000000000000"
+                      },
+                      "height": {
+                        "bits": "4011000000000000"
+                      }
+                    },
+                    "rows": [
+                      {
+                        "cells": [
+                          {
+                            "blocks": [
+                              {
+                                "kind": "quote",
+                                "blocks": [
+                                  {
+                                    "kind": "pageBreak"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "blocks": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "notes": [
+                  {
+                    "kind": "code",
+                    "language": "",
+                    "text": "notes"
+                  }
+                ]
+              },
+              {
+                "id": "",
+                "layoutId": null,
+                "shapes": [],
+                "notes": []
+              }
+            ]
+          },
+          "rows": 52,
+          "valueBytes": 2220
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "sourceSnapshot": {
+            "schema": "s.stdio.semio.presentation",
+            "masters": [],
+            "layouts": [],
+            "slides": []
+          },
+          "rows": 1,
+          "valueBytes": 34
+        }
+      ],
+      "publicIo": {
+        "schemaBytes": 5962,
+        "tableWidths": {
+          "semio_presentation_block": 2,
+          "semio_presentation_code": 3,
+          "semio_presentation_collection": 1,
+          "semio_presentation_document": 2,
+          "semio_presentation_heading": 3,
+          "semio_presentation_image_block": 9,
+          "semio_presentation_layout": 5,
+          "semio_presentation_list": 2,
+          "semio_presentation_list_item": 4,
+          "semio_presentation_master": 4,
+          "semio_presentation_member": 4,
+          "semio_presentation_page_break": 1,
+          "semio_presentation_paragraph": 2,
+          "semio_presentation_picture": 4,
+          "semio_presentation_placeholder": 3,
+          "semio_presentation_quote": 2,
+          "semio_presentation_run": 13,
+          "semio_presentation_shape": 18,
+          "semio_presentation_shape_table": 1,
+          "semio_presentation_shape_table_cell": 4,
+          "semio_presentation_shape_table_row": 3,
+          "semio_presentation_slide": 6,
+          "semio_presentation_table": 1,
+          "semio_presentation_table_cell": 4,
+          "semio_presentation_table_row": 3,
+          "semio_presentation_text_box": 2,
+          "semio_snapshot": 6
+        },
+        "cases": [
+          {
+            "id": "full",
+            "rows": 53,
+            "valueBytes": {
+              "binary": 2269,
+              "text": 2267
+            }
+          },
+          {
+            "id": "metadataRetainingEmpty",
+            "rows": 2,
+            "valueBytes": {
+              "binary": 83,
+              "text": 81
+            }
+          }
+        ]
+      }
+    },
+    "rustBody": "let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.masters.clear();source.layouts.clear();source.slides.clear();}source",
+    "hydrate": "const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value===\"object\"?(\"bits\"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt(\"0x\"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source))"
+  }
+]

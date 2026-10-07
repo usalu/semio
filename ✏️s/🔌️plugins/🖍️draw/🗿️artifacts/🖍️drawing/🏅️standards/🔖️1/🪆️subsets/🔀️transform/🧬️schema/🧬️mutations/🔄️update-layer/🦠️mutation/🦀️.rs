@@ -7,20 +7,20 @@ use crate::{DrawingSnapshot, DrawingTransform};
 
 //#region 🔖️Mutation
 /// 🔄️ `update-layer-transform` payload.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "update-layer-transform")]
 pub struct UpdateLayerTransform {
-    pub layer_id: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[dsl(block)]
     pub transform: DrawingTransform,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_layer_transform(layer_id: String, transform: DrawingTransform) -> DrawingMutation {
+pub fn update_layer_transform(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, transform: DrawingTransform) -> DrawingMutation {
     DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id, transform })
 }
 
@@ -40,7 +40,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdateLayerTra
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\" transform", self.layer_id), &format!("Transformation von Ebene \"{}\" aktualisieren", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

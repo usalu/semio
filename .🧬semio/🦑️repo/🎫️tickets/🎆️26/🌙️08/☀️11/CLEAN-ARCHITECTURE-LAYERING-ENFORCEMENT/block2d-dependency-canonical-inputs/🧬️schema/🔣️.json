@@ -1,0 +1,90 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "canonicalIdentity",
+    "definingManifest",
+    "retiredIdentity",
+    "rustIdentity",
+    "packageIdentity",
+    "cases",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.block2d.canonical-dependency/v1"
+    },
+    "canonicalIdentity": {
+      "const": "semio-framework-pack-json"
+    },
+    "definingManifest": {
+      "const": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml"
+    },
+    "retiredIdentity": {
+      "const": "semio-s-artifact-stdio-json"
+    },
+    "rustIdentity": {
+      "const": "semio_s_artifact_stdio_json"
+    },
+    "packageIdentity": {
+      "const": "semio-s-artifact-block-2d"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false,
+      "items": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind"
+          ],
+          "properties": {
+            "path": {
+              "const": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml"
+            },
+            "kind": {
+              "const": "manifest"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind"
+          ],
+          "properties": {
+            "path": {
+              "const": "✏️s/Cargo.lock"
+            },
+            "kind": {
+              "const": "lock"
+            }
+          }
+        }
+      ]
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retiredReferences",
+        "conservedOtherDeclarations"
+      ],
+      "properties": {
+        "retiredReferences": {
+          "const": 0
+        },
+        "conservedOtherDeclarations": {
+          "const": true
+        }
+      }
+    }
+  }
+}

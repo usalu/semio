@@ -5,7 +5,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::graph::schema::diff::*;
+use crate::standards::v1::subsets::graph::schema::diff::*;
 use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
@@ -14,12 +14,12 @@ use protocol::MutationDiff;
 /// snapshot facet's own real hex/bracket node/edge encoders (duplicated locally, same convention
 /// every sibling subset's `🔺️diff` facet already establishes — see that facet's own doc comment
 /// for why).
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
-use crate::flow::io::text::diff::{dec_node};
-use crate::flow::io::text::diff::{enc_node};
-use crate::flow::io::text::diff::{dec_edge};
-use crate::flow::io::text::diff::{enc_edge};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_node};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{enc_node};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_edge};
+use crate::standards::v1::subsets::graph::io::text::snapshot::{enc_edge};
 
 impl protocol::DiffBinary for SemioGraphDiff {
 /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`nodes`, bit1=`edges`) are two
@@ -28,8 +28,8 @@ impl protocol::DiffBinary for SemioGraphDiff {
 /// `read_edge`) rather than a text-blob-in-binary shortcut.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::graph::schema::snapshot::{write_edge};
-    use crate::standards::v5::subsets::any::io::text::snapshot::{write_node};
+    use crate::standards::v1::subsets::graph::io::binary::snapshot::{write_edge};
+    use crate::standards::v1::subsets::graph::io::binary::snapshot::{write_node};
     let presence: u8 = (if self.nodes.is_some() { 0b0000_0001 } else { 0 }) | (if self.edges.is_some() { 0b0000_0010 } else { 0 });
     let mut out = vec![DIFF_BINARY_FORMAT, presence];
     if let Some(list) = &self.nodes {
@@ -48,7 +48,7 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::graph::schema::snapshot::{read_edge, read_node};
+    use crate::standards::v1::subsets::graph::io::binary::snapshot::{read_edge, read_node};
     if bytes.len() < 2 {
         return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
     }

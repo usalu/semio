@@ -138,7 +138,7 @@ fn edit_value_round_trip_matches_serde_oracle() {
         id: "edit-1".into(),
         actor: Some("actor-1".into()),
         forwards: vec![CounterMutation::AddCounter(AddCounter { delta: 1 }), CounterMutation::AddCounter(AddCounter { delta: 2 })],
-        inverse: vec![CounterMutation::AddCounter(AddCounter { delta: -1 }), CounterMutation::AddCounter(AddCounter { delta: -2 })],
+        inverse: vec![CounterMutation::AddCounter(AddCounter { delta: -1 }), CounterMutation::AddCounter(AddCounter { delta: -2 })].into(),
         mutation_meta: vec![MutationMeta {
             mutation_id: None,
             dependencies: Vec::new(),

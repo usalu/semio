@@ -17,7 +17,7 @@ use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, Ind
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::MutationDiff;
 
 //#region 🔖️IndexTransport
@@ -490,3 +490,6 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioAudioDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

@@ -67,39 +67,6 @@
         }
       }
     },
-    "ArtifactCreationHttpRouteV1": {
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ],
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "method",
-        "path",
-        "accepted"
-      ],
-      "properties": {
-        "id": {
-          "$ref": "#/$defs/identity"
-        },
-        "method": {
-          "enum": [
-            "GET",
-            "POST"
-          ]
-        },
-        "path": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512,
-          "pattern": "^/_semio/hub/"
-        },
-        "accepted": {
-          "type": "boolean"
-        }
-      }
-    },
     "ArtifactCreationHttpResponseV1": {
       "x-semio-formats": [
         "🔣️jsonschema"

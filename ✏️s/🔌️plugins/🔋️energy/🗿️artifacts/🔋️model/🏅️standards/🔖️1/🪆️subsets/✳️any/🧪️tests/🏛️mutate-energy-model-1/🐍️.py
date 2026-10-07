@@ -873,11 +873,20 @@ def remove_output_variable(before, payload):
     return after, applied()
 
 
+def owned_target(target):
+    """🪪️ Admits exact owned reference fields for semantic link mutations."""
+    if not isinstance(target, dict) or set(target) != {"artifactId", "dialect"} or not isinstance(target["dialect"], dict) or set(target["dialect"]) != {"artifactKind", "standard", "subset"}:
+        return None
+    if any(not isinstance(v, str) or not v for v in [target["artifactId"], *target["dialect"].values()]):
+        return None
+    return copy.deepcopy(target)
+
+
 def bind_weather_file(before, payload):
-    """🌦️ `bind-weather-file{targetUri}` — taxonomy.md's `bind` verb attaching a parameterization."""
-    target = parse_uri(payload["targetUri"])
+    """🌦️ `bind-weather-file{target}` — taxonomy.md's `bind` verb attaching a parameterization."""
+    target = owned_target(payload["target"])
     if target is None:
-        return unchanged(before), rejected("mutation.invariant", [payload["targetUri"]])
+        return unchanged(before), rejected("mutation.invariant", [payload["target"].get("artifactId", "") if isinstance(payload["target"], dict) else ""])
     link = head_link(target, "weather")
     if before.get("weatherLink") == link:
         return unchanged(before), no_op()
@@ -897,10 +906,10 @@ def unbind_weather_file(before, payload):
 
 
 def connect_referenced_model(before, payload):
-    """🪢️ `connect-referenced-model{targetUri}` — taxonomy.md's `connect` verb on a relationship."""
-    target = parse_uri(payload["targetUri"])
+    """🪢️ `connect-referenced-model{target}` — taxonomy.md's `connect` verb on a relationship."""
+    target = owned_target(payload["target"])
     if target is None:
-        return unchanged(before), rejected("mutation.invariant", [payload["targetUri"]])
+        return unchanged(before), rejected("mutation.invariant", [payload["target"].get("artifactId", "") if isinstance(payload["target"], dict) else ""])
     link = head_link(target, "model")
     if before.get("referencedModel") == link:
         return unchanged(before), no_op()
@@ -7558,10 +7567,10 @@ def invert(kind, before, payload):
         return [("add-output-variable", {"name": spec["name"], "key": spec["key"], "reportingFrequency": spec["reporting_frequency"]})]
     if kind in ("bind-weather-file", "unbind-weather-file"):
         existing = before.get("weatherLink")
-        return [("bind-weather-file", {"targetUri": _uri_of(existing)})] if existing else [("unbind-weather-file", {})]
+        return [("bind-weather-file", {"target": copy.deepcopy(existing["target"])})] if existing else [("unbind-weather-file", {})]
     if kind in ("connect-referenced-model", "disconnect-referenced-model"):
         existing = before.get("referencedModel")
-        return [("connect-referenced-model", {"targetUri": _uri_of(existing)})] if existing else [("disconnect-referenced-model", {})]
+        return [("connect-referenced-model", {"target": copy.deepcopy(existing["target"])})] if existing else [("disconnect-referenced-model", {})]
     zone = _zone(before, payload["id"])
     if kind == "rename-zone":
         return [("rename-zone", {"id": payload["id"], "newName": zone["name"]})]

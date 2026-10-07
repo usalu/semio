@@ -30,7 +30,7 @@ pub use crate::snapshot::schema::{default_snapshot, demo_snapshot, PresentationS
 /// `definition()`'s own `s.presentation.schema.artifact` capability descriptor (`s.animate.presentation`) and this
 /// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — canonical surface id `s.animate.presentation@1/*#editor`
 /// / `s.animate.presentation@1/*#viewer`.
-pub const ANIMATE_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.animate.presentation", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const ANIMATE_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.animate.presentation", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 
 //#region 🔖️Domain
 /// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
@@ -182,8 +182,8 @@ pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileD
     let content = presentation_snapshot_from_source_tiles(source, tiles);
     let content_json = semio_framework_pack_json::to_json_string(&content);
     let child_id = store::content_id("presentation", content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "presentation".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "presentation".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -196,8 +196,8 @@ pub fn animation_child_handle() -> AnimationChild {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
     let content_json = semio_framework_pack_json::to_json_string(&SemioAnimationSnapshot::default());
     let child_id = store::content_id("animation", content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "animation".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "animation".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️PresentationBridge
@@ -383,7 +383,7 @@ where
         + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
 {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.animate.presentation").expect("canonical animate.presentation kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 //#endregion 🔖️Declaration
@@ -860,4 +860,10 @@ pub mod viewer {
             }
         }
     }
+}
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
 }

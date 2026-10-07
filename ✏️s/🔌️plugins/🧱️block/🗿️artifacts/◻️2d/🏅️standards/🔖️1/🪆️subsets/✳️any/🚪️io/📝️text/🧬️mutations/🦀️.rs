@@ -1,6 +1,7 @@
 //! ⚡️ Block2d artifact — OpText/OpBinary codecs + grammar for `Block2dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_block2d_mutation, inverse_block2d_mutation, Block2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_block2d_mutation,inverse_block2d_mutation,Block2dMutation};
+
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -29,14 +30,7 @@ impl protocol::OpText for Block2dMutation {
     }
 }
 
-impl protocol::OpBinary for Block2dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📜️ Describes the artifact mutation dialect.

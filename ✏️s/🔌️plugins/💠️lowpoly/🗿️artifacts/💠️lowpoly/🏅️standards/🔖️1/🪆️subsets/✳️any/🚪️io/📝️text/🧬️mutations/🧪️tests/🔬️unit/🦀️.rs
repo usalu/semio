@@ -29,7 +29,7 @@ fn demo_mutation_cases() -> Vec<LowpolyMutation> {
         LowpolyMutation::CreateMesh(create_mesh::CreateMesh { mesh_state:None,
             id: object_id.clone(),
             child_id: "mesh-fixture-01".into(),
-            target: store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },
+            target: semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },
             mesh_workspace: tiny_mesh_json(),
         }),
         LowpolyMutation::DeleteMesh(delete_mesh::DeleteMesh { id: object_id.clone() }),

@@ -495,7 +495,7 @@ async fn frame_selection_leaves_are_editable_through_their_payload_value() {
 #[semio_framework_async_macros::async_test]
 async fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::standards::v1::subsets::any::io::binary::mutations::new_layout_store(store::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None)).await.expect("the store opens");
+    let mut store = crate::host::owned::new_layout_store(store::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_frames(&["frame-1"], 10.0, 0.0), rotate_frames(&["frame-1"], (40.0, 30.0), std::f64::consts::FRAC_PI_2), scale_frames(&["frame-1"], (40.0, 30.0), 2.0, 2.0)];
     for mutation in &log {
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a frame transform applies");

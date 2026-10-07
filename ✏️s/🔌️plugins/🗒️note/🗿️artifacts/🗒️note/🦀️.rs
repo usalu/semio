@@ -6,7 +6,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
@@ -88,7 +88,7 @@ where
         + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::note::NoteViewer>>>,
 {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.note.note").expect("canonical note kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 //#endregion 🔖️Register
@@ -349,8 +349,8 @@ pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTe
 pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
     let content_json = serde_json::to_string(paragraphs).unwrap_or_default();
     let child_id = store::content_id("note-text", format!("{block_id}\u{1f}{content_json}").as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
     NoteTextChild { handle: store::ArtifactChild::new(child_id, target), paragraphs: paragraphs.to_vec() }
 }
 //#endregion 🔖️TextBridge
@@ -1509,3 +1509,9 @@ pub fn note_child_restore_projection(snapshot: &crate::NoteSnapshot) -> Result<s
 #[cfg(all(test,not(target_arch="wasm32")))]
 #[path="🧪️tests/⚡️quick/🦀️.rs"]
 mod quick;
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

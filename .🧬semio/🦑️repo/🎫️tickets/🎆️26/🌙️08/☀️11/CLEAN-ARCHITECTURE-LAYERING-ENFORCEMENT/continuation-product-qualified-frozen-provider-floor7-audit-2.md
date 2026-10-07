@@ -1,0 +1,7 @@
+# Product Qualified Frozen Provider Floor Seven Audit
+
+{"ready":true,"planHash":"2f2be515a74631891aa8a9953e69bcbf8d0cfe4a5cd7fee7394088d8860e8b62","metadataHash":"8ff229761dc3d97b8541ed1cb0740b0f0afa5f316ab22b5d92923f0ba0456a76","importSupplementHash":"a3697d955227aa519a21e9d7cdcbc5b44bd49253a35641471b170fa169a44f03","receiptHash":"a3697d955227aa519a21e9d7cdcbc5b44bd49253a35641471b170fa169a44f03","qualifierHash":"462de2d3d7aacc4bc337ec73c2ccc5c629cbfe35915940607d08541e2c5e96e7","routerSourceHash":"861fc4fdaccffc5b5c4faee0568681d8e47113ba61034241e49c1fb75409cfb6","endpointChecks":3818,"oldFailedEndpointChecks":3815,"metadataPhases":2,"sourceWritesOutsideTicket":false,"nativeExecuted":false,"scope":"Exact qualified cloned frozen provider floor7"}
+
+Plan7 conserves every plan6 field except the new exact receipt binding and explicit field qualification. Receipt12 conserves every old receipt field except the two corrected hashbang claim hashes and explicit qualification. All raw bindings, 3818 current cloned endpoints and all 3815 old failed-floor endpoints independently match. Named source/proof hashes match laws12 and full hashbang row authority.
+
+Actual fresh metadata3 exits zero for ordinary and locked phases, with exact stdout byte counts/hashes, parsed package sets, unchanged lock and current lock after. Original registered request and qualified source/overlay provenance are conserved. Admission permits only this frozen provider floor; no native attempt or LIVE source identity is inferred.

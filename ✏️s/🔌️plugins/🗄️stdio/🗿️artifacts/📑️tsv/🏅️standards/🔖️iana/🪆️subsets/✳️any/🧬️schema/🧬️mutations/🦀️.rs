@@ -10,8 +10,8 @@ use crate::standards::iana::subsets::any::schema::diff::{diff_set_snapshot, TsvD
 
 
 use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
-use protocol::OpBinary;
-use protocol::{Mutation, MutationDiff, OpText};
+
+use protocol::{Mutation, MutationDiff};
 
 //#region 🔖️Mutations
 #[path = "➕insert-row/🦀️.rs"]
@@ -150,3 +150,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

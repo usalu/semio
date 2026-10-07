@@ -1,0 +1,3 @@
+# OS Store Fold Advance Inference
+
+The two actual receivers are mutable references to Arc<P>. FoldProjection<P, Mutation> implements Arc<P> for every Mutation: Mutation<P>; method syntax cannot infer Mutation solely from receiver/next because Mutation appears only in the trait parameter. The canonical exact fix explicitly selects `<Arc<P> as FoldProjection<P, Mutation>>::advance(receiver, next)`, matching the existing current store use at line19564. No fallback, trait relaxation or assertion change is required. Narrowed two regions are retained in `📥️inputs/os-store-fold-advance-type-fix-held.json`; each before occurs exactly once in current source. Production unchanged; no compilation credit asserted.

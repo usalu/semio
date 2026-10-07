@@ -106,7 +106,7 @@ mod mask_tests;
 
 /// 🧹️ Cold-retires a batch of operations nobody will apply — a `create-layer` inverse can carry a
 /// whole subtree whose adjustment layers own populated `params` maps.
-fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
+pub(crate) fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
     for mutation in mutations {
         protocol::Mutation::retire_cold(mutation);
     }
@@ -115,7 +115,7 @@ fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
+pub(crate) fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
     use protocol::{Mutation, MutationDiff};
     // 🧹️ The outcome's diff is an owner too (a whole replacement artifact, or the layers an
     // insertion carries), so it is cold-retired here rather than dropped.
@@ -139,61 +139,14 @@ fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(
 /// extern-crate aliases (`🦀️.rs`) and cannot be named from a case adapter. Same shape and same
 /// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let stepped = bridge_step(&snapshot, &mutation);
-    retire_bridge_snapshot(snapshot);
-    protocol::Mutation::retire_cold(mutation);
-    let (applied, messages) = stepped?;
-    let rendered = bridge_render(&applied, messages);
-    retire_bridge_snapshot(applied);
-    Ok(rendered)
-}
+
 
 /// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
 /// answering in the same shape — the metamorphic half of what `🖨️mutate-raster-1` compares against its
 /// Python second implementation. The inverse is computed against the PRE-mutation document, which is
 /// the only state that carries what a delete removed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
-    let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let inverse = <RasterMutation as Mutation<RasterSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
-    let stepped = bridge_step(&base, &mutation);
-    Mutation::retire_cold(mutation);
-    retire_bridge_snapshot(base);
-    let (mut current, mut messages) = match stepped {
-        Ok(pair) => pair,
-        Err(error) => {
-            retire_bridge_mutations(inverse);
-            return Err(error);
-        }
-    };
-    let mut pending = inverse.into_iter();
-    let mut refusal = None;
-    while let Some(undo) = pending.next() {
-        let stepped = bridge_step(&current, &undo);
-        Mutation::retire_cold(undo);
-        match stepped {
-            Ok((next, raised)) => {
-                retire_bridge_snapshot(std::mem::replace(&mut current, next));
-                messages.extend(raised);
-            }
-            Err(error) => {
-                refusal = Some(error);
-                break;
-            }
-        }
-    }
-    if let Some(error) = refusal {
-        retire_bridge_mutations(pending.collect());
-        retire_bridge_snapshot(current);
-        return Err(error);
-    }
-    let rendered = bridge_render(&current, messages);
-    retire_bridge_snapshot(current);
-    Ok(rendered)
-}
+
 
 
 //#endregion 🌉️ExternalCodecBridge

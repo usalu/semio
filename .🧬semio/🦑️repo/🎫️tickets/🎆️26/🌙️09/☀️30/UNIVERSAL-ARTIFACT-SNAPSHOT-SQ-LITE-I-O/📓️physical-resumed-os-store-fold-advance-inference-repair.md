@@ -1,0 +1,7 @@
+# Current OS Store Fold Advance Type Inference Repair
+
+Root's actual whole Semio owning Native compilation reported two E0283 ambiguities at OS store rs18305 and24594. Independent read-only review retained the exact canonical candidates in inputs/os-store-fold-advance-type-fix-held.json and semantic-independent-os-store-fold-advance-inference-review.md. Fresh physical readback confirmed both calls still required the repair.
+
+Both existing receivers are mutable Arc<P> references, and the existing FoldProjection<P, Mutation> implementation for Arc<P> uses the same enclosing Mutation generic as fold_operation. Its advance method accepts only the next P, so method inference does not select Mutation when more than one Mutation<P> exists. The already-canonical call at rs19564 explicitly names that trait specialization. The two failing calls now use the same `<Arc<P> as FoldProjection<P, Mutation>>::advance` specialization and pass their existing mutable receiver directly.
+
+The exact two source regions were unique and unchanged before mounting; the complete source was re-read before writing to preserve concurrent edits. The receipt is inputs/physical-resumed-os-store-fold-advance-mounted-guard.json. No trait, signature, mutation behavior, retirement, progress, cancellation or allocation path changed. Root's original owning Native rerun supplies runtime validation; this lane has not launched a duplicate Root Semio or seven-owner run. Static repair alone gives no compiler or runtime qualification.

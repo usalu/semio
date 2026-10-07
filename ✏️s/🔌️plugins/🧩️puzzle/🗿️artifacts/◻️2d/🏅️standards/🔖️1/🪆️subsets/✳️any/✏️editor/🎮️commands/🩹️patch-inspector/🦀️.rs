@@ -21,7 +21,7 @@ pub fn patch_inspector(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     }
     if let (Some(offset), None, "x" | "y") = (delta.and_then(Value::as_f64).filter(|offset| offset.is_finite()), value, field) {
         let document = ctx.base;
-        let targets: Vec<String> = document.typed().nodes.iter().filter(|node| ids.is_empty() || ids.contains(&node.id)).map(|node| node.id.clone()).collect();
+        let targets: Vec<String> = document.typed().nodes.iter().filter(|node| ids.is_empty() || ids.iter().any(|id| node.id.eq_str(id))).map(|node| node.id.to_string_owner()).collect();
         let (dx, dy) = if field == "x" { (offset, 0.0) } else { (0.0, offset) };
         ctx.commit_selection("patchInspectorNodes", vec![Puzzle2dSelectionRecord { connect: false, ..Puzzle2dSelectionRecord::drag(targets, dx, dy) }]);
         return;

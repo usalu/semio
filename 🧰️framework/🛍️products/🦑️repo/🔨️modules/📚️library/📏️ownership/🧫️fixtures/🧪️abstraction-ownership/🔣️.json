@@ -255,67 +255,75 @@
   "schemaCases": [
     {
       "name": "nested-job-event-locale",
-      "schema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "kind": {
-                "const": "start"
-              },
-              "locale": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "expected": [
         "field:locale"
-      ]
+      ],
+      "input": {
+        "schema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "start"
+                },
+                "locale": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "name": "nested-config-theme",
-      "schema": {
-        "$defs": {
-          "Preferences": {
-            "type": "object",
-            "properties": {
-              "uiThemeId": {
-                "type": "string"
+      "expected": [
+        "field:uiThemeId"
+      ],
+      "input": {
+        "schema": {
+          "$defs": {
+            "Preferences": {
+              "type": "object",
+              "properties": {
+                "uiThemeId": {
+                  "type": "string"
+                }
               }
             }
           }
         }
-      },
-      "expected": [
-        "field:uiThemeId"
-      ]
+      }
     },
     {
       "name": "explicit-artifact-language",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "locale": {
-            "type": "string",
-            "x-semio-state": "artifact"
+      "expected": [],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "locale": {
+              "type": "string",
+              "x-semio-state": "artifact"
+            }
           }
         }
-      },
-      "expected": []
+      }
     },
     {
       "name": "domain-event-options",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "zoneTimestepMinutes": {
-            "type": "integer"
+      "expected": [],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "zoneTimestepMinutes": {
+              "type": "integer"
+            }
           }
         }
-      },
-      "expected": []
+      }
     }
   ],
   "sourceCases": [

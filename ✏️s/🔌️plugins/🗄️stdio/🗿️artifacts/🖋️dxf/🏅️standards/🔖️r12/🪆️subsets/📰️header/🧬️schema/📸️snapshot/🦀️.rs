@@ -24,7 +24,7 @@
 
 use crate::STDIO_DXF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use super::text as snapshot_text;
+
 
 //#region 🔖️RawTag
 /// 🏷️ One raw DXF group-code/value pair — used only as the tokenizer's intermediate unit and as
@@ -354,4 +354,3 @@ impl Default for DxfSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-

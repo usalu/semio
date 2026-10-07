@@ -84,10 +84,19 @@ describe("⏪️ time-travel band corpus", () => {
   afterEach(() => cleanup());
   afterAll(() => syncShellLabelLocale("en"));
 
-  it("validates against its schema and every session against the kernel's HistoryTimeTravel wire schema", () => {
+  it("validates every session and history patch against the kernel wire schema", () => {
     const ajv = new Ajv({ allErrors: true, strict: false });
-    ajv.addSchema(readJson(join(framework, "🔨️modules", "🎠️kernel", "🧬️schema", "🔣️history-patch", "🔣️.json")));
+    const schema = readJson(join(framework, "🔨️modules", "🎠️kernel", "🧬️schema", "🔣️history-patch", "🔣️.json"));
+    ajv.addSchema(schema);
+    const session = ajv.compile({ $ref: `${schema.$id}#/definitions/HistoryTimeTravel` });
+    const patch = ajv.compile({ $ref: `${schema.$id}#/definitions/HistoryPatch` });
+    for (const entry of cases) {
+      expect(session(entry.session), `${entry.name}: ${JSON.stringify(session.errors)}`).toBe(true);
+      expect(patch({ cursor: 0, timeTravel: entry.session }), `${entry.name}: ${JSON.stringify(patch.errors)}`).toBe(true);
+    }
     expect(new Set(cases.map((entry) => entry.session.stage))).toEqual(new Set(["editing", "replaying", "reviewing", "choosing", "finalizing"]));
+    for (const malformed of [{ ...cases[0]!.session, generation: -1 }, { ...cases[0]!.session, stage: "unknown" }, { ...cases[0]!.session, initialSnapshot: {} }, { ...cases[0]!.session, initialPack: "00" }, ...[-1, 4294967296, "128"].map(processed => ({ ...cases[0]!.session, processed }))]) expect(session(malformed)).toBe(false);
+    expect(patch({ cursor: 0, actor: "actor:alice" })).toBe(false);
   });
 
   it("pins the i18n catalogue to the corpus's labels table: every key, both tiers, both languages, and no other key", () => {
@@ -113,7 +122,7 @@ describe("⏪️ time-travel band corpus", () => {
         expect(entry.text[locale], `${entry.name} (${locale}): every line is a label of the table`).toEqual({
           stage: corpusLabel(`ui.timeTravel.stage.${session.stage}`, locale),
           target: target === null ? null : corpusLabel("ui.timeTravel.target", locale, { target }),
-          progress: session.stage === "replaying" && session.total !== undefined ? corpusLabel("ui.timeTravel.progress", locale, { done: session.done ?? 0, total: session.total }) : null,
+          progress: (session.stage === "editing" || session.stage === "replaying") && session.total !== undefined ? corpusLabel(session.stage === "editing" ? "ui.timeTravel.preparationProgress" : "ui.timeTravel.progress", locale, { done: session.done ?? 0, total: session.total }) : null,
           review: session.stage === "reviewing" && session.review !== undefined ? corpusLabel(`ui.timeTravel.review.${session.review}`, locale) : null,
           outcome: session.worst === undefined ? null : corpusLabel("ui.timeTravel.worst", locale, { level: corpusLabel(`ui.mutation.level.${session.worst}`, locale) }),
           fault: session.fault === undefined ? null : corpusLabel(HISTORY_REFUSAL_LABEL_KEYS[historyRefusalCodeV1(session.fault) ?? "timeTravel.replay-faulted"], locale),

@@ -1,24 +1,26 @@
 //! 🧬️ Puzzle2d artifact schema — every field of the artifact with its state class.
 
+use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+
 use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ puzzle2d document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
 pub struct Puzzle2dArtifact {
     #[state(artifact)]
-    pub schema: String,
+    pub schema: PagedUtf8<{ usize::MAX }>,
     #[state(artifact)]
     pub camera: Puzzle2dCamera,
     #[state(artifact)]
-    pub nodes: Vec<Puzzle2dNode>,
+    pub nodes: PagedList<Puzzle2dNode, { usize::MAX }>,
     #[state(artifact)]
-    pub edges: Vec<Puzzle2dEdge>,
+    pub edges: PagedList<Puzzle2dEdge, { usize::MAX }>,
     #[state(artifact)]
-    pub target_regions: Vec<Puzzle2dTargetRegion>,
+    pub target_regions: PagedList<Puzzle2dTargetRegion, { usize::MAX }>,
     #[state(artifact)]
     pub meta: Puzzle2dMeta,
 }

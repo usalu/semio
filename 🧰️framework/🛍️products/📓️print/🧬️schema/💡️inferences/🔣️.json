@@ -4,14 +4,10 @@
   "title": "Print Chart Inference",
   "type": "object",
   "required": [
-    "tikz",
     "diagnostics",
     "complete"
   ],
   "properties": {
-    "tikz": {
-      "type": "string"
-    },
     "diagnostics": {
       "type": "array",
       "items": {
@@ -26,6 +22,18 @@
     },
     "scene": {
       "$ref": "#/$defs/Scene"
+    },
+    "chart": {
+      "type": "object",
+      "required": [
+        "chart"
+      ],
+      "properties": {
+        "chart": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "$defs": {
@@ -285,7 +293,7 @@
             "height": {
               "type": "number"
             },
-            "tikzStyle": {
+            "nativeStyle": {
               "type": "string"
             }
           },
@@ -347,7 +355,7 @@
             "r": {
               "type": "number"
             },
-            "tikzStyle": {
+            "nativeStyle": {
               "type": "string"
             }
           },
@@ -413,7 +421,7 @@
             "y2": {
               "type": "number"
             },
-            "tikzStyle": {
+            "nativeStyle": {
               "type": "string"
             }
           },
@@ -470,7 +478,7 @@
                 "$ref": "#/$defs/Vec2"
               }
             },
-            "tikzStyle": {
+            "nativeStyle": {
               "type": "string"
             }
           },
@@ -527,7 +535,7 @@
                 "$ref": "#/$defs/PathCommand"
               }
             },
-            "tikzStyle": {
+            "nativeStyle": {
               "type": "string"
             }
           },
@@ -600,7 +608,7 @@
                 "end"
               ]
             },
-            "tikzStyle": {
+            "nativeStyle": {
               "type": "string"
             },
             "baseline": {
@@ -1342,10 +1350,6 @@
       "properties": {
         "complete": {
           "const": true
-        },
-        "tikz": {
-          "type": "string",
-          "minLength": 1
         }
       }
     },
@@ -1353,15 +1357,11 @@
       "type": "object",
       "required": [
         "complete",
-        "tikz",
         "diagnostics"
       ],
       "properties": {
         "complete": {
           "const": false
-        },
-        "tikz": {
-          "const": ""
         },
         "diagnostics": {
           "type": "array",

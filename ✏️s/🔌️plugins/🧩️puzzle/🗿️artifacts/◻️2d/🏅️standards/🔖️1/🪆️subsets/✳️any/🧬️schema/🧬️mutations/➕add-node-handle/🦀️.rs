@@ -1,5 +1,7 @@
 //! ➕ Puzzle2d mutation — `AddNodeHandle`: attaches a new rim port to a node.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::{Puzzle2dHandle, Puzzle2dSnapshot};
@@ -7,21 +9,21 @@ use crate::{Puzzle2dHandle, Puzzle2dSnapshot};
 //#region 🔖️Mutation
 /// ➕ `add-node-handle` payload — owner node id + new handle payload at an optional FINAL-state
 /// `index` (`None` appends). A duplicate `handle.id` on the same node is a no-op.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "add-node-handle")]
 pub struct AddNodeHandle {
-    pub node_id: String,
+    pub node_id: PagedUtf8<{ usize::MAX }>,
     #[dsl(block)]
     pub handle: Puzzle2dHandle,
     pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_node_handle(node_id: String, handle: Puzzle2dHandle, index: Option<usize>) -> Puzzle2dMutation {
+pub fn add_node_handle(node_id: PagedUtf8<{ usize::MAX }>, handle: Puzzle2dHandle, index: Option<usize>) -> Puzzle2dMutation {
     Puzzle2dMutation::AddNodeHandle(AddNodeHandle { node_id, handle, index })
 }
 

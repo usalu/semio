@@ -3,7 +3,7 @@ use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSl
 use semio_framework_plugin::app::DocumentWindowKit;
 
 fn deck(shapes: Vec<PptxShape>) -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
+    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -88,7 +88,7 @@ async fn registered_shape_draft_publishes_once_refuses_stale_and_undoes_redoes()
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let authored = deck(vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("before")], position: Default::default() }]);
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<PptxEditor>, _>(async { semio_framework_plugin::App { definition: create_pptx_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<PptxEditor>, _>(async { semio_framework_plugin::App { definition: create_pptx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&authored, STDIO_PPTX_DOCUMENT_SCHEMA) else { panic!("PPTX fixture produces a document load") };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let original = app.snapshot().unwrap().clone();

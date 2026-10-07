@@ -1,0 +1,377 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts" verify
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts:
+[0m[32m✓[0m[0m[1m SQLite remodeling authored semantic tables execute in an independent engine[0m [0m[2m[4.49ms[0m[2m][0m
+ [0m[1m7 |[0m [0m[35mimport[0m Ajv [0m[35mfrom[0m [0m[32m"ajv"[0m[0m[2m;[0m
+ [0m[1m8 |[0m import laws from "../🧫️fixtures/🔣️.json";
+ [0m[1m9 |[0m import valueSchema from "../../../../🧬️schema/🔣️.json";
+[0m[1m10 |[0m import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+[0m[1m11 |[0m test("SQLite remodeling authored semantic tables execute in an independent engine",()=>{const db=new Database(":memory:");try{db.run(readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8"));expect(db.query("SELECT count(*) AS n FROM sqlite_schema WHERE type='table'").get()).toEqual({n:35});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query<{name:string},[]>("PRAGMA table_info(remodel_float_sample)").all().map(row=>row.name)).toEqual(["id","buffer_id","ordinal","sample","sample_bits","sample_class"]);}finally{db.close()}});
+[0m[1m12 |[0m test([0m[32m"SQLite remodeling inline buffers follow the independent tagged schema"[0m,()=>{[0m[35mconst[0m admits=[0m[35mnew[0m [0m[1mAjv[0m({strict:[0m[33mfalse[0m})[0m[3m[1m.addSchema[0m(valueSchema)[0m[3m[1m.getSchema[0m(valueSchema.$id+[0m[32m"#/$defs/Float32Buffer/oneOf/0"[0m)![0m[2m;[0m[0m[35mfor[0m([0m[35mconst[0m buffer of laws.inlineBuffers){expect(admits(buffer))[0m[3m[1m.toBe[0m([0m[33mtrue[0m)[0m[2m;[0m[0m[35mconst[0m snapshot=JSON[0m[3m[1m.parse[0m(ownerPhysical0[0m[3m[1m.remodelingSnapshotToJsonText[0m(owner[0m[3m[1m.defaultRemodelingSnapshot[0m()))[0m[2m;[0m[0m[35mconst[0m json={...snapshot,results:{...snapshot.results,sparse:{points:buffer,colors:[0m[33mnull[0m}}}[0m[2m;[0mexpect(ownerPhysical0[0m[3m[1m.decodeRemodelingSnapshot[0m(json).results.sparse?.points)[0m[3m[1m.toEqual[0m({kind:[0m[32m"inline"[0m,values:buffer.values[0m[3m[1m.map[0m(value=>{[0m[35mconst[0m bytes=Buffer[0m[3m[1m.alloc[0m([0m[33m4[0m)[0m[2m;[0mbytes[0m[3m[1m.writeFloatBE[0m(value)[0m[2m;[0m[0m[35mreturn[0m{bits:bytes[0m[3m[1m.readUInt32BE[0m()}})})[0m[2m;[0m}})[0m[2m;[0m
+
+[0m[31mTypeError[0m[2m:[0m [1madmits is not a function. (In 'admits(buffer)', 'admits' is undefined)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts[0m[2m:[0m[33m12[0m[2m:[33m250[0m[2m)[0m
+[0m[31m✗[0m[0m[1m SQLite remodeling inline buffers follow the independent tagged schema[0m [0m[2m[[1m33.83ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling durable chunks contain literal octets[0m [0m[2m[2.19ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declares its owned public relational entry[0m [0m[2m[0.04ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared JSON admits every exact IEEE word[0m [0m[2m[6.62ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling retained content references own full unsigned64 decimal words[0m [0m[2m[0.65ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling owns every semantic table through an independent physical engine[0m [0m[2m[[1m107.82ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling accepts consistent edited surrogate aliases and independent IEEE words[0m [0m[2m[[1m26.30ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling refuses independently edited orphan and IEEE mismatches[0m [0m[2m[[1m76.20ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling exact document words obey the independent authored JSON schema[0m [0m[2m[[1m80.59ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling projection and restoration obey exact domain row admission[0m [0m[2m[[1m32.18ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared Text retains primitive exact words and signed64 values[0m [0m[2m[1.39ms[0m[2m][0m
+[0m[1m48 |[0m })[0m[2m;[0m
+[0m[1m49 |[0m 
+[0m[1m50 |[0m test([0m[32m"SQLite remodeling declared mutation schemas share exact words and raw octets"[0m,()=>{
+[0m[1m51 |[0m  const schemaRoot=new URL("../../../../🧬️schema",import.meta.url),schemas=[['⏱️change-stream-sync',{mutation:'changeStreamSync',id:'s',newSyncOffsetMs:{bits:'7ff0000000000001'}}],['📦append-content',{mutation:'appendContent',contentId:'c',kind:'sparse',mime:null,width:0,height:0,first:'18446744073709551615',chunks: laws.byteChunks}],['🔪remove-content',{mutation:'removeContent',contentId:'c',from:'18446744073709551615'}]] as const;
+[0m[1m52 |[0m  [0m[35mconst[0m ajv=[0m[35mnew[0m [0m[1mAjv[0m({strict:[0m[33mfalse[0m,validateFormats:[0m[33mfalse[0m})[0m[2m;[0majv[0m[3m[1m.addSchema[0m(documentSchema)[0m[2m;[0majv[0m[3m[1m.addSchema[0m(valueSchema)[0m[2m;[0m
+[0m[1m53 |[0m  for(const[slug,value]of schemas){const json=JSON.parse(readFileSync(new URL('🧬️mutations/'+slug+'/🧬️schema/🔣️.json',schemaRoot),'utf8'));const valid=ajv.compile(json);expect(valid(value)).toBe(true)}
+                                                             [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mENOENT: no such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️mutations/⏱️change-stream-sync/🧬️schema/🔣️.json'[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts[0m[2m:[0m[33m53[0m[2m:[33m57[0m[2m)[0m
+[0m[31m✗[0m[0m[1m SQLite remodeling declared mutation schemas share exact words and raw octets[0m [0m[2m[5.73ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared Text owns tagged buffers octets and literal references[0m [0m[2m[0.96ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling native Text binary32 widening is exact and refuses lost payload[0m [0m[2m[0.83ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling every committed snapshot fixture owns the canonical document domain[0m [0m[2m[[1m754.02ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling committed mutation and diff replay preserves typed snapshots[0m [0m[2m[[1m445.79ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling declared JSON word objects agree with the independent pretty writer[0m [0m[2m[0.62ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling semantic relationship construction reports its known cancellable frontier[0m [0m[2m[[1m99.50ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling committed JSON snapshot spelling matches its declared exact word writer[0m [0m[2m[[1m449.99ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling committed native Text assets preserve their independently authored frame identities[0m [0m[2m[4.62ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite remodeling all semantic cells have independent exact and one-short limits[0m [0m[2m[[1m42.17ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts:
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse array-of-text matches the Rust planner and replays through fast-json-patch[0m [0m[2m[5.79ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse long-text matches the Rust planner and replays through fast-json-patch[0m [0m[2m[2.13ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse struct-like-object matches the Rust planner and replays through fast-json-patch[0m [0m[2m[3.06ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse map-like-object matches the Rust planner and replays through fast-json-patch[0m [0m[2m[0.98ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse array-item-object matches the Rust planner and replays through fast-json-patch[0m [0m[2m[3.45ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse splice-inverse matches the Rust planner and replays through fast-json-patch[0m [0m[2m[1.26ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse root-replace matches the Rust planner and replays through fast-json-patch[0m [0m[2m[0.73ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m chunked exact inverse root-kind-change matches the Rust planner and replays through fast-json-patch[0m [0m[2m[1.57ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m an inverse needing more parts than its bound is refused, never truncated[0m [0m[2m[4.24ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m intrinsic object ordering preserves numeric keys and exact inverse values[0m [0m[2m[0.48ms[0m[2m][0m
+[0m[1m101 |[0m     expect([0m[35mnew[0m [0m[1mTextEncoder[0m()[0m[3m[1m.encode[0m(JSON[0m[3m[1m.stringify[0m(patch)).length)[0m[3m[1m.toBeLessThan[0m(row.maximumPatchBytes)[0m[2m;[0m
+[0m[1m102 |[0m     const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
+[0m[1m103 |[0m     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
+[0m[1m104 |[0m     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
+[0m[1m105 |[0m     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
+[0m[1m106 |[0m     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+                                                                                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"open"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[2masync <anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts[0m[2m:[0m[33m106[0m[2m:[33m83[0m[2m)[0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m csv native patch schema and large field match independent oracles[0m [0m[2m[[1m17.17ms[0m[2m][0m
+[0m[1m101 |[0m     expect([0m[35mnew[0m [0m[1mTextEncoder[0m()[0m[3m[1m.encode[0m(JSON[0m[3m[1m.stringify[0m(patch)).length)[0m[3m[1m.toBeLessThan[0m(row.maximumPatchBytes)[0m[2m;[0m
+[0m[1m102 |[0m     const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
+[0m[1m103 |[0m     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
+[0m[1m104 |[0m     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
+[0m[1m105 |[0m     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
+[0m[1m106 |[0m     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+                                                                                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"open"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[2masync <anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts[0m[2m:[0m[33m106[0m[2m:[33m83[0m[2m)[0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m json native patch schema and large field match independent oracles[0m [0m[2m[7.29ms[0m[2m][0m
+[0m[1m101 |[0m     expect([0m[35mnew[0m [0m[1mTextEncoder[0m()[0m[3m[1m.encode[0m(JSON[0m[3m[1m.stringify[0m(patch)).length)[0m[3m[1m.toBeLessThan[0m(row.maximumPatchBytes)[0m[2m;[0m
+[0m[1m102 |[0m     const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
+[0m[1m103 |[0m     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
+[0m[1m104 |[0m     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
+[0m[1m105 |[0m     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
+[0m[1m106 |[0m     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+                                                                                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"open"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[2masync <anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts[0m[2m:[0m[33m106[0m[2m:[33m83[0m[2m)[0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m png native patch schema and large field match independent oracles[0m [0m[2m[3.76ms[0m[2m][0m
+[0m[1m101 |[0m     expect([0m[35mnew[0m [0m[1mTextEncoder[0m()[0m[3m[1m.encode[0m(JSON[0m[3m[1m.stringify[0m(patch)).length)[0m[3m[1m.toBeLessThan[0m(row.maximumPatchBytes)[0m[2m;[0m
+[0m[1m102 |[0m     const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
+[0m[1m103 |[0m     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
+[0m[1m104 |[0m     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
+[0m[1m105 |[0m     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
+[0m[1m106 |[0m     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+                                                                                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"open"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[2masync <anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts[0m[2m:[0m[33m106[0m[2m:[33m83[0m[2m)[0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m jpg native patch schema and large field match independent oracles[0m [0m[2m[4.19ms[0m[2m][0m
+[0m[1m101 |[0m     expect([0m[35mnew[0m [0m[1mTextEncoder[0m()[0m[3m[1m.encode[0m(JSON[0m[3m[1m.stringify[0m(patch)).length)[0m[3m[1m.toBeLessThan[0m(row.maximumPatchBytes)[0m[2m;[0m
+[0m[1m102 |[0m     const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
+[0m[1m103 |[0m     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
+[0m[1m104 |[0m     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
+[0m[1m105 |[0m     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
+[0m[1m106 |[0m     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+                                                                                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"open"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[2masync <anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts[0m[2m:[0m[33m106[0m[2m:[33m83[0m[2m)[0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m tiff native patch schema and large field match independent oracles[0m [0m[2m[3.95ms[0m[2m][0m
+[0m[1m101 |[0m     expect([0m[35mnew[0m [0m[1mTextEncoder[0m()[0m[3m[1m.encode[0m(JSON[0m[3m[1m.stringify[0m(patch)).length)[0m[3m[1m.toBeLessThan[0m(row.maximumPatchBytes)[0m[2m;[0m
+[0m[1m102 |[0m     const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
+[0m[1m103 |[0m     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
+[0m[1m104 |[0m     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
+[0m[1m105 |[0m     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
+[0m[1m106 |[0m     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+                                                                                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"open"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[2masync <anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts[0m[2m:[0m[33m106[0m[2m:[33m83[0m[2m)[0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m mp4 native patch schema and large field match independent oracles[0m [0m[2m[5.03ms[0m[2m][0m
+[0m[1m101 |[0m     expect([0m[35mnew[0m [0m[1mTextEncoder[0m()[0m[3m[1m.encode[0m(JSON[0m[3m[1m.stringify[0m(patch)).length)[0m[3m[1m.toBeLessThan[0m(row.maximumPatchBytes)[0m[2m;[0m
+[0m[1m102 |[0m     const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
+[0m[1m103 |[0m     const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
+[0m[1m104 |[0m     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
+[0m[1m105 |[0m     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
+[0m[1m106 |[0m     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
+                                                                                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"open"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[2masync <anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts[0m[2m:[0m[33m106[0m[2m:[33m83[0m[2m)[0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m wav native patch schema and large field match independent oracles[0m [0m[2m[7.20ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m positioned object insertion preserves the authored key order and rejects invalid positions[0m [0m[2m[0.66ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m moves resolve the destination parent after removal[0m [0m[2m[[1m12.72ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m replace-payload[0m [0m[2m[0.55ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m edit-first-payload-byte[0m [0m[2m[0.05ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m insert-payload-byte[0m [0m[2m[0.03ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m remove-payload-byte[0m [0m[2m[0.03ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-payload-byte[0m [0m[2m[0.16ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m field[0m [0m[2m[0.10ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m append[0m [0m[2m[0.05ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m remove[0m [0m[2m[0.03ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move[0m [0m[2m[0.09ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-to-end[0m [0m[2m[0.06ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m rename-escaped-key[0m [0m[2m[0.52ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m cross-parent-move[0m [0m[2m[0.13ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m same-path[0m [0m[2m[0.05ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m remove-first-object-key[0m [0m[2m[0.06ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-object-key-to-array[0m [0m[2m[0.08ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m duplicate-key[0m [0m[2m[0.08ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m move-descendant[0m [0m[2m[0.02ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m rename-array-index[0m [0m[2m[0.01ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m missing-remove[0m [0m[2m[0.01ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m metadata patches preserve a large payload by reference[0m [0m[2m[1.96ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m failed path operations leave the original untouched[0m [0m[2m[0.12ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m every canonical patch and inverse meets the registry SnapshotPatch schema[0m [0m[2m[0.17ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m the wire reader admits exactly what the registry SnapshotPatch schema admits (ajv oracle)[0m [0m[2m[0.51ms[0m[2m][0m
+[0m[32m✓[0m [0mcompact snapshot patches[2m >[0m[1m snapshot schema locations type exactly the values the whole-document schema admits there (ajv oracle)[0m [0m[2m[[1m36.97ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts:
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral child and IEEE boundaries agree with independent engines[0m [0m[2m[[1m37.97ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d artifact catalog owns the actual independent persisted child[0m [0m[2m[0.22ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d canonical part owns every native IEEE word and both scale variants[0m [0m[2m[0.45ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d author rank and grip order retain the actual signed32 domain[0m [0m[2m[0.15ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d typed part rejects numeric alternatives in its canonical double fields[0m [0m[2m[0.03ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d exposes a canonical whole persisted snapshot parser[0m [0m[2m[0.01ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d complete parent retains empty collections, optional values and native catalog fields[0m [0m[2m[0.41ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d handcrafted entities are independently queryable with real foreign keys[0m [0m[2m[4.00ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d actual persisted parent crosses an independent SQLite reserialization[0m [0m[2m[[1m17.67ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d every authored entity and exact IEEE state survive independent reserialization[0m [0m[2m[[1m224.68ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d independent semantic edits and consistent surrogate renumbering are retained[0m [0m[2m[[1m30.22ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d rejects valid-SQL partial values and unowned or duplicate entities[0m [0m[2m[[1m109.05ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d exact row frontier and real projection/reconstruction cancellation remain controlled[0m [0m[2m[[1m110.17ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d declared JSON schema admits the exact word-backed persisted parent[0m [0m[2m[[1m31.67ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d declared JSON leaf preserves every native word without canonical numeric alternatives[0m [0m[2m[3.81ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d published mutation consumers share canonical words and native integer positions[0m [0m[2m[0.10ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d equivalent case and quoted table identities survive independent SQLite rewriting[0m [0m[2m[[1m80.10ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d authored schema admission precedes borrowed semantic traversal[0m [0m[2m[0.95ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d long Unicode cells publish known interior work in both semantic directions[0m [0m[2m[[1m13.17ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d exact signed IEEE cells cannot wrap outside SQLite INTEGER width[0m [0m[2m[[1m18.18ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d every persisted field retains its authored artifact state axis[0m [0m[2m[0.10ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 0 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m458.93ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 1 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m200.93ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 2 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m321.50ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 3 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m191.00ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 4 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m179.12ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 5 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m165.75ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 6 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m139.52ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 7 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m136.26ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 8 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m132.54ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 9 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m138.56ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 10 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m191.58ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m SQLite Puzzle5d neutral mutation snapshot batch 11 retains declared JSON state through relational reconstruction[0m [0m[2m[[1m183.40ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m Puzzle5d borrowed Scale and diff metadata preserve the authored neutral records[0m [0m[2m[[1m13.17ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m Puzzle5d nullable delta retains omission, clearing and exact typed replacement[0m [0m[2m[[1m13.57ms[0m[2m][0m
+[0m
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts:
+[0m[32m✓[0m[0m[1m canonical shard violation closure accepts every language-neutral order without losing metadata or entries[0m [0m[2m[[1m23.91ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m canonical shard closure rejects changed missing extra and duplicate top-level records[0m [0m[2m[0.85ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m shard descriptor order is explicit and cannot be hidden by co-reordering payloads[0m [0m[2m[0.54ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m serialized shard reconstruction preserves nested metadata and entry array order[0m [0m[2m[0.64ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m canonical artifact validation rejects every language-neutral preimage corruption[0m [0m[2m[2.43ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m the real inventory producer publishes locale-different violation order losslessly[0m [0m[2m[[1m391.66ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m publication verifies canonical violations and rejects inconsistent replacement before writing[0m [0m[2m[[1m19.67ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m inventory shard consistency gate is registered through Nx and both launch catalogs[0m [0m[2m[[1m57.49ms[0m[2m][0m
+[0m
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts:
+[0m[32m✓[0m[0m[1m neutral contract requires isolated queries and a fresh final authority witness[0m [0m[2m[6.17ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m Bun preserves independent ordered query results while reusing only the preflight basis[0m [0m[2m[[1m124.39ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m TypeScript preserves independent ordered query results while reusing only the preflight basis[0m [0m[2m[[1m143.46ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: added-candidate[0m [0m[2m[5.64ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: removed-candidate[0m [0m[2m[5.48ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: deleted-file-retains-index-membership[0m [0m[2m[9.02ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: late-reference-in-existing-file[0m [0m[2m[7.41ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: mode-change[0m [0m[2m[6.78ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: file-becomes-symlink[0m [0m[2m[3.56ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: fake-marker-appears[0m [0m[2m[4.90ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: nested-marker-replaced[0m [0m[2m[5.56ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: same-content-marker-file-replaced[0m [0m[2m[4.42ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: exact-owned-journal-publication[0m [0m[2m[3.74ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m fresh witness rejects only unowned authority drift: neighbor-ticket-is-not-owned[0m [0m[2m[3.54ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m late temporary content changes stay rejected even when restored before final validation[0m [0m[2m[6.14ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m raw marker bytes cannot drift behind identical UTF-8 replacement characters[0m [0m[2m[3.84ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m marker checks retain exact skipped paths, fake-marker behavior and symlink rejection[0m [0m[2m[3.29ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m freshness does not share projected bytes, target indexes or frozen checks between queries[0m [0m[2m[5.06ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m cancellation is observed during capture, every query and final validation[0m [0m[2m[5.95ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m explicit ignored-ticket and untracked consumers remain in the shared authority[0m [0m[2m[4.69ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m query callbacks can cancel without bypassing the final or next-candidate check[0m [0m[2m[7.60ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m basis identity cannot cross a repository, taxonomy object, plan or preflight invocation[0m [0m[2m[[1m14.22ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m apply validates freshness after its publication callback and before source staging[0m [0m[2m[0.61ms[0m[2m][0m
+[0m[1m273 |[0m   [0m[35mlet[0m current = parse(parent).root[0m[2m;[0m
+[0m[1m274 |[0m   [0m[35mfor[0m ([0m[35mconst[0m part of relative(current, parent)[0m[3m[1m.split[0m(sep)) {
+[0m[1m275 |[0m     current = join(current, part)[0m[2m;[0m
+[0m[1m276 |[0m     [0m[35mlet[0m stat[0m[2m;[0m
+[0m[1m277 |[0m     [0m[35mtry[0m { stat = lstatSync(current)[0m[2m;[0m }
+[0m[1m278 |[0m     [0m[35mcatch[0m (error) { [0m[35mif[0m ((error [0m[34mas[0m NodeJS.ErrnoException).code !== [0m[32m"ENOENT"[0m || current !== parent) [0m[35mthrow[0m error[0m[2m;[0m mkdirSync(current)[0m[2m;[0m stat = lstatSync(current)[0m[2m;[0m }
+                                                                                                              [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mENOENT: no such file or directory, lstat '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis'[0m
+[0m      [2mat [0m[0m[1m[3mphysicalRun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m278[0m[2m:[33m105[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m319[0m[2m:[33m17[0m[2m)[0m
+[0m[31m✗[0m[0m[1m actual Git markers preserve nested ownership, fake markers and skipped symlink descendants[0m [0m[2m[0.48ms[0m[2m][0m
+[0m[1m272 |[0m   const report = join(ticket, "📓️preflight-reference-basis"), parent = join(report, "🧾️runs");
+[0m[1m273 |[0m   [0m[35mlet[0m current = parse(parent).root[0m[2m;[0m
+[0m[1m274 |[0m   [0m[35mfor[0m ([0m[35mconst[0m part of relative(current, parent)[0m[3m[1m.split[0m(sep)) {
+[0m[1m275 |[0m     current = join(current, part)[0m[2m;[0m
+[0m[1m276 |[0m     [0m[35mlet[0m stat[0m[2m;[0m
+[0m[1m277 |[0m     [0m[35mtry[0m { stat = lstatSync(current)[0m[2m;[0m }
+                       [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, lstat '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"lstat"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[1m[3mphysicalRun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m277[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mphysicalFixture[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m293[0m[2m:[33m17[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m346[0m[2m:[33m71[0m[2m)[0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: unchanged-rollback[0m [0m[2m[9.30ms[0m[2m][0m
+[0m[1m272 |[0m   const report = join(ticket, "📓️preflight-reference-basis"), parent = join(report, "🧾️runs");
+[0m[1m273 |[0m   [0m[35mlet[0m current = parse(parent).root[0m[2m;[0m
+[0m[1m274 |[0m   [0m[35mfor[0m ([0m[35mconst[0m part of relative(current, parent)[0m[3m[1m.split[0m(sep)) {
+[0m[1m275 |[0m     current = join(current, part)[0m[2m;[0m
+[0m[1m276 |[0m     [0m[35mlet[0m stat[0m[2m;[0m
+[0m[1m277 |[0m     [0m[35mtry[0m { stat = lstatSync(current)[0m[2m;[0m }
+                       [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, lstat '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"lstat"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[1m[3mphysicalRun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m277[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mphysicalFixture[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m293[0m[2m:[33m17[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m346[0m[2m:[33m71[0m[2m)[0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: late-new-consumer[0m [0m[2m[7.59ms[0m[2m][0m
+[0m[1m272 |[0m   const report = join(ticket, "📓️preflight-reference-basis"), parent = join(report, "🧾️runs");
+[0m[1m273 |[0m   [0m[35mlet[0m current = parse(parent).root[0m[2m;[0m
+[0m[1m274 |[0m   [0m[35mfor[0m ([0m[35mconst[0m part of relative(current, parent)[0m[3m[1m.split[0m(sep)) {
+[0m[1m275 |[0m     current = join(current, part)[0m[2m;[0m
+[0m[1m276 |[0m     [0m[35mlet[0m stat[0m[2m;[0m
+[0m[1m277 |[0m     [0m[35mtry[0m { stat = lstatSync(current)[0m[2m;[0m }
+                       [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, lstat '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"lstat"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[1m[3mphysicalRun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m277[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mphysicalFixture[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m293[0m[2m:[33m17[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m346[0m[2m:[33m71[0m[2m)[0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: late-existing-consumer[0m [0m[2m[7.10ms[0m[2m][0m
+[0m[1m272 |[0m   const report = join(ticket, "📓️preflight-reference-basis"), parent = join(report, "🧾️runs");
+[0m[1m273 |[0m   [0m[35mlet[0m current = parse(parent).root[0m[2m;[0m
+[0m[1m274 |[0m   [0m[35mfor[0m ([0m[35mconst[0m part of relative(current, parent)[0m[3m[1m.split[0m(sep)) {
+[0m[1m275 |[0m     current = join(current, part)[0m[2m;[0m
+[0m[1m276 |[0m     [0m[35mlet[0m stat[0m[2m;[0m
+[0m[1m277 |[0m     [0m[35mtry[0m { stat = lstatSync(current)[0m[2m;[0m }
+                       [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, lstat '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis'[0m
+    path[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️preflight-reference-basis"[0m[0m[2m,[0m
+ syscall[0m[2m:[0m [0m[32m"lstat"[0m[0m[2m,[0m
+   errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+    code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[1m[3mphysicalRun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m277[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mphysicalFixture[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m293[0m[2m:[33m17[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts[0m[2m:[0m[33m346[0m[2m:[33m71[0m[2m)[0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: late-fake-marker[0m [0m[2m[6.68ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m the dedicated preflight gate is registered through Nx and both ordered launch catalogs[0m [0m[2m[[1m40.77ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m the exercised production slices remain stable across the dedicated gate[0m [0m[2m[[1m85.32ms[0m[2m][0m
+[0m
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-scenario-identities/🟦️.ts:
+[0m[32m✓[0m[0m[1m logical mutation scenario ids and physical case names are independent exact identities[0m [0m[2m[[1m14.99ms[0m[2m][0m
+
+[0m[2m14 tests failed:[0m
+[0m[31m✗[0m[0m[1m SQLite remodeling inline buffers follow the independent tagged schema[0m [0m[2m[[1m33.83ms[0m[2m][0m
+[0m[31m✗[0m[0m[1m SQLite remodeling declared mutation schemas share exact words and raw octets[0m [0m[2m[5.73ms[0m[2m][0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m csv native patch schema and large field match independent oracles[0m [0m[2m[[1m17.17ms[0m[2m][0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m json native patch schema and large field match independent oracles[0m [0m[2m[7.29ms[0m[2m][0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m png native patch schema and large field match independent oracles[0m [0m[2m[3.76ms[0m[2m][0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m jpg native patch schema and large field match independent oracles[0m [0m[2m[4.19ms[0m[2m][0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m tiff native patch schema and large field match independent oracles[0m [0m[2m[3.95ms[0m[2m][0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m mp4 native patch schema and large field match independent oracles[0m [0m[2m[5.03ms[0m[2m][0m
+[0m[31m✗[0m [0mcompact snapshot patches[2m >[0m[1m wav native patch schema and large field match independent oracles[0m [0m[2m[7.20ms[0m[2m][0m
+[0m[31m✗[0m[0m[1m actual Git markers preserve nested ownership, fake markers and skipped symlink descendants[0m [0m[2m[0.48ms[0m[2m][0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: unchanged-rollback[0m [0m[2m[9.30ms[0m[2m][0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: late-new-consumer[0m [0m[2m[7.59ms[0m[2m][0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: late-existing-consumer[0m [0m[2m[7.10ms[0m[2m][0m
+[0m[31m✗[0m[0m[1m physical preflight publication boundary: late-fake-marker[0m [0m[2m[6.68ms[0m[2m][0m
+
+[0m[32m 125 pass[0m
+[0m[31m 14 fail[0m
+ 2514 expect() calls
+Ran 139 tests across 6 files. [0m[2m[[1m7.48s[0m[2m][0m
+[DEBUG] Independent actual retained profile area oracle [0m[33m3[0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts" verify" exited with non-zero status code

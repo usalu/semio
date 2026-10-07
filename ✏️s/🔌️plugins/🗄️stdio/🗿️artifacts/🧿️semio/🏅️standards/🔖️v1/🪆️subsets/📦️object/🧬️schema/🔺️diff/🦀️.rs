@@ -151,7 +151,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
         SemioObjectDiff {
             mesh: Some(Some(store::ArtifactChild::new(
                 "m1".into(),
-                store::os_io::ArtifactRef { artifact_id: "m1".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },
+                semio_framework_artifact_reference::ArtifactRef { artifact_id: "m1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },
             ))),
             ..Default::default()
         },

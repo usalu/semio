@@ -76,7 +76,7 @@ async fn wires_child_restore_projection_accepts_the_exact_owned_content() {
 fn the_curated_example_projects_into_drawable_canvas_layers() {
     let document = schema::metabolism_wires_example_snapshot().expect("curated example parses");
     let composed = wires_composed(&document, demo_content());
-    let layers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot)))).expect("independent JSON oracle");
+    let layers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::Array(schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot))))).expect("independent JSON oracle");
     let layers = layers.as_array().expect("layer list");
     let boxes = layers.iter().filter(|layer| matches!(layer["kind"].as_str(), Some("circle" | "rect")) && layer["width"].as_f64().is_some_and(|width| width > 0.0) && layer["height"].as_f64().is_some_and(|height| height > 0.0)).count();
     let lines = layers.iter().filter(|layer| layer["kind"] == "line" && ["x0", "y0", "x1", "y1"].iter().all(|key| layer[*key].as_f64().is_some_and(f64::is_finite))).count();

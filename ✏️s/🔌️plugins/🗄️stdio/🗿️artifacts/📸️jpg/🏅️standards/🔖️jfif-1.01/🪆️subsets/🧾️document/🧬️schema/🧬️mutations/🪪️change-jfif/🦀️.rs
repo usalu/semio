@@ -58,6 +58,3 @@ pub fn contribute(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDens
 //#endregion Semantics
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
-mod tests_direct_behavior;

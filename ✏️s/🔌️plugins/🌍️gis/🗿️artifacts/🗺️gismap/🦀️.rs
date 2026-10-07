@@ -19,7 +19,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapsho
 pub const GIS_MAP_SCHEMA: &str = "gis.map";
 
 /// 🪪️ One canonical map identity shared by definition, composer and both app roles.
-pub const GISMAP_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.gis.gismap", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const GISMAP_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.gis.gismap", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 //#endregion 🔹Constants
 
 pub use crate::schema::feature::{MapFeature, MapFeaturePatch};
@@ -45,18 +45,30 @@ pub type GisMapValueChild = store::ArtifactChild<SemioValueSnapshot>;
 /// 🕸️ Stable admitted CHILD handle for the map's composed drawing member.
 pub fn gis_map_drawing_child_handle() -> GisMapDrawingChild {
     let child_id = "gismap-drawing".to_string();
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
 /// 🕸️ Stable admitted CHILD handle for the map's composed value member.
 pub fn gis_map_value_child_handle() -> GisMapValueChild {
     let child_id = "gismap-value".to_string();
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "gismap-value".into(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-value".into(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
+
+/// 🌱️ Maps the complete intrinsic tree to the composed value domain.
+pub fn semio_value_from_intrinsic(value:&semio_framework_value::DslValue)->SemioValue{
+ use semio_framework_value::{DslValue,Number};
+ match value{
+ DslValue::Null=>SemioValue::Null,DslValue::Bool(value)=>SemioValue::Bool{value:*value},DslValue::String(value)=>SemioValue::Str{value:value.clone()},DslValue::Bytes(bytes)=>SemioValue::Bytes{value:bytes.clone()},
+ DslValue::Number(Number::UInt(value))=>SemioValue::Int{lexeme:value.to_string()},DslValue::Number(Number::Int(value))=>SemioValue::Int{lexeme:value.to_string()},DslValue::Number(Number::Float(value))=>SemioValue::Float{lexeme:format!("{value:?}")},
+ DslValue::Array(items)=>SemioValue::List{items:items.iter().map(semio_value_from_intrinsic).collect()},DslValue::Object(members)=>SemioValue::Map{entries:members.iter().map(|(key,value)|SemioValueEntry{key:key.clone(),value:semio_value_from_intrinsic(value)}).collect()}
+ }
+}
+/// 🗺️ Materializes the descriptor's owned value child without JSON admission.
+pub fn gis_map_value_from_descriptor(value:&semio_framework_value::DslValue)->SemioValueSnapshot{SemioValueSnapshot{schema:STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),root:semio_value_from_intrinsic(value),nodes:Vec::new()}}
 
 /// 🌉️ WRITE direction, real (not a stub): `serde_json::Value` → `SemioValue`, a direct structural
 /// mapping (json has no binary/graph-reference primitive, so `Bytes`/`Ref` are never produced —
@@ -129,8 +141,8 @@ pub fn genesis_gis_map_child_pack(document: &GisMapSnapshot, slot: &str, child_i
         return Some(<SemioDrawingSnapshot as ArtifactPack>::encode_pack(&drawing));
     }
     if slot == "value" && child_id == document.value.child_id {
-        let descriptor = crate::schema::gis_map_descriptor_json(document);
-        let value = gis_map_value_from_descriptor_json(&descriptor);
+        let descriptor = crate::schema::gis_map_descriptor_value(document);
+        let value = gis_map_value_from_descriptor(&descriptor);
         return Some(<SemioValueSnapshot as ArtifactPack>::encode_pack(&value));
     }
     None
@@ -921,3 +933,9 @@ pub mod inference_mcp;
 pub mod tile_coordinates;
 
 pub use crate::standards::v1::subsets::any::io::{GismapBuilderConstruction, GisMapParts, GisMapAnalyzerAnalysis, GismapBuilderFacets, GismapBuilder, GisMapAnalyzer, GisMapComposer};
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

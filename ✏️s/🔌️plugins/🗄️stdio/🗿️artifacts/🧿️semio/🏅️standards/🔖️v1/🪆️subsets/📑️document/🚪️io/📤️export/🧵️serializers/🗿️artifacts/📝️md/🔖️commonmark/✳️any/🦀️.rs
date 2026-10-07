@@ -15,7 +15,7 @@
 //!   which reads `MdInline::Image::url` back into `image_id`) so no data is silently invented.
 
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
 use semio_s_artifact_stdio_md::MdSnapshot;
 

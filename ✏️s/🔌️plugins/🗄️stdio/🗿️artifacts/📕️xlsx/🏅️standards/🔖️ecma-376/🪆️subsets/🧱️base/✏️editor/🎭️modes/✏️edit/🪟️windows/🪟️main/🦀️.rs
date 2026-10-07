@@ -1,7 +1,7 @@
 //! 📊️ Windowed per-worksheet spreadsheet grids with revision-bound occupied and vacant cells.
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::render_xlsx_cell_value;
-use crate::standards::v_ecma_376::subsets::base::io::column_letter;
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::{xlsx_cell_address, xlsx_worksheet_address, XLSX_MAX_COLUMN, XLSX_MAX_ROW};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet};
 use crate::XlsxSnapshot;

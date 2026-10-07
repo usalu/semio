@@ -17,8 +17,8 @@ pub type VcsStore = store::ArtifactStore<VcsSnapshot, VcsDemoMutation>;
 /// insertion requires its exact mutation retirement factory`), so a bare `VcsStore::new` can be read
 /// but never mutated, undone or closed. `VcsPlayApp::build_document_store_owners` installs the SAME
 /// catalog for the app-hosted store; every standalone store goes through here instead.
-pub async fn new_vcs_store(envelope: VcsEnvelope) -> Result<OwnedVcsStore, store::VcsError> {
-    let mut store = VcsStore::new(envelope).await?;
+pub async fn new_vcs_store(envelope: VcsEnvelope, actor: protocol::ActorId) -> Result<OwnedVcsStore, store::VcsError> {
+    let mut store = VcsStore::new(envelope, actor).await?;
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<VcsSnapshot, VcsDemoMutation>());
     Ok(OwnedVcsStore(store))
 }

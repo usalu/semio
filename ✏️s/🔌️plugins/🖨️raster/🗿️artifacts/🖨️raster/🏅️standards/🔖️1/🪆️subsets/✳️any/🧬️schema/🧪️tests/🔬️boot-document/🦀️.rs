@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::raster_example_document;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_raster_document;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document;
 use super::*;
@@ -65,7 +66,7 @@ async fn the_demo_carrier_ships_real_media_sized_exactly_as_its_backdrop_declare
 #[test]
 fn repeated_layer_creation_has_distinct_persistable_identities() {
     use crate::standards::v1::subsets::any::schema::{layer_node_id};
-    use crate::standards::v1::subsets::any::io::text::snapshot::{create_pixel_layer};
+    use crate::standards::v1::subsets::any::schema::create_pixel_layer;
     let layers:Vec<_>=(0..1024).map(|_|create_pixel_layer("Pixels",1,1)).collect();
     let ids:std::collections::BTreeSet<_>=layers.iter().map(layer_node_id).collect();
     assert_eq!(ids.len(),layers.len());

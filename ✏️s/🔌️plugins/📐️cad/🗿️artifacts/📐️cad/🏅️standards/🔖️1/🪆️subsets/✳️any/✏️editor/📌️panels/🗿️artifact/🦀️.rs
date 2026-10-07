@@ -4,7 +4,7 @@
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::terminology::{typology_label, CadLabels};
 use crate::editor::cad::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN, CAD_PLAY_CONTROLLER_ID};
-use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::standards::v1::subsets::any::schema::geometry::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::{CadPaneId, CadReference, CadSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};

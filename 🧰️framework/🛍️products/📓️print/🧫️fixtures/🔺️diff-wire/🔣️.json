@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "edits": []
+    },
+    {
+      "edits": [
+        {
+          "path": [
+            "width"
+          ],
+          "before": 100,
+          "after": 120
+        },
+        {
+          "path": [
+            "title"
+          ],
+          "after": "Gruß 🌈"
+        },
+        {
+          "path": [
+            "missing"
+          ],
+          "before": null
+        }
+      ]
+    }
+  ]
+}

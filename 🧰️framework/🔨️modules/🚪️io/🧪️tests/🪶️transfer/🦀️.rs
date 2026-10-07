@@ -1,4 +1,5 @@
 //! 🔁️ The actual public snapshot hop retains native, metadata and physical ownership together.
+use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
 use semio_framework_os_kernel::{self as store,io_schema::*,os_io::{register_native_snapshot_codec,io_mechanism::{io_route,io_run_with_snapshot_control}},sqlite_snapshot::*};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_decoding::NativeDecodeProgress,native_encoding::NativeEncodeProgress};
 use std::{io::Write,process::{Command,Stdio}};

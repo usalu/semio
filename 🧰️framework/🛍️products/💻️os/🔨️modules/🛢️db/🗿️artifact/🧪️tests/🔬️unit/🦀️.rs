@@ -1823,12 +1823,12 @@ impl store::MemberStoreOwner<HashMutation> for HashProjection {
 }
 //#endregion 🔖️RecoveryFixtureStore
 
-async fn committed_recovery_hash_store(id: &str, dialect: store::os_io::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<HashProjection, HashMutation> {
+async fn committed_recovery_hash_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<HashProjection, HashMutation> {
     use store::MemberStoreOwner as _;
     let mut envelope = store::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = store::ArtifactStore::new(envelope).await.expect("committed recovery fixture creates one exact Store");
+    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("committed recovery fixture creates one exact Store");
     store.install_document_store_owners_exact(HashProjection::member_store_owners());
     store
 }
@@ -2068,9 +2068,9 @@ async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact
     let witness = committed_durable_group_decision_from_transaction(&document, transaction).await.unwrap().expect("one committed Event produces one opaque DB witness");
     while replay.close_owner_step().unwrap() {}
 
-    let parent_dialect = store::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };
-    let child_dialect = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
-    let parent_reference = store::os_io::ArtifactRef { artifact_id: "map-a".into(), dialect: parent_dialect.clone() };
+    let parent_dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };
+    let child_dialect = |subset: &str| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
+    let parent_reference = semio_framework_artifact_reference::ArtifactRef { artifact_id: "map-a".into(), dialect: parent_dialect.clone() };
     let parent = committed_recovery_hash_store("map-a", parent_dialect, None).await;
     let drawing = committed_recovery_hash_store("gismap-drawing", child_dialect("drawing"), Some(store::OwnerRef { parent: parent_reference.clone(), slot: "drawing".into(), child_id: "gismap-drawing".into() })).await;
     let value = committed_recovery_hash_store("gismap-value", child_dialect("value"), Some(store::OwnerRef { parent: parent_reference, slot: "value".into(), child_id: "gismap-value".into() })).await;

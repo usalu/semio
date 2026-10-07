@@ -1,0 +1,37 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts" pptx-verify
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧭️transform/🧪️tests/🟦️.ts:
+[0m
+[1m[2m#[0m [31m[1mUnhandled error[0m[2m between tests[0m
+[2m-------------------------------[0m
+[0m[1m10 |[0m [0m[35mconst[0m transforms = [
+[0m[1m11 |[0m   "📐set-shape-position",
+[0m[1m12 |[0m   "📸️set-snapshot",
+[0m[1m13 |[0m   "➕insert-slide",
+[0m[1m14 |[0m   "🔷insert-shape",
+[0m[1m15 |[0m ].map(kind => JSON.parse(read("🧬️schema/🧬️mutations/" + kind + "/🧬️schema/🔣️.json")).$defs.PptxTransform);
+                                                                                             [31m[1m^[0m
+[0m[31mTypeError[0m[2m:[0m [1mundefined is not an object (evaluating 'JSON.parse(read("\uD83E\uDDEC\uFE0Fschema/\uD83E\uDDEC\uFE0Fmutations/" + kind + "/\uD83E\uDDEC\uFE0Fschema/\uD83D\uDD23\uFE0F.json")).$defs.PptxTransform')[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧭️transform/🧪️tests/🟦️.ts[0m[2m:[0m[33m15[0m[2m:[33m89[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mmap[0m[2m ([0m[0m[36m[0m[33m1[0m[2m:[33m11[0m[2m)[0m
+[0m      [2mat [0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧭️transform/🧪️tests/🟦️.ts[0m[2m:[0m[33m15[0m[2m:[33m3[0m
+[0m[2m-------------------------------[0m
+
+
+ 0 pass[0m
+[0m[31m 1 fail[0m
+ [0m[31m1 error[0m
+Ran 1 test across 1 file. [0m[2m[[1m44.00ms[0m[2m][0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts" pptx-verify" exited with non-zero status code

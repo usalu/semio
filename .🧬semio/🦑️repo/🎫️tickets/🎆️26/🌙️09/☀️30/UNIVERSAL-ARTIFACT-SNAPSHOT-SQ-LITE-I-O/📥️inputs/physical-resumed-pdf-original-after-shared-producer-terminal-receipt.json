@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-06T13:22:36.460Z",
+  "session": 88105,
+  "exitCode": 1,
+  "qualification": "Compiler-only, no Nextest",
+  "error": "PDF1.4/A derived-construction test include at actual IO roster148 referenced missing IO test path",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-shared-derive.log"
+}

@@ -925,8 +925,8 @@ pub mod ooxml {
     }
 
     /// 🌳 One element read to its own end as a wire `XmlNode` tree. Character data and entity references between two
-    /// markup boundaries join one text node, whitespace included, as the subject's reader keeps them; OOXML parts carry no
-    /// comments, CDATA or processing instructions, so meeting one is refused.
+    /// markup boundaries join one text node, whitespace included, while CDATA, comments and processing instructions
+    /// retain their distinct logical forms.
     fn wire_element(reader: &mut Reader<&[u8]>, start: BytesStart) -> Result<Json, String> {
         let mut children = Vec::new();
         let mut run = String::new();
@@ -940,11 +940,51 @@ pub mod ooxml {
                 Event::GeneralRef(reference) => run.push_str(&resolved_reference(&reference)?),
                 Event::Start(child) => children.push(wire_element(reader, child)?),
                 Event::Empty(child) => children.push(element_node(&child, Vec::new())?),
+                Event::Comment(text) => children.push(Json::Object(vec![("kind".into(), Json::String("comment".into())), ("text".into(), Json::String(text.as_ref().into()))])),
+                Event::CData(text) => children.push(Json::Object(vec![("kind".into(), Json::String("cData".into())), ("text".into(), Json::String(text.as_ref().into()))])),
+                Event::PI(pi) => children.push(Json::Object(vec![("kind".into(), Json::String("processingInstruction".into())), ("target".into(), Json::String(pi.target().into())), ("data".into(), Json::String(pi.content().trim_start().into()))])),
                 Event::End(_) => return element_node(&start, children),
                 Event::Eof => return Err("unexpected end of input inside an element".to_string()),
                 other => return Err(format!("unexpected {other:?} inside an OOXML part")),
             }
         }
+    }
+
+    /// 🧬️ Owned VML fixture read independently through quick-xml.
+    pub fn vml_document() -> Json { wire_xml_document(VML_MARKUP.as_bytes()).expect("valid authored VML fixture") }
+
+    fn wire_xml_document(bytes: &[u8]) -> Result<Json, String> {
+        let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let mut reader = Reader::from_str(text);
+        let mut root = None;
+        let mut fields = Vec::new();
+        let mut prolog = Vec::new();
+        let mut epilog = Vec::new();
+        loop {
+            let before = reader.buffer_position() as usize;
+            let misc = match reader.read_event().map_err(|error| error.to_string())? {
+                Event::Start(start) => { root = Some(wire_element(&mut reader, start)?); continue; }
+                Event::Empty(start) => { root = Some(element_node(&start, Vec::new())?); continue; }
+                Event::Decl(decl) => {
+                    let mut declaration = vec![("version".into(), Json::String(decl.version().map_err(|error| error.to_string())?.into_owned())), ("quote".into(), Json::String(if text[before..reader.buffer_position() as usize].contains('\'') { "single" } else { "double" }.into()))];
+                    if let Some(encoding) = decl.encoding() { declaration.push(("encoding".into(), Json::String(encoding.map_err(|error| error.to_string())?.into_owned()))); }
+                    if let Some(standalone) = decl.standalone() { declaration.push(("standalone".into(), Json::Bool(standalone.map_err(|error| error.to_string())?.as_ref() == "yes"))); }
+                    fields.push(("declaration".into(), Json::Object(declaration)));
+                    continue;
+                }
+                Event::Comment(text) => Json::Object(vec![("kind".into(), Json::String("comment".into())), ("text".into(), Json::String(text.as_ref().into()))]),
+                Event::PI(pi) => Json::Object(vec![("kind".into(), Json::String("processingInstruction".into())), ("target".into(), Json::String(pi.target().into())), ("data".into(), Json::String(pi.content().trim_start().into()))]),
+                Event::DocType(_) => return Err("an OPC XML part carries no document type declaration".into()),
+                Event::Eof => break,
+                Event::Text(text) if text.as_ref().trim().is_empty() => continue,
+                other => return Err(format!("unexpected {other:?} outside the XML root")),
+            };
+            if root.is_some() { epilog.push(misc); } else { prolog.push(misc); }
+        }
+        fields.push(("root".into(), root.ok_or_else(|| "XML document has no root".to_string())?));
+        if !prolog.is_empty() { fields.push(("prolog".into(), Json::Array(prolog))); }
+        if !epilog.is_empty() { fields.push(("epilog".into(), Json::Array(epilog))); }
+        Ok(Json::Object(fields))
     }
 
     /// 📖️ Every logical XML part of a package in archive order — the order an OOXML snapshot lists its `xmlParts`: neither
@@ -1225,7 +1265,8 @@ pub mod ooxml {
                 if part_bytes(&parts, &path).is_some() {
                     return Err(format!("insert-vml-part: {path} already exists"));
                 }
-                set_part(&mut parts, &path, markup_or_default(&params, VML_MARKUP).into_bytes());
+                let document = params.get("document").ok_or_else(|| "insert-vml-part carries no owned XML document".to_string())?;
+                set_part(&mut parts, &path, xml_document_text(document)?.into_bytes());
                 set_content_type_override(&mut parts, &path, Some(profile.vml_content_type))?;
             }
             "remove-vml-part" => {
@@ -1297,7 +1338,7 @@ pub mod ooxml {
         let path = || Json::String(text(&params, "path"));
         match forward.str("kind").as_str() {
             "remove-conformance-attribute" => apply_conformance_mutation(input, &kind_spec("set-conformance-attribute", vec![("value", Json::String("strict".to_string()))]), profile),
-            "remove-vml-part" => apply_conformance_mutation(input, &kind_spec("insert-vml-part", vec![("path", path())]), profile),
+            "remove-vml-part" => apply_conformance_mutation(input, &kind_spec("insert-vml-part", vec![("path", path()), ("document", vml_document())]), profile),
             "remove-alternate-content" => apply_conformance_mutation(input, &kind_spec("insert-alternate-content", vec![("path", path())]), profile),
             _ => Ok(input.to_vec()),
         }
@@ -1336,8 +1377,8 @@ pub mod ooxml {
             "insert-vml-part" => kind_spec("remove-vml-part", vec![("path", path())]),
             "remove-vml-part" => {
                 let target = text(&params, "path");
-                let markup = part_bytes(&parts, &target).map(|bytes| String::from_utf8_lossy(bytes).into_owned()).ok_or_else(|| format!("remove-vml-part has no inverse: {target} is not in the base"))?;
-                kind_spec("insert-vml-part", vec![("path", path()), ("markup", Json::String(markup))])
+                let bytes = part_bytes(&parts, &target).ok_or_else(|| format!("remove-vml-part has no inverse: {target} is not in the base"))?;
+                kind_spec("insert-vml-part", vec![("path", path()), ("document", wire_xml_document(bytes)?)])
             }
             "insert-alternate-content" => kind_spec("remove-alternate-content", vec![("path", path())]),
             "remove-alternate-content" => kind_spec("insert-alternate-content", vec![("path", path())]),

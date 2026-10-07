@@ -14,8 +14,10 @@ use crate::LasSnapshot;
 use protocol::Mutation;
 #[cfg(test)]
 use crate::standards::v1_0::subsets::any::schema::mutations::{point};
+
 #[cfg(test)]
 use crate::standards::v1_0::subsets::any::schema::mutations::{vlr};
+
 /// 📋 Whole-`LasHeader` positional codec — only needed by `SetSnapshot`'s `snapshot` argument (no
 /// other variant carries a full header).
 pub(crate) fn enc_header(h: &LasHeader) -> String {

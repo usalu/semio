@@ -1,12 +1,13 @@
 use super::*;
 use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_layer_base};
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_drawing_document};
+use crate::standards::v1::subsets::any::schema::{default_drawing_document};
 use crate::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
 
 /// 🎨️ The direct typed SVG route retains authored paint and positioned text.
 #[semio_framework_async_macros::async_test]
 async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes() {
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{svg_element_from_xml_node, SvgElement};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::svg_element_from_xml_node;
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgElement;
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_svg_xml};
 
     let mut rect = create_drawing_shape_layer_rect("Rect");
@@ -16,7 +17,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     }
     let mut gradient_rect = create_drawing_shape_layer_rect("Gradient");
     if let DrawingLayerNode::Shape(shape) = &mut gradient_rect {
-        shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![crate::GradientStop {offset:0.0,color:[1.0,0.0,0.0,1.0]},crate::GradientStop {offset:1.0,color:[0.0,0.0,1.0,0.5]}] });
+        shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![crate::GradientStop {offset:0.0,color:[1.0,0.0,0.0,1.0]},crate::GradientStop {offset:1.0,color:[0.0,0.0,1.0,0.5]}].into() });
     }
     let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0 });
     let mut assets = std::collections::BTreeMap::new();
@@ -24,7 +25,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     let image = create_drawing_image_layer("Image", "img");
 
     let mut doc = default_drawing_document("svg-test", None);
-    doc.layers = vec![rect, gradient_rect, text, image];
+    doc.layers = vec![rect, gradient_rect, text, image].into();
     doc.assets = assets;
     doc.artboard = None;
 

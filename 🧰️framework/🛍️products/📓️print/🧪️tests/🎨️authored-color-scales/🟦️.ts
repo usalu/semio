@@ -1,7 +1,7 @@
 /** 🎨️ Declarative color scale output compared with independent D3 scales and interpolation. */
 import { defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { buildVizScale } from "../../🧬️schema/💡️inferences/📐scale/🟦️.ts";
-import { inferVizPresetTikz } from "../../🧬️schema/💡️inferences/📚️catalogue/🟦️.ts";
+import { renderVizPresetTikz } from "../../🚪️io/📝️text/💡️inferences/📚️catalogue/🟦️.ts";
 import {vizParseColor} from "../../🧬️schema/💡️inferences/🎨theme/🟦️.ts";
 import colorContract from "../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json";
 import type { VizScaleSpec } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
@@ -48,7 +48,7 @@ export async function authoredColorScaleChecks() {
   const names = Object.keys(colorContract["x-semio-named-colors"]);
   const parse = (value: string) => { try {const color=vizParseColor(value);return color.map((part,index)=>index===3?part:Math.round(part));} catch {return null;} };
   const reference = (value: string) => { const color=colors.color(value)?.rgb();return value==="transparent"?[0,0,0,0]:color ? [Math.round(color.r),Math.round(color.g),Math.round(color.b),color.opacity*255] : null; };
-  const presets={module:"theme",name:"authored-preset-paints",subject:()=>vectors.presetPaints.map(fill=>{const source=inferVizPresetTikz({width:80,height:40,language:"en",layers:[],presets:[{kind:"annular-arc",options:{fill}}]},"\\begin{tikzpicture}\n\\end{tikzpicture}");const paints=new Map([...source.matchAll(/\\definecolor\{([^}]+)\}\{HTML\}\{([^}]+)\}/g)].map(match=>[match[1],match[2]]));const alias=/\\SemioVizChart\{annular-arc\}\[fill=\{([^}]+)\}/.exec(source)?.[1];const alpha=new Map([...source.matchAll(/\\SemioVizPaintAlpha\{([^}]+)\}\{([^}]+)\}/g)].map(match=>[match[1],Number(match[2])]));if(alias===undefined)throw new Error("preset paint alias missing");return {hex:paints.get(alias),alpha:alpha.get(alias)??1};}),oracle:()=>vectors.presetPaints.map(fill=>({hex:colors.rgb(fill).formatHex().slice(1).toUpperCase(),alpha:colors.rgb(fill).opacity}))};
+  const presets={module:"theme",name:"authored-preset-paints",subject:()=>vectors.presetPaints.map(fill=>{const source=renderVizPresetTikz({width:80,height:40,language:"en",layers:[],presets:[{kind:"annular-arc",options:{fill}}]},"\\begin{tikzpicture}\n\\end{tikzpicture}");const paints=new Map([...source.matchAll(/\\definecolor\{([^}]+)\}\{HTML\}\{([^}]+)\}/g)].map(match=>[match[1],match[2]]));const alias=/\\SemioVizChart\{annular-arc\}\[fill=\{([^}]+)\}/.exec(source)?.[1];const alpha=new Map([...source.matchAll(/\\SemioVizPaintAlpha\{([^}]+)\}\{([^}]+)\}/g)].map(match=>[match[1],Number(match[2])]));if(alias===undefined)throw new Error("preset paint alias missing");return {hex:paints.get(alias),alpha:alpha.get(alias)??1};}),oracle:()=>vectors.presetPaints.map(fill=>({hex:colors.rgb(fill).formatHex().slice(1).toUpperCase(),alpha:colors.rgb(fill).opacity}))};
   return [...await authoredNiceScaleChecks(),...await authoredUnknownScaleChecks(),...await authoredMissingRenderChecks(),...scales,...controls,presets,{module:"theme",name:"authored-css-names",subject:()=>names.map(parse),oracle:()=>names.map(reference),tolerance:1e-9},{module:"theme",name:"authored-css-paints",subject:()=>vectors.paints.map(parse),oracle:()=>vectors.paints.map(reference),tolerance:1e-9}];
 }
 

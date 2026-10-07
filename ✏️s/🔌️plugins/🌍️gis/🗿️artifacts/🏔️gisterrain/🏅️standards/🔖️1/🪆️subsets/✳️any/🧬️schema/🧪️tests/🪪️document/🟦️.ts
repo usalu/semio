@@ -1,4 +1,5 @@
 /** 🧪️ Terrain facets preserve durable child handles independently of window preferences. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import {test} from "bun:test";
 import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import assert from "node:assert/strict";
@@ -16,7 +17,8 @@ import { parseGisTerrainDiff, applyGisTerrainDiff } from "../../🔺️diff/🟦
 import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
 
 
-import {intrinsicFromJson,intrinsicToJson,type ImportedMap} from "../../🗺️imported-map/🟦️.ts";
+import {type ImportedMap} from "../../🗺️imported-map/🟦️.ts";
+import {intrinsicFromJson,intrinsicToJson} from "../../../🚪️io/📝️text/📸️snapshot/🗺️imported-map/🔣️json/🟦️.ts";
 function foreignMap(value:unknown):unknown{const map=value as {positions:unknown[];routes:unknown[];regions:unknown[];properties:{name:string;value:unknown}[]};return{positions:map.positions.map(intrinsicFromJson),routes:map.routes.map(intrinsicFromJson),regions:map.regions.map(intrinsicFromJson),properties:map.properties.map(m=>({name:m.name,value:intrinsicFromJson(m.value)}))};}
 function foreignDocument(value:unknown):unknown{if(value===null||typeof value!=="object")return value;const row=value as Record<string,unknown>;return{...row,...(typeof row.exaggeration==="number"?{exaggeration:binary64(row.exaggeration)}:{}),...(row.importedMap===undefined?{}:{importedMap:foreignMap(row.importedMap)})};}
 function foreignDiff(value:unknown):unknown{if(value===null||typeof value!=="object")return value;const row=value as Record<string,unknown>,change=row.importedMap as {value?:unknown}|null;return{...row,...(row.artifact==null?{}:{artifact:foreignDocument(row.artifact)}),...(typeof row.exaggeration==="number"?{exaggeration:binary64(row.exaggeration)}:{}),...(change?.value===undefined?{}:{importedMap:{value:foreignMap(change.value)}})};}
@@ -32,7 +34,7 @@ export function testTerrainDocumentContractOracle(): void {
   }
   const empty = { exaggeration: 0 };
   assertDocumentContractOracle({
-    name: "GIS Terrain", dependencies: [ioSchema, childSchema],
+    name: "GIS Terrain", dependencies: [ioSchema, childSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: value=>parseGisTerrainArtifact(foreignDocument(value)), nativeJson },
     snapshot: { schema: snapshotSchema, parse: value=>parseGisTerrainSnapshot(foreignDocument(value)), nativeJson },
     diff: { schema: diffSchema, parse: value=>parseGisTerrainDiff(foreignDiff(value)), nativeJson },

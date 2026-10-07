@@ -5,154 +5,735 @@
   "type": "object",
   "additionalProperties": false,
   "$defs": {
-    "Byte": { "type": "integer", "minimum": 0, "maximum": 255 },
-    "UInt16": { "type": "integer", "minimum": 0, "maximum": 65535 },
-    "UInt32": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
-    "Int8": { "type": "integer", "minimum": -128, "maximum": 127 },
-    "Int16": { "type": "integer", "minimum": -32768, "maximum": 32767 },
-    "Int32": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+    "Byte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "UInt16": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "UInt32": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "Int8": {
+      "type": "integer",
+      "minimum": -128,
+      "maximum": 127
+    },
+    "Int16": {
+      "type": "integer",
+      "minimum": -32768,
+      "maximum": 32767
+    },
+    "Int32": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
     "Binary32": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["bits"],
-      "properties": { "bits": { "$ref": "#/$defs/UInt32", "x-semio-ui": { "label": { "en": "Bits", "de": "Bits" } } } }
+      "required": [
+        "bits"
+      ],
+      "properties": {
+        "bits": {
+          "$ref": "#/$defs/UInt32",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bits",
+              "de": "Bits"
+            }
+          }
+        }
+      }
     },
-    "Binary64": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["bits"],
-      "properties": { "bits": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$", "x-semio-ui": { "label": { "en": "Bits", "de": "Bits" } } } }
-    },
-    "TiffByteOrder": { "type": "string", "enum": ["littleEndian", "bigEndian"] },
     "TiffFieldType": {
       "type": "string",
-      "enum": ["byte", "ascii", "short", "long", "rational", "sByte", "undefined", "sShort", "sLong", "sRational", "float", "double"]
+      "enum": [
+        "byte",
+        "ascii",
+        "short",
+        "long",
+        "rational",
+        "sByte",
+        "undefined",
+        "sShort",
+        "sLong",
+        "sRational",
+        "float",
+        "double"
+      ]
     },
     "UnsignedRational": {
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
-      "items": { "$ref": "#/$defs/UInt32" }
+      "items": {
+        "$ref": "#/$defs/UInt32"
+      }
     },
     "SignedRational": {
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
-      "items": { "$ref": "#/$defs/Int32" }
+      "items": {
+        "$ref": "#/$defs/Int32"
+      }
     },
     "TiffValues": {
       "oneOf": [
-        { "$ref": "#/$defs/ByteValues" },
-        { "$ref": "#/$defs/AsciiValues" },
-        { "$ref": "#/$defs/ShortValues" },
-        { "$ref": "#/$defs/LongValues" },
-        { "$ref": "#/$defs/RationalValues" },
-        { "$ref": "#/$defs/SByteValues" },
-        { "$ref": "#/$defs/UndefinedValues" },
-        { "$ref": "#/$defs/SShortValues" },
-        { "$ref": "#/$defs/SLongValues" },
-        { "$ref": "#/$defs/SRationalValues" },
-        { "$ref": "#/$defs/FloatValues" },
-        { "$ref": "#/$defs/DoubleValues" }
+        {
+          "$ref": "#/$defs/ByteValues"
+        },
+        {
+          "$ref": "#/$defs/AsciiValues"
+        },
+        {
+          "$ref": "#/$defs/ShortValues"
+        },
+        {
+          "$ref": "#/$defs/LongValues"
+        },
+        {
+          "$ref": "#/$defs/RationalValues"
+        },
+        {
+          "$ref": "#/$defs/SByteValues"
+        },
+        {
+          "$ref": "#/$defs/UndefinedValues"
+        },
+        {
+          "$ref": "#/$defs/SShortValues"
+        },
+        {
+          "$ref": "#/$defs/SLongValues"
+        },
+        {
+          "$ref": "#/$defs/SRationalValues"
+        },
+        {
+          "$ref": "#/$defs/FloatValues"
+        },
+        {
+          "$ref": "#/$defs/DoubleValues"
+        }
       ]
     },
-    "ByteValues": { "$ref": "#/$defs/ByteSequence" },
-    "AsciiValues": { "$ref": "#/$defs/AsciiSequence" },
-    "UndefinedValues": { "$ref": "#/$defs/UndefinedSequence" },
+    "ByteValues": {
+      "$ref": "#/$defs/ByteSequence"
+    },
+    "AsciiValues": {
+      "$ref": "#/$defs/AsciiSequence"
+    },
+    "UndefinedValues": {
+      "$ref": "#/$defs/UndefinedSequence"
+    },
     "ByteSequence": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "byte", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Byte" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "byte",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Byte"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "AsciiSequence": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "ascii", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Byte" }, "x-semio-ui": { "label": { "en": "Bytes", "de": "Bytes" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ascii",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[\\u0001-\\u007f]*$"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Texts",
+              "de": "Texte"
+            }
+          }
+        }
+      }
     },
     "UndefinedSequence": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "undefined", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Byte" }, "x-semio-ui": { "label": { "en": "Bytes", "de": "Bytes" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "undefined",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Byte"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bytes",
+              "de": "Bytes"
+            }
+          }
+        }
+      }
     },
     "ShortValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "short", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/UInt16" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "short",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UInt16"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "LongValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "long", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/UInt32" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "long",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UInt32"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "RationalValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "rational", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/UnsignedRational" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "rational",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UnsignedRational"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "SByteValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "sByte", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Int8" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "sByte",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Int8"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "SShortValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "sShort", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Int16" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "sShort",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Int16"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "SLongValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "sLong", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Int32" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "sLong",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Int32"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "SRationalValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "sRational", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/SignedRational" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "sRational",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SignedRational"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "FloatValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "float", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Binary32" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "float",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Binary32"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "DoubleValues": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
-      "properties": { "kind": { "const": "double", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Binary64" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "double",
+          "x-semio-ui": {
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffWord64"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
+      }
     },
     "TiffTag": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tag", "values"],
+      "required": [
+        "tag",
+        "values"
+      ],
       "properties": {
-        "tag": { "$ref": "#/$defs/UInt16", "x-semio-ui": { "label": { "en": "Tag", "de": "Tag" } } },
-        "values": { "$ref": "#/$defs/TiffValues", "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } }
+        "tag": {
+          "$ref": "#/$defs/UInt16",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tag",
+              "de": "Tag"
+            }
+          },
+          "not": {
+            "enum": [
+              259,
+              266,
+              273,
+              278,
+              279,
+              284,
+              317,
+              322,
+              323,
+              324,
+              325,
+              292,
+              293,
+              347,
+              513,
+              514,
+              515,
+              517,
+              518,
+              519,
+              520,
+              521
+            ]
+          }
+        },
+        "values": {
+          "$ref": "#/$defs/TiffValues",
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
+          }
+        }
       }
-    },
-    "TiffStorageKind": { "type": "string", "enum": ["none", "strips", "tiles"] },
-    "TiffStorage": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "offsetsKind", "byteCountsKind", "chunks"],
-      "properties": {
-        "kind": { "$ref": "#/$defs/TiffStorageKind", "x-semio-ui": { "label": { "en": "Storage kind", "de": "Speicherart" }, "options": { "none": { "en": "None", "de": "Keine" }, "strips": { "en": "Strips", "de": "Streifen" }, "tiles": { "en": "Tiles", "de": "Kacheln" } } } },
-        "offsetsKind": { "type": "string", "enum": ["short", "long"], "x-semio-ui": { "label": { "en": "Offset word type", "de": "Offset-Worttyp" }, "options": { "short": { "en": "SHORT", "de": "SHORT" }, "long": { "en": "LONG", "de": "LONG" } } } },
-        "byteCountsKind": { "type": "string", "enum": ["short", "long"], "x-semio-ui": { "label": { "en": "Byte-count word type", "de": "Byteanzahl-Worttyp" }, "options": { "short": { "en": "SHORT", "de": "SHORT" }, "long": { "en": "LONG", "de": "LONG" } } } },
-        "chunks": {
-          "type": "array",
-          "items": { "type": "array", "items": { "$ref": "#/$defs/Byte" } },
-          "x-semio-ui": { "label": { "en": "Chunks", "de": "Datenblöcke" } }
-        }
-      },
-      "allOf": [
-        {
-          "if": { "properties": { "kind": { "const": "none" } }, "required": ["kind"] },
-          "then": { "properties": { "chunks": { "maxItems": 0 } } },
-          "else": { "properties": { "chunks": { "minItems": 1 } } }
-        }
-      ]
     },
     "TiffIfd": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["entries", "storage"],
+      "required": [
+        "entries",
+        "blocks"
+      ],
       "properties": {
-        "entries": { "type": "array", "items": { "$ref": "#/$defs/TiffTag" }, "x-semio-ui": { "label": { "en": "Tags", "de": "Tags" } } },
-        "storage": { "$ref": "#/$defs/TiffStorage", "x-semio-ui": { "label": { "en": "Storage", "de": "Speicher" } } }
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffTag"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Tags",
+              "de": "Tags"
+            }
+          }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffSampleBlock"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample Blocks",
+              "de": "Abtastblöcke"
+            }
+          }
+        }
+      }
+    },
+    "TiffWord64": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lo",
+        "hi"
+      ],
+      "properties": {
+        "lo": {
+          "$ref": "#/$defs/UInt32",
+          "x-semio-ui": {
+            "label": {
+              "en": "Low Word",
+              "de": "Niederwertiges Wort"
+            }
+          }
+        },
+        "hi": {
+          "$ref": "#/$defs/UInt32",
+          "x-semio-ui": {
+            "label": {
+              "en": "High Word",
+              "de": "Höherwertiges Wort"
+            }
+          }
+        }
+      }
+    },
+    "TiffSampleBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "channels",
+        "samples"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "X",
+              "de": "X"
+            }
+          }
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            }
+          }
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            }
+          }
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            }
+          }
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Channels",
+              "de": "Kanäle"
+            }
+          }
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffWord64"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Exact Samples",
+              "de": "Exakte Abtastwerte"
+            }
+          }
+        }
       }
     }
   },
-  "required": ["schema", "byteOrder", "ifds"],
+  "required": [
+    "schema",
+    "ifds"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact", "x-semio-ui": { "label": { "en": "Snapshot schema", "de": "Momentaufnahme-Schema" } } },
-    "byteOrder": { "$ref": "#/$defs/TiffByteOrder", "x-semio-state": "artifact", "x-semio-ui": { "label": { "en": "Byte order", "de": "Byte-Reihenfolge" }, "options": { "littleEndian": { "en": "Little endian", "de": "Little Endian" }, "bigEndian": { "en": "Big endian", "de": "Big Endian" } } } },
-    "ifds": { "type": "array", "items": { "$ref": "#/$defs/TiffIfd" }, "x-semio-state": "artifact", "x-semio-ui": { "label": { "en": "Image directories", "de": "Bildverzeichnisse" } } }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Momentaufnahme-Schema"
+        }
+      },
+      "const": "stdio.tiff"
+    },
+    "ifds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TiffIfd"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Image directories",
+          "de": "Bildverzeichnisse"
+        }
+      }
+    }
   }
 }

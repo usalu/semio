@@ -1,2 +1,9 @@
 semio stdio.bmp.dsl v1
-424d4e0000000000000036000000280000000400000002000000010018000000000018000000130b0000130b00000000000000000000ffff00ff00ff8080800000000000ff00ff00ff000000ffff
+schema=stdio.bmp
+image {
+  width=4 height=2 row-order=bottom-up profile=direct-rgb24 masks=16711680,65280,255,0 x-pixels-per-meter=2835 y-pixels-per-meter=2835 colors-used=0 colors-important=0 reserved-1=0 reserved-2=0 palette=[ ]
+  pixels {
+    direct samples=[ { red=255 green=0 blue=0 alpha=0 reserved=0 } { red=0 green=255 blue=0 alpha=0 reserved=0 } { red=0 green=0 blue=255 alpha=0 reserved=0 } { red=255 green=255 blue=0 alpha=0 reserved=0 } { red=0 green=255 blue=255 alpha=0 reserved=0 } { red=255 green=0 blue=255 alpha=0 reserved=0 } { red=255 green=255 blue=255 alpha=0 reserved=0 } { red=128 green=128 blue=128 alpha=0 reserved=0 } ]
+  }
+  opaque-gap=[ ] opaque-trailer=[ ]
+}

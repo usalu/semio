@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮replace-edge-geometry/📍️repositions-edge-1/📸️snapshot/⬅️before/🔣️.json");
@@ -38,7 +39,7 @@ fn applies_to_committed_after() {
     let edge = snapshot.edges.iter().find(|edge| edge.id == "edge-1").expect("edge-1 survives its repose");
     assert_eq!((edge.gap, edge.shift), (2.0, 1.0), "replace-edge-geometry/repositions-edge-1: the connection offsets are wrong");
     assert_eq!((edge.x, edge.y), (3.0, 4.0), "replace-edge-geometry/repositions-edge-1: the diagram position is wrong");
-    assert_eq!((edge.source.as_str(), edge.target.as_str()), ("handle-1", "handle-2"), "replace-edge-geometry/repositions-edge-1: a repose must not rewire the endpoints");
+    assert_eq!((edge.source.to_string_owner(), edge.target.to_string_owner()), ("handle-1".to_string(), "handle-2".to_string()), "replace-edge-geometry/repositions-edge-1: a repose must not rewire the endpoints");
 }
 
 /// ↩️ Applying `replace-edge-geometry` then the inverse it derives from `before` restores `before` exactly.

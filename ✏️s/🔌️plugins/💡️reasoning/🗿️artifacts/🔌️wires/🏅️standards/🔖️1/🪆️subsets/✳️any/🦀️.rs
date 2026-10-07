@@ -6,7 +6,7 @@ use crate::editor::wires as editor;
 use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::wires as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::{Dialect, ExampleSource};
+use {semio_framework_artifact_reference::Dialect,semio_framework_plugin::ExampleSource};
 use std::sync::OnceLock;
 
 //#region 🔖️Dialect

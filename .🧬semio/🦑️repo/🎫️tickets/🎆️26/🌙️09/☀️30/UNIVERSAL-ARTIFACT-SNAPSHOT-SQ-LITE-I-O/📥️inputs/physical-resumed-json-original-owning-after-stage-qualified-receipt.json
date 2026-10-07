@@ -1,0 +1,15 @@
+{
+  "session": 72660,
+  "stage": "JSON",
+  "stageStatus": "genuine completed Native20/20",
+  "parentCommandStatus": "active original CSV stage",
+  "compileSeconds": 22.8,
+  "nextestId": "8b5edbee-d100-465e-853f-9bc66bc8e6fa",
+  "run": 20,
+  "passed": 20,
+  "failed": 0,
+  "skipped": 148,
+  "durationSeconds": 5.205,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-csv-json-original-owning-native-after-current-twenty-nine-test-authorities.log",
+  "controls": "unchanged original dedicated Native target"
+}

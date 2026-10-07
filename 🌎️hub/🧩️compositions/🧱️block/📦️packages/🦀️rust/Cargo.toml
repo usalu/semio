@@ -24,8 +24,8 @@ role = "hub"
 [package.metadata.semio.storybook]
 id = "block"
 titlePrefix = "🧱️block"
-sourceRoots = ["."]
-storyGlobs = ["📖️stories/**/🧪️.story.tsx"]
+sourceRoots = ["../../../✏️s/🔌️plugins/🧱️block"]
+storyGlobs = ["../../../✏️s/🔌️plugins/🧱️block/📖️stories/**/🧪️.story.tsx"]
 
 [[package.metadata.semio.playground]]
 variant = "block2d"

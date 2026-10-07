@@ -17,14 +17,14 @@ use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_surface};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_surface};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_curve};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_curve};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_bool};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{parse_f64};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_point3};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_point3};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_bool};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{parse_f64};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_point3};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_point3};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_list};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_list};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_str};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_str};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary` block below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
@@ -124,7 +124,7 @@ pub(crate) fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, Strin
             outer_loop: dec_str(arg("outer")?)?,
             inner_loops: dec_list(arg("inner")?, crate::standards::v1::subsets::brep::io::text::snapshot::dec_loop_id)?,
             surface: dec_surface(arg("surface")?)?,
-            orientation: crate::brep::io::text::diff::parse_bool(arg("orientation")?)?,
+            orientation: crate::standards::v1::subsets::brep::io::text::diff::parse_bool(arg("orientation")?)?,
             tol: parse_f64(arg("tol")?)?,
         })),
         "delete-face" => Ok(SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: dec_str(arg("id")?)? })),

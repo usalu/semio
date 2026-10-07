@@ -225,13 +225,18 @@ fn child_authored_borrowed_schema_preserves_static_metadata_and_lazy_owner_edges
  let variants=<AuthoredBorrowedVariant as BorrowedDslVariants>::VARIANTS;assert_eq!(variants.len(),3);
  for((key,make),expected)in variants.iter().zip(fixture["variants"].as_array().unwrap()){assert_eq!(*key,expected["key"].as_str().unwrap());let spec=make();assert_eq!(spec.keyword,expected["recordKeyword"].as_str());assert_eq!(spec.fields.len(),expected["fields"].as_array().unwrap().len());for(field,expected)in spec.fields.iter().zip(expected["fields"].as_array().unwrap()){assert_eq!(field.id as u64,expected["id"].as_u64().unwrap());assert_eq!(field.key,expected["key"].as_str().unwrap());assert_eq!(authored_borrowed_kind(field.shape),expected["kind"].as_str().unwrap());}}
  let values=[AuthoredBorrowedVariant::Document{text:String::new()},AuthoredBorrowedVariant::Empty,AuthoredBorrowedVariant::Leaf(Box::new(AuthoredBorrowedLeaf{text:String::new()}))];
+ const PRODUCER:crate::BorrowedRecordSpecProducer=crate::BorrowedRecordSpecProducer::of::<AuthoredBorrowedOwner>();
+ let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(0,&mut accepted);
  let(_,requests)=observe_requests(||{
   for _ in 0..fixture["readRepetitions"].as_u64().unwrap(){
+   let produced=PRODUCER.encode(&mut control).unwrap();assert_eq!(produced.fields.as_ptr(),SPEC.fields.as_ptr());
    let repeated=<AuthoredBorrowedOwner as BorrowedDslRecord>::RECORD;assert_eq!(repeated.fields.as_ptr(),SPEC.fields.as_ptr());for field in repeated.fields{std::hint::black_box(authored_borrowed_kind(field.shape));}
    let H::Map(inner)=repeated.fields[20].shape else{panic!("recursive owner")};let H::Record(make)=inner()else{panic!("lazy record")};assert_eq!(make().fields.as_ptr(),SPEC.fields.as_ptr());
    for(index,value)in values.iter().enumerate(){let(key,ordinal,spec)=value.projected_borrowed_variant_identity();assert_eq!(ordinal,index);assert_eq!(key,variants[index].0);assert_eq!(spec.fields.as_ptr(),variants[index].1().fields.as_ptr());}
   }
  });
+ assert_eq!(control.owned_bytes(),0);
+ let mut refused=|_|false;let mut canceled=semio_framework_value::NativeEncodeControl::new(0,&mut refused);assert_eq!(PRODUCER.encode(&mut canceled).err().unwrap().kind,semio_framework_value::ValueRefusalKind::Canceled);assert_eq!(canceled.owned_bytes(),0);
  assert_eq!(requests.bytes,fixture["expectedAllocatedBytes"].as_u64().unwrap()as usize);assert_eq!(requests.length,0);
  eprintln!("[DEBUG] actual authored static schema fields21 kinds11 refinements7 variants3 repeated256 actual allocator requests0; recursive/source pointers preserved");
 }

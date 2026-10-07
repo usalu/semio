@@ -1,0 +1,14 @@
+{
+  "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🧪️tests/🔬️retained-authority-laws/🦀️.rs",
+  "before": "dda79914090b1b1ce2e886eca02dac0be27622ed00f64313d768289ef0986607",
+  "fixtures": [
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json",
+      "sha256": "89aabd5e20b69d65ae1e7ba613bbb2f7ac09543a7edebd3aa5ca1e6d1a119730"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧫️fixtures/🧬️semantic-wire/🔣️.json",
+      "sha256": "5198ff3f7336b43e673801351db78d6f052f08718db94bfd40d5d218a934821c"
+    }
+  ]
+}

@@ -16,7 +16,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
-use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, Mp3Mutation};
+use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation,Mp3Mutation};
+
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🏷️retitles/📸️snapshot/⬅️before/🔣️.json");

@@ -1,6 +1,7 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{create_tile, replace_tiles};
+use crate::standards::v1::subsets::any::schema::mutations::{create_tile,replace_tiles};
+
 use store::{os_store::test_support, ArtifactCommand};
 
 struct PresentationProjectionFixtureTarget {
@@ -33,7 +34,7 @@ impl PresentationProjectionAdoptionTarget for PresentationProjectionBackpressure
 }
 
 fn presentation_envelope_test_pages(snapshot_hex: &str) -> store::OwnedSchemaDecodePages {
-    let json = format!("{{\"schema\":\"{PRESENTATION_DOCUMENT_SCHEMA}\",\"id\":\"deck-1\",\"vcs\":{{\"initialSnapshot\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}");
+    let json = format!("{{\"schema\":\"{PRESENTATION_DOCUMENT_SCHEMA}\",\"id\":\"deck-1\",\"vcs\":{{\"initialPack\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}");
     presentation_envelope_json_test_pages(&json)
 }
 
@@ -66,7 +67,7 @@ fn close_presentation_pages(mut pages: store::OwnedSchemaDecodePages) {
 /// thread instead of burning a fixed spin count (a 10 000-iteration busy loop finishes in well under
 /// a millisecond, long before a condvar-parked worker is even scheduled under a loaded test run). The
 /// bound is liveness, not speed, and a stall reports the handle's exact retained state.
-/// See [`crate::standards::v1::subsets::any::io::binary::mutations::PresentationEnvelopeMaterializeHandle::maintenance_step`].
+/// See [`crate::host::owned::PresentationEnvelopeMaterializeHandle::maintenance_step`].
 fn drive_presentation_caller(
     registry: &mut PresentationEnvelopeMaterializeRegistry,
     operation: semio_framework_job::OperationId,
@@ -157,7 +158,7 @@ async fn retained_presentation_envelope_materializes_populated_history_in_order(
     let mutation_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })));
     let mutation = semio_framework_pack_json::to_string(&mutation_value);
     let json = format!(
-        "{{\"schema\":\"{PRESENTATION_DOCUMENT_SCHEMA}\",\"id\":\"deck-history\",\"vcs\":{{\"initialSnapshot\":\"{hex}\",\"edits\":[{{\"id\":\"edit-1\",\"forwards\":[{mutation}],\"inverse\":[],\"sequenceNumber\":1,\"startedAt\":\"1\"}}],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}"
+        "{{\"schema\":\"{PRESENTATION_DOCUMENT_SCHEMA}\",\"id\":\"deck-history\",\"vcs\":{{\"initialPack\":\"{hex}\",\"edits\":[{{\"id\":\"edit-1\",\"actor\":\"presentation-fixture\",\"forwards\":[{mutation}],\"inverse\":[],\"sequenceNumber\":1,\"startedAt\":\"1\"}}],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}"
     );
     let operation = semio_framework_job::OperationId(7007);
     let generation = semio_framework_job::Generation(9);
@@ -307,7 +308,7 @@ async fn presentation_deck_materializes() {
     // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
     // `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
@@ -324,7 +325,7 @@ async fn document_text_round_trip_with_operation_applied() {
     // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
     // `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],

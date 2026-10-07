@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
     use crate::standards::isobmff::subsets::any::io::Mp4Analyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 
@@ -46,7 +46,7 @@ pub mod derived_composition {
     pub async fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences().await;
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.mp4", standard: semio_framework_plugin::StandardId("isobmff"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.mp4", standard: semio_framework_artifact_reference::StandardId("isobmff"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -1783,7 +1783,8 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::isobmff::subsets::any::schema::diff::Mp4Diff;
-    use crate::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
+    use crate::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation,Mp4Mutation};
+
     use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -1826,7 +1827,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::isobmff::subsets::any::io;
     use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Snapshot, STDIO_MP4_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Mp4Parts {

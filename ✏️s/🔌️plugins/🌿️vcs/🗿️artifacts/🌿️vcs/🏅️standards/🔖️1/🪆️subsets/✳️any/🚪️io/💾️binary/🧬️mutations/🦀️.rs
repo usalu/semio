@@ -29,3 +29,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<VcsDemoMutation, protocol::ProtocolErro
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod native_codec {
+use super::*;
+use crate::schema::mutations::VcsDemoMutation;
+
+impl protocol::OpBinary for VcsDemoMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+}

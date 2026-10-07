@@ -27,78 +27,72 @@
     },
     {
       "id": 5,
-      "key": "reEncodeQuality",
-      "shape": "Value",
-      "optional": false
-    },
-    {
-      "id": 6,
       "key": "jfifVersion",
       "shape": "Value",
       "optional": false
     },
     {
-      "id": 7,
+      "id": 6,
       "key": "jfifDensityUnits",
       "shape": "Value",
       "optional": false
     },
     {
-      "id": 8,
+      "id": 7,
       "key": "jfifXDensity",
       "shape": "UInt",
       "optional": false
     },
     {
-      "id": 9,
+      "id": 8,
       "key": "jfifYDensity",
       "shape": "UInt",
       "optional": false
     },
     {
-      "id": 10,
+      "id": 9,
       "key": "jfifThumbnail",
       "shape": "Value",
       "optional": false
     },
     {
-      "id": 11,
+      "id": 10,
       "key": "frame",
       "shape": "Value",
       "optional": false
     },
     {
-      "id": 12,
+      "id": 11,
       "key": "sofMarker",
       "shape": "UInt",
       "optional": false
     },
     {
-      "id": 13,
+      "id": 12,
       "key": "arithmetic",
       "shape": "Bool",
       "optional": false
     },
     {
-      "id": 14,
+      "id": 13,
       "key": "quantTables",
       "shape": "Value",
       "optional": false
     },
     {
-      "id": 15,
+      "id": 14,
       "key": "huffmanTables",
       "shape": "Value",
       "optional": false
     },
     {
-      "id": 16,
+      "id": 15,
       "key": "restartInterval",
       "shape": "Value",
       "optional": false
     },
     {
-      "id": 17,
+      "id": 16,
       "key": "otherSegments",
       "shape": "Value",
       "optional": false

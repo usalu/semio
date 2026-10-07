@@ -1,0 +1,11 @@
+# Mesh Native-Matched Manual SQL Census
+
+Independent Bun SQLite manually assembled rows, without invoking either owner projection, confirms full **100 rows / 7650 semantic bytes**, metadata-retaining empty **1 / 24**, canonical schema **3372 bytes**, ten tables and maximum27 columns. Both databases have integrity_check=ok and no foreign-key violations. NULL costs0; INTEGER/REAL8; TEXT uses SQLite UTF-8 BLOB length; BLOB its length.
+
+Authority: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:10 and sibling 🗄️.sql, 🟦️.ts:18-45. Positions/normals/UV use Binary64; colors and material six scalar components use Binary32. Neutral bits are padded hexadecimal strings and the retained hydration converts only explicit bits objects to BigInt. Six topology IDs are primitive-0 through primitive-5, matching Native ordinal construction; the material has five texture references and three literal texture bytes.
+
+Manual per-table bytes: color2016, document24, index576, material199, mesh35, normal1620, position1620, primitive290, texture46, UV1224. Public metadata adds41 binary/39 text bytes, one row, six-column semio_snapshot and canonical293 schema bytes, giving public schema3665 and full7691/7689, empty65/63. These public additive values follow the actual existing Semio metadata authority; this run measures domain rows only.
+
+Input: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/semio-mesh-complete-semantic/handcrafted-native-matched-demand-specifications.json. Detailed independent receipt: /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/semio-mesh-manual-independent-sqlite-extents.json. No Source owner, Native owning gate or public registration runtime qualification is claimed.
+
+Existing intermediate Native law at original tests54-55 explicitly constructs empty positions, u32 indices, unresolved literal material/texture reference strings and no texture collection. A new admission must preserve these authored intermediate states rather than demand resolved references or position-index bounds.

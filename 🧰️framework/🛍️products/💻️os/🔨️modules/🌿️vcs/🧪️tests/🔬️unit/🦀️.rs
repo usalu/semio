@@ -305,6 +305,8 @@ fn pending_change_ref_json_matches_serde_json_oracle() {
 /// checkpoint id ever minted for a non-composite artifact stays valid.
 #[semio_framework_async_macros::async_test]
 async fn content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
     let mut changes = ArtifactHistoryLedger::try_from_preflighted(vec![root_change]).expect("one change fits the fixed ledger");
     let change_ids = vec!["change-root".to_string()];
@@ -338,8 +340,8 @@ async fn content_addressed_checkpoint_id_composition_pins_are_deterministic_and_
     assert_eq!(id_no_pins, legacy_id, "an empty pin list must not change a single byte of the pre-existing hash input");
 
     // (2) A non-empty pin set changes the id relative to no pins at all.
-    let child_a_ref = crate::os_io::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").expect("valid test fixture uri");
-    let child_b_ref = crate::os_io::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").expect("valid test fixture uri");
+    let child_a_ref = semio_framework_artifact_reference::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").expect("valid test fixture uri");
+    let child_b_ref = semio_framework_artifact_reference::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").expect("valid test fixture uri");
     let pins_one = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }];
     let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one).await;
     assert_ne!(id_no_pins, id_with_pins, "a non-empty pin list must change the id relative to no composition");

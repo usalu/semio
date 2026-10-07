@@ -3,7 +3,7 @@ import Ajv from"ajv";
 import fixture from"../🧫️fixtures/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
-import*as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import*as owner from"../🟦️.ts";
 test("EN1998 owning facade exposes both complete semantic SQLite directions",()=>{expect(Object.hasOwn(owner,"en1998SnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(owner,"en1998SnapshotFromSqliteDatabase")).toBe(true)});
 test("EN1998 independent snapshot schema retains complete native arbitrary annex subject",()=>{const validate=new Ajv({strict:false}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true)});
 test("EN1998 artifact-root schema agrees with the exact current site and every closed nested record",()=>{const validate=new Ajv({strict:false}).compile(artifactSchema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true)});
@@ -50,4 +50,14 @@ test("EN1998 nested variable collections and owned text support cancellation and
  const expected=ownedFixture(),initial=new AbortController();initial.abort();await expect(en1998SnapshotToSqliteDatabase(expected,{signal:initial.signal})).rejects.toHaveProperty("kind","canceled");const database=await en1998SnapshotToSqliteDatabase(expected);await expect(en1998SnapshotFromSqliteDatabase(database,{signal:initial.signal})).rejects.toHaveProperty("kind","canceled");expected.buildings[0]!.storeys[0]!.variables=Array.from({length:controls.entityCount},()=>({...expected.buildings[0]!.storeys[0]!.variables[0]!}));const large=await en1998SnapshotToSqliteDatabase(expected);
  for(const phase of["projectSnapshot","reconstructSnapshot"] as const){const c=new AbortController();let reached=false;const options={signal:c.signal,onProgress:(event:{phase:string;completed:number})=>{if(event.phase===phase&&event.completed>=controls.cancelAt){reached=true;c.abort()}}};await expect(phase==="projectSnapshot"?en1998SnapshotToSqliteDatabase(expected,options):en1998SnapshotFromSqliteDatabase(large,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true)}
  expected.annex="x".repeat(controls.largeTextBytes);await expect(en1998SnapshotToSqliteDatabase(expected,{maxValueBytes:controls.largeTextBytes-1})).rejects.toThrow();const c=new AbortController();let reached=false;await expect(en1998SnapshotToSqliteDatabase(expected,{signal:c.signal,onProgress:event=>{if(event.phase==="projectSnapshot"&&event.completed>0&&event.total===0){reached=true;c.abort()}}})).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);
+});
+
+import diffRecordFixture from "../../../../🧬️schema/🔺️diff/🧫️fixtures/🔣️.json";
+test("EN1998 diff records retain the neutral empty delta and authored record roles",async()=>{
+ expect(new Ajv({strict:true}).compile({type:"object",additionalProperties:false})(diffRecordFixture.empty)).toBe(true);
+ for(const [index,path] of ["../../../../🧬️schema/🔺️diff/🦀️.rs","../../../../🧬️schema/🦀️.rs"].entries()){
+  const source=await Bun.file(new URL(path,import.meta.url)).text();
+  expect(source).toContain("semio_framework_dsl_record_derive::DslRecord");
+  expect(source).toContain("pub struct "+diffRecordFixture.recordOwners[index]);
+ }
 });

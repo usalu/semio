@@ -3,7 +3,7 @@
 use crate::ProgramSnapshot;
 pub use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 pub use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
-use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+use semio_s_artifact_stdio_xlsx::schema::construction::build_minimal_xlsx;
 use std::collections::BTreeSet;
 
 pub fn register() {}

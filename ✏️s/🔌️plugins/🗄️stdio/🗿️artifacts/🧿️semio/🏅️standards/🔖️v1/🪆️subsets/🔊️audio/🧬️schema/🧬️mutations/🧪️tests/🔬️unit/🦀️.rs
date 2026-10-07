@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;
+use crate::standards::v1::subsets::audio::io::binary::mutations::{wire_tag,COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL};
 use crate::standards::v1::subsets::audio::io::text::mutations::print_audio_mutation;
 use super::*;
 

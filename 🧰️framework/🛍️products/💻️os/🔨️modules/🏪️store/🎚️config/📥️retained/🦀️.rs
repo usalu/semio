@@ -33,6 +33,10 @@ where
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Phase {
     Begin,
+    Fold,
+    BindGenesis,
+    BuildAppliedCursor,
+    BuildRedoCursor,
     BeginEdit,
     DecodeForward,
     DecodeInverse,
@@ -53,10 +57,15 @@ where
     P: Clone + ToValue + FromValue,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
-    initial: ManuallyDrop<Option<P>>,
+    initial: ManuallyDrop<Option<crate::os_store::ArtifactGenesis<P>>>,
     validation: ManuallyDrop<Option<P>>,
     current: ManuallyDrop<Option<P>>,
-    history: ManuallyDrop<Option<crate::os_spr::HistoryLog>>,
+    history: ManuallyDrop<Option<std::sync::Arc<crate::os_spr::HistoryLog>>>,
+    fold_job: ManuallyDrop<Option<crate::os_spr::HistoryFoldJob<'static, crate::os_spr::history::RetainedHistoryFold>>>,
+    fold: ManuallyDrop<Option<crate::os_spr::HistoryFold>>,
+    normalized_transitions: ManuallyDrop<Option<Vec<crate::os_spr::MutationEnvelope>>>,
+    fold_completed: u64,
+    progress_high_water: std::cell::Cell<u64>,
     source_edits: ManuallyDrop<Option<std::vec::IntoIter<crate::os_spr::HistoryEdit>>>,
     source_forwards: ManuallyDrop<Option<std::vec::IntoIter<crate::os_spr::OpPayload>>>,
     source_inverse: ManuallyDrop<Option<std::vec::IntoIter<crate::os_spr::OpPayload>>>,
@@ -72,6 +81,7 @@ where
     pending_messages: ManuallyDrop<Option<crate::os_spr::EditMessages>>,
     edit_lookup: ManuallyDrop<Option<std::collections::BTreeMap<String, usize>>>,
     active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    actor: ManuallyDrop<crate::os_spr::ActorId>,
     initial_digest: [u8; 32],
     generation: u64,
     maximum_value_bytes: usize,
@@ -89,22 +99,29 @@ where
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn from_snapshots(
-        initial: P,
+        initial: crate::os_store::ArtifactGenesis<P>,
         validation: P,
         current: P,
         history: crate::os_spr::HistoryLog,
         expected_id: String,
         schema: String,
-        initial_digest: [u8; 32],
         owners: DocumentStoreOwners<P, M>,
         generation: u64,
         maximum_value_bytes: usize,
+        actor: crate::os_spr::ActorId,
     ) -> Self {
+        let initial_digest = initial.digest();
         Self {
+            actor: ManuallyDrop::new(actor),
             initial: ManuallyDrop::new(Some(initial)),
             validation: ManuallyDrop::new(Some(validation)),
             current: ManuallyDrop::new(Some(current)),
-            history: ManuallyDrop::new(Some(history)),
+            history: ManuallyDrop::new(Some(std::sync::Arc::new(history))),
+            fold_job: ManuallyDrop::new(None),
+            fold: ManuallyDrop::new(None),
+            normalized_transitions: ManuallyDrop::new(None),
+            fold_completed: 0,
+            progress_high_water: std::cell::Cell::new(0),
             source_edits: ManuallyDrop::new(None),
             source_forwards: ManuallyDrop::new(None),
             source_inverse: ManuallyDrop::new(None),
@@ -160,7 +177,9 @@ where
 
     fn progress(&self) -> ConfigStoreHydrationProgress {
         let total = self.history.as_ref().map_or(1, |history| history.edits.len() + history.transitions.len() + history.conflicts.len() + 1);
-        ConfigStoreHydrationProgress { completed: self.record_index as u64, total: total as u64 }
+        let completed = self.progress_high_water.get().max(self.fold_completed.saturating_add(self.record_index as u64));
+        self.progress_high_water.set(completed);
+        ConfigStoreHydrationProgress { completed, total: completed.max(self.fold_completed.saturating_add(total as u64)) }
     }
 
     fn retire_edit(&mut self, edit: Edit<M>) {
@@ -188,7 +207,7 @@ where
     /// retained record's own admission; zero once no turn gates on bytes.
     pub fn demand_bytes(&self) -> usize {
         match self.phase {
-            Phase::Begin => self.maximum_value_bytes,
+            Phase::Fold => 1,
             Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.as_slice().first()).map_or(0, |edit| edit.id.len().saturating_mul(2)),
             Phase::DecodeForward | Phase::DecodeInverse => self.pending_payload.as_ref().map_or(0, Self::payload_bytes).max(size_of::<M>()),
             Phase::DecodeMetadata => size_of::<crate::os_spr::MutationMeta>().max(self.pending_metadata.as_ref().map_or(0, Self::metadata_retained_bytes)),
@@ -211,34 +230,65 @@ where
         }
         match self.phase {
             Phase::Begin => {
-                if maximum_bytes < self.maximum_value_bytes {
-                    return ConfigStoreHydrationStep::Pending(self.progress());
-                }
-                let history = self.history.as_mut().expect("config history remains retained");
+                if self.actor.0.trim().is_empty() { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+                let history = self.history.as_ref().expect("config history remains retained");
                 let expected_id = self.expected_id.as_ref().expect("config identity remains retained");
                 let schema = self.schema.as_ref().expect("config schema remains retained");
                 if history.doc_id != *expected_id || history.schema != *schema || history.composition.is_some() || !history.conflicts.is_empty() {
                     return self.reject(ConfigStoreHydrationDiagnostic::Identity);
                 }
-                if history.transitions.iter().any(|record| crate::os_spr::decode_history_transition(&record.payload).map_or(true, |transition| !crate::os_spr::HistoryShape::Config.admits(transition.kind()))) {
-                    return self.reject(ConfigStoreHydrationDiagnostic::Identity);
+                *self.fold_job = Some(crate::os_spr::HistoryLog::fold_job(history.clone(), crate::os_spr::HistoryShape::Config));
+                self.phase = Phase::Fold;
+                ConfigStoreHydrationStep::Pending(self.progress())
+            }
+            Phase::Fold => {
+                let job = self.fold_job.as_mut().expect("config fold job remains retained");
+                let result = job.step(1, maximum_bytes, &mut || false);
+                self.fold_completed = job.completed();
+                match result {
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { .. }) => {}
+                    Ok(crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts))) => {
+                        self.fold_job.take();
+                        assert!(conflicts.is_empty(), "config histories do not admit conflict owners");
+                        assert!(replay_order.is_empty(), "config histories do not prepare document replay owners");
+                        *self.fold = Some(fold);
+                        *self.normalized_transitions = Some(transitions);
+                        self.phase = Phase::BindGenesis;
+                    }
+                    _ => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                 }
-                let fold = match history.fold() {
-                    Ok(fold) => fold,
-                    Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
-                };
+                ConfigStoreHydrationStep::Pending(self.progress())
+            }
+            Phase::BindGenesis => {
+                let history = std::sync::Arc::get_mut(self.history.as_mut().expect("config history remains retained")).expect("config fold aliases close before genesis binding");
+                let fold = self.fold.as_mut().expect("derived config history remains retained");
                 let initial = self.initial.take().expect("typed config initial snapshot remains retained");
                 let current = self.current.take().expect("typed config current snapshot remains retained");
                 let expected_id = self.expected_id.take().expect("config identity remains retained");
                 let schema = self.schema.take().expect("config schema remains retained");
-                let mut envelope = crate::os_store::create_document_envelope::<P, M>(&schema, &expected_id, initial, None);
+                let mut envelope = crate::os_store::create_document_envelope_from_genesis::<P, M>(&schema, &expected_id, initial, None);
                 envelope.history_shape = crate::os_spr::HistoryShape::Config;
-                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(fold.applied, fold.redo, fold.checkpoint));
-                envelope.transitions = history.transitions.iter().map(|transition| transition.to_envelope(&history.doc_id)).collect();
+                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
+                envelope.transitions = self.normalized_transitions.take().expect("normalized config transitions remain retained");
                 *self.source_edits = Some(std::mem::take(&mut history.edits).into_iter());
-                *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, current, self.initial_digest));
+                *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, std::sync::Arc::new(current), self.initial_digest, crate::os_spr::ActorId(std::mem::take(&mut self.actor.0))));
                 *self.envelope = Some(envelope);
-                self.phase = Phase::BeginEdit;
+                self.operation_index = 0;
+                self.phase = Phase::BuildAppliedCursor;
+                ConfigStoreHydrationStep::Pending(self.progress())
+            }
+            Phase::BuildAppliedCursor | Phase::BuildRedoCursor => {
+                let fold = self.fold.as_mut().expect("derived config history remains retained");
+                let applied = self.phase == Phase::BuildAppliedCursor;
+                let ids = if applied { &mut fold.applied } else { &mut fold.redo };
+                if let Some(id) = ids.get_mut(self.operation_index) {
+                    let cursor = self.envelope.as_mut().expect("config envelope remains retained").cursor.as_mut().expect("config cursor remains retained");
+                    if applied { cursor.applied_edit_ids.push(std::mem::take(id)); } else { cursor.redo_edit_ids.push(std::mem::take(id)); }
+                    self.operation_index += 1;
+                } else {
+                    self.operation_index = 0;
+                    self.phase = if applied { Phase::BuildRedoCursor } else { Phase::BeginEdit };
+                }
                 ConfigStoreHydrationStep::Pending(self.progress())
             }
             Phase::BeginEdit => {
@@ -249,6 +299,10 @@ where
                     self.phase = Phase::ValidateReplay;
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 };
+                if source.actor.as_deref().is_none_or(|actor| actor.trim().is_empty()) {
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(source));
+                    return self.reject(ConfigStoreHydrationDiagnostic::Replay);
+                }
                 if source.id.is_empty() || source.id.len() > self.maximum_value_bytes || maximum_bytes < source.id.len().saturating_mul(2) {
                     *self.active = Some(semio_framework_value::retirement::owned_retirement(source));
                     return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
@@ -266,7 +320,7 @@ where
                     id: source.id,
                     actor: source.actor,
                     forwards: Vec::new(),
-                    inverse: Vec::new(),
+                    inverse: Vec::new().into(),
                     mutation_meta: Vec::new(),
                     verb: source.verb,
                     sequence_number: self.edit_index as i32 + 1,
@@ -301,19 +355,27 @@ where
                     if maximum_bytes < payload_bytes.max(size_of::<M>()) {
                         return ConfigStoreHydrationStep::Pending(self.progress());
                     }
+                    if self.phase == Phase::DecodeInverse {
+                        let edit = self.pending_edit.as_mut().expect("pending config edit remains retained");
+                        if !edit.inverse.has_reserved_slot() {
+                            match edit.inverse.reserve_one(maximum_bytes) {
+                                Ok(_) => return ConfigStoreHydrationStep::Pending(self.progress()),
+                                Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Capacity),
+                            }
+                        }
+                    }
                     let operation = match Self::decode_operation(payload) {
                         Ok(operation) => operation,
                         Err(diagnostic) => return self.reject(diagnostic),
                     };
                     let edit = self.pending_edit.as_mut().expect("pending config edit remains retained");
-                    let target = if self.phase == Phase::DecodeForward { &mut edit.forwards } else { &mut edit.inverse };
-                    if target.try_reserve_exact(1).is_err() {
+                    if self.phase == Phase::DecodeForward && edit.forwards.try_reserve_exact(1).is_err() {
                         return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                     }
                     if self.phase == Phase::DecodeForward {
                         edit.forwards.push(operation);
                     } else {
-                        edit.inverse.push(operation);
+                        edit.inverse.push_reserved(operation).unwrap_or_else(|_| panic!("funded config inverse slot"));
                     }
                     let payload = self.pending_payload.take().expect("decoded config payload remains retained");
                     *self.active = Some(semio_framework_value::retirement::owned_retirement(payload));
@@ -334,6 +396,7 @@ where
                     *self.pending_metadata = self.source_metadata.as_mut().expect("config metadata source remains retained").next();
                 }
                 if let Some(source) = self.pending_metadata.as_ref() {
+                    if source.author_id.as_deref().is_none_or(|actor| actor.trim().is_empty()) { return self.reject(ConfigStoreHydrationDiagnostic::Replay); }
                     let retained_bytes = Self::metadata_retained_bytes(source);
                     if retained_bytes > self.maximum_value_bytes {
                         return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
@@ -462,9 +525,9 @@ where
                     let Some(position) = self.edit_lookup.as_ref().expect("config edit lookup remains retained").get(id).copied() else { return self.reject(ConfigStoreHydrationDiagnostic::Replay) };
                     let edit = envelope.vcs.edits.get(position).expect("indexed config edit remains retained");
                     let result = if self.phase == Phase::SeedApplied {
-                        self.runtime.as_mut().expect("config hydration runtime remains retained").push_applied_edit(edit)
+                        self.runtime.as_mut().expect("config hydration runtime remains retained").push_applied_edit(edit, envelope.vcs.edits.key_at(position).expect("indexed config edit generation remains retained"))
                     } else {
-                        self.runtime.as_mut().expect("config hydration runtime remains retained").push_redo_edit(edit)
+                        self.runtime.as_mut().expect("config hydration runtime remains retained").push_redo_edit(edit, envelope.vcs.edits.key_at(position).expect("indexed config edit generation remains retained"))
                     };
                     if result.is_err() {
                         return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
@@ -478,7 +541,11 @@ where
             }
             Phase::RetireHistory => {
                 if let Some(history) = self.history.take() {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(std::sync::Arc::into_inner(history).expect("config fold aliases close before history retirement")));
+                    return ConfigStoreHydrationStep::Pending(self.progress());
+                }
+                if let Some(fold) = self.fold.take() {
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(fold));
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 }
                 if let Some(index) = self.edit_lookup.take() {
@@ -493,7 +560,6 @@ where
                 let mut runtime = self.runtime.take().expect("hydrated config runtime remains retained");
                 let cursor = envelope.cursor.as_ref().expect("persisted config cursor remains retained");
                 runtime.set_current_checkpoint_id(cursor.checkpoint_id.clone());
-                runtime.set_local_actor_id(cursor.applied_edit_ids.last().and_then(|id| envelope.vcs.edits.iter().find(|edit| edit.id == *id)).and_then(|edit| edit.actor.clone()));
                 let owners = self.owners.take().expect("config hydration owners remain retained");
                 self.terminal = true;
                 ConfigStoreHydrationStep::Ready(Box::new(crate::os_store::config_store_from_initialized_runtime_with_owners(envelope, runtime, self.generation, owners)))
@@ -529,6 +595,45 @@ where
                 step => Ok(step),
             };
         }
+        if let Some(job) = self.fold_job.as_mut() {
+            match job.close_step(1, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if job.terminal_is_empty() => { self.fold_job.take(); }
+                step => return Ok(step),
+            }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(transitions) = self.normalized_transitions.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(transitions));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(fold) = self.fold.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(fold));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.source_edits.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.source_forwards.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.source_inverse.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.source_metadata.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.pending_payload.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.pending_metadata.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         let owners = self.owners.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration lost its owner catalog"))?;
         if let Some(runtime) = self.runtime.as_mut() {
             return match runtime.close_step(owners.initial_snapshot_retirement.as_ref(), 1, maximum_bytes)? {
@@ -561,11 +666,11 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(initial) = self.initial.take() {
-            *self.active = Some(owners.initial_snapshot_retirement.retire_owned(initial));
+            *self.active = Some(owners.retire_genesis_owned(initial));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(history) = self.history.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(std::sync::Arc::into_inner(history).expect("config fold aliases close before history retirement")));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(index) = self.edit_lookup.take() {
@@ -574,6 +679,10 @@ where
         }
         if let Some(expected_id) = self.expected_id.take() {
             *self.active = Some(semio_framework_value::retirement::owned_retirement(expected_id));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if !self.actor.0.is_empty() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut self.actor.0)));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(schema) = self.schema.take() {
@@ -594,10 +703,20 @@ where
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal
+            && self.actor.0.is_empty()
             && self.initial.is_none()
             && self.validation.is_none()
             && self.current.is_none()
             && self.history.is_none()
+            && self.fold_job.is_none()
+            && self.fold.is_none()
+            && self.normalized_transitions.is_none()
+            && self.source_edits.is_none()
+            && self.source_forwards.is_none()
+            && self.source_inverse.is_none()
+            && self.source_metadata.is_none()
+            && self.pending_payload.is_none()
+            && self.pending_metadata.is_none()
             && self.expected_id.is_none()
             && self.schema.is_none()
             && self.envelope.is_none()
@@ -627,10 +746,20 @@ where
 {
     fn terminal_is_empty_unbounded(&self) -> bool {
         self.terminal
+            && self.actor.0.is_empty()
             && self.initial.is_none()
             && self.validation.is_none()
             && self.current.is_none()
             && self.history.is_none()
+            && self.fold_job.is_none()
+            && self.fold.is_none()
+            && self.normalized_transitions.is_none()
+            && self.source_edits.is_none()
+            && self.source_forwards.is_none()
+            && self.source_inverse.is_none()
+            && self.source_metadata.is_none()
+            && self.pending_payload.is_none()
+            && self.pending_metadata.is_none()
             && self.expected_id.is_none()
             && self.schema.is_none()
             && self.envelope.is_none()

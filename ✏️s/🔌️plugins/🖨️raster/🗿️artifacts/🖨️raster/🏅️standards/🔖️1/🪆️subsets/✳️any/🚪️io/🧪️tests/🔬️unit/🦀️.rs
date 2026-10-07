@@ -2,8 +2,13 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn raster_image_layer_and_asset_builds_a_pixel_layer_and_matching_asset() {
-    let (asset_id, asset, layer) = raster_image_layer_and_asset("aGVsbG8=");
-    assert_eq!(asset.data, b"hello".to_vec());
+    let pixels = [10,20,30,255];
+    let image = crate::standards::v1::subsets::any::schema::semio_image_from_rgba8(1,1,pixels.to_vec());
+    let bytes = png_bytes_from_semio_image(&image).unwrap();
+    let source = base64_codec::base64_standard_encode(&bytes);
+    let (asset_id, asset, layer) = raster_image_layer_and_asset(&source).unwrap();
+    assert_eq!(asset.frames[0].rgba8, pixels);
+    assert!(raster_image_layer_and_asset("aGVsbG8=").is_err());
     let RasterLayerNode::Pixel { image_key, .. } = &layer else { panic!("expected pixel layer") };
     assert_eq!(image_key.as_deref(), Some(asset_id.as_str()));
 }

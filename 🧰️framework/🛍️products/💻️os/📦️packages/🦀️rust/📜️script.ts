@@ -2704,7 +2704,7 @@ class DocumentHttpCheckScript extends BundleScript {
     const declared = ajv.compile(declarationSchema);
     assert(declared(fixture.neutral));
     assert(declared(fixture.secondary));
-    const replyBounds=ajv.compile(fixture.replyNodeBounds.oracleSchema);
+    const replyBounds=ajv.compile(JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧪️testing/📤️reply-node-bounds/🧬️schema/🔣️.json"),"utf8")).$defs.BoundedReply);
     for(const vector of fixture.replyNodeBounds.vectors) assert.equal(replyBounds(Array(vector.items).fill(null)),vector.valid);
     const validate = ajv.compile(JSON.parse(fixture.neutral.operations[0].inputSchema));
     for (const vector of fixture.vectors) assert.equal(validate(vector.value), vector.valid, vector.name);

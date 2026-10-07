@@ -5,7 +5,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::kit::schema::diff::*;
+use crate::standards::v1::subsets::kit::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
 use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
@@ -19,8 +19,8 @@ use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_type_list};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_type_list};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_link_list};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_link_list};
-use crate::standards::v1::subsets::object::io::text::snapshot::{dec_child_opt};
-use crate::standards::v1::subsets::object::io::text::snapshot::{enc_child_opt};
+use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_child_opt};
+use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child_opt};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_child_list};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child_list};
 

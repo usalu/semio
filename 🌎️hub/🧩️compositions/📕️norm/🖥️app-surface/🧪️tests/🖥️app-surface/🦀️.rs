@@ -77,14 +77,14 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
         assert_eq!(definition.id, row.app_id);
         assert_eq!(definition.role.as_str(), row.role);
         assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", row.variant));
-        let mut app = plugin.create_app(&row.app_id).expect("each manifest app must have a registered factory");
+        let mut app = plugin.create_app(&row.app_id, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("each manifest app must have a registered factory");
         let result = check_surface(&mut app, definition, row).await;
         close_registered_fixture_app(&mut app);
         rendered += result.unwrap_or_else(|error| panic!("{error}"));
     }
     assert_eq!(visited.len(), 30);
     assert_eq!(rendered, 120);
-    assert!(plugin.create_app("s.norm.unknown@1/*#editor").is_none());
+    assert!(plugin.create_app("s.norm.unknown@1/*#editor", semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).is_none());
 }
 
 //#region 🧵️RetainedCohort
@@ -187,7 +187,7 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
                 assert_eq!(action.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{} {} must dispatch from the UI", app.controller, route.id);
             }
         }
-        let mut runtime = plugin.create_app(&app.controller).unwrap_or_else(|| panic!("{} must build with its owned bounded factory registered", app.controller));
+        let mut runtime = plugin.create_app(&app.controller, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).unwrap_or_else(|| panic!("{} must build with its owned bounded factory registered", app.controller));
         close_registered_fixture_app(&mut runtime);
         identities += fixture.routes.len();
     }

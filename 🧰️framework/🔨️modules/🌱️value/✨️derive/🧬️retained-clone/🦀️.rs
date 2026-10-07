@@ -12,7 +12,7 @@ fn field_types(input: &DeriveInput) -> Vec<&Type> {
 
 fn bounded_generics(input: &DeriveInput, bound: TokenStream) -> Generics {
     let mut generics = input.generics.clone();
-    for ty in field_types(input).into_iter().filter(|ty| !type_mentions_ident(ty, &input.ident)) {
+    for ty in field_types(input).into_iter().filter(|ty| !type_mentions_ident(ty, &input.ident) && input.generics.type_params().any(|parameter| type_mentions_ident(ty, &parameter.ident))) {
         generics.make_where_clause().predicates.push(parse_quote!(#ty: #bound));
     }
     generics
@@ -144,8 +144,8 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
             (index, ty, cursor, value)
         })
         .collect::<Vec<_>>();
-    let cursor_fields = field_rows.iter().map(|(_, ty, cursor, value)| quote!(#cursor: <#ty as ::semio_framework_value::retained_clone::RetainedClone>::Cursor, #value: Option<#ty>));
-    let cursor_init = field_rows.iter().map(|(_, ty, cursor, value)| quote!(#cursor: <#ty as ::semio_framework_value::retained_clone::RetainedClone>::retained_clone_cursor(), #value: None));
+    let cursor_fields = field_rows.iter().map(|(_, ty, cursor, value)| quote!(#cursor: ::semio_framework_value::retained_clone::RetainedFieldCursor<#ty>, #value: Option<#ty>));
+    let cursor_init = field_rows.iter().map(|(_, ty, cursor, value)| quote!(#cursor: Default::default(), #value: None));
     let advance_arms = field_rows.iter().map(|(index, _, cursor, value)| {
         let access = field_access(fields, *index);
         quote! {
@@ -310,8 +310,8 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
             })
         })
         .collect::<Vec<_>>();
-    let cursor_fields = rows.iter().map(|(_, _, ty, cursor, value)| quote!(#cursor: <#ty as ::semio_framework_value::retained_clone::RetainedClone>::Cursor, #value: Option<#ty>));
-    let cursor_init = rows.iter().map(|(_, _, ty, cursor, value)| quote!(#cursor: <#ty as ::semio_framework_value::retained_clone::RetainedClone>::retained_clone_cursor(), #value: None));
+    let cursor_fields = rows.iter().map(|(_, _, ty, cursor, value)| quote!(#cursor: ::semio_framework_value::retained_clone::RetainedFieldCursor<#ty>, #value: Option<Box<#ty>>));
+    let cursor_init = rows.iter().map(|(_, _, ty, cursor, value)| quote!(#cursor: Default::default(), #value: None));
     let select_arms = data
         .variants
         .iter()
@@ -325,7 +325,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
     let variant_arms = data.variants.iter().enumerate().map(|(variant_index, variant)| {
         let (pattern, bindings) = borrowed_variant_pattern(name, variant, variant_index);
         let variant_rows = rows.iter().filter(|(row_variant, _, _, _, _)| *row_variant == variant_index).collect::<Vec<_>>();
-        let advance_arms = variant_rows.iter().map(|(_, field_index, _, cursor, value)| {
+        let advance_arms = variant_rows.iter().map(|(_, field_index, ty, cursor, value)| {
             let binding = &bindings[*field_index];
             let projection_pattern = pattern.clone();
             quote! {
@@ -345,10 +345,12 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                         if progress.copied_items >= grant.maximum_items {
                             return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
                         }
-                        self.#value = Some(::semio_framework_value::retained_clone::RetainedCloneCursor::take(&mut self.#cursor).ok_or_else(|| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum field completed without an owner"))?);
+                        let capacity = ::std::mem::size_of::<#ty>();
+                        if capacity > grant.maximum_capacity_bytes.saturating_sub(progress.retained_capacity_bytes) { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)); }
+                        self.#value = Some(Box::new(::semio_framework_value::retained_clone::RetainedCloneCursor::take(&mut self.#cursor).ok_or_else(|| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum field completed without an owner"))?));
                         let _ = ::semio_framework_value::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor);
                         self.draining = true;
-                        Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress.checked_add(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() })?))
+                        Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress.checked_add(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..Default::default() })?))
                     }
                 }
             }
@@ -384,6 +386,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
         let values = variant_rows.iter().map(|(_, _, _, _, value)| (*value).clone()).collect::<Vec<_>>();
         let construct = construct_fields(name, &variant.fields, &values, Some(&variant.ident));
         let field_count = variant_rows.len();
+        let construct_bytes = variant_rows.iter().map(|(_, _, ty, _, _)| quote!(::std::mem::size_of::<#ty>()));
         quote! {
             (#variant_index, #pattern) => {
                 if self.draining {
@@ -393,9 +396,11 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                     #(#advance_arms,)*
                     #field_count => {
                         if grant.maximum_items == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }
+                        let bytes = 0usize #(.saturating_add(#construct_bytes))*;
+                        if bytes > grant.maximum_copy_bytes { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }
                         self.output = Some(#construct);
                         self.phase += 1;
-                        Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                        Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0 }))
                     }
                     _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum clone state is invalid")),
                 }
@@ -510,12 +515,13 @@ fn field_access(fields: &Fields, index: usize) -> TokenStream {
 
 fn construct_fields(name: &syn::Ident, fields: &Fields, values: &[syn::Ident], variant: Option<&syn::Ident>) -> TokenStream {
     let prefix = variant.map_or_else(|| quote!(#name), |variant| quote!(#name::#variant));
+    let owners = values.iter().map(|value| if variant.is_some() { quote!(*self.#value.take().expect("retained field owner")) } else { quote!(self.#value.take().expect("retained field owner")) }).collect::<Vec<_>>();
     match fields {
         Fields::Named(named) => {
             let names = named.named.iter().map(|field| field.ident.as_ref().expect("named field"));
-            quote!(#prefix { #(#names: self.#values.take().expect("retained field owner")),* })
+            quote!(#prefix { #(#names: #owners),* })
         }
-        Fields::Unnamed(_) => quote!(#prefix ( #(self.#values.take().expect("retained field owner")),* )),
+        Fields::Unnamed(_) => quote!(#prefix ( #(#owners),* )),
         Fields::Unit => prefix,
     }
 }

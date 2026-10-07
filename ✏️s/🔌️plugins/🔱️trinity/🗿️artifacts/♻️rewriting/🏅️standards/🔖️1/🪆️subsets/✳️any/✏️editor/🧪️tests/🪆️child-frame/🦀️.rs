@@ -1,7 +1,7 @@
 //! 🧪️ Full Semio child laws exercise the actual Rewriting editor and registry owner.
 use super::*;
 use semio_framework_plugin::PluginCloseStep;
-use store::os_io::{ArtifactDialect,ArtifactRef};
+use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::{snapshot::SemioGraphSnapshot,mutations::SemioGraphMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{decode_semio_graph_snapshot_json};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{encode_semio_graph_snapshot_json};
@@ -19,7 +19,7 @@ fn full_frame_child(contract:&serde_json::Value,next:bool)->SemioGraphSnapshot{
 }
 async fn full_frame_app()->RichFrameApp{
  let contract=full_frame_contract();
- let mut app=artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>(trinity_rewriting_manifest_for_tests).await;
+ let mut app=artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>(trinity_rewriting_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
  app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
  let mut parent=app.snapshot().expect("actual parent");
  let logical=contract["childId"].as_str().expect("declared member key").to_owned();
@@ -29,7 +29,7 @@ async fn full_frame_app()->RichFrameApp{
  app.test_parent_store_mut().dispatch(store::ArtifactCommand::Apply{mutations:vec![schema::mutations::edit_working_graph(parent.working_graph)],transaction:None}).await.expect("declare actual owner identity");
  let mut envelope=store::create_document_envelope::<SemioGraphSnapshot,SemioGraphMutation>("stdio.semio",&target,full_frame_child(&contract,false),None);
  envelope.dialect=Some(dialect.clone());
- let mut child=store::ArtifactStore::new(envelope).await.expect("actual rich member store");
+ let mut child=store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("actual rich member store");
  child.install_document_store_owners_exact(<SemioGraphSnapshot as store::MemberStoreOwner<SemioGraphMutation>>::member_store_owners());
  app.register_child("workingGraph",logical,dialect,RichFrameMembers::Graph(Box::new(child))).await.expect("publish complete member");
  app

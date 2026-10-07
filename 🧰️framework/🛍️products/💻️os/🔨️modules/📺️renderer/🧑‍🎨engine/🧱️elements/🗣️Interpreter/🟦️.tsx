@@ -1425,6 +1425,16 @@ function useCommitDraft(published: string, scope: string, guard: string, revisio
         const pending: Pending = { value: next.publication, baseRevision: state.revision, cancelled: false, settled: false, outcome: undefined };
         state.awaiting = pending;
         const outcome = await sender.current(next.value, () => mounted.current && owner.current === state && !pending.cancelled, (listener) => { state.listeners.add(listener); return () => { state.listeners.delete(listener); }; });
+        if (!mounted.current || owner.current !== state) return;
+        if (pending.cancelled) { state.awaiting = null; continue; }
+        if (outcome?.kind === "refused" && outcome.draftDisposition === "discard") {
+          state.awaiting = null;
+          state.queue = [];
+          state.committed = state.published;
+          if (!pending.cancelled && state.draft === next.value) state.draft = state.published;
+          state.conflicted = state.draft !== state.published;
+          break;
+        }
         if (outcome && outcome.kind !== "applied") throw new Error(outcome.kind);
         pending.outcome = outcome || undefined;
         pending.settled = true;
@@ -1995,6 +2005,7 @@ export function treeWindowScrollViewport(root: HTMLElement): HTMLElement | null 
     return [style?.overflowX, style?.overflowY].some((overflow) => overflow === "auto" || overflow === "scroll" || overflow === "overlay");
   };
   const candidates: HTMLElement[] = [];
+  if (isScroller(root)) candidates.push(root);
   // 🌳️ `TreeView` wraps `<Tree>` in a `display: contents` div, so the tree's own root is the first
   // element child of `root` and belongs in the chain — skipping it would miss a bounded guest tree.
   const inner = root.firstElementChild;
@@ -2667,13 +2678,11 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       ...(dropBinding ? { handleDrop: () => dispatchTrigger(context, record, "drop")?.then(() => undefined) } : {}),
     };
   }, [record, context, sections]);
-  // 🪟️ `display: contents` — the wrapper exists ONLY to give the window observer a DOM handle on the
-  // tree it must measure (`<Tree>` exposes no ref). It generates no box, so the `Panel`/`Scrollable`
-  // layout chain above and the `Tree` root's own classes below are byte-for-byte what they were.
+  const ownsScroll = record.layout.kind === "scroll";
   return (
-    <div ref={rootRef} className="contents">
+    <div ref={rootRef} data-ui-node-id={record.id} data-ui-node-key={record.key} className={ownsScroll ? "min-h-0 min-w-0 flex-1" : "contents"} style={ownsScroll ? layoutSpecStyle(record.layout) : undefined}>
       <Tree
-        className="min-h-0 min-w-0 flex-1 overflow-auto"
+        className={ownsScroll ? "min-h-0 min-w-0" : "min-h-0 min-w-0 flex-1 overflow-auto"}
         presentation={(record.component as Extract<Component, { type: "tree" }>).presentation}
         sections={sections.length > 0 ? sections : [treeStatusSection(store, record)]}
         selectionMode="single"

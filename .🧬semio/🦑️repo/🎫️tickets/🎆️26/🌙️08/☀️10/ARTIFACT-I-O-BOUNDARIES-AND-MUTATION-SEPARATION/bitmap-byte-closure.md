@@ -174,3 +174,14 @@ Coverage correction: the preceding five-file list compared unstaged edits only a
 - `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🔨️modules/🏠️host/💡️inferences/🧪️tests/🔬️unit/🦀️.rs`
 - `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🧪️tests/🔬️store-fixture/🦀️.rs`
 - `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🧪️tests/🔬️unit/🦀️.rs`
+
+The physically moved TypeScript mutation fixture suite now runs through bun:test and is registered in the existing bitmap package `📜️script.ts test` suite list, preserving the existing Nx/launch command. Semantic Rust admission explicitly refuses the physical JSON base64 string until the IO binder lowers it to octets.
+
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript/📜️script.ts`
+
+Actual Nx bitmap test compiled production/build declarations and ran eight SQLite/byte tests: seven passed, one failed because the physical controlled-admission JSON schema still lived in schema. The independent bytes/Buffer law printed `[DEBUG] bitmap intrinsic byte vectors=5 Buffer oracle=agree base64 refusals=6`; BLOB SQL projection/query/edit laws passed. Moved the physical control specification to the canonical IO target. Fresh full Nx test includes the moved mutation fixture suite and is queued in bitmap-ts-test-final.log.
+
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛬️native/🧬️schema/🔣️.json` (removed)
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🧬️schema/🔣️.json` (created)
+
+Fresh actual `bun nx run @semio-tech/wfc-bitmap:test --skip-nx-cache` succeeded: production/declaration compilation, SQLite byte/admission suite 8 passed, physical mutation corpus 20 passed. Buffer oracle runtime DEBUG verified all five byte vectors and six malformed base64 refusals. Temporary TypeScript DEBUG output removed after capture. Rust execution remains covered by the parent/runtime agent.

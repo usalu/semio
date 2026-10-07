@@ -1,0 +1,496 @@
+{
+  "fixtures": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🎞️media-owner-context.json",
+      "before": "{\n  \"schema\": \"semio.test.media-owner-context/v1\",\n  \"valueSchema\": {\n    \"type\": \"object\",\n    \"required\": [\"owner\", \"count\"],\n    \"additionalProperties\": false,\n    \"properties\": {\"owner\": {\"type\": \"string\", \"minLength\": 1}, \"count\": {\"type\": \"integer\"}}\n  },\n  \"cases\": [\n    {\"owner\": \"alpha\", \"count\": 7, \"expected\": {\"owner\": \"alpha\", \"count\": 7}},\n    {\"owner\": \"beta\", \"count\": 7, \"expected\": {\"owner\": \"beta\", \"count\": 7}}\n  ],\n  \"invalid\": [{\"count\": 7}, {\"owner\": \"alpha\"}, {\"owner\": \"\", \"count\": 7}, {\"owner\": \"alpha\", \"count\": \"7\"}],\n  \"refusals\": [\"foreign-owner\", \"closed-owner\", \"unknown-port\"],\n  \"defaultPort\": \"artifact:out\",\n  \"contextPort\": \"retained:out\"\n}\n",
+      "after": "{\n  \"schema\": \"semio.test.media-owner-context/v1\",\n  \"cases\": [\n    {\"owner\": \"alpha\", \"count\": 7, \"expected\": {\"owner\": \"alpha\", \"count\": 7}},\n    {\"owner\": \"beta\", \"count\": 7, \"expected\": {\"owner\": \"beta\", \"count\": 7}}\n  ],\n  \"invalid\": [{\"count\": 7}, {\"owner\": \"alpha\"}, {\"owner\": \"\", \"count\": 7}, {\"owner\": \"alpha\", \"count\": \"7\"}],\n  \"refusals\": [\"foreign-owner\", \"closed-owner\", \"unknown-port\"],\n  \"defaultPort\": \"artifact:out\",\n  \"contextPort\": \"retained:out\"\n}\n",
+      "removed": [
+        {
+          "name": "MediaPayload",
+          "schema": {
+            "type": "object",
+            "required": [
+              "owner",
+              "count"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🎮️declared-bridge-arguments.json",
+      "before": "{\n  \"contract\": \"semio.framework.plugin.declared-bridge-arguments/v1\",\n  \"cases\": [\n    { \"name\": \"required-texts\", \"args\": [{\"id\":\"entity\",\"required\":true,\"schema\":{\"kind\":\"string\"}}, {\"id\":\"channel\",\"required\":true,\"schema\":{\"kind\":\"string\"}}, {\"id\":\"value\",\"required\":true,\"schema\":{\"kind\":\"string\"}}], \"expected\": {\"entity\":\"p8-alpha\",\"channel\":\"p8-alpha\",\"value\":\"p8-alpha\"}, \"valueSchema\": {\"type\":\"object\",\"required\":[\"entity\",\"channel\",\"value\"],\"additionalProperties\":false,\"properties\":{\"entity\":{\"type\":\"string\",\"minLength\":1},\"channel\":{\"type\":\"string\",\"minLength\":1},\"value\":{\"type\":\"string\",\"minLength\":1}}}, \"invalid\": [{}, {\"entity\":\"\",\"channel\":\"p8-alpha\",\"value\":\"p8-alpha\"}] },\n    { \"name\": \"required-toggle\", \"args\": [{\"id\":\"enabled\",\"required\":true,\"schema\":{\"kind\":\"boolean\"}}], \"expected\": {\"enabled\":false}, \"valueSchema\": {\"type\":\"object\",\"required\":[\"enabled\"],\"additionalProperties\":false,\"properties\":{\"enabled\":{\"type\":\"boolean\"}}}, \"invalid\":[{}, {\"enabled\":\"false\"}] },\n    { \"name\": \"single-option\", \"args\": [{\"id\":\"kind\",\"required\":true,\"schema\":{\"kind\":\"string\",\"options\":[\"only\"]}}], \"expected\":{\"kind\":\"only\"}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"kind\"],\"additionalProperties\":false,\"properties\":{\"kind\":{\"type\":\"string\",\"enum\":[\"only\"]}}}, \"invalid\":[{}, {\"kind\":\"p8-alpha\"}] },\n    { \"name\": \"declared-default\", \"args\": [{\"id\":\"kind\",\"required\":true,\"default\":\"second\",\"schema\":{\"kind\":\"string\",\"options\":[\"first\",\"second\"]}}], \"expected\":{\"kind\":\"second\"}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"kind\"],\"additionalProperties\":false,\"properties\":{\"kind\":{\"type\":\"string\",\"enum\":[\"first\",\"second\"]}}}, \"invalid\":[{}, {\"kind\":\"other\"}] },\n    { \"name\": \"bounded-number\", \"args\": [{\"id\":\"amount\",\"required\":true,\"schema\":{\"kind\":\"number\",\"min\":2,\"max\":3}}], \"expected\":{\"amount\":2.0}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"amount\"],\"additionalProperties\":false,\"properties\":{\"amount\":{\"type\":\"number\",\"minimum\":2,\"maximum\":3}}}, \"invalid\":[{\"amount\":1},{\"amount\":4}] },\n    { \"name\": \"exclusive-bound-selects-second\", \"args\": [{\"id\":\"amount\",\"required\":true,\"schema\":{\"kind\":\"number\",\"min\":2,\"minExclusive\":true,\"max\":3}}], \"expected\":{\"amount\":3.0}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"amount\"],\"additionalProperties\":false,\"properties\":{\"amount\":{\"type\":\"number\",\"exclusiveMinimum\":2,\"maximum\":3}}}, \"invalid\":[{\"amount\":2},{\"amount\":4}] },\n    { \"name\": \"optional-is-not-invented\", \"args\": [{\"id\":\"name\",\"required\":false,\"schema\":{\"kind\":\"string\"}}], \"expected\":{}, \"valueSchema\":{\"type\":\"object\",\"additionalProperties\":false,\"properties\":{}}, \"invalid\":[{\"name\":\"p8-alpha\"}] },\n    { \"name\": \"json-text\", \"args\": [{\"id\":\"payload\",\"required\":true,\"schema\":{\"kind\":\"string\",\"format\":{\"kind\":\"json\"}}}], \"expected\":{\"payload\":\"{}\"}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"payload\"],\"additionalProperties\":false,\"properties\":{\"payload\":{\"type\":\"string\",\"enum\":[\"{}\",\"[]\"]}}}, \"invalid\":[{}, {\"payload\":{}}] },\n    { \"name\": \"nullable-required-scalar\", \"args\": [{\"id\":\"enabled\",\"required\":true,\"nullable\":true,\"schema\":{\"kind\":\"boolean\"}}], \"expected\":{\"enabled\":false}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"enabled\"],\"additionalProperties\":false,\"properties\":{\"enabled\":{\"type\":[\"boolean\",\"null\"]}}}, \"invalid\":[{}, {\"enabled\":\"false\"}] },\n    { \"name\": \"nullable-declared-null-default\", \"args\": [{\"id\":\"enabled\",\"required\":true,\"nullable\":true,\"default\":null,\"schema\":{\"kind\":\"boolean\"}}], \"expected\":{\"enabled\":null}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"enabled\"],\"additionalProperties\":false,\"properties\":{\"enabled\":{\"type\":[\"boolean\",\"null\"]}}}, \"invalid\":[{}, {\"enabled\":\"false\"}] },\n    { \"name\": \"any-declared-null-default\", \"args\": [{\"id\":\"payload\",\"required\":true,\"default\":null,\"schema\":{\"kind\":\"any\"}}], \"expected\":{\"payload\":null}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"payload\"],\"additionalProperties\":false,\"properties\":{\"payload\":{}}}, \"invalid\":[{}, {\"other\":null}] },\n    { \"name\": \"record-declared-default\", \"args\": [{\"id\":\"record\",\"required\":true,\"default\":{},\"schema\":{\"kind\":\"object\",\"fields\":[]}}], \"expected\":{\"record\":{}}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"record\"],\"additionalProperties\":false,\"properties\":{\"record\":{\"type\":\"object\",\"additionalProperties\":false,\"properties\":{}}}}, \"invalid\":[{}, {\"record\":[]}] },\n    { \"name\": \"optional-declared-default\", \"args\": [{\"id\":\"name\",\"required\":false,\"default\":\"chosen\",\"schema\":{\"kind\":\"string\"}}], \"expected\":{\"name\":\"chosen\"}, \"valueSchema\":{\"type\":\"object\",\"required\":[\"name\"],\"additionalProperties\":false,\"properties\":{\"name\":{\"type\":\"string\"}}}, \"invalid\":[{}, {\"name\":false}] },\n    { \"name\": \"unsupported-record\", \"args\": [{\"id\":\"record\",\"required\":true,\"schema\":{\"kind\":\"object\",\"fields\":[]}}], \"errorArgument\":\"record\" },\n    { \"name\": \"unsupported-any\", \"args\": [{\"id\":\"payload\",\"required\":true,\"schema\":{\"kind\":\"any\"}}], \"errorArgument\":\"payload\" },\n    { \"name\": \"representatives-violate-pattern\", \"args\": [{\"id\":\"name\",\"required\":true,\"schema\":{\"kind\":\"string\",\"pattern\":\"^q+$\"}}], \"errorArgument\":\"name\" },\n    { \"name\": \"no-valid-bounded-representative\", \"args\": [{\"id\":\"amount\",\"required\":true,\"schema\":{\"kind\":\"number\",\"min\":2,\"minExclusive\":true,\"max\":3,\"maxExclusive\":true}}], \"errorArgument\":\"amount\" }\n  ]\n}\n",
+      "after": "{\n  \"contract\": \"semio.framework.plugin.declared-bridge-arguments/v1\",\n  \"cases\": [\n    { \"name\": \"required-texts\", \"args\": [{\"id\":\"entity\",\"required\":true,\"schema\":{\"kind\":\"string\"}}, {\"id\":\"channel\",\"required\":true,\"schema\":{\"kind\":\"string\"}}, {\"id\":\"value\",\"required\":true,\"schema\":{\"kind\":\"string\"}}], \"expected\": {\"entity\":\"p8-alpha\",\"channel\":\"p8-alpha\",\"value\":\"p8-alpha\"}, \"invalid\": [{}, {\"entity\":\"\",\"channel\":\"p8-alpha\",\"value\":\"p8-alpha\"}] },\n    { \"name\": \"required-toggle\", \"args\": [{\"id\":\"enabled\",\"required\":true,\"schema\":{\"kind\":\"boolean\"}}], \"expected\": {\"enabled\":false}, \"invalid\":[{}, {\"enabled\":\"false\"}] },\n    { \"name\": \"single-option\", \"args\": [{\"id\":\"kind\",\"required\":true,\"schema\":{\"kind\":\"string\",\"options\":[\"only\"]}}], \"expected\":{\"kind\":\"only\"}, \"invalid\":[{}, {\"kind\":\"p8-alpha\"}] },\n    { \"name\": \"declared-default\", \"args\": [{\"id\":\"kind\",\"required\":true,\"default\":\"second\",\"schema\":{\"kind\":\"string\",\"options\":[\"first\",\"second\"]}}], \"expected\":{\"kind\":\"second\"}, \"invalid\":[{}, {\"kind\":\"other\"}] },\n    { \"name\": \"bounded-number\", \"args\": [{\"id\":\"amount\",\"required\":true,\"schema\":{\"kind\":\"number\",\"min\":2,\"max\":3}}], \"expected\":{\"amount\":2.0}, \"invalid\":[{\"amount\":1},{\"amount\":4}] },\n    { \"name\": \"exclusive-bound-selects-second\", \"args\": [{\"id\":\"amount\",\"required\":true,\"schema\":{\"kind\":\"number\",\"min\":2,\"minExclusive\":true,\"max\":3}}], \"expected\":{\"amount\":3.0}, \"invalid\":[{\"amount\":2},{\"amount\":4}] },\n    { \"name\": \"optional-is-not-invented\", \"args\": [{\"id\":\"name\",\"required\":false,\"schema\":{\"kind\":\"string\"}}], \"expected\":{}, \"invalid\":[{\"name\":\"p8-alpha\"}] },\n    { \"name\": \"json-text\", \"args\": [{\"id\":\"payload\",\"required\":true,\"schema\":{\"kind\":\"string\",\"format\":{\"kind\":\"json\"}}}], \"expected\":{\"payload\":\"{}\"}, \"invalid\":[{}, {\"payload\":{}}] },\n    { \"name\": \"nullable-required-scalar\", \"args\": [{\"id\":\"enabled\",\"required\":true,\"nullable\":true,\"schema\":{\"kind\":\"boolean\"}}], \"expected\":{\"enabled\":false}, \"invalid\":[{}, {\"enabled\":\"false\"}] },\n    { \"name\": \"nullable-declared-null-default\", \"args\": [{\"id\":\"enabled\",\"required\":true,\"nullable\":true,\"default\":null,\"schema\":{\"kind\":\"boolean\"}}], \"expected\":{\"enabled\":null}, \"invalid\":[{}, {\"enabled\":\"false\"}] },\n    { \"name\": \"any-declared-null-default\", \"args\": [{\"id\":\"payload\",\"required\":true,\"default\":null,\"schema\":{\"kind\":\"any\"}}], \"expected\":{\"payload\":null}, \"invalid\":[{}, {\"other\":null}] },\n    { \"name\": \"record-declared-default\", \"args\": [{\"id\":\"record\",\"required\":true,\"default\":{},\"schema\":{\"kind\":\"object\",\"fields\":[]}}], \"expected\":{\"record\":{}}, \"invalid\":[{}, {\"record\":[]}] },\n    { \"name\": \"optional-declared-default\", \"args\": [{\"id\":\"name\",\"required\":false,\"default\":\"chosen\",\"schema\":{\"kind\":\"string\"}}], \"expected\":{\"name\":\"chosen\"}, \"invalid\":[{}, {\"name\":false}] },\n    { \"name\": \"unsupported-record\", \"args\": [{\"id\":\"record\",\"required\":true,\"schema\":{\"kind\":\"object\",\"fields\":[]}}], \"errorArgument\":\"record\" },\n    { \"name\": \"unsupported-any\", \"args\": [{\"id\":\"payload\",\"required\":true,\"schema\":{\"kind\":\"any\"}}], \"errorArgument\":\"payload\" },\n    { \"name\": \"representatives-violate-pattern\", \"args\": [{\"id\":\"name\",\"required\":true,\"schema\":{\"kind\":\"string\",\"pattern\":\"^q+$\"}}], \"errorArgument\":\"name\" },\n    { \"name\": \"no-valid-bounded-representative\", \"args\": [{\"id\":\"amount\",\"required\":true,\"schema\":{\"kind\":\"number\",\"min\":2,\"minExclusive\":true,\"max\":3,\"maxExclusive\":true}}], \"errorArgument\":\"amount\" }\n  ]\n}\n",
+      "removed": [
+        {
+          "name": "required-texts",
+          "schema": {
+            "type": "object",
+            "required": [
+              "entity",
+              "channel",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "entity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "channel": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "name": "required-toggle",
+          "schema": {
+            "type": "object",
+            "required": [
+              "enabled"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "name": "single-option",
+          "schema": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "only"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "declared-default",
+          "schema": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "first",
+                  "second"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "bounded-number",
+          "schema": {
+            "type": "object",
+            "required": [
+              "amount"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "type": "number",
+                "minimum": 2,
+                "maximum": 3
+              }
+            }
+          }
+        },
+        {
+          "name": "exclusive-bound-selects-second",
+          "schema": {
+            "type": "object",
+            "required": [
+              "amount"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 2,
+                "maximum": 3
+              }
+            }
+          }
+        },
+        {
+          "name": "optional-is-not-invented",
+          "schema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {}
+          }
+        },
+        {
+          "name": "json-text",
+          "schema": {
+            "type": "object",
+            "required": [
+              "payload"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "payload": {
+                "type": "string",
+                "enum": [
+                  "{}",
+                  "[]"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "nullable-required-scalar",
+          "schema": {
+            "type": "object",
+            "required": [
+              "enabled"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "nullable-declared-null-default",
+          "schema": {
+            "type": "object",
+            "required": [
+              "enabled"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "any-declared-null-default",
+          "schema": {
+            "type": "object",
+            "required": [
+              "payload"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "payload": {}
+            }
+          }
+        },
+        {
+          "name": "record-declared-default",
+          "schema": {
+            "type": "object",
+            "required": [
+              "record"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "record": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        {
+          "name": "optional-declared-default",
+          "schema": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🧬️schema/🔣️.json",
+      "value": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/testing/media-owner-context/schema.json",
+        "title": "Supplied Owner Media Payload",
+        "type": "object",
+        "required": [
+          "owner",
+          "count"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/⚖️declared-verb-verdicts/🧬️schema/🔣️.json",
+      "value": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/testing/declared-bridge-arguments/schema.json",
+        "title": "Declared Bridge Representative Value Policies",
+        "$defs": {
+          "required-texts": {
+            "type": "object",
+            "required": [
+              "entity",
+              "channel",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "entity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "channel": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required-toggle": {
+            "type": "object",
+            "required": [
+              "enabled"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "single-option": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "only"
+                ]
+              }
+            }
+          },
+          "declared-default": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "first",
+                  "second"
+                ]
+              }
+            }
+          },
+          "bounded-number": {
+            "type": "object",
+            "required": [
+              "amount"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "type": "number",
+                "minimum": 2,
+                "maximum": 3
+              }
+            }
+          },
+          "exclusive-bound-selects-second": {
+            "type": "object",
+            "required": [
+              "amount"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 2,
+                "maximum": 3
+              }
+            }
+          },
+          "optional-is-not-invented": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {}
+          },
+          "json-text": {
+            "type": "object",
+            "required": [
+              "payload"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "payload": {
+                "type": "string",
+                "enum": [
+                  "{}",
+                  "[]"
+                ]
+              }
+            }
+          },
+          "nullable-required-scalar": {
+            "type": "object",
+            "required": [
+              "enabled"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          },
+          "nullable-declared-null-default": {
+            "type": "object",
+            "required": [
+              "enabled"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          },
+          "any-declared-null-default": {
+            "type": "object",
+            "required": [
+              "payload"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "payload": {}
+            }
+          },
+          "record-declared-default": {
+            "type": "object",
+            "required": [
+              "record"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "record": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          },
+          "optional-declared-default": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🟦️.ts",
+      "before": "import assert from \"node:assert/strict\";\nimport { readFileSync } from \"node:fs\";\nimport Ajv from \"ajv\";\n\n/** 🎞️ Independent JSON Schema admission for supplied-owner media witnesses. */\nexport function mediaOwnerContextOracle(): number {\n  const fixture = JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🎞️media-owner-context.json\", import.meta.url), \"utf8\"));\n  const validate = new Ajv({ strict: true }).compile(fixture.valueSchema);\n  assert.equal(fixture.cases.length, 2);\n  assert.deepEqual(fixture.refusals, [\"foreign-owner\", \"closed-owner\", \"unknown-port\"]);\n  let assertions = 0;\n  for (const row of fixture.cases) {\n    assert.deepEqual(row.expected, { owner: row.owner, count: row.count });\n    assert.equal(validate(row.expected), true);\n    assertions++;\n  }\n  for (const row of fixture.invalid) { assert.equal(validate(row), false); assertions++; }\n  assert.equal(assertions, 6);\n  assert.notDeepEqual(fixture.cases[0].expected, fixture.cases[1].expected);\n  return assertions;\n}\n",
+      "after": "import assert from \"node:assert/strict\";\nimport { readFileSync } from \"node:fs\";\nimport Ajv from \"ajv\";\n\n/** 🎞️ Independent JSON Schema admission for supplied-owner media witnesses. */\nexport function mediaOwnerContextOracle(): number {\n  const fixture = JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🎞️media-owner-context.json\", import.meta.url), \"utf8\"));\n  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL(\"./🧬️schema/🔣️.json\", import.meta.url), \"utf8\")));\n  assert.equal(fixture.cases.length, 2);\n  assert.deepEqual(fixture.refusals, [\"foreign-owner\", \"closed-owner\", \"unknown-port\"]);\n  let assertions = 0;\n  for (const row of fixture.cases) {\n    assert.deepEqual(row.expected, { owner: row.owner, count: row.count });\n    assert.equal(validate(row.expected), true);\n    assertions++;\n  }\n  for (const row of fixture.invalid) { assert.equal(validate(row), false); assertions++; }\n  assert.equal(assertions, 6);\n  assert.notDeepEqual(fixture.cases[0].expected, fixture.cases[1].expected);\n  return assertions;\n}\n"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs",
+      "before": "use super::*;\nuse crate::app::{ArtifactApp, ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, MediaError, NoTransient, TransientView, ViewerApp};\n\npub(super) struct MediaOwner {\n    label: String,\n    closed: bool,\n}\n\nimpl ArtifactInstanceOperationOwner for MediaOwner {\n    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {\n        self\n    }\n    fn maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {\n        Ok(PluginCloseStep::Complete)\n    }\n    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {\n        if !self.closed && (maximum_items == 0 || maximum_bytes < self.label.capacity()) {\n            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });\n        }\n        self.label = String::new();\n        self.closed = true;\n        Ok(PluginCloseStep::Complete)\n    }\n    fn terminal_is_empty(&self) -> bool {\n        self.closed && self.label.is_empty()\n    }\n}\n\npub(super) fn owner(label: &str) -> Box<dyn ArtifactInstanceOperationOwner> {\n    Box::new(MediaOwner { label: label.into(), closed: false })\n}\n\npub(super) fn export(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, SurfaceSnapshot>) -> Result<Media, MediaError> {\n    owner\n        .with_mut::<MediaOwner, _>(|owner| {\n            if owner.closed {\n                return Err(Fault::new(FaultOrigin::Framework, semio_framework::FaultCode::new(\"media.owner-closed\"), \"media owner is closed\"));\n            }\n            let json = serde_json::json!({\"owner\": owner.label, \"count\": doc.snapshot.count}).to_string();\n            Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: \"semio.test.media-owner-context/v1\".into(), json } })\n        })\n        .map_err(|error| MediaError::Payload(port.into(), error.message))\n}\n\nfn payload(media: Media) -> serde_json::Value {\n    let MediaPayload::Structured { schema, json } = media.payload else {\n        panic!(\"structured fixture media\");\n    };\n    assert_eq!(schema, \"semio.test.media-owner-context/v1\");\n    serde_json::from_str(&json).unwrap()\n}\n\n/// 🎞️ Editor, viewer, and live VCS exports consume the supplied owner and preserve document defaults.\n#[semio_framework_async_macros::async_test]\nasync fn media_export_request_context_preserves_exact_supplied_owner() {\n    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧫️fixtures/🎞️media-owner-context.json\")).unwrap();\n    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&fixture[\"valueSchema\"].to_string()).unwrap();\n    let history = HistoryView::empty();\n    let snapshot = SurfaceSnapshot { count: 7 };\n    let doc = ArtifactView::new(&snapshot, &history);\n    let transient = NoTransient {};\n    let transient = TransientView { snapshot: &transient, window: None };\n    let context_port = fixture[\"contextPort\"].as_str().unwrap();\n    for case in fixture[\"cases\"].as_array().unwrap() {\n        let supplied = ArtifactInstanceOperationOwnerHandle::new(owner(case[\"owner\"].as_str().unwrap()));\n        assert!(matches!(supplied.close_step(0, 0).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));\n        assert!(!supplied.terminal_is_empty().unwrap());\n        let editor = payload(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());\n        let viewer = payload(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());\n        assert_eq!(editor, case[\"expected\"]);\n        assert_eq!(viewer, case[\"expected\"]);\n        validator.validate_json(&editor.to_string()).unwrap();\n        validator.validate_json(&viewer.to_string()).unwrap();\n        supplied.close_step(1, 4096).unwrap();\n        assert!(supplied.terminal_is_empty().unwrap());\n        assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"closed\"));\n        assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"closed\"));\n    }\n    for invalid in fixture[\"invalid\"].as_array().unwrap() {\n        assert!(validator.validate_json(&invalid.to_string()).is_err());\n    }\n    let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::app::EmptyArtifactInstanceOperationOwner));\n    assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"type\"));\n    assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"type\"));\n    foreign.close_step(1, 4096).unwrap();\n    let default_port = fixture[\"defaultPort\"].as_str().unwrap();\n    let supplied = ArtifactInstanceOperationOwnerHandle::new(owner(\"defaults\"));\n    let default_editor = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();\n    let default_viewer = <ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();\n    let expected_pack = store::pack_rt::pack_value_to_base64(&store::ArtifactPack::encode_pack(&snapshot));\n    for media in [default_editor, default_viewer] {\n        assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });\n        let MediaPayload::Structured { schema, json } = media.payload else {\n            panic!(\"default document pack\");\n        };\n        assert_eq!(schema, \"semio.testkit-surface/v1\");\n        assert_eq!(json, expected_pack);\n    }\n    assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, \"unknown:out\", &doc, &transient).await, Err(MediaError::NotImplemented)));\n    assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, \"unknown:out\", &doc, &transient).await, Err(MediaError::NotImplemented)));\n    supplied.close_step(1, 4096).unwrap();\n    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;\n    let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;\n    editor\n        .instance_operation_owner\n        .with_mut::<MediaOwner, _>(|owner| {\n            owner.label = \"vcs-editor\".into();\n            Ok(())\n        })\n        .unwrap();\n    viewer\n        .instance_operation_owner\n        .with_mut::<MediaOwner, _>(|owner| {\n            owner.label = \"vcs-viewer\".into();\n            Ok(())\n        })\n        .unwrap();\n    assert_eq!(payload(editor.export_media(context_port).await.unwrap()), serde_json::json!({\"owner\":\"vcs-editor\",\"count\":0}));\n    assert_eq!(payload(viewer.export_media(context_port).await.unwrap()), serde_json::json!({\"owner\":\"vcs-viewer\",\"count\":0}));\n    assert_eq!(editor.snapshot().unwrap().count, 0);\n    assert_eq!(viewer.snapshot().unwrap().count, 0);\n    assert!(editor.export_media(default_port).await.is_ok());\n    assert!(viewer.export_media(default_port).await.is_ok());\n    assert!(matches!(editor.export_media(\"unknown:out\").await, Err(MediaError::NotImplemented)));\n    assert!(matches!(viewer.export_media(\"unknown:out\").await, Err(MediaError::NotImplemented)));\n    close_registered_fixture_app(&mut editor);\n    close_registered_fixture_app(&mut viewer);\n}\n",
+      "after": "use super::*;\nuse crate::app::{ArtifactApp, ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, MediaError, NoTransient, TransientView, ViewerApp};\n\npub(super) struct MediaOwner {\n    label: String,\n    closed: bool,\n}\n\nimpl ArtifactInstanceOperationOwner for MediaOwner {\n    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {\n        self\n    }\n    fn maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {\n        Ok(PluginCloseStep::Complete)\n    }\n    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {\n        if !self.closed && (maximum_items == 0 || maximum_bytes < self.label.capacity()) {\n            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });\n        }\n        self.label = String::new();\n        self.closed = true;\n        Ok(PluginCloseStep::Complete)\n    }\n    fn terminal_is_empty(&self) -> bool {\n        self.closed && self.label.is_empty()\n    }\n}\n\npub(super) fn owner(label: &str) -> Box<dyn ArtifactInstanceOperationOwner> {\n    Box::new(MediaOwner { label: label.into(), closed: false })\n}\n\npub(super) fn export(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, SurfaceSnapshot>) -> Result<Media, MediaError> {\n    owner\n        .with_mut::<MediaOwner, _>(|owner| {\n            if owner.closed {\n                return Err(Fault::new(FaultOrigin::Framework, semio_framework::FaultCode::new(\"media.owner-closed\"), \"media owner is closed\"));\n            }\n            let json = serde_json::json!({\"owner\": owner.label, \"count\": doc.snapshot.count}).to_string();\n            Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: \"semio.test.media-owner-context/v1\".into(), json } })\n        })\n        .map_err(|error| MediaError::Payload(port.into(), error.message))\n}\n\nfn payload(media: Media) -> serde_json::Value {\n    let MediaPayload::Structured { schema, json } = media.payload else {\n        panic!(\"structured fixture media\");\n    };\n    assert_eq!(schema, \"semio.test.media-owner-context/v1\");\n    serde_json::from_str(&json).unwrap()\n}\n\n/// 🎞️ Editor, viewer, and live VCS exports consume the supplied owner and preserve document defaults.\n#[semio_framework_async_macros::async_test]\nasync fn media_export_request_context_preserves_exact_supplied_owner() {\n    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧫️fixtures/🎞️media-owner-context.json\")).unwrap();\n    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(include_str!(\"🧬️schema/🔣️.json\")).unwrap();\n    let history = HistoryView::empty();\n    let snapshot = SurfaceSnapshot { count: 7 };\n    let doc = ArtifactView::new(&snapshot, &history);\n    let transient = NoTransient {};\n    let transient = TransientView { snapshot: &transient, window: None };\n    let context_port = fixture[\"contextPort\"].as_str().unwrap();\n    for case in fixture[\"cases\"].as_array().unwrap() {\n        let supplied = ArtifactInstanceOperationOwnerHandle::new(owner(case[\"owner\"].as_str().unwrap()));\n        assert!(matches!(supplied.close_step(0, 0).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));\n        assert!(!supplied.terminal_is_empty().unwrap());\n        let editor = payload(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());\n        let viewer = payload(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());\n        assert_eq!(editor, case[\"expected\"]);\n        assert_eq!(viewer, case[\"expected\"]);\n        validator.validate_json(&editor.to_string()).unwrap();\n        validator.validate_json(&viewer.to_string()).unwrap();\n        supplied.close_step(1, 4096).unwrap();\n        assert!(supplied.terminal_is_empty().unwrap());\n        assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"closed\"));\n        assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"closed\"));\n    }\n    for invalid in fixture[\"invalid\"].as_array().unwrap() {\n        assert!(validator.validate_json(&invalid.to_string()).is_err());\n    }\n    let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::app::EmptyArtifactInstanceOperationOwner));\n    assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"type\"));\n    assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains(\"type\"));\n    foreign.close_step(1, 4096).unwrap();\n    let default_port = fixture[\"defaultPort\"].as_str().unwrap();\n    let supplied = ArtifactInstanceOperationOwnerHandle::new(owner(\"defaults\"));\n    let default_editor = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();\n    let default_viewer = <ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();\n    let expected_pack = store::pack_rt::pack_value_to_base64(&store::ArtifactPack::encode_pack(&snapshot));\n    for media in [default_editor, default_viewer] {\n        assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });\n        let MediaPayload::Structured { schema, json } = media.payload else {\n            panic!(\"default document pack\");\n        };\n        assert_eq!(schema, \"semio.testkit-surface/v1\");\n        assert_eq!(json, expected_pack);\n    }\n    assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, \"unknown:out\", &doc, &transient).await, Err(MediaError::NotImplemented)));\n    assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, \"unknown:out\", &doc, &transient).await, Err(MediaError::NotImplemented)));\n    supplied.close_step(1, 4096).unwrap();\n    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;\n    let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;\n    editor\n        .instance_operation_owner\n        .with_mut::<MediaOwner, _>(|owner| {\n            owner.label = \"vcs-editor\".into();\n            Ok(())\n        })\n        .unwrap();\n    viewer\n        .instance_operation_owner\n        .with_mut::<MediaOwner, _>(|owner| {\n            owner.label = \"vcs-viewer\".into();\n            Ok(())\n        })\n        .unwrap();\n    assert_eq!(payload(editor.export_media(context_port).await.unwrap()), serde_json::json!({\"owner\":\"vcs-editor\",\"count\":0}));\n    assert_eq!(payload(viewer.export_media(context_port).await.unwrap()), serde_json::json!({\"owner\":\"vcs-viewer\",\"count\":0}));\n    assert_eq!(editor.snapshot().unwrap().count, 0);\n    assert_eq!(viewer.snapshot().unwrap().count, 0);\n    assert!(editor.export_media(default_port).await.is_ok());\n    assert!(viewer.export_media(default_port).await.is_ok());\n    assert!(matches!(editor.export_media(\"unknown:out\").await, Err(MediaError::NotImplemented)));\n    assert!(matches!(viewer.export_media(\"unknown:out\").await, Err(MediaError::NotImplemented)));\n    close_registered_fixture_app(&mut editor);\n    close_registered_fixture_app(&mut viewer);\n}\n"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/⚖️declared-verb-verdicts/🟦️.ts",
+      "before": "import assert from \"node:assert/strict\";\nimport { readFileSync } from \"node:fs\";\nimport Ajv from \"ajv\";\n\ntype Effect = Readonly<{ lanes: string[]; documentChanged: boolean; documentReplaced: boolean; configChanged: boolean; userPathWritten: boolean; hostEffects: number; fingerprint: number; orphanedChildren?: string[] }>;\ntype Outcome = Readonly<{ settled: Effect } | { refused: { code: string; detail: string } } | { unreachable: { code: string; detail: string } }>;\ntype Argument = Readonly<{ argument: string; othersSpecified: boolean; first: Outcome; second: Outcome }>;\ntype Probe = Readonly<{ verb: string; kind: string; audience: string; destructive: boolean; bridge: string | null; windows: Readonly<{ window: string; staged: Outcome; arguments: Argument[] }>[]; agent: Outcome | null }>;\ntype Finding = Readonly<{ finding: string; argument?: string }>;\ntype Fixture = Readonly<{ why: string; cases: Readonly<{ name: string; probe: Probe; findings: Finding[] }>[] }>;\n\nconst ajv = new Ajv({ strict: true, allErrors: true, $data: true });\n\nconst touches = { type: \"object\", anyOf: [{ required: [\"documentChanged\"], properties: { documentChanged: { const: true } } }, { required: [\"documentReplaced\"], properties: { documentReplaced: { const: true } } }, { required: [\"lanes\"], properties: { lanes: { type: \"array\", contains: { enum: [\"artifact\", \"child\"] } } } }] };\nconst silent = {\n  type: \"object\",\n  required: [\"configChanged\", \"userPathWritten\", \"hostEffects\", \"lanes\"],\n  not: touches,\n  properties: { configChanged: { const: false }, userPathWritten: { const: false }, hostEffects: { const: 0 }, lanes: { type: \"array\", items: { enum: [\"terminal\", \"ui\"] } } },\n};\nconst settled = (effect: object) => ({ type: \"object\", required: [\"settled\"], properties: { settled: effect } });\nconst refused = { type: \"object\", required: [\"refused\"], properties: { refused: { type: \"object\" } } };\nconst unreachable = { type: \"object\", required: [\"unreachable\"], properties: { unreachable: { type: \"object\" } } };\nconst refusedUnreachableOrSilent = { anyOf: [refused, unreachable, settled(silent)] };\n\n/** 📜️ Every rule of the verdict as one JSON Schema over the probe's flattened view, evaluated by AJV — the third-party engine. */\nconst rules = {\n  unbridged: ajv.compile({ type: \"object\", required: [\"bridge\", \"audience\"], properties: { bridge: { type: \"string\" }, audience: { not: { const: \"input\" } } } }),\n  bridged: ajv.compile({ type: \"object\", required: [\"bridge\"], properties: { bridge: { type: \"null\" } } }),\n  unreachable: ajv.compile({ type: \"object\", required: [\"staged\"], properties: { staged: { type: \"array\", minItems: 1, items: unreachable } } }),\n  documentWriteFromNonMutation: ajv.compile({ type: \"object\", required: [\"kind\", \"effects\"], properties: { kind: { enum: [\"view\", \"shell\"] }, effects: { type: \"array\", contains: touches } } }),\n  silentMutation: ajv.compile({ type: \"object\", required: [\"kind\", \"audience\", \"outcomes\"], properties: { kind: { const: \"mutation\" }, audience: { const: \"agent\" }, outcomes: { type: \"array\", items: settled(silent) } } }),\n  destructiveWithoutDiscard: ajv.compile({\n    type: \"object\",\n    required: [\"destructive\", \"effects\"],\n    properties: { destructive: { const: true }, effects: { type: \"array\", minItems: 1, items: { type: \"object\", not: { anyOf: [touches, { type: \"object\", required: [\"userPathWritten\"], properties: { userPathWritten: { const: true } } }] } } } },\n  }),\n  composedChildOrphaned: ajv.compile({ type: \"object\", required: [\"effects\"], properties: { effects: { type: \"array\", contains: { type: \"object\", required: [\"orphanedChildren\"], properties: { orphanedChildren: { type: \"array\", minItems: 1 } } } } } }),\n  agentLaneDiverges: ajv.compile({\n    type: \"object\",\n    required: [\"agent\", \"staged\"],\n    properties: { agent: { type: \"object\" }, staged: { type: \"array\" } },\n    anyOf: [\n      { oneOf: [{ type: \"object\", properties: { staged: { type: \"array\", contains: settled(touches) } } }, { type: \"object\", properties: { agent: settled(touches) } }] },\n      { type: \"object\", properties: { agent: refusedUnreachableOrSilent, staged: { type: \"array\", contains: settled({ type: \"object\", not: silent }) } } },\n    ],\n  }),\n  argumentAudience: ajv.compile({ type: \"object\", required: [\"audience\"], properties: { audience: { not: { const: \"input\" } } } }),\n  ignoredArgument: ajv.compile({\n    type: \"array\",\n    minItems: 1,\n    items: {\n      type: \"object\",\n      anyOf: [\n        { type: \"object\", required: [\"first\", \"second\"], properties: { first: settled({ type: \"object\" }), second: { const: { $data: \"1/first\" } } } },\n        { type: \"object\", required: [\"first\", \"second\", \"staged\", \"othersSpecified\"], properties: { first: refused, second: { const: { $data: \"1/first\" } }, staged: { const: { $data: \"1/first\" } }, othersSpecified: { const: true } } },\n      ],\n    },\n  }),\n};\n\n/** 🧮️ An outcome in the Rust verdict's own equality: lanes are a set, a missing orphan list is empty. */\nconst normal = (outcome: Outcome): Outcome => (\"settled\" in outcome ? { settled: { ...outcome.settled, lanes: [...new Set(outcome.settled.lanes)].sort(), orphanedChildren: outcome.settled.orphanedChildren ?? [] } } : outcome);\n\n/** 🔍️ The findings of one probe, in the Rust verdict's order: an unbridged or unreachable verb reports that alone. */\nfunction findings(probe: Probe): Finding[] {\n  const staged = probe.windows.map((window) => normal(window.staged));\n  const outcomes = probe.windows.flatMap((window) => [window.staged, ...window.arguments.flatMap((argument) => [argument.first, argument.second])]).map(normal);\n  const effects = outcomes.flatMap((outcome) => (\"settled\" in outcome ? [outcome.settled] : []));\n  const view = { kind: probe.kind, audience: probe.audience, destructive: probe.destructive, bridge: probe.bridge, staged, outcomes, effects, ...(probe.agent === null ? {} : { agent: normal(probe.agent) }) };\n  if (!rules.bridged(view)) return rules.unbridged(view) ? [{ finding: \"unbridged\" }] : [];\n  if (rules.unreachable(view)) return [{ finding: \"unreachable\" }];\n  const found: Finding[] = ([\"documentWriteFromNonMutation\", \"silentMutation\", \"destructiveWithoutDiscard\", \"composedChildOrphaned\", \"agentLaneDiverges\"] as const).filter((rule) => rules[rule](view)).map((rule) => ({ finding: rule }));\n  if (!rules.argumentAudience(view)) return found;\n  const names = [...new Set(probe.windows.flatMap((window) => window.arguments.map((argument) => argument.argument)))];\n  for (const name of names) {\n    const rows = probe.windows.flatMap((window) => window.arguments.filter((argument) => argument.argument === name).map((argument) => ({ staged: normal(window.staged), first: normal(argument.first), second: normal(argument.second), othersSpecified: argument.othersSpecified })));\n    if (rules.ignoredArgument(rows)) found.push({ finding: \"ignoredArgument\", argument: name });\n  }\n  return found;\n}\n\n/** ⚖️ The AJV twin of `artifact_app_laws::declared_verb_findings`: every case of the language-agnostic verdict fixture answered exactly as written. */\nexport function declaredVerbVerdictOracle(): number {\n  const fixture = JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/⚖️declared-verb-verdicts.json\", import.meta.url), \"utf8\")) as Fixture;\n  assert(fixture.cases.length >= 31, \"the fixture keeps every rule's positive and negative case\");\n  for (const { name, probe, findings: expected } of fixture.cases) assert.deepEqual(findings(probe), expected.map((finding) => (finding.argument === undefined ? { finding: finding.finding } : finding)), name);\n  return fixture.cases.length;\n}\n\n/** 🧬️ AJV independently admits every declared representative and refuses every invalid neutral payload. */\nexport function declaredBridgeArgumentOracle(): number {\n  const fixture = JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🎮️declared-bridge-arguments.json\", import.meta.url), \"utf8\")) as { cases: { name: string; expected?: unknown; valueSchema?: object; invalid?: unknown[]; errorArgument?: string }[] };\n  const validator = new Ajv({ strict: true, allErrors: true });\n  let count = 0;\n  for (const row of fixture.cases) {\n    if (row.errorArgument !== undefined) continue;\n    assert(row.valueSchema !== undefined && row.invalid !== undefined, row.name);\n    const validate = validator.compile(row.valueSchema);\n    assert.equal(validate(row.expected), true, `${row.name}: ${validator.errorsText(validate.errors)}`);\n    for (const invalid of row.invalid) assert.equal(validate(invalid), false, `${row.name} rejects ${JSON.stringify(invalid)}`);\n    count += 1 + row.invalid.length;\n  }\n  assert.equal(count, 38, \"every authored representative and negative payload reaches AJV\");\n  return count;\n}\n\nif (import.meta.main) console.log(`declared-verb-verdict-oracle cases=${declaredVerbVerdictOracle()}`);\n",
+      "after": "import assert from \"node:assert/strict\";\nimport { readFileSync } from \"node:fs\";\nimport Ajv from \"ajv\";\n\ntype Effect = Readonly<{ lanes: string[]; documentChanged: boolean; documentReplaced: boolean; configChanged: boolean; userPathWritten: boolean; hostEffects: number; fingerprint: number; orphanedChildren?: string[] }>;\ntype Outcome = Readonly<{ settled: Effect } | { refused: { code: string; detail: string } } | { unreachable: { code: string; detail: string } }>;\ntype Argument = Readonly<{ argument: string; othersSpecified: boolean; first: Outcome; second: Outcome }>;\ntype Probe = Readonly<{ verb: string; kind: string; audience: string; destructive: boolean; bridge: string | null; windows: Readonly<{ window: string; staged: Outcome; arguments: Argument[] }>[]; agent: Outcome | null }>;\ntype Finding = Readonly<{ finding: string; argument?: string }>;\ntype Fixture = Readonly<{ why: string; cases: Readonly<{ name: string; probe: Probe; findings: Finding[] }>[] }>;\n\nconst ajv = new Ajv({ strict: true, allErrors: true, $data: true });\n\nconst touches = { type: \"object\", anyOf: [{ required: [\"documentChanged\"], properties: { documentChanged: { const: true } } }, { required: [\"documentReplaced\"], properties: { documentReplaced: { const: true } } }, { required: [\"lanes\"], properties: { lanes: { type: \"array\", contains: { enum: [\"artifact\", \"child\"] } } } }] };\nconst silent = {\n  type: \"object\",\n  required: [\"configChanged\", \"userPathWritten\", \"hostEffects\", \"lanes\"],\n  not: touches,\n  properties: { configChanged: { const: false }, userPathWritten: { const: false }, hostEffects: { const: 0 }, lanes: { type: \"array\", items: { enum: [\"terminal\", \"ui\"] } } },\n};\nconst settled = (effect: object) => ({ type: \"object\", required: [\"settled\"], properties: { settled: effect } });\nconst refused = { type: \"object\", required: [\"refused\"], properties: { refused: { type: \"object\" } } };\nconst unreachable = { type: \"object\", required: [\"unreachable\"], properties: { unreachable: { type: \"object\" } } };\nconst refusedUnreachableOrSilent = { anyOf: [refused, unreachable, settled(silent)] };\n\n/** 📜️ Every rule of the verdict as one JSON Schema over the probe's flattened view, evaluated by AJV — the third-party engine. */\nconst rules = {\n  unbridged: ajv.compile({ type: \"object\", required: [\"bridge\", \"audience\"], properties: { bridge: { type: \"string\" }, audience: { not: { const: \"input\" } } } }),\n  bridged: ajv.compile({ type: \"object\", required: [\"bridge\"], properties: { bridge: { type: \"null\" } } }),\n  unreachable: ajv.compile({ type: \"object\", required: [\"staged\"], properties: { staged: { type: \"array\", minItems: 1, items: unreachable } } }),\n  documentWriteFromNonMutation: ajv.compile({ type: \"object\", required: [\"kind\", \"effects\"], properties: { kind: { enum: [\"view\", \"shell\"] }, effects: { type: \"array\", contains: touches } } }),\n  silentMutation: ajv.compile({ type: \"object\", required: [\"kind\", \"audience\", \"outcomes\"], properties: { kind: { const: \"mutation\" }, audience: { const: \"agent\" }, outcomes: { type: \"array\", items: settled(silent) } } }),\n  destructiveWithoutDiscard: ajv.compile({\n    type: \"object\",\n    required: [\"destructive\", \"effects\"],\n    properties: { destructive: { const: true }, effects: { type: \"array\", minItems: 1, items: { type: \"object\", not: { anyOf: [touches, { type: \"object\", required: [\"userPathWritten\"], properties: { userPathWritten: { const: true } } }] } } } },\n  }),\n  composedChildOrphaned: ajv.compile({ type: \"object\", required: [\"effects\"], properties: { effects: { type: \"array\", contains: { type: \"object\", required: [\"orphanedChildren\"], properties: { orphanedChildren: { type: \"array\", minItems: 1 } } } } } }),\n  agentLaneDiverges: ajv.compile({\n    type: \"object\",\n    required: [\"agent\", \"staged\"],\n    properties: { agent: { type: \"object\" }, staged: { type: \"array\" } },\n    anyOf: [\n      { oneOf: [{ type: \"object\", properties: { staged: { type: \"array\", contains: settled(touches) } } }, { type: \"object\", properties: { agent: settled(touches) } }] },\n      { type: \"object\", properties: { agent: refusedUnreachableOrSilent, staged: { type: \"array\", contains: settled({ type: \"object\", not: silent }) } } },\n    ],\n  }),\n  argumentAudience: ajv.compile({ type: \"object\", required: [\"audience\"], properties: { audience: { not: { const: \"input\" } } } }),\n  ignoredArgument: ajv.compile({\n    type: \"array\",\n    minItems: 1,\n    items: {\n      type: \"object\",\n      anyOf: [\n        { type: \"object\", required: [\"first\", \"second\"], properties: { first: settled({ type: \"object\" }), second: { const: { $data: \"1/first\" } } } },\n        { type: \"object\", required: [\"first\", \"second\", \"staged\", \"othersSpecified\"], properties: { first: refused, second: { const: { $data: \"1/first\" } }, staged: { const: { $data: \"1/first\" } }, othersSpecified: { const: true } } },\n      ],\n    },\n  }),\n};\n\n/** 🧮️ An outcome in the Rust verdict's own equality: lanes are a set, a missing orphan list is empty. */\nconst normal = (outcome: Outcome): Outcome => (\"settled\" in outcome ? { settled: { ...outcome.settled, lanes: [...new Set(outcome.settled.lanes)].sort(), orphanedChildren: outcome.settled.orphanedChildren ?? [] } } : outcome);\n\n/** 🔍️ The findings of one probe, in the Rust verdict's order: an unbridged or unreachable verb reports that alone. */\nfunction findings(probe: Probe): Finding[] {\n  const staged = probe.windows.map((window) => normal(window.staged));\n  const outcomes = probe.windows.flatMap((window) => [window.staged, ...window.arguments.flatMap((argument) => [argument.first, argument.second])]).map(normal);\n  const effects = outcomes.flatMap((outcome) => (\"settled\" in outcome ? [outcome.settled] : []));\n  const view = { kind: probe.kind, audience: probe.audience, destructive: probe.destructive, bridge: probe.bridge, staged, outcomes, effects, ...(probe.agent === null ? {} : { agent: normal(probe.agent) }) };\n  if (!rules.bridged(view)) return rules.unbridged(view) ? [{ finding: \"unbridged\" }] : [];\n  if (rules.unreachable(view)) return [{ finding: \"unreachable\" }];\n  const found: Finding[] = ([\"documentWriteFromNonMutation\", \"silentMutation\", \"destructiveWithoutDiscard\", \"composedChildOrphaned\", \"agentLaneDiverges\"] as const).filter((rule) => rules[rule](view)).map((rule) => ({ finding: rule }));\n  if (!rules.argumentAudience(view)) return found;\n  const names = [...new Set(probe.windows.flatMap((window) => window.arguments.map((argument) => argument.argument)))];\n  for (const name of names) {\n    const rows = probe.windows.flatMap((window) => window.arguments.filter((argument) => argument.argument === name).map((argument) => ({ staged: normal(window.staged), first: normal(argument.first), second: normal(argument.second), othersSpecified: argument.othersSpecified })));\n    if (rules.ignoredArgument(rows)) found.push({ finding: \"ignoredArgument\", argument: name });\n  }\n  return found;\n}\n\n/** ⚖️ The AJV twin of `artifact_app_laws::declared_verb_findings`: every case of the language-agnostic verdict fixture answered exactly as written. */\nexport function declaredVerbVerdictOracle(): number {\n  const fixture = JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/⚖️declared-verb-verdicts.json\", import.meta.url), \"utf8\")) as Fixture;\n  assert(fixture.cases.length >= 31, \"the fixture keeps every rule's positive and negative case\");\n  for (const { name, probe, findings: expected } of fixture.cases) assert.deepEqual(findings(probe), expected.map((finding) => (finding.argument === undefined ? { finding: finding.finding } : finding)), name);\n  return fixture.cases.length;\n}\n\n/** 🧬️ AJV independently admits every declared representative and refuses every invalid neutral payload. */\nexport function declaredBridgeArgumentOracle(): number {\n  const fixture = JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🎮️declared-bridge-arguments.json\", import.meta.url), \"utf8\")) as { cases: { name: string; expected?: unknown; invalid?: unknown[]; errorArgument?: string }[] };\n  const policies = JSON.parse(readFileSync(new URL(\"./🧬️schema/🔣️.json\", import.meta.url), \"utf8\")).$defs as Record<string, object>;\n  const validator = new Ajv({ strict: true, allErrors: true });\n  let count = 0;\n  for (const row of fixture.cases) {\n    if (row.errorArgument !== undefined) continue;\n    assert(policies[row.name] !== undefined && row.invalid !== undefined, row.name);\n    const validate = validator.compile(policies[row.name]!);\n    assert.equal(validate(row.expected), true, `${row.name}: ${validator.errorsText(validate.errors)}`);\n    for (const invalid of row.invalid) assert.equal(validate(invalid), false, `${row.name} rejects ${JSON.stringify(invalid)}`);\n    count += 1 + row.invalid.length;\n  }\n  assert.equal(count, 38, \"every authored representative and negative payload reaches AJV\");\n  return count;\n}\n\nif (import.meta.main) console.log(`declared-verb-verdict-oracle cases=${declaredVerbVerdictOracle()}`);\n"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/⚖️declared-verb-verdicts/🦀️.rs",
+      "before": "mod declared_verb_verdict_tests {\n    use super::*;\n\n    const LANES: [&str; 15] = [\"artifact\", \"config\", \"draft\", \"presence\", \"transient\", \"windowConfig\", \"windowTransient\", \"child\", \"interaction\", \"effect\", \"event\", \"ui\", \"download\", \"terminal\", \"fault\"];\n\n    /// 🧬️ Required bridge representatives obey every independently authored neutral value schema.\n    #[test]\n    fn declared_bridge_required_arguments_match_neutral_schemas() {\n        use semio_framework::{ActionArgDef, ActionArgOption, DslValue};\n        let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧫️fixtures/🎮️declared-bridge-arguments.json\")).unwrap();\n        for case in fixture[\"cases\"].as_array().unwrap() {\n            let args = case[\"args\"].as_array().unwrap().iter().map(|argument| {\n                let mut schema = argument[\"schema\"].clone();\n                if let Some(options) = schema.get_mut(\"options\").and_then(serde_json::Value::as_array_mut) {\n                    for option in options { *option = serde_json::to_value(ActionArgOption::new(option.as_str().unwrap(), semio_framework_ui_locale::LocalizedLabel::native(\"Choice\", \"Auswahl\"))).unwrap(); }\n                }\n                let mut arg = ActionArgDef::text(argument[\"id\"].as_str().unwrap(), semio_framework_ui_locale::LocalizedLabel::native(\"Argument\", \"Argument\"));\n                arg.schema = serde_json::from_value(schema).unwrap();\n                arg.required = argument[\"required\"].as_bool().unwrap();\n                arg.nullable = argument[\"nullable\"].as_bool().unwrap_or(false);\n                arg.default = argument.get(\"default\").map(DslValue::from);\n                arg\n            }).collect::<Vec<_>>();\n            let actual = declared_bridge_arguments(&args);\n            if let Some(argument) = case[\"errorArgument\"].as_str() {\n                assert!(actual.unwrap_err().contains(argument), \"{}\", case[\"name\"]);\n            } else {\n                let actual = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&actual.unwrap())).unwrap();\n                assert_eq!(actual, case[\"expected\"], \"{}\", case[\"name\"]);\n                let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&case[\"valueSchema\"].to_string()).unwrap();\n                validator.validate_json(&actual.to_string()).unwrap();\n                for invalid in case[\"invalid\"].as_array().unwrap() { assert!(validator.validate_json(&invalid.to_string()).is_err(), \"{} rejects {invalid}\", case[\"name\"]); }\n            }\n        }\n    }\n\n    fn outcome(value: &serde_json::Value) -> DeclaredVerbOutcome {\n        let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect(\"fixture outcome text\").to_string();\n        if let Some(refusal) = value.get(\"unreachable\") {\n            return DeclaredVerbOutcome::Unreachable { code: text(refusal, \"code\"), detail: text(refusal, \"detail\") };\n        }\n        if let Some(refusal) = value.get(\"refused\") {\n            return DeclaredVerbOutcome::Refused { code: text(refusal, \"code\"), detail: text(refusal, \"detail\") };\n        }\n        let settled = &value[\"settled\"];\n        let flag = |key: &str| settled[key].as_bool().expect(\"fixture outcome flag\");\n        DeclaredVerbOutcome::Settled(DeclaredVerbEffect {\n            lanes: settled[\"lanes\"].as_array().expect(\"fixture lanes\").iter().map(|lane| *LANES.iter().find(|name| Some(**name) == lane.as_str()).expect(\"fixture lane is a published lane\")).collect(),\n            document_changed: flag(\"documentChanged\"),\n            document_replaced: flag(\"documentReplaced\"),\n            config_changed: flag(\"configChanged\"),\n            user_path_written: flag(\"userPathWritten\"),\n            host_effects: settled[\"hostEffects\"].as_u64().expect(\"fixture host effects\") as usize,\n            fingerprint: settled[\"fingerprint\"].as_u64().expect(\"fixture fingerprint\"),\n            orphaned_children: settled[\"orphanedChildren\"].as_array().map_or_else(Vec::new, |children| children.iter().map(|child| child.as_str().expect(\"fixture orphaned child\").to_string()).collect()),\n        })\n    }\n\n    fn probe(value: &serde_json::Value) -> DeclaredVerbProbe {\n        let kind = match value[\"kind\"].as_str() {\n            Some(\"mutation\") => semio_framework::ActionKind::Mutation,\n            Some(\"view\") => semio_framework::ActionKind::View,\n            Some(\"shell\") => semio_framework::ActionKind::Shell,\n            other => panic!(\"fixture kind {other:?}\"),\n        };\n        let audience = match value[\"audience\"].as_str() {\n            Some(\"agent\") => semio_framework::CapabilityAudience::Agent,\n            Some(\"input\") => semio_framework::CapabilityAudience::Input,\n            Some(\"chrome\") => semio_framework::CapabilityAudience::Chrome,\n            other => panic!(\"fixture audience {other:?}\"),\n        };\n        DeclaredVerbProbe {\n            verb: value[\"verb\"].as_str().expect(\"fixture verb\").to_string(),\n            kind,\n            audience,\n            destructive: value[\"destructive\"].as_bool().expect(\"fixture destructive\"),\n            bridge: value[\"bridge\"].as_str().map_or(Ok(()), |detail| Err(detail.to_string())),\n            windows: value[\"windows\"]\n                .as_array()\n                .expect(\"fixture windows\")\n                .iter()\n                .map(|window| DeclaredVerbWindowProbe {\n                    window: window[\"window\"].as_str().expect(\"fixture window\").to_string(),\n                    staged: outcome(&window[\"staged\"]),\n                    arguments: window[\"arguments\"]\n                        .as_array()\n                        .expect(\"fixture arguments\")\n                        .iter()\n                        .map(|argument| DeclaredArgumentProbe {\n                            argument: argument[\"argument\"].as_str().expect(\"fixture argument\").to_string(),\n                            others_specified: argument[\"othersSpecified\"].as_bool().expect(\"fixture othersSpecified\"),\n                            first: outcome(&argument[\"first\"]),\n                            second: outcome(&argument[\"second\"]),\n                        })\n                        .collect(),\n                })\n                .collect(),\n            agent: (!value[\"agent\"].is_null()).then(|| outcome(&value[\"agent\"])),\n        }\n    }\n\n    fn finding_name(finding: &DeclaredVerbFinding) -> (&'static str, Option<&str>) {\n        match finding {\n            DeclaredVerbFinding::DocumentWriteFromNonMutation { .. } => (\"documentWriteFromNonMutation\", None),\n            DeclaredVerbFinding::SilentMutation { .. } => (\"silentMutation\", None),\n            DeclaredVerbFinding::IgnoredArgument { argument, .. } => (\"ignoredArgument\", Some(argument.as_str())),\n            DeclaredVerbFinding::DestructiveWithoutDiscard { .. } => (\"destructiveWithoutDiscard\", None),\n            DeclaredVerbFinding::Unreachable { .. } => (\"unreachable\", None),\n            DeclaredVerbFinding::Unbridged { .. } => (\"unbridged\", None),\n            DeclaredVerbFinding::AgentLaneDiverges { .. } => (\"agentLaneDiverges\", None),\n            DeclaredVerbFinding::ComposedChildOrphaned { .. } => (\"composedChildOrphaned\", None),\n        }\n    }\n\n    /// ⚖️ The Rust verdict answers every case of the language-agnostic fixture exactly as written.\n    #[test]\n    fn declared_verb_verdicts_match_the_language_agnostic_fixture() {\n        let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧫️fixtures/⚖️declared-verb-verdicts.json\")).expect(\"declared-verb verdict fixture parses\");\n        let cases = fixture[\"cases\"].as_array().expect(\"fixture cases\");\n        assert!(cases.len() >= 31, \"the fixture keeps every rule's positive and negative case\");\n        for case in cases {\n            let name = case[\"name\"].as_str().expect(\"case name\");\n            let actual = declared_verb_findings(&probe(&case[\"probe\"])).iter().map(|finding| finding_name(finding)).map(|(finding, argument)| (finding.to_string(), argument.map(str::to_string))).collect::<Vec<_>>();\n            let expected = case[\"findings\"].as_array().expect(\"case findings\").iter().map(|finding| (finding[\"finding\"].as_str().expect(\"finding name\").to_string(), finding[\"argument\"].as_str().map(str::to_string))).collect::<Vec<_>>();\n            assert_eq!(actual, expected, \"{name}\");\n        }\n    }\n\n    /// 🔀️ Every perturbable argument schema yields two distinct values, and a single-option choice none.\n    #[test]\n    fn declared_argument_alternatives_are_distinct_valid_values() {\n        use semio_framework_ui_locale::LocalizedLabel;\n        use semio_framework::{ActionArgDef, ActionArgOption};\n        let label = || LocalizedLabel::native(\"Probe\", \"Probe\");\n        let two = ActionArgDef::select(\"kind\", label(), vec![ActionArgOption::new(\"owns\", label()), ActionArgOption::new(\"uses\", label())]);\n        let one = ActionArgDef::select(\"kind\", label(), vec![ActionArgOption::new(\"owns\", label())]);\n        for argument in [two, ActionArgDef::text(\"name\", label()), ActionArgDef::json_text(\"patch\", label()), ActionArgDef::number(\"zoom\", label()), ActionArgDef::slider(\"opacity\", label(), 0.0, 1.0), ActionArgDef::toggle(\"snap\", label()), ActionArgDef::vector(\"offset\", label(), 3), ActionArgDef::text_list(\"ids\", label())] {\n            let (first, second) = declared_argument_alternatives(&argument).unwrap_or_else(|| panic!(\"{} yields a pair\", argument.id));\n            assert_ne!(first, second, \"{}\", argument.id);\n        }\n        assert!(declared_argument_alternatives(&one).is_none());\n    }\n}\n",
+      "after": "mod declared_verb_verdict_tests {\n    use super::*;\n\n    const LANES: [&str; 15] = [\"artifact\", \"config\", \"draft\", \"presence\", \"transient\", \"windowConfig\", \"windowTransient\", \"child\", \"interaction\", \"effect\", \"event\", \"ui\", \"download\", \"terminal\", \"fault\"];\n\n    /// 🧬️ Required bridge representatives obey every independently authored neutral value schema.\n    #[test]\n    fn declared_bridge_required_arguments_match_neutral_schemas() {\n        use semio_framework::{ActionArgDef, ActionArgOption, DslValue};\n        let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧫️fixtures/🎮️declared-bridge-arguments.json\")).unwrap();\n        let policies: serde_json::Value = serde_json::from_str(include_str!(\"🧬️schema/🔣️.json\")).unwrap();\n        for case in fixture[\"cases\"].as_array().unwrap() {\n            let args = case[\"args\"].as_array().unwrap().iter().map(|argument| {\n                let mut schema = argument[\"schema\"].clone();\n                if let Some(options) = schema.get_mut(\"options\").and_then(serde_json::Value::as_array_mut) {\n                    for option in options { *option = serde_json::to_value(ActionArgOption::new(option.as_str().unwrap(), semio_framework_ui_locale::LocalizedLabel::native(\"Choice\", \"Auswahl\"))).unwrap(); }\n                }\n                let mut arg = ActionArgDef::text(argument[\"id\"].as_str().unwrap(), semio_framework_ui_locale::LocalizedLabel::native(\"Argument\", \"Argument\"));\n                arg.schema = serde_json::from_value(schema).unwrap();\n                arg.required = argument[\"required\"].as_bool().unwrap();\n                arg.nullable = argument[\"nullable\"].as_bool().unwrap_or(false);\n                arg.default = argument.get(\"default\").map(DslValue::from);\n                arg\n            }).collect::<Vec<_>>();\n            let actual = declared_bridge_arguments(&args);\n            if let Some(argument) = case[\"errorArgument\"].as_str() {\n                assert!(actual.unwrap_err().contains(argument), \"{}\", case[\"name\"]);\n            } else {\n                let actual = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&actual.unwrap())).unwrap();\n                assert_eq!(actual, case[\"expected\"], \"{}\", case[\"name\"]);\n                let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&policies[\"$defs\"][case[\"name\"].as_str().unwrap()].to_string()).unwrap();\n                validator.validate_json(&actual.to_string()).unwrap();\n                for invalid in case[\"invalid\"].as_array().unwrap() { assert!(validator.validate_json(&invalid.to_string()).is_err(), \"{} rejects {invalid}\", case[\"name\"]); }\n            }\n        }\n    }\n\n    fn outcome(value: &serde_json::Value) -> DeclaredVerbOutcome {\n        let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect(\"fixture outcome text\").to_string();\n        if let Some(refusal) = value.get(\"unreachable\") {\n            return DeclaredVerbOutcome::Unreachable { code: text(refusal, \"code\"), detail: text(refusal, \"detail\") };\n        }\n        if let Some(refusal) = value.get(\"refused\") {\n            return DeclaredVerbOutcome::Refused { code: text(refusal, \"code\"), detail: text(refusal, \"detail\") };\n        }\n        let settled = &value[\"settled\"];\n        let flag = |key: &str| settled[key].as_bool().expect(\"fixture outcome flag\");\n        DeclaredVerbOutcome::Settled(DeclaredVerbEffect {\n            lanes: settled[\"lanes\"].as_array().expect(\"fixture lanes\").iter().map(|lane| *LANES.iter().find(|name| Some(**name) == lane.as_str()).expect(\"fixture lane is a published lane\")).collect(),\n            document_changed: flag(\"documentChanged\"),\n            document_replaced: flag(\"documentReplaced\"),\n            config_changed: flag(\"configChanged\"),\n            user_path_written: flag(\"userPathWritten\"),\n            host_effects: settled[\"hostEffects\"].as_u64().expect(\"fixture host effects\") as usize,\n            fingerprint: settled[\"fingerprint\"].as_u64().expect(\"fixture fingerprint\"),\n            orphaned_children: settled[\"orphanedChildren\"].as_array().map_or_else(Vec::new, |children| children.iter().map(|child| child.as_str().expect(\"fixture orphaned child\").to_string()).collect()),\n        })\n    }\n\n    fn probe(value: &serde_json::Value) -> DeclaredVerbProbe {\n        let kind = match value[\"kind\"].as_str() {\n            Some(\"mutation\") => semio_framework::ActionKind::Mutation,\n            Some(\"view\") => semio_framework::ActionKind::View,\n            Some(\"shell\") => semio_framework::ActionKind::Shell,\n            other => panic!(\"fixture kind {other:?}\"),\n        };\n        let audience = match value[\"audience\"].as_str() {\n            Some(\"agent\") => semio_framework::CapabilityAudience::Agent,\n            Some(\"input\") => semio_framework::CapabilityAudience::Input,\n            Some(\"chrome\") => semio_framework::CapabilityAudience::Chrome,\n            other => panic!(\"fixture audience {other:?}\"),\n        };\n        DeclaredVerbProbe {\n            verb: value[\"verb\"].as_str().expect(\"fixture verb\").to_string(),\n            kind,\n            audience,\n            destructive: value[\"destructive\"].as_bool().expect(\"fixture destructive\"),\n            bridge: value[\"bridge\"].as_str().map_or(Ok(()), |detail| Err(detail.to_string())),\n            windows: value[\"windows\"]\n                .as_array()\n                .expect(\"fixture windows\")\n                .iter()\n                .map(|window| DeclaredVerbWindowProbe {\n                    window: window[\"window\"].as_str().expect(\"fixture window\").to_string(),\n                    staged: outcome(&window[\"staged\"]),\n                    arguments: window[\"arguments\"]\n                        .as_array()\n                        .expect(\"fixture arguments\")\n                        .iter()\n                        .map(|argument| DeclaredArgumentProbe {\n                            argument: argument[\"argument\"].as_str().expect(\"fixture argument\").to_string(),\n                            others_specified: argument[\"othersSpecified\"].as_bool().expect(\"fixture othersSpecified\"),\n                            first: outcome(&argument[\"first\"]),\n                            second: outcome(&argument[\"second\"]),\n                        })\n                        .collect(),\n                })\n                .collect(),\n            agent: (!value[\"agent\"].is_null()).then(|| outcome(&value[\"agent\"])),\n        }\n    }\n\n    fn finding_name(finding: &DeclaredVerbFinding) -> (&'static str, Option<&str>) {\n        match finding {\n            DeclaredVerbFinding::DocumentWriteFromNonMutation { .. } => (\"documentWriteFromNonMutation\", None),\n            DeclaredVerbFinding::SilentMutation { .. } => (\"silentMutation\", None),\n            DeclaredVerbFinding::IgnoredArgument { argument, .. } => (\"ignoredArgument\", Some(argument.as_str())),\n            DeclaredVerbFinding::DestructiveWithoutDiscard { .. } => (\"destructiveWithoutDiscard\", None),\n            DeclaredVerbFinding::Unreachable { .. } => (\"unreachable\", None),\n            DeclaredVerbFinding::Unbridged { .. } => (\"unbridged\", None),\n            DeclaredVerbFinding::AgentLaneDiverges { .. } => (\"agentLaneDiverges\", None),\n            DeclaredVerbFinding::ComposedChildOrphaned { .. } => (\"composedChildOrphaned\", None),\n        }\n    }\n\n    /// ⚖️ The Rust verdict answers every case of the language-agnostic fixture exactly as written.\n    #[test]\n    fn declared_verb_verdicts_match_the_language_agnostic_fixture() {\n        let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧫️fixtures/⚖️declared-verb-verdicts.json\")).expect(\"declared-verb verdict fixture parses\");\n        let cases = fixture[\"cases\"].as_array().expect(\"fixture cases\");\n        assert!(cases.len() >= 31, \"the fixture keeps every rule's positive and negative case\");\n        for case in cases {\n            let name = case[\"name\"].as_str().expect(\"case name\");\n            let actual = declared_verb_findings(&probe(&case[\"probe\"])).iter().map(|finding| finding_name(finding)).map(|(finding, argument)| (finding.to_string(), argument.map(str::to_string))).collect::<Vec<_>>();\n            let expected = case[\"findings\"].as_array().expect(\"case findings\").iter().map(|finding| (finding[\"finding\"].as_str().expect(\"finding name\").to_string(), finding[\"argument\"].as_str().map(str::to_string))).collect::<Vec<_>>();\n            assert_eq!(actual, expected, \"{name}\");\n        }\n    }\n\n    /// 🔀️ Every perturbable argument schema yields two distinct values, and a single-option choice none.\n    #[test]\n    fn declared_argument_alternatives_are_distinct_valid_values() {\n        use semio_framework_ui_locale::LocalizedLabel;\n        use semio_framework::{ActionArgDef, ActionArgOption};\n        let label = || LocalizedLabel::native(\"Probe\", \"Probe\");\n        let two = ActionArgDef::select(\"kind\", label(), vec![ActionArgOption::new(\"owns\", label()), ActionArgOption::new(\"uses\", label())]);\n        let one = ActionArgDef::select(\"kind\", label(), vec![ActionArgOption::new(\"owns\", label())]);\n        for argument in [two, ActionArgDef::text(\"name\", label()), ActionArgDef::json_text(\"patch\", label()), ActionArgDef::number(\"zoom\", label()), ActionArgDef::slider(\"opacity\", label(), 0.0, 1.0), ActionArgDef::toggle(\"snap\", label()), ActionArgDef::vector(\"offset\", label(), 3), ActionArgDef::text_list(\"ids\", label())] {\n            let (first, second) = declared_argument_alternatives(&argument).unwrap_or_else(|| panic!(\"{} yields a pair\", argument.id));\n            assert_ne!(first, second, \"{}\", argument.id);\n        }\n        assert!(declared_argument_alternatives(&one).is_none());\n    }\n}\n"
+    }
+  ]
+}

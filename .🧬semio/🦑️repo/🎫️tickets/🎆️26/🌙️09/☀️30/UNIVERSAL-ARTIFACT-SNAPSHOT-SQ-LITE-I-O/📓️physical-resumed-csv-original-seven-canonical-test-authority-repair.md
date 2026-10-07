@@ -1,0 +1,7 @@
+# CSV Original Seven Canonical Test Authority Repair
+
+Original unchanged serial 13875 ended with exit 1: JSON twenty-two compiler errors, CSV seven, no owning Nextest runtime. CSV's actual seven errors are five exact binding regions in three existing test files. Two inference demos bind the existing IO TextSnapshot demo; SQLite tests explicitly import the existing Text/Binary source readers and remove the duplicated sqlite path from their same-owner admission callback; the malformed-Unicode compact-patch law binds the existing IO TextMutation patch parser.
+
+The same callback/input/grants/assertions are retained. All actual module definitions and visibility were verified, and fresh current before images plus full after readback preserve concurrent source. The original two-owner serial Native route follows this terminal receipt with all original quick controls unchanged. This report does not claim Native runtime from compiler-only receipts.
+
+Original unchanged two-owner serial session 72660 ended exit 0. JSON compiled in 22.80s and passed 20/20, 148 skipped, in 5.205s (Nextest 8b5edbee-d100-465e-853f-9bc66bc8e6fa). CSV compiled in 2m32s and passed 15/15, 70 skipped, in 1.378s (Nextest 2104bad8-7892-4885-9b3f-cb6d457c2194). These are current genuine original dedicated Native receipts, qualifying their exact existing IO authority prerequisites without changing controls. The prepared fresh whole PDF replay follows these terminal receipts.

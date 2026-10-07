@@ -53,7 +53,7 @@ impl store::ArtifactSqliteSnapshot for DagSnapshot {
         let schema = read.text(document.text(1)?)?;
         let content = DagContentChild::new(
             read.text(child.text(2)?)?,
-            store::io_schema::ArtifactRef { artifact_id: read.text(child.text(3)?)?, dialect: store::io_schema::ArtifactDialect { artifact_kind: read.text(child.text(4)?)?, standard: read.text(child.text(5)?)?, subset: read.text(child.text(6)?)? } },
+            semio_framework_artifact_reference::ArtifactRef { artifact_id: read.text(child.text(3)?)?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: read.text(child.text(4)?)?, standard: read.text(child.text(5)?)?, subset: read.text(child.text(6)?)? } },
         );
         let value = semio_framework_value::DecodedValue::new(Self { schema, content }, <Self as semio_framework_value::FromValue>::retire_decoded);
         valid(value.get())?;
@@ -82,7 +82,7 @@ impl store::ArtifactSqliteSnapshot for DagSnapshot {
     fn retire_sqlite_snapshot(self) {
         <Self as semio_framework_value::FromValue>::retire_decoded(self)
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 2).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.dag.dag" || dialect.standard != "1" || dialect.subset != "*" {
             return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, "DAG SQLite dialect mismatch")));

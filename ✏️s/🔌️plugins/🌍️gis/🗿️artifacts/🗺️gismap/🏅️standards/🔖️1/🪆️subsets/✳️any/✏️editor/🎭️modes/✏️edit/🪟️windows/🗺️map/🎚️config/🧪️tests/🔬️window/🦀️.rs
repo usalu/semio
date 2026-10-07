@@ -137,7 +137,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
             let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
             let left = view.for_window_instance("gis-map-left").unwrap();
             let right = view.for_window_instance("gis-map-right").unwrap();
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest).await);
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
             app.bind_instance_id(86).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -198,7 +198,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 }
                 if app.snapshot().map_err(|error| format!("{error:?}"))?.positions.is_empty() { return Err("GIS Map reuse example did not restore document positions".into()); }
                 if render(&mut app, &left).await?.camera_json == camera_before_example { return Err("GIS Map example camera was not captured by its caller window".into()); }
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 reopened.bind_instance_id(87).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_payloads = reopened

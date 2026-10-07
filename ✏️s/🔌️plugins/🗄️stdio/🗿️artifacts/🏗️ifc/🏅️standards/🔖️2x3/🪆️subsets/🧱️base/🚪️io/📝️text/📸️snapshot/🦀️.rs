@@ -11,6 +11,7 @@ pub type Ifc2x3SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
+use crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native;
 use super::*;
 use crate::standards::v2x3::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;

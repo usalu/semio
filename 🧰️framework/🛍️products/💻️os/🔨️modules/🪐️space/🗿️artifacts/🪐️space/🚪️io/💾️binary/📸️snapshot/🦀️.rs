@@ -3,7 +3,7 @@ use super::super::super::*;
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for SpaceSnapshot {
-    fn native_snapshot_registration() -> Option<(store::os_io::Dialect, store::ArtifactCodec)> {
+    fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, store::ArtifactCodec)> {
         Some((SQLITE_SNAPSHOT_DIALECT, store::ArtifactCodec::bare::<Self, SpaceMutation>(S_SPACE_SCHEMA)))
     }
     /// 📣️ Publishes this artifact-owned native codec at its declared lifecycle boundary.

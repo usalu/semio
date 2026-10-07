@@ -16,7 +16,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 async fn store_roundtrips_through_document_text() {
     let initial = default_remodeling_scene();
     let envelope = store::create_document_envelope("test/v1", "test", initial, None);
-    let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🏪️ A bare store carries no owner catalog and refuses its first edit; install the exact owners
     // production installs through `RemodelingPlayApp::build_document_store_owners`.
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::RemodelingSnapshot, RemodelingMutation>());

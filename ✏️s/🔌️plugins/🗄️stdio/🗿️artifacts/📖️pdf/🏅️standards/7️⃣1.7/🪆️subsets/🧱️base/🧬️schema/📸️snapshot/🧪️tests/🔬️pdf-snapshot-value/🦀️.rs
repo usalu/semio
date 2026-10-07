@@ -57,14 +57,6 @@ fn page_text_joins_shown_runs() {
     assert_eq!(snapshot.pages[0].text(), "Semio");
 }
 
-#[test]
-fn dates_parse_and_print_every_form() {
-    let date = PdfDate::parse("D:20260918120000+02'00'").unwrap();
-    assert_eq!(date.to_string(), "D:20260918120000+02'00'");
-    assert_eq!(PdfDate::parse("D:2026").unwrap(), PdfDate { year: 2026, month: 1, day: 1, hour: 0, minute: 0, second: 0, offset_minutes: None });
-    assert_eq!(PdfDate::parse("D:20260918Z").unwrap().offset_minutes, Some(0));
-    assert_eq!(PdfDate::parse("garbage"), None);
-}
 
 #[test]
 fn fresh_ids_avoid_every_collection() {

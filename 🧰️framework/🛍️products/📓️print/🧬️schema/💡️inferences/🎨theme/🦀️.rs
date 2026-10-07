@@ -1,16 +1,12 @@
 //! 🎨️ Owned CSS paint parsing shares the authored color contract with numerical inference.
 #[derive(Clone,Debug)]
 pub struct Paint { pub hex:String,pub alpha:f64 }
-impl Paint {
-    pub fn name(&self)->String{if self.alpha>=1.0{format!("semio-print-color-{}",self.hex)}else{format!("semio-print-color-{}-A{}",self.hex,self.alpha.to_string().replace('.',"p"))}}
-    pub fn declaration(&self)->String{let name=self.name();format!("\\definecolor{{{name}}}{{HTML}}{{{}}}\n{}",self.hex,if self.alpha<1.0{format!("\\SemioVizPaintAlpha{{{name}}}{{{}}}\n",self.alpha)}else{String::new()})}
-}
 pub fn parse(value:&str)->Result<Paint,String>{
     let value=value.trim().to_ascii_lowercase();
     let invalid=||format!("invalid colour: {value}");
     if value=="transparent"{return Ok(Paint{hex:"000000".into(),alpha:0.0});}
     static NAMES:std::sync::OnceLock<semio_framework_value::DslValue>=std::sync::OnceLock::new();
-    let names=NAMES.get_or_init(||semio_framework_pack_json::from_json_str(include_str!("../../📸️snapshot/📊️chart/🎨️color/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored color schema"));
+    let names=NAMES.get_or_init(||semio_framework_value_derive::owned_json_file!("../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json"));
     let hex=names["x-semio-named-colors"].get(&value).and_then(semio_framework_value::DslValue::as_str).or_else(||value.strip_prefix('#'));
     if let Some(hex)=hex{
         if ![3,4,6,8].contains(&hex.len())||!hex.chars().all(|c|c.is_ascii_hexdigit()){return Err(invalid());}

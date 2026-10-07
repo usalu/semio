@@ -1,7 +1,7 @@
 {
   "mutation": "paint-indexed-region",
   "payload": {
-    "revision": "1d7a128c6731d691",
+    "revision": "8194611e21a9f56d",
     "x": 0,
     "y": 0,
     "width": 1,

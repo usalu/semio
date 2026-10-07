@@ -12,7 +12,7 @@
 
 pub use semio_framework_geometry::{Mat4, Vec3};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_ui_viewport::{
     Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant,
     Viewport3dAxonometricVariant, Viewport3dObliqueVariant,
@@ -831,7 +831,7 @@ impl Mesh3dSchema {
 
     fn validate(self) -> Result<Mesh3dLayout, Mesh3dFault> {
         if self.vertices == 0
-            || self.indices == 0
+            || (self.indices == 0 && self.edges == 0 && self.vertex_ids == 0)
             || !self.indices.is_multiple_of(3)
             || (self.face_ids != 0 && self.face_ids != self.indices / 3)
             || (self.vertex_ids != 0 && self.vertex_ids != self.vertices)
@@ -885,6 +885,20 @@ pub struct Mesh3dLease {
     revision: u64,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Mesh3dComponentAdmissionStep {
+    pub complete: bool,
+    pub processed_items: usize,
+    pub processed_bytes: usize,
+    pub retired_items: usize,
+    pub retired_bytes: usize,
+}
+
+fn mesh3d_component_number(label: &str) -> Option<u64> {
+    if label.len() > 20 || !label.as_bytes().first().is_some_and(|byte| matches!(byte, b'1'..=b'9')) || !label.bytes().all(|byte| byte.is_ascii_digit()) { return None; }
+    label.parse().ok()
+}
+
 #[derive(Clone, Copy)]
 struct Mesh3dLayout {
     offsets: [usize; 14],
@@ -910,11 +924,78 @@ struct Mesh3dOwner {
     close_page: u16,
     component_references: Option<BTreeMap<String, Vec<String>>>,
     component_retirement: Option<Box<dyn protocol::value::ErasedSnapshotRetirement>>,
+    component_domain: u8,
+    component_group: usize,
+    component_complete: bool,
+    component_credit: usize,
+    component_fault: Option<Mesh3dFault>,
+    component_seen: BTreeMap<u64, u32>,
+    component_ineligible: BTreeSet<u64>,
+    has_topological_vertex: bool,
 }
 
 impl Mesh3dOwner {
     fn new(generation: u64, revision: u64, schema: Mesh3dSchema, layout: Mesh3dLayout) -> Self {
-        Self { generation, revision, schema, layout, pages: Box::new(std::array::from_fn(|_| None)), allocated_pages: 0, written: [0; 14], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0, component_references: None, component_retirement: None }
+        Self { generation, revision, schema, layout, pages: Box::new(std::array::from_fn(|_| None)), allocated_pages: 0, written: [0; 14], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0, component_references: None, component_retirement: None, component_domain: 0, component_group: 0, component_complete: true, component_credit: 0, component_fault: None, component_seen: BTreeMap::new(), component_ineligible: BTreeSet::new(), has_topological_vertex: false }
+    }
+
+    fn component_header_credit(&self) -> Result<usize, Mesh3dFault> {
+        let Some(table) = self.component_references.as_ref() else { return Ok(0); };
+        if table.len() > 3 { return Err(Mesh3dFault::Schema); }
+        let mut credit = 768usize;
+        for (kind, labels) in table {
+            if !matches!(kind.as_str(), "face" | "edge" | "vertex") || labels.len() > 600_000 { return Err(Mesh3dFault::Schema); }
+            let bytes = labels.capacity().checked_mul(std::mem::size_of::<String>()).and_then(|bytes| bytes.checked_add(kind.capacity())).and_then(|bytes| bytes.checked_add(128)).ok_or(Mesh3dFault::ByteCapacity)?;
+            credit = credit.checked_add(bytes).ok_or(Mesh3dFault::ByteCapacity)?;
+        }
+        Ok(credit)
+    }
+
+    fn component_current_label(&self) -> Option<&String> {
+        self.component_references.as_ref()?.get(*["face", "edge", "vertex"].get(self.component_domain as usize)?)?.get(self.component_group)
+    }
+
+    fn component_key(&self, group: u32) -> u64 { (u64::from(self.component_domain) << 32) | u64::from(group) }
+
+    fn component_turn_byte_demand(&self) -> usize {
+        if let Some(label) = self.component_current_label() { return 24 + if label.len() <= 20 { label.len() } else { 0 }; }
+        if self.component_seen.is_empty() { 1 } else { 12 }
+    }
+
+    fn component_turn_credit(&self) -> Result<(usize, Option<u64>), Mesh3dFault> {
+        if let Some(label) = self.component_current_label() {
+            let mut credit = self.component_credit.checked_add(label.capacity()).ok_or(Mesh3dFault::ByteCapacity)?;
+            let group = self.component_group as u32;
+            let number = mesh3d_component_number(label);
+            let extra = match number {
+                Some(number) => match self.component_seen.get(&number) {
+                    Some(first) => [*first, group].into_iter().filter(|group| !self.component_ineligible.contains(&self.component_key(*group))).count() * 64,
+                    None => 128,
+                },
+                None => 64,
+            };
+            credit = credit.checked_add(extra).ok_or(Mesh3dFault::ByteCapacity)?;
+            return Ok((credit, number));
+        }
+        Ok((self.component_credit, None))
+    }
+
+    fn component_turn(&mut self, number: Option<u64>) -> Mesh3dComponentAdmissionStep {
+        if let Some(label) = self.component_current_label() {
+            let bytes = 24 + if label.len() <= 20 { label.len() } else { 0 };
+            let group = self.component_group as u32;
+            match number {
+                Some(number) => if let Some(first) = self.component_seen.get(&number).copied() { self.component_ineligible.insert(self.component_key(first)); self.component_ineligible.insert(self.component_key(group)); } else { self.component_seen.insert(number, group); },
+                None => { self.component_ineligible.insert(self.component_key(group)); }
+            }
+            self.component_group += 1;
+            return Mesh3dComponentAdmissionStep { processed_items: 1, processed_bytes: bytes, ..Default::default() };
+        }
+        if self.component_seen.pop_first().is_some() { return Mesh3dComponentAdmissionStep { retired_items: 1, retired_bytes: 12, ..Default::default() }; }
+        self.component_domain += 1;
+        self.component_group = 0;
+        self.component_complete = self.component_domain == 3;
+        Mesh3dComponentAdmissionStep { complete: self.component_complete, processed_items: 1, processed_bytes: 1, ..Default::default() }
     }
 
     fn allocate_step(&mut self) -> bool {
@@ -939,6 +1020,7 @@ impl Mesh3dOwner {
         let absolute = self.layout.offsets[field_index].checked_add(item as usize * bytes.len()).ok_or(Mesh3dFault::ByteCapacity)?;
         self.write_at(absolute, bytes)?;
         self.written[field_index] += 1;
+        if field == Mesh3dField::VertexIds && bytes != u32::MAX.to_le_bytes() { self.has_topological_vertex = true; }
         Ok(item)
     }
 
@@ -978,7 +1060,7 @@ impl Mesh3dOwner {
     }
 
     fn terminal_is_complete(&self) -> bool {
-        self.allocated_pages == self.layout.page_count
+        self.component_complete && self.component_fault.is_none() && self.allocated_pages == self.layout.page_count
             && self.written.iter().enumerate().all(|(index, count)| {
                 *count
                     == self.schema.field_items([Mesh3dField::Positions, Mesh3dField::Normals, Mesh3dField::Indices, Mesh3dField::FaceIds, Mesh3dField::VertexIds, Mesh3dField::Edges, Mesh3dField::EdgeIds, Mesh3dField::Uvs, Mesh3dField::Colors,Mesh3dField::UvsMetallicRoughness,Mesh3dField::UvsNormal,Mesh3dField::UvsOcclusion,Mesh3dField::UvsEmissive,Mesh3dField::Tangents][index])
@@ -992,6 +1074,7 @@ impl Mesh3dOwner {
             self.close_page += 1;
             return Ok(false);
         }
+        if self.component_seen.pop_first().is_some() || self.component_ineligible.pop_first().is_some() { return Ok(false); }
         if let Some(original) = self.component_references.take() { self.component_retirement = Some(protocol::value::retirement::owned_retirement(original)); return Ok(false); }
         if let Some(close) = self.component_retirement.as_mut() {
             if !close.terminal_is_empty() { let bytes = close.next_close_byte_demand().max(MESH3D_PAGE_BYTES); close.close_step(1, bytes).map_err(|_| Mesh3dFault::Closing)?; return Ok(false); }
@@ -1071,12 +1154,49 @@ impl Mesh3dAuthority {
         }
     }
 
+    fn reserve_component_credit(&mut self, token: Mesh3dWriteToken, credit: usize) -> Result<(), Mesh3dFault> {
+        let geometry_pages = usize::from(self.writing_ref(token)?.layout.page_count);
+        let bytes = geometry_pages.checked_mul(MESH3D_PAGE_BYTES).and_then(|bytes| bytes.checked_add(credit)).ok_or(Mesh3dFault::ByteCapacity)?;
+        if bytes > MESH3D_OWNER_BYTE_CAPACITY { return Err(Mesh3dFault::ByteCapacity); }
+        let pages = bytes.div_ceil(MESH3D_PAGE_BYTES);
+        let previous = usize::from(self.slots[usize::from(token.slot)].as_ref().ok_or(Mesh3dFault::Stale)?.reserved_pages);
+        let added = pages.saturating_sub(previous);
+        if self.reserved_pages.checked_add(added).is_none_or(|pages| pages > MESH3D_AUTHORITY_PAGE_CAPACITY) { return Err(Mesh3dFault::PageCapacity); }
+        self.reserved_pages += added;
+        self.slots[usize::from(token.slot)].as_mut().ok_or(Mesh3dFault::Stale)?.reserved_pages = pages as u16;
+        self.writing(token)?.component_credit = credit;
+        Ok(())
+    }
+
+    fn move_component_references(&mut self, token: Mesh3dWriteToken, original: &mut BTreeMap<String, Vec<String>>) -> Result<(), Mesh3dFault> {
+        let owner = self.writing(token)?;
+        if owner.component_references.is_some() { return Err(Mesh3dFault::Order); }
+        owner.component_references = Some(std::mem::take(original));
+        owner.component_complete = false;
+        let result = owner.component_header_credit().and_then(|credit| self.reserve_component_credit(token, credit));
+        if let Err(fault) = result { self.writing(token)?.component_fault = Some(fault); }
+        result
+    }
+
+    fn component_admission_step(&mut self, token: Mesh3dWriteToken, maximum_items: usize, maximum_bytes: usize) -> Result<Mesh3dComponentAdmissionStep, Mesh3dFault> {
+        let owner = self.writing_ref(token)?;
+        if let Some(fault) = owner.component_fault { return Err(fault); }
+        if owner.component_complete || maximum_items == 0 || maximum_bytes == 0 { return Ok(Mesh3dComponentAdmissionStep { complete: owner.component_complete, ..Default::default() }); }
+        let bytes = owner.component_turn_byte_demand();
+        if maximum_bytes < bytes { return Ok(Mesh3dComponentAdmissionStep::default()); }
+        let (credit, number) = owner.component_turn_credit()?;
+        if let Err(fault) = self.reserve_component_credit(token, credit) { self.writing(token)?.component_fault = Some(fault); return Err(fault); }
+        Ok(self.writing(token)?.component_turn(number))
+    }
+
     fn seal(&mut self, token: Mesh3dWriteToken) -> Result<Mesh3dLease, Mesh3dFault> {
         let slot = self.slots.get_mut(usize::from(token.slot)).and_then(Option::as_mut).filter(|slot| slot.epoch == token.epoch).ok_or(Mesh3dFault::Stale)?;
         let Mesh3dSlotState::Writing(owner) = &slot.state else { return Err(Mesh3dFault::Stale) };
+        if let Some(fault) = owner.component_fault { return Err(fault); }
         if !owner.terminal_is_complete() {
             return Err(Mesh3dFault::Incomplete);
         }
+        if owner.schema.indices == 0 && owner.schema.edges == 0 && !owner.has_topological_vertex { return Err(Mesh3dFault::Schema); }
         let owner = match std::mem::replace(&mut slot.state, Mesh3dSlotState::Transition) {
             Mesh3dSlotState::Writing(owner) => owner,
             other => {
@@ -1271,11 +1391,12 @@ pub fn mesh3d_seal(token: Mesh3dWriteToken) -> Result<Mesh3dLease, Mesh3dFault> 
 
 /// 🎯️ Moves the original label table into the same mesh owner before publication.
 pub fn mesh3d_move_component_references(token: Mesh3dWriteToken, original: &mut BTreeMap<String, Vec<String>>) -> Result<(), Mesh3dFault> {
-    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
-    let owner = authority.writing(token)?;
-    if owner.component_references.is_some() { return Err(Mesh3dFault::Order); }
-    owner.component_references = Some(std::mem::take(original));
-    Ok(())
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.move_component_references(token, original)
+}
+
+/// 🧮️ Admits one original typed label or retires one scratch entry under fixed credits.
+pub fn mesh3d_component_admission_step(token: Mesh3dWriteToken, maximum_items: usize, maximum_bytes: usize) -> Result<Mesh3dComponentAdmissionStep, Mesh3dFault> {
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.component_admission_step(token, maximum_items, maximum_bytes)
 }
 
 pub fn mesh3d_abort(token: Mesh3dWriteToken) -> Result<(), Mesh3dFault> {
@@ -1301,12 +1422,12 @@ pub fn mesh3d_terminal_is_empty(lease: Mesh3dLease) -> bool {
 impl Mesh3dLease {
     /// 🔖️ Reads one original canonical label without a floating point conversion.
     pub fn component_label(self, field: Mesh3dField, group: u32) -> Result<Option<u64>, Mesh3dFault> {
-        let kind = match field { Mesh3dField::FaceIds => "face", Mesh3dField::EdgeIds => "edge", Mesh3dField::VertexIds => "vertex", _ => return Err(Mesh3dFault::Schema) };
+        let (kind, domain) = match field { Mesh3dField::FaceIds => ("face", 0u64), Mesh3dField::EdgeIds => ("edge", 1u64), Mesh3dField::VertexIds => ("vertex", 2u64), _ => return Err(Mesh3dFault::Schema) };
         let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
         let owner = authority.ready(self)?;
         let Some(label) = owner.component_references.as_ref().and_then(|map| map.get(kind)).and_then(|labels| labels.get(group as usize)) else { return Ok(None); };
-        if label.len() > 20 || !label.as_bytes().first().is_some_and(|byte| matches!(byte, b'1'..=b'9')) || !label.bytes().all(|byte| byte.is_ascii_digit()) { return Err(Mesh3dFault::Schema); }
-        label.parse().map(Some).map_err(|_| Mesh3dFault::Schema)
+        if owner.component_ineligible.contains(&((domain << 32) | u64::from(group))) { return Err(Mesh3dFault::Schema); }
+        mesh3d_component_number(label).map(Some).ok_or(Mesh3dFault::Schema)
     }
 
     pub fn generation(self) -> u64 {
@@ -2170,6 +2291,8 @@ pub fn screen_select_components(
             match granularity {
                 "vertex" if schema.vertex_ids != 0 => {
                     for vertex_index in 0..schema.vertices {
+                        let group = mesh.u32(Mesh3dField::VertexIds, vertex_index).unwrap_or(vertex_index);
+                        if group == u32::MAX { continue; }
                         let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
                         let world = instance.model.transform_point_m(vec3_new_m(point[0], point[1], point[2]));
                         let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) else {
@@ -2178,7 +2301,7 @@ pub fn screen_select_components(
                         let point = [screen[0], screen[1]];
                         let inside = marquee_contains_point(point, &local_polygon, rectangle, rect_bounds);
                         if inside {
-                            let id = mesh.u32(Mesh3dField::VertexIds, vertex_index).unwrap_or(vertex_index).to_string();
+                            let id = group.to_string();
                             selected.insert(id);
                         }
                     }
@@ -2477,21 +2600,35 @@ pub fn gumball_project_ray_onto_axis(origin: Vec3, dir: Vec3, pivot: Vec3, axis:
     Some(hit.sub_m(pivot).dot_m(axis.normalize_m()))
 }
 
+/// 🎯️ Resolves the closest pair on a forward ray and a finite segment.
 pub fn ray_segment_distance(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option<f32> {
     let ab = b.sub_m(a);
     let len_sq = ab.dot_m(ab);
-    if len_sq < 1e-8 {
+    let dir_sq = dir.dot_m(dir);
+    if len_sq <= 0.0 || dir_sq <= 0.0 || !len_sq.is_finite() || !dir_sq.is_finite() {
         return None;
     }
-    let t = origin.sub_m(a).dot_m(ab) / len_sq;
-    let t_clamped = t.clamp(0.0, 1.0);
-    let closest = a.add_m(ab.scale_m(t_clamped));
-    let w = origin.sub_m(closest);
-    let b_val = dir.dot_m(w);
-    let c = w.dot_m(w);
-    let denom = 1.0 - b_val * b_val;
-    let dist_sq = if denom.abs() < 1e-6 { c } else { c - b_val * b_val / denom };
-    Some(dist_sq.max(0.0).sqrt())
+    let offset = origin.sub_m(a);
+    let along_ray = offset.dot_m(dir);
+    let along_segment = offset.dot_m(ab);
+    let directions = dir.dot_m(ab);
+    let squared = |ray: f32, segment: f32| {
+        let gap = offset.add_m(dir.scale_m(ray)).sub_m(ab.scale_m(segment));
+        gap.dot_m(gap)
+    };
+    let mut distance = squared((-along_ray / dir_sq).max(0.0), 0.0)
+        .min(squared(((directions - along_ray) / dir_sq).max(0.0), 1.0))
+        .min(squared(0.0, (along_segment / len_sq).clamp(0.0, 1.0)));
+    let cross = dir.cross_m(ab);
+    let denominator = cross.dot_m(cross);
+    if denominator > 0.0 {
+        let ray = (directions * along_segment - len_sq * along_ray) / denominator;
+        let segment = (dir_sq * along_segment - directions * along_ray) / denominator;
+        if ray >= 0.0 && (0.0..=1.0).contains(&segment) {
+            distance = distance.min(squared(ray, segment));
+        }
+    }
+    Some(distance.sqrt())
 }
 
 pub fn quat_from_basis(x: Vec3, y: Vec3, z: Vec3) -> [f32; 4] {

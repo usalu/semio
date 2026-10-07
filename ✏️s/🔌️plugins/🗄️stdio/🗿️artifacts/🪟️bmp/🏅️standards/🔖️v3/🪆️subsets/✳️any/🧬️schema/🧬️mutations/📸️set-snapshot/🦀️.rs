@@ -5,7 +5,7 @@ use crate::schema::mutations::BmpMutation;
 use crate::BmpSnapshot;
 use protocol::{DiffAlgebra, Mutation};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
     pub snapshot: BmpSnapshot,

@@ -294,7 +294,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
     let law = &fixture["restartAuthority"];
     let items = law["closeItems"].as_u64().unwrap() as usize;
     let bytes = law["closeBytes"].as_u64().unwrap() as usize;
-    let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await).await;
+    let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let outcome: Result<(u64, u64, u64, u64, u64, i32), Fault> = async {
         app.bind_instance_id(meta.instance_id).await;
         let contracts = app.tool_public_contracts().await;

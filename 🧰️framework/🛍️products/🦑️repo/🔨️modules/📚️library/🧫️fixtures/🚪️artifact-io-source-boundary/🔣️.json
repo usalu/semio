@@ -45,6 +45,18 @@
   ],
   "typescript": [
     {
+      "source": "export function parseCameraJson(value: unknown): unknown{return value} export const parseJsonValue=(value:unknown):unknown=>value; export type CameraJson={kind:'camera'};",
+      "forbidden": []
+    },
+    {
+      "source": "export function intrinsicFromJson(value:unknown):unknown{return value} export function valueToJsonValue(value:unknown):unknown{return value} export const encodeMeshJson=(value:unknown):string=>JSON.stringify(value);",
+      "forbidden": [
+        "encodeMeshJson",
+        "intrinsicFromJson",
+        "valueToJsonValue"
+      ]
+    },
+    {
       "source": "export function valueToJsonText(value: unknown): string{return JSON.stringify(value)}",
       "forbidden": [
         "valueToJsonText"
@@ -75,6 +87,13 @@
       "source": "export {codec as valueFromNativeJson} from './codec';",
       "forbidden": [
         "valueFromNativeJson"
+      ]
+    },
+    {
+      "source": "export function renderVizTikzPlan(plan:unknown):string{return \"\"} export function inferVizPresetTikz(value:unknown):string{return \"\"}",
+      "forbidden": [
+        "inferVizPresetTikz",
+        "renderVizTikzPlan"
       ]
     }
   ]

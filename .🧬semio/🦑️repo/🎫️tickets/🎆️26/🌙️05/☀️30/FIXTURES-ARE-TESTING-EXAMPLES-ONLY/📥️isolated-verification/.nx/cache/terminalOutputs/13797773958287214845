@@ -1,0 +1,48 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts" native
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[DEBUG] Embedded8 native build  /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/embedded-current-native/exact-cargo-laws-wQxlRr/00
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+semio conversion composition: targets=44
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 5 queued owner(s): 5869bf90-edd1-437d-b6f8-f08ea2836d47, 258b34e6-0df4-4bc6-87dc-e281c42665be, 53025790-14ea-4a08-8b90-72f550134186, 7bfdfa90-897f-433c-995a-0956944acaca, 4186cd86-8941-462b-82e7-2933503c1cdb
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 3 queued owner(s): 53025790-14ea-4a08-8b90-72f550134186, 7bfdfa90-897f-433c-995a-0956944acaca, 4186cd86-8941-462b-82e7-2933503c1cdb
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 1 queued owner(s): 4186cd86-8941-462b-82e7-2933503c1cdb
+[cargo-preparation] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/Cargo.toml composition prepare
+[DEBUG] Embedded8 native list  /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/embedded-current-native/exact-cargo-laws-wQxlRr/00
+[0m[1m187 |[0m       [0m[35mconst[0m groupRoot = join(runRoot, String(index)[0m[3m[1m.padStart[0m([0m[33m2[0m, [0m[32m"0"[0m))[0m[2m;[0m
+[0m[1m188 |[0m       mkdirSync(groupRoot)[0m[2m;[0m
+[0m[1m189 |[0m       [0m[35mlet[0m stage: ExactCargoLawStage = [0m[32m"build"[0m[0m[2m;[0m
+[0m[1m190 |[0m       [0m[35mlet[0m last: OwnedProcessCaptureResult = { status: [0m[33mnull[0m, signal: [0m[33mnull[0m, stdout: [0m[32m""[0m, stderr: [0m[32m""[0m }[0m[2m;[0m
+[0m[1m191 |[0m       [0m[35mconst[0m fail = (detail: [0m[34mstring[0m): [0m[34mnever[0m => {
+[0m[1m192 |[0m         [0m[35mthrow[0m [0m[35mnew[0m [0m[1mExactCargoLawError[0m(stage, last.status, last.signal, groupRoot, detail)[0m[2m;[0m
+                    [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mexact Cargo law list failed: status=0 signal=none artifacts=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/embedded-current-native/exact-cargo-laws-wQxlRr/00; expected exactly one retained_profiles_survive_every_repeated_extrusion_without_topology_aliases, selected=0[0m
+      stage[0m[2m:[0m [0m[32m"list"[0m[0m[2m,[0m
+     status[0m[2m:[0m [0m[33m0[0m[0m[2m,[0m
+     signal[0m[2m:[0m [0m[33mnull[0m[0m[2m,[0m
+ artifactDir[0m[2m:[0m [0m[32m"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/embedded-current-native/exact-cargo-laws-wQxlRr/00"[0m[0m[2m,[0m
+
+[0m      [2mat [0m[0m[1m[3mfail[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts[0m[2m:[0m[33m192[0m[2m:[33m15[0m[2m)[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts[0m[2m:[0m[33m274[0m[2m:[33m35[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mmap[0m[2m ([0m[0m[36m[0m[33m1[0m[2m:[33m11[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunExactCargoLaws[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts[0m[2m:[0m[33m272[0m[2m:[33m31[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts" native" exited with non-zero status code

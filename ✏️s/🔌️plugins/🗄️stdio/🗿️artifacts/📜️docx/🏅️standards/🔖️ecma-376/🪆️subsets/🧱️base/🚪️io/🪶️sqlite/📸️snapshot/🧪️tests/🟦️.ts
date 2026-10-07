@@ -26,8 +26,8 @@ const input={...fixture,xmlParts:fixture.xmlParts.map(part=>({...part,document:p
 test("DOCX typed profile path ownership is bounded and interior cancellable",async()=>{
  const first=profiles.cases[0]!;const snapshot=profileSnapshot(first.document,first.relationshipBase);const path="x".repeat(profiles.largeTextCharacters);snapshot.opc.relationships[""]![0]!.target=path;snapshot.xmlParts[0]!.path=path;
  const controller=new AbortController();let reached=false;
- await expect(validateDocxSnapshotProfile(snapshot,"strict",{signal:controller.signal,onProgress(event){if(event.total===path.length&&event.completed>=profiles.cancelAfter&&event.completed<event.total){reached=true;controller.abort();}}})).rejects.toThrow("cancelled");expect(reached).toBe(true);
- await expect(validateDocxSnapshotProfile(snapshot,"strict",{maxValueBytes:profiles.smallValueBudget})).rejects.toThrow("limit");
+ await expect(validateDocxSnapshotProfile(snapshot,"strict",{signal:controller.signal,onProgress(event){if(event.total===path.length&&event.completed>=profiles.cancelAfter&&event.completed<event.total){reached=true;controller.abort();}}})).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);
+ await expect(validateDocxSnapshotProfile(snapshot,"strict",{maximumBytes:profiles.smallValueBudget})).rejects.toThrow("limit");
 });
 test("DOCX all owned OPC/XML fields expose independent relational identities",async()=>{
  const ajv=new Ajv({strict:false}).addSchema(xmlSchema);const admitted=ajv.validate(schema,fixture);expect(admitted,JSON.stringify(ajv.errors)).toBe(true);expect(DOCX_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../🗄️.sql",import.meta.url)).text());

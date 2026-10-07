@@ -1,28 +1,28 @@
 //! 💾️ Generic binary framing and direct-owner registry for the visible PDF/VT mutation aggregate.
 
-use super::PdfVtMutation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation;
 use protocol::OpBinary;
 
 //#region 🧾️DerivedRegistry
 pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[
-    ("InsertEncryptionDictionary", "insertEncryptionDictionary", super::insert_encryption_dictionary::binary::BINARY_TAG),
-    ("RemoveEncryptionDictionary", "removeEncryptionDictionary", super::remove_encryption_dictionary::binary::BINARY_TAG),
-    ("SetOutputIntent", "setOutputIntent", super::set_output_intent::binary::BINARY_TAG),
-    ("RemoveOutputIntent", "removeOutputIntent", super::remove_output_intent::binary::BINARY_TAG),
-    ("SetTrimBox", "setTrimBox", super::set_trim_box::binary::BINARY_TAG),
-    ("RemoveTrimBox", "removeTrimBox", super::remove_trim_box::binary::BINARY_TAG),
-    ("EmbedFontFile", "embedFontFile", super::embed_font_file::binary::BINARY_TAG),
-    ("RemoveFontFile", "removeFontFile", super::remove_font_file::binary::BINARY_TAG),
-    ("InsertJavascriptAction", "insertJavascriptAction", super::insert_javascript_action::binary::BINARY_TAG),
-    ("RemoveJavascriptAction", "removeJavascriptAction", super::remove_javascript_action::binary::BINARY_TAG),
-    ("InsertLaunchAction", "insertLaunchAction", super::insert_launch_action::binary::BINARY_TAG),
-    ("RemoveLaunchAction", "removeLaunchAction", super::remove_launch_action::binary::BINARY_TAG),
-    ("InsertMediaAnnotation", "insertMediaAnnotation", super::insert_media_annotation::binary::BINARY_TAG),
-    ("RemoveMediaAnnotation", "removeMediaAnnotation", super::remove_media_annotation::binary::BINARY_TAG),
-    ("SetDpartRoot", "setDpartRoot", super::set_dpart_root::binary::BINARY_TAG),
-    ("RemoveDpartRoot", "removeDpartRoot", super::remove_dpart_root::binary::BINARY_TAG),
-    ("SetDpartMetadata", "setDpartMetadata", super::set_dpart_metadata::binary::BINARY_TAG),
-    ("RemoveDpartMetadata", "removeDpartMetadata", super::remove_dpart_metadata::binary::BINARY_TAG),
+    ("InsertEncryptionDictionary", "insertEncryptionDictionary", self::insert_encryption_dictionary::BINARY_TAG),
+    ("RemoveEncryptionDictionary", "removeEncryptionDictionary", self::remove_encryption_dictionary::BINARY_TAG),
+    ("SetOutputIntent", "setOutputIntent", self::set_output_intent::BINARY_TAG),
+    ("RemoveOutputIntent", "removeOutputIntent", self::remove_output_intent::BINARY_TAG),
+    ("SetTrimBox", "setTrimBox", self::set_trim_box::BINARY_TAG),
+    ("RemoveTrimBox", "removeTrimBox", self::remove_trim_box::BINARY_TAG),
+    ("EmbedFontFile", "embedFontFile", self::embed_font_file::BINARY_TAG),
+    ("RemoveFontFile", "removeFontFile", self::remove_font_file::BINARY_TAG),
+    ("InsertJavascriptAction", "insertJavascriptAction", self::insert_javascript_action::BINARY_TAG),
+    ("RemoveJavascriptAction", "removeJavascriptAction", self::remove_javascript_action::BINARY_TAG),
+    ("InsertLaunchAction", "insertLaunchAction", self::insert_launch_action::BINARY_TAG),
+    ("RemoveLaunchAction", "removeLaunchAction", self::remove_launch_action::BINARY_TAG),
+    ("InsertMediaAnnotation", "insertMediaAnnotation", self::insert_media_annotation::BINARY_TAG),
+    ("RemoveMediaAnnotation", "removeMediaAnnotation", self::remove_media_annotation::BINARY_TAG),
+    ("SetDpartRoot", "setDpartRoot", self::set_dpart_root::BINARY_TAG),
+    ("RemoveDpartRoot", "removeDpartRoot", self::remove_dpart_root::BINARY_TAG),
+    ("SetDpartMetadata", "setDpartMetadata", self::set_dpart_metadata::BINARY_TAG),
+    ("RemoveDpartMetadata", "removeDpartMetadata", self::remove_dpart_metadata::BINARY_TAG),
 ];
 //#endregion 🧾️DerivedRegistry
 

@@ -18,7 +18,7 @@ export function admitVizChartSpecification(chart: VizAuthoredChartSpecification)
   return { chart: { ...chart, language: chart.language }, diagnostics };
 }
 
-/** 🪪️ Admits canonical wire output against every owned inference result variant. */
+/** 🪪️ Admits owned semantic results against the inference contract. */
 export function validateVizChartInference(value: unknown): readonly VizChartDiagnostic[] {
   try { return validateJsonSchemaSubset(resultDocument, value).map(message => ({ code: "print.chart.inference-schema", path: "inference", message })); }
   catch (error) { return [{ code: "print.chart.inference-schema", path: "inference", message: error instanceof Error ? error.message : String(error) }]; }

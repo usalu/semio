@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-06T11:44:58.433192+00:00",
+  "state": "Actual original registered owning PDF Source full13files54/54; broader3project run still active",
+  "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-norm-source.log",
+  "summary": [
+    "@semio-tech/stdio-pdf-rs:  54 pass",
+    "@semio-tech/stdio-pdf-rs:  0 fail",
+    "@semio-tech/stdio-pdf-rs:  1814 expect() calls",
+    "@semio-tech/stdio-pdf-rs: Ran 54 tests across 13 files. [35.87s]"
+  ],
+  "nativeInference": false
+}

@@ -10,7 +10,7 @@ mod tests {
         let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let composed = PdfHComposerComposition::compose(&sources).expect("PDF/H never hard-gates");
-        assert!(composed.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::h::schema::CODE_INFO_TITLE_OR_AUTHOR));
+        assert!(composed.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::h::io::CODE_INFO_TITLE_OR_AUTHOR));
     }
 
     #[semio_framework_async_macros::async_test]

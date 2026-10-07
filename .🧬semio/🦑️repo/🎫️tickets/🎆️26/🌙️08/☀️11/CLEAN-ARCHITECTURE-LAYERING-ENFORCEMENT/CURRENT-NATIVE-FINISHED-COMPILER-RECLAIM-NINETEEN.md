@@ -1,0 +1,7 @@
+# Native Finished Compiler Reclaim Nineteen
+
+During the shared ENOSPC incident the parent explicitly authorized reclaiming only finished own compiler outputs after retaining captures, terminals and hashes. The clean skill was read; its broad default ticket/output/process cleanup is overridden by that narrower authorized scope. No broad clean or process killing was performed.
+
+The registered Bun/Nx helper19 whitelists only `target-ui-board-owned-keys-11` and `target-ui-board-canonical-document-14`. It protects every executable, symbolic and special node, and explicitly protects the actual Nextest test binary paths. Both original binaries, Nextest metadata, terminal11/14 and actual logs are hashed before and after. Five independent Ajv/own predicate controls verify the deletion decision. Every selected non-executable regular file has a durable path/device/inode/size/mtime/hash receipt before deletion and is rechecked immediately before unlinking.
+
+The actual command exited0:4380 files and996701747 bytes were reclaimed;9061433344 available bytes were then observed. Executable identities remain exact. Source, fixtures, audit/capture files, live Board18 outputs and other agents' stores were untouched. The complete selection and terminal are `🗑️generated/native-continuation/native-finished-compiler-reclaim-19.json.selection.json` and `native-finished-compiler-reclaim-19.json`. Creation/inverse and GUI registration are journals19/130.

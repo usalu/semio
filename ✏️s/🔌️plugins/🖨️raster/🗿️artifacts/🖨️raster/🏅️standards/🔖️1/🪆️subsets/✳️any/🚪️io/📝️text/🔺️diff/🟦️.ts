@@ -51,3 +51,17 @@ export const rasterRasterDiffTextGuardConstant = <T extends string | number | bo
 export function parseRasterDiffText(value: unknown, at = "$"): RasterDiffText {
   return rasterRasterDiffTextGuardObject(value, `${at}`);
 }
+
+import { parseRasterLayerPatch, type RasterLayerPatch } from "./../../../🧬️schema/🔺️diff/🟦️.ts";
+import { rasterTransformFromJson, rasterLayerMaskFromJson, rasterRasterSnapshotTextGuardObject } from "./../📸️snapshot/🟦️.ts";
+/** 📐️ Decodes the numeric fields of a physical JSON layer patch. */
+export function rasterLayerPatchFromJson(value: unknown, at = "$"): RasterLayerPatch {
+  const row = rasterRasterSnapshotTextGuardObject(value, at);
+  const bound = {...row};
+  if (row.transform != null) bound.transform = rasterTransformFromJson(row.transform, `${at}.transform`);
+  if (row.maskContent != null) {
+    const content = rasterRasterSnapshotTextGuardObject(row.maskContent, `${at}.maskContent`);
+    bound.maskContent = {...content, ...(content.mask == null ? {} : {mask: rasterLayerMaskFromJson(content.mask, `${at}.maskContent.mask`)})};
+  }
+  return parseRasterLayerPatch(bound, at);
+}

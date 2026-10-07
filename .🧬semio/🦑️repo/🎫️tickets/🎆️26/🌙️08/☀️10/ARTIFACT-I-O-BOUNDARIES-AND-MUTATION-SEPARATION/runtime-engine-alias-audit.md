@@ -1,0 +1,101 @@
+# Schema Engine Alias Inventory
+
+Literal import inventory for actual ownership review; comments/test-only imports can appear and must be inspected before classification.
+
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - `use neural_engine::{Atom, Value};`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_s_plugin_wfc_engine as wfc;`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_s_plugin_wfc_engine as engine;`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_s_plugin_wfc_engine as engine;`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_s_plugin_wfc_engine as engine;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - `use crate::standards::v_ac1024::engine as dwg_engine;`
+  - `use dwg_engine::DwgGeometry::*;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🧬️mutations/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+  - `use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🧬️mutations/🪪set-product-identity/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ProductIdentity;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🧬️mutations/🏷️set-file-schema/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🧬️mutations/🪜set-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🧬️mutations/⬇️demote-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🧬️mutations/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+  - `use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🧬️mutations/🪪set-product-identity/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ProductIdentity;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🧬️mutations/🏷️set-file-schema/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🧬️mutations/🪜set-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🧬️mutations/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+  - `use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🧬️mutations/🪪set-product-identity/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ProductIdentity;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🧬️mutations/🏷️set-file-schema/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🧬️mutations/🪜set-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🧬️mutations/⬇️demote-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🧬️mutations/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+  - `use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🧬️mutations/🪪set-product-identity/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ProductIdentity;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🧬️mutations/🏷️set-file-schema/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🧬️mutations/🪜set-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🧬️mutations/⬇️demote-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🧬️mutations/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+  - `use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🧬️mutations/🪪set-product-identity/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ProductIdentity;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🧬️mutations/🏷️set-file-schema/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🧬️mutations/🪜set-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🧬️mutations/⬇️demote-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🧬️mutations/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🧬️mutations/🗑️remove-shape-representation/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🧬️mutations/🪪set-product-identity/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+  - `use crate::standards::v_ap214::engine::ladder::ProductIdentity;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🧬️mutations/🏷️set-file-schema/🦀️.rs`
+  - `use crate::standards::v_ap214::engine::ladder::ClassEdit;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs`
+  - `pub use crate::engine::brep::{BrepFace, BrepMesh, BrepVertex};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_framework_3d::brep::engine::contract::MeshTransfer;`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, Vec3};`
+  - `use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;`
+  - `use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - `use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle};`

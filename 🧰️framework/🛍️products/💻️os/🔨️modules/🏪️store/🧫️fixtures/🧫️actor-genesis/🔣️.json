@@ -1,0 +1,77 @@
+{
+  "schema": "artifact-actor-stored-genesis-law/v1",
+  "actors": {
+    "opened": "actor:alice",
+    "other": "actor:bob",
+    "explicitAuthor": "actor:carol",
+    "bareAuthor": "actor:alice",
+    "transitionAuthor": "actor:alice",
+    "reopened": "actor:alice",
+    "actorlessHistoryRefused": true
+  },
+  "packs": [
+    {
+      "hex": "7b226e223a307d",
+      "decoded": {
+        "n": 0
+      }
+    },
+    {
+      "hex": "7b226e223a20307d",
+      "decoded": {
+        "n": 0
+      }
+    }
+  ],
+  "laws": [
+    "birth-encodes-once",
+    "stored-load-never-encodes",
+    "stored-bytes-persist-verbatim",
+    "same-bytes-same-identity-across-encoders",
+    "different-bytes-different-identity",
+    "decoded-genesis-preview-alias",
+    "actor-required-at-construction",
+    "explicit-mutation-author-preserved",
+    "bare-mutation-uses-opened-actor",
+    "transition-uses-opened-actor",
+    "reopen-keeps-opened-actor",
+    "actorless-history-refused"
+  ],
+  "retainedAdmissions": [
+    {
+      "editAuthor": null,
+      "operationAuthor": "actor:alice",
+      "accepted": false
+    },
+    {
+      "editAuthor": "actor:alice",
+      "operationAuthor": null,
+      "accepted": false
+    },
+    {
+      "editAuthor": "",
+      "operationAuthor": "actor:alice",
+      "accepted": false
+    },
+    {
+      "editAuthor": "actor:alice",
+      "operationAuthor": "",
+      "accepted": false
+    },
+    {
+      "editAuthor": "  ",
+      "operationAuthor": "actor:alice",
+      "accepted": false
+    },
+    {
+      "editAuthor": "actor:alice",
+      "operationAuthor": "  ",
+      "accepted": false
+    },
+    {
+      "editAuthor": "actor:bob",
+      "operationAuthor": "actor:carol",
+      "accepted": true
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "owner": "json",
+      "fields": [
+        {
+          "id": 0,
+          "key": "nodes",
+          "optional": false,
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "owner": "morph-target",
+      "fields": [
+        {
+          "id": 0,
+          "key": "attributes",
+          "optional": false,
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "owner": "primitive",
+      "fields": [
+        {
+          "id": 0,
+          "key": "attributes",
+          "optional": false,
+          "kind": "list"
+        },
+        {
+          "id": 1,
+          "key": "indices",
+          "optional": true,
+          "kind": "uint"
+        },
+        {
+          "id": 2,
+          "key": "material",
+          "optional": true,
+          "kind": "uint"
+        },
+        {
+          "id": 3,
+          "key": "mode",
+          "optional": true,
+          "kind": "uint"
+        },
+        {
+          "id": 4,
+          "key": "targets",
+          "optional": false,
+          "kind": "list"
+        },
+        {
+          "id": 5,
+          "key": "extensions",
+          "optional": true,
+          "kind": "record"
+        },
+        {
+          "id": 6,
+          "key": "extras",
+          "optional": true,
+          "kind": "record"
+        }
+      ]
+    },
+    {
+      "owner": "camera-projection",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "kind": "enum"
+        },
+        {
+          "id": 1,
+          "key": "perspective",
+          "optional": true,
+          "kind": "record"
+        },
+        {
+          "id": 2,
+          "key": "orthographic",
+          "optional": true,
+          "kind": "record"
+        }
+      ]
+    },
+    {
+      "owner": "image",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "kind": "enum"
+        },
+        {
+          "id": 1,
+          "key": "uri",
+          "optional": true,
+          "kind": "text"
+        },
+        {
+          "id": 2,
+          "key": "mime-type",
+          "optional": true,
+          "kind": "text"
+        },
+        {
+          "id": 3,
+          "key": "buffer-view",
+          "optional": true,
+          "kind": "uint"
+        },
+        {
+          "id": 4,
+          "key": "name",
+          "optional": true,
+          "kind": "text"
+        },
+        {
+          "id": 5,
+          "key": "extensions",
+          "optional": true,
+          "kind": "record"
+        },
+        {
+          "id": 6,
+          "key": "extras",
+          "optional": true,
+          "kind": "record"
+        }
+      ]
+    },
+    {
+      "owner": "texture",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "kind": "enum"
+        },
+        {
+          "id": 1,
+          "key": "sampler",
+          "optional": true,
+          "kind": "uint"
+        },
+        {
+          "id": 2,
+          "key": "source",
+          "optional": true,
+          "kind": "uint"
+        },
+        {
+          "id": 3,
+          "key": "name",
+          "optional": true,
+          "kind": "text"
+        },
+        {
+          "id": 4,
+          "key": "extensions",
+          "optional": true,
+          "kind": "record"
+        },
+        {
+          "id": 5,
+          "key": "extras",
+          "optional": true,
+          "kind": "record"
+        }
+      ]
+    }
+  ]
+}

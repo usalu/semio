@@ -6,7 +6,11 @@ start snapshot
 framing record
 use semio.pack
 
+# The owned snapshot is a first-party Record in the framework Pack document.
+# Record slot 1 is the canonical schema; slot 2 is the named image block.
+# Primitive tags, blocks, lists, optional slots and tagged variants use semio.pack.
+# Image fields and all nested sums are declared by the canonical snapshot schema.
 record snapshot {
   schema utf8
-  bytes bytes
+  image Ref(image)
 }

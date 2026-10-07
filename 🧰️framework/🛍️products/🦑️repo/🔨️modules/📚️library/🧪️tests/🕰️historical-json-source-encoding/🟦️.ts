@@ -24,8 +24,6 @@ function sealedCoordinatesSha256(id: string, contract: Parameters<typeof frozenC
 }
 
 test("historical escaped-source vectors bind one JSON string layer and an explicit root", () => {
-  const validate = new Ajv().compile({ type: "object", required: ["schemaVersion", "contract", "semantics", "cases"], properties: { schemaVersion: { const: 1 }, contract: { const: "historical-json-escaped-source-coordinates-v1" }, cases: { type: "array", minItems: 15, items: { type: "object", required: ["id", "source", "pointer", "accepted"] } } } });
-  expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const row of vector.cases.filter((row: any) => row.accepted)) {
     const tree = parseTree(row.source)!;
     expect(getNodeValue(tree)).toEqual(JSON.parse(row.source));

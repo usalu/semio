@@ -1,0 +1,69 @@
+{
+  "schema": "retained-initialization-genesis/v1",
+  "cases": [
+    {
+      "name": "empty",
+      "events": [
+        "BIND",
+        "FINISH"
+      ],
+      "states": [
+        "aliased",
+        "complete"
+      ]
+    },
+    {
+      "name": "withdrawn",
+      "events": [
+        "BIND",
+        "WITHDRAWN",
+        "FINISH"
+      ],
+      "states": [
+        "aliased",
+        "aliased",
+        "complete"
+      ]
+    },
+    {
+      "name": "first-mutation",
+      "events": [
+        "BIND",
+        "MUTATE",
+        "COPIED",
+        "RETIRED",
+        "FINISH"
+      ],
+      "states": [
+        "aliased",
+        "copying",
+        "retiring",
+        "owned",
+        "complete"
+      ]
+    },
+    {
+      "name": "cancel-copy",
+      "events": [
+        "BIND",
+        "MUTATE",
+        "CANCEL"
+      ],
+      "states": [
+        "aliased",
+        "copying",
+        "cancelled"
+      ]
+    }
+  ],
+  "domains": [
+    "GisMap",
+    "Writer",
+    "Jack",
+    "Raster",
+    "Generation2d",
+    "Generation3d",
+    "Process3d",
+    "Drawing"
+  ]
+}

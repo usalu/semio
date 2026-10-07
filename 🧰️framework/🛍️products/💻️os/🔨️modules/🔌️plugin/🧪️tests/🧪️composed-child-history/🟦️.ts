@@ -1,12 +1,10 @@
 /** 🧩️ TypeScript twin of the plugin runtime's composed-child history backfill (`member_backfill` in
  * `⏪️time-travel/🦀️.rs`, design §12), checked against the language-agnostic fixture
  * `🧫️fixtures/🧫️composed-child-history/🔣️.json` that `🧪️tests/🧪️composed-child-history/🦀️.rs` runs through the Rust law.
- * Independent where it counts: Ajv (2020-12) validates the fixture against its schema, and every case is derived here from
- * the fixture's facts alone, never from a Rust projection. */
+ * Independent where it counts: every case is derived here from the fixture's facts alone, never from a Rust projection. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
 
 type Label = Readonly<{ en: string; de: string }>;
 type History = Readonly<{ store: string; editId: string; transaction: string | null; at: number; startedAt: string; opCount: number; opLines: readonly string[]; firstLabel?: Label }>;
@@ -29,6 +27,10 @@ function rowLabel(history: History): Label {
 
 /** 🧾️ The backfill of `histories`: unlogged edits in moment order (ties by edit id); an edit whose transaction also landed a parent edit joins that parent's row, an edit of a transaction already grouped joins that group, every other edit opens a row of its own. */
 export function memberBackfill(histories: readonly History[], logged: readonly string[], parentTransactions: Readonly<Record<string, string>>): Backfill {
+  for (const history of histories) {
+    assert.match(history.store, /^(?:[^/]+\/[^/]+)(?:\/[^/]+\/[^/]+)*$/u, "a member store is `<slot>/<childId>`");
+    if (history.transaction !== null) assert.match(history.transaction, /^tx-[0-9a-f]{16}$/u, "a transaction is its minted `tx-<hex16>` id");
+  }
   const unlogged = histories.filter((history) => !logged.includes(history.editId)).sort((a, b) => a.at - b.at || (a.editId < b.editId ? -1 : a.editId > b.editId ? 1 : 0));
   const attached: Record<string, string[]> = {};
   const groups: { at: number; transaction: string | null; editIds: string[]; label: Label; startedAt: string }[] = [];
@@ -48,15 +50,12 @@ export function memberBackfill(histories: readonly History[], logged: readonly s
   return { attached, groups };
 }
 
-/** ⚖️ Validates the fixture, rejects hostile rows and derives every case through the twin; answers the case count. */
+/** ⚖️ Rejects hostile domain records and derives every case through the twin; answers the case count. */
 export function composedChildHistoryOracle(repoRoot: string): number {
   const fixture: Fixture = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🧬️schema/🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
   const first = fixture.cases[0]!;
-  assert.equal(validate({ ...fixture, cases: [{ ...first, histories: [{ ...first.histories[0]!, store: "content" }] }] }), false, "a member store is `<slot>/<childId>`");
-  assert.equal(validate({ ...fixture, cases: [{ ...first, histories: [{ ...first.histories[0]!, transaction: "nodeGraphEdit" }] }] }), false, "a transaction is its minted `tx-<hex16>` id");
+  assert.throws(() => memberBackfill([{ ...first.histories[0]!, store: "content" }], [], {}), /member store/);
+  assert.throws(() => memberBackfill([{ ...first.histories[0]!, transaction: "nodeGraphEdit" }], [], {}), /minted/);
   for (const testCase of fixture.cases) assert.deepEqual(memberBackfill(testCase.histories, testCase.logged, testCase.parentTransactions), testCase.expected, testCase.id);
   return fixture.cases.length;
 }

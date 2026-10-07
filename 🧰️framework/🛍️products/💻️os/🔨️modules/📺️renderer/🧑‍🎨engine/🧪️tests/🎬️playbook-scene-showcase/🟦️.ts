@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020.js";
 import userEvent from "@testing-library/user-event";
 import { createElement } from "react";
 import { render } from "@semio-tech/ui-react/test";
@@ -25,12 +24,9 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const taxonomy = "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder";
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, taxonomy, "🧫️fixtures/🎬️scene-showcase/🔣️.json"), "utf8")) as { readonly windows: readonly WindowFixture[]; readonly files: FilesFixture };
-const schema = JSON.parse(readFileSync(resolve(repoRoot, taxonomy, "🧬️schema/🎬️scene-showcase/🔣️.json"), "utf8"));
 
 describe("registered Playbook scene showcase", () => {
-  it("validates the authored route corpus with the independent JSON Schema oracle", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  it("projects the authored routes through the actual scene builder", () => {
     expect(fixture.windows.map(({ surfaceKind }) => surfaceKind)).toEqual(["block-list", "table", "diff-view", "event-feed", "text-editor", "virtual-file-system"]);
     expect(new Set(fixture.windows.map(({ windowId }) => windowId)).size).toBe(fixture.windows.length);
     expect(fixture.files.rows.every((row) => !("navigateUri" in row))).toBe(true);

@@ -1,0 +1,3 @@
+> bun ./📜️script.ts test-owner-command "🧰️framework/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts" prepare
+
+Warning: command "bun ./📜️script.ts test-owner-command "🧰️framework/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts" prepare" exited with non-zero status code

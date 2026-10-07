@@ -3222,3 +3222,48 @@ fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
     let expected = sequence[2]["heightBeforeLayout"].as_f64().unwrap() as f32;
     assert!(before_layout.is_none_or(|height| (height - expected).abs() < 0.02), "C has no layout; A's {presented} may be reused, never discarded B's {discarded}: {before_layout:?}");
 }
+
+#[test]
+fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
+    for (index, law) in corpus["cases"].as_array().unwrap().iter().enumerate() {
+        let window = format!("retained-draft-{index}");
+        let records = serde_json::json!([
+            {"id":0,"key":"draft/root","component":{"type":"container"},"layout":{"kind":"stack","axis":"vertical","gap":"none","padding":{"all":"none"},"align":"stretch","justify":"start","grow":true,"wrap":false},"style":{},"activity":"idle","accessibility":{},"children":[1]},
+            {"id":1,"key":"draft/input","component":{"type":"input","kind":law["kind"],"value":law["base"],"commit":"blur"},"layout":{"kind":"leaf","width":"fill","height":"hug"},"style":{},"activity":"idle","accessibility":{"label":"Draft input"},"bindings":[{"trigger":"commit","action":{"scope":"fixture","name":"setValue","version":1}}]}
+        ]);
+        let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation:1, surface:SurfaceId::try_from(window.as_str()).unwrap(), revision:UiRevision(1), root:UiNodeId(0), layout_epoch:1, node_count:2 }).unwrap();
+        for record in records.as_array().unwrap() { document.try_upsert_record(serde_json::from_value(record.clone()).unwrap()).unwrap(); }
+        let mut ui = Ui::new(crate::wgpu::Locale::En);
+        assert!(ui.publish_document(&window, document));
+        drive_scene_lifetime_reconcile(&mut ui, &window, 1);
+        acknowledge_scene_lifetime_candidate(&mut ui, &window, index as u64 + 1);
+        let key = |name:&str, ctrl:bool| UiEvent::KeyDown { key:name.into(), modifiers:crate::wgpu::events::EventModifiers { ctrl, ..Default::default() } };
+        ui.dispatch_event(&window, key("Tab",false));
+        ui.dispatch_event(&window, key("a",true));
+        ui.dispatch_event(&window, UiEvent::TextInput { text:law["submitted"].as_str().unwrap().into() });
+        let commands = ui.dispatch_event(&window, key("Enter",law["kind"] == "longText"));
+        let intent = commands.iter().find_map(|command| match command { UiCommand::App { intent, .. } => Some(intent), _ => None }).unwrap();
+        let submitted = ui.retained_input_draft(&window,intent).unwrap();
+        if law["draft"] != law["submitted"] {
+            ui.dispatch_event(&window,key("a",true));
+            ui.dispatch_event(&window,UiEvent::TextInput { text:law["draft"].as_str().unwrap().into() });
+        }
+        drive_scene_lifetime_reconcile(&mut ui, &window, 1);
+        let owned = ui.windows.get_mut(&window).unwrap();
+        let root = owned.tree.root.unwrap();
+        for flag in [NodeFlags::DIRTY_PAINT, NodeFlags::DIRTY_LAYOUT, NodeFlags::SUBTREE_DIRTY] { owned.tree.node_mut(root).unwrap().flags.set(flag, false); }
+        assert!(!ui.needs_frame());
+        if law["cancelled"] != true && law["disposition"] == "discard" {
+            let restored = ui.discard_retained_input_draft(&window,&submitted);
+            assert_eq!(restored,law["draft"] == law["submitted"]);
+            assert_eq!(ui.needs_frame(),restored,"a discarded focused input schedules its next painted frame");
+            if restored {
+                drive_scene_lifetime_reconcile(&mut ui, &window, 1);
+                acknowledge_scene_lifetime_candidate(&mut ui, &window, index as u64 + 101);
+            }
+        }
+        let visible = crate::wgpu::accessibility::accessibility_projection(ui.tree(&window).unwrap()).into_iter().find(|node|node.key == "draft/input").unwrap().value_text.unwrap();
+        assert_eq!(visible,law["expected"].as_str().unwrap(),"{}",law["name"]);
+    }
+}

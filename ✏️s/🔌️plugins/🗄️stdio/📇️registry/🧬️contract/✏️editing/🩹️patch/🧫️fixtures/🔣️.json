@@ -277,31 +277,6 @@
     ]
   },
   "shiftedParent": {
-    "schema": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          {
-            "type": "integer"
-          },
-          {
-            "type": "object",
-            "required": [
-              "children"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "children": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              }
-            }
-          }
-        ]
-      }
-    },
     "before": [
       7,
       9,
@@ -506,7 +481,7 @@
       "largeValueBytes": 2097152,
       "event": {
         "operation": "setValue",
-        "path": "/reEncodeQuality",
+        "path": "/jfifXDensity",
         "value": 73
       },
       "maximumPatchBytes": 1048576
@@ -527,7 +502,9 @@
               "kind": "strips",
               "offsetsKind": "long",
               "byteCountsKind": "long",
-              "chunks": ["x"]
+              "chunks": [
+                "x"
+              ]
             }
           }
         ]

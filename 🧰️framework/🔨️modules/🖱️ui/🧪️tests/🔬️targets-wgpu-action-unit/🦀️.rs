@@ -63,7 +63,7 @@ fn correlated_receipts_survive_identical_payloads_without_entering_the_domain_de
     for row in rows {
         batch
             .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
-                builder.set_receipt(ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })?;
+                builder.set_receipt(ActionQueueReceipt { source: crate::wgpu::action::ActionQueueReceiptSource::CanvasTextEditor, token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })?;
                 builder.begin_object(None)?;
                 builder.string(Some("surfaceId"), fixture["surface"].as_str().unwrap())?;
                 builder.string(Some("text"), fixture["text"].as_str().unwrap())?;
@@ -94,7 +94,7 @@ fn correlated_receipts_survive_identical_payloads_without_entering_the_domain_de
 fn a_duplicate_receipt_refuses_publication_without_leaving_a_queued_owner() {
     let mut queue = BoundedActionQueue::default();
     let mut reservation = queue.reserve("writer", "edit", 128).unwrap();
-    let receipt = ActionQueueReceipt { token: std::num::NonZeroU64::new(1).unwrap(), member: 0, abort_correlation_on_error: true };
+    let receipt = ActionQueueReceipt { source: crate::wgpu::action::ActionQueueReceiptSource::CanvasTextEditor, token: std::num::NonZeroU64::new(1).unwrap(), member: 0, abort_correlation_on_error: true };
     reservation.builder().set_receipt(receipt).unwrap();
     assert_eq!(reservation.builder().set_receipt(receipt), Err(BoundedActionFault::Structure));
     assert_eq!(reservation.publish(), Err(BoundedActionFault::Structure));

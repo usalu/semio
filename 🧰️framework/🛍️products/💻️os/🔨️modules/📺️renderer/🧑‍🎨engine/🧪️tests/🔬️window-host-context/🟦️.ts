@@ -7,7 +7,6 @@
  * §6.4). Ticket 26/09/02/PUZZLE-3D-END-TO-END. */
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import Ajv from "ajv";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, windowHostContextBindings } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import fixture from "../../🧫️fixtures/🔬️window-host-context/🔣️.json";
 
@@ -24,19 +23,6 @@ function oracleWindowHostContextBindings(instanceId: number, windows: readonly {
 }
 
 export function testWindowHostContext(): void {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({
-    type: "object",
-    additionalProperties: false,
-    required: ["instanceId", "view", "windows", "expected", "inspectionRefresh"],
-    properties: {
-      instanceId: { type: "integer" },
-      view: { type: "object" },
-      windows: { type: "array" },
-      expected: { type: "array" },
-      inspectionRefresh: { type: "array" },
-    },
-  });
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const actual = windowHostContextBindings(fixture.instanceId, fixture.windows, fixture.view);
   const oracle = oracleWindowHostContextBindings(fixture.instanceId, fixture.windows, fixture.view);
   assert.deepEqual(actual, fixture.expected);

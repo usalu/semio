@@ -61,8 +61,8 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::*;
 use crate::{Puzzle3dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
-use derived_construction::*;
-use derived_analysis::*;
+use crate::standards::v1::subsets::any::io::derived_construction::*;
+use crate::standards::v1::subsets::any::io::derived_analysis::*;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::Puzzle3dMeta;
 use crate::Puzzle3dObject;

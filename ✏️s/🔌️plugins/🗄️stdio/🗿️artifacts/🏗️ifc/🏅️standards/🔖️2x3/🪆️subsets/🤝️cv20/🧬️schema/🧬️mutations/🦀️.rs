@@ -40,7 +40,7 @@ pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_
 //#region 🔖️Vocabulary
 /// 🚫️ Entity types Coordination View 2.0 excludes — the same list `check_cv20_conformance`
 /// hard-faults on, reached through the analysis module rather than restated here.
-use crate::standards::v2x3::subsets::cv20::schema::derived_analysis::{FORBIDDEN_STRUCTURAL_TYPES, GEOMETRY_BEARING_PRODUCT_TYPES};
+use crate::standards::v2x3::subsets::cv20::schema::{FORBIDDEN_STRUCTURAL_TYPES, GEOMETRY_BEARING_PRODUCT_TYPES};
 
 /// 📐️ `IfcProject.UnitsInContext` is attribute 9 of `IfcProject` (index 8).
 const PROJECT_UNITS_INDEX: usize = 8;

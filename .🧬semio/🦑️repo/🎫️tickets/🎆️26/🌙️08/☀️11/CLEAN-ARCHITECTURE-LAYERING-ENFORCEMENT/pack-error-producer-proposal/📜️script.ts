@@ -8,7 +8,7 @@ if(process.argv.slice(2).join(" ")==="syntax"){
  const {default:Parser}=await import("web-tree-sitter");
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(new Uint8Array(await Bun.file(resolve(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")).arrayBuffer())));
  const providers=await Bun.file(resolve(import.meta.dir,"🧫️fixtures/🧬️production-provider-before.json")).json() as {rows:Array<{path:string}>};
- const paths=providers.rows.filter(row=>row.path.endsWith(".rs")).map(row=>"production-provider-drafts/"+row.path);
+ const paths=providers.rows.filter(row=>row.path.endsWith(".rs")).map(row=>"prod-drafts/"+row.path);
  paths.push("🧭️producer/🗂️catalog/🧪️tests/🦀️.rs","🧭️producer/📥️source/🧪️tests/🦀️.rs","🧭️producer/🏪️store/🧪️tests/🦀️.rs","🔌️capture/🦀️.rs","🔌️capture/👥️context/🦀️.rs");
  const rows=[];
  for(const path of paths){
@@ -17,7 +17,7 @@ if(process.argv.slice(2).join(" ")==="syntax"){
    if(tree.rootNode.hasError())inspect(tree.rootNode);tree.delete();return errors;
   };
   const source=await Bun.file(resolve(import.meta.dir,path)).text(),errors=parse(source);
-  let baselineErrors:ReturnType<typeof parse>=[];if(path.startsWith("production-provider-drafts/"))baselineErrors=parse(await Bun.file(resolve(root,path.slice("production-provider-drafts/".length))).text());
+  let baselineErrors:ReturnType<typeof parse>=[];if(path.startsWith("prod-drafts/"))baselineErrors=parse(await Bun.file(resolve(root,path.slice("prod-drafts/".length))).text());
   const inheritedGrammarLimitation=errors.length>0&&JSON.stringify(errors)===JSON.stringify(baselineErrors);
   if(await Bun.file(resolve(import.meta.dir,path)).text()!==source)throw Error("draft changed during grammar proof: "+path);
   const hash=new Bun.CryptoHasher("sha256");hash.update(source);rows.push({path,bytes:Buffer.byteLength(source),sha256:hash.digest("hex"),errors,baselineErrors,inheritedGrammarLimitation});
@@ -29,7 +29,7 @@ if(process.argv.slice(2).join(" ")==="syntax"){
 if(process.argv.slice(2).join(" ")==="providers-refresh-store"){
  const path="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",receiptPath=resolve(import.meta.dir,"🧫️fixtures/🧬️production-provider-before.json"),original=await Bun.file(receiptPath).text();
  const receipt=JSON.parse(original) as {rows:Array<{path:string;before:string;sha256:string;bytes:number}>},row=receipt.rows.find(row=>row.path===path);if(!row)throw Error("Store source not captured");
- const file=resolve(import.meta.dir,"production-provider-drafts",path),draft=await Bun.file(file).text(),current=await Bun.file(resolve(root,path)).text();
+ const file=resolve(import.meta.dir,"prod-drafts",path),draft=await Bun.file(file).text(),current=await Bun.file(resolve(root,path)).text();
  const removed="    pub use super::mounted_pack_session::{RetainedTypedPackCloseStep, RetainedTypedPackOwner, RetainedTypedPackSession};",inserted="    pub use super::mounted_pack_session::{RetainedTypedPackAllocationError, RetainedTypedPackCloseStep, RetainedTypedPackOwner, RetainedTypedPackSession};";
  if(row.before.indexOf(removed)===-1||row.before.indexOf(removed)!==row.before.lastIndexOf(removed)||row.before.replace(removed,inserted)!==draft)throw Error("Store local delta differs from reviewed explicit export");
  if(current.indexOf(removed)===-1||current.indexOf(removed)!==current.lastIndexOf(removed))throw Error("Store concurrent export needs source review");
@@ -85,7 +85,7 @@ if(process.argv.slice(2).join(" ")==="providers-refresh-concurrent"){
  const planned=[];
  for(const row of drift.rows){
   const source=receipt.rows.find(source=>source.path===row.path);if(!source||source.before!==row.before||await Bun.file(resolve(root,row.path)).text()!==row.current)throw new Error("concurrent input changed before draft refresh: "+row.path);
-  const file=resolve(import.meta.dir,"production-provider-drafts",row.path),before=await Bun.file(file).text();let after=before;
+  const file=resolve(import.meta.dir,"prod-drafts",row.path),before=await Bun.file(file).text();let after=before;
   if(row.path.includes("📡️replication/⚙️codec/")){
    if(row.hunks.length!==1||!after.includes('semio_framework_deflate::DeflateError::OutputLimitExceeded=>PackError::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"retained deflate physical ceiling"))'))throw new Error("typed physical constructor conflict lacks explicit preserved source branch");
   }else if(before===row.before)after=row.current;
@@ -111,11 +111,11 @@ if(process.argv.slice(2).join(" ")==="providers-canonical"){
  if(!rust||await Bun.file(resolve(root,rust.path)).text()!==rust.before)throw new Error("canonical current input changed before draft rebase");
  const footer=rust.before.slice(rust.before.indexOf("#[cfg(test)]")),draftRust=await Bun.file(resolve(import.meta.dir,"🦀️.rs")).text();
  if(!footer||!draftRust.includes("#[cfg(test)]"))throw new Error("canonical original/draft test links missing");
- await Bun.write(resolve(import.meta.dir,"production-provider-drafts",rust.path),draftRust.slice(0,draftRust.indexOf("#[cfg(test)]"))+footer);
+ await Bun.write(resolve(import.meta.dir,"prod-drafts",rust.path),draftRust.slice(0,draftRust.indexOf("#[cfg(test)]"))+footer);
  const draftTs=await Bun.file(resolve(import.meta.dir,"🟦️.ts")).text();
  const typeScript=draftTs.replace("../../../../../../../../🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts","../../🌱️value/⚠️refusal/🟦️.ts").replace("../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/🚧️text-error/🟦️.ts","../../⚠️diagnostic/🚧️text-error/🟦️.ts");
  if(typeScript===draftTs)throw new Error("canonical draft imports were not rebound");
- await Bun.write(resolve(import.meta.dir,"production-provider-drafts",path+"🟦️.ts"),typeScript);
+ await Bun.write(resolve(import.meta.dir,"prod-drafts",path+"🟦️.ts"),typeScript);
  console.log("[DEBUG] ticket-only canonical drafts refreshed; both original native owner laws retained; actual production unchanged");
  process.exit(0);
 }
@@ -166,7 +166,7 @@ if(process.argv.slice(2).join(" ")==="providers-ready"){
  const captured=await Bun.file(resolve(import.meta.dir,"🧫️fixtures/🧬️production-provider-before.json")).json() as {rows:Array<{path:string;before:string}>};
  const rows=[];
  for(const source of captured.rows){
-  const after=await Bun.file(resolve(import.meta.dir,"production-provider-drafts",source.path)).text(),current=await Bun.file(resolve(root,source.path)).text(),before=source.before;
+  const after=await Bun.file(resolve(import.meta.dir,"prod-drafts",source.path)).text(),current=await Bun.file(resolve(root,source.path)).text(),before=source.before;
   let start=0,end=before.length,tail=after.length;
   while(start<end&&start<tail&&before[start]===after[start])start++;
   while(end>start&&tail>start&&before[end-1]===after[tail-1]){end--;tail--;}
@@ -182,7 +182,7 @@ if(process.argv[2]==="providers-add"){
  for(const path of process.argv.slice(3)){
   if(receipt.rows.some(row=>row.path===path))throw new Error("provider already captured: "+path);
   const before=await Bun.file(resolve(root,path)).text(),hash=new Bun.CryptoHasher("sha256");hash.update(before);
-  const draft=resolve(import.meta.dir,"production-provider-drafts",path);
+  const draft=resolve(import.meta.dir,"prod-drafts",path);
   if(await Bun.file(draft).exists()&&await Bun.file(draft).text()!==before)throw new Error("untracked edited draft must be refreshed explicitly: "+path);
   await Bun.write(draft,before);
   if(await Bun.file(resolve(root,path)).text()!==before)throw new Error("provider source changed during added capture: "+path);
@@ -198,7 +198,7 @@ if(process.argv.slice(2).join(" ")==="providers-capture"){
  const rows=[];
  for(const path of new Set([...prior.sources.map(row=>row.path),...extras])){
   const before=await Bun.file(resolve(root,path)).text(),hash=new Bun.CryptoHasher("sha256");hash.update(before);
-  const draft=resolve(import.meta.dir,"production-provider-drafts",path);
+  const draft=resolve(import.meta.dir,"prod-drafts",path);
   if(await Bun.file(draft).exists())throw new Error("existing provider draft must be refreshed explicitly: "+path);
   await Bun.write(draft,before);
   rows.push({path,draft:path,before,sha256:hash.digest("hex"),bytes:Buffer.byteLength(before),priorChanged:prior.sources.some(row=>row.path===path&&row.fullSource!==before)});

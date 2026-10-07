@@ -2,7 +2,7 @@ use super::*;
 use crate::schema::snapshot::PptxXmlPart;
 use protocol::{command::DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
 use quick_xml::{events::Event, reader::Reader};
-use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 use std::io::{Cursor, Read};
 

@@ -1,24 +1,26 @@
 //! 🙈 Puzzle2d mutation — `ChangeTargetRegionHidden`: changes a region's hidden flag — a hidden region constrains nothing.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 🙈 `change-target-region-hidden` payload — changes a region's hidden flag — a hidden region constrains nothing.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "change-target-region-hidden")]
 pub struct ChangeTargetRegionHidden {
-    pub id: String,
+    pub id: PagedUtf8<{ usize::MAX }>,
     pub new_hidden: bool,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_target_region_hidden(id: String, new_hidden: bool) -> Puzzle2dMutation {
+pub fn change_target_region_hidden(id: PagedUtf8<{ usize::MAX }>, new_hidden: bool) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeTargetRegionHidden(ChangeTargetRegionHidden { id, new_hidden })
 }
 
@@ -38,7 +40,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeTarget
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change target region hidden \"{}\"", self.id), &format!("Ausblendung von Zielregion \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
+        vec![self.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

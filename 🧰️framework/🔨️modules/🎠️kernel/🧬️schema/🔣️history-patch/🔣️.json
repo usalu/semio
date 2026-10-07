@@ -303,6 +303,10 @@
         },
         "nextProblem": {
           "$ref": "#/definitions/HistoryTimeTravelProblem"
+        },
+        "processed": {
+          "$ref": "#/definitions/U32",
+          "description": "Cumulative completed semantic operation-preparation work in this replay; excludes planning, owner retirement, and final message settlement. Absent when no semantic preparation work has completed."
         }
       }
     },
@@ -393,6 +397,10 @@
         "fault": {
           "type": "string",
           "minLength": 1
+        },
+        "processed": {
+          "$ref": "#/definitions/U32",
+          "description": "Cumulative completed semantic operation-preparation work in this replay; excludes planning, owner retirement, and final message settlement. Absent when no semantic preparation work has completed."
         }
       }
     }

@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-launch-action";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::RemoveLaunchAction;
+use crate::standards::v1_7::subsets::e::schema::mutations::RemoveLaunchAction;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveLaunchAction) -> Result<String, String> {

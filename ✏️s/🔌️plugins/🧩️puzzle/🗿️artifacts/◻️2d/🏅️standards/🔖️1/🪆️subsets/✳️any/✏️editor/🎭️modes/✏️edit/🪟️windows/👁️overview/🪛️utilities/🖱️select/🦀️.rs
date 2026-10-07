@@ -13,7 +13,8 @@
 
 use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_pairs;
 use crate::editor::puzzle2d::{board_snapshot_nodes, puzzle2d_occupied_handles, puzzle2d_push_edge, PUZZLE2D_PROXIMITY_GESTURE_MAX};
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, connect_handles_in_proximity, drag_selection, puzzle2d_handle_distance, rotate_selection, scale_selection, Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,connect_handles_in_proximity,drag_selection,puzzle2d_handle_distance,rotate_selection,scale_selection,Puzzle2dMutation};
+
 use crate::standards::v1::subsets::any::io::text::mutations::{puzzle2d_declared_precision};
 use crate::Puzzle2dSnapshot;
 use machine::Command;
@@ -73,7 +74,7 @@ impl Puzzle2dSelectionRecord {
     /// 🧮️ The parametric leaf this record yields, over its targets deduplicated in first-seen order — a leaf's
     /// target set is never empty (see [`Self::applies_to`]) and never repeats an id.
     pub fn mutation(&self) -> Puzzle2dMutation {
-        let targets = puzzle2d_unique_targets(self.targets.iter().cloned());
+        let targets = puzzle2d_unique_targets(self.targets.iter().cloned()).into_iter().map(Into::into).collect();
         match self.motion {
             Puzzle2dSelectionMotion::Drag { dx, dy } => drag_selection(targets, dx, dy),
             Puzzle2dSelectionMotion::Rotate { pivot_x, pivot_y, angle } => rotate_selection(targets, pivot_x, pivot_y, angle),
@@ -106,9 +107,9 @@ impl Puzzle2dSelectionRecord {
     /// 🧬️ The record a parametric leaf states — how a resumed stream recovers its accumulated transform.
     pub fn from_leaf(leaf: &Puzzle2dMutation, connect: bool) -> Option<Self> {
         let (targets, motion) = match leaf {
-            Puzzle2dMutation::DragSelection(leaf) => (leaf.targets.clone(), Puzzle2dSelectionMotion::Drag { dx: leaf.dx, dy: leaf.dy }),
-            Puzzle2dMutation::RotateSelection(leaf) => (leaf.targets.clone(), Puzzle2dSelectionMotion::Rotate { pivot_x: leaf.pivot_x, pivot_y: leaf.pivot_y, angle: leaf.angle }),
-            Puzzle2dMutation::ScaleSelection(leaf) => (leaf.targets.clone(), Puzzle2dSelectionMotion::Scale { pivot_x: leaf.pivot_x, pivot_y: leaf.pivot_y, factor: leaf.factor }),
+            Puzzle2dMutation::DragSelection(leaf) => (leaf.targets.iter().map(semio_framework_value::paged::PagedUtf8::to_string_owner).collect(), Puzzle2dSelectionMotion::Drag { dx: leaf.dx, dy: leaf.dy }),
+            Puzzle2dMutation::RotateSelection(leaf) => (leaf.targets.iter().map(semio_framework_value::paged::PagedUtf8::to_string_owner).collect(), Puzzle2dSelectionMotion::Rotate { pivot_x: leaf.pivot_x, pivot_y: leaf.pivot_y, angle: leaf.angle }),
+            Puzzle2dMutation::ScaleSelection(leaf) => (leaf.targets.iter().map(semio_framework_value::paged::PagedUtf8::to_string_owner).collect(), Puzzle2dSelectionMotion::Scale { pivot_x: leaf.pivot_x, pivot_y: leaf.pivot_y, factor: leaf.factor }),
             _ => return None,
         };
         Some(Self { targets, motion, proximity: Vec::new(), connect })
@@ -151,8 +152,8 @@ pub fn puzzle2d_unique_targets(targets: impl IntoIterator<Item = String>) -> Vec
 /// 📍️ The pivot a command-driven rotate or scale records: the centroid of the targets' node positions, and with
 /// `regions` also of their target-region centres — one recorded point, so the leaf replays on any base.
 pub fn puzzle2d_selection_pivot(document: &Puzzle2dSnapshot, targets: &[String], regions: bool) -> Option<(f64, f64)> {
-    let nodes = document.nodes.iter().filter(|node| targets.contains(&node.id)).map(|node| (node.x, node.y));
-    let centres = document.target_regions.iter().filter(|region| regions && targets.contains(&region.id)).map(|region| {
+    let nodes = document.nodes.iter().filter(|node| targets.iter().any(|target| node.id.eq_str(target))).map(|node| (node.x, node.y));
+    let centres = document.target_regions.iter().filter(|region| regions && targets.iter().any(|target| region.id.eq_str(target))).map(|region| {
         let [min_x, min_y, max_x, max_y] = region.bounds();
         ((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)
     });

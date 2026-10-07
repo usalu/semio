@@ -1,10 +1,9 @@
+use serde_json::Value;
 use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::write_geojson;
-use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::right_handed_ring;
-use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::ring_signed_area2;
 use super::*;
 use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 use crate::standards::v_rfc8259::subsets::geojson::io::{JsonGeoJsonComposerComposition, JsonGeoJsonValidator};
-use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeSource, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator};
+use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator};
 use std::str::FromStr;
 
 const VECTORS: &str = include_str!("../../../🧫️fixtures/🌍️read-write/🔣️.json");
@@ -97,10 +96,10 @@ fn geojson_crate_reads_every_written_document_identically() {
         for (oracle, ours) in collection.features.iter().zip(&ours) {
             let oracle_id = oracle.id.as_ref().map(|id| match id {
                 geojson::feature::Id::String(text) => GeoJsonId::Text(text.clone()),
-                geojson::feature::Id::Number(number) => GeoJsonId::Number(number.clone()),
+                geojson::feature::Id::Number(number) => GeoJsonId::Number(JsonValue::Number { lexeme: number.to_string() }),
             });
             assert_eq!(oracle_id, ours.id, "{id}");
-            assert_eq!(oracle.properties, ours.properties, "{id}");
+            assert_eq!(oracle.properties.as_ref().map(|members| members.iter().map(|(name,value)|(name.clone(),JsonValue::from(value))).collect::<std::collections::BTreeMap<_,_>>()), ours.properties, "{id}");
             match (&oracle.geometry, &ours.geometry) {
                 (Some(oracle), Some(ours)) => assert!(oracle_geometry_agrees(oracle, ours), "{id}: {oracle:?} vs {ours:?}"),
                 (None, None) => {}
@@ -131,8 +130,8 @@ fn reader_accepts_what_the_geojson_crate_writes() {
     let read = read_geojson_text(&text).expect("RFC 7946 text written by the oracle is readable");
     assert_eq!(read.source_crs, GeoJsonSourceCrs::Rfc7946);
     assert_eq!(read.left_handed_rings, 0);
-    assert_eq!(read.features[0], GeoJsonFeature { id: Some(GeoJsonId::Text("lighthouse".into())), geometry: Some(GeoJsonGeometry::Point(vec![5.58, 50.60, 17.5])), properties: Some(properties) });
-    assert_eq!(read.features[1].id, Some(GeoJsonId::Number(3.into())));
+    assert_eq!(read.features[0], GeoJsonFeature { id: Some(GeoJsonId::Text("lighthouse".into())), geometry: Some(GeoJsonGeometry::Point(vec![5.58, 50.60, 17.5])), properties: Some(properties.into_iter().map(|(name,value)|(name,JsonValue::from(value))).collect()) });
+    assert_eq!(read.features[1].id, Some(GeoJsonId::Number(JsonValue::Number { lexeme: "3".into() })));
     assert_eq!(read.features[1].geometry, Some(GeoJsonGeometry::LineString(vec![vec![5.5, 50.5], vec![5.6, 50.6], vec![5.7, 50.5]])));
     assert_eq!(read.features[2].geometry, Some(GeoJsonGeometry::Polygon(vec![vec![vec![0.0, 0.0], vec![2.0, 0.0], vec![2.0, 2.0], vec![0.0, 2.0], vec![0.0, 0.0]], vec![vec![0.5, 0.5], vec![0.5, 1.0], vec![1.0, 1.0], vec![1.0, 0.5], vec![0.5, 0.5]]])));
 }

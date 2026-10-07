@@ -52,7 +52,7 @@ pub(crate) mod context {
     /// `Migrated` in the LIVE registry, so a bare instance faults at construction with
     /// `interactive-job.catalog-authority` now that every verb is a bounded tool.
     pub async fn shooting_app() -> ShootingApp {
-        let mut app = new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(SHOOTING_TEST_INSTANCE).await;
         ShootingApp(app)
     }

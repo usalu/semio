@@ -15,7 +15,7 @@ pub(crate) mod context {
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs, over the stdio semio
     /// member roster that opens the derived `climateTable` child.
     pub async fn app_with_registry() -> NormApp {
-        let mut app = new_app_with_registry_and_members::<EditorApp<Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(din18599_manifest_for_tests).await;
+        let mut app = new_app_with_registry_and_members::<EditorApp<Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(din18599_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }

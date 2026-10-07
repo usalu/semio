@@ -1,6 +1,6 @@
 //! 🧭️ Language-neutral typed-path fixtures exercised through generated Rust implementations.
 
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -102,17 +102,17 @@ fn payload_to_value(payload: &Payload) -> DslValue {
 fn payload_from_value(value: DslValue) -> Result<Payload, ValueError> {
     let mut entries = DslValue::into_object(value)?;
     if entries.len() != 1 || entries[0].0 != "hex" {
-        return Err(ValueError::new("expected one hex field"));
+        return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected one hex field"));
     }
     let DslValue::String(hex) = entries.remove(0).1 else {
-        return Err(ValueError::new("expected a hex string"));
+        return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a hex string"));
     };
     if hex.len() % 2 != 0 || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return Err(ValueError::new("invalid hexadecimal payload"));
+        return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid hexadecimal payload"));
     }
     let bytes = (0..hex.len())
         .step_by(2)
-        .map(|index| u8::from_str_radix(&hex[index..index + 2], 16).map_err(|error| ValueError::new(error.to_string())))
+        .map(|index| u8::from_str_radix(&hex[index..index + 2], 16).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
         .collect::<Result<Vec<_>, _>>()?;
     Ok(Payload(bytes))
 }

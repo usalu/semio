@@ -1,5 +1,6 @@
 pub(crate) mod retirement {
-    use crate::standards::v1::subsets::any::io::binary::mutations::{RasterSnapshot, RasterSnapshotRetirementFactory, RASTER_OWNED_FIELD_BYTES};
+    use crate::host::owned::{RasterSnapshotRetirementFactory,RASTER_OWNED_FIELD_BYTES};
+use crate::standards::v1::subsets::any::io::binary::mutations::{RasterSnapshot};
 
     
     pub(crate) fn retire_raster_snapshot(snapshot: RasterSnapshot) {
@@ -64,7 +65,7 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
     use crate::RasterSnapshot;
 
     let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
-    let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
@@ -142,7 +143,7 @@ impl RasterProcessCreditBaseline {
 
 fn empty_raster_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
     let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None);
-    RasterStoreInitializationAuthority::new(envelope, operation, generation)
+    RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn drive_raster_initializer(authority: &mut RasterStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::StepOutcome {
@@ -207,13 +208,16 @@ fn close_raster_retirement(retirement: &mut dyn store::ErasedSnapshotRetirement)
 }
 
 #[test]
-fn raster_store_initializer_publishes_next_generation_and_candidate_closes_incrementally() {
+fn raster_history_edit_initializer_aliases_genesis_and_publishes_next_generation_and_candidate_closes_incrementally() {
     let operation = semio_framework_job::OperationId(701);
     let generation = semio_framework_job::Generation(31);
     let mut authority = empty_raster_initializer(operation, generation);
+    let genesis = authority.envelope.as_ref().expect("retained Raster envelope").vcs.genesis.share_snapshot();
     assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Raster candidate");
     assert_eq!(candidate.generation_now(), 32);
+    assert!(std::sync::Arc::ptr_eq(&genesis, &candidate.snapshot_owner()));
+    drop(genesis);
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
     close_raster_candidate(candidate);
@@ -338,13 +342,13 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
                 format!("mounted-{index}"),
                 store::ArtifactChild::new(
                     format!("child-{index}"),
-                    store::os_io::ArtifactRef { artifact_id: format!("artifact-{index}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                    semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("artifact-{index}"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
                 ),
             )
             .expect("mounted-shaped source admits its second fixed map page");
     }
     let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None);
-    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation);
+    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let mut terminal = None;
     for _ in 0..100_000 {
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
@@ -430,7 +434,7 @@ fn raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal(
     let operation = semio_framework_job::OperationId(707);
     let generation = semio_framework_job::Generation(39);
     let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None);
-    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation);
+    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     assert!(authority.candidate.is_some());
     semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut authority);
@@ -605,8 +609,8 @@ fn retained_mask_keys_and_transforms_survive_clone_and_bounded_retirement() {
 /// materialization was left.
 #[test]
 fn retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels() {
-    let asset = crate::examples::art_raster_demo::emblem_image_asset();
-    let minted = crate::mint_raster_asset_child("semio-emblem", &asset);
+    let asset = crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&crate::examples::art_raster_demo::emblem_image_asset()).expect("fixture image decodes");
+    let minted = crate::mint_raster_image_child("semio-emblem", &asset);
     let base = empty_raster_document();
     let layer_id = crate::standards::v1::subsets::any::schema::layer_node_id(&base.layers[0]).to_string();
     let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset });
@@ -630,8 +634,8 @@ fn retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels() {
 /// within each grant, the same contract draw's owned strings follow.
 #[test]
 fn an_asset_over_one_retirement_grant_applies_and_its_operation_retires_within_every_grant() {
-    let asset = crate::examples::art_raster_demo::emblem_image_asset();
-    let bytes = asset.data.len();
+    let asset = crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&crate::examples::art_raster_demo::emblem_image_asset()).expect("fixture image decodes");
+    let bytes = asset.frames.iter().map(|frame| frame.rgba8.len()).sum::<usize>();
     assert!(bytes > RASTER_OWNED_FIELD_BYTES * 4, "the demo emblem is real media, several grants long: {bytes} B");
     let base = empty_raster_document();
     let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset });
@@ -679,7 +683,7 @@ fn raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_
                 format!("asset-{index:02}"),
                 store::ArtifactChild::new(
                     format!("child-{index:02}"),
-                    store::os_io::ArtifactRef { artifact_id: format!("artifact-{index:02}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                    semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("artifact-{index:02}"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
                 ),
             )
             .expect("fixed Raster map admits its exact item capacity");
@@ -691,7 +695,7 @@ fn raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_
     let rejected = assets
         .insert(
             rejected_key,
-            store::ArtifactChild::new(rejected_child_id, store::os_io::ArtifactRef { artifact_id: "overflow".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } }),
+            store::ArtifactChild::new(rejected_child_id, semio_framework_artifact_reference::ArtifactRef { artifact_id: "overflow".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } }),
         )
         .expect_err("fixed Raster map rejects capacity plus one");
     assert_eq!(rejected.key.as_ptr(), key_pointer);
@@ -711,7 +715,7 @@ fn raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_
             replacement_key,
             store::ArtifactChild::new(
                 replacement_child_id,
-                store::os_io::ArtifactRef { artifact_id: "replacement-artifact".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                semio_framework_artifact_reference::ArtifactRef { artifact_id: "replacement-artifact".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
             ),
         )
         .expect("replacement preserves fixed capacity")
@@ -1089,7 +1093,7 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
                 key,
                 store::ArtifactChild::new(
                     format!("output-child-{index:02}"),
-                    store::os_io::ArtifactRef { artifact_id: format!("output-artifact-{index:02}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                    semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("output-artifact-{index:02}"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
                 ),
             )
             .expect("maximum populated output asset map remains exactly admitted");
@@ -1098,7 +1102,7 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
     let plus_one_asset_pointer = plus_one_asset_key.as_ptr();
     let plus_one_asset_child = store::ArtifactChild::new(
         "output-child-plus-one".into(),
-        store::os_io::ArtifactRef { artifact_id: "output-artifact-plus-one".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+        semio_framework_artifact_reference::ArtifactRef { artifact_id: "output-artifact-plus-one".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
     );
     let plus_one_asset_child_pointer = plus_one_asset_child.child_id.as_ptr();
     let rejected_asset = assets.insert(plus_one_asset_key, plus_one_asset_child).expect_err("output asset capacity plus one returns both exact owners");
@@ -1178,7 +1182,7 @@ fn raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant() {
         .assets
         .insert(
             "asset".into(),
-            store::ArtifactChild::new("child".into(), store::os_io::ArtifactRef { artifact_id: "artifact".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } }),
+            store::ArtifactChild::new("child".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "artifact".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } }),
         )
         .expect("bounded fixture operation succeeds");
     let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);
@@ -1217,7 +1221,7 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
         RasterMutation::MoveLayer(move_layer::mutation::MoveLayer { layer_id: "pixel".into(), new_x: 1.0, new_y: 2.0 }),
         RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id: "pixel".into(), new_width: 2, new_height: 3 }),
         RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "pixel".into(), new_adjustment_kind: "levels".into() }),
-        RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset".into(), asset: RasterImageAsset { mime: "image/png".into(), data: vec![1, 2, 3] } }),
+        RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset".into(), asset: crate::standards::v1::subsets::any::schema::semio_image_from_rgba8(1,1,vec![1,2,3,255]) }),
         RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "asset".into() }),
         RasterMutation::ChangeLayerPixels(crate::mutations::change_layer_pixels::ChangeLayerPixels { layer_id: "pixel".into(), expected_image_key: Some("previous".into()), content: crate::RasterPixelContent { image_key: Some("next".into()), width: None, height: None }, transform: None }),
         RasterMutation::ChangeLayerMask(crate::mutations::change_layer_mask::ChangeLayerMask {
@@ -1298,7 +1302,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
     let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
-    let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
@@ -1380,7 +1384,7 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
     let asset=crate::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage {width:1,height:1,pixels:vec![1,2,3,255]}).unwrap()};
     for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {let key=format!("capacity-{index}");base.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}
     let before=base.clone();
-    let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset});
+    let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset:crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&asset).unwrap()});
     let mut authority=RasterMutationCandidateAuthority::new();let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();let mut fault=None;
     for _ in 0..200_000 {
         let mut context=semio_framework_job::StepContext::new(semio_framework_job::OperationId(980),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(64,u64::MAX),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
@@ -1401,4 +1405,16 @@ fn retained_layer_clone_preserves_protection_during_history_replay() {
     let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:"locked-pixel".into(),new_name:"locked-pixel".into()});
     let restored=drive_raster_candidate(&candidate,&operation,982);assert_eq!(restored,base);
     retirement::retire_raster_snapshot(restored);retirement::retire_raster_snapshot(candidate);retirement::retire_raster_snapshot(base);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn raster_close_diagnosis_direct_store_add_layer_releases_all_owners() {
+    let document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
+    let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(RASTER_DOCUMENT_SCHEMA,"close-owner-law",document,None);
+    let mut document=store::ArtifactStore::new(envelope,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+    document.install_document_store_owners_exact(raster_document_store_owners());
+    document.dispatch(store::ArtifactCommand::Apply{mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer{parent_id:None,index:0,layer:Box::new(crate::standards::v1::subsets::any::schema::create_pixel_layer("Close",512,512))})],transaction:None}).await.unwrap();
+    let mut blocked=false;
+    for _ in 0..100000 {match document.close_owned_store_step(1,16384).unwrap(){store::SnapshotRetirementStep::Complete=>break,store::SnapshotRetirementStep::Blocked=>{if !blocked{eprintln!("[DEBUG] direct Raster store blocked phase={} displaced={}",document.close_owned_phase_witness(),document.close_displaced_witness());blocked=true;}},_=>{}}}
+    assert!(document.close_owned_store_terminal_is_empty(),"direct store AddLayer closure must release all owners");
 }

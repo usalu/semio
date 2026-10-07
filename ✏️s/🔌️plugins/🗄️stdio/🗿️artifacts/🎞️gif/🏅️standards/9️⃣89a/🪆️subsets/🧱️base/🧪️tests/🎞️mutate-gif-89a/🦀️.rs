@@ -96,7 +96,8 @@ mod subject {
     use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_gif::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
+    use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation,GifMutation};
+
     use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
     use semio_s_artifact_stdio_gif::ArtifactDsl;
 

@@ -35,7 +35,7 @@ export interface NoteDiff {
   linkedArtifact?: ArtifactLink | null;
 }
 export interface NoteAddedBlockEntry { parentId: string | null; index: number | null; block: NoteBlockNode }
-export interface NoteBlockPatch { blockJson?: string | null }
+export interface NoteBlockPatch { block?: NoteBlockNode | null }
 export interface NoteBlockPatchEntry { id: string; patch: NoteBlockPatch }
 export interface NoteBlocksDelta { added: NoteAddedBlockEntry[]; removed: string[]; patched: NoteBlockPatchEntry[]; reordered?: string[] | null }
 export interface NoteAssetsDelta { entries: Record<string, NoteImageAsset | null> }
@@ -47,9 +47,9 @@ export function parseNoteAddedBlockEntry(value: unknown, at = "$"): NoteAddedBlo
   return parseNoteRecord(value, { parentId: noteNullable(noteString), index: noteNullable(index), block: parseNoteBlockNode }, ["parentId", "index", "block"], at) as unknown as NoteAddedBlockEntry;
 }
 
-/** 🩹️ Preserves the native block patch transport. */
+/** 🩹️ Admits the intrinsic replacement block. */
 export function parseNoteBlockPatch(value: unknown, at = "$"): NoteBlockPatch {
-  return parseNoteRecord(value, { blockJson: noteNullable(noteString) }, [], at) as unknown as NoteBlockPatch;
+  return parseNoteRecord(value, { block: noteNullable(parseNoteBlockNode) }, [], at) as unknown as NoteBlockPatch;
 }
 
 /** 🪪️ Associates a sparse patch with its block identity. */

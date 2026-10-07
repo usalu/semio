@@ -21,7 +21,7 @@ async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
     for definition in &plugin.manifest.apps {
         for grant in fixture["byteGrants"].as_array().unwrap() {
             let bytes = grant.as_u64().unwrap() as usize;
-            let mut app = plugin.create_app(&definition.id).expect("every declared surface has an actual factory");
+            let mut app = plugin.create_app(&definition.id, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("every declared surface has an actual factory");
             assert!(matches!((&app, &definition.role), (super::FlowApps::FlowEditor(_), AppRole::Editor) | (super::FlowApps::FlowViewer(_), AppRole::Viewer)));
             let mut completed = false;
             let (mut turns, mut released_item_total, mut released_byte_total, mut idle_turns) = (0u64, 0u64, 0u64, 0u64);

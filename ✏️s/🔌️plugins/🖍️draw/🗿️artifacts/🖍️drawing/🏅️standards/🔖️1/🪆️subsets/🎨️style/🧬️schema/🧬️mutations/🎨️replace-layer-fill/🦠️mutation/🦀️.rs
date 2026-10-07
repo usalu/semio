@@ -6,14 +6,14 @@ use crate::{DrawingSnapshot, FillStyle};
 
 //#region 🔖️Mutation
 /// 🔁 `replace-layer-fill` payload.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "replace-layer-fill")]
 pub struct ReplaceLayerFill {
-    pub layer_id: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(statements, block)]
@@ -21,7 +21,7 @@ pub struct ReplaceLayerFill {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_layer_fill(layer_id: String, fill: Option<FillStyle>) -> DrawingMutation {
+pub fn replace_layer_fill(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, fill: Option<FillStyle>) -> DrawingMutation {
     DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id, fill })
 }
 
@@ -41,7 +41,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ReplaceLayerFi
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace layer \"{}\" fill", self.layer_id), &format!("Füllung von Ebene \"{}\" ersetzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

@@ -511,7 +511,7 @@ async fn regenerate_machine_stock_cursor_mutation_vectors() {
     let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     let planed_solid_handle = store::ArtifactChild::new(
         "brep-stock-02".to_string(),
-        store::os_io::ArtifactRef { artifact_id: "stock-1-solid-planed".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } },
+        semio_framework_artifact_reference::ArtifactRef { artifact_id: "stock-1-solid-planed".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } },
     );
     write_vector(dir, "replace-stock-solid", &base, &Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: planed_solid_handle }));
     //#endregion 🔖️ReplaceStockSolid

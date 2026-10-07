@@ -31,6 +31,7 @@ component-guest-async = []
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 replication = { package = "semio-framework-replication", path = "../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }

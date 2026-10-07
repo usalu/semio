@@ -8,7 +8,7 @@ impl Census{
  fn row(&mut self,table:usize,cells:&[usize],native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<()>{
   native.step()?;let rows=self.rows.checked_add(1).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS semantic rows overflow"))?;
   let bytes=cells.iter().try_fold(self.bytes.checked_add(8).ok_or_else(||invalid("GIS semantic cells overflow"))?,|sum,size|sum.checked_add(*size).ok_or_else(||invalid("GIS semantic cells overflow")))?;
-  if super::super::sqlite::WIDTHS[table]>self.limits.max_columns||rows>self.limits.max_rows{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS semantic row or column limit exceeded"));}
+  if crate::standards::v1::subsets::any::io::sqlite::snapshot::WIDTHS[table]>self.limits.max_columns||rows>self.limits.max_rows{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS semantic row or column limit exceeded"));}
   if bytes>self.limits.max_value_bytes{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"GIS semantic value limit exceeded"));}
   self.rows=rows;self.bytes=bytes;Ok(())
  }
@@ -22,7 +22,7 @@ fn child(value:&R,table:usize,census:&mut Census,native:&mut semio_framework_val
 /// 🗺️ Visits every flat value, feature and child using its exact declared storage-class role.
 pub(super)fn admit_record(source:&R,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  native.scoped_stage(|native|{
-  native.begin_stage(0)?;if limits.max_tables<20||super::super::sqlite::WIDTHS.iter().any(|width|*width>limits.max_columns){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS authored schema extent exceeds caller limits"));}
+  native.begin_stage(0)?;if limits.max_tables<20||crate::standards::v1::subsets::any::io::sqlite::snapshot::WIDTHS.iter().any(|width|*width>limits.max_columns){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS authored schema extent exceeds caller limits"));}
   let mut c=Census{limits,rows:0,bytes:0};c.row(0,&[],native)?;child(record(source.get(3))?,5,&mut c,native)?;
   match required(source.get(4))?{F::Absent=>{},F::Record(value)=>child(value,6,&mut c,native)?,_=>return Err(invalid("GIS optional image role differs"))}
   child(record(source.get(5))?,7,&mut c,native)?;

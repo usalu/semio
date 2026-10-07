@@ -13,7 +13,8 @@
 //! The unreferenced SHS strut profile is struck from the catalogue.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-section/🏗️hall-cut-shs-d44b9e/📸️snapshot/⬅️before/🔣️.json");

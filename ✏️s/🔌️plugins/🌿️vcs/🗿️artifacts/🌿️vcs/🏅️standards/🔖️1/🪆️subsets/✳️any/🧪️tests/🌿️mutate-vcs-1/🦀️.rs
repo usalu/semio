@@ -130,7 +130,8 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::mutations::{apply_vcs_mutation_reporting, inverse_vcs_mutation_steps, VcsDemoMutation};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::mutations::{apply_vcs_mutation_reporting,inverse_vcs_mutation_steps,VcsDemoMutation};
+
     use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::text::mutations::{decode_vcs_mutation_json};
     use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::snapshot::{VcsSnapshot};
     use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::text::snapshot::{print_vcs_dsl};

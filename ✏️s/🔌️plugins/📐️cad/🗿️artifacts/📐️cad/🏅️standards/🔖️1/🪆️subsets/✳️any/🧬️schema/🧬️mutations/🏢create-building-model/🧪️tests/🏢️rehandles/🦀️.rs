@@ -34,6 +34,8 @@ fn applied() -> CadSnapshot {
 /// ▶️ `create-building-model` writes the fixed `building_model` slot even when it is already occupied; the other three slots never move.
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_building_handle_in_place() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let after = applied();
     let handle = after.building_model.as_ref().expect("create-building-model leaves the slot occupied");
     assert_eq!(handle.child_id, "cad-building-2", "create-building-model must install the payload's child id");

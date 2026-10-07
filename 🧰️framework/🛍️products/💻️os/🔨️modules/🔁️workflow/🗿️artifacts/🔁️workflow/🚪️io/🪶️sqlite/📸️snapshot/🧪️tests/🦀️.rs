@@ -18,7 +18,7 @@ fn database(value:&WorkflowSnapshot)->SqliteDatabase{value.to_sqlite_database(&m
 fn restore(value:&SqliteDatabase)->WorkflowSnapshot{WorkflowSnapshot::from_sqlite_database(value,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(value:&WorkflowSnapshot)->Vec<u8>{export_sqlite_database(&database(value),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
 fn payload(value:&WorkflowSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(value)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(value))}}
-fn dialect()->store::io_schema::ArtifactDialect{store::io_schema::ArtifactDialect{artifact_kind:"os.workflow".into(),standard:"1".into(),subset:"*".into()}}
+fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"os.workflow".into(),standard:"1".into(),subset:"*".into()}}
 fn oracle(script:&str,input:&[u8])->Vec<u8>{use std::{io::Write,process::{Command,Stdio}};let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(input).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));output.stdout}
 #[test]
 fn sqlite_snapshot_workflow_complete_relational_root_and_empty_collections_restore(){
@@ -58,7 +58,7 @@ fn sqlite_snapshot_workflow_caller_cancellation_reaches_interior_known_node_coll
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_workflow_imperative_registration_routes_actual_queryable_files(){
- let codec=store::ArtifactCodec::bare::<WorkflowSnapshot,WorkflowMutation>(S_WORKFLOW_SCHEMA);store::io::register_native_document_codec(store::io_schema::Dialect{artifact_kind:"os.workflow",standard:store::io_schema::StandardId("1"),subset:store::io_schema::SubsetId("*")},codec).unwrap();let expected=source();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(),&expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<WorkflowSnapshot>(&dialect(),&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,expected);}
+ let codec=store::ArtifactCodec::bare::<WorkflowSnapshot,WorkflowMutation>(S_WORKFLOW_SCHEMA);store::io::register_native_document_codec(semio_framework_artifact_reference::Dialect{artifact_kind:"os.workflow",standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")},codec).unwrap();let expected=source();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(),&expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<WorkflowSnapshot>(&dialect(),&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,expected);}
 }
 
 #[test]

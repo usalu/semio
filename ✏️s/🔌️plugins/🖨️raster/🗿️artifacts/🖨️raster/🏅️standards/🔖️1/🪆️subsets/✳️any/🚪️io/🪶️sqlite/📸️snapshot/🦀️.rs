@@ -90,7 +90,7 @@ impl Drop for Members{fn drop(&mut self){while let Some((_,value))=self.0.pop(){
 struct Items(Vec<semio_framework_value::DslValue>);
 impl Drop for Items{fn drop(&mut self){while let Some(value)=self.0.pop(){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(value);}}}
 pub(super) fn retire_snapshot(snapshot:RasterSnapshot){
- let mut cursor=store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::io::binary::mutations::RasterSnapshotRetirementFactory,snapshot);
+ let mut cursor=store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::owned::RasterSnapshotRetirementFactory,snapshot);
  let mut stalled=0usize;
  loop{match cursor.close_step(256,usize::MAX).expect("Raster owned snapshot retirement"){
  store::SnapshotRetirementStep::Pending{released_items,released_bytes}=>{if released_items==0&&released_bytes==0{stalled+=1;assert!(stalled<256,"Raster cold retirement made no progress");}else{stalled=0;}},
@@ -126,7 +126,7 @@ impl Reader<'_,'_,'_>{
 }
 fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<RasterSnapshot,ValueError>{
  let mut r=Reader::new(database,control)?;let document=r.take("raster_document",1)?;let mut owner=SnapshotOwned(Some(RasterSnapshot{schema:r.text(document,1)?,id:r.text(document,2)?,title:r.optional_text(document,3)?,layers:Vec::new(),assets:RasterOwnedMap::new()}));
- let assets=r.list("raster_asset",1,1,2)?;if assets.len()>64{return Err(invalid("Raster map capacity"))}let mut previous=None;for row in assets{let key=r.text(row,3)?;if let Some(previous)=previous{if !ordered_keys(previous,row.text(3)?,r.control)?{return Err(invalid("Raster asset key order"))}}previous=Some(row.text(3)?);let child=store::ArtifactChild::new(r.text(row,4)?,store::io_schema::ArtifactRef{dialect:store::io_schema::ArtifactDialect{artifact_kind:r.text(row,5)?,standard:r.text(row,6)?,subset:r.text(row,7)?},artifact_id:r.text(row,8)?});owner.0.as_mut().unwrap().assets.insert(key,child).map_err(|e|invalid(e.reason))?;}
+ let assets=r.list("raster_asset",1,1,2)?;if assets.len()>64{return Err(invalid("Raster map capacity"))}let mut previous=None;for row in assets{let key=r.text(row,3)?;if let Some(previous)=previous{if !ordered_keys(previous,row.text(3)?,r.control)?{return Err(invalid("Raster asset key order"))}}previous=Some(row.text(3)?);let child=store::ArtifactChild::new(r.text(row,4)?,semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:r.text(row,5)?,standard:r.text(row,6)?,subset:r.text(row,7)?},artifact_id:r.text(row,8)?});owner.0.as_mut().unwrap().assets.insert(key,child).map_err(|e|invalid(e.reason))?;}
  enum Task<'a>{Node(&'a SqliteRow),Group(i64,Vec<i64>)}
  let roots=r.list("raster_layer",1,1,3)?;let root_ids=roots.iter().map(|v|v.rowid).collect::<Vec<_>>();let mut pending=Vec::new();for row in roots.into_iter().rev(){pending.push(Task::Node(row));}let mut forest=Forest(BTreeMap::new());
  while let Some(task)=pending.pop(){r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;match task{
@@ -142,19 +142,21 @@ impl store::ArtifactSqliteSnapshot for RasterSnapshot{
  fn retire_sqlite_snapshot(self){retire_snapshot(self)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::schema::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record,native|{
-   let document=crate::standards::v1::subsets::any::schema::snapshot::record::RasterNativeDocument::__dsl_from_record_controlled(record,native)?;document.into_snapshot(maximum_rows,native)
+  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record,native|{
+   let document=crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_from_record_controlled(record,native)?;document.into_snapshot(maximum_rows,native)
   },control)
  }
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::schema::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
-   let document=crate::standards::v1::subsets::any::schema::snapshot::record::RasterNativeDocument::from_snapshot(self,maximum_rows,native)?;
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
+   let document=crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::from_snapshot(self,maximum_rows,native)?;
    document.__dsl_to_record_controlled(native)
   },control)
  }
 
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
   let io=store::io_schema::IoError::from_value_error;
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(io)?;
   if dialect.artifact_kind!="s.raster.raster"||dialect.standard!="1"||dialect.subset!="*"{return Err(io(invalid(format!("unrecognized Raster semantic dialect {}",dialect.to_coordinate()))))}

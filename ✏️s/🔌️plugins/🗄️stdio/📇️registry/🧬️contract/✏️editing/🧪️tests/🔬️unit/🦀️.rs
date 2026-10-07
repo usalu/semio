@@ -310,7 +310,7 @@ fn schema_constraints_reject_an_addressed_value_atomically() {
     let fixture = fixture();
     let base = snapshot(&fixture["base"]);
     let cases = &fixture["constraintCases"];
-    let schema = cases["schema"].to_string();
+    let schema = cases["input"]["schema"].to_string();
     let accepted = apply_snapshot_edit_with_schema(&base, &event(&cases["accepted"]), &schema).expect("boundary value");
     assert_eq!(accepted.count, 4);
     let error = apply_snapshot_edit_with_schema(&base, &event(&cases["rejected"]), &schema).expect_err("maximum");

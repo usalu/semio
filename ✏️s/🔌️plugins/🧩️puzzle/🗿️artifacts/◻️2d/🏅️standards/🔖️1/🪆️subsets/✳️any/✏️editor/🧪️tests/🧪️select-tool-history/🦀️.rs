@@ -12,9 +12,10 @@ use super::select_tool_transaction_tests::{dispatched_rows, english, flush, germ
 use super::*;
 use crate::editor::puzzle2d::engine::board_host::unit_tests::context::close_board_host;
 use crate::editor::puzzle2d::unit_tests::context::*;
-use crate::standards::v1::subsets::any::io::binary::mutations::{close_puzzle2d_store, puzzle2d_store};
+use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,Puzzle2dMutation};
+
 use crate::Puzzle2dSnapshot;
 use protocol::{OpBinary, OpText};
 use semio_framework::kernel::{HistoryEntry, HistoryTimeTravel, HistoryTimeTravelStage};
@@ -439,7 +440,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
     let board: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(&corpus["board"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus board decodes");
     for scenario in corpus["scenarios"].as_array().expect("scenarios") {
         let id = scenario["id"].as_str().expect("scenario id");
-        let mut store = puzzle2d_store(store::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None)).await.expect("the store opens");
+        let mut store = puzzle2d_store(store::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for logged in scenario["log"].as_array().expect("log") {
             store.dispatch(store::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }).await.expect("a logged leaf applies");
         }

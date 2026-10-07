@@ -10,7 +10,7 @@ pub(crate) mod context {
     /// is refused with `interactive-job.live-instance` ("typed command … does not belong to the live
     /// instance").
     pub async fn forms_app() -> OwnedFormsApp {
-        let mut app = new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(forms_manifest_for_tests).await;
+        let mut app = new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(forms_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         OwnedFormsApp(app)
     }
@@ -132,7 +132,7 @@ pub(crate) mod context {
     pub fn building_component_question() -> FormQuestion {
         let mut question = crate::editor::forms::questions::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.example_id = Some("hexagonal-mushroom-column".into());
-        question.params = Some(crate::schema::value_to_dsl(&semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
+        question.params = Some(crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl(&semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
     }
 }
@@ -369,7 +369,7 @@ async fn fields_interaction_domain_is_declared_topology_and_transitive_on_the_bl
 /// links — a step has no parent, every question's parent is its owning step's row id.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_walks_step_nesting_into_parent_links() {
-    let document = crate::schema::building_component_spec();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::building_component_spec();
     let config = FormsConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);

@@ -2,16 +2,16 @@
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
-use crate::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::{brep::schema::snapshot::SemioBrepSnapshot,mesh::schema::snapshot::SemioMeshSnapshot,value::schema::snapshot::SemioValueSnapshot};
+use crate::standards::v1::subsets::{brep::schema::snapshot::SemioBrepSnapshot,mesh::schema::snapshot::SemioMeshSnapshot,value::schema::snapshot::SemioValueSnapshot};
 use crate::standards::v1::subsets::base::schema::{geometry::{SemioPoint3,SemioQuaternion},child::validate_semio_child_identity};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use std::collections::BTreeMap;
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 📦️ Emits placement companions and each independent persisted child through one writer.
-fn visit_rows(snapshot:&SemioObjectSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioObjectSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  snapshot.validate().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let t=snapshot.transform;
  out.insert_key_float("semio_object_document",1,&[Cell::Text(&snapshot.schema),Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)],float_columns("semio_object_document"))?;
  if let Some(child)=&snapshot.brep{project_child(child,"semio_object_brep_child",out)?;}if let Some(child)=&snapshot.mesh{project_child(child,"semio_object_mesh_child",out)?;}if let Some(child)=&snapshot.properties{project_child(child,"semio_object_value_child",out)?;}Ok(())
@@ -26,6 +26,7 @@ fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Resu
 fn project_child<S>(child:&store::ArtifactChild<S>,table:&str,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{let target=&child.target;let reference=p.insert("semio_object_reference",&[Cell::Text(&target.artifact_id),Cell::Text(&target.dialect.artifact_kind),Cell::Text(&target.dialect.standard),Cell::Text(&target.dialect.subset)])?;p.insert(table,&[Cell::Integer(1),Cell::Text(&child.child_id),Cell::Integer(reference)])?;Ok(())}
 fn child<S>(database:&SqliteDatabase,table:&str,subset:&str,references:&mut BTreeMap<i64,store::os_io::ArtifactRef>,control:&mut SqliteSnapshotControl<'_>)->Result<Option<store::ArtifactChild<S>>,ValueError>{let rows=database.table(table)?;if rows.rows.is_empty(){return Ok(None);}let row=SqliteRow::new(rows.single_row()?,float_columns(table))?;identity(row,4)?;if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio object child owner"));}let target=references.remove(&row.integer(3)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"dangling or multiply owned Semio object reference"))?;validate_semio_child_identity(row.text(2)?,&target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Ok(Some(store::ArtifactChild::new(reconstruct_text(control,row.text(2)?)?,target)))}
 impl ArtifactSqliteSnapshot for SemioObjectSnapshot{
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}
 fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{(|| -> Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})()}
@@ -73,7 +74,7 @@ pub fn native_child<S>(child:&store::ArtifactChild<S>,b:&mut Bound<'_, '_>)->Res
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

@@ -2,7 +2,7 @@
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
-use crate::standards::v_ecma_376::subsets::base::io::namespaces::{apply_bindings, expanded_name, is_word_name, qualified_word_prefix, set_word_attr, word_attr, XML_NAMESPACE};
+use crate::standards::v_ecma_376::subsets::base::schema::namespaces::{apply_bindings, expanded_name, is_word_name, qualified_word_prefix, set_word_attr, word_attr, XML_NAMESPACE};
 
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 
@@ -345,7 +345,7 @@ fn collect_word_descendants(snapshot: &DocxSnapshot, part_path: &str, parent_pat
 }
 
 fn main_body_path(snapshot: &DocxSnapshot) -> Result<(String, Vec<usize>), ValueError> {
-    let part_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).map_err(crate::standards::v_ecma_376::subsets::base::io::DocxError::into_value_error)?;
+    let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)?;
     let body_path = word_child_path(snapshot, &part_path, &[], &["body"], 0)?;
     Ok((part_path, body_path))
 }
@@ -615,11 +615,11 @@ pub(super) fn run_with_formatting(resolved: &ResolvedDocxXmlAddress, bold: bool,
 }
 
 fn styles_part_path(snapshot: &DocxSnapshot) -> Result<String, ValueError> {
-    let main = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).map_err(crate::standards::v_ecma_376::subsets::base::io::DocxError::into_value_error)?;
+    let main = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)?;
     snapshot
         .opc
-        .resolve_relationship(&main, crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_STYLES)
-        .or_else(|| snapshot.opc.resolve_relationship(&main, crate::standards::v_ecma_376::subsets::base::io::STRICT_REL_TYPE_STYLES))
+        .resolve_relationship(&main, crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_STYLES)
+        .or_else(|| snapshot.opc.resolve_relationship(&main, crate::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_STYLES))
         .ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"DOCX main document has no internal styles relationship"))
 }
 
@@ -770,5 +770,5 @@ pub(super) fn replace_addressed_node(snapshot: &mut DocxSnapshot, address: &Docx
     *node = replacement;
     semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&document).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
     snapshot.xml_parts[part_index].replace_document(document)?;
-    snapshot.validate_authority().map_err(crate::standards::v_ecma_376::subsets::base::io::DocxError::into_value_error)
+    snapshot.validate_authority().map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)
 }

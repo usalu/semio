@@ -152,7 +152,7 @@ impl TessellationPhase {
 }
 
 /// 📈 Monotone progress of one resumable tessellation: `units_done` never decreases and never
-/// exceeds `units_total`, which is fixed at construction (edges + faces + edges).
+/// exceeds `units_total`, fixed at construction (edges + faces + edges, or one standalone vertex).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct TessellationProgress {
     pub units_done: usize,
@@ -185,6 +185,8 @@ pub struct TessellationJob {
     edge_order: Vec<EdgeId>,
     edge_cache: BTreeMap<EdgeId, Vec<(f64, Pnt3)>>,
     vertices: std::collections::BTreeSet<VertexId>,
+    standalone_vertex: Option<VertexId>,
+    vertex_units_done: usize,
     faces: Vec<FaceId>,
     edge_cursor: usize,
     face_cursor: usize,
@@ -213,6 +215,14 @@ impl TessellationJob {
         payloads.pod(self.edge_order); payloads.pod(self.faces);
         payloads.frontier(RetiredEdgeSamples(self.edge_cache)); payloads.frontier(RetiredVertexIds(self.vertices)); payloads.mesh_transfer(self.transfer);
     }
+    /// 📍️ A resumable preview of one original topology vertex without sampled edges or faces.
+    pub fn for_vertex(body: &Body, vertex: VertexId, deflection: f64) -> Result<Self, KernelError> {
+        if body.vertices.get(vertex).is_none() { return Err(KernelError::MissingEntity(vertex.to_string())); }
+        let mut job = Self::seeded(deflection, Vec::new(), Vec::new());
+        job.standalone_vertex = Some(vertex);
+        Ok(job)
+    }
+
     /// 🧩 A resumable tessellation of every face of `solid`.
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn for_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<Self, KernelError> {
@@ -261,6 +271,8 @@ impl TessellationJob {
             deflection: deflection.max(1e-9),
             edge_cache: BTreeMap::new(),
             vertices: std::collections::BTreeSet::new(),
+            standalone_vertex: None,
+            vertex_units_done: 0,
             edge_order,
             faces,
             edge_cursor: 0,
@@ -276,7 +288,7 @@ impl TessellationJob {
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn progress(&self) -> TessellationProgress {
         TessellationProgress {
-            units_done: self.edge_cursor + self.face_cursor + self.pack_cursor,
+            units_done: self.edge_cursor + self.face_cursor + self.pack_cursor + self.vertex_units_done,
             units_total: self.units_total(),
             faces_done: self.face_cursor,
             faces_total: self.faces.len(),
@@ -286,7 +298,7 @@ impl TessellationJob {
 
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     fn units_total(&self) -> usize {
-        self.edge_order.len() + self.faces.len() + self.edge_order.len()
+        self.edge_order.len() + self.faces.len() + self.edge_order.len() + self.vertex_units_done + usize::from(self.standalone_vertex.is_some())
     }
 
     /// 🛑 Retires this job at the next observable boundary — the current phase becomes `Cancelled`
@@ -340,21 +352,27 @@ impl TessellationJob {
                     self.face_cursor += 1;
                 }
                 TessellationPhase::PackingEdges => {
-                    if self.pack_cursor >= self.edge_order.len() {
-                        self.phase = TessellationPhase::Complete;
-                        self.edge_cache.clear();
-                        return Ok(TessellationStep::Done(self.progress()));
+                    if let Some(vertex) = self.standalone_vertex {
+                        self.pack_vertex(body, vertex)?;
+                        self.standalone_vertex = None;
+                        self.vertex_units_done += 1;
+                    } else {
+                        if self.pack_cursor >= self.edge_order.len() {
+                            self.phase = TessellationPhase::Complete;
+                            self.edge_cache.clear();
+                            return Ok(TessellationStep::Done(self.progress()));
+                        }
+                        let edge = self.edge_order[self.pack_cursor];
+                        self.pack_edge(body, edge)?;
+                        self.pack_cursor += 1;
                     }
-                    let edge = self.edge_order[self.pack_cursor];
-                    self.pack_edge(body, edge)?;
-                    self.pack_cursor += 1;
                 }
                 TessellationPhase::Complete => return Ok(TessellationStep::Done(self.progress())),
                 TessellationPhase::Cancelled => return Ok(TessellationStep::Cancelled(self.progress())),
             }
             spent += 1;
         }
-        if self.edge_cursor >= self.edge_order.len() && self.face_cursor >= self.faces.len() && self.pack_cursor >= self.edge_order.len() {
+        if self.edge_cursor >= self.edge_order.len() && self.face_cursor >= self.faces.len() && self.pack_cursor >= self.edge_order.len() && self.standalone_vertex.is_none() {
             self.phase = TessellationPhase::Complete;
             self.edge_cache.clear();
             return Ok(TessellationStep::Done(self.progress()));
@@ -376,14 +394,17 @@ impl TessellationJob {
         let curve_kind = body.curves3.get(edge.curve).map_or(CurveKind::Line, curve_kind_of);
         self.transfer.edge_groups.push(EdgeGroup { start, count, entity_id: label.clone() });
         self.transfer.edge_infos.push(EdgeInfo { entity_id: label, curve_kind, length });
-        for id in [edge.v0, edge.v1] {
-            if self.vertices.insert(id) {
-                let vertex = body.vertices.get(id).ok_or_else(|| KernelError::MissingEntity(id.to_string()))?;
-                let start = u32::try_from(self.transfer.points.len() / 3).map_err(|_| KernelError::InvalidInput("preview vertex capacity exceeded".into()))?;
-                self.transfer.points.extend_from_slice(&[vertex.position.x as f32, vertex.position.y as f32, vertex.position.z as f32]);
-                self.transfer.vertex_groups.push(VertexGroup { start, count: 1, entity_id: vertex.label.0.to_string() });
-            }
-        }
+        for id in [edge.v0, edge.v1] { self.pack_vertex(body, id)?; }
+        Ok(())
+    }
+
+    fn pack_vertex(&mut self, body: &Body, id: VertexId) -> Result<(), KernelError> {
+        if self.vertices.contains(&id) { return Ok(()); }
+        let vertex = body.vertices.get(id).ok_or_else(|| KernelError::MissingEntity(id.to_string()))?;
+        let start = u32::try_from(self.transfer.points.len() / 3).map_err(|_| KernelError::InvalidInput("preview vertex capacity exceeded".into()))?;
+        self.transfer.points.extend_from_slice(&[vertex.position.x as f32, vertex.position.y as f32, vertex.position.z as f32]);
+        self.transfer.vertex_groups.push(VertexGroup { start, count: 1, entity_id: vertex.label.0.to_string() });
+        self.vertices.insert(id);
         Ok(())
     }
 

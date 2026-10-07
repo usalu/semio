@@ -1,0 +1,45 @@
+{
+  "cases": [
+    {
+      "name": "model-reference",
+      "target": {
+        "artifactId": "model-target",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "weather-reference",
+      "target": {
+        "artifactId": "weather-target",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "epw"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "native-uri-is-not-a-semantic-target",
+      "target": "model!s.stdio.semio@v1/model",
+      "valid": false
+    },
+    {
+      "name": "empty-target-refuses",
+      "target": {
+        "artifactId": "",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      },
+      "valid": false
+    }
+  ]
+}

@@ -50,7 +50,7 @@ pub(crate) mod context {
     /// The RUNTIME side stays async (`ArtifactApp`/`VcsArtifactApp` are async traits, unlike the
     /// AUTHORING `ArtifactEditor` this crate implements), so every harness entry point awaits.
     pub async fn app() -> RemodelingApp {
-        let mut app = new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         RemodelingApp(app)
     }
@@ -445,7 +445,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 #[semio_framework_async_macros::async_test]
 async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_once() {
     let envelope = store::create_document_envelope(REMODELING_DOCUMENT_SCHEMA, "remodel-window-preparation-law", RemodelingSnapshot::default(), None);
-    let mut document = store::ArtifactStore::new(envelope).await.expect("Remodel window preparation-law Store opens");
+    let mut document = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("Remodel window preparation-law Store opens");
     document.install_document_store_owners_exact(
         <RemodelingPlayApp as ArtifactEditor>::build_document_store_owners().expect("Remodel document Store owners"),
     );

@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
     use crate::standards::v1_0::subsets::any::io::AviAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
 
@@ -47,7 +47,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.avi", standard: semio_framework_plugin::StandardId("1.0"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<AviSnapshot, crate::standards::v1_0::subsets::any::schema::mutations::AviMutation>(crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.avi", standard: semio_framework_artifact_reference::StandardId("1.0"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<AviSnapshot, crate::standards::v1_0::subsets::any::schema::mutations::AviMutation>(crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -1215,7 +1215,8 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::v1_0::subsets::any::schema::diff::AviDiff;
-    use crate::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
+    use crate::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation,AviMutation};
+
     use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -1258,7 +1259,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v1_0::subsets::any::io;
     use crate::standards::v1_0::subsets::any::schema::snapshot::{AviSnapshot, STDIO_AVI_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct AviParts {

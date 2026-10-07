@@ -60,7 +60,7 @@ fn query_windows() -> ViewModel {
 /// 🔚 Self-closing: the store's `Drop` demands the terminal-empty witness, so the guard retires the
 /// app through the framework's exact close loop unless the test already closed it (or is unwinding).
 async fn new_app() -> JackTestApp {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_jack_manifest_for_tests).await;
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_jack_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(JACK_TEST_INSTANCE).await;
     JackTestApp { app, closed: false }
 }
@@ -123,7 +123,7 @@ fn jack_envelope_wire_of(snapshot: crate::JackSnapshot) -> Vec<u8> {
         "schema": TRINITY_GRAPH_SCHEMA,
         "id": "jack-live-load",
         "vcs": {
-            "initialSnapshot": snapshot_hex,
+            "initialPack": snapshot_hex,
             "edits": [],
             "changes": [],
             "checkpoints": [],

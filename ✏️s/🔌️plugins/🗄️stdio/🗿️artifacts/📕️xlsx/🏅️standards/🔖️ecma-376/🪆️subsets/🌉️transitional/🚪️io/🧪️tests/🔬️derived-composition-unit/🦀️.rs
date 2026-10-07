@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     use crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
     use crate::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;

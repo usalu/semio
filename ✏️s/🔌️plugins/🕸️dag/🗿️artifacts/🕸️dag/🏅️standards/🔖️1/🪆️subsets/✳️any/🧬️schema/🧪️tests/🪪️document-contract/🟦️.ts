@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyDagDiff } from "../../🔺️diff/🟦️.ts";
 import semioChildSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json" with { type: "json" };
@@ -19,7 +20,7 @@ import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json
 export function testDagDocumentContractOracle(): void {
   assertDocumentContractOracle({
     name: "DAG",
-    dependencies: [ioSchema, childSchema, semioChildSchema],
+    dependencies: [ioSchema, childSchema, semioChildSchema,artifactReferenceSchema],
     childIdentityFields: ["content"],
     artifact: { schema: artifactSchema, parse: parseDagArtifact },
     snapshot: { schema: snapshotSchema, parse: parseDagSnapshot },

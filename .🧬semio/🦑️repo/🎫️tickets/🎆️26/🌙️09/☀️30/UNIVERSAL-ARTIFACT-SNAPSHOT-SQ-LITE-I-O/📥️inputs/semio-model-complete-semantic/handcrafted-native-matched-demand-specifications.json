@@ -1,0 +1,1096 @@
+[
+  {
+    "name": "model",
+    "cap": "Model",
+    "tables": 9,
+    "maxColumns": 31,
+    "contract": {
+      "schemaBytes": 3230,
+      "tableWidths": {
+        "semio_model_document": 2,
+        "semio_model_element": 4,
+        "semio_model_entity": 5,
+        "semio_model_geometry_reference": 3,
+        "semio_model_placement": 31,
+        "semio_model_property": 10,
+        "semio_model_property_set": 4,
+        "semio_model_relation": 8,
+        "semio_model_spatial": 4
+      },
+      "cases": [
+        {
+          "id": "full",
+          "sourceSnapshot": {
+            "schema": "stdio.semio.model",
+            "spatial": [
+              {
+                "id": "spatial-0",
+                "kind": "site",
+                "name": "Spatial 0",
+                "parentId": null,
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "spatial-1",
+                "kind": "building",
+                "name": "Spatial 1",
+                "parentId": "spatial-0",
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "spatial-2",
+                "kind": "storey",
+                "name": "Spatial 2",
+                "parentId": "spatial-1",
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "spatial-3",
+                "kind": "space",
+                "name": "Spatial 3",
+                "parentId": "spatial-2",
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                }
+              }
+            ],
+            "elements": [
+              {
+                "id": "element-0",
+                "class": {
+                  "kind": "wall"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "none"
+                },
+                "spatialId": "spatial-3",
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": true
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-1",
+                "class": {
+                  "kind": "slab"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "brep",
+                  "brepId": "external-geometry"
+                },
+                "spatialId": null,
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": false
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-2",
+                "class": {
+                  "kind": "column"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "mesh",
+                  "meshId": "external-geometry"
+                },
+                "spatialId": "spatial-3",
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": true
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-3",
+                "class": {
+                  "kind": "beam"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "none"
+                },
+                "spatialId": null,
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": false
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-4",
+                "class": {
+                  "kind": "door"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "brep",
+                  "brepId": "external-geometry"
+                },
+                "spatialId": "spatial-3",
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": true
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-5",
+                "class": {
+                  "kind": "window"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "mesh",
+                  "meshId": "external-geometry"
+                },
+                "spatialId": null,
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": false
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-6",
+                "class": {
+                  "kind": "roof"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "none"
+                },
+                "spatialId": "spatial-3",
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": true
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-7",
+                "class": {
+                  "kind": "stair"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "brep",
+                  "brepId": "external-geometry"
+                },
+                "spatialId": null,
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": false
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-8",
+                "class": {
+                  "kind": "furniture"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "mesh",
+                  "meshId": "external-geometry"
+                },
+                "spatialId": "spatial-3",
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": true
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "element-9",
+                "class": {
+                  "kind": "other",
+                  "name": "IfcCustom世界"
+                },
+                "placement": {
+                  "translation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "x": {
+                      "bits": "0000000000000000"
+                    },
+                    "y": {
+                      "bits": "0000000000000000"
+                    },
+                    "z": {
+                      "bits": "0000000000000000"
+                    },
+                    "w": {
+                      "bits": "3ff0000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "z": {
+                      "bits": "3ff0000000000000"
+                    }
+                  }
+                },
+                "geometry": {
+                  "kind": "none"
+                },
+                "spatialId": null,
+                "psets": [
+                  {
+                    "name": "Pset typed",
+                    "properties": [
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "text",
+                          "value": "Grüße\u0000世界"
+                        }
+                      },
+                      {
+                        "key": "same",
+                        "value": {
+                          "kind": "number",
+                          "value": {
+                            "bits": "3ff3c0ca428c59fb"
+                          }
+                        }
+                      },
+                      {
+                        "key": "boolean",
+                        "value": {
+                          "kind": "boolean",
+                          "value": false
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "relations": [
+              {
+                "id": "relation-0",
+                "kind": {
+                  "kind": "aggregates"
+                },
+                "from": "spatial-0",
+                "to": "element-0"
+              },
+              {
+                "id": "relation-1",
+                "kind": {
+                  "kind": "containedIn"
+                },
+                "from": "spatial-0",
+                "to": "element-1"
+              },
+              {
+                "id": "relation-2",
+                "kind": {
+                  "kind": "connectsTo"
+                },
+                "from": "spatial-0",
+                "to": "element-2"
+              },
+              {
+                "id": "relation-3",
+                "kind": {
+                  "kind": "fillsVoid"
+                },
+                "from": "spatial-0",
+                "to": "element-3"
+              },
+              {
+                "id": "relation-4",
+                "kind": {
+                  "kind": "voidsElement"
+                },
+                "from": "spatial-0",
+                "to": "element-4"
+              },
+              {
+                "id": "relation-5",
+                "kind": {
+                  "kind": "other",
+                  "label": "custom relation"
+                },
+                "from": "spatial-0",
+                "to": "element-5"
+              }
+            ]
+          },
+          "rows": 99,
+          "valueBytes": 6496
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "sourceSnapshot": {
+            "schema": "stdio.semio.model",
+            "spatial": [],
+            "elements": [],
+            "relations": []
+          },
+          "rows": 1,
+          "valueBytes": 25
+        }
+      ],
+      "publicIo": {
+        "schemaBytes": 3523,
+        "tableWidths": {
+          "semio_model_document": 2,
+          "semio_model_element": 4,
+          "semio_model_entity": 5,
+          "semio_model_geometry_reference": 3,
+          "semio_model_placement": 31,
+          "semio_model_property": 10,
+          "semio_model_property_set": 4,
+          "semio_model_relation": 8,
+          "semio_model_spatial": 4,
+          "semio_snapshot": 6
+        },
+        "cases": [
+          {
+            "id": "full",
+            "rows": 100,
+            "valueBytes": {
+              "binary": 6538,
+              "text": 6536
+            }
+          },
+          {
+            "id": "metadataRetainingEmpty",
+            "rows": 2,
+            "valueBytes": {
+              "binary": 67,
+              "text": 65
+            }
+          }
+        ]
+      }
+    },
+    "rustBody": "let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.spatial.clear();source.elements.clear();source.relations.clear();}source",
+    "hydrate": "const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value===\"object\"?(\"bits\"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt(\"0x\"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source))"
+  }
+]

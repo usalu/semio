@@ -5,8 +5,10 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
+use crate::standards::v1::subsets::image::io::text::mutations::TEXT_KEYWORDS;
 use crate::standards::v1::subsets::image::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::image::schema::diff::{diff_set_snapshot, SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
 use crate::standards::v1::subsets::image::io::text::snapshot::{dec_metadata_entry};
 use crate::standards::v1::subsets::image::io::text::snapshot::{enc_metadata_entry};

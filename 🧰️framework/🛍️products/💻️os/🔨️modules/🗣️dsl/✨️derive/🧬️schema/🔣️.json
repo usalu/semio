@@ -28,50 +28,6 @@
         }
       ]
     },
-    "MandatoryMutationDescriptorFacts": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "descriptorsHasInitializer",
-        "descriptorHasDefaultBody",
-        "sentinelPresent"
-      ],
-      "properties": {
-        "descriptorsHasInitializer": {
-          "type": "boolean"
-        },
-        "descriptorHasDefaultBody": {
-          "type": "boolean"
-        },
-        "sentinelPresent": {
-          "type": "boolean"
-        }
-      }
-    },
-    "MandatoryMutationDescriptorExpectation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "accepted",
-        "violations"
-      ],
-      "properties": {
-        "accepted": {
-          "type": "boolean"
-        },
-        "violations": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "enum": [
-              "descriptors-has-initializer",
-              "descriptor-has-default-body",
-              "undeclared-sentinel-present"
-            ]
-          }
-        }
-      }
-    },
     "MutationAuthoritySegment": {
       "type": "string",
       "minLength": 1,
@@ -79,7 +35,7 @@
     },
     "MutationSourceAuthorityProjectionV1": {
       "title": "Mutation Source Authority Projection",
-      "description": "The taxonomy facts the mutation derive macros read at compile time, generated from \ud83d\udd23\ufe0ftaxonomy.json so only a change to these facts invalidates a deriving crate.",
+      "description": "The taxonomy facts the mutation derive macros read at compile time, generated from 🔣️taxonomy.json so only a change to these facts invalidates a deriving crate.",
       "type": "object",
       "additionalProperties": false,
       "required": [

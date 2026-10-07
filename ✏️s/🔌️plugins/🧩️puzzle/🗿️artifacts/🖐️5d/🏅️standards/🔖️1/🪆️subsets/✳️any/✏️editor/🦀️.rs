@@ -13,8 +13,11 @@
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle5dPlaySnapshot};
+
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle5dMutation};
+
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_document_delta_operations};
+
 use crate::Puzzle5dSnapshot;
 use crate::editor::puzzle5d::commands::{
     add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
@@ -709,7 +712,8 @@ pub fn grips_from_templates(document: &Puzzle5dDocument, part_kind: &str) -> Vec
         .collect()
 }
 
-pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul};
+pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle,quat_mul};
+
 
 pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
     let [x, y, z, w] = quat;
@@ -4417,7 +4421,7 @@ impl<'a> Puzzle5dActionCtx<'a> {
             return;
         }
         let request = world3d::utilities::transform::TransformToolRequest { base, records };
-        if let Some((transaction, mutations)) = world3d::utilities::transform::puzzle5d_transform_tool_commit(verb, self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
+        if let Some((transaction, mutations)) = world3d::utilities::transform::puzzle5d_transform_tool_commit(verb, self.authoring_seed, request) {
             self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
             self.artifact_mutations.extend(mutations);
         }
@@ -5146,7 +5150,7 @@ impl Puzzle5dTransformWork {
             return puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str());
         }
         let request = world3d::utilities::transform::TransformToolRequest { base, records: vec![record] };
-        match world3d::utilities::transform::puzzle5d_transform_tool_commit(self.tool_id, &self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
+        match world3d::utilities::transform::puzzle5d_transform_tool_commit(self.tool_id, &self.authoring_seed, request) {
             Some((transaction, mutations)) => Emit { artifact_mutations: mutations, transaction: (!self.authoring_seed.is_empty()).then_some(transaction), ui_scope: UiDirtyScope::Full, ..Default::default() },
             None => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
         }
@@ -7678,7 +7682,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 // skipped part as `mutation.partial`.
                 self.locked_refused |= drags.iter().any(|record| record.targets.iter().any(|id| base.parts.iter().any(|part| &part.id == id && part.part_2d.locked == Some(true))));
                 let request = world3d::utilities::transform::TransformToolRequest { base, records: drags };
-                let committed = (!request.records.is_empty()).then(|| world3d::utilities::transform::puzzle5d_transform_tool_commit("applyBoardEvents", &self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request)).flatten();
+                let committed = (!request.records.is_empty()).then(|| world3d::utilities::transform::puzzle5d_transform_tool_commit("applyBoardEvents", &self.authoring_seed, request)).flatten();
                 let mut artifact_mutations = std::mem::take(&mut self.mutations);
                 let transaction = committed.map(|(transaction, leaves)| {
                     let later = artifact_mutations.split_off(drag_at);

@@ -15,7 +15,7 @@
       "const": "setDefaultApp"
     },
     "dialect": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactDialect",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactDialect",
       "x-semio-ui": {
         "role": "value",
         "label": {

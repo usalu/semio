@@ -27,3 +27,6 @@ pub use mutations::{apply_svg_tiny_mutation, SvgTinyMutation, KINDS as TINY_MUTA
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+#[path="🏅️conformance/🦀️.rs"]
+pub mod conformance;

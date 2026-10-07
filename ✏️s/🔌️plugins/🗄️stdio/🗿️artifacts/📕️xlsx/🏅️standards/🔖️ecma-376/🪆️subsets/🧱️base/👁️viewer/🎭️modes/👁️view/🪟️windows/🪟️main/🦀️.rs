@@ -1,6 +1,6 @@
 //! 📊️ Sparse, windowed, read-only worksheet grids for the XLSX viewer.
 
-use crate::standards::v_ecma_376::subsets::base::io::column_letter;
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::{XLSX_MAX_COLUMN, XLSX_MAX_ROW};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet};
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::render_xlsx_cell_value;

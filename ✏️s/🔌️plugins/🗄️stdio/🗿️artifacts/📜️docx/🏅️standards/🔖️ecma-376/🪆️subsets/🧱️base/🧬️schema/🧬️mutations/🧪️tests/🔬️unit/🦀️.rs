@@ -1,3 +1,4 @@
+use protocol::{OpText,OpBinary};
 use super::*;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
@@ -7,8 +8,8 @@ fn namespace_formatting_fixture() -> serde_json::Value {
 }
 
 fn namespace_formatting_snapshot(case: &serde_json::Value) -> DocxSnapshot {
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
-    let mut snapshot = crate::engine::build_minimal_docx(DocxDocument { body: Vec::new(), styles: vec![DocxStyle { id: "Heading".into(), name: "Heading title".into(), based_on: Some("Normal".into()) }] });
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument { body: Vec::new(), styles: vec![DocxStyle { id: "Heading".into(), name: "Heading title".into(), based_on: Some("Normal".into()) }] });
     snapshot.xml_part_mut("word/document.xml").unwrap().replace_document(xml_document_from_text(case["documentXml"].as_str().unwrap()).unwrap()).unwrap();
     snapshot.xml_part_mut("word/styles.xml").unwrap().replace_document(xml_document_from_text(case["stylesXml"].as_str().unwrap()).unwrap()).unwrap();
     snapshot
@@ -75,7 +76,7 @@ fn namespace_projection_matches_independent_expanded_names_and_false_flags() {
 
 #[test]
 fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_inverse() {
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text;
     for case in namespace_formatting_fixture()["cases"].as_array().unwrap() {
         let before = namespace_formatting_snapshot(case);
         let namespace = case["namespace"].as_str().unwrap();
@@ -129,7 +130,7 @@ fn apply(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) {
 
 #[semio_framework_async_macros::async_test]
 async fn block_run_style_and_part_mutations_apply_and_inverse() {
-    let mut base = crate::engine::build_minimal_docx(DocxDocument {
+    let mut base = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![
             DocxBlock::paragraph("first"),
             DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }),
@@ -147,7 +148,7 @@ async fn block_run_style_and_part_mutations_apply_and_inverse() {
         DocxMutation::InsertStyle(insert_style::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "Heading 1".into(), based_on: Some("Normal".into()) } }),
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id: "Normal".into(), name: "Body".into() }),
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Heading1".into()) }),
-        DocxMutation::SetPart(set_part::SetPart { path: "word/media/new.bin".into(), content_type: "application/octet-stream".into(), bytes: vec![4, 5, 6] }),
+        DocxMutation::SetPart(set_part::SetPart { path: "word/media/new.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![4, 5, 6] } }),
         DocxMutation::RemovePart(remove_part::RemovePart { path: "word/media/original.bin".into() }),
     ];
 
@@ -195,7 +196,7 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
     let address = docx_block_run_address(&base, &DocxBlockPath { segments: vec![], index: 0 }, 0).expect("run address");
     apply(&mut middle, &DocxMutation::SetRunText(set_run_text::SetRunText { address, text: "middle".into() }));
     let mut final_snapshot = middle.clone();
-    apply(&mut final_snapshot, &DocxMutation::SetPart(set_part::SetPart { path: "word/media/final.bin".into(), content_type: "application/octet-stream".into(), bytes: vec![9, 8, 7] }));
+    apply(&mut final_snapshot, &DocxMutation::SetPart(set_part::SetPart { path: "word/media/final.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![9, 8, 7] } }));
 
     let first = DocxDiff::between(&base, &middle);
     let second = DocxDiff::between(&middle, &final_snapshot);
@@ -214,7 +215,7 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
 
 #[test]
 fn invalid_paragraph_style_and_last_table_row_removal_are_atomic() {
-    let base = crate::engine::build_minimal_docx(DocxDocument {
+    let base = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![
             DocxBlock::paragraph("body"),
             DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("only row")], ..Default::default() }], ..Default::default() }], ..Default::default() }),
@@ -235,7 +236,7 @@ fn invalid_paragraph_style_and_last_table_row_removal_are_atomic() {
 fn identical_run_insertion_invalidates_the_original_canonical_address() {
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 
     let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️identical-run-displacement/🔣️.json")).unwrap();
     let before_xml = authored["beforeXml"].as_str().unwrap();
@@ -272,7 +273,7 @@ fn canonical_xml_addresses_support_empty_and_default_namespaces_and_reject_unbou
     use crate::schema::snapshot::DocxXmlPart;
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 
     let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️xml-address-namespaces/🔣️.json")).unwrap();
     let part_path = authored["partPath"].as_str().unwrap();
@@ -305,7 +306,7 @@ fn canonical_xml_addresses_support_empty_and_default_namespaces_and_reject_unbou
 fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse() {
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text};
 
     let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔤️run-text-fidelity/🔣️.json")).unwrap();
     let part_path = authored["partPath"].as_str().unwrap();
@@ -398,7 +399,7 @@ fn kinds_const_matches_enum_variants_in_declaration_order() {
 #[semio_framework_async_macros::async_test]
 async fn top_level_table_projection_matches_independent_xml_text_order() {
     use quick_xml::{events::Event, Reader};
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
     let xml = fixture["xml"].as_str().unwrap();
     let mut reader = Reader::from_str(xml);
@@ -412,8 +413,8 @@ async fn top_level_table_projection_matches_independent_xml_text_order() {
     }
     let expected: Vec<Vec<String>> = serde_json::from_value(fixture["blocks"].clone()).unwrap();
     assert_eq!(oracle, expected.iter().flatten().cloned().collect::<Vec<_>>());
-    let mut snapshot = crate::engine::build_minimal_docx(DocxDocument::default());
-    let part_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).unwrap();
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default());
+    let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
     snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(xml).unwrap()).unwrap();
     assert_eq!(docx_top_level_block_count(&snapshot).unwrap(), expected.len());
     for (block, runs) in expected.iter().enumerate() {
@@ -432,12 +433,12 @@ async fn top_level_table_projection_matches_independent_xml_text_order() {
 #[test]
 fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent_xml() {
     use quick_xml::{events::Event, name::ResolveResult, reader::NsReader};
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✍️empty-paragraphs/🔣️.json")).unwrap();
     let replacement = fixture["replacement"].as_str().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut snapshot = crate::engine::build_minimal_docx(DocxDocument::default());
-        let part_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).unwrap();
+        let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default());
+        let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
         snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(case["xml"].as_str().unwrap()).unwrap()).unwrap();
         let before = snapshot.clone();
         let expected_blocks: Vec<Vec<String>> = serde_json::from_value(case["blocks"].clone()).unwrap();

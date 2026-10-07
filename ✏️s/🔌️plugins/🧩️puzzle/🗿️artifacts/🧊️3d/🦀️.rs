@@ -73,7 +73,7 @@ pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 /// `"s.puzzle3d.schema.artifact"` row), standard `"1"` and subset `"*"` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Lives at the artifact level (not under the two
 /// surfaces) so a viewer file can read it without ever importing through the sibling editor module.
-pub const PUZZLE3D_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.puzzle.puzzle3d", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const PUZZLE3D_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.puzzle.puzzle3d", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 
 //#region 📐️Scale
 /// 📐️ A placed object's / target volume's freeform pose scale: either a single scalar broadcast
@@ -149,6 +149,10 @@ impl semio_framework_value::FromValue for Puzzle3dScale {
 /// per the engine's own `validate_table_columns`), so this binds through the bracketed
 /// `Shape::List(Float)` instead: `scale=[2]` (uniform) / `scale=[2 3 4]` (per-axis) — the brackets
 /// make it self-delimiting regardless of item count.
+impl semio_framework_dsl_record::BorrowedDslField for Puzzle3dScale {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = <Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE;
+}
+
 impl semio_framework_dsl_record::DslField for Puzzle3dScale {
     fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
         <Vec<f64> as semio_framework_dsl_record::DslField>::shape_controlled(control)
@@ -846,7 +850,7 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle3d").expect("canonical puzzle3d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 
@@ -884,8 +888,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "puzzle.puzzle3d.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("puzzle.puzzle3d.diff"),
@@ -1891,3 +1895,9 @@ pub mod config {
 }
 
 pub use crate::standards::v1::subsets::any::io::{Puzzle3dBuilderConstruction, Puzzle3dParts, Puzzle3dAnalyzerAnalysis, Puzzle3dBuilderFacets, Puzzle3dBuilder, Puzzle3dAnalyzer, Puzzle3dComposer};
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

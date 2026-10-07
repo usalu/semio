@@ -482,9 +482,9 @@ fn world3d_preview_window_law(surface_id: &str) {
     assert_eq!(state.snapshot_fault(), None, "the production attach reaches a published snapshot without faulting");
     let pass = painted.draw.scene_passes.first().expect("the World3d host paints a real 3-D pass into the window draw list");
     assert_eq!(pass.viewport, [bounds.x, bounds.y, bounds.w, bounds.h], "the pass is sized to the window body");
-    assert_eq!(pass.draws.len(), expect["draws"].as_u64().expect("draws") as usize, "one draw per previewed mesh that actually carries triangles");
+    assert_eq!(pass.draws.len(), expect["draws"].as_u64().expect("draws") as usize, "each original surface and wire mesh retains its draw");
 
-    let draw = pass.draws.first().expect("published draw");
+    let draw = pass.draws.iter().find(|draw| Some(draw.mesh_key.as_str()) == expect["drawMeshKey"].as_str()).expect("published solid draw");
     assert_eq!(draw.mesh_key, expect["drawMeshKey"].as_str().expect("mesh key"));
     let instance_ids: Vec<&str> = draw.instances.iter().map(|instance| instance.id.as_str()).collect();
     let expected_ids: Vec<&str> = expect["instanceIds"].as_array().expect("instance ids").iter().map(|id| id.as_str().expect("id")).collect();

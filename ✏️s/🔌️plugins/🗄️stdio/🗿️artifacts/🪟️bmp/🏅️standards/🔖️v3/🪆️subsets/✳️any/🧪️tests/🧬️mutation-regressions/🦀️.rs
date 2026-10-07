@@ -13,7 +13,7 @@ fn indexed() -> crate::BmpSnapshot {
 fn direct_region_mutation_is_revision_guarded_and_exactly_invertible() {
     let original = direct();
     let mutation = BmpMutation::PaintDirectRegion(PaintDirectRegion {
-        revision: crate::standards::v_v3::subsets::any::io::bmp_revision(&original),
+        revision: crate::standards::v_v3::subsets::any::schema::operations::bmp_revision(&original),
         x: 1,
         y: 0,
         width: 1,
@@ -27,14 +27,14 @@ fn direct_region_mutation_is_revision_guarded_and_exactly_invertible() {
     assert_eq!(inverse.len(), 1);
     let mut edited = original.clone();
     let outcome = apply_bmp_mutation(&mut edited, &mutation);
-    assert!(!outcome.diff().bytes.is_none());
+    assert!(!outcome.diff().image.is_none());
     assert_ne!(edited, original);
     apply_bmp_mutation(&mut edited, &inverse[0]);
     assert_eq!(edited, original);
 
     let stale = BmpMutation::PaintDirectRegion(PaintDirectRegion { revision: "stale".into(), ..match mutation { BmpMutation::PaintDirectRegion(payload) => payload, _ => unreachable!() } });
     let mut unchanged = original.clone();
-    assert!(apply_bmp_mutation(&mut unchanged, &stale).diff().bytes.is_none());
+    assert!(apply_bmp_mutation(&mut unchanged, &stale).diff().image.is_none());
     assert_eq!(unchanged, original);
 }
 
@@ -42,7 +42,7 @@ fn direct_region_mutation_is_revision_guarded_and_exactly_invertible() {
 fn indexed_region_mutation_round_trips_text_binary_and_undo() {
     let original = indexed();
     let mutation = BmpMutation::PaintIndexedRegion(PaintIndexedRegion {
-        revision: crate::standards::v_v3::subsets::any::io::bmp_revision(&original),
+        revision: crate::standards::v_v3::subsets::any::schema::operations::bmp_revision(&original),
         x: 0,
         y: 0,
         width: 2,

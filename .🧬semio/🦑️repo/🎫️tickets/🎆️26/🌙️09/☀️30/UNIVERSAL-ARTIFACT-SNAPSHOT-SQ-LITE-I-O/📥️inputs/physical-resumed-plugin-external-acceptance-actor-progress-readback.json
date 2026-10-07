@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-06T13:52:17.786Z",
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs",
+  "mtime": "2026-10-06T13:49:57.253Z",
+  "oldOptionSetters": 0,
+  "currentActorLines": [
+    {
+      "line": 20,
+      "text": "const ACCEPTANCE_ACTOR: &str = \"history-edit-acceptance\";"
+    },
+    {
+      "line": 294,
+      "text": "    ActionMeta { view_state: Some(ViewModel::new(Locale::En, Terminology::Native)), ..artifact_app_laws::meta(ACCEPTANCE_ACTOR) }"
+    },
+    {
+      "line": 352,
+      "text": "    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;"
+    },
+    {
+      "line": 353,
+      "text": "    app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;"
+    },
+    {
+      "line": 355,
+      "text": "        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));"
+    },
+    {
+      "line": 1059,
+      "text": "    let mut reloaded = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;"
+    },
+    {
+      "line": 1060,
+      "text": "    reloaded.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;"
+    },
+    {
+      "line": 1062,
+      "text": "        assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));"
+    },
+    {
+      "line": 1162,
+      "text": "        let mut saved = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;"
+    },
+    {
+      "line": 1163,
+      "text": "        saved.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;"
+    },
+    {
+      "line": 1166,
+      "text": "                assert_eq!(saved.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));"
+    },
+    {
+      "line": 1219,
+      "text": "    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;"
+    },
+    {
+      "line": 1220,
+      "text": "    app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;"
+    },
+    {
+      "line": 1222,
+      "text": "        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));"
+    },
+    {
+      "line": 1410,
+      "text": "    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;"
+    }
+  ],
+  "qualification": "Read-only concurrent current state, no physical source edits"
+}

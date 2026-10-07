@@ -2190,7 +2190,7 @@ function buildVertexPickData(mesh: WorldMeshData): VertexPickData | null {
   const emitted = new Set<number>();
   for (let index = 0; index < mesh.vertexIds.length; index += 1) {
     const id = mesh.vertexIds[index]!;
-    if (emitted.has(id)) continue;
+    if (id === 0xffff_ffff || emitted.has(id)) continue;
     emitted.add(id);
     vertexIds.push(id);
     positions.push(mesh.positions[index * 3]!, mesh.positions[index * 3 + 1]!, mesh.positions[index * 3 + 2]!);
@@ -3335,9 +3335,9 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredEdgeId = hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
-  const selectedFaceIds = isActiveObject && selectionMode === "face" ? selectedComponentIds : new Set<number>();
-  const selectedVertexIds = isActiveObject && selectionMode === "vertex" ? selectedComponentIds : new Set<number>();
-  const selectedEdgeIds = isActiveObject && selectionMode === "edge" ? selectedComponentIds : new Set<number>();
+  const selectedFaceIds = selectionMode === "face" ? selectedComponentIds : new Set<number>();
+  const selectedVertexIds = selectionMode === "vertex" ? selectedComponentIds : new Set<number>();
+  const selectedEdgeIds = selectionMode === "edge" ? selectedComponentIds : new Set<number>();
   const previewFaceIds = isActiveObject && selectionMode === "face" ? previewComponentIds : new Set<number>();
   const previewVertexIds = isActiveObject && selectionMode === "vertex" ? previewComponentIds : new Set<number>();
   const previewEdgeIds = isActiveObject && selectionMode === "edge" ? previewComponentIds : new Set<number>();
@@ -3353,6 +3353,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
 
   const hasShadedMesh = Boolean(meshData && geometry && meshData.indices.length > 0);
   const isCurveOnly = Boolean(meshData && isCurveOnlyWorldMesh(meshData));
+  const isPointOnly = Boolean(meshData && !hasShadedMesh && !edgeGeometry && vertexPick);
   const curveLineWidth = styleKind === "neutral" ? 2 : 4;
 
   return (
@@ -3493,7 +3494,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               <lineBasicMaterial color={style.lineColor} linewidth={isCurveOnly ? curveLineWidth : 1} depthTest={false} />
             </lineSegments>
           ) : null}
-          {targets.vertex && vertexPick ? (
+          {(targets.vertex || isPointOnly) && vertexPick ? (
             <points
               geometry={vertexPick.geometry}
               onClick={(event) => {
@@ -3504,6 +3505,10 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
                 }
                 if (!instancePickEnabled) return;
                 event.stopPropagation();
+                if (!targets.vertex) {
+                  if (targets.mesh) onInstancePointerDown(instance.id, index, event);
+                  return;
+                }
                 const idx = event.index ?? 0;
                 const vertexId = vertexPick.vertexIds[idx];
                 if (vertexId == null) return;
@@ -3512,16 +3517,20 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               onPointerMove={(event) => {
                 if (!instancePickEnabled) return;
                 event.stopPropagation();
+                if (!targets.vertex) {
+                  onInstancePointerMove(instance.id);
+                  return;
+                }
                 const idx = event.index ?? 0;
                 const vertexId = vertexPick.vertexIds[idx];
                 if (vertexId == null) return;
                 onComponentHover({ objectId: instance.id, mode: "vertex", id: vertexId });
               }}
-              onPointerOut={() => onComponentHover(null)}
+              onPointerOut={() => { onInstancePointerMove(null); onComponentHover(null); }}
             >
               {/* 📍️ Screen-space dots: a world-unit size (0.05) is sub-pixel on a six-unit mesh seen from
                   thirty units away, so vertex mode showed nothing to hover or pick (lowpoly, 2026-09-18). */}
-              <pointsMaterial color={colors.edge} size={WORLD_VERTEX_DOT_PX} sizeAttenuation={false} />
+              <pointsMaterial color={isPointOnly ? style.lineColor : colors.edge} size={WORLD_VERTEX_DOT_PX} sizeAttenuation={false} />
             </points>
           ) : null}
           {faceSelectedOverlay ? (
@@ -3803,6 +3812,23 @@ function WorldInstancesLayer({
     () => (mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>()),
     [currentComponentIds, mergedComponentIdsSet],
   );
+  const analyticComponentIdsByInstance = useMemo(() => {
+    const byInstance = new Map<string, Set<number>>();
+    const byTarget = new Map(instances.map(instance => [instance.interactionId ?? instance.id, instance]));
+    for (const target of selection.gumballSelectionIds ?? []) {
+      const address = /^(.+)\.(vertex|edge|face)\.(0|[1-9][0-9]*)~/.exec(target);
+      if (!address || address[2] !== selectionMode) continue;
+      const instance = byTarget.get(address[1]!);
+      const group = Number(address[3]);
+      if (!instance?.componentSource || !Number.isSafeInteger(group)) continue;
+      const mesh = meshById.get(instance.meshId ?? instance.id);
+      if (!mesh || world3dComponentInteractionTarget([instance], [mesh], instance.id, address[2]!, group)?.id !== target) continue;
+      let groups = byInstance.get(instance.id);
+      if (!groups) byInstance.set(instance.id, groups = new Set());
+      groups.add(group);
+    }
+    return byInstance;
+  }, [instances, meshById, selection.gumballSelectionIds, selectionMode]);
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
   const selectedIds = selection.ids ?? [];
   const instanceChromeStore = useMemo(() => createWorldInstanceChromeStore(), []);
@@ -4103,6 +4129,9 @@ function WorldInstancesLayer({
           const position = instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0];
           const scale = instance.scale ?? WORLD_INSTANCE_UNIT_SCALE;
           const quaternion = worldInstanceQuaternion(instance);
+          const isActiveObject = instance.id === selection.activeObjectId || (instance.interactionId != null && instance.interactionId === selection.activeObjectId);
+          const componentIds = instance.componentSource ? analyticComponentIdsByInstance.get(instance.id) ?? new Set<number>() : isActiveObject ? selectedComponentIds : new Set<number>();
+          const selectedIds = instance.componentSource && isActiveObject && mergedComponentIdsSet ? new Set([...componentIds].filter(id => mergedComponentIdsSet.has(id))) : componentIds;
           return (
             <WorldInstanceNode
               key={instance.id}
@@ -4124,7 +4153,7 @@ function WorldInstancesLayer({
               targets={targets}
               activeObjectId={selection.activeObjectId ?? undefined}
               selectionMode={selectionMode}
-              selectedComponentIds={selectedComponentIds}
+              selectedComponentIds={selectedIds}
               previewComponentIds={previewComponentIds}
               hoveredComponent={hoveredComponent}
               showEdges={selection.showEdges}
@@ -5970,7 +5999,7 @@ export function world3dComponentInteractionTarget(instances: readonly WorldInsta
   const id = `${record?.interactionId ?? objectId}.${granularity}.${componentId}`;
   const source = record?.componentSource;
   if (!source) return { granularity, id };
-  if (!Number.isInteger(componentId) || componentId < 0 || !["edge", "face"].includes(granularity) || !/^[0-9a-f]{64}$/.test(source.handle) || !/^[0-9a-f]{64}$/.test(source.revision)) return undefined;
+  if (!Number.isInteger(componentId) || componentId < 0 || !["vertex", "edge", "face"].includes(granularity) || !/^[0-9a-f]{64}$/.test(source.handle) || !/^[0-9a-f]{64}$/.test(source.revision)) return undefined;
   const references = meshes.find(mesh => mesh.id === record?.meshId)?.data?.componentReferences?.[granularity];
   const label = references?.[componentId];
   if (!label || !/^[1-9][0-9]{0,19}$/.test(label) || BigInt(label) > 18446744073709551615n || references!.filter(value => value === label).length !== 1) return undefined;
@@ -7385,7 +7414,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!sent) return;
     gumballDragChainRef.current = gumballDragChainRef.current
       .then(async () => {
-        await dispatch(sent.action, sent.args);
+        await dispatchSettled(sent.action, sent.args);
       })
       .catch(() => undefined)
       .finally(() => {

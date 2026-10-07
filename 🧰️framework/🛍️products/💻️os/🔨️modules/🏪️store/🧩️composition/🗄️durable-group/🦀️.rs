@@ -11,6 +11,7 @@ use crate::os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
 use crate::os_store::{ArtifactDsl, ArtifactPack, ArtifactStore, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError, pack_rt};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
+use std::collections::BTreeMap;
 
 pub const DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1: &str = "semio.store.durable-owned-three-member-decision.v1";
 pub const DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1: &str = "semio.store.owned-three-member-anchor.v1";
@@ -35,7 +36,7 @@ const VALUE_RECOVERY_SCHEMA: &str = "semio.store.one-item-outcome.stdio-value-v1
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DurableOwnedGroupAnchorV1 {
     pub(crate) schema: String,
-    pub(crate) parent: crate::os_io::ArtifactRef,
+    pub(crate) parent: semio_framework_artifact_reference::ArtifactRef,
     pub(crate) shape: String,
 }
 
@@ -43,7 +44,7 @@ pub struct DurableOwnedGroupAnchorV1 {
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DurableOwnedGroupMemberV1 {
     pub(crate) role: String,
-    pub(crate) reference: crate::os_io::ArtifactRef,
+    pub(crate) reference: semio_framework_artifact_reference::ArtifactRef,
     pub(crate) owner: Option<OwnerRef>,
     pub(crate) expected_generation: u64,
     pub(crate) expected_revision: [u8; 32],
@@ -83,11 +84,18 @@ macro_rules! value_field {
 value_field!(DurableOwnedGroupAnchorV1);
 value_field!(DurableOwnedGroupMemberV1);
 
+impl semio_framework_dsl_record::BorrowedDslField for DurableOwnedGroupAnchorV1{
+ const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;
+}
+impl semio_framework_dsl_record::BorrowedDslField for DurableOwnedGroupMemberV1{
+ const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, ToValue)]
 #[value(rename_all = "camelCase")]
 struct DurableOwnedThreeMemberUnsignedMemberV1 {
     role: String,
-    reference: crate::os_io::ArtifactRef,
+    reference: semio_framework_artifact_reference::ArtifactRef,
     owner: Option<OwnerRef>,
     expected_generation: u64,
     expected_revision: [u8; 32],
@@ -260,7 +268,7 @@ pub struct DurableOwnedGroupJournalRecordV1 {
     canonical_pack: Vec<u8>,
     decision_sha256: String,
     anchor_sha256: String,
-    document: crate::os_io::ArtifactRef,
+    document: semio_framework_artifact_reference::ArtifactRef,
     parent_edit_id: String,
     parent_post_revision: [u8; 32],
 }
@@ -269,7 +277,7 @@ pub struct DurableOwnedGroupJournalRecordV1 {
 pub struct DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation> {
     decision_sha256: String,
     anchor_sha256: String,
-    document: crate::os_io::ArtifactRef,
+    document: semio_framework_artifact_reference::ArtifactRef,
     parent: Edit<ParentMutation>,
     drawing: Edit<DrawingMutation>,
     value: Edit<ValueMutation>,
@@ -284,7 +292,7 @@ impl<ParentMutation, DrawingMutation, ValueMutation> DurableOwnedGroupVerifiedTh
         &self.anchor_sha256
     }
 
-    pub fn document(&self) -> &crate::os_io::ArtifactRef {
+    pub fn document(&self) -> &semio_framework_artifact_reference::ArtifactRef {
         &self.document
     }
 
@@ -339,7 +347,7 @@ impl DurableOwnedGroupJournalRecordV1 {
         &self.anchor_sha256
     }
 
-    pub fn document(&self) -> &crate::os_io::ArtifactRef {
+    pub fn document(&self) -> &semio_framework_artifact_reference::ArtifactRef {
         &self.document
     }
 
@@ -353,7 +361,7 @@ impl DurableOwnedGroupJournalRecordV1 {
         self.parent_post_revision
     }
 
-    pub fn into_parts(self) -> (Vec<u8>, String, String, crate::os_io::ArtifactRef) {
+    pub fn into_parts(self) -> (Vec<u8>, String, String, semio_framework_artifact_reference::ArtifactRef) {
         (self.canonical_pack, self.decision_sha256, self.anchor_sha256, self.document)
     }
 
@@ -462,8 +470,7 @@ pub(super) struct ArtifactStoreDurableGroupRootV1<P> {
     pub(super) last_projection_cause: Option<super::ArtifactProjectionCause>,
     edit_sequence: i32,
     clock: HybridLogicalTimestamp,
-    pub(super) local_actor_id: Option<String>,
-    revision_accumulator: Option<CursorRevisionAccumulator>,
+    pub(super) revision_accumulator: Option<CursorRevisionAccumulator>,
     tail_undo_cache: Option<(String, Arc<P>)>,
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     displaced_reservation: Option<super::ArtifactStoreDisplacedOwnerReservation>,
@@ -558,9 +565,18 @@ where
             Err(error) => return reject(error, outcome),
         },
         applied_tail_chains: None,
+        mutation_positions: BTreeMap::new(),
+        indexed_edits: BTreeMap::new(),
+        unit_flags: BTreeMap::new(),
     };
+    revision_accumulator.index_applied_edit::<P, Mutation>(applied_edit_ids.len() - 1, &outcome.prepared.edit);
+    let edit_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit.id.as_bytes()]);
+    for (index, operation) in outcome.prepared.edit.forwards.iter().enumerate().filter(|(_, op)| op.may_emit_foreign_steps()) {
+        revision_accumulator.unit_flags.insert((edit_digest, index), !operation.foreign_steps(&store.current).is_empty());
+    }
     let previous = revision_accumulator.applied.last().map_or(revision_accumulator.identity_digest, |record| record.prefix_digest);
     revision_accumulator.applied.push(super::CursorRevisionRecord {
+        ledger_key: None,
         id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit.id.as_bytes()]),
         edit_digest: outcome.prepared.edit_digest,
         prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest]),
@@ -583,7 +599,13 @@ where
     let post_revision = outcome.post_revision;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
     let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id: _, tail_edit_id, seal } = prepared;
-    store.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
+    if let Some(actor) = local_actor {
+        store.displaced_retirements.push_reserved(Box::new(super::ArtifactStoreStringRetirement::new(actor)));
+    }
+    let ledger_key = store.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
+    let mut tail = revision_accumulator.applied.pop().expect("staged revision retains its exact tail");
+    tail.ledger_key = Some(ledger_key);
+    revision_accumulator.applied.push(tail);
     *store.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
         visibility: Arc::clone(visibility),
         current: Some(post_snapshot),
@@ -594,7 +616,6 @@ where
         last_projection_cause: Some(super::ArtifactProjectionCause::Apply),
         edit_sequence: seal.authority.next_sequence_number,
         clock: next_clock,
-        local_actor_id: local_actor,
         revision_accumulator: Some(revision_accumulator),
         tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.current))),
         authority: Some(seal.authority),
@@ -642,9 +663,6 @@ where
     if let Some(revision) = root.revision_accumulator.take() {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreRevisionAccumulatorRetirement::new(revision)));
     }
-    if let Some(actor) = root.local_actor_id.take() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(actor)));
-    }
     if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(edit_id)));
         if !Arc::ptr_eq(&snapshot, &store.current) {
@@ -687,7 +705,17 @@ where
     if !previous_redo.is_empty() || previous_redo.capacity() != 0 {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(previous_redo)));
     }
-    let previous_revision = std::mem::replace(&mut *store.revision_accumulator, root.revision_accumulator.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
+    let mut next_revision = root.revision_accumulator.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let mut positions = std::mem::take(&mut store.revision_accumulator.mutation_positions);
+    positions.extend(std::mem::take(&mut next_revision.mutation_positions));
+    next_revision.mutation_positions = positions;
+    let mut indexed = std::mem::take(&mut store.revision_accumulator.indexed_edits);
+    indexed.extend(std::mem::take(&mut next_revision.indexed_edits));
+    next_revision.indexed_edits = indexed;
+    let mut units = std::mem::take(&mut store.revision_accumulator.unit_flags);
+    units.extend(std::mem::take(&mut next_revision.unit_flags));
+    next_revision.unit_flags = units;
+    let previous_revision = std::mem::replace(&mut *store.revision_accumulator, next_revision);
     if !previous_revision.applied.is_empty() || previous_revision.applied.capacity() != 0 || !previous_revision.redo.is_empty() || previous_revision.redo.capacity() != 0 {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreRevisionAccumulatorRetirement::new(previous_revision)));
     }
@@ -697,9 +725,6 @@ where
         drop(previous_current);
     } else {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(previous_current));
-    }
-    if let Some(previous_actor) = std::mem::replace(&mut *store.local_actor_id, root.local_actor_id.take()) {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(previous_actor)));
     }
     if let Some((edit_id, snapshot)) = store.tail_undo_cache.take() {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(edit_id)));
@@ -2857,17 +2882,17 @@ impl DurableOwnedThreeMemberDecisionV1 {
     }
 }
 
-fn store_member_identity<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> Result<(crate::os_io::ArtifactRef, Option<OwnerRef>), DurableOwnedGroupDecisionError>
+fn store_member_identity<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<OwnerRef>), DurableOwnedGroupDecisionError>
 where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
 {
     let envelope = &store.envelope;
     let dialect = envelope.dialect.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
-    Ok((crate::os_io::ArtifactRef { artifact_id: envelope.id.clone(), dialect }, envelope.owner.clone()))
+    Ok((semio_framework_artifact_reference::ArtifactRef { artifact_id: envelope.id.clone(), dialect }, envelope.owner.clone()))
 }
 
-fn prepared_member<P, Mutation>(role: &str, reference: crate::os_io::ArtifactRef, owner: Option<OwnerRef>, prepared: &DurableStorePreparedOwnerV1<P, Mutation>) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
+fn prepared_member<P, Mutation>(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, prepared: &DurableStorePreparedOwnerV1<P, Mutation>) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
     let authority = &prepared.prepared.seal.authority;
     authority.validate_prepared(&prepared.prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
     if authority.group_id.is_some() {
@@ -2888,7 +2913,7 @@ fn prepared_member<P, Mutation>(role: &str, reference: crate::os_io::ArtifactRef
     })
 }
 
-fn bound_member<P, Mutation>(role: &str, reference: crate::os_io::ArtifactRef, owner: Option<OwnerRef>, bound: &DurableStoreBoundOutcomeV1<P, Mutation>) -> DurableOwnedGroupMemberV1 {
+fn bound_member<P, Mutation>(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, bound: &DurableStoreBoundOutcomeV1<P, Mutation>) -> DurableOwnedGroupMemberV1 {
     DurableOwnedGroupMemberV1 {
         role: role.into(),
         reference,
@@ -2927,6 +2952,8 @@ where
         drawing_store: &ArtifactStore<DrawingP, DrawingMutation>,
         value_store: &ArtifactStore<ValueP, ValueMutation>,
     ) -> Result<DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
         let (parent_reference, parent_owner) = store_member_identity(parent_store)?;
         let (drawing_reference, drawing_owner) = store_member_identity(drawing_store)?;
         let (value_reference, value_owner) = store_member_identity(value_store)?;
@@ -3044,8 +3071,8 @@ impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct DurableOwnedGroupMapHandlesV1 {
-    pub(crate) drawing: crate::os_io::ArtifactRef,
-    pub(crate) value: crate::os_io::ArtifactRef,
+    pub(crate) drawing: semio_framework_artifact_reference::ArtifactRef,
+    pub(crate) value: semio_framework_artifact_reference::ArtifactRef,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -3066,7 +3093,7 @@ fn valid_identity(value: &str) -> bool {
     !value.is_empty() && value.len() <= DURABLE_OWNED_GROUP_ID_MAX_BYTES && !value.chars().any(char::is_control)
 }
 
-fn valid_reference(reference: &crate::os_io::ArtifactRef) -> bool {
+fn valid_reference(reference: &semio_framework_artifact_reference::ArtifactRef) -> bool {
     valid_identity(&reference.artifact_id) && valid_identity(&reference.dialect.artifact_kind) && valid_identity(&reference.dialect.standard) && valid_identity(&reference.dialect.subset)
 }
 
@@ -3083,6 +3110,8 @@ fn unsigned_member(member: &DurableOwnedGroupMemberV1) -> DurableOwnedThreeMembe
 }
 
 fn member_identity_matches(member: &DurableOwnedGroupMemberV1, role: &str, recovery_schema: &str, reference_uri: &str, anchor: &DurableOwnedGroupAnchorV1) -> bool {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     if member.role != role || member.recovery_schema != recovery_schema || member.reference.to_uri() != reference_uri || !valid_reference(&member.reference) || !valid_identity(&member.recovery_schema) {
         return false;
     }
@@ -3223,6 +3252,8 @@ impl DurableOwnedThreeMemberDecisionV1 {
     }
 
     pub(crate) fn validate(&self) -> Result<(), DurableOwnedGroupDecisionError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _,DialectCoordinateText as _};
+
         if self.schema != DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1 || self.anchor.schema != DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1 || self.anchor.shape != DURABLE_OWNED_GROUP_SHAPE_V1 {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
@@ -3392,7 +3423,9 @@ where
 }
 
 #[cfg(feature = "durable-group-testing")]
-fn durable_group_test_member(role: &str, reference: crate::os_io::ArtifactRef, owner: Option<OwnerRef>, outcome: &DurableStorePreparedOutcomeV1) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
+fn durable_group_test_member(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, outcome: &DurableStorePreparedOutcomeV1) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let unbound = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack)?;
     let post_revision = durable_group_test_revision(format!("{}:{}:{}", role, reference.to_uri(), outcome.sha256).as_bytes());
     Ok(DurableOwnedGroupMemberV1 {
@@ -3450,7 +3483,7 @@ where
 /// fabricate this record and must obtain it from the retained Store-owned assembly.
 #[cfg(feature = "durable-group-testing")]
 pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
-    document: crate::os_io::ArtifactRef,
+    document: semio_framework_artifact_reference::ArtifactRef,
     parent_edit: Edit<ParentMutation>,
     parent_post_snapshot: ParentP,
     drawing_edit: Edit<DrawingMutation>,
@@ -3469,8 +3502,8 @@ where
     let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent_edit, parent_post_snapshot)?;
     let drawing_outcome = durable_group_test_outcome(DRAWING_RECOVERY_SCHEMA, 2, drawing_edit, drawing_post_snapshot)?;
     let value_outcome = durable_group_test_outcome(VALUE_RECOVERY_SCHEMA, 3, value_edit, value_post_snapshot)?;
-    let drawing_reference = crate::os_io::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: DRAWING_ROLE.into() } };
-    let value_reference = crate::os_io::ArtifactRef { artifact_id: "gismap-value".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: VALUE_ROLE.into() } };
+    let drawing_reference = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: DRAWING_ROLE.into() } };
+    let value_reference = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-value".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: VALUE_ROLE.into() } };
     let anchor = DurableOwnedGroupAnchorV1 { schema: DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1.into(), parent: document.clone(), shape: DURABLE_OWNED_GROUP_SHAPE_V1.into() };
     let mut decision = DurableOwnedThreeMemberDecisionV1 {
         schema: DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1.into(),

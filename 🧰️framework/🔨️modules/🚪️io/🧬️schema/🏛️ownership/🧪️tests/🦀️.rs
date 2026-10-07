@@ -1,5 +1,5 @@
 //! 🏛️ Neutral I/O vocabulary preserves shared literal values and controlled refusal causes.
-use crate::{ArtifactDialect,ArtifactRef};
+use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef};
 use semio_framework_value::{DslValue,FromValue,NativeDecodeControl,NativeEncodeControl,ToValue};
 fn reference(value:&serde_json::Value)->ArtifactRef{
     ArtifactRef{artifact_id:value["artifactId"].as_str().unwrap().into(),dialect:ArtifactDialect{artifact_kind:value["dialect"]["artifactKind"].as_str().unwrap().into(),standard:value["dialect"]["standard"].as_str().unwrap().into(),subset:value["dialect"]["subset"].as_str().unwrap().into()}}
@@ -21,7 +21,7 @@ fn neutral_vocabulary_preserves_shared_literal_identity_and_independent_json(){
 }
 #[test]
 fn neutral_vocabulary_preserves_shared_controlled_refusal_categories(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🔗️reference/🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📝️text/🗿️artifact-reference/🪆️binding/🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
     let identity=&fixture["identity"];let expected=ArtifactRef{artifact_id:identity["artifactId"].as_str().unwrap().into(),dialect:ArtifactDialect{artifact_kind:identity["artifactKind"].as_str().unwrap().into(),standard:identity["standard"].as_str().unwrap().into(),subset:identity["subset"].as_str().unwrap().into()}};
     let mut allow=|_|true;let mut control=NativeEncodeControl::new(16384,&mut allow);let native=expected.to_value_controlled(&mut control).unwrap();
     let mut deny=|_|false;let mut control=NativeDecodeControl::new(16384,&mut deny);let canceled=ArtifactRef::from_value_controlled(&native,&mut control).unwrap_err();

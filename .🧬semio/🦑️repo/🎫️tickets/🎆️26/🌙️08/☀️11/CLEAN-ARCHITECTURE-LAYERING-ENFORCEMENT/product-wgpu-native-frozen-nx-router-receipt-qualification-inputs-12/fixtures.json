@@ -1,0 +1,93 @@
+[
+  {
+    "id": "source",
+    "input": {
+      "bindings": [
+        {
+          "path": "source",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "path": "proof",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "path": "source"
+    },
+    "accepted": true,
+    "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "schemaAccepted": true
+  },
+  {
+    "id": "proof",
+    "input": {
+      "bindings": [
+        {
+          "path": "source",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "path": "proof",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "path": "proof"
+    },
+    "accepted": true,
+    "expected": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "schemaAccepted": true
+  },
+  {
+    "id": "missing",
+    "input": {
+      "bindings": [
+        {
+          "path": "source",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "path": "proof",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "path": "absent"
+    },
+    "accepted": false,
+    "expected": null,
+    "schemaAccepted": true
+  },
+  {
+    "id": "duplicate",
+    "input": {
+      "bindings": [
+        {
+          "path": "source",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "path": "source",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "path": "source"
+    },
+    "accepted": false,
+    "expected": null,
+    "schemaAccepted": true
+  },
+  {
+    "id": "malformed",
+    "input": {
+      "bindings": [
+        {
+          "path": "source",
+          "sha256": "bad"
+        }
+      ],
+      "path": "source"
+    },
+    "accepted": false,
+    "expected": null,
+    "schemaAccepted": false
+  }
+]

@@ -147,7 +147,7 @@ async fn aggregate_runtime_renders_every_demonstrator_window() {
     let mut generation = 1_u64;
     for (app_index, (app_id, body_keys)) in apps.iter().enumerate() {
         let instance_id = u32::try_from(app_index + 1).expect("six aggregate app instances");
-        semio_framework_plugin::plugin_runtime::plugin_create_app_with_id(&runtime, instance_id, app_id).await.unwrap_or_else(|fault| panic!("aggregate app {app_id} opens: {fault:?}"));
+        semio_framework_plugin::plugin_runtime::plugin_create_app_with_id(&runtime, instance_id, app_id, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|fault| panic!("aggregate app {app_id} opens: {fault:?}"));
         for body_key in *body_keys {
             let tree = semio_framework_plugin::plugin_runtime::plugin_render(&runtime, instance_id, body_key, &view_state).await.unwrap_or_else(|fault| panic!("aggregate body {body_key} renders: {fault:?}"));
             assert_tree_reconciles(tree, generation, body_key);

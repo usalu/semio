@@ -20,50 +20,28 @@ fn restore(database: &semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase
  BmpSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,Default::default())).unwrap()
 }
 #[test]
-fn sqlite_snapshot_semantic_every_supported_profile_preserves_each_declared_native_octet() {
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️semantic/🔣️.json")).unwrap();
- assert_eq!(neutral["accepted"].as_array().unwrap().len(),sources().len());
- for (id,bytes) in sources() {
-  assert!(neutral["accepted"].as_array().unwrap().iter().any(|value|value==id));
+fn sqlite_snapshot_semantic_every_supported_profile_preserves_precise_owned_values() {
+ for (name,bytes) in sources() {
   let snapshot=crate::standards::v_v3::subsets::any::io::decode_bmp(bytes).unwrap();
   let database=project(&snapshot);
-  assert_eq!(database.tables.len(),12,"{id}");
-  assert_eq!(database.table("bmp_document").unwrap().rows[0].text(2).unwrap(),"valid_layout","{id}");
-  assert!(database.tables.iter().flat_map(|table|&table.rows).flat_map(|row|&row.values).all(|value|!matches!(value,SqliteValue::Blob(_))));
-  let restored=restore(&database);
-  assert_eq!(restored,snapshot,"{id}");
-  assert_eq!(crate::standards::v_v3::subsets::any::io::encode_bmp(&restored).unwrap(),bytes,"{id}");
-  let (width,height,rgba)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(bytes).unwrap();
-  let layout=crate::standards::v_v3::subsets::any::io::bmp_layout(&restored).unwrap();
-  assert_eq!((width,height),(layout.width,layout.height),"{id}");
-  assert_eq!(crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&restored).unwrap(),rgba,"{id}");
-  let file=export_sqlite_database(&database,Default::default(),&mut |_|true).unwrap();
-  let database=import_sqlite_database(&file,Default::default(),&mut |_|true).unwrap();
-  assert_eq!(restore(&database),snapshot,"{id}");
+  assert_eq!(database.table("bmp_image").unwrap().rows.len(),1);
+  assert!(database.tables.iter().all(|table|!table.name.contains("literal")&&!table.name.contains("padding")));
+  let restored=restore(&database);assert_eq!(restored,snapshot,"{name}: exact native precision and metadata");
+  let encoded=crate::standards::v_v3::subsets::any::io::encode_bmp(&restored).unwrap();
+  let (_,_,independent)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&encoded).unwrap();
+  assert_eq!(crate::schema::operations::bmp_rgba8_preview(&restored).unwrap(),independent,"{name}: independent image crate");
+  eprintln!("[DEBUG] bmp semantic profile={name} precise-values=exact");
  }
-}
-#[test]
-fn sqlite_snapshot_semantic_literal_occurrences_preserve_empty_truncated_and_refused_native_owners() {
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️semantic/🔣️.json")).unwrap();
- let mut cases=neutral["literalCases"].as_array().unwrap().iter().map(|case|BmpSnapshot{schema:case["schema"].as_str().unwrap().into(),bytes:case["bytes"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap() as u8).collect()}).collect::<Vec<_>>();
- for bytes in [
-  include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/reject-dib-12.bmp").as_slice(),include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/reject-dib-52.bmp").as_slice(),include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/reject-dib-56.bmp").as_slice(),include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/reject-dib-108.bmp").as_slice(),include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/reject-dib-124.bmp").as_slice()
- ] {cases.push(BmpSnapshot{schema:"literal.\0引用😀".into(),bytes:bytes.to_vec()});}
- let mut negative=fixture();negative.bytes[18..22].copy_from_slice(&(-1i32).to_le_bytes());cases.push(negative);
- for snapshot in cases {
-  let diagnostic=crate::standards::v_v3::subsets::any::io::bmp_layout_bytes(&snapshot.bytes).unwrap_err();
-  let database=project(&snapshot);
-  let document=&database.table("bmp_document").unwrap().rows[0];
-  assert_eq!(document.text(1).unwrap(),snapshot.schema);
-  assert_eq!(document.text(2).unwrap(),"literal_octets");
-  assert_eq!(document.text(3).unwrap(),diagnostic);
-  let rows=&database.table("bmp_literal_octet").unwrap().rows;assert_eq!(rows.len(),snapshot.bytes.len());
-  for (ordinal,row) in rows.iter().enumerate(){assert_eq!(row.integer(2).unwrap(),ordinal as i64);assert_eq!(row.integer(3).unwrap(),snapshot.bytes[ordinal] as i64);}
-  assert!(database.tables.iter().filter(|table|table.name!="bmp_document"&&table.name!="bmp_literal_octet").all(|table|table.rows.is_empty()));
-  assert_eq!(restore(&database),snapshot);
- }
- let mut arbitrary=fixture();arbitrary.schema="native-free.\0引用😀".into();assert_eq!(restore(&project(&arbitrary)),arbitrary);
 }
 
-#[path="⏱️row-tail/🦀️.rs"]
-mod row_tail;
+#[test]
+fn sqlite_snapshot_semantic_refuses_invalid_owned_models_and_orphan_samples() {
+ let fixture=fixture();let mut models=Vec::new();
+ let mut wrong_schema=fixture.clone();wrong_schema.schema="undeclared".into();models.push(wrong_schema);
+ let mut wrong_count=fixture.clone();wrong_count.image.width+=1;models.push(wrong_count);
+ let mut wrong_precision=fixture.clone();let crate::schema::snapshot::BmpPixels::Direct {samples}=&mut wrong_precision.image.pixels else {panic!("direct fixture");};samples[0].red=256;models.push(wrong_precision);
+ for snapshot in models {assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).is_err());}
+ let mut database=project(&fixture);database.table_mut("bmp_pixel_sample").unwrap().rows[0].values[1]=SqliteValue::Integer(2);
+ assert!(BmpSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).is_err());
+ eprintln!("[DEBUG] bmp semantic invalid-owned-refusals=4");
+}

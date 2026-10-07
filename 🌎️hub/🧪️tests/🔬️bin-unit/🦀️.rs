@@ -1332,7 +1332,7 @@ async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<Mutat
     use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, MapFeature};
     let parsed = directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr).await.expect("genesis pair parses");
-    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope()).await.expect("editor store");
+    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope(), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("editor store");
     store.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
     let mut applied = Ok(());
     for (index, id) in ids.iter().enumerate() {
@@ -1517,7 +1517,7 @@ async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope>
     use semio_s_artifact_gis_gismap::mutations::{create_position::CreatePosition, create_route::CreateRoute};
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
     let target = gis_map_test_snapshot();
-    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(directory::os_store::create_document_envelope(schema, "check-in-fixture", GisMapSnapshot::default(), None)).await.expect("fixture GIS store");
+    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(directory::os_store::create_document_envelope(schema, "check-in-fixture", GisMapSnapshot::default(), None), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("fixture GIS store");
     store.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
     let applied = store
         .dispatch(ArtifactCommand::Apply {
@@ -4388,9 +4388,9 @@ impl SupersedeAuthor {
         let pack = <GisMapSnapshot as directory::os_store::ArtifactPack>::encode_pack(&GisMapSnapshot::default());
         let spr = directory::os_store::empty_document_spr(document, GIS_MAP_SCHEMA).await;
         let parsed = directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
-        let mut replica = SupersedeReplica::new(parsed.into_envelope()).await.expect("replica");
+        let mut replica = SupersedeReplica::new(parsed.into_envelope(), directory::ActorId(actor.clone())).await.expect("replica");
         replica.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
-        replica.set_local_actor_id(Some(actor.clone())).expect("the replica authors as its socket's actor");
+        assert_eq!(replica.local_actor_id(), &directory::ActorId(actor.clone()), "the replica authors as its socket's actor");
         Self { actor, socket, replica, known: std::collections::HashSet::new(), relayed: Vec::new(), batch: 0 }
     }
 

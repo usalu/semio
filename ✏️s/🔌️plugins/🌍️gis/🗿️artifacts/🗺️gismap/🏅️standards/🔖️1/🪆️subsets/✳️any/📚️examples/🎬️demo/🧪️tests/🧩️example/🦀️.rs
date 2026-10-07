@@ -16,7 +16,7 @@ async fn default_example_document_carries_addressable_features() {
     let document = example_document(DEFAULT_EXAMPLE_ID).expect("default example resolves");
     assert!(!document.positions.is_empty(), "the demo map has positions");
     assert!(!document.routes.is_empty(), "the demo map has routes");
-    let descriptor: serde_json::Value = serde_json::from_str(&crate::schema::gis_map_descriptor_json(&document)).expect("descriptor json");
+    let descriptor: serde_json::Value = serde_json::from_str(&crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json(&document)).expect("descriptor json");
     let first = descriptor.get("positions").and_then(serde_json::Value::as_array).and_then(|entries| entries.first()).expect("a projected position payload");
     assert!(first.get("lon").and_then(serde_json::Value::as_f64).is_some(), "the opaque payload still carries the renderer's lon");
     assert!(first.get("lat").and_then(serde_json::Value::as_f64).is_some(), "the opaque payload still carries the renderer's lat");

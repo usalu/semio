@@ -2,6 +2,8 @@
 
 pub(super) fn label(key: &str, german: bool, beginner: bool) -> Option<&'static str> {
     let variants = match key {
+        "ui.timeTravel.refusal.unchanged" => ["Change an input before accepting", "Vor dem Übernehmen eine Eingabe ändern", "Change an input before accepting", "Vor dem Übernehmen eine Eingabe ändern"],
+        "ui.timeTravel.preparationProgress" => ["Preparing history preview: {done} of {total} steps", "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten", "Preparing history preview: {done} of {total} steps", "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten"],
         "ui.timeTravel.band" => ["History editing", "Verlaufsbearbeitung", "History editing: you are changing an earlier mutation", "Verlaufsbearbeitung: Du änderst eine frühere Mutation"],
         "ui.timeTravel.indicator" => ["History editing", "Verlaufsbearbeitung", "History editing", "Verlaufsbearbeitung"],
         "ui.timeTravel.indicatorTarget" => ["History editing: document before {target}", "Verlaufsbearbeitung: Dokument vor {target}", "History editing: this window shows the document before {target}", "Verlaufsbearbeitung: Dieses Fenster zeigt das Dokument vor {target}"],

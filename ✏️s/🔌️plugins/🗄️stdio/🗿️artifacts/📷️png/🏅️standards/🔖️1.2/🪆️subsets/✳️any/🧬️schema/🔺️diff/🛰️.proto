@@ -1,3 +1,5 @@
 syntax = "proto3";
 package semio.s_stdio_png.diff;
-message PngDiff { optional bytes bytes = 1; }
+import "s_stdio_png/snapshot.proto";
+
+message PngDiff { semio.s_stdio_png.snapshot.PngImage image = 1; }

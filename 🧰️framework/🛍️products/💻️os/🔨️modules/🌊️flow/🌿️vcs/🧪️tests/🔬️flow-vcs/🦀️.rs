@@ -1933,7 +1933,7 @@ fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let envelope = create_document_envelope("test/v1", "test", FlowHostSnapshot::default(), None);
-    let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
     store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("apply");

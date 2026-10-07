@@ -1,0 +1,394 @@
+{
+  "schemaBytes": 5913,
+  "tableWidths": {
+    "semio_drawing_arc": 18,
+    "semio_drawing_child": 4,
+    "semio_drawing_close": 1,
+    "semio_drawing_cubic": 19,
+    "semio_drawing_document": 20,
+    "semio_drawing_group": 31,
+    "semio_drawing_image": 15,
+    "semio_drawing_layer": 7,
+    "semio_drawing_line": 7,
+    "semio_drawing_move": 7,
+    "semio_drawing_node": 2,
+    "semio_drawing_path": 2,
+    "semio_drawing_quad": 13,
+    "semio_drawing_segment": 4,
+    "semio_drawing_style": 34,
+    "semio_drawing_text": 9
+  },
+  "cases": [
+    {
+      "id": "full",
+      "sourceSnapshot": {
+        "schema": "stdio.semio.drawing",
+        "canvas": {
+          "width": {
+            "bits": "409e020000000000"
+          },
+          "height": {
+            "bits": "4090e10000000000"
+          },
+          "background": {
+            "r": {
+              "bits": "3e800000"
+            },
+            "g": {
+              "bits": "3f000000"
+            },
+            "b": {
+              "bits": "3f400000"
+            },
+            "a": {
+              "bits": "3f800000"
+            }
+          }
+        },
+        "styles": [
+          {
+            "name": "",
+            "fill": {
+              "r": {
+                "bits": "00000000"
+              },
+              "g": {
+                "bits": "3f800000"
+              },
+              "b": {
+                "bits": "3f000000"
+              },
+              "a": {
+                "bits": "00000000"
+              }
+            },
+            "strokeWidth": {
+              "bits": "0000000000000000"
+            },
+            "opacity": {
+              "bits": "3f000000"
+            }
+          }
+        ],
+        "layers": [
+          {
+            "id": "layer-🗂",
+            "name": "",
+            "visible": true,
+            "root": {
+              "kind": "group",
+              "transform": {
+                "translation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "rotation": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "0000000000000000"
+                  },
+                  "w": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "scale": {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              },
+              "children": [
+                {
+                  "kind": "path",
+                  "style": "",
+                  "segments": [
+                    {
+                      "kind": "moveTo",
+                      "to": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "lineTo",
+                      "to": {
+                        "x": {
+                          "bits": "4008000000000000"
+                        },
+                        "y": {
+                          "bits": "4010000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "cubicTo",
+                      "c1": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "c2": {
+                        "x": {
+                          "bits": "4008000000000000"
+                        },
+                        "y": {
+                          "bits": "4010000000000000"
+                        }
+                      },
+                      "to": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "quadTo",
+                      "c": {
+                        "x": {
+                          "bits": "4008000000000000"
+                        },
+                        "y": {
+                          "bits": "4010000000000000"
+                        }
+                      },
+                      "to": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "arcTo",
+                      "rx": {
+                        "bits": "4000000000000000"
+                      },
+                      "ry": {
+                        "bits": "4008000000000000"
+                      },
+                      "xRotation": {
+                        "bits": "c010000000000000"
+                      },
+                      "largeArc": true,
+                      "sweep": false,
+                      "to": {
+                        "x": {
+                          "bits": "4008000000000000"
+                        },
+                        "y": {
+                          "bits": "4010000000000000"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "close"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "value": "English Deutsch\u0000文",
+                  "at": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  "style": ""
+                },
+                {
+                  "kind": "image",
+                  "at": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  "width": {
+                    "bits": "0000000000000000"
+                  },
+                  "height": {
+                    "bits": "bff0000000000000"
+                  },
+                  "mime": "image/png",
+                  "bytes": [
+                    0,
+                    255,
+                    127
+                  ]
+                },
+                {
+                  "kind": "group",
+                  "transform": {
+                    "translation": {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      }
+                    },
+                    "rotation": {
+                      "x": {
+                        "bits": "0000000000000000"
+                      },
+                      "y": {
+                        "bits": "0000000000000000"
+                      },
+                      "z": {
+                        "bits": "0000000000000000"
+                      },
+                      "w": {
+                        "bits": "3ff0000000000000"
+                      }
+                    },
+                    "scale": {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "z": {
+                        "bits": "3ff0000000000000"
+                      }
+                    }
+                  },
+                  "children": []
+                }
+              ]
+            }
+          },
+          {
+            "id": "hidden",
+            "name": "hidden",
+            "visible": false,
+            "root": {
+              "kind": "text",
+              "value": "",
+              "at": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "rows": 32,
+      "valueBytes": 1982
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "sourceSnapshot": {
+        "schema": "stdio.semio.drawing",
+        "canvas": {
+          "width": {
+            "bits": "409e020000000000"
+          },
+          "height": {
+            "bits": "4090e10000000000"
+          },
+          "background": {
+            "r": {
+              "bits": "3e800000"
+            },
+            "g": {
+              "bits": "3f000000"
+            },
+            "b": {
+              "bits": "3f400000"
+            },
+            "a": {
+              "bits": "3f800000"
+            }
+          }
+        },
+        "styles": [],
+        "layers": []
+      },
+      "rows": 1,
+      "valueBytes": 159
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 6206,
+    "tableWidths": {
+      "semio_drawing_arc": 18,
+      "semio_drawing_child": 4,
+      "semio_drawing_close": 1,
+      "semio_drawing_cubic": 19,
+      "semio_drawing_document": 20,
+      "semio_drawing_group": 31,
+      "semio_drawing_image": 15,
+      "semio_drawing_layer": 7,
+      "semio_drawing_line": 7,
+      "semio_drawing_move": 7,
+      "semio_drawing_node": 2,
+      "semio_drawing_path": 2,
+      "semio_drawing_quad": 13,
+      "semio_drawing_segment": 4,
+      "semio_drawing_style": 34,
+      "semio_drawing_text": 9,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 33,
+        "valueBytes": {
+          "binary": 2026,
+          "text": 2024
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 203,
+          "text": 201
+        }
+      }
+    ]
+  }
+}

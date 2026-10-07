@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::standards::v_raw::subsets::any::io::BinaryAnalyzer;
     use crate::BinarySnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
@@ -74,7 +74,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.binary", standard: semio_framework_plugin::StandardId("raw"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::of::<crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(crate::STDIO_BINARY_DOCUMENT_SCHEMA))
+    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.binary", standard: semio_framework_artifact_reference::StandardId("raw"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::of::<crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(crate::STDIO_BINARY_DOCUMENT_SCHEMA))
         .expect("static Stdio registration must be available and conflict-free");
 }
 
@@ -270,7 +270,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::BinarySnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.binary` parts.

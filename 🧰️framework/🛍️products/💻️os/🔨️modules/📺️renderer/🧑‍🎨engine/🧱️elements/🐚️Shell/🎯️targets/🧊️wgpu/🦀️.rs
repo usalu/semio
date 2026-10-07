@@ -650,7 +650,7 @@ fn directory_command_from_action(action_id: &str, args: Option<&Value>) -> Optio
 #[derive(Debug)]
 struct OpenArtifactRelayTarget {
     artifact_ref: String,
-    dialect: semio_framework::ArtifactDialect,
+    dialect: semio_framework_artifact_reference::ArtifactDialect,
     role: semio_framework::AppRole,
     plugin_id: Option<String>,
     app_id: Option<String>,
@@ -660,6 +660,8 @@ struct OpenArtifactRelayTarget {
 }
 
 fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<OpenArtifactRelayTarget, &'static str> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let args = args.and_then(Value::as_object).ok_or("opening.invalid-args")?;
     let text = |field: &str| args.get(field).and_then(Value::as_str).filter(|value| !value.trim().is_empty()).map(str::to_string);
     let raw_artifact_ref = text("artifactRef").ok_or("opening.invalid-artifact-ref")?;
@@ -667,7 +669,7 @@ fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<O
         let (dialect, role) = semio_framework::parse_surface_app_id(&raw_artifact_ref).map_err(|_| "opening.invalid-artifact-ref")?;
         (dialect, Some(role))
     } else {
-        (semio_framework::ArtifactDialect::parse_coordinate(&raw_artifact_ref).map_err(|_| "opening.invalid-artifact-ref")?, None)
+        (semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&raw_artifact_ref).map_err(|_| "opening.invalid-artifact-ref")?, None)
     };
     let wire_role = match args.get("role") {
         None => None,
@@ -745,8 +747,8 @@ fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Opti
 const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
 const S_SPACE_INDEX_DOCUMENT_ID: &str = "index";
 
-fn space_index_dialect() -> semio_framework::ArtifactDialect {
-    semio_framework::ArtifactDialect { artifact_kind: "s.space.space".to_string(), standard: "1".to_string(), subset: "*".to_string() }
+fn space_index_dialect() -> semio_framework_artifact_reference::ArtifactDialect {
+    semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.space.space".to_string(), standard: "1".to_string(), subset: "*".to_string() }
 }
 
 //#region 📣️ReplayRefusal
@@ -836,7 +838,7 @@ pub(crate) async fn space_artifact_creation_replay_choice(args: Option<&Value>, 
         let offered = semio_framework::manifest::ArtifactKindChoice {
             kind_id: kind.kind_id.clone(),
             schema: kind.schema.clone(),
-            dialect: semio_framework::ArtifactDialect { artifact_kind: kind.dialect.artifact_kind.clone(), standard: kind.dialect.standard.clone(), subset: kind.dialect.subset.clone() },
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.dialect.artifact_kind.clone(), standard: kind.dialect.standard.clone(), subset: kind.dialect.subset.clone() },
             label: LocalizedLabel::native(&kind.label.en, &kind.label.de),
         };
         if semio_framework::manifest::encode_artifact_kind_choice(&offered).await == choice {
@@ -849,7 +851,7 @@ pub(crate) async fn space_artifact_creation_replay_choice(args: Option<&Value>, 
 
 /// 📇️ §5/§6 — a direct manifest scan for the one app a plugin declares for a given
 /// `(dialect, role)`, mirroring the React shell's `findDialectApp`.
-fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framework::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
+fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
     program.manifest.apps.iter().find(|app| &app.dialect == dialect && app.role == role)
 }
 
@@ -9543,6 +9545,8 @@ impl ShellState {
     /// 👁️✏️ `(dialect, role, pinned value, options)` per opening pairing the loaded manifests declare —
     /// React's `defaultAppsRows` memo over `AppRouter.entriesFor` plus the persisted `OpeningPreferences`.
     fn default_app_rows(&self) -> Vec<(String, String, String, Vec<(String, String)>)> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let mut dialects: Vec<String> = Vec::new();
         for entry in &self.plugins {
             for app in &entry.manifest.apps {
@@ -13246,11 +13250,13 @@ impl ShellState {
     /// only when this shell's document binding then names the created artifact
     /// ([`Self::pump_hub_artifact_creation`]).
     async fn open_created_hub_artifact(&mut self) {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let Some((ready, space_id)) = self.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.clone().map(|ready| (ready, operation.space_id.clone()))) else { return };
         if let Some(operation) = self.hub_workspace.creation.operation.as_mut() {
             operation.opening = HubArtifactOpening::Opening;
         }
-        let dialect = semio_framework::ArtifactDialect { artifact_kind: ready.parent_dialect.artifact_kind.clone(), standard: ready.parent_dialect.standard.clone(), subset: ready.parent_dialect.subset.clone() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: ready.parent_dialect.artifact_kind.clone(), standard: ready.parent_dialect.standard.clone(), subset: ready.parent_dialect.subset.clone() };
         let args = serde_json::json!({ "artifactRef": dialect.to_coordinate(), "documentId": ready.artifact_id, "schema": ready.artifact_schema, "spaceId": space_id });
         self.handle_open_artifact_relay("os.open-artifact", Some(&args)).await;
     }
@@ -14874,7 +14880,7 @@ impl ShellState {
     /// owner is installed, so the relay below can hand both straight to [`Self::switch_to_app`].
     /// Both targets: the table is generated into this crate and the install is [`Self::install_plugin`],
     /// which O2 made target-neutral.
-    async fn resolve_activation_owner_app(&mut self, dialect: &semio_framework::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<(String, AppDefinition)> {
+    async fn resolve_activation_owner_app(&mut self, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<(String, AppDefinition)> {
         let owner = crate::program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind)?;
         if let Err(error) = self.install_plugin(owner).await {
             Self::debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install {owner}: {error}"));
@@ -20698,7 +20704,7 @@ pub(crate) fn shell_mode_controls(app: &AppDefinition, active_mode_id: Option<&s
 /// 👁️✏️ Both surfaces of ONE dialect, in `editor → viewer` focus order, or `None` when the plugin
 /// declares fewer than two — the roles group's whole render gate. Twin of `surfaceRoleAppsV1`
 /// (`🏛️ShellHost/🔀️surface-switch/🟦️.ts`), pinned by that lane's `group` fixture rows.
-pub(crate) fn surface_role_apps<'a>(apps: &'a [AppDefinition], dialect: &semio_framework::ArtifactDialect) -> Option<(&'a AppDefinition, &'a AppDefinition)> {
+pub(crate) fn surface_role_apps<'a>(apps: &'a [AppDefinition], dialect: &semio_framework_artifact_reference::ArtifactDialect) -> Option<(&'a AppDefinition, &'a AppDefinition)> {
     let editor = apps.iter().find(|app| &app.dialect == dialect && app.role == semio_framework::manifest::AppRole::Editor)?;
     let viewer = apps.iter().find(|app| &app.dialect == dialect && app.role == semio_framework::manifest::AppRole::Viewer)?;
     Some((editor, viewer))
@@ -20706,7 +20712,7 @@ pub(crate) fn surface_role_apps<'a>(apps: &'a [AppDefinition], dialect: &semio_f
 
 /// 👁️✏️ The app a role switch would open, or `None` when the role is already mounted or the dialect
 /// declares no such sibling. Twin of `roleSwitchTargetV1`.
-pub(crate) fn role_switch_target<'a>(apps: &'a [AppDefinition], dialect: &semio_framework::ArtifactDialect, current_role: semio_framework::manifest::AppRole, requested: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
+pub(crate) fn role_switch_target<'a>(apps: &'a [AppDefinition], dialect: &semio_framework_artifact_reference::ArtifactDialect, current_role: semio_framework::manifest::AppRole, requested: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
     if current_role == requested {
         return None;
     }
@@ -24412,6 +24418,11 @@ fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuestFaul
 /// channels), else the call's own text.
 fn program_fault_text(refusal: &crate::program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
     refusal.fault.as_ref().and_then(|fault| semio_framework::kernel::fault_notice(fault, &[], terminology, locale)).map_or_else(|| refusal.text.clone(), |notice| notice.text)
+}
+
+/// 🛟️ The native input draft disposition of an exact typed history refusal.
+pub(crate) fn dispatch_refusal_discards_input_draft(error: &str) -> bool {
+    time_travel::history_refusal_discards_input_draft(error)
 }
 
 /// ✂️ Whether a dispatch-fault string names `code` as one whole token — the string the funnel classifies and the structured
@@ -30475,28 +30486,44 @@ impl ShellState {
         ops
     }
 
-    /// 🗨️ This frame's flat paint program for `request` — rebuilt per opportunity (it is pure and small)
+    /// 🗨️ This frame's flat paint program for `request` — rebuilt per opportunity with the shared font metrics
     /// so the retained step only carries an index. Title, body, one labelled row per staged field (a
     /// slider's rail with one tick per detent and its value, a segmented field's pressed segments, a
     /// stepper's −/+ buttons, a reference field's removable chips and its "use current selection" button),
-    /// the choices' consequence lines, then Cancel on the start edge and the choices plus the submit on
-    /// the end edge (a row of their own when they do not fit beside Cancel). A gated submit or choice
+    /// each choice followed by its wrapped consequence, then Cancel on the start edge and the submit on
+    /// the end edge. Action groups wrap within the dialog. A gated submit or choice
     /// paints dimmed and registers no event; a destructive choice paints in the error colour.
-    fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height: f32, theme: &Theme) -> Vec<ChromeDialogPaintOp> {
+    fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height: f32, theme: &Theme, atlas: &mut FontAtlas) -> Vec<ChromeDialogPaintOp> {
         let (pad, gap, small, body) = (theme.padding_standard, theme.gap_standard, theme.font_size_small, theme.font_size_body);
         let (line_small, line_body, control_h) = (small * 1.6, body * 1.6, theme.control_height);
-        let dialog_w = (width - pad * 4.0).clamp(240.0, 420.0);
-        let inner_w = dialog_w - pad * 2.0;
+        let dialog_w = (width - pad * 4.0).min(420.0).max(1.0);
+        let inner_w = (dialog_w - pad * 2.0).max(1.0);
         let glyphs_w = |label: &str| label.chars().count() as f32 * small * 0.62;
-        let button_w = |label: &str| (glyphs_w(label) + gap * 4.0).clamp(72.0, inner_w);
+        let button_w = |label: &str| (glyphs_w(label) + gap * 4.0).max(72.0).min(inner_w);
         let trailing: Vec<(ChromeDialogStop, &str)> = request.choices.iter().enumerate().map(|(index, choice)| (ChromeDialogStop::Choice(index), choice.label.as_str())).chain([(ChromeDialogStop::Confirm, request.confirm_label.as_str())]).collect();
-        let trailing_w = trailing.iter().map(|(_, label)| button_w(label) + gap).sum::<f32>() - gap;
-        let cancel_w = button_w(&request.cancel_label);
-        let split = cancel_w + gap + trailing_w > inner_w;
-        let descriptions: Vec<&str> = request.choices.iter().filter_map(|choice| choice.description.as_deref()).collect();
+        let mut action_rows: Vec<Vec<(ChromeDialogStop, &str, f32, Vec<String>)>> = vec![Vec::new()];
+        let mut row_w = 0.0;
+        for (stop, label) in trailing {
+            let description = match stop {
+                ChromeDialogStop::Choice(index) => request.choices[index].description.as_deref(),
+                _ => None,
+            };
+            let lines = description.map(|value| atlas.wrap_lines(value, inner_w, small).into_iter().map(|range| value[range].trim().to_string()).filter(|line| !line.is_empty()).collect::<Vec<_>>()).unwrap_or_default();
+            let w = if lines.is_empty() { (atlas.measure_text(label, small).0 + gap * 4.0).max(72.0).min(inner_w) } else { inner_w };
+            if row_w > 0.0 && row_w + gap + w > inner_w {
+                action_rows.push(Vec::new());
+                row_w = 0.0;
+            }
+            let row = action_rows.last_mut().expect("an action row");
+            row_w += w + if row.is_empty() { 0.0 } else { gap };
+            row.push((stop, label, w, lines));
+        }
+        let row_heights: Vec<f32> = action_rows.iter().map(|row| control_h + row.iter().map(|(_, _, _, lines)| if lines.is_empty() { 0.0 } else { gap + lines.len() as f32 * line_small }).fold(0.0, f32::max)).collect();
+        let cancel_w = (atlas.measure_text(&request.cancel_label, small).0 + gap * 4.0).max(72.0).min(inner_w);
+        let cancel_footer = cancel_w + gap + row_w > inner_w;
         let body_h = if request.body.is_empty() { 0.0 } else { line_small };
-        let rows = if split { 2.0 } else { 1.0 };
-        let dialog_h = pad * 2.0 + line_body + body_h + request.fields.len() as f32 * (line_small + control_h + gap) + descriptions.len() as f32 * line_small + gap + control_h * rows + gap * (rows - 1.0);
+        let actions_h = row_heights.iter().sum::<f32>() + gap * row_heights.len().saturating_sub(1) as f32 + if cancel_footer { gap + control_h } else { 0.0 };
+        let dialog_h = pad * 2.0 + line_body + body_h + request.fields.len() as f32 * (line_small + control_h + gap) + gap + actions_h;
         let dialog = Rect::new((width - dialog_w) * 0.5, ((height - dialog_h) * 0.5).max(0.0), dialog_w, dialog_h);
         let x = dialog.x + pad;
         let focused = request.focused();
@@ -30622,10 +30649,6 @@ impl ShellState {
             }
             y += control_h + gap;
         }
-        for description in &descriptions {
-            ops.push(text((*description).to_string(), x, y + small, small, theme.text_muted));
-            y += line_small;
-        }
         y += gap;
         let button = |stop: ChromeDialogStop, label: &str, rect: Rect, ops: &mut Vec<ChromeDialogPaintOp>| {
             let event = request.action(stop);
@@ -30648,22 +30671,20 @@ impl ShellState {
             };
             ops.push(ChromeDialogPaintOp::Hit { rect, stop, control_id: request.control_id(stop), label: label.to_string(), description, kind: HitKind::Button, event: if gated { None } else { event }, semantics: ChromeDialogSemantics::default(), disabled: gated });
         };
-        let cancel_y = if split { y + control_h + gap } else { y };
+        let cancel_y = if cancel_footer { y + actions_h - control_h } else { y + row_heights.iter().take(row_heights.len().saturating_sub(1)).map(|h| h + gap).sum::<f32>() };
         button(ChromeDialogStop::Cancel, &request.cancel_label, Rect::new(x, cancel_y, cancel_w, control_h), &mut ops);
-        let mut right = dialog.x + dialog.w - pad;
-        let placed: Vec<(ChromeDialogStop, &str, Rect)> = trailing
-            .iter()
-            .rev()
-            .map(|(stop, label)| {
-                let w = button_w(label);
-                right -= w;
-                let rect = Rect::new(right, y, w, control_h);
-                right -= gap;
-                (*stop, *label, rect)
-            })
-            .collect();
-        for (stop, label, rect) in placed.into_iter().rev() {
-            button(stop, label, rect, &mut ops);
+        for (row, row_h) in action_rows.into_iter().zip(row_heights) {
+            let used_w = row.iter().map(|(_, _, w, _)| *w).sum::<f32>() + gap * row.len().saturating_sub(1) as f32;
+            let mut left = x + inner_w - used_w;
+            for (stop, label, w, lines) in row {
+                let rect = Rect::new(left, y, w, control_h);
+                button(stop, label, rect, &mut ops);
+                for (index, line) in lines.into_iter().enumerate() {
+                    ops.push(clipped(line, left, y + control_h + gap + small + index as f32 * line_small, w, theme.text_muted));
+                }
+                left += w + gap;
+            }
+            y += row_h + gap;
         }
         ops.push(ChromeDialogPaintOp::Clicks { dialog });
         ops
@@ -30674,7 +30695,7 @@ impl ShellState {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         };
-        let ops = Self::chrome_dialog_paint_ops(request, width, height, theme);
+        let ops = Self::chrome_dialog_paint_ops(request, width, height, theme, atlas);
         let Some(op) = ops.get(cursor.scalar) else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
@@ -30913,7 +30934,7 @@ impl ShellState {
         let Some(request) = self.chrome_build.dialog_stack.last() else {
             return;
         };
-        let ops = Self::chrome_dialog_paint_ops(request, width, height, theme);
+        let ops = Self::chrome_dialog_paint_ops(request, width, height, theme, atlas);
         for op in &ops {
             match op {
                 ChromeDialogPaintOp::Scrim => {

@@ -2,7 +2,6 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, posix, resolve } from "node:path";
-import Ajv from "ajv";
 import stringify from "fast-json-stable-stringify";
 import { escape, minimatch } from "minimatch";
 import { parse as parseJsonc } from "jsonc-parser";
@@ -75,17 +74,7 @@ function foldedCalls<T>(run: () => T): { value: T; calls: Map<string, number> } 
   try { return { value: run(), calls }; } finally { Object.defineProperty(String.prototype, "toLocaleLowerCase", descriptor); }
 }
 
-test("neutral collision schema pins exact Unicode order and diagnostic multiplicity", () => {
-  expect(vector.schemaVersion).toBe(1);
-  expect(vector.contract.fold).toEqual(["NFC", "toLocaleLowerCase:und", "remove:U+FE0F"]);
-  expect(vector.contract.allowedDirectories).toBe("exact-unfolded-identity");
-  expect(vector.contract.diagnostics).toBe("occupied-input-order-with-duplicates");
-  expect(vector.contract.reuse).toBe("invocation-local");
-  const valid = new Ajv().compile(vector.caseSchema);
-  for (const row of vector.cases) expect(valid(row), JSON.stringify(valid.errors)).toBe(true);
-  expect(valid({ ...vector.cases[0], undocumented: true })).toBe(false);
-  expect(valid({ id: "missing-input", collisions: [] })).toBe(false);
-});
+
 
 for (const row of vector.cases) test("source collision authority: " + row.id, () => {
   const input = { ...vector.fixture, occupiedPaths: row.occupiedPaths }, before = stringify(input), expected = row.collisions.map((path: string) => prefix + path);

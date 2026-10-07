@@ -27,5 +27,9 @@ export type DocxMutation =
   | { readonly mutation: 'removeStyle'; readonly id: string }
   | { readonly mutation: 'setStyleName'; readonly id: string; readonly name: string }
   | { readonly mutation: 'setStyleBasedOn'; readonly id: string; readonly based_on: string | null }
-  | { readonly mutation: 'setPart'; readonly path: string; readonly content_type: string; readonly bytes: readonly number[] }
+  | { readonly mutation: 'setPart'; readonly path: string; readonly content_type: string; readonly payload: DocxPartContent }
   | { readonly mutation: 'removePart'; readonly path: string };
+
+/** 📦️ Authoritative part content independent of physical XML parsing. */
+export type DocxPartContent = {readonly kind:"xml";readonly document:import("../📸️snapshot/🟦️.ts").XmlDocument}|{readonly kind:"binary";readonly bytes:readonly number[]};
+export type DocxSetPart = Extract<DocxMutation,{mutation:"setPart"}>;

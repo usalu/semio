@@ -1,5 +1,6 @@
 //! 💾️ Direct set-snapshot binary codec.
 
+use crate::standards::v1_1::subsets::base::schema::{mutations::set_snapshot::SetSnapshot, snapshot::SvgSnapshot};
 use crate::standards::v1_1::subsets::base::io::binary::mutations::*;
 
 pub const BINARY_TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "set-snapshot");

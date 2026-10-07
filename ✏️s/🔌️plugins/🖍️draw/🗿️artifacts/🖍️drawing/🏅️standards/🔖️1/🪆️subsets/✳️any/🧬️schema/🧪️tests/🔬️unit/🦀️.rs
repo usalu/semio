@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::default_drawing_document;
-use crate::standards::v1::subsets::any::io::text::snapshot::create_drawing_path_layer;
+use crate::standards::v1::subsets::any::schema::default_drawing_document;
+use crate::standards::v1::subsets::any::schema::create_drawing_path_layer;
 use super::*;
 use crate::DrawingCircle;
 
@@ -13,7 +13,7 @@ async fn default_document_has_path_layer() {
 #[semio_framework_async_macros::async_test]
 async fn scene_nodes_include_shape_bounds() {
     let layer = create_drawing_shape_layer_rect("Rect");
-    let doc = DrawingSnapshot { layers: vec![layer], ..default_drawing_document("scene", None) };
+    let doc = DrawingSnapshot { layers: vec![layer].into(), ..default_drawing_document("scene", None) };
     let nodes = flatten_drawing_document_to_scene_nodes(&doc);
     assert_eq!(nodes.len(), 1);
     assert!(!nodes[0].segments.is_empty());
@@ -49,7 +49,7 @@ async fn resolve_boolean_layer_segments_flattens_arcs_before_boolean_operation()
     let mut doc = default_drawing_document("bool-arc-test", None);
     doc.layers.clear();
     let path_a =
-        create_drawing_path_layer("A", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] }, PathSegment::Close]);
+        create_drawing_path_layer("A", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] }, PathSegment::Close].into());
     let id_a = layer_id(&path_a).to_string();
     let rect_b = {
         let mut layer = create_drawing_shape_layer_rect("B");
@@ -96,7 +96,7 @@ async fn resolve_trace_layer_segments_traces_solid_square_png() {
     let mut doc = default_drawing_document("trace-test", None);
     doc.layers.clear();
     let mut assets = BTreeMap::new();
-    assets.insert("source".to_string(), DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: None, height: None });
+    assets.insert("source".to_string(), DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes).into(), width: None, height: None });
     doc.assets = assets;
     doc.artboard = Some(DrawingArtboard { width: 16.0, height: 16.0 });
     doc.layers.push(create_drawing_trace_layer("Trace", "source"));
@@ -133,11 +133,11 @@ async fn default_drawing_document_has_artboard_dimensions() {
 #[semio_framework_async_macros::async_test]
 async fn layer_id_base_and_kind_label_cover_all_seven_variants() {
     let shape = create_drawing_shape_layer_rect("Shape");
-    let path = create_drawing_path_layer("Path", Vec::new());
+    let path = create_drawing_path_layer("Path", Vec::new().into());
     let text = create_drawing_text_layer("Text");
     let image = create_drawing_image_layer("Image", "key");
     let group = create_drawing_group_layer("Group");
-    let boolean = create_drawing_boolean_layer("Boolean", "union", Vec::new());
+    let boolean = create_drawing_boolean_layer("Boolean", "union", Vec::new().into());
     let trace = create_drawing_trace_layer("Trace", "src");
     for (layer, expected_kind) in [(&shape, "shape:rect"), (&path, "path"), (&text, "text"), (&image, "image"), (&group, "group"), (&boolean, "boolean"), (&trace, "trace")] {
         assert_eq!(layer_kind_label(layer), expected_kind);
@@ -154,7 +154,7 @@ async fn find_drawing_layer_locates_nested_child_and_returns_none_for_missing() 
         body.children.push(child);
     }
     let mut doc = default_drawing_document("nested", None);
-    doc.layers = vec![group];
+    doc.layers = vec![group].into();
     assert!(find_drawing_layer(&doc, &child_id).is_some());
     assert!(find_drawing_layer(&doc, "missing-id").is_none());
 }
@@ -216,7 +216,7 @@ async fn layer_to_path_segments_covers_every_shape_kind_and_empty_polygon_and_un
     let line = DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0 }), polygon: None });
     assert_eq!(layer_to_path_segments(&line).len(), 2);
 
-    let empty_polygon = DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Poly"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawingPolygon { points: Vec::new() }) });
+    let empty_polygon = DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Poly"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawingPolygon { points: Vec::new().into() }) });
     assert!(layer_to_path_segments(&empty_polygon).is_empty());
 
     let polygon = DrawingLayerNode::Shape(DrawingShapeBody {
@@ -226,7 +226,7 @@ async fn layer_to_path_segments_covers_every_shape_kind_and_empty_polygon_and_un
         ellipse: None,
         circle: None,
         line: None,
-        polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]] }),
+        polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]].into() }),
     });
     assert_eq!(layer_to_path_segments(&polygon).len(), 4);
 
@@ -258,10 +258,10 @@ async fn drawing_layer_world_bounds_covers_text_image_default_and_none_branches(
     let (_, _, iw, ih) = drawing_layer_world_bounds(&image).expect("image bounds");
     assert_eq!((iw, ih), (256.0, 256.0));
 
-    let empty_path = create_drawing_path_layer("Empty", Vec::new());
+    let empty_path = create_drawing_path_layer("Empty", Vec::new().into());
     assert!(drawing_layer_world_bounds(&empty_path).is_none());
 
-    let close_only = create_drawing_path_layer("CloseOnly", vec![PathSegment::Close]);
+    let close_only = create_drawing_path_layer("CloseOnly", vec![PathSegment::Close].into());
     assert!(drawing_layer_world_bounds(&close_only).is_none());
 }
 
@@ -273,7 +273,7 @@ async fn canvas_layer_records_excludes_groups_and_includes_bounds() {
         body.children.push(child);
     }
     let mut doc = default_drawing_document("records", None);
-    doc.layers = vec![group];
+    doc.layers = vec![group].into();
     let records = canvas_layer_records(&doc);
     assert_eq!(records.len(), 1);
     assert_eq!(records[0].kind, "shape:rect");
@@ -412,7 +412,7 @@ async fn drawing_layer_descendant_leaf_ids_flattens_nested_groups_to_leaves() {
 async fn resolve_boolean_layer_segments_returns_empty_for_missing_children_and_invalid_operation() {
     let mut doc = default_drawing_document("bool-empty", None);
     doc.layers.clear();
-    let boolean_missing = DrawingBooleanBody { base: default_layer_base("B"), operation: "union".into(), children: vec!["missing".into()] };
+    let boolean_missing = DrawingBooleanBody { base: default_layer_base("B"), operation: "union".into(), children: vec!["missing".into()].into() };
     assert!(resolve_boolean_layer_segments(&doc, &boolean_missing).is_empty());
 
     let mut rect_a = create_drawing_shape_layer_rect("A");
@@ -440,13 +440,13 @@ async fn decode_drawing_image_asset_luma_handles_data_uri_prefix_resize_and_inva
     let bytes = semio_framework_pixels::encode_png(&image_buffer).expect("encode png");
     let encoded = base64_codec::base64_standard_encode(&bytes);
 
-    let data_uri_asset = DrawingImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{encoded}"), width: None, height: None };
+    let data_uri_asset = DrawingImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{encoded}").into(), width: None, height: None };
     let (w, h, luma) = decode_drawing_image_asset_luma(&data_uri_asset).expect("decode data uri");
     assert_eq!((w, h), (4, 4));
     assert_eq!(luma.len(), 16);
     assert!(luma.iter().all(|&v| v == 255));
 
-    let resized_asset = DrawingImageAsset { mime: "image/png".into(), data: encoded, width: Some(8), height: Some(8) };
+    let resized_asset = DrawingImageAsset { mime: "image/png".into(), data: encoded.into(), width: Some(8), height: Some(8) };
     let (rw, rh, rluma) = decode_drawing_image_asset_luma(&resized_asset).expect("decode resized");
     assert_eq!((rw, rh), (8, 8));
     assert_eq!(rluma.len(), 64);
@@ -454,7 +454,7 @@ async fn decode_drawing_image_asset_luma_handles_data_uri_prefix_resize_and_inva
     let invalid_base64 = DrawingImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None };
     assert!(decode_drawing_image_asset_luma(&invalid_base64).is_none());
 
-    let invalid_image = DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(b"not a png"), width: None, height: None };
+    let invalid_image = DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(b"not a png").into(), width: None, height: None };
     assert!(decode_drawing_image_asset_luma(&invalid_image).is_none());
 }
 
@@ -536,7 +536,7 @@ async fn find_drawing_layer_location_reports_parent_and_index_or_none_when_missi
     let top_level = create_drawing_text_layer("Top");
     let top_id = layer_id(&top_level).to_string();
     let mut doc = default_drawing_document("locate", None);
-    doc.layers = vec![group, top_level];
+    doc.layers = vec![group, top_level].into();
 
     let child_location = find_drawing_layer_location(&doc, &child_id).expect("child location");
     assert_eq!(child_location.parent_id.as_deref(), Some(group_id.as_str()));
@@ -559,14 +559,14 @@ fn nested_group_transform_reaches_scene_and_bounds() {
     layer_base_mut(&mut group).transform = DrawingTransform { x: 10.0, y: 20.0, scale_x: 2.0, scale_y: 3.0, rotation: 0.0, shear: 0.0 };
     if let DrawingLayerNode::Group(body) = &mut group { body.children.push(child); }
     assert_eq!(drawing_layer_world_bounds(&group), Some((18.0, 35.0, 20.0, 60.0)));
-    let document = DrawingSnapshot { layers: vec![group], ..Default::default() };
+    let document = DrawingSnapshot { layers: vec![group].into(), ..Default::default() };
     let scene = flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(scene[0].transform, [2.0, 0.0, 0.0, 3.0, 18.0, 35.0]);
 }
 
 #[test]
 fn curve_bounds_include_the_visible_extremum() {
-    let layer = create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 100.0], ctrl2: [100.0, 100.0], to: [100.0, 0.0] }]);
+    let layer = create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 100.0], ctrl2: [100.0, 100.0], to: [100.0, 0.0] }].into());
     assert_eq!(drawing_layer_world_bounds(&layer), Some((0.0, 0.0, 100.0, 75.0)));
 }
 
@@ -582,7 +582,7 @@ fn duplicated_group_remaps_internal_boolean_references() {
     let original_id = layer_id(&child).to_string();
     let boolean = create_drawing_boolean_layer("Result", "union", vec![original_id.clone(), "external".into()]);
     let mut group = create_drawing_group_layer("Container");
-    if let DrawingLayerNode::Group(body) = &mut group { body.children = vec![child, boolean]; }
+    if let DrawingLayerNode::Group(body) = &mut group { body.children = vec![child, boolean].into(); }
     let DrawingLayerNode::Group(copy) = clone_drawing_layer_node(&group, " copy") else { panic!("Expected a group") };
     let DrawingLayerNode::Boolean(boolean) = &copy.children[1] else { panic!("Expected Boolean operands") };
     assert_ne!(layer_id(&copy.children[0]), original_id);
@@ -611,7 +611,7 @@ fn text_scene_preserves_authored_coordinates_under_layer_transform() {
     text.base.transform.y = 200.0;
     text.base.transform.scale_x = 2.0;
     text.base.transform.scale_y = 3.0;
-    let snapshot = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let snapshot = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let nodes = flatten_drawing_document_to_scene_nodes(&snapshot);
     assert_eq!(nodes[0].transform, [2.0, 0.0, 0.0, 3.0, 114.0, 233.0]);
 }
@@ -619,6 +619,6 @@ fn text_scene_preserves_authored_coordinates_under_layer_transform() {
 #[test]
 fn scene_preserves_authored_curve_segments_for_canvas_and_vector_export() {
     let segments = vec![PathSegment::Move { to:[0.0,0.0] },PathSegment::Arc { rx:5.0,ry:3.0,rotation:25.0,large_arc:true,sweep:false,to:[30.0,10.0] },PathSegment::Quad { ctrl:[5.0,9.0],to:[10.0,0.0] }];
-    let snapshot = DrawingSnapshot { layers:vec![create_drawing_path_layer("Curves",segments.clone())],..Default::default() };
+    let snapshot = DrawingSnapshot { layers:vec![create_drawing_path_layer("Curves",segments.clone())].into(),..Default::default() };
     assert_eq!(flatten_drawing_document_to_scene_nodes(&snapshot)[0].segments,segments);
 }

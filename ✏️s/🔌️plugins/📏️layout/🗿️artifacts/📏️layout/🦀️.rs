@@ -11,7 +11,7 @@ extern crate semio_framework_os_kernel as store;
 mod art_layout_demo_tests;
 
 use protocol::{Identified, Patchable};
-use semio_framework::{Dialect, StandardId, SubsetId};
+use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
@@ -99,8 +99,8 @@ impl semio_framework_dsl_record::DslField for LayoutDrawingChild {
 pub fn background_drawing_child_handle(_source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
     let content_json = semio_framework_pack_json::to_json_string(content);
     let child_id = store::content_id("background-drawing", content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
     LayoutDrawingChild { handle: store::ArtifactChild::new(child_id, target), content: content.clone() }
 }
 //#endregion 🔖️ComposedTypes
@@ -2109,3 +2109,9 @@ pub mod viewer {
 }
 
 pub use crate::standards::v1::subsets::any::io::{LayoutBuilderConstruction, LayoutParts, LayoutAnalyzerAnalysis, LayoutBuilderFacets, LayoutBuilder, LayoutAnalyzer, LayoutComposer};
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

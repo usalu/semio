@@ -1014,3 +1014,59 @@ pub fn generation2d_mounted_pack_session(expected_bytes: usize, maximum_items: u
 #[cfg(test)]
 #[path = "🧪️tests/🔬️retained-mounted-laws/🦀️.rs"]
 mod retained_mounted_laws;
+
+mod native_codec {
+use super::*;
+use crate::Generation2dSnapshot;
+use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
+use std::collections::BTreeMap;
+pub(crate) use controlled::{decode as decode_sqlite_native,encode as encode_sqlite_native};
+pub use snapshot_wire_codec::*;
+use crate::standards::v1::subsets::any::io::text::snapshot::{Generation2dSnapshotDsl,generation2d_document_to_dsl,generation2d_document_from_dsl};
+
+impl store::ArtifactPack for Generation2dSnapshotDsl {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+
+impl store::ArtifactPack for Generation2dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let document = generation2d_document_to_dsl(self);
+        let inner = store::pack_rt::encode_document(&Generation2dSnapshotDsl::__dsl_spec(), &document.__dsl_to_record(), options)?;
+        let mut bytes = Vec::with_capacity(4 + inner.len());
+        bytes.extend_from_slice(b"P2D2");
+        bytes.extend_from_slice(&inner);
+        Ok(bytes)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        if !bytes.starts_with(b"P2D2") {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "generation2d pack discriminator mismatch")));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&bytes[4..], &Generation2dSnapshotDsl::__dsl_spec(), options)?;
+        let parsed = Generation2dSnapshotDsl::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
+        generation2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
+    }
+
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
+        <Generation2dSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
+}
+}

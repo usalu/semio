@@ -33,8 +33,11 @@ export function toolJobLatestWinsSelfTests(): number {
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const runtimeContractTests = readFileSync(join(base, "🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   const body = (text: string, name: string): string => {
-    const start = text.lastIndexOf(`fn ${name}(`);
-    return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? "";
+    const owner = name === "has_runnable_typed_operations" ? "impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M>" : ["take_result_page", "reject_cancelled_publication"].includes(name) ? "impl<A: ArtifactApp> MountedTypedCommandFullOperation<A>" : undefined;
+    const ownerStart = owner ? text.indexOf(owner) : -1;
+    const scope = owner ? ownerStart < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", ownerStart))?.body ?? "" : text;
+    const start = scope.lastIndexOf(`fn ${name}(`);
+    return start < 0 ? "" : toolJobRustBlock(scope, scope.indexOf("{", start))?.body ?? "";
   };
   const obligations: Array<[string, string]> = [
     ["publish_mounted_typed_operation_unit", "mounted.reject_cancelled_publication()?"],
@@ -49,29 +52,60 @@ export function toolJobLatestWinsSelfTests(): number {
     ["dispatch_typed_command_inner", "registration.latest_wins_command_disposer"],
     ["dispatch_typed_command_inner", "self.tool_cancellations.begin_keyed"],
     ["dispatch_typed_command_inner", "self.latest_wins_order.push(operation_id.0)"],
-    ["dispatch_typed_command_inner", "self.can_admit_typed_operation(operation_id.0)"],
+    ["dispatch_typed_command_inner", "self.admit_typed_operation_slot()"],
+    ["admit_typed_operation_slot", "!self.latest_wins_order.allocation_admitted"],
+    ["admit_typed_operation_slot", "self.latest_wins_order.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["admit_typed_operation_slot", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| self.typed_operation_slot_is_vacant(*slot))?"],
+    ["admit_typed_operation_slot", "allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64)"],
+    ["typed_operation_slot_is_vacant", "self.tool_operations.slot_is_vacant(slot)"],
+    ["typed_operation_slot_is_vacant", "self.typed_operation_reservations[slot].is_none()"],
+    ["typed_operation_slot_is_vacant", "self.latest_wins_commands.slot_is_vacant(slot)"],
+    ["typed_operation_slot_is_vacant", "self.segmented_downloads.slot_is_vacant(slot)"],
+    ["typed_operation_slot_is_vacant", "self.segmented_closures.slot_is_vacant(slot)"],
     ["advance_latest_wins_admission_unit", ".rebind_keyed(base_revision, generation)?"],
     ["rebind_keyed", "scope.operation != self.key"],
     ["rebind_keyed", "scope.operation.generation = generation"],
-    ["advance_typed_operation_publication_one", "next_id_from(self.typed_publication_cursor)"],
-    ["take_typed_operation_result_page", "next_id_from(self.typed_result_cursor)"],
+    ["advance_typed_operation_publication_unit", "self.next_advanceable_typed_operation()"],
+    ["advance_typed_operation_publication_unit", "self.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["next_advanceable_typed_operation", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|"],
+    ["next_advanceable_typed_operation", "(self.typed_publication_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["next_advanceable_typed_operation", "self.tool_operations.entry(index)"],
+    ["next_advanceable_typed_operation", "operation.stage != MountedTypedCommandFullOperationStage::AwaitingAck"],
+    ["next_advanceable_typed_operation", ".map(|(id, _)| (index, *id))"],
+    ["take_typed_operation_result_page", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|"],
+    ["take_typed_operation_result_page", "(self.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["take_typed_operation_result_page", "self.tool_operations.entry(index)"],
+    ["take_typed_operation_result_page", "operation.meta.instance_id == receiver"],
+    ["take_typed_operation_result_page", "!operation.result_page_presented && operation.result_page.is_some()"],
+    ["take_typed_operation_result_page", "self.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["take_typed_operation_result_page", "self.tool_operations.get_mut(operation_id)?.take_result_page()"],
     ["take_result_page", "if self.result_page_presented"],
     ["take_result_page", "return None"],
-    ["has_runnable_work", "MountedTypedCommandFullOperationStage::AwaitingAck => !self.result_page_presented"],
+    ["has_runnable_typed_operations", "!self.tool_operations.is_empty()"],
     ["cleanup_finished_slot", "scope.publication_claim.is_finished()"],
     ["release_current", "std::sync::Arc::ptr_eq(&scope.publication_claim, &self.publication_claim)"],
     ["try_claim_publication", "self.handle.publication_scope.try_claim()?"],
     ["try_claim_publication", "self.publication_claim.try_claim()?"],
   ];
+  const ordered = (scope: string, tokens: readonly string[]): boolean => {
+    let previous = -1;
+    return tokens.every((token) => { const index = scope.indexOf(token); const valid = index > previous; previous = index; return valid; });
+  };
   const exact = (text: string): boolean => obligations.every(([name, token]) => body(text, name).includes(token))
-    && !body(text, "publish_mounted_typed_operation_unit").includes(".await")
     && !body(text, "publish_mounted_typed_operation_unit").includes("dispatch_emit_group(")
     && text.includes("self.token.child_now()")
     && text.includes("compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel")
     && text.includes("scope.operation")
-    && runtimeContractTests.includes("async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close()");
+    && ["retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close", "a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work", "a_status_only_host_call_finishes_every_typed_operation_it_admitted"].every((name) => runtimeContractTests.includes(`async fn ${name}()`))
+    && ordered(body(text, "dispatch_typed_command_inner"), ["self.live_runtime_instance_id != Some(meta.instance_id)", "self.require_complete_tool_operation_pipeline(&admission)?", "admission.verb != verb", "self.admit_typed_operation_slot()", "registration.latest_wins_command_disposer", "ToolLatestWinsKeyCopy::new(meta.instance_id", "self.tool_cancellations.begin_keyed", "self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0)", "self.latest_wins_order.push(operation_id.0)"]);
+
   if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
   for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
+  const dispatch = body(source, "dispatch_typed_command_inner");
+  const admissionToken = "self.admit_typed_operation_slot()";
+  const reordered = source.replace(dispatch, dispatch.replace(admissionToken, "unqualified_authority()") + admissionToken);
+  if (reordered === source || exact(reordered)) throw new Error("latest-wins accepts slot admission after cancellation binding and enqueue");
+  if (body(source, "publish_mounted_typed_operation_unit").includes(".await")) throw new Error(`latest-wins publication awaits while holding app/document/operation claims; ${obligations.length} current authority obligations, their removal controls, and admission ordering control passed`);
   const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
   
   

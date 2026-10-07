@@ -1,0 +1,112 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🚪️io/🦀️.rs",
+    "sha256": "6914785a0693e894305d6d4451dfe1238f1b58e98eddf91502c45f5f72105932",
+    "regions": [
+      {
+        "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+        "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🚪️io/🦀️.rs",
+    "sha256": "a06ed65b30cd8948a35d4c5df116833e8cf68f9a8baa8fab3bfb006614db3e09",
+    "regions": [
+      {
+        "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+        "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+    "sha256": "7dd4088736c94d1708cbfa991d6be21e2ed2dc06dbde0342d02b57a094849c31",
+    "regions": [
+      {
+        "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+        "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🚪️io/🦀️.rs",
+    "sha256": "d25f2a5355d28421d6341330f81a598f36bb5ce6c964dd8bd698b506d6f1cafc",
+    "regions": [
+      {
+        "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+        "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🦀️.rs",
+    "sha256": "1469c76c47622fa6180ee1c7cc5fe47ef8b29c2aec16bea46ab28052a6f8b562",
+    "regions": [
+      {
+        "before": "include!(\"🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");",
+        "after": "include!(\"../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs\");"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "sha256": "5bf4d143d50af099ba8a3bcc991a72cd6d45339f085e3e48000cf1dffbab55d8",
+    "regions": [
+      {
+        "before": "let base=root.join(\"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot\");",
+        "after": "let base=root.join(\"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot\");"
+      },
+      {
+        "before": "let fixture=base.join(\"🧫️fixtures/🪶️sqlite/🟦️.ts\");let provider=base.join(\"🪶️sqlite/🟦️.ts\");",
+        "after": "let fixture=base.join(\"🧪️tests/🧰️support/🟦️.ts\");let provider=base.join(\"🟦️.ts\");"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📦️pack/🦀️.rs",
+    "sha256": "23efa0169efb2161cd9e78601f0e07a16b0f53c77d20c673c366bf6d414e1abc",
+    "regions": [
+      {
+        "before": "crate::standards::v_commonmark::subsets::any::schema::snapshot::sqlite_tests::MdReconstructTestScope::enter()",
+        "after": "crate::standards::v_commonmark::subsets::any::io::sqlite::snapshot::tests::MdReconstructTestScope::enter()"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "sha256": "cd8ee706946a50190852b580389846be591acbc5bbc820168efd04b23d536ec8",
+    "regions": [
+      {
+        "before": "pub(super) struct MdReconstructTestScope(bool);",
+        "after": "pub(crate) struct MdReconstructTestScope(bool);"
+      },
+      {
+        "before": "impl MdReconstructTestScope{pub(super) fn enter()",
+        "after": "impl MdReconstructTestScope{pub(crate) fn enter()"
+      },
+      {
+        "before": " let cases=cohort();let depth=cases[\"partialDepth\"].as_u64().unwrap()as usize;let mut inline=MdInline::Text{text:\"retained leaf 世界\".into()};for _ in 0..depth{inline=MdInline::Strong{inlines:vec![inline]};}let mut block=MdBlock::Paragraph{inlines:vec![inline]};for _ in 0..depth{block=MdBlock::BlockQuote{blocks:vec![block]};}let snapshot=MdSnapshot{schema:\"deep partial candidate\".into(),blocks:vec![block]};let invalid=crate::standards::v_commonmark::subsets::any::io::sqlite::snapshot::owned_pack::duplicate_roots_payload_for_test(&snapshot);let refusal=MdSnapshot::decode_sqlite_snapshot_native(&invalid,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).expect_err(\"duplicated root refuses after owned deep construction\");assert_eq!(refusal.kind,semio_framework_os_kernel::sqlite_snapshot::ValueRefusalKind::InvalidValue);assert!(refusal.message.contains(\"multiple owners\"),\"{refusal}\");snapshot.retire_sqlite_snapshot();",
+        "after": " let cases=cohort();let depth=cases[\"partialDepth\"].as_u64().unwrap()as usize;let mut inline=MdInline::Text{text:\"retained leaf 世界\".into()};for _ in 0..depth{inline=MdInline::Strong{inlines:vec![inline]};}let mut block=MdBlock::Paragraph{inlines:vec![inline]};for _ in 0..depth{block=MdBlock::BlockQuote{blocks:vec![block]};}let snapshot=MdSnapshot{schema:\"deep partial candidate\".into(),blocks:vec![block]};let invalid=crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::duplicate_roots_payload_for_test(&snapshot);let refusal=MdSnapshot::decode_sqlite_snapshot_native(&invalid,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).expect_err(\"duplicated root refuses after owned deep construction\");assert_eq!(refusal.kind,semio_framework_os_kernel::sqlite_snapshot::ValueRefusalKind::InvalidValue);assert!(refusal.message.contains(\"multiple owners\"),\"{refusal}\");snapshot.retire_sqlite_snapshot();"
+      },
+      {
+        "before": "  crate::standards::v_commonmark::subsets::any::io::sqlite::snapshot::owned_pack::reset_retirement_visits_for_test();let mut reached=false;let result=MdSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::ReconstructSnapshot&&event.completed==1&&event.total==1{assert!(!reached,\"actual final checkpoint runs once\");reached=true;false}else{true}},limits));",
+        "after": "  crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::reset_retirement_visits_for_test();let mut reached=false;let result=MdSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::ReconstructSnapshot&&event.completed==1&&event.total==1{assert!(!reached,\"actual final checkpoint runs once\");reached=true;false}else{true}},limits));"
+      },
+      {
+        "before": "  let visits=crate::standards::v_commonmark::subsets::any::io::sqlite::snapshot::owned_pack::retirement_visits_for_test();snapshot.retire_sqlite_snapshot();assert!(reached,\"refusal must occur at the actual final reconstructed SQL snapshot checkpoint\");assert!(result.is_err(),\"late cancellation cannot publish the completed snapshot\");assert!(visits>=depth+1,\"all completed owned nodes must use cold retirement at the final refusal; observed {visits}, expected at least {}\",depth+1);",
+        "after": "  let visits=crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::retirement_visits_for_test();snapshot.retire_sqlite_snapshot();assert!(reached,\"refusal must occur at the actual final reconstructed SQL snapshot checkpoint\");assert!(result.is_err(),\"late cancellation cannot publish the completed snapshot\");assert!(visits>=depth+1,\"all completed owned nodes must use cold retirement at the final refusal; observed {visits}, expected at least {}\",depth+1);"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "sha256": "39372f6039107e337275c326ecaa1f27a0ee018bcf8b44deb2116f0e9192053f",
+    "regions": [
+      {
+        "before": "#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;",
+        "after": "#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\npub(crate) mod tests;"
+      }
+    ]
+  }
+]

@@ -23,8 +23,8 @@ role = "hub"
 [package.metadata.semio.storybook]
 id = "fem"
 titlePrefix = "🏗️fem"
-sourceRoots = ["."]
-storyGlobs = ["📖️stories/**/🧪️.story.tsx"]
+sourceRoots = ["../../../✏️s/🔌️plugins/🏗️fem"]
+storyGlobs = ["../../../✏️s/🔌️plugins/🏗️fem/📖️stories/**/🧪️.story.tsx"]
 
 [[package.metadata.semio.playground]]
 variant = "fem2d"

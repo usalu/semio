@@ -171,7 +171,7 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
     let admitted_source_bytes = session.progress().expect("outer retained Pack source progress").allocated_bytes;
     assert!(admitted_source_bytes > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
 
-    let mut snapshot = Generation2dPackSnapshotAuthority::new(operation, generation, store::OwnedSchemaPath::field("initialSnapshot").expect("outer retained Pack snapshot path"));
+    let mut snapshot = Generation2dPackSnapshotAuthority::new(operation, generation, store::OwnedSchemaPath::field("initialPack").expect("outer retained Pack snapshot path"));
     *snapshot.session = Some(session);
     snapshot.state = Generation2dPackSnapshotState::Ingest;
     let vcs = store::ArtifactEnvelopeFreshVcsAuthority::try_new(

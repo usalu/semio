@@ -1,21 +1,21 @@
 //! 📝️ Generic text framing and direct-owner registry for the visible PDF/UA mutation aggregate.
 
-use super::PdfUaMutation;
+use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
 use protocol::OpText;
 
 //#region 🧾️DerivedRegistry
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("SetMarkInfo", super::set_mark_info::text::TEXT_OPCODE),
-    ("RemoveMarkInfo", super::remove_mark_info::text::TEXT_OPCODE),
-    ("SetStructTreeRoot", super::set_struct_tree_root::text::TEXT_OPCODE),
-    ("RemoveStructTreeRoot", super::remove_struct_tree_root::text::TEXT_OPCODE),
-    ("SetLang", super::set_lang::text::TEXT_OPCODE),
-    ("RemoveLang", super::remove_lang::text::TEXT_OPCODE),
-    ("SetDisplayDocTitle", super::set_display_doc_title::text::TEXT_OPCODE),
-    ("RemoveDisplayDocTitle", super::remove_display_doc_title::text::TEXT_OPCODE),
-    ("SetInfoTitle", super::set_info_title::text::TEXT_OPCODE),
-    ("EmbedFontFile", super::embed_font_file::text::TEXT_OPCODE),
-    ("RemoveFontFile", super::remove_font_file::text::TEXT_OPCODE),
+    ("SetMarkInfo", self::set_mark_info::TEXT_OPCODE),
+    ("RemoveMarkInfo", self::remove_mark_info::TEXT_OPCODE),
+    ("SetStructTreeRoot", self::set_struct_tree_root::TEXT_OPCODE),
+    ("RemoveStructTreeRoot", self::remove_struct_tree_root::TEXT_OPCODE),
+    ("SetLang", self::set_lang::TEXT_OPCODE),
+    ("RemoveLang", self::remove_lang::TEXT_OPCODE),
+    ("SetDisplayDocTitle", self::set_display_doc_title::TEXT_OPCODE),
+    ("RemoveDisplayDocTitle", self::remove_display_doc_title::TEXT_OPCODE),
+    ("SetInfoTitle", self::set_info_title::TEXT_OPCODE),
+    ("EmbedFontFile", self::embed_font_file::TEXT_OPCODE),
+    ("RemoveFontFile", self::remove_font_file::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

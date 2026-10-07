@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/space-history/authors.json",
+  "title": "History Authors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "editAuthor",
+    "operationAuthor"
+  ],
+  "properties": {
+    "editAuthor": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "operationAuthor": {
+      "type": "string",
+      "pattern": "\\S"
+    }
+  }
+}

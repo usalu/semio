@@ -1,3 +1,2 @@
-# stdio.png snapshot text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+"📝️ Logical Text with a schema field and named owned image block."
+scalar PngSnapshotText

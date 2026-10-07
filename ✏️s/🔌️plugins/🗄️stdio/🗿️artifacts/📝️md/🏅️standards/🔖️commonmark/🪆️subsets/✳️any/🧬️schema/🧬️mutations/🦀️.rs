@@ -37,7 +37,7 @@ pub use crate::schema::diff::MdPathStep;
 use crate::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::MdSnapshot;
-use protocol::{Mutation, OpText};
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "➕insert-block/🦀️.rs"]
@@ -251,3 +251,6 @@ mod op_codec_tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpText};

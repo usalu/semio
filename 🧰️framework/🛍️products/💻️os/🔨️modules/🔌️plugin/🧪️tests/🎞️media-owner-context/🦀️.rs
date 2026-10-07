@@ -54,7 +54,7 @@ fn payload(media: Media) -> serde_json::Value {
 #[semio_framework_async_macros::async_test]
 async fn media_export_request_context_preserves_exact_supplied_owner() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️media-owner-context.json")).unwrap();
-    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&fixture["valueSchema"].to_string()).unwrap();
+    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(include_str!("../../🧪️testing/🎞️media-owner-context/🧬️schema/🔣️.json")).unwrap();
     let history = HistoryView::empty();
     let snapshot = SurfaceSnapshot { count: 7 };
     let doc = ArtifactView::new(&snapshot, &history);
@@ -99,8 +99,8 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     supplied.close_step(1, 4096).unwrap();
-    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>().await;
-    let mut viewer = new_viewer::<SurfaceViewerFixture>().await;
+    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     editor
         .instance_operation_owner
         .with_mut::<MediaOwner, _>(|owner| {

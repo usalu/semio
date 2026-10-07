@@ -30,14 +30,7 @@ impl protocol::OpText for VcsDemoMutation {
     }
 }
 
-impl protocol::OpBinary for VcsDemoMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 //#region 🧪️Tests

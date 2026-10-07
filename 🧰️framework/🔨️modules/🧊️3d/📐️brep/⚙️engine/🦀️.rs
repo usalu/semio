@@ -1772,6 +1772,7 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<MeshTransfer, BrepError> {
         match self.entity(shape)? {
+            Entity::Vertex(id) => TessellationJob::for_vertex(&self.body, *id, deflection).and_then(|job| job.run_to_completion(&self.body)).map(|(mesh, _)| mesh).map_err(|error| map_err(&error)),
             Entity::Solid(id) => tessellate_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Shell(_)=>{let mut job=self.tessellate_job_sync(shape,deflection)?;loop {match job.step(&self.body,4096).map_err(|error|map_err(&error))? {crate::brep::queries::tessellation::TessellationStep::Done(_)=>return job.into_mesh().map(|(mesh,_)|mesh).ok_or_else(||BrepError::InvalidInput("missing shell tessellation".into())),crate::brep::queries::tessellation::TessellationStep::Cancelled(_)=>return Err(BrepError::InvalidInput("shell tessellation cancelled".into())),_=>{}}}},
@@ -1786,6 +1787,7 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_job_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<TessellationJob, BrepError> {
         match self.entity(shape)? {
+            Entity::Vertex(id) => TessellationJob::for_vertex(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Solid(id) => TessellationJob::for_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Face(id) => TessellationJob::for_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Shell(id)=>TessellationJob::for_shell(&self.body,*id,deflection).map_err(|error|map_err(&error)),

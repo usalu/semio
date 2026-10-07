@@ -1,8 +1,8 @@
 //! 🧭️ Canonical SpreadsheetML mutation semantics over authoritative XML parts.
 
 use super::*;
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::worksheet_to_xml_with_namespace;
-use crate::standards::v_ecma_376::subsets::base::io::{attribute_value, element_matches, expanded_element_name, namespace_scope, REL_TYPE_WORKSHEET, R_NS, R_NS_STRICT, SML_NS, SML_NS_STRICT, WORKSHEET_CONTENT_TYPE};
+use crate::standards::v_ecma_376::subsets::base::schema::construction::worksheet_to_xml_with_namespace;
+use crate::schema::vocabulary::{attribute_value, element_matches, expanded_element_name, namespace_scope, REL_TYPE_WORKSHEET, R_NS, R_NS_STRICT, SML_NS, SML_NS_STRICT, WORKSHEET_CONTENT_TYPE};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 const SPREADSHEETML_NAMESPACES: [&str; 2] = [SML_NS, SML_NS_STRICT];
@@ -116,7 +116,7 @@ fn cell_column(node: &XmlNode, scope: &[(String, String)]) -> Result<Option<u32>
     }
     let Some(reference) = attribute_value(node, scope, &[""], "r")? else { return Ok(None) };
     let letters = reference.chars().take_while(|character| character.is_ascii_alphabetic()).collect::<String>();
-    Ok(crate::standards::v_ecma_376::subsets::base::io::column_index(&letters))
+    Ok(crate::standards::v_ecma_376::subsets::base::schema::vocabulary::column_index(&letters))
 }
 
 fn insert_addressed_cell(snapshot: &mut XlsxSnapshot, address: &cell_address::XlsxCellVacancyAddress, value: &XlsxCellValue) -> Result<(), String> {
@@ -124,7 +124,7 @@ fn insert_addressed_cell(snapshot: &mut XlsxSnapshot, address: &cell_address::Xl
     let namespace = address.worksheet.namespace_uri.clone();
     let row_number = address.row;
     let column = address.column;
-    let reference = format!("{}{}", crate::standards::v_ecma_376::subsets::base::io::column_letter(column), row_number);
+    let reference = format!("{}{}", crate::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter(column), row_number);
     let sheet_data_scope = cell_address::addressed_worksheet_scope(snapshot, &address.worksheet)?;
     let sheet_data = cell_address::addressed_worksheet_mut(snapshot, &address.worksheet)?;
     let XmlNode::Element { name: sheet_data_name, children: rows, .. } = sheet_data else { return Err("worksheet address resolved a non-element".into()) };
@@ -191,7 +191,7 @@ fn shared_strings_path(snapshot: &XlsxSnapshot) -> Result<String, String> {
     let workbook_path = snapshot
         .opc
         .resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT)
-        .or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT))
+        .or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT))
         .ok_or_else(|| "missing workbook relationship".to_string())?;
     let relationship = snapshot.opc.relationships_for(&workbook_path).iter().find(|relationship| relationship.rel_type.ends_with("/sharedStrings")).ok_or_else(|| "workbook has no shared strings relationship".to_string())?;
     Ok(semio_s_artifact_stdio_zip::opc::resolve_relationship_target(&workbook_path, &relationship.target))
@@ -329,7 +329,7 @@ fn rename_sheet(snapshot: &mut XlsxSnapshot, old_name: &str, new_name: &str) -> 
     let workbook_path = snapshot
         .opc
         .resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT)
-        .or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT))
+        .or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT))
         .ok_or_else(|| "missing workbook relationship".to_string())?;
     let root = snapshot.xml_part_mut(&workbook_path).and_then(|part| part.document.root.as_mut()).ok_or_else(|| "missing workbook root".to_string())?;
     let root_scope = namespace_scope(&[], root);
@@ -363,7 +363,7 @@ fn workbook_path(snapshot: &XlsxSnapshot) -> Result<String, String> {
     snapshot
         .opc
         .resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT)
-        .or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT))
+        .or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT))
         .ok_or_else(|| "missing workbook relationship".to_string())
 }
 

@@ -26,11 +26,12 @@ pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, Signa
 
 pub use crate::os_spr::causal::{
     decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec,
-    frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_envelopes_from_edit_since, mutation_ids_for_edit, ArtifactDiff, DocumentBackboneBatchLimitsV1, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
+    frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_envelopes_from_edit_since, mutation_ids_for_edit, mutation_id_for_edit_operation, ArtifactDiff, DocumentBackboneBatchLimitsV1, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
     InverseMutation, MutationDag, MutationDagAppliedStep, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected, MutationDagSeedRejected, MutationEnvelope, MutationTransform, TransformOutcome, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS,
     DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
 };
 pub use crate::os_spr::causal::transition::{
+    HistoryFoldControl, HistoryFoldJob, HistoryFoldJobStep, fold_history_for_controlled, decode_history_transition_controlled, decode_history_envelope_controlled, copy_history_text, copy_history_text_parts, copy_history_bytes, history_envelope_id_controlled,
     decode_history_transition, encode_history_transition, fold_history, fold_history_for, history_transition_envelope, history_transition_from_envelope, history_transition_id, is_history_transition, trunk_alternative_id, ViewerHead, HistoryShape, HistoryTransitionKind, FoldAlternative, FoldChange, FoldCheckpoint, FoldEdit, HistoryFold, HistoryTransition,
     TransitionAuthor, TransitionCheckpoint, TransitionPin, EffectiveSupersession, InputReplacement, SupersededInput, TransitionSupersede, HISTORY_TRANSITION_SCHEMA, SUPERSEDE_PAYLOAD_MAX_BYTES, SUPERSEDE_SCOPE_MAX_BYTES,
 };
@@ -53,6 +54,7 @@ pub use crate::os_spr::wire::{
     decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,
     ServerFrame,
 };
+pub use crate::os_spr::wire::LOCAL_ACTOR_ID;
 pub use {crate::os_spr::wire::read_f64, crate::os_spr::wire::read_str, crate::os_spr::wire::read_varint_u64, crate::os_spr::wire::write_f64, crate::os_spr::wire::write_str, crate::os_spr::wire::write_varint_u64, crate::os_spr::wire::ActorId, crate::os_spr::wire::ArtifactId, crate::os_spr::wire::ArtifactVersion, crate::os_spr::wire::HybridLogicalTimestamp, crate::os_spr::wire::MergePolicy, crate::os_spr::wire::MutationId, crate::os_spr::wire::PayloadHash, crate::os_spr::wire::SchemaId, crate::os_spr::wire::SchemaVersion, crate::os_spr::wire::UndoPolicy};
 use semio_framework_schema_state::StateClass;
 //#endregion 🔖️Reexports

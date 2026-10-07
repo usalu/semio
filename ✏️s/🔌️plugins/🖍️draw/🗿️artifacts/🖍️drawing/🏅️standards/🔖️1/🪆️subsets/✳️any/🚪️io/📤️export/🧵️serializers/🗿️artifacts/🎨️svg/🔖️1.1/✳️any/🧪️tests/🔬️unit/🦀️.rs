@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{svg_document_to_typed};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{svg_document_to_typed};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_svg_xml};
 
 #[test]
@@ -86,14 +86,14 @@ fn drawing_projection_keeps_isolation_without_changing_leaf_opacity() {
     let second=crate::schema::create_drawing_shape_layer_rect("Second");
     let mut blend=crate::schema::create_drawing_group_layer("Blend");
     let crate::DrawingLayerNode::Group(body)=&mut blend else {unreachable!()};
-    body.base.id="blend".into();body.base.blend_mode="screen".into();body.children=vec![second];
+    body.base.id="blend".into();body.base.blend_mode="screen".into();body.children=vec![second].into();
     let mut half=crate::schema::create_drawing_group_layer("Half");
     let crate::DrawingLayerNode::Group(body)=&mut half else {unreachable!()};
-    body.base.id="half".into();body.base.opacity=0.5;body.base.transform.x=5.0;body.children=vec![first,blend];
+    body.base.id="half".into();body.base.opacity=0.5;body.base.transform.x=5.0;body.children=vec![first,blend].into();
     let mut outer=crate::schema::create_drawing_group_layer("Outer");
     let crate::DrawingLayerNode::Group(body)=&mut outer else {unreachable!()};
-    body.base.transform.x=10.0;body.children=vec![half];
-    let document=DrawingSnapshot {layers:vec![outer],..Default::default()};
+    body.base.transform.x=10.0;body.children=vec![half].into();
+    let document=DrawingSnapshot {layers:vec![outer].into(),..Default::default()};
     let nodes=flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(nodes.len(),2);
     assert_eq!(nodes[0].groups.iter().map(|g|g.id.as_str()).collect::<Vec<_>>(),vec!["half"]);
@@ -106,7 +106,7 @@ fn explicit_isolation_survives_unit_opacity_scene_projection() {
     let mut group=crate::schema::create_drawing_group_layer("Isolated");
     let crate::DrawingLayerNode::Group(body)=&mut group else {unreachable!()};
     body.isolation=true;body.base.id="isolated".into();body.children.push(crate::schema::create_drawing_shape_layer_rect("Child"));
-    let mut document=DrawingSnapshot {layers:vec![group],..Default::default()};
+    let mut document=DrawingSnapshot {layers:vec![group].into(),..Default::default()};
     let nodes=flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(nodes[0].groups.len(),1);assert_eq!(nodes[0].groups[0].id,"isolated");assert_eq!(nodes[0].groups[0].opacity,1.0);
     let crate::DrawingLayerNode::Group(body)=&mut document.layers[0] else {unreachable!()};body.isolation=false;

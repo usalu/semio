@@ -39,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 fn is_rectangle(node: &Puzzle2dNode) -> bool {
-    node.shape.as_deref() == Some("rectangle") || (node.shape.is_none() && node.width.is_some())
+    node.shape.as_ref().is_some_and(|shape|shape.eq_str("rectangle")) || (node.shape.is_none() && node.width.is_some())
 }
 
 /// 👁️ Read-only twin of the editor's own node placement — real per-node position/kind/label, flattened
@@ -58,12 +58,12 @@ fn world_instances_json(snapshot: &Puzzle2dSnapshot) -> String {
                 [diameter, diameter, PUZZLE2D_VIEW_FLAT_DEPTH]
             };
             semio_framework_value::DslValue::object([
-                ("id".to_string(), semio_framework_value::DslValue::String(node.id.clone())),
+                ("id".to_string(), semio_framework_value::ToValue::to_value(&node.id)),
                 ("meshId".to_string(), semio_framework_value::DslValue::String(mesh_id.to_string())),
                 ("position".to_string(), semio_framework_value::ToValue::to_value(&[node.x, node.y, 0.0])),
                 ("rotation".to_string(), semio_framework_value::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
                 ("scale".to_string(), semio_framework_value::ToValue::to_value(&scale)),
-                ("label".to_string(), semio_framework_value::DslValue::String(node.text.clone().unwrap_or_default())),
+                ("label".to_string(), node.text.as_ref().map(semio_framework_value::ToValue::to_value).unwrap_or_else(||semio_framework_value::DslValue::String(String::new()))),
             ])
         })
         .collect();

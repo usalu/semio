@@ -93,7 +93,7 @@ export async function zipSnapshotFromSqliteDatabase(database: SqliteDatabase, op
   return result;
 }
 
-import type {ArtifactDialect} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import {checkZipIso21320Conformance,type ZipIso21320Diagnostic} from "../../../../🌐️iso21320/🧬️schema/🟦️.ts";
 
 /** 🛡️ Validates the exact owned coordinate and returns its typed semantic diagnostics. */

@@ -1,6 +1,7 @@
 //! 🐍️ Python balance oracle + third-party JSON-schema validation.
 
-use crate::standards::v1::subsets::any::schema::{evaluate_document, snapshot::encode_din18599_snapshot_json};
+use crate::standards::v1::subsets::any::schema::evaluate_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::encode_din18599_snapshot_json;
 use crate::Din18599Snapshot;
 use std::path::PathBuf;
 use std::process::Command;

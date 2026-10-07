@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+  "before": "assert_eq!(before-after,step.2)",
+  "after": "assert_eq!(usize::try_from(before-after).unwrap(),step.2)"
+}

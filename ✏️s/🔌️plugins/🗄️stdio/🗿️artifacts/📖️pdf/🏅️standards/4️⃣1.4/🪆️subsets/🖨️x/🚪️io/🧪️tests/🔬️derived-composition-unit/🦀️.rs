@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1_4::subsets::x::schema::CODE_SCHEMA_GAP;
+    use crate::standards::v1_4::subsets::x::io::CODE_SCHEMA_GAP;
     use semio_framework_plugin::AnalyzeSource;
 
     #[semio_framework_async_macros::async_test]

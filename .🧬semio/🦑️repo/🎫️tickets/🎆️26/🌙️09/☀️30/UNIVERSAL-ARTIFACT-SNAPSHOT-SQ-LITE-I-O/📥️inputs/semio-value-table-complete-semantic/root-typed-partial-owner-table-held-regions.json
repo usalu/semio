@@ -1,0 +1,24 @@
+{
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+  "beforeHeldSha256": "42e700df33c88d3bc7a3bfb6e5627682e3784c53a2e41172ec13f16d724047fe",
+  "afterHeldSha256": "03a8b5c9e53dd5c780eb59bd593ee3e972513e215658cb5c64326a69a628a4a3",
+  "regions": [
+    {
+      "before": "let column_rows=ordered(&database.table(\"semio_table_column\")?.rows,5,control)?;",
+      "after": "let mut result=Owned::new(Self{schema:String::new(),columns:Vec::new(),rows:Vec::new()});let column_rows=ordered(&database.table(\"semio_table_column\")?.rows,5,control)?;"
+    },
+    {
+      "before": "let mut columns=transfer::reserve(column_rows.len(),control)?;",
+      "after": "result.get_mut().columns=transfer::reserve(column_rows.len(),control)?;"
+    },
+    {
+      "before": "columns.push(SemioTableColumn{",
+      "after": "result.get_mut().columns.push(SemioTableColumn{"
+    },
+    {
+      "before": "control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(Self{schema:reconstruct_text(control,document.text(1)?)?,columns,rows:rows.take()})",
+      "after": "result.get_mut().rows=rows.take();result.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(result.take())"
+    }
+  ],
+  "productionMounted": false
+}

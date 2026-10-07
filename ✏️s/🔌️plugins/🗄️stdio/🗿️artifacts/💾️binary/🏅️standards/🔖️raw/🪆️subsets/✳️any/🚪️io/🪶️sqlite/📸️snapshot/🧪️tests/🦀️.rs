@@ -51,7 +51,7 @@ fn binary_native_control_snapshot()->BinarySnapshot{let input=binary_native_cont
 fn binary_native_payload(snapshot:&BinarySnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io_schema::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(<BinarySnapshot as store::ArtifactPack>::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(<BinarySnapshot as store::ArtifactDsl>::print_dsl(snapshot))}}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_binary_actual_factory_canonical_external_carrier(){
- use semio_framework_os_kernel::io::ArtifactDialect;
+ use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Binary full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::document_codec(crate::STDIO_BINARY_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().expect("actual owning declaration publishes semantic SQLite");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<BinarySnapshot>()));
@@ -88,7 +88,7 @@ fn binary_canonical_carrier_snapshot()->BinarySnapshot{let mut snapshot=binary_n
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_binary_actual_typed_file_preserves_complete_literal_owned_fields(){
- use semio_framework_os_kernel::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Binary typed SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.binary".into(),standard:"raw".into(),subset:"*".into()};

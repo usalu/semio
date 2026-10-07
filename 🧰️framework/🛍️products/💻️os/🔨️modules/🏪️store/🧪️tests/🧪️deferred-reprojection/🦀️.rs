@@ -31,7 +31,7 @@ async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>) -> (A
 }
 
 async fn replica(id: &str, n: Option<i32>, log: &[crate::os_spr::MutationEnvelope], budget: Option<usize>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    let mut store = store_named(id, n).await;
+    let mut store = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", id, DemoSnapshot { n }, None), ActorId("deferred".into())).await;
     for event in log {
         store.ingest_remote(event.clone()).await.expect("the replica takes the log");
     }
@@ -169,7 +169,6 @@ async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() 
     let (author, log) = authored("deferred-restart", Some(0), edits).await;
     let ids: Vec<MutationId> = author.mutation_ops().expect("operations").into_iter().map(|operation| operation.mutation_id).collect();
     let mut deferred = replica("deferred-restart", Some(0), &log, Some(2)).await;
-    deferred.set_local_actor_id(Some("deferred".into())).expect("actor");
     deferred.ingest_remote(remote_supersede("deferred-restart", vec![replaced(&ids[0], set(10))], 0)).await.expect("admitted");
     deferred.step_reprojection(None).await.expect("a step");
     deferred.dispatch(ArtifactCommand::Apply { mutations: vec![add(100)], transaction: None }).await.expect("a local edit while the replay waits");
@@ -323,7 +322,7 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) {
 /// then `add(1)` × 239 authored by `later`, so `early`'s undo is an interior revert at position 0 that replays every later
 /// edit. The store authors as `early` afterwards and defers local replays by `budget`.
 async fn long_history(id: &str, budget: Option<ReplayTurnBudget>) -> ArtifactStore<DemoSnapshot, CountedOp> {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new_with_actor(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None), ActorId("early".into())).await;
     store.enable_convergence_early_exit();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }).await.expect("the early edit");
     for _ in 1..LONG_HISTORY {
@@ -331,7 +330,6 @@ async fn long_history(id: &str, budget: Option<ReplayTurnBudget>) -> ArtifactSto
         store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1), Some("later"))], transaction: None }).await.expect("a later edit");
     }
     settle(&mut store);
-    store.set_local_actor_id(Some("early".into())).expect("actor");
     store.defer_local_replays(budget);
     store
 }

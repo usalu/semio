@@ -26,7 +26,7 @@ use semio_framework_plugin::ToolOperationSpec;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
@@ -126,7 +126,7 @@ impl ArtifactOwnedToolJobFactory for SvgBasicEditorExampleFactory {
 //#region 🔖️Editor
 fn svgBasicEditor_validate_natural_snapshot(snapshot: &SvgSnapshot) -> Result<(), semio_framework_plugin::MediaError> {
     snapshot.validate_natural().map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))?;
-    if let Some(diagnostic) = crate::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance(snapshot)
+    if let Some(diagnostic) = crate::standards::v1_1::subsets::basic::schema::conformance::check_svg_basic_conformance(snapshot)
         .into_iter()
         .find(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
     {
@@ -202,8 +202,8 @@ impl ArtifactEditor for SvgBasicEditor {
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
-    fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_SVG_DOCUMENT_SCHEMA, operation, generation))
+    fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_SVG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str { svgBasicEditor_command_id(command) }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { svgBasicEditor_command_from_action(action, args) }

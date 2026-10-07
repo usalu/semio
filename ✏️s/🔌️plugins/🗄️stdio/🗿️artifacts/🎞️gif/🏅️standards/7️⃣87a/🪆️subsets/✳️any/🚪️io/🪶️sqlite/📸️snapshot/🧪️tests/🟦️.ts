@@ -16,9 +16,8 @@ test("GIF87 literal dimensions and intrinsic index sequence preserve independent
 });
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
-type GifSnapshot = gif87.GifSnapshot;
-import { gif87 } from "../../../../../../../../🟦️.ts";
-const { GIF87_SQLITE_SCHEMA, gifSnapshotToSqliteDatabase, gifSnapshotFromSqliteDatabase } = gif87;
+import type { GifSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import { GIF87_SQLITE_SCHEMA, gifSnapshotToSqliteDatabase, gifSnapshotFromSqliteDatabase } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 
 test("GIF87 shared full snapshot corpus exposes editable indexed grids and palettes",async()=>{

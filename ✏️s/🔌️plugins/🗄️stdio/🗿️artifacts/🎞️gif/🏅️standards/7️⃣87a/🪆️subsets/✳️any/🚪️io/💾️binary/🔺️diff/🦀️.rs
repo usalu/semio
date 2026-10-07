@@ -13,6 +13,11 @@ use protocol::os_spr::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
+/// 📦️ Preserves the standard-specific binary diff refusal at the physical codec boundary.
+fn diff_pack_err(e: &dsl::PackRefusal) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "gif87a diff binary", offset: 0, detail: e.to_string() }
+}
+
 /// 🧪️ P2-FG2: real binary value codecs for `GifDiff`'s nested types — mirrors the text codecs
 /// above field-for-field, using `dsl::ByteWriter`/`dsl::ByteReader` (the same real
 /// LEB128-varint/length-prefixed framework primitives png's own upgraded `PngDiff` binary frame

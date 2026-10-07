@@ -1,7 +1,7 @@
 //! 🧬️ TiffArtifact schema — full artifact state (mirrors `TiffSnapshot` field-for-field; see
 //! `png_artifact_schema_descriptor`/`PngArtifact` for the established repo pattern this follows).
 
-use crate::schema::snapshot::{TiffByteOrder, TiffIfd};
+use crate::schema::snapshot::{TiffIfd};
 use crate::TiffSnapshot;
 use framework_schema::ArtifactSchema;
 
@@ -11,8 +11,6 @@ use framework_schema::ArtifactSchema;
 pub struct TiffArtifact {
     #[state(artifact)]
     pub schema: String,
-    #[state(artifact)]
-    pub byte_order: TiffByteOrder,
     #[state(artifact)]
     #[value(default)]
     pub ifds: Vec<TiffIfd>,
@@ -27,11 +25,11 @@ impl Default for TiffArtifact {
 impl TiffArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> TiffSnapshot {
-        TiffSnapshot { schema: self.schema.clone(), byte_order: self.byte_order, ifds: self.ifds.clone() }
+        TiffSnapshot { schema: self.schema.clone(), ifds: self.ifds.clone() }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: TiffSnapshot) -> Self {
-        Self { schema: snapshot.schema, byte_order: snapshot.byte_order, ifds: snapshot.ifds }
+        Self { schema: snapshot.schema, ifds: snapshot.ifds }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
@@ -87,36 +85,20 @@ pub fn tiff_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 // `declaration()` in the artifact root, zero real callers) deleted outright; the real codec
 // (`encode_tiff`/`encode_tiff_packbits`/`decode_tiff` + every pure format algorithm) and
 // `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
-/// 🆕️ A new tiff document: one opaque white pixel in one IFD as the real codec round-trips it — baseline TIFF has no
-/// image without `ImageWidth`/`ImageLength` (TIFF 6.0 §8), and a new document must save and reopen as itself.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🆕️ One owned white RGB pixel.
 pub fn blank_tiff_snapshot() -> TiffSnapshot {
-    use crate::standards::v6_0::subsets::document::schema::snapshot::*;
-    TiffSnapshot { ifds: vec![TiffIfd { entries: vec![
-        TiffTag { tag: TAG_IMAGE_WIDTH, values: TiffValues::Long(vec![1]) },TiffTag { tag: TAG_IMAGE_LENGTH, values: TiffValues::Long(vec![1]) },TiffTag { tag: TAG_BITS_PER_SAMPLE, values: TiffValues::Short(vec![8,8,8]) },TiffTag { tag: TAG_COMPRESSION, values: TiffValues::Short(vec![1]) },TiffTag { tag: TAG_PHOTOMETRIC, values: TiffValues::Short(vec![2]) },TiffTag { tag: TAG_SAMPLES_PER_PIXEL, values: TiffValues::Short(vec![3]) },TiffTag { tag: TAG_ROWS_PER_STRIP, values: TiffValues::Long(vec![1]) },
-    ], storage: TiffStorage { kind:TiffStorageKind::Strips,offsets_kind:TiffFieldType::Long,byte_counts_kind:TiffFieldType::Long,chunks:vec![vec![255,255,255]] } }], ..TiffSnapshot::default() }
+    use crate::schema::snapshot::*;
+    TiffSnapshot { schema: crate::STDIO_TIFF_DOCUMENT_SCHEMA.into(), ifds: vec![TiffIfd {
+        entries: vec![TiffTag{tag:256,values:TiffValues::Long(vec![1])},TiffTag{tag:257,values:TiffValues::Long(vec![1])},TiffTag{tag:258,values:TiffValues::Short(vec![8,8,8])},TiffTag{tag:262,values:TiffValues::Short(vec![2])},TiffTag{tag:277,values:TiffValues::Short(vec![3])}],
+        blocks: vec![TiffSampleBlock{x:0,y:0,width:1,height:1,channels:3,samples:vec![TiffWord64{lo:255,hi:0};3]}]
+    }] }
 }
-
-/// 📄️ P2-FG2: the demo `stdio.tiff` document — a genuinely non-trivial `TiffSnapshot` exercising
-/// a non-solid checkerboard raster plus one carried non-core tag (`Artist`, 315). The single
-/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` (`fixture_honesty_law`
-/// in `../🚪️io`'s own tests asserts they're literally this snapshot's `print_dsl` output).
-///
-/// **Deliberately built via a real `encode_tiff`/`decode_tiff` round trip**, not hand-assembled
-/// field values: `encode_tiff` always CANONICALIZES the core strip/geometry tags fresh from
-/// `pixels` (see `encode_tiff_with`'s own `MultiIfdEncodeScopeNote`) — hand-picking `ImageWidth`/
-/// `BitsPerSample`/`Compression`/`PhotometricInterpretation`/`SamplesPerPixel`/`RowsPerStrip`/
-/// `StripByteCounts`/`StripOffsets` values here would silently "self-correct" on the very first
-/// `print_dsl`/`parse_dsl` round trip and break `fixture_honesty_law`'s `parse_dsl(fixture) ==
-/// demo()` identity (same class of trap `png`'s own `demo_png_snapshot()` doc comment documents
-/// for its IHDR fields) — running the real codec once here guarantees `demo()` is ALREADY in
-/// exactly the canonical shape a second `encode_tiff`/`decode_tiff` pass reproduces byte-for-byte.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 📄️ Literal logical checkerboard and owned artist text.
 pub fn demo_tiff_snapshot() -> TiffSnapshot {
-    use crate::standards::v6_0::subsets::document::schema::snapshot::*;
-    let (width,height)=(3u32,2u32);let mut rgb=Vec::with_capacity((width*height*3)as usize);for y in 0..height{for x in 0..width{let checker=if(x+y)%2==0{255}else{0};rgb.extend_from_slice(&[checker,((x*37)%256)as u8,((y*53)%256)as u8]);}}
-    TiffSnapshot{schema:crate::STDIO_TIFF_DOCUMENT_SCHEMA.into(),byte_order:TiffByteOrder::LittleEndian,ifds:vec![TiffIfd{entries:vec![
-        TiffTag{tag:TAG_IMAGE_WIDTH,values:TiffValues::Long(vec![width])},TiffTag{tag:TAG_IMAGE_LENGTH,values:TiffValues::Long(vec![height])},TiffTag{tag:TAG_BITS_PER_SAMPLE,values:TiffValues::Short(vec![8,8,8])},TiffTag{tag:TAG_COMPRESSION,values:TiffValues::Short(vec![1])},TiffTag{tag:TAG_PHOTOMETRIC,values:TiffValues::Short(vec![2])},TiffTag{tag:TAG_SAMPLES_PER_PIXEL,values:TiffValues::Short(vec![3])},TiffTag{tag:TAG_ROWS_PER_STRIP,values:TiffValues::Long(vec![height])},TiffTag{tag:315,values:TiffValues::Ascii(b"stdio.tiff demo\0".to_vec())},
-    ],storage:TiffStorage{kind:TiffStorageKind::Strips,offsets_kind:TiffFieldType::Long,byte_counts_kind:TiffFieldType::Long,chunks:vec![rgb]}}]}
+    use crate::schema::snapshot::*;
+    let mut snapshot=blank_tiff_snapshot();let page=&mut snapshot.ifds[0];
+    page.entries[0].values=TiffValues::Long(vec![3]);page.entries[1].values=TiffValues::Long(vec![2]);
+    page.entries.push(TiffTag{tag:315,values:TiffValues::Ascii(vec!["stdio.tiff demo".into()])});
+    page.blocks[0]=TiffSampleBlock{x:0,y:0,width:3,height:2,channels:3,samples:vec![255,0,0,0,37,0,255,74,0,0,0,53,255,37,53,0,74,53].into_iter().map(TiffWord64::from_word).collect()};
+    snapshot
 }
-//#endregion 🔖️DocumentHelpers

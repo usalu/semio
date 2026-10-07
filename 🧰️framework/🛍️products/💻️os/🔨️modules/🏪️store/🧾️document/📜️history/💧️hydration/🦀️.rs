@@ -1,7 +1,7 @@
 //! 💧️ Retained typed hydration of one persisted Pack and SPR history into an exact document owner.
 
 use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, SnapshotRetirementStep, conflict_from_history_conflict, mutation_meta_from_history_op_meta};
-use crate::os_io::ArtifactRef;
+use {semio_framework_artifact_reference::ArtifactRef};
 use crate::os_store::{ArtifactEnvelope, ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, EditReplay, OwnerRef, ReplayStep};
 use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::{Generation, OperationId, StepContext};
@@ -43,18 +43,27 @@ enum Phase {
     ScanPack,
     DecodePack,
     Begin,
+    Fold,
+    BindGenesis,
+    BuildAppliedCursor,
+    BuildRedoCursor,
     BeginEdit,
     DecodeForward,
     DecodeInverse,
     DecodeMetadata,
     FinishEdit,
-    HydrateTransitions,
     HydrateChanges,
     HydrateCheckpoints,
     HydrateAlternatives,
-    HydrateConflicts,
     HydratePins,
+    PrepareReplay,
     ReplayCursor,
+    AdoptInverse,
+    AdoptMessages,
+    SettleReplay,
+    BeginTargets,
+    DecodeTarget,
+    TargetInputs,
     SeedApplied,
     SeedRedo,
     RetireHistory,
@@ -65,14 +74,42 @@ enum Phase {
     Rejected,
 }
 
+struct HydratedReplayEdits<'a, M> {
+    edits: &'a crate::os_vcs::ArtifactHistoryLedger<Edit<M>>,
+    positions: &'a std::collections::BTreeMap<String, usize>,
+}
+
+impl<M> crate::os_store::ReplayEdits<M> for HydratedReplayEdits<'_, M> {
+    fn replay_edit(&self, id: &str) -> Option<&Edit<M>> {
+        self.edits.get(*self.positions.get(id)?).filter(|edit| edit.id == id)
+    }
+}
+
 pub struct RetainedPersistedDocumentHydration<P, M>
 where
     P: Clone + ToValue + FromValue,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
+    actor: ManuallyDrop<crate::os_spr::ActorId>,
     pack: ManuallyDrop<Option<Vec<u8>>>,
     initial: ManuallyDrop<Option<P>>,
-    history: ManuallyDrop<Option<crate::os_spr::HistoryLog>>,
+    history: ManuallyDrop<Option<std::sync::Arc<crate::os_spr::HistoryLog>>>,
+    fold_job: ManuallyDrop<Option<crate::os_spr::HistoryFoldJob<'static, crate::os_spr::history::RetainedHistoryFold>>>,
+    normalized_transitions: ManuallyDrop<Option<Vec<crate::os_spr::MutationEnvelope>>>,
+    normalized_conflicts: ManuallyDrop<Option<Vec<crate::os_spr::Conflict>>>,
+    replay_ids: ManuallyDrop<Option<Vec<String>>>,
+    replay_order: ManuallyDrop<Option<crate::os_vcs::HistoryPageStack<String>>>,
+    replay_total: u32,
+    pin_refs: ManuallyDrop<Option<std::collections::HashSet<ArtifactRef>>>,
+    loaded_result: ManuallyDrop<Option<super::EditReplayResult<P, M>>>,
+    edit_lookup: ManuallyDrop<Option<std::collections::BTreeMap<String, usize>>>,
+    mutation_lookup: ManuallyDrop<Option<std::collections::BTreeMap<crate::os_spr::MutationId, (usize, usize)>>>,
+    target_source: ManuallyDrop<Option<std::sync::Arc<Vec<crate::os_spr::MutationEnvelope>>>>,
+    target_decoder: ManuallyDrop<Option<crate::os_spr::HistoryFoldJob<'static, crate::os_spr::HistoryTransition>>>,
+    pending_target: ManuallyDrop<Option<crate::os_spr::TransitionSupersede>>,
+    target_address: ManuallyDrop<Option<Vec<String>>>,
+    fold_completed: u64,
+    progress_high_water: std::cell::Cell<u64>,
     fold: ManuallyDrop<Option<crate::os_spr::HistoryFold>>,
     expected: ManuallyDrop<Option<ArtifactRef>>,
     owner: ManuallyDrop<Option<OwnerRef>>,
@@ -95,6 +132,8 @@ where
     pin_group_index: usize,
     pin_index: usize,
     pack_scanned: usize,
+    pack_hasher: semio_framework_hash::Hasher,
+    pack_digest: Option<[u8; 32]>,
     diagnostic: Option<MemberOpenDiagnostic>,
     terminal: bool,
 }
@@ -104,8 +143,10 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub fn from_initial(
+    pub fn from_decoded_pack(
         initial: P,
+        pack: Vec<u8>,
+        digest: [u8; 32],
         history: crate::os_spr::HistoryLog,
         expected: ArtifactRef,
         owner: Option<OwnerRef>,
@@ -115,8 +156,11 @@ where
         generation: Generation,
         expires_at_us: u64,
         target: PersistedDocumentHydrationTarget,
+        actor: crate::os_spr::ActorId,
     ) -> Self {
-        Self::new(None, Some(initial), history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::Begin)
+        let mut hydration = Self::new(Some(pack), Some(initial), history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::Begin, actor);
+        hydration.pack_digest = Some(digest);
+        hydration
     }
 
     pub fn from_pack(
@@ -130,8 +174,9 @@ where
         generation: Generation,
         expires_at_us: u64,
         target: PersistedDocumentHydrationTarget,
+        actor: crate::os_spr::ActorId,
     ) -> Self {
-        Self::new(Some(pack), None, history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::ScanPack)
+        Self::new(Some(pack), None, history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::ScanPack, actor)
     }
 
     fn new(
@@ -147,11 +192,29 @@ where
         expires_at_us: u64,
         target: PersistedDocumentHydrationTarget,
         phase: Phase,
+        actor: crate::os_spr::ActorId,
     ) -> Self {
         Self {
+            actor: ManuallyDrop::new(actor),
             pack: ManuallyDrop::new(pack),
             initial: ManuallyDrop::new(initial),
-            history: ManuallyDrop::new(Some(history)),
+            history: ManuallyDrop::new(Some(std::sync::Arc::new(history))),
+            fold_job: ManuallyDrop::new(None),
+            normalized_transitions: ManuallyDrop::new(None),
+            normalized_conflicts: ManuallyDrop::new(None),
+            replay_ids: ManuallyDrop::new(None),
+            replay_order: ManuallyDrop::new(Some(crate::os_vcs::HistoryPageStack::new())),
+            replay_total: 0,
+            pin_refs: ManuallyDrop::new(Some(std::collections::HashSet::new())),
+            loaded_result: ManuallyDrop::new(None),
+            edit_lookup: ManuallyDrop::new(Some(std::collections::BTreeMap::new())),
+            mutation_lookup: ManuallyDrop::new(Some(std::collections::BTreeMap::new())),
+            target_source: ManuallyDrop::new(None),
+            target_decoder: ManuallyDrop::new(None),
+            pending_target: ManuallyDrop::new(None),
+            target_address: ManuallyDrop::new(None),
+            fold_completed: 0,
+            progress_high_water: std::cell::Cell::new(0),
             fold: ManuallyDrop::new(None),
             expected: ManuallyDrop::new(Some(expected)),
             owner: ManuallyDrop::new(owner),
@@ -174,6 +237,8 @@ where
             pin_group_index: 0,
             pin_index: 0,
             pack_scanned: 0,
+            pack_hasher: semio_framework_hash::Hasher::new(),
+            pack_digest: None,
             diagnostic: None,
             terminal: false,
         }
@@ -208,7 +273,9 @@ where
 
     fn progress(&self) -> PersistedDocumentHydrationProgress {
         let total = self.history.as_ref().map_or(1, |history| history.edits.len() + history.transitions.len() + history.conflicts.len() + 1);
-        PersistedDocumentHydrationProgress { completed: self.record_index as u64, total: total as u64 }
+        let completed = self.progress_high_water.get().max(self.fold_completed.saturating_add(self.record_index as u64));
+        self.progress_high_water.set(completed);
+        PersistedDocumentHydrationProgress { completed, total: completed.max(self.fold_completed.saturating_add(total as u64)) }
     }
 
     fn drive_active(&mut self, cx: &mut StepContext<'_>) -> Result<bool, MemberOpenDiagnostic> {
@@ -231,11 +298,17 @@ where
         }
     }
 
+    fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> super::ArtifactHistoryReadRetirement<P, M> {
+        super::ArtifactHistoryReadRetirement { preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), snapshots: owners.initial_snapshot_retirement.clone(), mutations: owners.mutation_retirement.clone() }
+    }
+
     fn retire_edit(&mut self, edit: Edit<M>) {
         *self.active = Some(self.owners.as_ref().expect("hydration owner catalog remains retained").retire_decoded_edit(edit));
     }
 
     pub fn step(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
         if let Some(diagnostic) = self.diagnostic {
             return PersistedDocumentHydrationStep::Rejected(diagnostic);
         }
@@ -263,6 +336,7 @@ where
                 if scanned == 0 {
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
+                self.pack_hasher.update(&self.pack.as_ref().expect("retained Pack remains present")[self.pack_scanned..self.pack_scanned + scanned]);
                 self.pack_scanned += scanned;
                 cx.consume_fuel(scanned as u64);
                 PersistedDocumentHydrationStep::Pending(self.progress())
@@ -278,6 +352,7 @@ where
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::Begin => {
+                if self.actor.0.trim().is_empty() { return self.reject(MemberOpenDiagnostic::Initialization); }
                 let history = self.history.as_ref().expect("decoded history remains retained");
                 let expected = self.expected.as_ref().expect("document identity remains retained");
                 let schema = self.schema.as_ref().expect("document schema remains retained");
@@ -294,36 +369,74 @@ where
                     return self.reject(MemberOpenDiagnostic::Identity);
                 }
                 if P::publish_native_snapshot().is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
-                let fold = match history.fold() {
-                    Ok(fold) => fold,
-                    Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
-                };
+                *self.fold_job = Some(crate::os_spr::HistoryLog::fold_job(history.clone(), crate::os_spr::HistoryShape::Document));
+                self.phase = Phase::Fold;
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::Fold => {
+                let maximum_bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+                let job = self.fold_job.as_mut().expect("history fold job remains retained");
+                let result = job.step(1, maximum_bytes, &mut || cx.should_yield());
+                self.fold_completed = job.completed();
+                cx.consume_fuel(1);
+                match result {
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { .. }) => {}
+                    Ok(crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts))) => {
+                        self.fold_job.take();
+                        *self.replay_ids = Some(replay_order);
+                        *self.fold = Some(fold);
+                        *self.normalized_transitions = Some(transitions);
+                        *self.normalized_conflicts = Some(conflicts);
+                        self.phase = Phase::BindGenesis;
+                    }
+                    _ => return self.reject(MemberOpenDiagnostic::Replay),
+                }
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::BindGenesis => {
+                let history = std::sync::Arc::get_mut(self.history.as_mut().expect("decoded history remains retained")).expect("fold aliases close before genesis binding");
+                let fold = self.fold.as_mut().expect("derived history remains retained");
                 let initial = self.initial.take().expect("typed initial snapshot remains retained");
-                let initial_digest = *semio_framework_hash::hash(&initial.encode_pack()).as_bytes();
+                let initial_digest = self.pack_digest.unwrap_or_else(|| *self.pack_hasher.finalize().as_bytes());
+                let pack = self.pack.take().expect("stored genesis Pack remains retained");
+                let genesis = crate::os_store::ArtifactGenesis::from_verified_pack(initial, pack, initial_digest);
                 let expected = self.expected.take().expect("document identity remains retained");
                 let schema = self.schema.take().expect("document schema remains retained");
-                let mut envelope = crate::os_store::create_document_envelope::<P, M>(&schema, &expected.artifact_id, initial, None);
+                let mut envelope = crate::os_store::create_document_envelope_from_genesis::<P, M>(&schema, &expected.artifact_id, genesis, None);
                 envelope.dialect = Some(expected.dialect);
-                self.owner.take();
-                envelope.owner = history_owner;
-                envelope.active_alternative_id = fold.alternative.clone();
-                envelope.viewer_checkpoint_id = history.viewer_checkpoint.clone();
-                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(fold.applied.clone(), fold.redo.clone(), fold.checkpoint.clone()));
-                let supersessions = fold.supersessions.clone();
-                *self.fold = Some(fold);
-                if envelope.conflicts.try_reserve_exact(history.conflicts.len()).is_err() || envelope.transitions.try_reserve_exact(history.transitions.len()).is_err() {
-                    *self.envelope = Some(envelope);
-                    return self.reject(MemberOpenDiagnostic::Capacity);
-                }
-                let current = envelope.vcs.initial_snapshot.clone();
-                let mut runtime = ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, current, initial_digest);
+                envelope.owner = self.owner.take();
+                envelope.active_alternative_id = fold.alternative.take();
+                envelope.viewer_checkpoint_id = history.viewer_checkpoint.take();
+                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
+                envelope.transitions = self.normalized_transitions.take().expect("normalized transition owners remain retained");
+                let supersessions = std::mem::take(&mut fold.supersessions);
+                envelope.conflicts = self.normalized_conflicts.take().expect("normalized conflict owners remain retained");
+                let current = envelope.vcs.genesis.share_snapshot();
+                let mut runtime = ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, current, initial_digest, crate::os_spr::ActorId(std::mem::take(&mut self.actor.0)));
                 let installed = runtime.set_supersessions(supersessions);
                 *self.runtime = Some(runtime);
                 *self.envelope = Some(envelope);
                 if installed.is_err() {
                     return self.reject(MemberOpenDiagnostic::Initialization);
                 }
-                self.phase = Phase::BeginEdit;
+                self.phase = Phase::BuildAppliedCursor;
+                self.operation_index = 0;
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::BuildAppliedCursor | Phase::BuildRedoCursor => {
+                let fold = self.fold.as_mut().expect("derived history remains retained");
+                let applied = self.phase == Phase::BuildAppliedCursor;
+                let ids = if applied { &mut fold.applied } else { &mut fold.redo };
+                if let Some(id) = ids.get_mut(self.operation_index) {
+                    let cursor = self.envelope.as_mut().expect("hydrated envelope remains retained").cursor.as_mut().expect("hydrated cursor remains retained");
+                    if applied { cursor.applied_edit_ids.push(std::mem::take(id)); } else { cursor.redo_edit_ids.push(std::mem::take(id)); }
+                    self.operation_index += 1;
+                } else {
+                    self.operation_index = 0;
+                    self.phase = if applied { Phase::BuildRedoCursor } else { Phase::BeginEdit };
+                }
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
@@ -331,10 +444,11 @@ where
                 let history = self.history.as_ref().expect("decoded history remains retained");
                 let Some(source) = history.edits.get(self.edit_index) else {
                     self.operation_index = 0;
-                    self.phase = Phase::HydrateTransitions;
+                    self.phase = Phase::HydrateChanges;
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 };
+                if source.actor.as_deref().is_none_or(|actor| actor.trim().is_empty()) { return self.reject(MemberOpenDiagnostic::Replay); }
                 let mut forwards = Vec::new();
                 let mut inverse = Vec::new();
                 let mut mutation_meta = Vec::new();
@@ -346,7 +460,7 @@ where
                     id: source.id.clone(),
                     actor: source.actor.clone(),
                     forwards,
-                    inverse,
+                    inverse: inverse.into(),
                     mutation_meta,
                     verb: source.verb.clone(),
                     sequence_number: self.edit_index as i32 + 1,
@@ -395,12 +509,14 @@ where
                     return self.reject(MemberOpenDiagnostic::Replay);
                 }
                 if let Some(meta) = metadata.get(self.operation_index) {
+                    if meta.author_id.as_deref().is_none_or(|actor| actor.trim().is_empty()) { return self.reject(MemberOpenDiagnostic::Replay); }
                     let (meta, messages) = match mutation_meta_from_history_op_meta(meta.clone()) {
                         Ok(decoded) => decoded,
                         Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                     };
                     let edit_id = self.pending_edit.as_ref().expect("pending typed edit remains retained").id.as_str();
                     if let Some(id) = &meta.mutation_id {
+                        self.mutation_lookup.as_mut().expect("hydrated mutation index remains retained").insert(id.clone(), (self.edit_index, self.operation_index));
                         if self.runtime.as_mut().expect("hydration runtime remains retained").seed_edit_operation(edit_id, id.clone()).is_err() {
                             return self.reject(MemberOpenDiagnostic::Replay);
                         }
@@ -420,6 +536,7 @@ where
                 let mut edit = self.pending_edit.take().expect("completed typed edit remains retained");
                 let envelope = self.envelope.as_mut().expect("hydrated envelope remains retained");
                 super::stamp_edit_semantics::<P, M>(&mut edit, &envelope.schema);
+                self.edit_lookup.as_mut().expect("hydrated edit index remains retained").insert(edit.id.clone(), envelope.vcs.edits.len());
                 if let Err(edit) = envelope.vcs.edits.try_push(edit) {
                     self.retire_edit(edit);
                     return self.reject(MemberOpenDiagnostic::Capacity);
@@ -437,24 +554,10 @@ where
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
-            Phase::HydrateTransitions => {
-                let history = self.history.as_ref().expect("decoded history remains retained");
-                if let Some(transition) = history.transitions.get(self.operation_index) {
-                    let transition = transition.to_envelope(&history.doc_id);
-                    self.envelope.as_mut().expect("hydrated envelope remains retained").transitions.push(transition);
-                    self.operation_index += 1;
-                    self.record_index += 1;
-                } else {
-                    self.operation_index = 0;
-                    self.phase = Phase::HydrateChanges;
-                }
-                cx.consume_fuel(1);
-                PersistedDocumentHydrationStep::Pending(self.progress())
-            }
             Phase::HydrateChanges => {
-                let fold = self.fold.as_ref().expect("history fold remains retained");
-                if let Some(change) = fold.changes.get(self.operation_index) {
-                    let change = crate::os_store::Change { id: change.id.clone(), edit_ids: change.edit_ids.clone(), description: change.description.clone(), saved_at: change.saved_at.clone() };
+                let fold = self.fold.as_mut().expect("history fold remains retained");
+                if let Some(change) = fold.changes.get_mut(self.operation_index) {
+                    let change = crate::os_store::Change { id: std::mem::take(&mut change.id), edit_ids: std::mem::take(&mut change.edit_ids), description: change.description.take(), saved_at: std::mem::take(&mut change.saved_at) };
                     if let Err(change) = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.changes.try_push(change) {
                         *self.active = Some(Box::new(super::ArtifactStoreHistoryMetadataRetirement::change(change)));
                         return self.reject(MemberOpenDiagnostic::Capacity);
@@ -468,55 +571,40 @@ where
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::HydrateCheckpoints => {
-                let fold = self.fold.as_ref().expect("history fold remains retained");
-                if let Some(checkpoint) = fold.checkpoints.get(self.operation_index) {
-                    let checkpoint = crate::os_store::Checkpoint {
-                        id: checkpoint.id.clone(),
-                        change_ids: checkpoint.change_ids.clone(),
-                        parent_id: checkpoint.parent_id.clone(),
-                        authors: checkpoint.authors.iter().map(|author| crate::os_store::Author { id: author.id.clone(), name: author.name.clone(), avatar: author.avatar.clone() }).collect(),
-                        message: checkpoint.message.clone(),
-                        timestamp: checkpoint.timestamp.clone(),
-                        composition_pins: Vec::new(),
-                    };
-                    if let Err(checkpoint) = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.checkpoints.try_push(checkpoint) {
-                        *self.active = Some(Box::new(super::ArtifactStoreHistoryMetadataRetirement::checkpoint(checkpoint)));
-                        return self.reject(MemberOpenDiagnostic::Capacity);
+                let fold = self.fold.as_mut().expect("history fold remains retained");
+                if let Some(source) = fold.checkpoints.get_mut(self.operation_index) {
+                    let envelope = self.envelope.as_mut().expect("hydrated envelope remains retained");
+                    if self.pin_index == 0 {
+                        let checkpoint = crate::os_store::Checkpoint { id: std::mem::take(&mut source.id), change_ids: std::mem::take(&mut source.change_ids), parent_id: source.parent_id.take(), authors: Vec::with_capacity(source.authors.len()), message: source.message.take(), timestamp: std::mem::take(&mut source.timestamp), composition_pins: Vec::new() };
+                        if let Err(checkpoint) = envelope.vcs.checkpoints.try_push(checkpoint) {
+                            *self.active = Some(Box::new(super::ArtifactStoreHistoryMetadataRetirement::checkpoint(checkpoint)));
+                            return self.reject(MemberOpenDiagnostic::Capacity);
+                        }
+                        self.pin_index = 1;
+                    } else if let Some(author) = source.authors.get_mut(self.pin_index - 1) {
+                        envelope.vcs.checkpoints.get_mut(self.operation_index).expect("hydrated checkpoint remains indexed").authors.push(crate::os_store::Author { id: std::mem::take(&mut author.id), name: std::mem::take(&mut author.name), avatar: author.avatar.take() });
+                        self.pin_index += 1;
+                    } else {
+                        self.operation_index += 1;
+                        self.pin_index = 0;
                     }
-                    self.operation_index += 1;
                 } else {
                     self.operation_index = 0;
+                    self.pin_index = 0;
                     self.phase = Phase::HydrateAlternatives;
                 }
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::HydrateAlternatives => {
-                let fold = self.fold.as_ref().expect("history fold remains retained");
-                if let Some(alternative) = fold.alternatives.get(self.operation_index) {
-                    let alternative = crate::os_store::Alternative { id: alternative.id.clone(), name: alternative.name.clone(), checkpoint_ids: alternative.checkpoint_ids.clone() };
+                let fold = self.fold.as_mut().expect("history fold remains retained");
+                if let Some(alternative) = fold.alternatives.get_mut(self.operation_index) {
+                    let alternative = crate::os_store::Alternative { id: std::mem::take(&mut alternative.id), name: std::mem::take(&mut alternative.name), checkpoint_ids: std::mem::take(&mut alternative.checkpoint_ids) };
                     if let Err(alternative) = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.alternatives.try_push(alternative) {
                         *self.active = Some(Box::new(super::ArtifactStoreHistoryMetadataRetirement::alternative(alternative)));
                         return self.reject(MemberOpenDiagnostic::Capacity);
                     }
                     self.operation_index += 1;
-                } else {
-                    self.operation_index = 0;
-                    self.phase = Phase::HydrateConflicts;
-                }
-                cx.consume_fuel(1);
-                PersistedDocumentHydrationStep::Pending(self.progress())
-            }
-            Phase::HydrateConflicts => {
-                let history = self.history.as_ref().expect("decoded history remains retained");
-                if let Some(conflict) = history.conflicts.get(self.operation_index) {
-                    let conflict = match conflict_from_history_conflict(conflict.clone()) {
-                        Ok(conflict) => conflict,
-                        Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
-                    };
-                    self.envelope.as_mut().expect("hydrated envelope remains retained").conflicts.push(conflict);
-                    self.operation_index += 1;
-                    self.record_index += 1;
                 } else {
                     self.operation_index = 0;
                     self.phase = Phase::HydratePins;
@@ -528,12 +616,12 @@ where
                 let Some(source) = self.fold.as_ref().expect("history fold remains retained").checkpoints.get(self.pin_group_index) else {
                     self.record_index = 0;
                     self.operation_index = 0;
-                    self.phase = Phase::ReplayCursor;
+                    self.phase = Phase::PrepareReplay;
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 };
                 let envelope = self.envelope.as_mut().expect("hydrated envelope remains retained");
-                let Some(checkpoint) = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == source.id) else {
+                let Some(checkpoint) = envelope.vcs.checkpoints.get_mut(self.pin_group_index) else {
                     return self.reject(MemberOpenDiagnostic::Replay);
                 };
                 if self.pin_index == 0 && checkpoint.composition_pins.try_reserve_exact(source.pins.len()).is_err() {
@@ -544,33 +632,46 @@ where
                         Ok(reference) => reference,
                         Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                     };
-                    if checkpoint.composition_pins.iter().any(|pin| pin.child_ref == child_ref) {
+                    if !self.pin_refs.as_mut().expect("hydrated checkpoint pin index remains retained").insert(child_ref.clone()) {
                         return self.reject(MemberOpenDiagnostic::Replay);
                     }
                     checkpoint.composition_pins.push(CompositionPin { child_ref, checkpoint_id: pin.checkpoint_id.clone() });
                     self.pin_index += 1;
                 } else {
+                    let previous = std::mem::take(self.pin_refs.as_mut().expect("hydrated checkpoint pin index remains retained"));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(previous));
                     self.pin_group_index += 1;
                     self.pin_index = 0;
                 }
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
-            Phase::ReplayCursor => {
-                if self.replay.is_none() {
+            Phase::PrepareReplay => {
+                let ids = self.replay_ids.as_mut().expect("prepared replay identity owners remain retained");
+                if let Some(id) = ids.get_mut(self.record_index) {
                     let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
-                    let applied = envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
-                    let supersessions = self.runtime.as_ref().expect("hydration runtime remains retained").supersessions().clone();
-                    match super::loaded_history_replay(envelope, &applied, supersessions) {
-                        Ok(replay) => *self.replay = Some(replay),
+                    let Some(position) = self.edit_lookup.as_ref().expect("hydrated edit index remains retained").get(id).copied() else { return self.reject(MemberOpenDiagnostic::Replay) };
+                    let edit = envelope.vcs.edits.get(position).expect("indexed hydrated edit remains retained");
+                    self.replay_total = self.replay_total.saturating_add(u32::try_from(edit.forwards.len()).unwrap_or(u32::MAX));
+                    self.replay_order.as_mut().expect("prepared replay order remains retained").push(std::mem::take(id));
+                    self.record_index += 1;
+                } else {
+                    self.replay_ids.take();
+                    let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
+                    let supersessions = std::mem::take(&mut *self.runtime.as_mut().expect("hydration runtime remains retained").supersessions);
+                    match EditReplay::new_counted(super::ReplayMode::Report, envelope.vcs.genesis.share_snapshot(), self.replay_order.take().expect("prepared replay order remains retained"), 0, &envelope.schema, supersessions, self.replay_total) {
+                        Ok(replay) => { *self.replay = Some(replay); self.phase = Phase::ReplayCursor; },
                         Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                     }
-                    cx.consume_fuel(1);
-                    return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::ReplayCursor => {
                 let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
                 let replay = self.replay.as_mut().expect("hydration replay remains retained");
-                let stepped = replay.step(&envelope.vcs.edits, &mut || {
+                let edits = HydratedReplayEdits { edits: &envelope.vcs.edits, positions: self.edit_lookup.as_ref().expect("hydrated replay index remains retained") };
+                let stepped = replay.step(&edits, &mut || {
                     cx.consume_fuel(1);
                     cx.should_yield()
                 });
@@ -580,17 +681,128 @@ where
                     Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                 }
                 let replay = self.replay.take().expect("finished hydration replay remains retained");
-                let adopted = replay.finish().and_then(|result| super::adopt_loaded_replay(self.envelope.as_mut().expect("hydrated envelope remains retained"), result));
-                let state = match adopted {
-                    Ok(state) => state,
-                    Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
-                };
-                let current = self.runtime.as_mut().and_then(ArtifactStoreInitializationRuntime::current_mut).expect("hydrated current remains retained");
-                let displaced = std::mem::replace(current, state);
-                *self.active = Some(self.owners.as_ref().expect("hydration owners remain retained").initial_snapshot_retirement.retire_owned(displaced));
-                self.record_index = 0;
-                self.operation_index = 0;
-                self.phase = Phase::SeedApplied;
+                match replay.finish() { Ok(result) => *self.loaded_result = Some(result), Err(_) => return self.reject(MemberOpenDiagnostic::Replay) }
+                self.phase = Phase::AdoptInverse;
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::AdoptInverse => {
+                let result = self.loaded_result.as_mut().expect("completed hydration replay remains retained");
+                if let Some((id, inverse)) = result.rebased_inverse.last_mut() {
+                    let Some(position) = self.edit_lookup.as_ref().expect("hydrated edit index remains retained").get(id).copied() else { return self.reject(MemberOpenDiagnostic::Replay) };
+                    let edit = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.edits.get_mut(position).expect("indexed hydrated edit remains retained");
+                    let displaced = std::mem::replace(&mut edit.inverse, std::mem::take(inverse));
+                    let (id, _) = result.rebased_inverse.pop().expect("adopted inverse identity remains retained");
+                    *self.active = Some(Box::new(super::ArtifactStoreOperationRowsRetirement::new(displaced, self.owners.as_ref().expect("hydration owner catalog remains retained").mutation_retirement.clone()).with_identity(id)));
+                } else { self.phase = Phase::AdoptMessages; }
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::AdoptMessages => {
+                let result = self.loaded_result.as_mut().expect("completed hydration replay remains retained");
+                if let Some(entry) = result.replayed.pop() {
+                    let ledger = &mut self.envelope.as_mut().expect("hydrated envelope remains retained").edit_messages;
+                    if entry.messages.is_empty() {
+                        let previous = ledger.remove_id(&entry.edit_id);
+                        *self.active = Some(semio_framework_value::retirement::owned_retirement((entry, previous)));
+                    } else if let Some(previous) = ledger.get_mut_by_id(&entry.edit_id) {
+                        let previous = std::mem::replace(previous, entry);
+                        *self.active = Some(Box::new(super::ArtifactStoreMessageLedgerRetirement::new(previous.edit_id, previous.messages)));
+                    } else if let Err(entry) = ledger.admit(entry) {
+                        *self.active = Some(Box::new(super::ArtifactStoreMessageLedgerRetirement::new(entry.edit_id, entry.messages)));
+                        return self.reject(MemberOpenDiagnostic::Capacity);
+                    }
+                } else {
+                    let runtime = self.runtime.as_mut().expect("hydration runtime remains retained");
+                    runtime.set_supersessions(std::mem::take(&mut result.supersessions)).expect("replay returns the original effective-input owner");
+                    let state = result.take_state().expect("completed replay retains its reached projection");
+                    let factory = self.owners.as_ref().expect("hydration owner catalog remains retained").initial_snapshot_retirement.clone();
+                    *self.active = Some(Box::new(super::ReturnedSnapshotReadRetirement::new(runtime.replace_current_alias(state), factory)));
+                    self.phase = Phase::SettleReplay;
+                }
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::SettleReplay => {
+                if let Some(result) = self.loaded_result.take() {
+                    let owners = self.owners.as_ref().expect("hydration owner catalog remains retained");
+                    let mut retirement = self.loaded_replay_retirement(owners);
+                    *retirement.finished = Some(result);
+                    *self.active = Some(Box::new(retirement));
+                } else {
+                    self.record_index = 0;
+                    self.operation_index = 0;
+                    self.phase = Phase::BeginTargets;
+                }
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::BeginTargets => {
+                if self.target_source.is_none() {
+                    *self.target_source = Some(std::sync::Arc::new(std::mem::take(&mut self.envelope.as_mut().expect("hydrated envelope remains retained").transitions)));
+                    self.record_index = 0;
+                }
+                let source = self.target_source.as_ref().expect("immutable transition source remains retained");
+                if let Some(transition) = source.get(self.record_index) {
+                    let mut at = 0;
+                    let kind = crate::os_spr::wire::read_varint_u64(&transition.diff.payload, &mut at);
+                    if !transition.target.is_empty() || !matches!(kind, Ok(6)) { self.record_index += 1; }
+                    else {
+                        let source = source.clone();
+                        let index = self.record_index;
+                        *self.target_decoder = Some(crate::os_spr::HistoryFoldJob::new(move |control| async move { crate::os_spr::decode_history_transition_controlled(&source[index].diff.payload, &control).await }));
+                        self.phase = Phase::DecodeTarget;
+                    }
+                } else {
+                    let transitions = std::sync::Arc::into_inner(self.target_source.take().expect("immutable transition source remains retained")).expect("target decoder aliases close before transition handoff");
+                    self.envelope.as_mut().expect("hydrated envelope remains retained").transitions = transitions;
+                    self.record_index = 0;
+                    self.phase = Phase::SeedApplied;
+                }
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::DecodeTarget => {
+                let bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+                let job = self.target_decoder.as_mut().expect("transition target decoder remains retained");
+                match job.step(1, bytes, &mut || cx.should_yield()) {
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { .. }) => {},
+                    Ok(crate::os_spr::HistoryFoldJobStep::Ready(crate::os_spr::HistoryTransition::Supersede(target))) => {
+                        self.target_decoder.take();
+                        *self.pending_target = Some(target);
+                        self.operation_index = 0;
+                        self.phase = Phase::TargetInputs;
+                    }
+                    _ => return self.reject(MemberOpenDiagnostic::Replay),
+                }
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::TargetInputs => {
+                let target = self.pending_target.as_ref().expect("decoded target inputs remain retained");
+                if let Some(input) = target.inputs.get(self.operation_index) {
+                    let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
+                    let operation = self.mutation_lookup.as_ref().expect("hydrated mutation index remains retained").get(&input.target).and_then(|(edit, index)| envelope.vcs.edits.get(*edit).and_then(|edit| edit.forwards.get(*index)));
+                    let original = operation.map(<M as Mutation<P>>::conflict_target).unwrap_or_default();
+                    let replacement = operation.and_then(|operation| super::admit_replacement::<P, M>(operation, &input.replacement, &envelope.schema).ok().flatten());
+                    let replacement_target = replacement.as_ref().map(<M as Mutation<P>>::conflict_target);
+                    let mut written = match &replacement_target { Some(target) => super::common_address(&original, target), None => super::common_address(&original, &original) };
+                    let previous = self.target_address.take();
+                    let next = match &previous { Some(known) => super::common_address(known, &written), None => std::mem::take(&mut written) };
+                    *self.target_address = Some(next);
+                    let retired_strings = (original, replacement_target, previous, written);
+                    if let Some(replacement) = replacement {
+                        let owners = self.owners.as_ref().expect("hydration owner catalog remains retained");
+                        *self.active = Some(Box::new(super::ArtifactStoreOperationRowsRetirement::new(vec![replacement], owners.mutation_retirement.clone()).with_strings(retired_strings)));
+                    } else { *self.active = Some(semio_framework_value::retirement::owned_retirement(retired_strings)); }
+                    self.operation_index += 1;
+                } else {
+                    let source = std::sync::Arc::get_mut(self.target_source.as_mut().expect("immutable transition source remains retained")).expect("decoder aliases close before target mutation");
+                    source[self.record_index].target = self.target_address.take().unwrap_or_default();
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(self.pending_target.take().expect("finished decoded target remains retained")));
+                    self.record_index += 1;
+                    self.phase = Phase::BeginTargets;
+                }
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
@@ -599,11 +811,13 @@ where
                 let cursor = envelope.cursor.as_ref().expect("persisted cursor remains retained");
                 let ids = if self.phase == Phase::SeedApplied { &cursor.applied_edit_ids } else { &cursor.redo_edit_ids };
                 if let Some(id) = ids.get(self.record_index) {
-                    let Some(edit) = envelope.vcs.edits.iter().find(|edit| edit.id == *id) else { return self.reject(MemberOpenDiagnostic::Replay) };
+                    let Some(position) = self.edit_lookup.as_ref().expect("hydrated edit index remains retained").get(id).copied() else { return self.reject(MemberOpenDiagnostic::Replay) };
+                    let edit = envelope.vcs.edits.get(position).expect("indexed hydrated edit remains retained");
+                    let ledger_key = envelope.vcs.edits.key_at(position).expect("indexed hydrated ledger key remains retained");
                     let result = if self.phase == Phase::SeedApplied {
-                        self.runtime.as_mut().expect("hydration runtime remains retained").push_applied_edit(edit)
+                        self.runtime.as_mut().expect("hydration runtime remains retained").push_applied_edit(edit, ledger_key)
                     } else {
-                        self.runtime.as_mut().expect("hydration runtime remains retained").push_redo_edit(edit)
+                        self.runtime.as_mut().expect("hydration runtime remains retained").push_redo_edit(edit, ledger_key)
                     };
                     if result.is_err() {
                         return self.reject(MemberOpenDiagnostic::Capacity);
@@ -618,7 +832,18 @@ where
             }
             Phase::RetireHistory => {
                 if let Some(history) = self.history.take() {
-                    *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(std::sync::Arc::into_inner(history).expect("fold aliases close before history retirement")));
+                    cx.consume_fuel(1);
+                    return PersistedDocumentHydrationStep::Pending(self.progress());
+                }
+                if let Some(index) = self.mutation_lookup.take() {
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
+                    cx.consume_fuel(1);
+                    return PersistedDocumentHydrationStep::Pending(self.progress());
+                }
+                if let Some(pins) = self.pin_refs.take() { *self.active = Some(semio_framework_value::retirement::owned_retirement(pins)); cx.consume_fuel(1); return PersistedDocumentHydrationStep::Pending(self.progress()); }
+                if let Some(index) = self.edit_lookup.take() {
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
@@ -689,7 +914,6 @@ where
                         let mut runtime = self.runtime.take().expect("hydrated runtime remains retained");
                         let cursor = envelope.cursor.as_ref().expect("persisted cursor remains retained");
                         runtime.set_current_checkpoint_id(cursor.checkpoint_id.clone());
-                        runtime.set_local_actor_id(cursor.applied_edit_ids.last().and_then(|id| envelope.vcs.edits.iter().find(|edit| edit.id == *id)).and_then(|edit| edit.actor.clone()));
                         let owners = self.owners.take().expect("store hydration owners remain retained");
                         PersistedDocumentHydrationOutput::Store(Box::new(ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, generation, owners)))
                     }
@@ -730,6 +954,35 @@ where
                 step => Ok(step),
             };
         }
+        if let Some(job) = self.fold_job.as_mut() {
+            match job.close_step(1, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if job.terminal_is_empty() => { self.fold_job.take(); }
+                step => return Ok(step),
+            }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(conflicts) = self.normalized_conflicts.take() { *self.active = Some(semio_framework_value::retirement::owned_retirement(conflicts)); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(transitions) = self.normalized_transitions.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(transitions));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(job) = self.target_decoder.as_mut() {
+            match job.close_step(1, maximum_bytes)? { SnapshotRetirementStep::Complete if job.terminal_is_empty() => { self.target_decoder.take(); }, step => return Ok(step) }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(target) = self.pending_target.take() { *self.active = Some(semio_framework_value::retirement::owned_retirement(target)); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(address) = self.target_address.take() { *self.active = Some(semio_framework_value::retirement::owned_retirement(address)); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(source) = self.target_source.take() { *self.active = Some(semio_framework_value::retirement::owned_retirement(std::sync::Arc::into_inner(source).expect("target decoder closes before its source"))); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(ids) = self.replay_ids.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(ids));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(order) = self.replay_order.as_mut() {
+            if let Some(id) = order.pop() { *self.active = Some(semio_framework_value::retirement::owned_retirement(id)); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+            if order.release_empty_page() { return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+            self.replay_order.take();
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         let owners = self.owners.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration lost its owner catalog"))?;
         if let Some(runtime) = self.runtime.as_mut() {
             return match runtime.close_step(owners.initial_snapshot_retirement.as_ref(), 1, maximum_bytes)? {
@@ -749,9 +1002,12 @@ where
             *self.active = Some(Box::new(super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if let Some(replay) = self.replay.take() {
-            replay.cancel();
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        if self.replay.is_some() || self.loaded_result.is_some() {
+            let mut retirement = self.loaded_replay_retirement(owners);
+            *retirement.loaded_replay = self.replay.take();
+            *retirement.finished = self.loaded_result.take();
+            *self.active = Some(Box::new(retirement));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(envelope) = self.envelope.take() {
             *self.active = Some(owners.retire_decoded_envelope(envelope));
@@ -762,7 +1018,16 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(history) = self.history.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(std::sync::Arc::into_inner(history).expect("fold aliases close before history retirement")));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(index) = self.mutation_lookup.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(pins) = self.pin_refs.take() { *self.active = Some(semio_framework_value::retirement::owned_retirement(pins)); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(index) = self.edit_lookup.take() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(fold) = self.fold.take() {
@@ -789,6 +1054,10 @@ where
             *self.active = Some(semio_framework_value::retirement::owned_retirement(owner));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        if !self.actor.0.is_empty() {
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut self.actor.0)));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         if let Some(schema) = self.schema.take() {
             *self.active = Some(semio_framework_value::retirement::owned_retirement(schema));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -807,10 +1076,24 @@ where
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal
+            && self.actor.0.is_empty()
             && self.pack.is_none()
             && self.initial.is_none()
             && self.replay.is_none()
+            && self.loaded_result.is_none()
+            && self.pin_refs.is_none()
+            && self.edit_lookup.is_none()
+            && self.mutation_lookup.is_none()
+            && self.target_source.is_none()
+            && self.target_decoder.is_none()
+            && self.pending_target.is_none()
+            && self.target_address.is_none()
             && self.history.is_none()
+            && self.fold_job.is_none()
+            && self.replay_ids.is_none()
+            && self.replay_order.is_none()
+            && self.normalized_transitions.is_none()
+            && self.normalized_conflicts.is_none()
             && self.fold.is_none()
             && self.expected.is_none()
             && self.owner.is_none()
@@ -841,10 +1124,24 @@ where
 {
     fn terminal_is_empty_unbounded(&self) -> bool {
         self.terminal
+            && self.actor.0.is_empty()
             && self.pack.is_none()
             && self.initial.is_none()
             && self.replay.is_none()
+            && self.loaded_result.is_none()
+            && self.pin_refs.is_none()
+            && self.edit_lookup.is_none()
+            && self.mutation_lookup.is_none()
+            && self.target_source.is_none()
+            && self.target_decoder.is_none()
+            && self.pending_target.is_none()
+            && self.target_address.is_none()
             && self.history.is_none()
+            && self.fold_job.is_none()
+            && self.replay_ids.is_none()
+            && self.replay_order.is_none()
+            && self.normalized_transitions.is_none()
+            && self.normalized_conflicts.is_none()
             && self.fold.is_none()
             && self.expected.is_none()
             && self.owner.is_none()

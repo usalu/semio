@@ -108,7 +108,8 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
+    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation,HtmlMutation};
+
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_html::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_html::standards::v5::subsets::any::io::text::snapshot::{write_html_document};

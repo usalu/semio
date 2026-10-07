@@ -6,8 +6,7 @@ byte-for-byte to the ``expectedInputs`` of ``shared://🧫️mutation-inputs/�
 validator whether those descriptors tell the truth about their leaf schemas: every hard bound, option and
 requirement a descriptor declares must be exactly what ``jsonschema`` enforces — a value at an inclusive bound, every
 option and every required input present validate; a value past a bound, an undeclared option, a fraction for an
-integer, a missing required input and an oversized vector are refused. It also validates the corpus against the
-manifest's ``MutationInputCorpus`` export and the framework glossary against ``InputLabelGlossary``.
+integer, a missing required input and an oversized vector are refused. It validates the domain glossary and each supplied leaf schema independently; examples remain plain test input.
 
 Run directly from the repository root: ``python3 "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🐍️.py"``.
 Exits non-zero on any disagreement.
@@ -174,10 +173,10 @@ def reference_id_failures(rows):
 
 
 def main():
-    """🧭️ Validates the corpus and the glossary, then holds every declared descriptor to ``jsonschema``'s verdicts."""
+    """🧭️ Validates the glossary, then holds every declared descriptor to ``jsonschema``'s verdicts."""
     manifest = load(SCHEMA)
     corpus = load(CORPUS)
-    failures = ["corpus %s: %s" % ("/".join(map(str, error.absolute_path)), error.message) for error in export(manifest, "MutationInputCorpus").iter_errors(corpus)]
+    failures = []
     failures += ["glossary %s: %s" % ("/".join(map(str, error.absolute_path)), error.message) for error in export(manifest, "InputLabelGlossary").iter_errors(load(GLOSSARY))]
     failures += reference_id_failures(corpus["referenceIds"])
     documents = registry(corpus["documents"])
@@ -185,8 +184,8 @@ def main():
     for case in corpus["cases"]:
         if "expectedInputs" not in case:
             continue
-        validator = jsonschema.Draft7Validator(case["leafSchema"], registry=documents)
-        for probe, payload, admitted in probes(case["leafSchema"], case["expectedInputs"]):
+        validator = jsonschema.Draft7Validator(case["input"]["leafSchema"], registry=documents)
+        for probe, payload, admitted in probes(case["input"]["leafSchema"], case["expectedInputs"]):
             judged += 1
             if validator.is_valid(payload) != admitted:
                 failures.append("%s %s: jsonschema says %s, the descriptors say %s for %s" % (case["name"], probe, "valid" if not admitted else "invalid", "valid" if admitted else "invalid", json.dumps(payload, ensure_ascii=False)))

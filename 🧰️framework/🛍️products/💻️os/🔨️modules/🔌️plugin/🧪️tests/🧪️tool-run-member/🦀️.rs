@@ -101,14 +101,16 @@ fn member_key() -> (String, String) {
 async fn member_store() -> ToolRunMembers {
     let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", text(&member_fixture()["childId"]), TestSnapshot::default(), None);
     envelope.dialect = Some(member_dialect());
-    let mut child = ArtifactStore::new(envelope).await.expect("the member store opens");
+    let mut child = ArtifactStore::new(envelope, protocol::ActorId(text(&fixture()["actor"]).into())).await.expect("the member store opens");
     child.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
     ToolRunMembers::Child(Box::new(child))
 }
 
 /// 🏗️ The toy app over the member roster with the parent declaring and owning its one member, run target `target`.
 async fn member_app(target: u64) -> MemberApp {
-    let mut app = artifact_app_laws::new_registered_app_with_members::<ToyRunApp, ToolRunMembers, _>(toy_manifest()).await;
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    let mut app = artifact_app_laws::new_registered_app_with_members::<ToyRunApp, ToolRunMembers, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into())).await;
     app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }).await.expect("the member target config applies");
     let (slot, child_id) = member_key();
     let declared = ArtifactRef { artifact_id: child_id.clone(), dialect: member_dialect() }.to_uri();

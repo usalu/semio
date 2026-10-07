@@ -1,0 +1,703 @@
+{
+  "phases": [
+    "semio-paid-copy-cancellation-witness",
+    "semio-drawing-successful-empty-workspace-release-preparation",
+    "semio-drawing-successful-empty-workspace-release",
+    "semio-text-complete-independent-demand",
+    "semio-text-complete-semantic-provider-held",
+    "semio-text-new-demand-label-correction",
+    "semio-text-held-actual-progress-path",
+    "semio-audio-six-format-complete-independent-demand",
+    "semio-audio-source-exact-authority-correction",
+    "semio-text-common-borrowed-hex-held",
+    "semio-audio-complete-semantic-provider-held",
+    "semio-text-audio-shared-hex-utf8-demand",
+    "semio-audio-shared-hex-utf8-demand",
+    "semio-video-native-matched-complete-independent-demand",
+    "semio-object-exact-word-complete-independent-demand",
+    "semio-properties-six-authored-fixture-inputs",
+    "semio-object-complete-semantic-provider",
+    "semio-value-table-native-matched-complete-independent-demand",
+    "semio-canonical-io-stale-duplicate-test-glue",
+    "semio-mesh-authored-source-url-separator",
+    "semio-canonical-eight-private-sibling-base-tests-glue",
+    "semio-canonical-reached-native-entry-visibility",
+    "semio-flow-image-native-matched-complete-independent-demand",
+    "semio-second-native-io-four-canonical-glue",
+    "semio-second-native-io-ten-private-domain-imports",
+    "semio-current-io-two-grouped-native-imports",
+    "semio-flow-image-complete-semantic-provider",
+    "semio-graph-animation-native-matched-complete-independent-demand",
+    "semio-source-flow-loop-and-image-current-fixture",
+    "semio-animation-sql-direct-geometry",
+    "semio-animation-complete-semantic-provider",
+    "semio-graph-hex-float-native-grammar-independent-demand",
+    "semio-ten-owners-forty-three-complete-semantic-providers",
+    "semio-object-current-grouped-native-io-import",
+    "semio-mesh-native-matched-complete-independent-demand",
+    "semio-kit-current-grouped-native-io-import",
+    "semio-mesh-source-exact-word-width-hydration",
+    "semio-kit-native-matched-complete-independent-demand",
+    "semio-twelve-owners-fifty-one-complete-semantic-providers",
+    "semio-model-native-matched-complete-independent-demand",
+    "semio-thirteen-owners-fifty-five-complete-semantic-providers",
+    "semio-cad-native-matched-complete-independent-demand",
+    "semio-fourteen-owners-fifty-nine-complete-semantic-providers",
+    "semio-document-native-matched-complete-independent-demand",
+    "semio-presentation-native-matched-complete-independent-demand",
+    "semio-sixteen-owners-sixty-seven-complete-semantic-providers",
+    "semio-drawing-native-matched-complete-independent-demand",
+    "semio-brep-native-matched-complete-independent-demand",
+    "semio-base-native-matched-complete-independent-demand",
+    "semio-base-independent-complete-manual-oracle",
+    "semio-nineteen-owners-seventy-eight-complete-semantic-providers",
+    "semio-base-native-default-required-image-null",
+    "semio-base-complete-thirty-six-independent-demand",
+    "semio-base-complete-individual-source-cases",
+    "semio-nineteen-native-test-canonical-owner-paths",
+    "semio-model-independent-late-owned-oracle",
+    "semio-model-nonempty-late-owned-demand",
+    "semio-nineteen-owners-eighty-paid-complete-semantic-providers"
+  ],
+  "registrations": [
+    {
+      "name": "🧿️semio🪶️sqlite Paid Copy Cancellation Witness",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-paid-copy-cancellation-witness",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Drawing Successful Empty Workspace Release Preparation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-drawing-successful-empty-workspace-release-preparation",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18001
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Drawing Successful Empty Workspace Release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-drawing-successful-empty-workspace-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Text Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-text-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18003000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Text Complete Semantic Provider Held",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-text-complete-semantic-provider-held",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18004000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Text New Demand Label Correction",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-text-new-demand-label-correction",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18005
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Text Held Actual Progress Path",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-text-held-actual-progress-path",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18006
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Audio Six Format Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-audio-six-format-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18007
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Audio Source Exact Authority Correction",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-audio-source-exact-authority-correction",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18008
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Text Common Borrowed Hex Held",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-text-common-borrowed-hex-held",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18009
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Audio Complete Semantic Provider Held",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-audio-complete-semantic-provider-held",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1801
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Text Audio Shared Hex Utf8 Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-text-audio-shared-hex-utf8-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18011
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Audio Shared Hex Utf8 Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-audio-shared-hex-utf8-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18012000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Video Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-video-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18013000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Object Exact Word Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-object-exact-word-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18014
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Properties Six Authored Fixture Inputs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-properties-six-authored-fixture-inputs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18015
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Object Complete Semantic Provider",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-object-complete-semantic-provider",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18016
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Value Table Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-value-table-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18017
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Canonical Io Stale Duplicate Test Glue",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-canonical-io-stale-duplicate-test-glue",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18018
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Mesh Authored Source Url Separator",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-mesh-authored-source-url-separator",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18019
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Canonical Eight Private Sibling Base Tests Glue",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-canonical-eight-private-sibling-base-tests-glue",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1802
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Canonical Reached Native Entry Visibility",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-canonical-reached-native-entry-visibility",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18021000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Flow Image Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-flow-image-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18022000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Second Native Io Four Canonical Glue",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-second-native-io-four-canonical-glue",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18023
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Second Native Io Ten Private Domain Imports",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-second-native-io-ten-private-domain-imports",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18024
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Current Io Two Grouped Native Imports",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-current-io-two-grouped-native-imports",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18025
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Flow Image Complete Semantic Provider",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-flow-image-complete-semantic-provider",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18026
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Graph Animation Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-graph-animation-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18027
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Source Flow Loop And Image Current Fixture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-source-flow-loop-and-image-current-fixture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18028
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Animation Sql Direct Geometry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-animation-sql-direct-geometry",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18029
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Animation Complete Semantic Provider",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-animation-complete-semantic-provider",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18030000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Graph Hex Float Native Grammar Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-graph-hex-float-native-grammar-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18031000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Ten Owners Forty Three Complete Semantic Providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-ten-owners-forty-three-complete-semantic-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18032
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Object Current Grouped Native Io Import",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-object-current-grouped-native-io-import",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18033
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Mesh Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-mesh-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18034
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Kit Current Grouped Native Io Import",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-kit-current-grouped-native-io-import",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18035
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Mesh Source Exact Word Width Hydration",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-mesh-source-exact-word-width-hydration",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18036
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Kit Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-kit-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18037
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Twelve Owners Fifty One Complete Semantic Providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-twelve-owners-fifty-one-complete-semantic-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18038
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Model Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-model-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18039000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Thirteen Owners Fifty Five Complete Semantic Providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-thirteen-owners-fifty-five-complete-semantic-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18040000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Cad Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-cad-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18041
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Fourteen Owners Fifty Nine Complete Semantic Providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-fourteen-owners-fifty-nine-complete-semantic-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18042
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Document Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-document-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18043
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Presentation Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-presentation-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18044
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Sixteen Owners Sixty Seven Complete Semantic Providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-sixteen-owners-sixty-seven-complete-semantic-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18045
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Drawing Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-drawing-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18046
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Brep Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-brep-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18047
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Base Native Matched Complete Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-base-native-matched-complete-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18048000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Base Independent Complete Manual Oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-base-independent-complete-manual-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18049000000002
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Nineteen Owners Seventy Eight Complete Semantic Providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-nineteen-owners-seventy-eight-complete-semantic-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1805
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Base Native Default Required Image Null",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-base-native-default-required-image-null",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18051
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Base Complete Thirty Six Independent Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-base-complete-thirty-six-independent-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18052
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Base Complete Individual Source Cases",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-base-complete-individual-source-cases",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18053
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Nineteen Native Test Canonical Owner Paths",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-nineteen-native-test-canonical-owner-paths",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18054
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Model Independent Late Owned Oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-model-independent-late-owned-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18055
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Model Nonempty Late Owned Demand",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-model-nonempty-late-owned-demand",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18056
+      }
+    },
+    {
+      "name": "🧿️semio🪶️sqlite Nineteen Owners Eighty Paid Complete Semantic Providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts\" semio-nineteen-owners-eighty-paid-complete-semantic-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.18057000000002
+      }
+    }
+  ],
+  "source": "/Users/ueli/Documents/semio/.vscode/🧩️launch.seed.jsonc"
+}

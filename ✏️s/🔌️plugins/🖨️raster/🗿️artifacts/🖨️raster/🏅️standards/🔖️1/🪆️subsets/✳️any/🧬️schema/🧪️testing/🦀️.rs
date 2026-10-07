@@ -1,6 +1,7 @@
 //! 🧪️ Synthetic image-bearing raster document used exclusively by native tests.
 
 use super::*;
+use crate::RasterImageAsset;
 
 pub fn raster_image_test_snapshot() -> RasterSnapshot {
     let mut assets = RasterOwnedMap::new();

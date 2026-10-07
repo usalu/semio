@@ -1,0 +1,225 @@
+{
+  "schemaBytes": 3580,
+  "tableWidths": {
+    "semio_document_block": 2,
+    "semio_document_code": 3,
+    "semio_document_collection": 1,
+    "semio_document_document": 3,
+    "semio_document_heading": 3,
+    "semio_document_image": 6,
+    "semio_document_image_block": 9,
+    "semio_document_list": 2,
+    "semio_document_list_item": 4,
+    "semio_document_member": 4,
+    "semio_document_page_break": 1,
+    "semio_document_paragraph": 2,
+    "semio_document_quote": 2,
+    "semio_document_run": 13,
+    "semio_document_style": 6,
+    "semio_document_table": 1,
+    "semio_document_table_cell": 4,
+    "semio_document_table_row": 3
+  },
+  "cases": [
+    {
+      "id": "full",
+      "sourceSnapshot": {
+        "schema": "s.stdio.semio.document",
+        "styles": [
+          {
+            "id": "",
+            "name": "root",
+            "basedOn": null
+          },
+          {
+            "id": "child",
+            "name": "child",
+            "basedOn": ""
+          }
+        ],
+        "images": [
+          {
+            "id": "image-🖼",
+            "mime": "image/png",
+            "bytes": [
+              0,
+              255,
+              127
+            ]
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "style_id": "",
+            "runs": [
+              {
+                "text": "English Deutsch\u0000文",
+                "style": {
+                  "bold": true,
+                  "italic": true,
+                  "underline": true,
+                  "size": {
+                    "bits": "bff8000000000000"
+                  },
+                  "font": "",
+                  "color": "#ff0000",
+                  "link": "https://example.test"
+                }
+              },
+              {
+                "text": "",
+                "style": {
+                  "bold": false,
+                  "italic": false,
+                  "underline": false,
+                  "size": null,
+                  "font": null,
+                  "color": null,
+                  "link": null
+                }
+              }
+            ]
+          },
+          {
+            "kind": "heading",
+            "level": 255,
+            "style_id": "child",
+            "runs": []
+          },
+          {
+            "kind": "list",
+            "ordered": true,
+            "items": [
+              {
+                "blocks": [
+                  {
+                    "kind": "pageBreak"
+                  }
+                ]
+              },
+              {
+                "blocks": []
+              }
+            ]
+          },
+          {
+            "kind": "table",
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "blocks": [
+                      {
+                        "kind": "paragraph",
+                        "style_id": null,
+                        "runs": [
+                          {
+                            "text": "cell",
+                            "style": {
+                              "bold": false,
+                              "italic": false,
+                              "underline": false,
+                              "size": null,
+                              "font": null,
+                              "color": null,
+                              "link": null
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "blocks": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "code",
+            "language": "",
+            "text": "English Deutsch\u0000文"
+          },
+          {
+            "kind": "quote",
+            "blocks": [
+              {
+                "kind": "quote",
+                "blocks": []
+              }
+            ]
+          },
+          {
+            "kind": "image",
+            "image_id": "image-🖼",
+            "alt": "",
+            "width": {
+              "bits": "0000000000000000"
+            },
+            "height": null
+          },
+          {
+            "kind": "pageBreak"
+          }
+        ]
+      },
+      "rows": 52,
+      "valueBytes": 1274
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "sourceSnapshot": {
+        "schema": "s.stdio.semio.document",
+        "styles": [],
+        "images": [],
+        "blocks": []
+      },
+      "rows": 2,
+      "valueBytes": 46
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 3873,
+    "tableWidths": {
+      "semio_document_block": 2,
+      "semio_document_code": 3,
+      "semio_document_collection": 1,
+      "semio_document_document": 3,
+      "semio_document_heading": 3,
+      "semio_document_image": 6,
+      "semio_document_image_block": 9,
+      "semio_document_list": 2,
+      "semio_document_list_item": 4,
+      "semio_document_member": 4,
+      "semio_document_page_break": 1,
+      "semio_document_paragraph": 2,
+      "semio_document_quote": 2,
+      "semio_document_run": 13,
+      "semio_document_style": 6,
+      "semio_document_table": 1,
+      "semio_document_table_cell": 4,
+      "semio_document_table_row": 3,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 53,
+        "valueBytes": {
+          "binary": 1319,
+          "text": 1317
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 91,
+          "text": 89
+        }
+      }
+    ]
+  }
+}

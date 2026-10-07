@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "targets",
+    "owner",
+    "positions",
+    "dispatches",
+    "offset"
+  ],
+  "properties": {
+    "targets": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "ids"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "face",
+              "edge",
+              "vertex"
+            ]
+          },
+          "ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^.+\\.(face|edge|vertex)\\.(0|[1-9][0-9]*)~[a-f0-9]{64}~[1-9][0-9]*~[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "owner": {
+      "type": "string"
+    },
+    "positions": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+      }
+    },
+    "dispatches": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dx",
+          "dy",
+          "dz",
+          "phase"
+        ],
+        "properties": {
+          "dx": {
+            "type": "number"
+          },
+          "dy": {
+            "type": "number"
+          },
+          "dz": {
+            "type": "number"
+          },
+          "phase": {
+            "enum": [
+              "stream",
+              "commit"
+            ]
+          }
+        }
+      }
+    },
+    "offset": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

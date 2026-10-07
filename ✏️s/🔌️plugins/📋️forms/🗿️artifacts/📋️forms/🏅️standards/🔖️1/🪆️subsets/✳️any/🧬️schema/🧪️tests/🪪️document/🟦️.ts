@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import {parseFormsJsonArtifact,formsArtifactJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {parseFormsJsonDiff} from "../../../🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
 import { applyPatch, compare } from "fast-json-patch";
@@ -24,7 +25,7 @@ import contactTemplate from "../../../🖼️assets/📇️contact/🔣️.json"
 /** 📥️ Canonical import shares schema and identity checks with an independent JSON Schema oracle. */
 export async function testFormsDesignImport(): Promise<void> {
   const { default: Ajv } = await import("ajv");
-  const ajv = new Ajv({ strict: false });
+  const ajv = new Ajv({ strict: false }).addSchema(artifactReferenceSchema);
   for (const schema of [ioSchema, childSchema, semioChildSchema, definitionSchema, responseSchema]) ajv.addSchema(schema);
   const validate = ajv.compile(artifactSchema);
   const unique = ajv.compile({ type: "array", items: { type: "string", minLength: 1 }, uniqueItems: true });
@@ -48,7 +49,7 @@ export function testFormsDocumentContractOracle(): void {
   const { title: _, ...base } = vectors.document;
   assertDocumentContractOracle({
     name: "Forms",
-    dependencies: [ioSchema, childSchema, semioChildSchema, definitionSchema, responseSchema],
+    dependencies: [ioSchema, childSchema, semioChildSchema, definitionSchema, responseSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: parseFormsJsonArtifact, nativeJson:value=>formsArtifactJson(value as artifact.FormsArtifact) },
     snapshot: { schema: snapshotSchema, parse: parseFormsJsonArtifact, nativeJson:value=>formsArtifactJson(value as artifact.FormsArtifact) },
     diff: { schema: diffSchema, parse: parseFormsJsonDiff, nativeJson:value=>formsArtifactJson(value as diff.FormsDiff) },
@@ -74,7 +75,7 @@ export async function testFormsMutationSchemas(): Promise<void> {
   const { default: Ajv } = await import("ajv");
   const { parse } = await import("graphql");
   const root = fileURLToPath(new URL("../..", import.meta.url));
-  const ajv = new Ajv({ strict: false });
+  const ajv = new Ajv({ strict: false }).addSchema(artifactReferenceSchema);
   ajv.addSchema(definitionSchema).addSchema(responseSchema);
   const mutationRoot = join(root, "🧬️mutations");
   for (const entry of readdirSync(mutationRoot, { withFileTypes: true })) {

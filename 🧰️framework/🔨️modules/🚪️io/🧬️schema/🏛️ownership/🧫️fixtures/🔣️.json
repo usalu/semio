@@ -5,16 +5,11 @@
     "semio-framework-value",
     "semio-framework-value-derive",
     "semio-framework-diagnostic",
-    "semio-framework-schema-registry"
+    "semio-framework-schema-registry",
+    "semio-framework-artifact-reference",
+    "semio-framework-dsl-record"
   ],
   "exports": [
-    "StandardId",
-    "SubsetId",
-    "Dialect",
-    "ArtifactDialect",
-    "ArtifactKindId",
-    "ArtifactRef",
-    "is_canonical_artifact_kind",
     "IoPayload",
     "CARRIER_BINARY",
     "CARRIER_TEXT",

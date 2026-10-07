@@ -1,3 +1,5 @@
+import { pdfIndirectFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/📄️document/🟦️.ts";
+import { pdfCosFromNativeJson,pdfDictionaryFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
 /** 🧩️ PDF COS owner laws against neutral vectors and an independent SQLite engine. */
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
@@ -56,12 +58,28 @@ test("PDF COS rejects cycles, orphan rows, variant spoofing and weakened SQL", a
   await expect(pdfObjectFromSqliteDatabase(valid, 2n)).rejects.toThrow();
   const weakened = { tables: valid.tables.map(table => ({ ...table, sql: table.sql.replace("chain_id INTEGER NOT NULL", "chain_id INTEGER \"NOT NULL\"") })) };
   await expect(pdfObjectFromSqliteDatabase(weakened, 1n)).rejects.toThrow();
-  expect(PDF_COS_SQLITE_SCHEMA.split("CREATE TABLE")).toHaveLength(8);
+  expect(PDF_COS_SQLITE_SCHEMA.split("CREATE TABLE")).toHaveLength(9);
 });
 
 test("PDF COS native JSON admission constructs the canonical owned bigint model", () => {
-  expect(parsePdfObject({ kind: "int", value: 17 })).toEqual({ kind: "int", value: 17n });
-  expect(parsePdfDictEntry({ key: "Integer", value: { kind: "array", value: [{ kind: "int", value: -17 }] } })).toEqual({ key: "Integer", value: { kind: "array", value: [{ kind: "int", value: -17n }] } });
-  expect(parsePdfIndirectObject({ id: { num: 7, gen: 0 }, value: { kind: "int", value: 1 } })).toEqual({ id: { num: 7, gen: 0 }, value: { kind: "int", value: 1n } });
-  expect(() => parsePdfObject({ kind: "int", value: 9223372036854775807 })).toThrow();
+  expect(parsePdfObject(pdfCosFromNativeJson({ kind: "int", value: 17 }))).toEqual({ kind: "int", value: 17n });
+  expect(parsePdfDictEntry(pdfDictionaryFromNativeJson([{ key: "Integer", value: { kind: "array", value: [{ kind: "int", value: -17 }] } }])[0])).toEqual({ key: "Integer", value: { kind: "array", value: [{ kind: "int", value: -17n }] } });
+  expect(parsePdfIndirectObject(pdfIndirectFromNativeJson({ id: { num: 7, gen: 0 }, value: { kind: "int", value: 1 } }))).toEqual({ id: { num: 7, gen: 0 }, value: { kind: "int", value: 1n } });
+  expect(() => parsePdfObject(pdfCosFromNativeJson({ kind: "int", value: 9223372036854775807 }))).toThrow();
+});
+
+test("PDF retained text and date own typed SQL values against neutral admission cases",async()=>{
+  const cases=await Bun.file(new URL("../../../../🧫️fixtures/🪪️retained-text/🔣️.json",import.meta.url)).json();
+  for(const vector of cases.cases){
+    const root:PdfObject={kind:"array",value:[{kind:"text",value:vector.text},{kind:"date",value:vector.ownedDate}]};
+    expect(parsePdfObject(root)).toEqual(root);
+    const bytes=await exportSqliteDatabase(await pdfObjectToSqliteDatabase(root)),sql=Database.deserialize(bytes);
+    expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    expect(sql.query("SELECT name AS value FROM pdf_cos_value WHERE kind='text'").get()).toEqual({value:vector.text});
+    expect(sql.query("SELECT d.year,d.month,d.day,d.offset_minutes AS offsetMinutes FROM pdf_cos_value v JOIN pdf_date d ON d.id=v.date_id WHERE v.kind='date'").get()).toEqual({year:vector.ownedDate.year,month:vector.ownedDate.month,day:vector.ownedDate.day,offsetMinutes:vector.ownedDate.offsetMinutes});
+    expect(await pdfObjectFromSqliteDatabase(await importSqliteDatabase(bytes),1n)).toEqual(root);
+    sql.run("UPDATE pdf_cos_value SET name='independent owned text' WHERE kind='text'");sql.run("UPDATE pdf_date SET year=2031");
+    expect(await pdfObjectFromSqliteDatabase(await importSqliteDatabase(sql.serialize()),1n)).toEqual({kind:"array",value:[{kind:"text",value:"independent owned text"},{kind:"date",value:{...vector.ownedDate,year:2031}}]});
+    sql.close();
+  }
 });

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "layout",
+          "member",
+          "excluded",
+          "declared"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "source",
+              "canonical",
+              "missing",
+              "excluded",
+              "prefix-imposter"
+            ]
+          },
+          "layout": {
+            "enum": [
+              "source",
+              "destination"
+            ]
+          },
+          "member": {
+            "enum": [
+              "exact",
+              "absent",
+              "prefix"
+            ]
+          },
+          "excluded": {
+            "type": "boolean"
+          },
+          "declared": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,24 +1,26 @@
 //! Puzzle2d mutation — `ChangeEdgeKind`: changes an edge's `edge_kind` catalog reference.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// `change-edge-kind` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "change-edge-kind")]
 pub struct ChangeEdgeKind {
-    pub id: String,
-    pub new_edge_kind: Option<String>,
+    pub id: PagedUtf8<{ usize::MAX }>,
+    pub new_edge_kind: Option<PagedUtf8<{ usize::MAX }>>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_edge_kind(id: String, new_edge_kind: Option<String>) -> Puzzle2dMutation {
+pub fn change_edge_kind(id: PagedUtf8<{ usize::MAX }>, new_edge_kind: Option<PagedUtf8<{ usize::MAX }>>) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeEdgeKind(ChangeEdgeKind { id, new_edge_kind })
 }
 
@@ -38,7 +40,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeEdgeKi
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change edge \"{}\" kind", self.id), &format!("Art von Kante \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
+        vec![self.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

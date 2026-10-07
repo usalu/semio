@@ -22,7 +22,7 @@ fn database(snapshot:&SequenceSnapshot)->SqliteDatabase{snapshot.to_sqlite_datab
 fn restore(database:&SqliteDatabase)->SequenceSnapshot{SequenceSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(snapshot:&SequenceSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
 fn native(snapshot:&SequenceSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot))}}
-fn dialect()->store::io_schema::ArtifactDialect{store::io_schema::ArtifactDialect{artifact_kind:"s.sequence.sequence".into(),standard:"1".into(),subset:"*".into()}}
+fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.sequence.sequence".into(),standard:"1".into(),subset:"*".into()}}
 
 #[test]
 fn sqlite_snapshot_sequence_complete_parent_and_empty_reference_fields_are_exact(){
@@ -52,7 +52,7 @@ fn sqlite_snapshot_sequence_independent_query_and_reference_edits_are_semantic()
  use std::{io::Write,process::{Command,Stdio}};let mut expected=fixture();
  let script=r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const row=db.query('SELECT artifact_id,artifact_kind,standard,subset FROM sequence_content').get();if(row.artifact_id!=='artifact 世界\0'||row.artifact_kind!=='s.stdio.semio'||row.standard!=='v1'||row.subset!=='flow')throw Error('literal identity');db.run('UPDATE sequence_document SET schema=?',['edited 世界']);db.run('UPDATE sequence_content SET id=99,child_id=?,artifact_id=?,artifact_kind=?,standard=?,subset=?',['new child','new artifact','s.stdio.json','rfc8259','*']);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
  let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file(&expected)).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
- expected.schema="edited 世界".into();expected.content=store::ArtifactChild::new("new child".into(),store::io_schema::ArtifactRef{artifact_id:"new artifact".into(),dialect:store::io_schema::ArtifactDialect{artifact_kind:"s.stdio.json".into(),standard:"rfc8259".into(),subset:"*".into()}});
+ expected.schema="edited 世界".into();expected.content=store::ArtifactChild::new("new child".into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:"new artifact".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.json".into(),standard:"rfc8259".into(),subset:"*".into()}});
  assert_eq!(restore(&import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);
 }
 

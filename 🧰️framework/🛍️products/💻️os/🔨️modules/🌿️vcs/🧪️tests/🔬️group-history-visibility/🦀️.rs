@@ -13,10 +13,15 @@ fn retained_group_history_switches_every_direct_reader_at_one_decision() {
     second.try_push(-1).expect("second seed");
     let mut owner = ArtifactGroupVisibilityOwner::new();
     let view = owner.view();
+    let mut keys = Vec::new();
     for row in fixture["ordered"].as_array().expect("ordered fixture") {
         let ledger = if row["member"] == "a" { &mut first } else { &mut second };
         let reservation = ledger.reserve_group_one(&view).expect("exact suffix reservation");
-        ledger.stage_group_reserved(reservation, row["value"].as_i64().expect("value") as i32, &view).expect("one prepared history owner");
+        let key = ledger.stage_group_reserved(reservation, row["value"].as_i64().expect("value") as i32, &view).expect("one prepared history owner");
+        assert_eq!(ledger.get_key(key), None);
+        keys.push((row["member"].as_str().expect("member"), key, row["value"].as_i64().expect("value") as i32));
+        let seed = ledger.key_at(0).expect("visible seed generation");
+        assert!(ledger.get_key(seed).is_some());
         assert_eq!(observed(&first), fixture["members"][0]["before"]);
         assert_eq!(observed(&second), fixture["members"][1]["before"]);
         assert_eq!((first.len(), first.first(), first.last(), first.get(1)), (1, Some(&0), Some(&0), None));
@@ -27,6 +32,10 @@ fn retained_group_history_switches_every_direct_reader_at_one_decision() {
     assert!(owner.commit());
     assert!(!owner.commit());
     assert!(!owner.abort());
+    for (member, key, value) in keys {
+        let ledger = if member == "a" { &first } else { &second };
+        assert_eq!(ledger.get_key(key), Some(&value));
+    }
     assert_eq!(observed(&first), fixture["members"][0]["after"]);
     assert_eq!(observed(&second), fixture["members"][1]["after"]);
     assert_eq!((first.len(), first.last(), first.get(1)), (3, Some(&42), Some(&17)));
@@ -49,9 +58,10 @@ fn retained_group_history_abort_transfers_one_exact_owner_and_rejects_foreign_de
     let view = owner.view();
     let mut foreign = ArtifactGroupVisibilityOwner::new();
     let wrong = foreign.view();
+    let mut keys = Vec::new();
     for value in [17, 42] {
         let reservation = ledger.reserve_group_one(&view).expect("exact group reservation");
-        ledger.stage_group_reserved(reservation, value, &view).expect("exact staged owner");
+        keys.push(ledger.stage_group_reserved(reservation, value, &view).expect("exact staged owner"));
     }
     assert!(ledger.reserve_group_one(&wrong).is_err());
     assert!(foreign.abort());
@@ -62,6 +72,7 @@ fn retained_group_history_abort_transfers_one_exact_owner_and_rejects_foreign_de
     assert_eq!(ledger.abort_group_one(&view), Ok(Some(42)));
     assert_eq!(observed(&ledger), serde_json::json!([0]));
     assert_eq!(ledger.abort_group_one(&view), Ok(Some(17)));
+    for key in keys { assert_eq!(ledger.get_key(key), None); }
     assert!(!ledger.terminal_is_empty());
     assert_eq!(ledger.abort_group_one(&view), Ok(None));
     assert_eq!(ledger.pop(), Some(0));

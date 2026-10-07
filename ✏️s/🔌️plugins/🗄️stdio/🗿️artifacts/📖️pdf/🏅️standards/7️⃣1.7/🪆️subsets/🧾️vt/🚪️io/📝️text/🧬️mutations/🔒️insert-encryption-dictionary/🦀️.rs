@@ -1,6 +1,6 @@
 //! 🔒️ Direct text codec for `insert-encryption-dictionary`.
 
-use super::InsertEncryptionDictionary;
+use crate::standards::v1_7::subsets::vt::schema::mutations::InsertEncryptionDictionary;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "insert-encryption-dictionary";

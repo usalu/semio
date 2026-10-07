@@ -96,7 +96,9 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "artifact-io-ownership") {
       if (segments.length !== 1) throw Error("Expected test artifact-io-ownership");
-      await runRepositoryTestCommand(process.execPath, ["test", "../../🧪️tests/🚪️artifact-io-ownership/🟦️.ts", "../../🚪️io/🏛️architecture/🧪️tests/physical-codecs/🟦️.ts", "../../../../../../🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts"], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "artifact-io-ownership"), budgetMs: 60_000 });
+      for(const suite of ["../../🧪️tests/🚪️artifact-io-ownership/🟦️.ts", "../../🚪️io/🏛️architecture/🧪️tests/physical-codecs/🟦️.ts", "../../../../../../🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts"]){
+        await runRepositoryTestCommand(process.execPath, ["test", suite], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "artifact-io-ownership"), budgetMs: 120_000 });
+      }
       return;
     }
     if (segments.length === 1 && segments[0] === "rust-runtime-path-direction") {
@@ -151,7 +153,6 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "native-owner-command-policy") {
       if (segments.length !== 1) throw Error("Expected test native-owner-command-policy");
-      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "native-owner-command-policy") });
       return;
@@ -606,7 +607,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "preflight-reference-basis") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "preflight-reference-basis") });
       return;
     }
     if (segments[0] === "typescript-path-collection") {

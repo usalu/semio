@@ -1,6 +1,6 @@
 //! 🗂️ Direct text codec for `set-dpart-root`.
 
-use super::SetDpartRoot;
+use crate::standards::v1_7::subsets::vt::schema::mutations::SetDpartRoot;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-dpart-root";

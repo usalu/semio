@@ -6,7 +6,7 @@
 //! `diff()` is handcrafted (constructs `IfcDiff` directly via the `schema::diff` builders) —
 //! apply-and-capture is never used.
 
-use crate::schema::diff::{self, dec_entity_list_bin, enc_entity_list_bin, IfcDiff};
+use crate::schema::diff::{self, IfcDiff};
 
 
 
@@ -27,8 +27,8 @@ use crate::schema::diff::{self, dec_entity_list_bin, enc_entity_list_bin, IfcDif
 
 use crate::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
 use crate::IfcSnapshot;
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
+
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "➕insert-entity/🦀️.rs"]
@@ -262,3 +262,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

@@ -1,3 +1,7 @@
 syntax = "proto3";
 package semio.stdio_png.snapshot_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+
+// 📝️ Logical Text contains the canonical owned snapshot in named image blocks.
+message Document {
+  string logical_text = 1;
+}

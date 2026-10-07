@@ -1,3 +1,4 @@
+import {bmpMaskShift} from "../../🧬️schema/📸️snapshot/🟦️.ts";
 /** 🪟️ Borrowed BMP v3 byte grammar with explicit layout refusal. */
 export interface BmpByteLayout {
  fileSize:number;reserved1:number;reserved2:number;dataOffset:number;width:number;signedHeight:number;height:number;planes:number;bitsPerPixel:number;compression:number;imageSize:number;xPixelsPerMeter:number;yPixelsPerMeter:number;colorsUsed:number;colorsImportant:number;
@@ -6,8 +7,6 @@ export interface BmpByteLayout {
 export type BmpByteLayoutResult={state:"valid_layout";layout:BmpByteLayout;diagnostic:""}|{state:"literal_octets";diagnostic:string};
 /** 🔢️ Reads an already bounded little-endian native word without copying source bytes. */
 export function bmpWord(bytes:ArrayLike<number>,at:number,width:number):number{let result=0;for(let i=0;i<width;i++)result+=bytes[at+i]!*2**(8*i);return result;}
-/** 📐️ Checks actual sample-width masks without normalizing channel precision. */
-export function bmpMaskShift(mask:number):number{let shift=0;while(mask!==0&&mask%2===0){mask/=2;shift++;}return shift;}
 /** 🛂️ Classifies complete byte vectors according to the current uncompressed forty-byte DIB grammar. */
 export function bmpByteLayout(bytes:ArrayLike<number>):BmpByteLayoutResult{
  const refused=(diagnostic:string):BmpByteLayoutResult=>({state:"literal_octets",diagnostic});

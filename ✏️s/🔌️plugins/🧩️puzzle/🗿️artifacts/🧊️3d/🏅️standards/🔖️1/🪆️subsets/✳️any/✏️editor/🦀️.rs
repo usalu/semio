@@ -32,7 +32,9 @@ use crate::editor::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutati
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
 use crate::editor::puzzle3d::window as window_ownership;
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dPlaySnapshot};
+
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dMutation};
+
 use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::Puzzle3dEngineCommand;
 use crate::Puzzle3dSnapshot;
@@ -59,7 +61,7 @@ use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DialogDefinition;
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
@@ -803,7 +805,8 @@ fn puzzle3d_action_artifact_intent(action: &str) -> bool {
 }
 
 //#region 🔖️Quaternions
-pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul, quat_rotate_vector};
+pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle,quat_mul,quat_rotate_vector};
+
 //#endregion 🔖️Quaternions
 
 //#region 🔖️FixtureQueries
@@ -1783,7 +1786,8 @@ pub fn scene_from_engine_snapshot(envelope: &Puzzle3dScene, scene_snapshot: &cra
 /// 📐️ Attraction placement math lives with the selection leaves that re-solve attractions on every move
 /// (`🧬️schema/🧬️mutations` `🔖️AttractionPose`); the editor resolves whole fixtures with the same kernel.
 pub use crate::standards::v1::subsets::any::schema::mutations::derive_attraction_params;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle3d_attraction_child_pose, quat_normalize};
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle3d_attraction_child_pose,quat_normalize};
+
 
 /// 📌️ Resolves an attraction endpoint (`objectId:vortexId`) to its owning object id and its vortex's
 /// LOCAL (object-frame) position/direction — the frame the connector math expects, before the object's
@@ -2768,7 +2772,7 @@ impl<'a> Puzzle3dActionCtx<'a> {
             return;
         }
         let request = utilities::transform::TransformToolRequest { base: std::sync::Arc::clone(self.base), records };
-        if let Some((transaction, mutations)) = utilities::transform::puzzle3d_transform_tool_commit(verb, self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
+        if let Some((transaction, mutations)) = utilities::transform::puzzle3d_transform_tool_commit(verb, self.authoring_seed, request) {
             *self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
             self.artifact_mutations.extend(mutations);
         }
@@ -4536,7 +4540,7 @@ impl Puzzle3dTransformWork {
             return puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str());
         }
         let request = utilities::transform::TransformToolRequest { base, records: vec![record] };
-        match utilities::transform::puzzle3d_transform_tool_commit(self.tool_id, &self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
+        match utilities::transform::puzzle3d_transform_tool_commit(self.tool_id, &self.authoring_seed, request) {
             Some((transaction, mutations)) => Emit { artifact_mutations: mutations, transaction: (!self.authoring_seed.is_empty()).then_some(transaction), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() },
             None => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
         }

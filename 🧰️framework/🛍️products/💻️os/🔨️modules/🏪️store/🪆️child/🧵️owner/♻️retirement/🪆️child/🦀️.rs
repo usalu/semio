@@ -11,8 +11,8 @@ pub struct ArtifactChildRetirement<S>{
 impl<S> ArtifactChildRetirement<S>{
  pub fn new(child:ArtifactChild<S>)->Self{
   let ArtifactChild{child_id,target,read_owner}=child;
-  let crate::os_io::ArtifactRef{artifact_id,dialect}=target;
-  let crate::os_io::ArtifactDialect{artifact_kind,standard,subset}=dialect;
+  let semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect}=target;
+  let semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}=dialect;
   let buffers=[child_id,artifact_id,artifact_kind,standard,subset].map(|text|Some(text.into_bytes()));
   let remaining=std::array::from_fn(|index|buffers[index].as_ref().map_or(0,Vec::capacity));
   Self{buffers,remaining,read:read_owner}

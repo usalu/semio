@@ -36,7 +36,7 @@ pub struct Puzzle2dFlatPosition {
 pub fn compute_flat_position(snapshot: &Puzzle2dSnapshot) -> Puzzle2dFlatPosition {
     let mut resolved = snapshot.clone();
     fastened_layout_snapshot(&mut resolved);
-    let positions = resolved.nodes.iter().map(|node| (node.id.clone(), Puzzle2dFlatPositionXy { x: node.x, y: node.y })).collect();
+    let positions = resolved.nodes.iter().map(|node| (node.id.to_string_owner(), Puzzle2dFlatPositionXy { x: node.x, y: node.y })).collect();
     Puzzle2dFlatPosition { positions }
 }
 //#endregion 🔖️FlatPosition

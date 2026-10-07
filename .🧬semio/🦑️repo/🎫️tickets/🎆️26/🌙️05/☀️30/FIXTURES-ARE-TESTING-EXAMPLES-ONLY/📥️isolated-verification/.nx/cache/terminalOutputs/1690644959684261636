@@ -1,0 +1,3 @@
+> bun ./📜️script.ts test-owner-command "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts" prepare
+
+[DEBUG] isolated Nx verification test-owner-command

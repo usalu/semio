@@ -25,5 +25,19 @@ test("PDF content rejects foreign IEEE operands and bounds intrinsic ownership c
   const reader=await PdfReader.create(await importSqliteDatabase(sql.serialize()),PDF17_SQLITE_SCHEMA,{},pdfContentNumberColumns);await expect(readPdfOperations(reader,root)).rejects.toThrow("unrelated scalar or IEEE");sql.close();
   const controller=new AbortController();const canceled=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{signal:controller.signal,onProgress:progress=>{if(progress.phase==="projectSnapshot"&&progress.completed>0)controller.abort();}},pdfContentNumberColumns);
   const many: PdfOp[]=Array.from({length:300},()=>({op:"save"}));await expect(writePdfOperations(canceled,many)).rejects.toThrow("cancel");
-  const bounded=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{maxValueBytes:128},pdfContentNumberColumns);await expect(writePdfOperations(bounded,[{op:"showText",text:{kind:"codes",bytes:new Array(129).fill(255)}}])).rejects.toThrow("value");
+  const bounded=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{maxValueBytes:128},pdfContentNumberColumns);await expect(writePdfOperations(bounded,[{op:"showText",text:{kind:"codes",codes:new Array(129).fill(255)}}])).rejects.toThrow("value");
 }, { timeout:30_000 });
+
+test("PDF logical code units retain u32 precision in independent integer rows", async()=>{
+  const fixture=JSON.parse(await Bun.file(new URL("../../../../🧫️fixtures/🔢️logical-character-codes/🔣️.json",import.meta.url)).text());
+  for(const sample of fixture.cases){
+    const input:PdfOp[]=[{op:"showText",text:{kind:"codes",codes:sample.codes}},{op:"showTextArray",items:[{kind:"codes",codes:sample.codes}]}];
+    const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfContentNumberColumns);const root=await writePdfOperations(out,input);
+    const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);
+    for(const table of ["pdf_operation_code","pdf_array_item_code"]) expect(sql.query(`SELECT code FROM ${table} ORDER BY ordinal`).all()).toEqual(sample.codes.map((code:number)=>({code})));
+    expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    const reader=await PdfReader.create(await importSqliteDatabase(bytes),PDF17_SQLITE_SCHEMA,{},pdfContentNumberColumns);expect(await readPdfOperations(reader,root)).toEqual(input);await reader.finish();
+    sql.run("UPDATE pdf_operation_code SET code=4294967295 WHERE ordinal=0");const edited=await PdfReader.create(await importSqliteDatabase(sql.serialize()),PDF17_SQLITE_SCHEMA,{},pdfContentNumberColumns);const current=await readPdfOperations(edited,root);expect(current[0]).toEqual({op:"showText",text:{kind:"codes",codes:[0xffffffff,...sample.codes.slice(1)]}});await edited.finish();sql.close();
+    console.log(`[DEBUG] PDF logical code case=${sample.id} native width=${sample.width} independent integer rows exact`);
+  }
+}, {timeout:30000});

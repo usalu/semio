@@ -1,0 +1,335 @@
+{
+  "schema": "artifact-edit-message-clamp-law/v1",
+  "entryBytes": 4096,
+  "messageOwnerBytes": 96,
+  "targetSegmentBytes": 24,
+  "workGrants": [
+    1,
+    2,
+    7
+  ],
+  "byteGrants": [
+    1,
+    7,
+    4096
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    7,
+    31,
+    257
+  ],
+  "cases": [
+    {
+      "name": "small-ledger-preserves-all-levels",
+      "editId": "small",
+      "messages": [
+        {
+          "level": "info",
+          "code": "mutation.invariant",
+          "text": "one",
+          "repeat": 1,
+          "target": [],
+          "opIndex": 0
+        },
+        {
+          "level": "warning",
+          "code": "mutation.invariant",
+          "text": "two",
+          "repeat": 1,
+          "target": [],
+          "opIndex": 1
+        },
+        {
+          "level": "fatal",
+          "code": "mutation.invariant",
+          "text": "three",
+          "repeat": 1,
+          "target": [],
+          "opIndex": 2
+        }
+      ],
+      "expected": {
+        "changed": false,
+        "kept": [
+          0,
+          1,
+          2
+        ],
+        "dropped": 0,
+        "summaryOp": null,
+        "truncatedUtf8Bytes": null
+      }
+    },
+    {
+      "name": "severity-priority-keeps-original-display-order",
+      "editId": "mixed",
+      "messages": [
+        {
+          "level": "info",
+          "code": "mutation.invariant",
+          "text": "i",
+          "repeat": 3000,
+          "target": [],
+          "opIndex": 0
+        },
+        {
+          "level": "warning",
+          "code": "mutation.invariant",
+          "text": "w",
+          "repeat": 3000,
+          "target": [],
+          "opIndex": 1
+        },
+        {
+          "level": "fatal",
+          "code": "mutation.invariant",
+          "text": "f",
+          "repeat": 600,
+          "target": [],
+          "opIndex": 2
+        }
+      ],
+      "expected": {
+        "changed": true,
+        "kept": [
+          1,
+          2
+        ],
+        "dropped": 1,
+        "summaryOp": 0,
+        "truncatedUtf8Bytes": null
+      }
+    },
+    {
+      "name": "first-over-budget-row-stops-selection",
+      "editId": "stop",
+      "messages": [
+        {
+          "level": "fatal",
+          "code": "mutation.invariant",
+          "text": "a",
+          "repeat": 2000,
+          "target": [],
+          "opIndex": 0
+        },
+        {
+          "level": "fatal",
+          "code": "mutation.invariant",
+          "text": "b",
+          "repeat": 2500,
+          "target": [],
+          "opIndex": 1
+        },
+        {
+          "level": "warning",
+          "code": "mutation.invariant",
+          "text": "c",
+          "repeat": 1000,
+          "target": [],
+          "opIndex": 2
+        }
+      ],
+      "expected": {
+        "changed": true,
+        "kept": [
+          0
+        ],
+        "dropped": 2,
+        "summaryOp": 1,
+        "truncatedUtf8Bytes": null
+      }
+    },
+    {
+      "name": "one-oversized-worst-keeps-utf8-prefix",
+      "editId": "one",
+      "messages": [
+        {
+          "level": "fatal",
+          "code": "mutation.invariant",
+          "text": "🧩",
+          "repeat": 1600,
+          "target": [
+            "target",
+            "segment"
+          ],
+          "opIndex": 3
+        }
+      ],
+      "expected": {
+        "changed": true,
+        "kept": [
+          0
+        ],
+        "dropped": 0,
+        "summaryOp": null,
+        "truncatedUtf8Bytes": 3852
+      }
+    },
+    {
+      "name": "stable-severity-ties-use-recorded-order",
+      "editId": "ties",
+      "messages": [
+        {
+          "level": "error",
+          "code": "mutation.invariant",
+          "text": "a",
+          "repeat": 1800,
+          "target": [],
+          "opIndex": 7
+        },
+        {
+          "level": "error",
+          "code": "mutation.invariant",
+          "text": "b",
+          "repeat": 1800,
+          "target": [],
+          "opIndex": 8
+        },
+        {
+          "level": "error",
+          "code": "mutation.invariant",
+          "text": "c",
+          "repeat": 1800,
+          "target": [],
+          "opIndex": 9
+        },
+        {
+          "level": "info",
+          "code": "mutation.invariant",
+          "text": "d",
+          "repeat": 1,
+          "target": [],
+          "opIndex": 10
+        }
+      ],
+      "expected": {
+        "changed": true,
+        "kept": [
+          0,
+          1
+        ],
+        "dropped": 2,
+        "summaryOp": 9,
+        "truncatedUtf8Bytes": null
+      }
+    },
+    {
+      "name": "target-address-bytes-count-toward-budget",
+      "editId": "targets",
+      "messages": [
+        {
+          "level": "fatal",
+          "code": "mutation.invariant",
+          "text": "body",
+          "repeat": 1,
+          "target": [
+            "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          ],
+          "opIndex": 0
+        },
+        {
+          "level": "warning",
+          "code": "mutation.invariant",
+          "text": "fallback",
+          "repeat": 1,
+          "target": [],
+          "opIndex": 1
+        }
+      ],
+      "expected": {
+        "changed": true,
+        "kept": [
+          0
+        ],
+        "dropped": 1,
+        "summaryOp": 1,
+        "truncatedUtf8Bytes": 4
+      }
+    },
+    {
+      "name": "empty-target-segments-consume-native-scaffold",
+      "editId": "empty-targets",
+      "messages": [
+        { "level": "fatal", "code": "mutation.invariant", "text": "body", "repeat": 1, "target": [""], "targetRepeat": 320, "opIndex": 0 },
+        { "level": "warning", "code": "mutation.invariant", "text": "fallback", "repeat": 1, "target": [], "opIndex": 1 }
+      ],
+      "expected": { "changed": true, "kept": [0], "dropped": 1, "summaryOp": 1, "truncatedUtf8Bytes": 4 }
+    },
+    {
+      "name": "empty-message-bodies-consume-row-owner-budget",
+      "editId": "empty-rows",
+      "messageRepeat": 320,
+      "messages": [
+        {
+          "level": "info",
+          "code": "x",
+          "text": "",
+          "repeat": 1,
+          "target": [],
+          "opIndex": 0
+        }
+      ],
+      "expected": {
+        "changed": true,
+        "kept": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39
+        ],
+        "dropped": 280,
+        "summaryOp": 0,
+        "truncatedUtf8Bytes": null
+      }
+    }
+  ],
+  "settlement": {
+    "operations": 512,
+    "edits": 1,
+    "pendingWork": { "done": 512, "total": 513 },
+    "finishedWork": { "done": 513, "total": 513 },
+    "cancelStages": ["clamp", "outcome-retirement", "partial-copy", "finished"],
+    "preserveFullWorst": true,
+    "cancelPreservesBaseline": true,
+    "retirementTerminal": true
+  }
+}

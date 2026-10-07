@@ -473,9 +473,6 @@ pub(crate) fn print_jpg_diff(d: &JpgDiff) -> String {
     if let Some(v) = &d.pixels {
         tokens.push(format!("pixels={}", hex_encode(v)));
     }
-    if let Some(v) = &d.re_encode_quality {
-        tokens.push(format!("re-encode-quality={}", encode_option(v, |q| q.to_string())));
-    }
     if let Some(v) = d.jfif_version {
         tokens.push(format!("jfif-version={}", enc_version(&v)));
     }
@@ -528,8 +525,6 @@ pub(crate) fn parse_jpg_diff(line: &str) -> Result<JpgDiff, String> {
             d.height = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("pixels=") {
             d.pixels = Some(hex_decode(rest)?);
-        } else if let Some(rest) = token.strip_prefix("re-encode-quality=") {
-            d.re_encode_quality = Some(decode_option(rest, parse_u8)?);
         } else if let Some(rest) = token.strip_prefix("jfif-version=") {
             d.jfif_version = Some(dec_version(rest)?);
         } else if let Some(rest) = token.strip_prefix("jfif-density-units=") {

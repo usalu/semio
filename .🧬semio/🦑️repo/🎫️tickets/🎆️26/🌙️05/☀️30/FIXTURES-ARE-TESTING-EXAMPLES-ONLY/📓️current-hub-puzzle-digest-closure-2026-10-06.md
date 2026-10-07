@@ -1,0 +1,21 @@
+# Current Hub Puzzle Digest Closure
+
+Fifteen retained source-byte expectations refreshed after authorized corpus and runtime ownership refactors. Only literal digest values changed; all remaining plain descriptor bytes and independent parser/mutant/canonical/native ownership assertions remain intact. Original stale hashes and exact current hashes are retained in input.
+
+- Updated `/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧫️fixtures/🔮️ownership/🔣️.json`
+
+- 2d editor `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`: `6bf8ad2b5286a12b0773f41d1d0f4bc59469351abbe2fa746e730f849fa24a2d` → `8294662d0dafc0a48a55da120b2cca276d3b94f4ae772f09fb74bfd68ae96bd6`
+- 2d fixture `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json`: `c2f6161a2a6263007296e9ef99209bfcc0cbdac47c4bb37ec5178878bc37110a` → `19fc635e53d20856676d244931b00f11d533ea3763741d1bf24502790810bf12`
+- 2d root `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs`: `43f194d6d816f5d66fface151c67b6a25476921b00d251fffd255812b568ed75` → `23ab9ea6d4a0b06607d4ed28785413ea89c447bb2bfb90cca1c4872ab4c2339d`
+- 2d manifest `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml`: `70cc74ae1dc3fcfe1e3f365ab33262a8c23c212fdff15dd4e50eb64887936182` → `ca6805fa69b5b68e503b5662116fa4faec08da69d76bfc04fe308ce40c5f8efc`
+- 2d script `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts`: `fe35a7593324fcbd247c04d1866d85aa8ce75d1d915ccd4c101bfbe3e681761e` → `4bd55eb5c1e5c94db89223a54c250ef9d17f6f5cfd92f54d1d58821b7691dcd5`
+- 3d editor `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`: `7d6a3678c6dfe87df1a30f4f5e9a59670a7b9ce5f6c515ae96af66535b313885` → `a8a431d84a3426819363ee94e27ab09da8f18892f1d87864a1d30551554ab817`
+- 3d fixture `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json`: `2cea877c1c2ce9ae154cddc4611597423da6930aaae40fe65381fc8d6ae6d459` → `dcd1d7203cfedaace9f0ab696a67da440b12139527f027db13f9ccaf2cc71cc7`
+- 3d root `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs`: `aa89f8491a677484cfdae9d4d4209b792ee5d3f1076db4be20ba9e24553702f0` → `414acb46096a8b198ab2f465f16df3b80dd1811944822796bf733dc7782dccce`
+- 3d manifest `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml`: `f5b0b2da0417579fdf295ef33544074247f6befb5054b22d2d6ce45f29f60d12` → `6d042d3c4941c9184c8cefd091b2eae9da198ffd6259f78bb59e01d44559b481`
+- 3d script `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts`: `acebc3d15b77b9839cf36fa41009a39da89e72e75e5b05080553bac413c7ee15` → `ad145bc8972ba23caf3ab2fabe40b939c55a637dd0c3c18a66a6e7a7ed8ca8ba`
+- 5d editor `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`: `0ec549ff06f5ab534fe3039bb4e9bb2732db9216cc9dd0f4098b28700fdf57f7` → `07d52ac4d90c0ec73f5558bec91d72eac5d223a35c3f8a71bb3937e4678f55ca`
+- 5d fixture `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json`: `ccdbe5d8bc118b8f26d3b2720f3ae744e5a49968431e1525a362fc402beee163` → `179cf1703aaf20e17b1b1d1df89dd668c29efbc47cbfcebcb458679261da2b88`
+- 5d root `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs`: `a335cedf5ba338b042537dfd88f0545e23f7cd49374193d1eaae4aa78bb736a3` → `24167a0436b96b5806678caed488fb61e400419a36a1597052d3447cbab5856d`
+- 5d manifest `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml`: `5be6b6dfecca5daf8d40a1b41c2bfb77dd44562eab3671e77bbaecac644ca5dc` → `e06fe51ec53a7a0880c8d4e5a5add1809321c51cbf2e6e44e30273f1c64cb036`
+- 5d script `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts`: `092f2f85ce78eb6bd809f812768fce7bebe4385df30e3afe097f75208513d1a0` → `4f2dd80d2bd003770e0fe2b23745e469a9e4746f9506cc7981eff5b0e2535481`

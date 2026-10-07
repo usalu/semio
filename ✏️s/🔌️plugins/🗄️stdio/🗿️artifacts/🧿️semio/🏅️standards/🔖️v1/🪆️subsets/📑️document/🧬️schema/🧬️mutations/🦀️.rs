@@ -40,7 +40,7 @@ use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioDocumentMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
 /// scope in production code too, not merely under `#[cfg(test)]` (W2b closer fix).
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️PathAddressing
 /// 🧭️ One step down into a nested block container: `Quote` (own `blocks`), a `List` item's own
@@ -584,3 +584,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/📋️bolds/🦀️.rs"]
 mod set_snapshot_bolds_the_body_paragraph_and_finalizes_its_copy;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

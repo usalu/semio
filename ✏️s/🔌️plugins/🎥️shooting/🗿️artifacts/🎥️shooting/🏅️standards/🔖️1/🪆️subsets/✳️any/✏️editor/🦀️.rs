@@ -35,7 +35,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::Editor;
@@ -220,11 +220,11 @@ pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
 }
 
 /// 🖼️ Exports the active shot's rendered scene as a `2d.image` `Media` payload for the `photos:out`
-/// port — reuses the same SVG-then-rasterize pipeline (`crate::standards::v1::subsets::any::schema::shooting_scene_svg` +
+/// port — reuses the same SVG-then-rasterize pipeline (`crate::standards::v1::subsets::any::io::text::snapshot::shooting_scene_svg` +
 /// `rasterize_svg_to_png_base64`) as the `exportActiveShot`/PNG shell action, so there is exactly one
 /// photo renderer.
 pub fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaError> {
-    let (svg, width, height) = crate::standards::v1::subsets::any::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
+    let (svg, width, height) = crate::standards::v1::subsets::any::io::text::snapshot::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }

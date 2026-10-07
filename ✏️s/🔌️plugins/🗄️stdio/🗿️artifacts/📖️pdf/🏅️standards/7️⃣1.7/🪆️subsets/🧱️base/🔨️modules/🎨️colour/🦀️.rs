@@ -4,7 +4,8 @@
 //! stream (sampled/PostScript functions, ICC profiles, mesh shadings, tiling patterns).
 
 use super::lexer::{dict_f64, dict_get, dict_i64, dict_name};
-use super::xref::{ObjectSink, ObjectSource};
+use super::xref::ObjectSink;
+use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfDictEntry, PdfExtGState, PdfFunction, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfShading, PdfShadingKind, PdfSoftMask};
 
 //#region 🔖️Helpers

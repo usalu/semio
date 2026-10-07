@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_io::{ArtifactDialect, ArtifactRef};
+use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use crate::os_store::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 
@@ -35,7 +35,7 @@ fn request(history: &[u8]) -> MemberOpenRequest {
     }
     pages.seal().unwrap();
     let expected = ArtifactRef { artifact_id: "flow-member".into(), dialect: ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
-    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, None, pages).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
+    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, None, pages, crate::os_spr::ActorId(fixture()["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
 }
 
 fn retire(owner: &mut dyn ErasedSnapshotRetirement, grant: usize) -> usize {

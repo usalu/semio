@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-info-title";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::SetInfoTitle;
+use crate::standards::v1_7::subsets::h::schema::mutations::SetInfoTitle;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetInfoTitle) -> Result<String, String> {

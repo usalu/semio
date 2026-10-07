@@ -32,8 +32,11 @@ use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 pub use crate::editor::puzzle2d::terminology::{puzzle2d_localized, puzzle2d_localized_phrase};
 use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig, Puzzle2dWindowTransient};
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dPlaySnapshot};
+
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
+
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle2d_document_delta_operations};
+
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
 use semio_framework_plugin::ActionArgDef;
@@ -50,7 +53,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DialogDefinition;
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
@@ -3153,7 +3156,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dExampleStage::ClearEdges => {
                 let source = snapshot.value().get("edges").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_handles(id.to_string()));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_handles(id.into()));
                     self.source_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-clear-edge", "Removing existing edge", "Bestehende Kante wird entfernt"));
                 }
@@ -3164,7 +3167,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dExampleStage::ClearNodes => {
                 let source = snapshot.value().get("nodes").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::delete_node(id.to_string()));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::delete_node(id.into()));
                     self.source_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-clear-node", "Removing existing node", "Bestehender Knoten wird entfernt"));
                 }
@@ -3174,7 +3177,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             }
             Puzzle2dExampleStage::Manifest => {
                 let current = snapshot.value().get("meta").and_then(|meta| meta.get("manifestId")).and_then(Value::as_str);
-                if current != target.meta.manifest_id.as_deref() {
+                if !match (current,target.meta.manifest_id.as_ref()){(None,None)=>true,(Some(current),Some(target))=>target.eq_str(current),_=>false} {
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_manifest_id(target.meta.manifest_id.clone()));
                 }
                 self.stage = Puzzle2dExampleStage::ClearCompatibility;
@@ -3684,7 +3687,7 @@ impl Puzzle2dForceLayoutWork {
             return true;
         };
         if self.original[index] != Some(position) {
-            self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_node(self.node_ids[index].clone(), position[0], position[1]));
+            self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_node(self.node_ids[index].clone().into(), position[0], position[1]));
         }
         self.force_cursor += 1;
         false
@@ -4045,7 +4048,7 @@ impl Puzzle2dRedrawHandlesWork {
             return Ok(false);
         }
         self.admit_bytes(node_id.len().saturating_add(next.id.len()))?;
-        self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_node_handle(node_id.to_string(), next.id.clone(), next));
+        self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_node_handle(node_id.into(), next.id.clone(), next));
         Ok(false)
     }
 
@@ -4249,8 +4252,8 @@ fn puzzle2d_retire_vec_backing<T>(owners: &mut Vec<T>, maximum_bytes: usize) -> 
     Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
 }
 
-fn puzzle2d_import_text(row: &Value, key: &str) -> String {
-    row.get(key).and_then(Value::as_str).unwrap_or_default().to_string()
+fn puzzle2d_import_text(row: &Value, key: &str) -> semio_framework_value::paged::PagedUtf8<{ usize::MAX }> {
+    row.get(key).and_then(Value::as_str).unwrap_or_default().into()
 }
 
 fn puzzle2d_import_identity(row: &Value) -> Option<&str> {
@@ -4261,26 +4264,26 @@ fn puzzle2d_import_presentation<'a>(row: &'a Value, key: &str) -> Option<&'a Val
     row.get("presentation").and_then(|presentation| presentation.get(key))
 }
 
-fn puzzle2d_import_presentation_text(row: &Value, key: &str) -> String {
-    puzzle2d_import_presentation(row, key).and_then(Value::as_str).unwrap_or_default().to_string()
+fn puzzle2d_import_presentation_text(row: &Value, key: &str) -> semio_framework_value::paged::PagedUtf8<{ usize::MAX }> {
+    puzzle2d_import_presentation(row, key).and_then(Value::as_str).unwrap_or_default().into()
 }
 
 /// 🏷️ Manifest rows carry `name` and no `label`; the catalog row wants both, so an absent label
 /// mirrors the name rather than inventing a third spelling.
-fn puzzle2d_import_label(row: &Value, name: &str) -> String {
-    row.get("label").and_then(Value::as_str).filter(|label| !label.trim().is_empty()).map_or_else(|| name.to_string(), str::to_string)
+fn puzzle2d_import_label(row: &Value, name: &str) -> semio_framework_value::paged::PagedUtf8<{ usize::MAX }> {
+    row.get("label").and_then(Value::as_str).filter(|label| !label.trim().is_empty()).unwrap_or(name).into()
 }
 
 fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &Value) -> Option<crate::Puzzle2dHandleTemplate> {
     let handle_kind = template.get("handleKind").and_then(Value::as_str).filter(|kind| !kind.trim().is_empty())?;
-    let name = puzzle2d_import_text(template, "name");
+    let name = template.get("name").and_then(Value::as_str).unwrap_or_default();
     Some(crate::Puzzle2dHandleTemplate {
-        id: puzzle2d_import_identity(template).map_or_else(|| format!("{node_kind_id}-h{index}"), str::to_string),
-        label: puzzle2d_import_label(template, &name),
-        name,
+        id: puzzle2d_import_identity(template).map_or_else(|| format!("{node_kind_id}-h{index}"), str::to_string).into(),
+        label: puzzle2d_import_label(template, name),
+        name: name.into(),
         description: puzzle2d_import_text(template, "description"),
         icon: puzzle2d_import_text(template, "icon"),
-        handle_kind: Some(handle_kind.to_string()),
+        handle_kind: Some(handle_kind.into()),
         angle: template.get("angle").and_then(Value::as_f64).filter(|angle| angle.is_finite()).unwrap_or_default(),
         t: template.get("t").and_then(Value::as_f64).filter(|t| t.is_finite()),
         mandatory: template.get("mandatory").and_then(Value::as_bool),
@@ -4290,33 +4293,33 @@ fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &
 
 fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::Puzzle2dCatalogNodeKind> {
     let id = puzzle2d_import_identity(row)?;
-    let name = row.get("name").and_then(Value::as_str).unwrap_or(id).to_string();
-    let handles = puzzle2d_import_presentation(row, "handles").and_then(Value::as_array).map_or_else(Vec::new, |templates| templates.iter().enumerate().filter_map(|(index, template)| puzzle2d_import_handle_template(id, index, template)).collect());
+    let name = row.get("name").and_then(Value::as_str).unwrap_or(id);
+    let handles = puzzle2d_import_presentation(row, "handles").and_then(Value::as_array).map_or_else(semio_framework_value::list::PagedList::new, |templates| templates.iter().enumerate().filter_map(|(index, template)| puzzle2d_import_handle_template(id, index, template)).collect());
     Some(crate::Puzzle2dCatalogNodeKind {
-        id: id.to_string(),
-        label: puzzle2d_import_label(row, &name),
-        name,
+        id: id.into(),
+        label: puzzle2d_import_label(row, name),
+        name: name.into(),
         description: puzzle2d_import_text(row, "description"),
         icon: puzzle2d_import_presentation_text(row, "icon"),
         image: puzzle2d_import_presentation_text(row, "image"),
         unit: puzzle2d_import_text(row, "unit"),
         is_abstract: row.get("abstract").and_then(Value::as_bool).unwrap_or_default(),
-        base_kinds: Vec::new(),
-        representations: Vec::new(),
+        base_kinds: Default::default(),
+        representations: Default::default(),
         handles,
-        attributes: Vec::new(),
-        authors: Vec::new(),
+        attributes: Default::default(),
+        authors: Default::default(),
     })
 }
 
 fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::Puzzle2dCatalogHandleKind> {
     let id = puzzle2d_import_identity(row)?;
     Some(crate::Puzzle2dCatalogHandleKind {
-        id: id.to_string(),
+        id: id.into(),
         code: None,
         label: Some(puzzle2d_import_label(row, row.get("name").and_then(Value::as_str).unwrap_or(id))),
         order: None,
-        compatible_with: Vec::new(),
+        compatible_with: Default::default(),
         description: puzzle2d_import_text(row, "description"),
         icon: puzzle2d_import_presentation_text(row, "icon"),
         color: puzzle2d_import_presentation_text(row, "color"),
@@ -4326,11 +4329,11 @@ fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::Puzzle2dCatalogHand
 
 fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::Puzzle2dCatalogEdgeKind> {
     let id = puzzle2d_import_identity(row)?;
-    let name = row.get("name").and_then(Value::as_str).unwrap_or(id).to_string();
+    let name = row.get("name").and_then(Value::as_str).unwrap_or(id);
     Some(crate::Puzzle2dCatalogEdgeKind {
-        id: id.to_string(),
-        label: puzzle2d_import_label(row, &name),
-        name,
+        id: id.into(),
+        label: puzzle2d_import_label(row, name),
+        name: name.into(),
         description: puzzle2d_import_text(row, "description"),
         icon: puzzle2d_import_presentation_text(row, "icon"),
         color: puzzle2d_import_presentation_text(row, "color"),
@@ -4339,11 +4342,11 @@ fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::Puzzle2dCatalogEdgeKi
 
 fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::Puzzle2dCatalogWireKind> {
     let id = puzzle2d_import_identity(row)?;
-    let name = row.get("name").and_then(Value::as_str).unwrap_or(id).to_string();
+    let name = row.get("name").and_then(Value::as_str).unwrap_or(id);
     Some(crate::Puzzle2dCatalogWireKind {
-        id: id.to_string(),
-        label: puzzle2d_import_label(row, &name),
-        name,
+        id: id.into(),
+        label: puzzle2d_import_label(row, name),
+        name: name.into(),
         description: puzzle2d_import_text(row, "description"),
         icon: puzzle2d_import_presentation_text(row, "icon"),
         color: puzzle2d_import_presentation_text(row, "color"),
@@ -4354,7 +4357,7 @@ fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::Puzzle2dCatalogWireKi
 /// 🗂️ Id-keyed upsert — deterministic and order-independent, so a `multiplicity: Many` port that fans
 /// in several catalog producers converges on the same bundle whatever order they arrive in. Reports
 /// whether the bundle actually changed, so an idempotent re-delivery emits no operation at all.
-fn puzzle2d_upsert_catalog_row<T: PartialEq>(rows: &mut Vec<T>, incoming: T, matches: impl Fn(&T) -> bool) -> bool {
+fn puzzle2d_upsert_catalog_row<T: PartialEq>(rows: &mut semio_framework_value::list::PagedList<T, { usize::MAX }>, incoming: T, matches: impl Fn(&T) -> bool) -> bool {
     match rows.iter().position(matches) {
         Some(index) if rows[index] == incoming => false,
         Some(index) => {

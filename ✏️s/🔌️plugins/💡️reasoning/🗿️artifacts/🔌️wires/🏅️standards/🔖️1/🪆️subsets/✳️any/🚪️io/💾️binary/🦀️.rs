@@ -7,3 +7,6 @@ pub mod snapshot;
 pub mod inferences;
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
+
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;

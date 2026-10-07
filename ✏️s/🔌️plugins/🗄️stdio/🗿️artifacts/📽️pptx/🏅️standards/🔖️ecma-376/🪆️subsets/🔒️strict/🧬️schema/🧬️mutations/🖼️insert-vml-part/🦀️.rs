@@ -9,7 +9,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertVmlPart {
     pub(crate) path: String,
-    pub(crate) markup: String,
+    pub(crate) document: XmlDocument,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for InsertVmlPart {

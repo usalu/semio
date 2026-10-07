@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1_7::subsets::base::io::text_document;
-use crate::standards::v1_7::subsets::base::schema::mutations::{binary, text};
+use crate::standards::v1_7::subsets::base::io::{binary::mutations as binary, text::mutations as text};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{OpBinary, OpText, SemanticMutation};
 

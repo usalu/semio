@@ -65,7 +65,7 @@ fn property_value(question: &FormQuestion, field: &str) -> String {
     match field {
         "label" => question.label.clone(), "description" => question.description.clone().unwrap_or_default(),
         "placeholder" => question.placeholder.clone().unwrap_or_default(),
-        "default" => question.default.as_ref().map(crate::schema::dsl_string_value).unwrap_or_default(),
+        "default" => question.default.as_ref().map(crate::standards::v1::subsets::any::io::text::snapshot::dsl_string_value).unwrap_or_default(),
         "min" => question.min.map(|v| v.to_string()).unwrap_or_default(),
         "max" => question.max.map(|v| v.to_string()).unwrap_or_default(),
         "step" => question.step.map(|v| v.to_string()).unwrap_or_default(),

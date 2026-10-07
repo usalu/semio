@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🆔change-manifest-id/📦️repoints-manifest/📸️snapshot/⬅️before/🔣️.json");
@@ -35,7 +36,7 @@ fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("change-manifest-id applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-manifest-id/repoints-manifest: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.meta.manifest_id.as_deref(), Some("manifest-beta"), "change-manifest-id/repoints-manifest: the manifest reference did not move");
+    assert_eq!(snapshot.meta.manifest_id.as_ref().map(|text| text.eq_str("manifest-beta")), Some(true), "change-manifest-id/repoints-manifest: the manifest reference did not move");
     assert_eq!(snapshot.meta.kind_compatibility, before().meta.kind_compatibility, "change-manifest-id/repoints-manifest: republishing meta must carry the compatibility table through unchanged");
 }
 

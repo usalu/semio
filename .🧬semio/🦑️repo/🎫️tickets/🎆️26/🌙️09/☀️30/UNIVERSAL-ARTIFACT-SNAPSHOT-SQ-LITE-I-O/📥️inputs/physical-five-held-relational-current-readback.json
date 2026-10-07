@@ -1,0 +1,186 @@
+{
+  "syntaxOwners": 5,
+  "syntaxOnly": true,
+  "roster": [
+    {
+      "owner": "model",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "e1242ce9e4f3177630fea565ef4f0810080e97e830b665cd593ca61a96220144",
+      "bytes": 29531
+    },
+    {
+      "owner": "model",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+      "exists": false,
+      "beforeAbsent": true,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "a2107354677fcc73cf778a155811c20fe2acde172886821c08b1bb0a3bbc2b92",
+      "bytes": 10554
+    },
+    {
+      "owner": "model",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "ad0ca952d78e14ae0d6102d2bb60f728487d8ae01f1b58a85e474cfdb804ecc2",
+      "bytes": 15362
+    },
+    {
+      "owner": "model",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "28500be913f3494641e77aff31fa1e3e1576a61cc0533dcbd64ee26221e94736",
+      "bytes": 7479
+    },
+    {
+      "owner": "document",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "0083ed8a916b716f72d10ac994f250f3c76a8ebce365689e5ff40fb6e637097f",
+      "bytes": 34078
+    },
+    {
+      "owner": "document",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+      "exists": false,
+      "beforeAbsent": true,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "bbe1ee0c7c80841ad09788f81966e4fec50708ddc36671567cebe59b6a55f048",
+      "bytes": 13745
+    },
+    {
+      "owner": "document",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "f572a8d85291ef8609baff4a8174c3d26bb3d8718429f742cfcf1dd8818e252f",
+      "bytes": 15275
+    },
+    {
+      "owner": "document",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "44b79bc8fe6213a84fb61acc1cfd4fb70e1905f9db788a2b1d15b904b83ec669",
+      "bytes": 6707
+    },
+    {
+      "owner": "presentation",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "1a887a9aee19770a0d54b7ea419054b0cdabe0591db6f7bd35c4b7820b807bda",
+      "bytes": 25392
+    },
+    {
+      "owner": "presentation",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+      "exists": false,
+      "beforeAbsent": true,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "4c3887cda16b98bbc874c5b43381552d1544cb9de1ac14faa92cbdfa59de5f18",
+      "bytes": 9606
+    },
+    {
+      "owner": "presentation",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "9258821dca90e1bd68dde854180698ebdd468531ad7ca41ad5851417f2ebd181",
+      "bytes": 13166
+    },
+    {
+      "owner": "presentation",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "610d82002b1abfb43c7f40925e80a14d2b1370d4f3effc080806d66204d7430b",
+      "bytes": 4885
+    },
+    {
+      "owner": "kit",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "de724c3aca0bc5692732c3b9c404eff7ef8107ef5e0c8ecedccb7f93ad58740e",
+      "bytes": 26826
+    },
+    {
+      "owner": "kit",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+      "exists": false,
+      "beforeAbsent": true,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "6393bff4ab3c85f9ef05be349c256c13a9b403f7e6f775360b4f6fbd8b83d0f7",
+      "bytes": 10112
+    },
+    {
+      "owner": "kit",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "9e23d18a4c7ba02a16973ccb883d9bdc0ec4380bd98c6270d531c3c69c698810",
+      "bytes": 16283
+    },
+    {
+      "owner": "kit",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "01711f7e9655588489bd05f0125b931b153b48e82c69a766b99d642a6320f331",
+      "bytes": 3728
+    },
+    {
+      "owner": "cad",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "f3d51af7b7bbaa3c68fe2a110c51e37a6c36fdb179813d88275e31fb6be60fa3",
+      "bytes": 25776
+    },
+    {
+      "owner": "cad",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+      "exists": false,
+      "beforeAbsent": true,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "3cb1da73db464fc95a89edc0d504e19a4048a4188e6c8e1d870e822904345b50",
+      "bytes": 10375
+    },
+    {
+      "owner": "cad",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "23c4450a03ee0c774c2e035408922ace459cf8a84120daca80bc3a22be54645e",
+      "bytes": 13170
+    },
+    {
+      "owner": "cad",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+      "exists": true,
+      "beforeAbsent": false,
+      "currentBeforeExact": true,
+      "heldAfterSha256": "191bb74ec146781bfd982c741c66b651e2f5529db638c000b852214ed0af6cbe",
+      "bytes": 5964
+    }
+  ]
+}

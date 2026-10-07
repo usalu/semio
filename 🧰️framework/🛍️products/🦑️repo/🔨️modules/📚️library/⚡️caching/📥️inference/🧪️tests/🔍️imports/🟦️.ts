@@ -2,16 +2,13 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
 import { build } from "esbuild";
 
 const owner = resolve(import.meta.dir, "../..");
 const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as { imports: { id: string; path: string; source: string; imports: string[] }[] };
-const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
 type Provider = { commandSourceImports(path: string, source: string): readonly string[]; commandSourceParseStats(): { hits: number; misses: number; bytes: number; limit: number } };
 
 test("closed import facts retain unique language-neutral vectors", () => {
-  expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
   expect(new Set(fixture.imports.map(row => row.id)).size).toBe(fixture.imports.length);
 });
 

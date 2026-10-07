@@ -56,8 +56,6 @@ test("a session observes descriptors completed by its selected component closure
 test("browser and native renderer inputs precede consumers in the installed Nx graph", async () => {
   const workspace=process.env.NX_WORKSPACE_ROOT??process.cwd(),require=createRequire(import.meta.url);
   const corpus=JSON.parse(readFileSync(join(import.meta.dir,"../../🧫️fixtures/🎮️renderer-inputs/🔣️.json"),"utf8"));
-  const validate=new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir,"../../🧬️schema/🎮️renderer-inputs/🔣️.json"),"utf8")));
-  expect(validate(corpus)).toBe(true);
   const {cacheInternals}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
   const targets=cacheInternals.playgroundPreparationTargets([corpus.crate+"/Cargo.toml"],workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript");
   const {createTaskGraph}=require("nx/src/tasks-runner/create-task-graph");

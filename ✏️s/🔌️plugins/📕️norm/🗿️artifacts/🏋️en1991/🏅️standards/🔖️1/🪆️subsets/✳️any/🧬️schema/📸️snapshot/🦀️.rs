@@ -190,7 +190,7 @@ pub struct En1991Snapshot {
     pub accidental_cases: Vec<crate::AccidentalCase>,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1991Snapshot, extension = "en1991", envelope_id = "norm.en1991", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1991Snapshot {

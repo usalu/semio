@@ -23,6 +23,6 @@ mod tests {
             snapshot.objects.push(violating);
             let mutated = PdfABuilderConstruction::from_snapshot(snapshot);
             let err = mutated.build().expect_err("a /Launch action must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::a::schema::CODE_LAUNCH));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::a::io::CODE_LAUNCH));
         }
     }

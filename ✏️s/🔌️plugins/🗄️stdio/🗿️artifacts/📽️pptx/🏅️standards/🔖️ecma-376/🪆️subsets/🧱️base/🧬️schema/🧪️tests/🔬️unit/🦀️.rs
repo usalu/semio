@@ -1,12 +1,10 @@
 use super::*;
 use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
+use crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
+use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
 use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
-use crate::standards::v_ecma_376::subsets::base::io::{
-    PptxError, MINIMAL_SLIDE_MASTER_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE,
-    SLIDE_MASTER_PART, THEME_PART,
-};
-use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+use crate::standards::v_ecma_376::subsets::base::{io::{PptxAnalyzerAnalysis,PptxBuilderConstruction,MINIMAL_SLIDE_MASTER_XML},schema::{refusal::{PptxError},vocabulary::{PRESENTATION_CONTENT_TYPE,PRESENTATION_PART,REL_TYPE_OFFICE_DOCUMENT_STRICT,REL_TYPE_SLIDE,REL_TYPE_SLIDE_LAYOUT,REL_TYPE_SLIDE_MASTER,SLIDE_CONTENT_TYPE,SLIDE_LAYOUT_PART,SLIDE_MASTER_CONTENT_TYPE,SLIDE_MASTER_PART,THEME_PART}}};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 fn construction_fidelity_fixture() -> serde_json::Value {

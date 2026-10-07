@@ -1,17 +1,15 @@
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
-import Ajv from "ajv";
+
 import equal from "fast-deep-equal";
 import { afterEach, describe, expect, it } from "vitest";
-import fixture from "../../../../📇️directory/🪪️session-refresh/🔣️.json";
-import schema from "../../../../📇️directory/🪪️session-refresh/🧬️.schema.json";
+import fixture from "../../../../📇️directory/🧫️fixtures/🪪️session-refresh/🔣️.json";
 import { DIRECTORY_SESSION_AUTHORITY_TEXT_V1, directorySessionAuthorityTextV1, parseDirectorySessionAuthorityLocaleV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
 import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
 
 afterEach(cleanup);
 
 describe("session authority progress and cancellation", () => {
-  it("validates the neutral bilingual presentation with independent schema and equality oracles", () => {
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+  it("mirrors actual bilingual presentation with independent equality oracles", () => {
     expect(equal(DIRECTORY_SESSION_AUTHORITY_TEXT_V1, fixture.presentation.text)).toBe(true);
     for (const locale of fixture.presentation.locales.map(parseDirectorySessionAuthorityLocaleV1)) expect(equal(directorySessionAuthorityTextV1(locale), fixture.presentation.text[locale])).toBe(true);
     expect(() => directorySessionAuthorityTextV1("fr")).toThrow("directory.session-authority.locale-unsupported");

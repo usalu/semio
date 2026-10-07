@@ -1,0 +1,10 @@
+{
+  "status": "genuine terminal0 whole761/761, current original controls",
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-current-after-historical-454-readback-native-artifacts' bun run nx run @semio-tech/stdio-pdf-rs:test '--args=--lib --features component-app-assembly --no-fail-fast --status-level all --final-status-level all' --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-current-454-readback.log' 2>&1",
+  "controls": "same original whole owner --lib component-app-assembly no-fail-fast all statuses quick; original 300000ms script",
+  "historicalSession": 14595,
+  "currentReadback": "physical-resumed-pdf-historical-454-current-source-readback.json",
+  "session": 15649,
+  "startedAt": "2026-10-06T16:20:57.386Z",
+  "terminalReceipt": "physical-resumed-pdf-fresh-original-whole-owner-terminal-qualified-receipt.json"
+}

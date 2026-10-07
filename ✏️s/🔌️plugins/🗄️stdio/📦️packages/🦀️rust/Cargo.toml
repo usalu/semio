@@ -16,6 +16,7 @@ role = "plugin"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 

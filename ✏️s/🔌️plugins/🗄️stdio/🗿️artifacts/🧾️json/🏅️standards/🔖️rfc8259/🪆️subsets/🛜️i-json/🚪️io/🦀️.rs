@@ -7,12 +7,12 @@
 pub mod derived_composition {
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
     use crate::standards::v_rfc8259::subsets::base::io::JsonComposer as JsonAnyComposer;
-    use crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
+    use crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_I_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("i-json") };
@@ -98,7 +98,7 @@ pub use derived_composition::*;
 pub mod derived_construction {
     use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
-    use crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
+    use crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance;
     use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, JsonIJsonMutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -163,7 +163,7 @@ use semio_framework_diagnostic::Severity;
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 
@@ -176,7 +176,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("i-json") };
@@ -256,7 +256,7 @@ use semio_framework_diagnostic::TextSpan;
                 Work::Value(JsonValue::Array{items})=>pending.push(Work::Array(items.iter())),
                 Work::Object(mut members,mut seen)=>{if let Some(member)=members.next(){if pass==0&&!seen.insert(member.key.as_str()){if member.key.len()>65536{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}out.push(hard(CODE_DUPLICATE_MEMBER,format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object",member.key)));}pending.push(Work::Object(members,seen));pending.push(Work::Value(&member.value));}},
                 Work::Array(mut items)=>{if let Some(value)=items.next(){pending.push(Work::Array(items));pending.push(Work::Value(value));}},
-                Work::Value(value@JsonValue::Number{lexeme}) if pass==1=>{let meaning=crate::schema::snapshot::number::meaning(lexeme,control,SqliteSnapshotPhase::ProjectSnapshot,count,0)?;if !meaning.valid{out.push(hard(CODE_INVALID_NUMBER_LEXEME,"a number requires an RFC8259 lexeme".into()));}else if meaning.numeric.is_none(){out.push(hard(CODE_NUMBER_NOT_BINARY64,"a number exceeds finite IEEE754 binary64 representation -- RFC7493 §2.2".into()));}else{scan_unsafe_integers(value,&mut out);}},
+                Work::Value(value@JsonValue::Number{lexeme}) if pass==1=>{let meaning=crate::schema::snapshot::number::meaning(lexeme,&mut ||control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0))?;if !meaning.valid{out.push(hard(CODE_INVALID_NUMBER_LEXEME,"a number requires an RFC8259 lexeme".into()));}else if meaning.numeric.is_none(){out.push(hard(CODE_NUMBER_NOT_BINARY64,"a number exceeds finite IEEE754 binary64 representation -- RFC7493 §2.2".into()));}else{scan_unsafe_integers(value,&mut out);}},
                 Work::Value(JsonValue::String{value}) if pass==2=>{let mut noncharacter=false;for c in value.chars(){count=count.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "I-JSON validation unit count overflow"))?;noncharacter|=is_unicode_noncharacter(c);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}}if noncharacter{out.push(soft(CODE_STRING_NONCHARACTER,format!("string {value:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));}},
                 _=>{}
             }
@@ -300,7 +300,7 @@ use semio_framework_diagnostic::TextSpan;
     //#endregion 🔖️Analyzer
 
     #[cfg(test)]
-    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
 }
 pub use derived_analysis::*;
 

@@ -3,7 +3,8 @@
 //! any base.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_label_number, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation2d_label_number,Generation2dMutation};
+
 use crate::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};

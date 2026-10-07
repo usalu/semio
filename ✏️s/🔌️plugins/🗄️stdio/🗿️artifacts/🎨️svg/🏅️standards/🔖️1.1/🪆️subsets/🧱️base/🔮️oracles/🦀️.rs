@@ -35,7 +35,7 @@ mod oracles {
 
     //#region 🔖️Tree
     /// 🌳 This module's OWN quick-xml-backed element tree — independent of, and structurally
-    /// parallel to, the production `XmlNode`/`XmlDocument` this subset's own codec persists
+    /// parallel to, the production `SvgNode`/`SvgDocument` this subset's own codec persists
     /// (`../../🧬️schema/📸️snapshot/🦀️.rs`), never importing it. Attributes are an ordered
     /// `Vec` (source order preserved on read) since the WRITE side never needs it ordered — the
     /// projection sorts by name, per this module's own `comparisonProfiles` entry.
@@ -215,7 +215,7 @@ mod oracles {
         json_number(&member(value, key)).unwrap_or(0.0).max(0.0) as usize
     }
 
-    /// 🔎️ One `XmlNode` wire value (`{"kind":"element"|"text"|"cData"|"comment"|"processingInstruction", ...}`, the
+    /// 🔎️ One `SvgNode` wire value (`{"kind":"element"|"text"|"cData"|"comment"|"processingInstruction", ...}`, the
     /// leaf payload schema's own node union) read into this module's tree — written from the schema, not from the
     /// subject's decoder.
     fn qnode_from_wire(value: &Json) -> Result<QNode, String> {
@@ -499,7 +499,7 @@ mod oracles {
     //#region 🔖️Apply
     /// 🦠️ Mutates `doc` in place for one declared kind, reading `params` as that leaf's wire payload. An unrecognised
     /// kind is an error, never a silent no-op.
-    /// 🌲️ One node as the `XmlNode` wire [`qnode_from_wire`] reads.
+    /// 🌲️ One node as the `SvgNode` wire [`qnode_from_wire`] reads.
     fn qnode_to_wire(node: &QNode) -> Json {
         let text = |kind: &str, text: &str| obj(vec![("kind", Json::String(kind.into())), ("text", Json::String(text.into()))]);
         match node {

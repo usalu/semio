@@ -70,7 +70,7 @@ fn text_string(bytes: &[u8], font: Option<&FontCodec>) -> PdfTextString {
         }
         None => {}
     }
-    PdfTextString::Codes { bytes: bytes.to_vec() }
+    PdfTextString::Codes { codes:font.map_or_else(||bytes.iter().map(|byte|u32::from(*byte)).collect(),|font|font.decode(bytes).iter().map(|glyph|glyph.code).collect()) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -80,7 +80,7 @@ fn text_array(items: &[PdfObject], font: Option<&FontCodec>) -> Vec<PdfTextArray
         .filter_map(|item| match item {
             PdfObject::Str(bytes) => Some(match text_string(bytes, font) {
                 PdfTextString::Text { text } => PdfTextArrayItem::Text { text },
-                PdfTextString::Codes { bytes } => PdfTextArrayItem::Codes { bytes },
+                PdfTextString::Codes { codes } => PdfTextArrayItem::Codes { codes },
             }),
             other => other.as_f64().map(|amount| PdfTextArrayItem::Adjust { amount }),
         })
@@ -374,7 +374,7 @@ fn push_name(out: &mut Vec<u8>, name: &str) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn encode_text(text: &PdfTextString, font: Option<&FontCodec>, font_name: Option<&str>) -> PResult<Vec<u8>> {
     match text {
-        PdfTextString::Codes { bytes } => Ok(bytes.clone()),
+        PdfTextString::Codes { codes } => match font {Some(font)=>font.encode_codes(codes).ok_or_else(||PdfEngineError::Malformed("logical character code exceeds current font codespace".into())),None=>codes.iter().map(|code|u8::try_from(*code).map_err(|_|PdfEngineError::Malformed("logical character code needs a declared composite font".into()))).collect()},
         PdfTextString::Text { text } => match font {
             Some(font) => font.encode(text).ok_or_else(|| PdfEngineError::Unsupported(format!("font /{} cannot show {text:?}", font_name.unwrap_or("?")))),
             None if text.bytes().all(|byte| (0x20..=0x7E).contains(&byte)) => Ok(text.as_bytes().to_vec()),
@@ -552,7 +552,7 @@ pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
                 for item in items {
                     match item {
                         PdfTextArrayItem::Text { text } => super::lexer::write_string(&mut out, &encode_text(&PdfTextString::Text { text: text.clone() }, font, font_name)?),
-                        PdfTextArrayItem::Codes { bytes } => super::lexer::write_string(&mut out, bytes),
+                        PdfTextArrayItem::Codes { codes } => super::lexer::write_string(&mut out, &encode_text(&PdfTextString::Codes {codes:codes.clone()},font,font_name)?),
                         PdfTextArrayItem::Adjust { amount } => {
                             out.push(b' ');
                             out.extend_from_slice(number_text(*amount).as_bytes());
@@ -735,16 +735,9 @@ pub fn extract_text(ops: &[PdfOp], fonts: &dyn FontTable) -> String {
     };
     let show = |out: &mut String, text: &PdfTextString, font: Option<&FontCodec>| match text {
         PdfTextString::Text { text } => out.push_str(text),
-        PdfTextString::Codes { bytes } => match font {
-            Some(font) => match font.decode_text(bytes) {
-                Some(text) => out.push_str(&text),
-                None => {
-                    for glyph in font.decode(bytes) {
-                        out.push_str(glyph.text.as_deref().unwrap_or("\u{FFFD}"));
-                    }
-                }
-            },
-            None => out.extend(bytes.iter().map(|byte| if (0x20..=0x7E).contains(byte) { *byte as char } else { '\u{FFFD}' })),
+        PdfTextString::Codes { codes } => match font {
+            Some(font)=>{for glyph in font.decode_codes(codes) {out.push_str(glyph.text.as_deref().unwrap_or("\u{FFFD}"));}},
+            None=>out.extend(codes.iter().map(|code|if(0x20..=0x7E).contains(code){char::from_u32(*code).unwrap()}else{'\u{FFFD}'})),
         },
     };
     for op in ops {
@@ -766,7 +759,7 @@ pub fn extract_text(ops: &[PdfOp], fonts: &dyn FontTable) -> String {
                 for item in items {
                     match item {
                         PdfTextArrayItem::Text { text } => out.push_str(text),
-                        PdfTextArrayItem::Codes { bytes } => show(&mut out, &PdfTextString::Codes { bytes: bytes.clone() }, font),
+                        PdfTextArrayItem::Codes { codes } => show(&mut out, &PdfTextString::Codes { codes: codes.clone() }, font),
                         PdfTextArrayItem::Adjust { amount } => {
                             if *amount < -200.0 && !out.ends_with(' ') {
                                 out.push(' ');

@@ -7,7 +7,7 @@ use store::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell}};
 #[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
-pub const SQLITE_SNAPSHOT_DIALECT:store::os_io::Dialect=store::os_io::Dialect{artifact_kind:S_SPACE_SCHEMA,standard:store::os_io::StandardId("1"),subset:store::os_io::SubsetId("*")};
+pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_SPACE_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.
 pub fn register_sqlite_snapshot()->Result<(),store::os_io::ArtifactAssemblyRegistryError>{store::os_io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::ArtifactCodec::bare::<SpaceSnapshot,crate::SpaceMutation>(S_SPACE_SCHEMA))}
 fn rows(value:&SpaceSnapshot)->Result<usize,ValueError>{let mut count=1;for length in[value.users.len(),value.collections.len(),value.programs.len(),value.extensions.len()]{count=fields::add(count,length)?;}Ok(count)}
@@ -52,7 +52,7 @@ impl store::ArtifactSqliteSnapshot for SpaceSnapshot{
   let ordered=fields::ordered(database.table("space_program")?,doc.rowid,4,&mut native)?;let mut programs=native.allocate_vec(ordered.len())?;native.begin_stage(ordered.len())?;for row in ordered{programs.push(fields::text(row,3,&mut native)?);native.step()?;}
   let ordered=fields::ordered(database.table("space_extension")?,doc.rowid,8,&mut native)?;let mut extensions=native.allocate_vec(ordered.len())?;native.begin_stage(ordered.len())?;for row in ordered{extensions.push(InstalledExtension{extension_id:fields::text(row,3,&mut native)?,version:fields::text(row,4,&mut native)?,source_uri:fields::text(row,5,&mut native)?,package_hash:fields::text(row,6,&mut native)?,enabled:match row.integer(7)?{0=>false,1=>true,_=>return Err(fields::invalid("space enabled must be boolean"))}});native.step()?;}native.checkpoint()?;Ok(Self{schema,name,kind,visibility,users,collections,programs,extensions})})
  }
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
   (|| -> Result<store::io_schema::IoOutcome<()>,ValueError> {
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!=S_SPACE_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space does not own this SQLite coordinate"))}let candidate=Self::from_sqlite_database(database,control)?;if self!=&candidate{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space semantic state differs"))}Ok(store::io_schema::IoOutcome::clean(()))
  

@@ -38,7 +38,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use record::RasterNativeDocument;
+use super::record::RasterNativeDocument;
 
 /// 🖨️ Prints the owner's literal typed forest and intrinsic records.
 pub(crate) fn print_pack_record_text(snapshot:&RasterSnapshot)->String{
@@ -132,24 +132,13 @@ use schema::ArtifactSchema;
 /// use crate::standards::v1::subsets::any::schema::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::{RasterSnapshot, RasterTransform};
 #[cfg(test)]
-use testing::raster_image_test_snapshot;
+use crate::standards::v1::subsets::any::schema::testing::raster_image_test_snapshot;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::RasterImageAsset;
 use crate::RasterLayerNode;
 use crate::RasterViewportSize;
 
-pub fn create_raster_id(prefix: &str) -> String {
-    use std::hash::BuildHasher;
-    use std::sync::{OnceLock,atomic::{AtomicU64,Ordering}};
-    static NAMESPACE:OnceLock<[u64;2]>=OnceLock::new();
-    static NEXT:AtomicU64=AtomicU64::new(0);
-    let namespace=NAMESPACE.get_or_init(||{
-        let state=std::collections::hash_map::RandomState::new();
-        [state.hash_one(0_u8),state.hash_one(1_u8)]
-    });
-    let next=NEXT.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect("Raster identity sequence exhausted");
-    format!("{prefix}-{:016x}{:016x}{next:016x}",namespace[0],namespace[1])
-}
+
 
 pub fn empty_raster_snapshot() -> RasterSnapshot {
     RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: RasterOwnedMap::new() }
@@ -159,9 +148,7 @@ pub fn empty_raster_snapshot() -> RasterSnapshot {
 /// cross-module from `🚪️io/🦀️.rs`'s `MediaImport` region (`raster_document_from_dwg_drawing`,
 /// `raster_image_layer_and_asset`), which need a specific name/width/height rather than
 /// `create_layer_of_kind`'s generic defaults.
-pub fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {
-    RasterLayerNode::Pixel { id: create_raster_id("layer"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(width), height: Some(height), image_key: None }
-}
+
 
 pub fn empty_raster_document() -> RasterSnapshot {
     let mut document = empty_raster_snapshot();
@@ -176,7 +163,14 @@ pub fn empty_raster_document() -> RasterSnapshot {
 /// source of truth instead of being restated in Rust. Falls back to [`empty_raster_document`] when
 /// the carrier does not parse — the same shape `block2d`'s `default_block2d_snapshot` uses.
 pub fn default_raster_document() -> RasterSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::art_raster_demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
+    crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::art_raster_demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
 }
 }
 pub use snapshot_wire_codec::*;
+
+pub fn raster_example_document(example_id: &str) -> Option<RasterSnapshot> {
+    (example_id == crate::examples::art_raster_demo::ID).then(default_raster_document)
+}
+
+#[path="📦️record/🦀️.rs"]
+pub(crate) mod record;

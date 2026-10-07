@@ -44,6 +44,7 @@ use crate::BcfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use crate::standards::v2_1::subsets::any::io::binary::diff::{write_str_lp,read_str_lp,enc_topic_bin,enc_part_bin,dec_topic_bin,dec_part_bin};
 
 /// 🌱 Full (non-diff) `BcfSnapshot` binary codec -- only `SetSnapshot`'s whole-payload encoding
 /// needs this, mirroring `enc_bcf_snapshot`'s text form above.

@@ -1,2 +1,3 @@
+import type { TransformOp } from "../../📸️snapshot/🧩️document/🟦️.ts";
 /** 🧬 set-transform direct payload. */
-export interface SetTransformPayload { readonly path: number[]; readonly transform?: unknown[] | null }
+export interface SetTransformPayload { readonly path: number[]; readonly transform?: TransformOp[] | null }

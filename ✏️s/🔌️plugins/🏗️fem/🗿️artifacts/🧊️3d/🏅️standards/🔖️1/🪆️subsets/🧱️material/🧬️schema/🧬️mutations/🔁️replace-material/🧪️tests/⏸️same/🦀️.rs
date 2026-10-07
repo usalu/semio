@@ -13,7 +13,8 @@
 //! Re-declaring C24 with its own five properties is a no-op WARNING; only an uncatalogued grade is `target-missing`.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-material/⏸️same/📸️snapshot/⬅️before/🔣️.json");

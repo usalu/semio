@@ -11,7 +11,7 @@ const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧬️mutat
 
 test("logical mutation scenario ids and physical case names are independent exact identities", () => {
   const ajv = new Ajv({ strict: false });
-  const validateScenario = ajv.compile(vector.scenarioSchema);
+  const validateScenario = ajv.compile(JSON.parse(readFileSync(join(owner,"🧪️testing/🧬️mutation-scenario-identities/🧬️schema/🔣️.json"),"utf8")));
   expect(vector["contract"]).toEqual("mutation-scenario-identities-v1");
   const ownerPath = "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any";
   const sourceRoot = `${ownerPath}/🧬️schema/🧬️mutations`;

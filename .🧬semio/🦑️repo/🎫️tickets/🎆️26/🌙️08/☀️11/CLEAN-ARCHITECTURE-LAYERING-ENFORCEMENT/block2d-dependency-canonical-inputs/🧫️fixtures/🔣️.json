@@ -1,0 +1,22 @@
+{
+  "schema": "semio.block2d.canonical-dependency/v1",
+  "canonicalIdentity": "semio-framework-pack-json",
+  "definingManifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+  "retiredIdentity": "semio-s-artifact-stdio-json",
+  "rustIdentity": "semio_s_artifact_stdio_json",
+  "packageIdentity": "semio-s-artifact-block-2d",
+  "cases": [
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "kind": "manifest"
+    },
+    {
+      "path": "✏️s/Cargo.lock",
+      "kind": "lock"
+    }
+  ],
+  "expected": {
+    "retiredReferences": 0,
+    "conservedOtherDeclarations": true
+  }
+}

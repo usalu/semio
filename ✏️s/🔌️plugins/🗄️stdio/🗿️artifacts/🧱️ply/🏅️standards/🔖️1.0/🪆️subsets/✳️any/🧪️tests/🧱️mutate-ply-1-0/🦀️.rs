@@ -139,7 +139,8 @@ mod subject {
     use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::io::{decode_ply, encode_ply_with_format};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_ply::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation, PlyMutation};
+    use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation,PlyMutation};
+
     use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
     use semio_s_artifact_stdio_ply_test_oracle::standards::v1_0::subsets::any::project_ply;
 

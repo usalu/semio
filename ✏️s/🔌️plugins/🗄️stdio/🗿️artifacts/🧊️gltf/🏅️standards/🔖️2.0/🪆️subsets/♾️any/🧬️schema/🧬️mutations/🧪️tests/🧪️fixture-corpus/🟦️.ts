@@ -1,3 +1,4 @@
+import registrySchema from "../../../../../../../../../../📇️registry/🧬️schema/🔣️.json";
 /** 🧫️ Canonical GLTF mutation/source snapshots retain every finite native wire field.
  * The strict independent Ajv oracle validates all committed and malformed JSON fixtures;
  * scalar assertions compare exact bigint, binary64 and ordered local JSON/pair values.
@@ -7,9 +8,10 @@ import {binary64Value,type Binary64} from "../../../../../../../../../../../../.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import { GltfWireRefusal, parseGltfSnapshot, type GltfWireReader } from "../../../📸️snapshot/🟦️.ts";
-import { parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
-import { parseGltfMutation } from "../../🟦️.ts";
+import { GltfWireRefusal, type GltfWireReader } from "../../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import { parseGltfSnapshot} from "../../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import { parseGltfDiff } from "../../../../🚪️io/📝️text/🔺️diff/🟦️.ts";
+import { parseGltfMutation } from "../../../../🚪️io/📝️text/🧬️mutations/🟦️.ts";
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
@@ -37,7 +39,7 @@ const ajv = semioSchemaAjvV1({ strict: true, allErrors: true });
 const snapshotSchema = document(join(mutations, "../📸️snapshot/🔣️.json"));
 const diffSchema = document(join(mutations, "../🔺️diff/🔣️.json"));
 const aggregateSchema = document(join(mutations, "🔣️.json"));
-ajv.addSchema(snapshotSchema).addSchema(diffSchema);
+ajv.addSchema(registrySchema).addSchema(snapshotSchema).addSchema(diffSchema);
 for (const domain of readdirSync(mutations, { withFileTypes: true }).filter((entry) => entry.isDirectory()))
   for (const verb of readdirSync(join(mutations, domain.name), { withFileTypes: true }).filter((entry) => entry.isDirectory()))
     if (existsSync(join(mutations, domain.name, verb.name, "🧬️schema/🔣️.json"))) ajv.addSchema(document(join(mutations, domain.name, verb.name, "🧬️schema/🔣️.json")));

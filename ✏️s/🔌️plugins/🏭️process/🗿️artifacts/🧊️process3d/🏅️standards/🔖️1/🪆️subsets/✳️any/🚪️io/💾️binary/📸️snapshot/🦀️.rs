@@ -122,7 +122,7 @@ fn process3d_list_item(shape: &semio_framework_dsl_record::Shape) -> Result<semi
 }
 
 fn process3d_empty_child<S>() -> store::ArtifactChild<S> {
-    store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
+    store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
 }
 
 fn process3d_text(value: semio_framework_dsl_record::FieldValue) -> Result<String, &'static str> {
@@ -551,7 +551,7 @@ impl mounted::RetainedTypedPackOwner for Process3dMountedSnapshotOwner {
             return false;
         }
         if let Some(candidate) = self.candidate.take() {
-            *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::io::binary::mutations::Process3dSnapshotRetirementFactory, candidate));
+            *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::owned::Process3dSnapshotRetirementFactory, candidate));
             return false;
         }
         self.handed_back = true;

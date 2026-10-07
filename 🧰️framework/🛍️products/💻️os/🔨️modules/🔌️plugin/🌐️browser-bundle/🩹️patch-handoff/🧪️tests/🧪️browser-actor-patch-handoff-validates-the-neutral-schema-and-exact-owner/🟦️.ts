@@ -10,10 +10,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const equal = (await import("fast-deep-equal")).default;
     const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(schema);
-    expect(validate(fixture)).toBe(true);
     const offer = parseBrowserActorUiPatchOfferV1(fixture.offer);
     const result = parseBrowserActorUiPatchResultV1(fixture.acknowledged);
+    expect(new Ajv({ strict: true }).compile({ ...schema, $ref: "#/definitions/offer" })(offer)).toBe(true);
+    expect(new Ajv({ strict: true }).compile({ ...schema, $ref: "#/definitions/result" })(result)).toBe(true);
     expect(browserActorUiPatchOwnerMatchesV1(offer, result)).toBe(true);
     expect(equal(offer.receipt, result.receipt)).toBe(true);
     expect(browserActorUiPatchOwnerMatchesV1(offer, parseBrowserActorUiPatchResultV1(fixture.rejected))).toBe(true);

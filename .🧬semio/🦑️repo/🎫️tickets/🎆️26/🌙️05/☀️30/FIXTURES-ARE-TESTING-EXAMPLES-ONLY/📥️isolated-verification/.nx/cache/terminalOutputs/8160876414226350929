@@ -1,0 +1,43 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" verify
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts:
+[0m[32m✓[0m[0m[1m Count complete erased backing has a closed scratch diagnostic and incoming release contract[0m [0m[2m[[1m13.07ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m closed real Count lease contract selects complete native encodings and eight distinct compiled refusal owners[0m [0m[2m[0.42ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m independent SQLite validates every Count row for both encodings and exact dialect metadata[0m [0m[2m[5.12ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m independent UTF8 oracle preserves typed cause and every NUL diagnostic field without prose classification[0m [0m[2m[0.40ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m declared compiled refusal owner closes all i32 fields and eight exact dialect coordinates[0m [0m[2m[[1m308.63ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m published Count snapshot schema admits exactly the complete i32 owner[0m [0m[2m[[1m29.90ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m independent SQLite and closed neutral Count corpus preserve every stored field[0m [0m[2m[7.65ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🗒️note/🧪️tests/🧭️action-cohort/🟦️.ts:
+[0m[32m✓[0m[0m[1m Note source and fixture have one exact hostile census[0m [0m[2m[4.47ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m hostile source rejects global ids, copied digests, and scan-then-monolith shells[0m [0m[2m[[1m46.55ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🟦️.ts:
+[DEBUG] Independent authored history oracle checked five restored-history actor transitions
+[0m[32m✓[0m[0m[1m restored history actor cases preserve authored names and distinguish foreign undo[0m [0m[2m[1.92ms[0m[2m][0m
+
+[0m[32m 10 pass[0m
+[0m[2m 0 fail[0m
+ 282 expect() calls
+Ran 10 tests across 3 files. [0m[2m[[1m563.00ms[0m[2m][0m
+[DEBUG] Plugin15 actual owner [0m[33m2[0m toolJobCooperativeMaintenanceSelfTests [0m[33m6[0m
+[DEBUG] Plugin15 actual owner [0m[33m5[0m canonicalDescriptorPackOracle [0m[33m2[0m
+codec caller source hostiles: 12 exact local omissions; await/global-trait/A/PA/Diff/impl/erased-slot guards; in-memory candidate only
+[DEBUG] Plugin15 actual owner [0m[33m10[0m testPluginCodecCallerSource [0m[2mundefined[0m
+[stdio-command-ownership] owners=9 routers=2 artifacts=36 commands=5
+[DEBUG] Plugin15 actual owner [0m[33m40[0m verifyStdioCommandOwnership [0m[2mundefined[0m
+native-service-composition: cargo=1 real-owner=1 generic-empty=1 passed
+[DEBUG] Plugin15 actual owner [0m[33m43[0m nativeServiceCompositionLaws [0m[2mundefined[0m

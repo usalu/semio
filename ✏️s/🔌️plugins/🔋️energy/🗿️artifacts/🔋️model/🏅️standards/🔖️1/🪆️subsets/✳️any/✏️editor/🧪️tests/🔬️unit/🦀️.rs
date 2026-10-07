@@ -302,7 +302,7 @@ semio_framework_plugin::history_edit_acceptance_law!("energy", EnergyModelEditor
 /// closed with `interactive-job.catalog-authority` the moment any proof is declared.
 async fn dispatchable_app() -> EnergyEditorApp {
     use semio_framework_plugin::PluginApp as _;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>(energy_model_manifest_for_tests).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>(energy_model_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
     app
 }

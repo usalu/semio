@@ -1,14 +1,12 @@
 import {readFileSync} from "node:fs";
 import {dirname,resolve,join} from "node:path";
 import assert from "node:assert/strict";
-import Ajv2020 from "ajv/dist/2020";
 import Parser from "web-tree-sitter";
 export type BindingFixture={version:number;owner:string;entry:string;manifest:string;binding:string;types:string[];fields:Record<string,{id:number;key:string;shape:string;optional:boolean}[]>;controls:{initialCancel:string;metadataZero:string;projection:string;construction:string};cases:{id:string;type:string;value:Record<string,unknown>;expectedFields:[number,unknown][]}[];sourceCases:{id:string;accepted:boolean}[]};
 export type BindingReader=(path:string)=>string;
 /** 🪆️ Checks executable binding ownership and direct canonical trait authority without private implementation digests. */
 export async function inspectNeutralBindingOwnership(root:string,fixturePath:string,read:BindingReader=path=>readFileSync(resolve(root,path),"utf8")):Promise<{types:number;directRecord:boolean}>{
- const fixture=JSON.parse(read(fixturePath)) as BindingFixture,schema=JSON.parse(read("🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧬️schema/🔣️.json")),validate=new Ajv2020({strict:true,allErrors:true}).compile(schema);
- assert.equal(validate(fixture),true,JSON.stringify(validate.errors));
+ const fixture=JSON.parse(read(fixturePath)) as BindingFixture;
  const manifest=Bun.TOML.parse(read(fixture.manifest)) as {package:{name:string};dependencies:Record<string,{path?:string;package?:string}>};
  assert.equal(manifest.package.name,fixture.owner);const dep=manifest.dependencies["semio-framework-dsl-record"];assert.ok(dep?.path);const canonical=resolve(root,dirname(fixture.manifest),dep.path,"Cargo.toml"),owned=resolve(root,"🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml");assert.equal(canonical,owned);
  for(const [name,dependency]of Object.entries(manifest.dependencies)){assert.equal(name.includes("os-kernel"),false);if(dependency.path)assert.equal(dependency.path.includes("🛍️products"),false);}

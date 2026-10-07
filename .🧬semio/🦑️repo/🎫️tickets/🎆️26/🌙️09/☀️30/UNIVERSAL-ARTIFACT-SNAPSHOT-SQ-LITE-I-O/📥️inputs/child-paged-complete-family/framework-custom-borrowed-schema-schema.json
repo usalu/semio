@@ -1,0 +1,98 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "records",
+    "fields",
+    "expectedMetadataAllocations",
+    "projectionCredit",
+    "retirementCredit"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.authored.borrowed-framework-custom-schema.v1"
+    },
+    "records": {
+      "const": [
+        {
+          "type": "Viewport2d",
+          "keyword": null,
+          "layout": "inline",
+          "fields": [
+            [
+              1,
+              "x",
+              "Float",
+              false
+            ],
+            [
+              2,
+              "y",
+              "Float",
+              false
+            ],
+            [
+              3,
+              "zoom",
+              "Float",
+              false
+            ]
+          ]
+        },
+        {
+          "type": "Viewport3dOrbit",
+          "keyword": null,
+          "layout": "inline",
+          "fields": [
+            [
+              1,
+              "position",
+              "Tuple(Float,3)",
+              false
+            ],
+            [
+              2,
+              "target",
+              "Tuple(Float,3)",
+              false
+            ],
+            [
+              3,
+              "zoom",
+              "Float",
+              false
+            ],
+            [
+              4,
+              "up",
+              "Tuple(Float,3)",
+              true
+            ]
+          ]
+        }
+      ]
+    },
+    "fields": {
+      "const": [
+        {
+          "type": "ExternalRefusingField",
+          "kind": "Text"
+        },
+        {
+          "type": "OsRefusing",
+          "kind": "Text"
+        }
+      ]
+    },
+    "expectedMetadataAllocations": {
+      "const": 0
+    },
+    "projectionCredit": {
+      "const": false
+    },
+    "retirementCredit": {
+      "const": false
+    }
+  }
+}

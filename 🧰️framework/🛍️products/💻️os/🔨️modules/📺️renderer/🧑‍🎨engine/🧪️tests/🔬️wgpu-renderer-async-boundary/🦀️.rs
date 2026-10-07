@@ -1417,7 +1417,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
         for row in pair {
             batch
                 .action("writer", row["action"].as_str().unwrap(), 128, |builder| {
-                    builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
+                    builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor,
                         token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                         member: row["member"].as_u64().unwrap() as u8,
                         abort_correlation_on_error: row["abort"].as_bool().unwrap(),
@@ -1437,7 +1437,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
     let mut batch = interaction.input.reserve_actions(2, 256).unwrap();
     for member in 0..2 {
         batch
-            .action("writer", "textEdit", 128, |builder| builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0 }))
+            .action("writer", "textEdit", 128, |builder| builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0 }))
             .unwrap();
     }
     batch.publish().unwrap();

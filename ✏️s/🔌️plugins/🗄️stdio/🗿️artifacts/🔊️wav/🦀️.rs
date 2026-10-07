@@ -11,7 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use standards::riff_pcm::subsets::any::schema::diff::WavDiff;
 pub use standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
@@ -68,7 +68,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .inferences([standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor()])
         .composers(standards::riff_pcm::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<WavSnapshot, WavMutation>(STDIO_WAV_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.wav", standard: semio_framework_plugin::StandardId("riff-pcm"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<WavSnapshot, WavMutation>(STDIO_WAV_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.wav", standard: semio_framework_artifact_reference::StandardId("riff-pcm"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
 }
 
@@ -93,7 +93,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::riff_pcm::subsets::any::io::io_registry as std_composer;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -175,10 +175,7 @@ pub mod standards {
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
         }
     }
 }

@@ -744,3 +744,312 @@ Metadata diagnostic4 completed PREASSERT exit1/Nx7m8 before original payload: so
 Metadata diagnostic5 completed PREASSERT exit1/Nx1m43 before original payload. Imperative import and MD explicit TryFrom floors advanced. Three reached type-path references: glTF native SQLite11 private protocol::native_decoding::NativeDecodeProgress, PNG IO13 native progress types incorrectly imported at canonical Value root, PNG snapshot6 stale generic DslScalar derive. Parent assigned exact glTF caller here and PNG2 to Surface. Fresh glTF source retains same cumulative allocation_stage/checkpoint/owned_bytes semantics; exactly one progress type path now points at existing canonical semio_framework_value::native_decoding. No callback/control/budget/schema/payload/assertion edits. Await PNG2 release before changed-source metadata6. Log82 / exact-cargo-laws-Gf0pwD/00 retains diagnostics.
 
 Surface released PNG canonical progress and original color scalar derives, existing package mounts preserved. Same registered metadata diagnostic6 is sole own session83394, enduser-metadata-runtime-diagnostic-6.log, after exact glTF/PNG caller source closure. Original app assertions/contribution/helper remain unchanged; actual metadata payload still pending.
+
+Metadata diagnostic6 authoritative log readback on 2026-10-06: completed PREASSERT exit1/Nx3m4 before payload, PNG snapshot185 / paint-native-samples9 / IO67 stale dsl::DslRecord. Fresh original three callers already use semio_framework_dsl_record_derive::DslRecord; canonical Record+derive manifest mounts24–25 preserved. No duplicate caller edit. No active metadata/app matching process at readback. Same existing seed/current registered metadata diagnostic7 replays changed source with fresh Nx graph flags and CARGO_BUILD_JOBS=2; assertions/helpers/contributions unchanged.
+
+Original React vertex picking sentinel baseline reached actual RED0/1,3 skipped,Vitest19.14s,Nx23s: neutral mixed-sample fixture returned [4294967295,0,1] instead of [0,1] at component law211. Both existing launch sources register the focused original law. Fixture also includes sentinel-only empty pick geometry and exact decimal uint64 target labels, with installed Three BufferGeometry independent expected-buffer oracle and owned visual disposal. Original buildVertexPickData now skips only u32::MAX before deduplication; hover/click/marquee/overlay callers retain the same builder. Changed-source focused GREEN replay follows; no passing claim before receipt.
+
+React sentinel current1 advanced exact pick buffer assertions then reached a second actual RED: valid analytic vertex group0/max-safe+1 decimal label returned undefined because original world3dComponentInteractionTarget5973 allowed only edge/face. Existing source-bearing target resolver now admits vertex alongside those same two granularities and preserves handle/revision/u64/duplicate checks. Existing invalid vertex0 case remains invalid because its mesh has no vertex references. Current2 replays the unchanged sentinel law; broad existing component+interaction regression follows once GREEN.
+
+React vertex sentinel/analytic target current2 is actual GREEN1/1,3 skipped,Vitest6.63s/Nx8.1s,exit0: mixed surface-sample sentinel omitted, repeated group0 deduplicated, exact group0/group1 buffers match installed Three, sentinel-only emits no pick geometry, exact9007199254740993/18446744073709551615 labels survive canonical targets, sentinel target refused. Receipt enduser-react-vertex-sentinel-green-2.log. Original full component+interaction registered regression now follows; metadata7 original handle reached owner command after dependency preparation and remains pending.
+
+Original registered React component plus World3d interaction regression completed actual GREEN, Nx7.6s/exit0, enduser-react-vertex-picking-regression.log. Focused sentinel/current target proof remains1/1; broad counts recorded from actual log. Same builder and original target resolver carry the change, with no new picker, no runtime dependency or external export. Metadata7 retains original live session66794 in native-owner preparation; no metadata payload or actual selected-shell proof inferred.
+
+React regression receipt readback exact counts: 2 test files passed,25 tests passed,Vitest6.40s,Nx7.6s,exit0. New fixture/test code and original two-line host production change are runtime verified. Existing launch pair new sentinel row order900.036425 retains the same owner script/target; broad original analytic pick launch remains unchanged. No actual metadata, real selected-shell geometry/history, or complete original Enduser app acceptance claim.
+
+Metadata diagnostic7 completed PREASSERT exit1/Nx20m9s after shared exclusive-preparation queue (up to16 queued owners) and all four dependency generations succeeded. Original source-admission35 refused full-editor mirror actual229d9110fffb3feefe84cff79ff3db3f59c1f89ff9cf3d6762524a0db935973a vs retained53ddc589b548e2f7108d766866b1db7425c8f47756e45cfac7348e78307f89b5. No Rust build or actual metadata payload ran; original session66794 is terminal. Six independently proven admission changes are already reconciled; three transient-source rows remain untouched pending exact source attribution. No unchanged retry or contribution/helper edit made.
+
+Metadata diagnostic8 now replays the unchanged original metadata law after explicit semantic source-admission review. Current all57 App plus17 native hashes are exact. Three transient old blobs remain unrecovered and are explicitly recorded in the separate admission report; their closest authoritative baseline reviews preserve assertions/history/law rosters. Registered fresh-Nx/CARGO2 command session58707, receipt enduser-metadata-runtime-diagnostic-8.log. No contribution/helper edit and no runtime acceptance inferred.
+
+## Current Enduser Runtime Acceptance Ledger
+
+Source admission is a receipt for reviewed source bytes; it does not establish feature behavior. Current pending native commands retain their original law selections and assertions.
+
+| Boundary | Last actual evidence | Current acceptance status |
+| --- | --- | --- |
+| Original React shared vertex builder + analytic target | Sentinel RED then focused1/1 GREEN; original component/interaction25/25 GREEN | Current runtime verified for this focused change |
+| EN/DE selected BRep inspector controls and generated labels | Original projection RED→GREEN1/1 with seven cases, exact u64, late-window, ok/stale/error and unchanged document | Prior exact runtime receipt remains; full actual evaluated shell is separate |
+| Scalar and collection inputs | App26 scalar1/1 and collection1/1 with retained publication effects, four collection actions and exact history | Partial original input runtime proof; complete six-law suite remains pending |
+| Variable rename metadata | App26 actual parameter status error versus expected ok after finalized2hops/0answers | Diagnostic8 is current original runtime route; actual status/evaluation payload required before inference hypotheses |
+| Selected slider/source/texture App actions | Prepared original law assertions and prior portable fixtures | Original native runtime assertions still pending |
+| Actual source-bearing selected solid shell | Original neutral2×1.5×1 source volume3 and independent Three oracle; full-editor original law derives live label/handle/revision and consumer, then history | Native law unrun; do not infer shell correctness from projection or lower-provider proof |
+| Full original mesh App laws | Original six contributed actual-App law roster and live-shell gate preserved | Native runtime still pending |
+
+No ticket/goal/Enduser completion claim is warranted. Diagnostic8 dependency preparation still has a live owner handle; no unchanged retry or caller speculation introduced.
+
+Diagnostic8 has passed the original source admission and reached `[composition-laws] build`; exact current capture `enduser-controls-exact/exact-cargo-laws-h1OR7Z/00`. Native owner is live (active lease PID19093); build receipt files are not emitted yet. No feature assertion/payload claimed and handle58707 remains authoritative.
+
+Diagnostic8 exact h1OR7Z/00 now has build.stdout0bytes and build.stderr57bytes: `Blocking waiting for file lock on artifact directory`. Original inner package preparation completed; native owner elapsed about360s. This is an authoritative shared build-lock wait, not a compiler or feature failure. No restart or lock manipulation.
+
+Metadata diagnostic8 completed PREASSERT exit1/Nx21m36 after source admission passed; exact h1OR7Z/00 compiled current Pack/UI/validator/mesh/tool-run/schema and stopped only on OS durable-group604 missing `HistoryPageStack::last_mut`. No actual metadata payload/assertion ran. Before any edit, current concurrent owner repaired the exact caller to pop the existing exact tail, update only ledger_key, and push it back into the same retained slot. This preserves tail contents/order/count/pages, revision prefix and reserved ledger ownership; pop/push are existing stack operations and push reuses the capacity vacated by pop. No duplicate method/API/source edit made. Parent and Mesh confirmed current source closure; same original metadata9 replay is justified by that changed source, not an unchanged retry.
+
+Metadata9 current original handle67147, log enduser-metadata-runtime-diagnostic-9.log; all four dependency generations completed and original composition owner preparing current source. Document owner separately released coherent XML28 original caller/module boundaries from its original G3fourlaw baseline, with no G3 editor/unit or metadata edits; no duplicate repair and no XML/native compile success inferred.
+
+Metadata9 passed original source admission and reached build stage; exact current directory enduser-controls-exact/exact-cargo-laws-Gp2CPV/00 remains empty during original inner package preparation. Parent’s concurrent DAG three-type BorrowedDslField repair is preserved; no duplicate implementation. Read-only guest selected-face snapshot-authority audit is recorded in 📓️guest-selected-face-snapshot-authority-2026-10-06.md, distinguishing exact framework geometry interaction IDs from Scene instance/numeric projections. Original live-shell law/sourceguard untouched.
+
+Metadata9 completed PREASSERT exit1/Nx15m47, exact Gp2CPV/00: previous durable-group and DAG floors passed; only five Flow BorrowedDslField errors on Widget/SynapseSpec/FlowHostSnapshot original mutations. No metadata payload or assertions. Handle67147 terminal. Mesh owns same original Flow text/snapshot borrowed-shape repair; no duplicate edit, and metadata10 waits its coherent source release. Root authorized actual original React multi-object component overlay neutral RED from shared original World fixture while this source floor closes.
+
+### 2026-10-06 Metadata10 and React Multi-Instance Overlay Baseline
+
+Original metadata diagnostic9 completed PREASSERT, exit1, on the five framework Flow borrowed-field requirements, without metadata payload or feature assertion. Mesh owner released the exact original Widget/Synapse/HostSnapshot borrowed snapshot repair; diagnostic10 now uses the unchanged registered metadata command with fresh Nx graph flags, CARGO_BUILD_JOBS=2 and immediate success output. Live session57756; generated log `🗑️generated/enduser-metadata-runtime-diagnostic-10.log`. Preserve this handle until terminal; no inference/provider/ContributionRelay behavior has been changed.
+
+Original mounted React overlay law now consumes root-owned neutral `World/🧫️fixtures/🎯️component-selection-merges/🔣️.json`, actual World3dHost scene mount and real Three BufferGeometry oracle. Baseline session86503 terminated exit1: replace paints solid0, additive paints only solid1 rather than both solid0 and solid1. The failing assertion is mounted selected-face geometry membership; independent Three position oracle succeeded. This is an actual production RED, not a inferred helper failure. Generated receipt `🗑️generated/enduser-react-component-overlay-red.log`, Vitest1failed/4skipped,8.74s/Nx11.2s.
+
+Repair stays in original WorldInstancesLayer/WorldInstanceNode: validate exact gumballSelectionIds against each current instance componentSource and current unique componentReferences using original component interaction target builder; selected masks now belong to the matching instance and ordinary mesh numeric masks remain restricted to the active object. Neither guest Scene.ids nor guest producer/schema is altered. Fresh source refusal rows in the existing analytic neutral fixture cover empty lane, stale handle/revision, wrong label/group/mode, trailing bytes, numeric unbound target and duplicate current labels. Targeted green session90321 is live; no GREEN claim before terminal.
+
+The new command is registered in both original launch sources at group4_gate/order900.036424. An initially missing row closure/presentation was repaired immediately after parent readback; both complete launch sources then passed actual jsonc-parser validation.
+
+### 2026-10-06 React Overlay Regression Receipt
+
+Targeted original mounted law session90321 completed exit0,1/1(+4skipped),Vitest12.08s/Nx14.0s. Then final original component+interaction files, including all nine new neutral refusal rows, session55347 completed actual GREEN26/26 across2files,exit0,Vitest9.39s/Nx11.1s; generated `🗑️generated/enduser-react-component-overlay-regression.log`. Existing25 tests/law assertions preserved; appended mounted law is the26th. JSDOM reports its existing terrain canvas getContext limitation; WebGL seam is replaced exactly as the existing component mount suite, real Three overlay buffers remain asserted.
+
+Passing console info receipts were absent despite --silent=false; the final targeted registered command now also uses standard Vitest --disableConsoleIntercept so the console assertions have a directly visible runtime receipt. This changes runner logging only, not feature expectations. Live final receipt follows in `🗑️generated/enduser-react-component-overlay-runtime-receipt.log`. No selected-shell/native metadata feature completion is inferred from React26/26.
+
+### 2026-10-06 Metadata10 Terminal XML Boundary
+
+Authoritative live57756 terminal exit1, Nx16m56. Exact capture `🗑️generated/enduser-controls-exact/exact-cargo-laws-EguT3L/00` reached Rust compilation after original admission guard, durable/DAG/Flow repairs. Current remaining floor is exactly3 XML diagnostics: IO-owned original text snapshot line42 dangling item doccomment; consequent missing XmlSnapshot ArtifactDsl at valid IO59 and XML root ArtifactCodec43. The five framework Flow borrowed requirements are absent. No metadata assertion/status/eval payload yet; therefore no ContributionRelay cause or feature success is claimed. Document owner received the exact original XML contexts and owns coherent caller/source repair. No unchanged diagnostic replay; await actual source release. Mesh reports independent DWG21 current source release ready; this XML3 capture did not reach DWG compilation.
+
+### 2026-10-06 React Visible Final Runtime Receipt
+
+Final original targeted command session63555 terminal exit0, actual1/1(+4skipped),Vitest10.37s/Nx14.4s; `🗑️generated/enduser-react-component-overlay-runtime-receipt.log` records direct DEBUG lines73–90: replace[solid0], additive[solid0,solid1], subtractive[solid1], invertive[], followed by every nine exact-source refusal. Real Three position oracle and mounted geometry membership assertions remain unchanged. The final mask readback also preserves original ordinary-instance active comparison's non-null interactionId guard, so an absent active object cannot accidentally admit a missing interactionId. Both entire launch sources parsed without error, exact new row once each, matching registered flags and order.
+
+React feature is actual RED→GREEN with neutral shared fixture and third-party Three geometry oracle; full Enduser/shell/metadata native acceptance remains pending on XML compilation release.
+
+### 2026-10-06 Pure Point Original Vertex Baseline and Metadata11
+
+Parent assigned pure BRep vertex preview acceptance after NativeWorld actual feature baselines. Readback: original Brep tessellate_sync/tessellate_job_sync currently reject Entity::Vertex; TessellationJob only admits vertices while packing edge endpoints. No production changes before RED. Original vertex-provenance schema/fixture now add one point[1.25,-2.5,3.75] with zero dimensions/edges/faces. Conditional schema preserves previous box/wire min2 dimension rule and restricts point to exactly one authored point. Strict Ajv2020 fixture validation actual GREEN after correcting missing conditional array types; this was a schema-authoring failure, not a feature baseline. Existing Native provenance law gains point construction, exact transfer emptiness, one-unit/zero-budget progress and cancellation checks while every previous assertion remains. Existing portable provenance law handles point's zero surface/index buffers, asserts maxu64 labels and independent Three vertex positions, and now validates the same neutral schema with Ajv.
+
+Original registered Native3 gate session68791 logs `🗑️generated/enduser-brep-pure-point-red.log`; original portable law session23496 logs `🗑️generated/enduser-brep-pure-point-portable-oracle.log`. Both live at fresh graph preparation; no point RED/GREEN runtime claim yet. Portable existing launch row in both sources now includes standard visible console flags, no new runner/script.
+
+Document coherent XML text snapshot release removed only empty orphan module/export and its dangling doccomment; original ArtifactDsl/parser bodies remain unchanged. Metadata11 source-coherent original command replay live69802, log `🗑️generated/enduser-metadata-runtime-diagnostic-11.log`; fresh3Nx flags/CARGO_BUILD_JOBS2, no source/admission/assertion changes.
+
+Portable original provenance transfer session23496 completed actual1/1(+8skipped),exit0,Vitest424ms/Nx1.4s; visible DEBUG box8/wire4/point1 independentThree. After adding the in-law strict Ajv fixture assertion, final unchanged feature portable session51331 completed actual1/1(+8skipped),exit0,Vitest511ms/Nx1.4s with the same three exact DEBUG outputs; `🗑️generated/enduser-brep-pure-point-portable-schema-oracle.log`. Both complete launch sources freshly parsed; existing portable vertex row matches exact visible registered command. Native68791 is now cargo build after coherent owner preparation; production point code still untouched.
+
+### 2026-10-06 Pure Point Native Actual RED and Original Cursor Repair
+
+Original Native3 baseline68791 reached actual runtime and terminated exit1: merged/refusal2/3 GREEN, original vertex preview1/3 RED at original law877, `InvalidInput("cannot tessellate vvertex-0-0")`. Box8/wire4 original provenance+Parry assertions passed before the point refusal. Nextest3tests/604skipped, runtime0.019s,build2m07s/Nx3m51s; generated `🗑️generated/enduser-brep-pure-point-red.log`.
+
+After actual RED only, original Brep sync/job entry points now admit Entity::Vertex via original TessellationJob. Job retains exactly one standalone topology vertex, packs it through the same original pack_vertex helper used by edge endpoints, reports exactly one unit with zero-budget no-work, and keeps existing phases and edge/face behavior. No new evaluator, sampled guess, mesh mirror or source registry is introduced. Original edge vertex packing was extracted without changing original valid transfer order/labels. All neutral fixture/native/portable assertions are unchanged from baseline. Original Native3 source-coherent green replay live15013, `🗑️generated/enduser-brep-pure-point-green.log`; no GREEN claim until actual terminal. Metadata11 live69802 remains unchanged in original dependencies.
+
+### 2026-10-06 Metadata11 Terminal Explicit Actor Boundary
+
+Authoritative69802 terminal PREASSERT exit1/Nx4m50s. Exact `🗑️generated/enduser-controls-exact/exact-cargo-laws-pD2ySm/00` now has only three original Store E0061 callers: create_member_store4032,open_member_store4053,replay_envelopes_onto_pair11730 call ArtifactStore::new without newly-required explicit ActorId. XML3 is absent. Fresh constructor18024 doc explicitly requires caller opened actor, forbidding history-author-derived loading identity. No Store edit or guessed default actor was made; root assigned Mesh exact actor propagation ownership, and all three original contexts were sent to that owner. Preserve pending coherent source repair; no unchanged metadata replay and still no metadata payload/assertion.
+
+### 2026-10-06 Pure Point Native Actual GREEN
+
+Original Native3 green15013 terminal exit0: actual3/3 GREEN604skipped,build12.26s/runtime0.018s/Nx28.1s. Direct original runtime DEBUG records box8/wire4/point1 independentParry, original merged three-domain Parry area1 and unchanged refusal6. Same language-neutral point case passes exact original topology label/handle resolution, no surface/index/edge/face publication, one-unit progress, budget0 no work, budget1 terminal, sync-job transfer parity, and cancellation without published mesh. Existing original3 law roster unchanged; point is added to the original provenance law. Generated receipt `🗑️generated/enduser-brep-pure-point-green.log`. Native kernel source release ready; neither evaluator/mirror/provider nor guest selection schema/producer changed.
+
+Portable strict Ajv+Three1/1 and Native Parry3/3 together complete this pure-point feature acceptance. They do not prove still-pending selected-shell live App inference/history or metadata status/eval payload. The latest metadata11 Store3 floor remains owned by Mesh pending coherent explicit ActorId caller release.
+
+### 2026-10-06 Camera Ownership Audit Pointer
+
+Parent requested read-only camera lifecycle comparison during Store actor source coherence. Exact original React/Native/policy/fixture readback is saved in `📓️react-native-camera-ownership-lifecycle-2026-10-06.md`: separate viewport-owned content debt and genuine-user fit guard, raw-content zoom88.5185 then loaded geometry preservingzoom, direct delivered fit7.7595 untouched, Native accepted-boundary deferred framer scheduling gap in original drive_scene_bridge. Original lower frame_orbit_to_bounds720 explicitly preserves current zoom through `..orbit.clone()`. No camera source/fixture/assertion edited; actual failed Native zoom remains unknown to this audit. Parent owns all Native camera repair/runtime laws.
+
+Mesh actor prerequisite audit now records original create/open callers externally repaired with explicit opened ActorId; same concurrent original replay helper uses LOCAL_ACTOR_ID for service replay, actor owner must verify intentional authority. Enduser lane preserves these current repairs and awaits coherent source release rather than dispatching unchanged metadata after PREASSERT.
+
+## Independent Actual React Inspector Controls, October 6
+
+See 📓️enduser-react-inspector-controls-2026-10-06.md for original fixture/control coverage and strict runtime boundary. Actual focused6/6 GREEN:13 scalar/coordinate/selected fillet/chamfer/shell controls for each EN/DE and blur/Enter combination, plus12 original ordered UI-compatible edit/add/remove/adjacent-move vectors per locale. Direct actual UiNodeView/UiDocumentStore mounting, accessible-name/focus oracle, exact action/args, independent Ajv/JSON expectations. New harness setup refusals were corrected before a coherent receipt; no production defect or repair claimed. Actual original full keyboard/control127/127 GREEN (2files,Nx8.3s), portable333input+551creation+3951terms+strict tsc GREEN(Nx17s), full BRep catalogue141 bilingual entries preserved. Metadata/inference/live-shell proof remains pending upstream Actor/immutable-genesis source coherence.
+
+Native editor unit admission updated only to independently reversedbc33e335 plus two strict import/value-oracle laws. Sole external old-block canonical key initialSnapshot→initialPack was justified by current VCS parse/print codec and independently reversed; removing appended two-law suffix recovers all55fefa old bytes exactly. Prior17 native sources and prior57 app rosters remain; concurrent owners extended composition to63. Source guard replay50718 pending; every feature assertion/history law retained.
+
+## Final Pending Gate Handoff
+
+Original metadata11 remains last actual metadata outcome: PREASSERT exit1/Nx4m50, Store3 missing explicit ActorId constructor callers. No metadata12 launched. Current external Actor/window changes are coherent per owners but shared immutable Genesis floor still blocks root World/Document native gates; parent will resume High metadata and selected-shell lane after that release. Actual metadata failure payload, finalized operation relay result and native live selected shell consumer/geometry/history expectations remain unproven. No ContributionRelay diagnosis was inferred.
+
+New original composition source-check50718 terminal PREASSERT exit1/Nx10.2: unrelated generation2d-example-export source changed from retainedf4262f925d713ade7b13a36bf2f727d4eb135dbd955043b11b0a4668be2c9f7a to currentf3ece8e14cf9875752e4832e1ff2e43b7c442f0c3795e597cd26b7170be2538a. No unrelated source receipt refreshed.
+
+Final read-only targeted Generation3d admission hash check: 74 rows; mismatches2. This is a source hash readback, not a runtime gate receipt.
+
+- 🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs
+  retained `e9c01f045c373bd44d1d1a5999f7b163b447cf05ad4d8b1cbe6ba827265b4bca`; current `076b79a4d5721e8699650c95dc65541b58559636d0367d1946fc84f2d0d682d9`.
+
+- 🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+  retained `229d9110fffb3feefe84cff79ff3db3f59c1f89ff9cf3d6762524a0db935973a`; current `fabb3ac1ca2bbf173a73a594d3b9cf22bd153232e40d0852affbb98a93b15ba6`.
+
+## High Runtime Resume After Genesis Source Release
+
+Exact viewer/full-editor ActorId source receipts reconciled independently in 📓️enduser-actor-caller-admission-review-2026-10-06.md. Each source changes only one explicit standalone fixture opening actor argument; reversing it recovers admitted hash and every old byte. All original assertions/history/law rosters preserved. Original metadata12 dispatched session16962 against changed source with fresh3 Nx flags/two Cargo jobs/immediate original test output; authoritative generated log enduser-metadata-runtime-diagnostic-12.log. Both launch entries metadata and original live-shell retain their original filters and now declare all fresh graph/resource env fields. Both full JSONC sources parse GREEN.
+
+Shared release readback: persisted hydrator from_decoded_pack now accepts original decoded state, original Pack/digest and opened ActorId; original Finish constructs ArtifactGenesis::from_verified_pack. Config hydrator from_snapshots accepts ArtifactGenesis<P>; original Window retained loader creates that Genesis only from verified Pack/digest and propagates same construction-time actor. This readback/source release is not a compile/runtime receipt.
+
+Document original six-law96861 subsequently terminal PREASSERT exit1/Nx3m3, only DAG vcs481 missing mandatory ActorId. No original G3/import assertion. Root assigned exact DAG authority closure to Mesh. Metadata12 remains its original live handle; no restart without authoritative terminal. Original shell gate follows source-coherent metadata terminal. Document owns changed six-law replay covering appended strict import laws, so this lane will share its original actual receipt rather than duplicate the same pending compile. Separate generic semantic oracle1/1 is retained as scoped evidence only.
+
+## Metadata12 Actual Terminal and Changed Metadata13
+
+Original16962 metadata12 terminal PREASSERT exit1/Nx3m54, exact original artifact enduser-controls-exact/exact-cargo-laws-KYYCZJ/00: only DAG vcs481 DagStore::new missing mandatory ActorId. Source admission passed to original Cargo build; no feature assertions, payload or relay reached. Current DAG helper now explicitly receives/forwards opened ActorId. Mesh owns this closure and confirms browser actual-input signature, four named neutral test callers and preserved serializer/actor assertions; no production defaults/history authority. Root authorized changed13 after that release. Original metadata law/filter/assertions unchanged; fresh3Nx flags/two Cargo jobs/immediate output maintained. Log enduser-metadata-runtime-diagnostic-13.log; native runtime pending.
+
+Current coordinated runtime handles: metadata13 session47813 original one-law app gate; Document original six-selector changed replay76062 includes both strict import laws. Metadata13 has entered original composition Cargo build after target source admission. Native behavior is not yet accepted. The existing shell target/filter is unchanged and sequential dispatch is reserved until this authoritative terminal, avoiding duplicate same-target compilation.
+
+Original metadata13 remains active47813; actual descendant Cargo was observed compiling kernel/UI with two rustc jobs. Root reports separate Mesh Scope22 terminal PREASSERT72 DWG/STEP caller diagnostics; this is not metadata13’s result and cannot be imported as its runtime status. No unchanged metadata or shell retry was dispatched. Read-only actual local preview publication owner audit is appended to 📓️guest-selected-face-snapshot-authority-2026-10-06.md and remains a source/design qualification only.
+
+
+### Metadata13 Authoritative Terminal and PNG Caller Closure (2026-10-06)
+
+Original session47813 terminal exit1, Nx12m25. Exact build stage Cargo101, `🗑️generated/enduser-controls-exact/exact-cargo-laws-tR1Ix9/00`. Structured original `build.stdout` reports PNG22 and glTF38 compiler diagnostics. No metadata feature assertions or payload/relay runtime executed; the earlier still-live observation is superseded by this terminal receipt. Original selected-shell and strict import runtime proof remain pending.
+
+Fresh PNG readback located all22 diagnostics: five stale CODEC references in each original binary/text mutation registry; six missing domain/contract imports in each binary/text patch-snapshot and set-snapshot leaf. Existing canonical codec constants live under the matching IO binary/text owners; original PatchSnapshot/SetSnapshot stay under schema mutations, PngSnapshot stays at its existing public domain export, SnapshotPatch stays in the original stdio contract editing owner. Six callers repaired only; no codec/parser body, schema, fixture, assertion or admission receipt changed. Removing only the added imports and reversing only five registry owner paths per registry reproduces every captured source byte.
+
+| Caller | Before SHA256 | After SHA256 |
+| --- | --- | --- |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs` | `2cb6e4edb73ab685cbcbaecaf0bedf5e138d59df1feb685f2ddfff41bcd197d8` | `834cf2262a354037b913400e1817ea0367b3145d54124d4a915cba3979afa68a` |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🩹️patch-snapshot/🦀️.rs` | `edfa7c7f244889306a1dc255c14bab2f79886d3d17cd8fd039f3e3745f8db36b` | `a2b0ee4266e6a374bd2358a28ea48f36a6c1a41afd68355f3e64a5af21924142` |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📸️set-snapshot/🦀️.rs` | `3523dd23a15212b45a5cfcdfb3c3f4ac4e66fbc532ecf4c735b971d0cb589b65` | `bc9d537362f06774920575bf4ae4f89c298a69f810eb5bfb6676ea45d1c66913` |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs` | `b70cf94536bb56281de12e74f06067fd39339edb927931b39a0849b68774992a` | `3ef85114e6f66feda7cd4bb9d543a0ada69e398133e3db5f1be6f1fded5a7844` |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🩹️patch-snapshot/🦀️.rs` | `3e9f21423e3798784dc17e4aa8e16d2533272ead537cb778461b66f0a4b1c1a5` | `2250ef4731fdbeb0f83a0c791d18824bf876e45aae0a1ac0598579f0c95a1ef4` |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/📸️set-snapshot/🦀️.rs` | `dd713f5453aea57ec40496291dce9072a31c4da411421b3bf9bb3f7dc96df2b4` | `beee2681a7a92b024856c536d138a88b90d39ebd1f8b0d3b310f5b2443088132` |
+
+PNG source closure is readback only, compilation/runtime pending a coherent glTF release. Document owns glTF38; this metadata receipt contains no PNG duplicate diff_codec error. No unchanged retry dispatched.
+
+
+### Metadata14 Changed-Source Dispatch (2026-10-06)
+
+Document current canonical glTF38 release readback is recorded in `📓️document-gltf-prerequisite-readback-2026-10-06.md` (external repairs preserved, no duplicate source edits). Combined with exact PNG22 six-caller closure above, one original registered metadata gate dispatched session59377 with fresh graph/daemon/plugin flags and Cargo2. Original command and metadata filter/assertions retained. Log `🗑️generated/enduser-metadata-runtime-diagnostic-14.log`; original artifact root unchanged. No runtime result yet. Original live-selected-solid gate will use its existing registered command after actual metadata outcome; original strict import laws remain Document-owned original6 route, not duplicated here.
+
+
+### Original React Zero-Index and Exact-Source Law (2026-10-06)
+
+Mesh assigned neutral shared `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json` rows. Appended one law `retains zero-index analytic wire and point buffers and exact source admission` in existing World3dHost component suite, preserving all prior laws and original React production source. Accepted wire/point rows travel through original buildMeshVisuals; independent actual Three BufferGeometry verifies zero triangle count, all typed vertex positions, edge buffer, fixture AABB. All10 new admission cases travel through original world3dComponentInteractionTarget and assert exact handle/revision/u64 encoded target or refusal (duplicate/malformed label). Neutral refused native schema-count rows remain Mesh-owned native schema coverage; no claim of React schema interpreter parity. Native byte-capacity/fuel coverage likewise remains its original owner.
+
+Focused command registered in both launch sources as `⚖️test-zero-index-component-source🌐️World3dHost🟦️`, group4_gate/order900.036427, fresh graph/daemon/plugin flags; complete JSONC parsed before launch. Original portable session79867 dispatched, log `🗑️generated/enduser-react-zero-index-component-source.log`. Runtime result pending; no production repair without actual RED. Metadata14 original59377 remains live separately.
+
+
+Initial portable79867 terminal exit1, Nx13.1s, one new harness TypeError before buffer/admission assertions: original geometry deliberately omits an index attribute when indices are empty; the new harness incorrectly dereferenced it. Original WorldInstanceLayer3354 separately gates shaded geometry on meshData.indices.length>0. Corrected only new harness index-count read to treat the absent attribute as zero while comparing independent actual Three empty index count; original intended zero-triangle expectation retained. No feature RED or production change claimed. Coherent portable52011 launched same registered command, original first log retained.
+
+
+Coherent portable52011 actual GREEN1/1 (+5skip), exit0, Vitest13.71s/test15ms, Nx14.9s. Actual DEBUG confirms wire4vertices/4edges/indices0/AABB[[0,0,0],[1,1,0]], point2vertices/0edges/indices0/AABB[[2,3,4],[5,6,7]], all10 original shared admission verdicts exact (duplicate17 groups0/1 refused, maxu64 accepted, five malformed labels refused, edge17/vertex23 accepted). No React production change. Original registered combined component+world3d-interaction regression dispatched after this new test addition; outcome pending in `🗑️generated/enduser-react-zero-index-component-regression.log`. Nx flaky classification reflects the recorded new harness TypeError followed by its repair, not an unchanged flaky feature rerun.
+
+
+### Metadata14 Authoritative Terminal and Portable Regression (2026-10-06)
+
+Original59377 terminal exit1, Nx13m3, exact Cargo build101/no signal, `🗑️generated/enduser-controls-exact/exact-cargo-laws-jmJCg6/00`. Full structured compiler capture: {"semio-s-artifact-stdio-gltf@0.1.0":55,"semio-s-artifact-stdio-svg@0.1.0":38}. Earlier PNG22/glTF38 moved caller family absent; new glTF55 borrowed-shape metadata and SVG38 original IO/import/helper boundary. No metadata assertion/payload, selected-shell inference/history or strict import runtime receipt. No unchanged retry. Document assigned exact glTF borrowed-shape owner; this lane reads SVG current callers.
+
+Original registered React component+world3d-interaction regression52358 actual GREEN27/27,2files, exit0, Vitest14.33s/tests2.70s,Nx15.6s; original assertions retained plus new zero-index/shared-admission law.
+
+SVG diagnostic census (original compiler data; source review follows):
+
+| File | Line | Diagnostic |
+| --- | --- | --- |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 42 | cannot find function `parse_svg_xml` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 437 | cannot find function `attr_val` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 445 | cannot find function `attr_val` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 453 | cannot find function `attr_val` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 639 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 640 | cannot find function `attr_val` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 641 | cannot find function `parse_view_box` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 647 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 659 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 663 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 667 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 671 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 672 | cannot find function `attr_val` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 673 | cannot find function `parse_points` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 679 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 680 | cannot find function `attr_val` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 681 | cannot find function `parse_points` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 687 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 688 | cannot find function `attr_val` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 689 | cannot find function `parse_path_data` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 694 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 696 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 700 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 703 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 705 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 717 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 730 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` | 734 | cannot find function `parse_common_attrs` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🦀️.rs` | 30 | cannot find function `encode_snapshot_binary` in module `crate::standards::v1_1::subsets::base::io::text::snapshot` |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🦀️.rs` | 45 | cannot find function `decode_snapshot_binary` in module `crate::standards::v1_1::subsets::base::io::text::snapshot` |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/💾️binary/🧬️mutations/📸️set-snapshot/🦀️.rs` | 7 | cannot find struct, variant or union type `SetSnapshot` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/💾️binary/🧬️mutations/📸️set-snapshot/🦀️.rs` | 12 | cannot find type `SvgSnapshot` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/💾️binary/🧬️mutations/📸️set-snapshot/🦀️.rs` | 13 | cannot find struct, variant or union type `SetSnapshot` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🦀️.rs` | 421 | cannot find function `apply_presentation_attr` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🦀️.rs` | 424 | cannot find function `apply_presentation_attr` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/📸️set-snapshot/🦀️.rs` | 12 | cannot find struct, variant or union type `SetSnapshot` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/📸️set-snapshot/🦀️.rs` | 21 | cannot find type `SvgSnapshot` in this scope |
+| `🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/📸️set-snapshot/🦀️.rs` | 22 | cannot find struct, variant or union type `SetSnapshot` in this scope |
+
+
+Fresh original SVG38 source readback already contains coherent external closures; no SVG edit authored by this lane. Original schema snapshot line4 imports all six physically moved original text parser helpers attr_val/parse_common_attrs/parse_path_data/parse_points/parse_svg_xml/parse_view_box (all exist in original text snapshot with matching visibility/reexports). Original apply_presentation_attr315 is now pub(crate), visible to original text wildcard domain import. Original binary pack encode30/decode45 now call the physically retained binary snapshot wire helpers59/82; both set-snapshot binary/text leaves explicitly import original domain SetSnapshot/SvgSnapshot. These exact source changes cover all38 captured missing helper/import/caller diagnostics. No new schema/codec body or mirrored owner added by this lane; this is source readback, not a compiler pass. Metadata next replay remains held until assigned glTF55 borrowed-shape release.
+
+
+### Metadata15 Changed-Source Dispatch (2026-10-06)
+
+Document glTF55 source release now provides exactly six original binary snapshot owned_pack BorrowedDslField declarations forwarding the same existing derived static helper shapes (GltfJson→json::Json, MorphTarget→Target, Primitive→Primitive, CameraProjection→Projection, Image→Image, Texture→Texture). Exact6line reversal645bb647→688b0caf receipt is in `📓️document-gltf-prerequisite-readback-2026-10-06.md`. Combined with externally closed original SVG38 readback, next original metadata gate dispatched with identical original metadata command/filter/assertions and fresh graph/daemon/plugin/Cargo2 flags. Log `🗑️generated/enduser-metadata-runtime-diagnostic-15.log`; runtime pending. No unchanged-source retry.
+
+
+Metadata15 original session1812 progressed through all four declared Nx generators and original reviewed Generation3d source admission to `[composition-laws] build`. Shared preparation queue visibly drained6→4→3→1 before entry. Main original native owner7643 retains the current run; no runtime assertion/payload as of this bounded observation. New React launch row now physically follows sentinel900.036425 and precedes original picks900.03643 with its unchanged order900.036427; both complete JSONC files parsed after the local row placement.
+
+
+### Metadata15 Authoritative Terminal (2026-10-06)
+
+Original session1812 terminal exit1/Nx18m17, exact Cargo build101/no signal, `🗑️generated/enduser-controls-exact/exact-cargo-laws-crSTXD/00`. Complete structured compiler data reports ONLY one framework-replication error: original retirement owner83 retained stale `retire_fields!(crate::causal::transition::ViewerHead,line_id,checkpoint_id)` macro caller. PNG22/glTF55/SVG38 diagnostics absent from this changed build. No metadata feature assertion/payload, live selected-shell inference/history or strict import runtime executed.
+
+Fresh exact source readback `🧰️framework/🔨️modules/📡️replication/🧬️retirement/🦀️.rs:83` is already externally repaired to `semio_framework_value::artifact_retire_struct!(crate::ViewerHead { line_id, checkpoint_id });`, matching every surrounding original neutral retirement declaration and preserving both exact original ViewerHead fields. No added macro/trait/alias, no eager drop/clone and no retirement source edit by this lane. This is a changed canonical caller release, not compiler/runtime proof. One changed-source original metadata replay is justified; no unchanged restart.
+
+
+### Metadata16 Changed-Source Dispatch (2026-10-06)
+
+Original session58254 retains unchanged original metadata command/filter/assertions after externally repaired ViewerHead retirement caller; log `🗑️generated/enduser-metadata-runtime-diagnostic-16.log`. Fresh graph/daemon/plugin flags and Cargo2 retained. Declared generators currently active; no original runtime assertion or payload yet. No unchanged-source retry.
+
+
+### Mounted Component Publication and Default Point Actual GREEN (2026-10-06)
+
+Original combined green50013 terminal exit0: actual29/29,2files,0skip; Vitest13.18s/tests2.83s/Nx17.6s, `🗑️generated/enduser-react-component-point-green-regression.log`. Direct runtime DEBUG records full face/edge/vertex uint64 source addresses, one in-flight guest Promise with newest-pose coalescing, preserved start targets across changed selection, exact stream/stream/commit phases and independent Three translation result[1,0,0]. Existing shared local preview remains null for the actual Generation3d live-dispatch lane. Separate default Point3d direct DEBUG records exactly one original base point at[1.25,-2.5,3.75], no selected component, triangles or edges, independent actual Three.Points. Original WorldInstanceNode source now paints that point in object mode and retains original object/vertex interaction handlers. This qualifies mounted original owner behavior through the established WebGL seam; actual Native/GPU physical paint remains parent-owned pending runtime.
+
+Same run retains every previous27 check, including changed neutral edgeOnlyWire: packed endpoint positions/real edge buffers/AABB agree with independent actual Three, absent vertex IDs produce no fabricated vertex pick buffer. Source capacity/refusal and original Native mesh provenance remain Mesh scope. Both launch source entries remain ordered900.036428/900.036429 and complete JSONC parsed after additions. No original metadata payload, live selected-shell inference/history or strict import acceptance is implied by this portable29/29. Metadata16 original58254 retains process19345 Cargo --no-run (bounded12min wait) and current terminal remains pending; no unchanged restart.
+
+
+### Generation3d67 Exact Original Config/Transient/Presence Prerequisite Release
+
+Document original seven54345 reached G3lib-test67 PREASSERT after PNG/glTF/SVG floors cleared (no original seven-law assertions). Assigned original binary/text callers inspected and repaired: all48 obsolete bare private set_* leaf imports removed across10 original files, while every existing canonical semantic aggregate wildcard import/public leaf TYPE reexport remains authoritative. Exact full-byte reversals and original/current hashes retained in `📓️enduser-generation3d-leaf-import-review-2026-10-06.md`; no codec body, schema, assertion, history or source admission modification. Other67 compiler families remain independently owned by Document/Root; this release does not claim total compile closure. Metadata16 original58254→Cargo19345 remains retained until terminal, current bounded owner1100s, no runtime metadata payload/selected-shell assertion yet.
+
+
+### Strict Import Type Witness Admission Reconciled
+
+Document appended strict import law now borrows original Generation3dSnapshotRead via its existing Deref61→Snapshot62 in exactly two ArtifactCommandInputs initializers. Complete sourcebc33e335→d3a7b2bf has only two inserted dereference stars; exact full-byte reversal was independently executed and reproduces bc33. All25 original function/method names remain exactly ordered, and all earlier assertions/rosters/history blocks remain exact. Only retained native unit SHA changed, and reversing that single fixtureSHA reproduces complete prior fixture values. Receipt `📓️enduser-native-import-caller-admission-review-2026-10-06.md`; this is canonical caller/source admission repair, not feature expectation weakening. Original metadata16 still live58254→Cargo19345; no current terminal/assertion/payload.
+
+
+Metadata16 bounded authoritative wait: original Cargo19345 retains shared build/artifact lock descriptors, no rustc child, while earlier puzzle2d Cargo18819 has active rustc39906 stdio-binary and subsequently40206 stdio-semio. The shared queue is making compiler progress. Exact lock-file readback lists7 owners; no owner interrupted, no lost-handle restart, no competing selected-shell heavy run. Current original owner heartbeat1690s, no terminal/runtime metadata payload.
+
+
+### Metadata16 Authoritative Terminal and Exact CommonMark Caller Release (2026-10-06)
+
+Original session58254 terminal exit1/Nx35m4s (target33m21s), exact Cargo101/no signal, `🗑️generated/enduser-controls-exact/exact-cargo-laws-4w0QCE/00`. Full structured compiler census ONLY5 errors, all original CommonMark SQLite snapshot6/177/188/189/190 obsolete schema::snapshot::owned_pack references. Original ViewerHead macro floor absent; no metadata assertion/payload, selected-shell inference/history or strict import assertion executed. Full bounded structured errors retained `🗑️generated/enduser-metadata16-bounded-errors.json`.
+
+Fresh original owner readback binary snapshot9 exposes SAME existing owned_pack module (pub(crate)); its pack physically owns OwnedNodes/RetireNode and decode_owned/encode_owned/retire_owned. Changed only the exact5 caller prefixes from schema::snapshot::owned_pack to io::binary::snapshot::owned_pack; all SQL projection/reconstruction, logical semantics, bounded cancellation/retirement, schema and assertions remain exact. One file before SHA `3b106417afbcc00c218d838284a2a991464efc0aa13429684ff670bc87034983`, current `39372f6039107e337275c326ecaa1f27a0ee018bcf8b44deb2116f0e9192053f`; reversing only5 prefixes reproduces every before byte/hash. Exact review `🗑️generated/enduser-metadata16-md-owned-pack-review.json`. This is source closure, not compiler proof; no expectation weakening/source mirror/newcodec. Next changed-source original selected-shell gate is justified after original terminal, while metadata actual payload remains pending.
+
+
+### Original Live Selected-Shell Runtime Dispatch After Metadata16 Terminal
+
+Same original registered generation3d-app-laws target, retained mesh_brep_live_scoped_selection_ filter/assertions/history/volume/full label+handle+revision neutral sourcebox2×1.5×1vol3 law dispatched once after actual metadata16 terminal and exact CommonMark caller release. Both launchsources existing900.036405 used unchanged, fresh graph/daemon/plugin/Cargo2/immediate flags and original exact artifact directory retained. Log `🗑️generated/enduser-live-selected-shell-runtime-1.log`; runtime pending. No second heavy native lane or unchanged metadata retry. Metadata full status/eval payload remains a separate original pending scope.
+
+## 2026-10-06 Selected Shell Runtime 1 — CommonMark Two-Method Visibility Floor
+
+Original selected-shell25510 terminated exit1/Cargo101/no signal, Nx14m37/target13m50. Exact artifact `🗑️generated/enduser-controls-exact/exact-cargo-laws-ogzQRa/00`, bounded full error messages/spans `🗑️generated/enduser-selected-shell1-bounded-errors.json`. Only two E0624 errors remain in the same original CommonMark binary snapshot Pack107/110 calling original SQLite snapshot120 admission methods. No selected-shell inference/history assertion executed. Metadata16's previous moved-owned-pack five-error family is absent; this is a narrower PREASSERT receipt, not shell RED/GREEN.
+
+Fresh readback found both original method bodies already own the correct bounded semantic admission: `admit_sqlite_values` visits original SQL rows using the caller's control/phase, and `admit_sqlite_record` delegates to original semantic record admission with the caller's limits/native control. Their `pub(super)` visibility covers only the SQLite parent and excludes the now-canonical sibling binary Pack. Changed exactly these two declarations to `pub(crate)`; no SQL/schema/codec/admission body/budget/retirement/assertion changed. Complete before/after SHA and source/diff retained in `🗑️generated/enduser-selected-shell1-commonmark-admission-visibility-review.json`; reversing only both visibility tokens reproduces every previous byte. Changed-source replay is justified after this release; no unchanged retry.
+
+## Current Mounted Refresh Regression and Changed Selected-Shell Dispatch
+
+Combined original registered World3dHost component + world3d-interaction gate65604 terminated exit0: actual GREEN30/30, two files, zero skip, Vitest38.94s/tests5.82s/Nx46.6s. This includes the strengthened actual refreshed-gumball mount assertion, exact source targets/incremental motion, all prior component overlay/picking/default point/wire buffer laws, and original interaction laws. Log `🗑️generated/enduser-react-live-source-refresh-regression.log`. No React production change was required for source refresh; Native new refresh law remains pending Root's actual baseline.
+
+Following actual terminal of selected-shell25510 and current portable65604, changed-source original selected-shell replay65701 dispatched with the exact existing registered composition target/test/filter `mesh_brep_live_scoped_selection_`, three fresh Nx flags, CARGO_BUILD_JOBS2 and the original exact-Cargo ticket artifact directory. Log `🗑️generated/enduser-live-selected-shell-runtime-2.log`. This captures only the independently reviewed two CommonMark admission visibility corrections; original selected-shell fixture/input/inference/history expectations are unchanged. Dispatch is not a runtime receipt. No second heavy native run was launched by this lane.
+
+## Final Current Mounted Regression Actual GREEN31
+
+Original combined component+interaction gate79682 terminated exit0: actual GREEN31/31, two files, zero skip, Vitest13.85s/tests2.44s/Nx16.4s. Log `🗑️generated/enduser-react-primary-object-style-green-final-regression.log`. This includes all previous29 laws, the real guest mesh/source-refresh gesture law, and all12 primary point/wire/edgeOnlyWire style states. Direct target35863 separately logged every semantic color versus actual Three. No further portable rerun is needed without a new source/fixture change or unresolved concern.
+
+Point-only primary paint now uses the original instance style line color after actual point-hover RED; wire production remains unchanged. Original selected-shell65701 stays live in native preparation (~14min at this readback); no shell inference/history or full metadata assertion is claimed. Root owns Native gesture/style runtime and production qualification.
+
+## 2026-10-06 Selected Shell Runtime 2 — Full Structured Generation2d Ten-Error Receipt
+
+Original selected-shell65701 terminated exit1/Cargo101/no signal, Nx17m27/target15m17. Exact artifact `🗑️generated/enduser-controls-exact/exact-cargo-laws-8YZ5Wd/00`. The truncated launcher stderr displayed only its leading three errors; full structured `build.stdout` contains TEN compiler errors, all retained with codes/spans/rendered contexts in `🗑️generated/enduser-selected-shell2-bounded-errors.json`: Generation2d transient bare-leaf imports3, schema182 unqualified original generation_preview_host1, and original binary/text Generation2dDiff Record helper calls6. CommonMark sibling admission visibility errors are absent. No selected-shell inference/history assertion executed. The initial source-edit script stopped before mutation because its assumed three-error count failed; full authority was read before proceeding.
+
+Fresh canonical readback: original transient schema mutation aggregate privately declares the leaf and publicly exports SetGenerationPreview; all three codec modules already import that exact aggregate wildcard. Removed only three redundant bare-leaf import lines. Original generation_preview_host body exists at physical text snapshot530 and the production flow-eval tick already calls that exact owner. Qualified only the schema evaluation convenience caller to the same authority; its evaluation and retirement body is unchanged. All codec/report bodies, semantic mutation enums/leaves, schemas/expectations/retirement/rosters stay intact; no private module was exposed. Complete three-source before/after SHA/source/diffs in `🗑️generated/enduser-selected-shell2-generation2d-caller-review.json`; exact inverse import re-insertion and helper qualification reversal reproduce every old byte. The six physical Diff helper errors remain under original owner review; do not replay unchanged before coherent release.
+
+## Current Canonical History Release and Original Selected-Shell Replay 3
+
+Doc's seven17685 captured one missing HistoryFoldJob.finish_cold method while shared source was being edited. Fresh independent readback confirms os_spr reexports the same original causal::transition HistoryFoldJob at spr34, original cold HistoryLog::fold caller241 uses it, and canonical replication/causal/transition/fold102 now publicly supplies finish_cold by driving its existing step cursor; interactive callers continue explicit bounded turns. No alternate wrapper, compatibility shim, or history source edit was added by this lane. This is a source-coherent release, not history runtime qualification.
+
+After Parent's release and original selected-shell65701 terminal10-error capture plus reviewed G2 original caller/provider closure, original selected-shell replay17505 dispatched with unchanged registered composition target, generation3d-app-laws test and mesh_brep_live_scoped_selection_ filter, fresh three Nx flags/CARGO_BUILD_JOBS2, same exact-Cargo artifact directory. Durable log `🗑️generated/enduser-live-selected-shell-runtime-3.log`. Dispatch is not shell inference/history success. Original shell schema/input/oracles/history assertions and retained unit rosters remain unchanged. Focused original G2 Diff5 follows this lane sequentially after terminal; no second heavy native command launched here.

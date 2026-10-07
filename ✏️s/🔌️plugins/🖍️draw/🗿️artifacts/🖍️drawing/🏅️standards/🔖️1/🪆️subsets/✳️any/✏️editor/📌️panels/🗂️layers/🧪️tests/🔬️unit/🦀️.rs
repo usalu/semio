@@ -6,7 +6,7 @@ use crate::{DrawingGroupBody, DrawingLayerBase, DrawingShapeBody};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn shape_layer(id: &str, name: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Shape(DrawingShapeBody { base: DrawingLayerBase { id: id.to_string(), name: name.to_string(), ..default_layer_base(name) }, shape_kind: "rect".into(), rect: None, ellipse: None, circle: None, line: None, polygon: None })
+    DrawingLayerNode::Shape(DrawingShapeBody { base: DrawingLayerBase { id: id.to_string(), name: name.to_string().into(), ..default_layer_base(name) }, shape_kind: "rect".into(), rect: None, ellipse: None, circle: None, line: None, polygon: None })
 }
 
 /// 🪟️ A document an order of magnitude past one viewport, whose FIRST layer is a group holding

@@ -15,7 +15,7 @@ use protocol::OpText;
 
 //#region 🔖️OpText
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-enum Din18599MutationDsl {
+pub(crate) enum Din18599MutationDsl {
     ChangeBuildingCategory {
         new_building_category: BuildingCategory,
     },
@@ -106,17 +106,10 @@ impl OpText for Din18599MutationDsl {
     }
 }
 
-impl protocol::OpBinary for Din18599MutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl {
+pub(crate) fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl {
     match mutation {
         Din18599Mutation::ChangeBuildingCategory(payload) => Din18599MutationDsl::ChangeBuildingCategory { new_building_category: payload.new_building_category },
         Din18599Mutation::ChangeAttachment(payload) => Din18599MutationDsl::ChangeAttachment { new_attachment: payload.new_attachment },
@@ -140,7 +133,7 @@ fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl 
     }
 }
 
-fn din18599_mutation_from_dsl(dsl: Din18599MutationDsl) -> Din18599Mutation {
+pub(crate) fn din18599_mutation_from_dsl(dsl: Din18599MutationDsl) -> Din18599Mutation {
     match dsl {
         Din18599MutationDsl::ChangeBuildingCategory { new_building_category } => Din18599Mutation::ChangeBuildingCategory(change_building_category::ChangeBuildingCategory { new_building_category }),
         Din18599MutationDsl::ChangeAttachment { new_attachment } => Din18599Mutation::ChangeAttachment(change_attachment::ChangeAttachment { new_attachment }),
@@ -173,14 +166,7 @@ impl OpText for Din18599Mutation {
     }
 }
 
-impl protocol::OpBinary for Din18599Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        din18599_mutation_to_dsl(self).encode_op()
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(din18599_mutation_from_dsl(Din18599MutationDsl::decode_op(bytes)?))
-    }
-}
+
 //#endregion 🔖️OpText
 
 #[cfg(test)]

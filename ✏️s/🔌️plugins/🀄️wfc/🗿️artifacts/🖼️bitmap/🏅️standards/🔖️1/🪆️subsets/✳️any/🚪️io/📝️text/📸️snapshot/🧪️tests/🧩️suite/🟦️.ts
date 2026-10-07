@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { applyBitmapDiff, type BitmapDiff } from "../../../../../🧬️schema/🔺️diff/🟦️.ts";
 import { BITMAP_MUTATION_KINDS, type BitmapMutation } from "../../../../../🧬️schema/🧬️mutations/🟦️.ts";
 import { BITMAP_MAX_PALETTE, WFC_BITMAP_DOCUMENT_SCHEMA, bitmapIndices, pinKey, type BitmapSnapshot } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -19,7 +19,7 @@ import { BITMAP_MAX_PALETTE, WFC_BITMAP_DOCUMENT_SCHEMA, bitmapIndices, pinKey, 
 import {decodeBase64, encodeBase64, bitmapJsonBind} from "../../🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const subset = join(here, "../../../../../..");
+const subset = join(here, "../../../../..");
 const vectorsRoot = join(subset, "🧫️fixtures/🧬️mutations");
 
 interface Outcome {

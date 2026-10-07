@@ -52,11 +52,10 @@ pub use snapshot_codec::*;
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::*;
+use crate::standards::v1::subsets::any::schema::snapshot::attributes_from_records;
 use std::collections::BTreeMap;
 use crate::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
 use ::framework_schema::ArtifactSchema;
-use derived_construction::*;
-use derived_analysis::*;
 use crate::document::{AnnexChoice, ClauseId, LocalizedCopy, NormError, SubjectRef};
 /// 📐️ Pure VDI 3805 compliance helpers — native-text parsing with typed record families,
 /// Part 1 structural validation, and sheet attribute catalogues.
@@ -190,22 +189,10 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
 pub use snapshot_wire_codec::*;
 
 
-#[allow(unused_imports)]
-mod snapshot_wire_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
-use framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
-
-
-
-
-}
-pub use snapshot_wire_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
+use super::parse_native_text;
 use crate::standards::v1::subsets::any::schema::*;
 use std::collections::BTreeMap;
 use crate::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
@@ -330,3 +317,5 @@ pub fn assert_native_round_trip(catalog: &ManufacturerCatalog, limits: SecurityL
 }
 }
 pub use snapshot_wire2_codec::*;
+
+crate::impl_norm_artifact_record!(@text crate::Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805");

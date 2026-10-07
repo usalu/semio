@@ -13,7 +13,7 @@ pub struct SvgArtifact {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub doc: semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument,
+    pub doc: crate::schema::snapshot::SvgDocument,
 }
 //#endregion 🔖️Artifact
 
@@ -35,14 +35,14 @@ impl SvgArtifact {
     /// 🧬️ Builds a full artifact from a snapshot.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SvgSnapshot) -> Result<Self, String> {
-        semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc)?;
+        snapshot.doc.validate_boundaries()?;
         Ok(Self { schema: snapshot.schema, doc: snapshot.doc })
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SvgSnapshot) -> Result<(), String> {
-        semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc)?;
+        snapshot.doc.validate_boundaries()?;
         self.schema = snapshot.schema;
         self.doc = snapshot.doc;
         Ok(())
@@ -106,7 +106,7 @@ pub fn empty_svg_snapshot() -> SvgSnapshot {
 }
 
 /// 📄️ The demo `stdio.svg` document -- exercises every real-syntax construct the W0 census row
-/// names (svg's snapshot IS an `XmlDocument`, so this mirrors `📰️xml`'s own `demo_xml_snapshot`
+/// names (svg's snapshot IS an `SvgDocument`, so this mirrors `📰️xml`'s own `demo_xml_snapshot`
 /// construct-for-construct): an XML declaration, a simple `<!DOCTYPE svg>`, a namespaced
 /// (`:`-qualified) attribute name (`xmlns:xlink`), entity decode (`Tom &amp; Jerry`), a
 /// self-closing element (carrying an attribute so its trailing `/` never fuses with the preceding
@@ -116,40 +116,40 @@ pub fn empty_svg_snapshot() -> SvgSnapshot {
 /// asserted equal by `fixture_honesty_law` in `../🚪️io`'s own tests).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_svg_snapshot() -> SvgSnapshot {
-    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
-    let root = XmlNode::Element {
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration};
+    use crate::schema::snapshot::{SvgAttr, SvgDocument, SvgNode, SvgAttributeValue, SvgLength, ViewBox};
+    let root = SvgNode::Element {
         name: "svg".into(),
-        attrs: vec![XmlAttr { name: "xmlns".into(), value: "http://www.w3.org/2000/svg".into() }, XmlAttr { name: "xmlns:xlink".into(), value: "http://www.w3.org/1999/xlink".into() }, XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() }],
+        attrs: vec![SvgAttr { name: "xmlns".into(), value: SvgAttributeValue::Text("http://www.w3.org/2000/svg".into()) }, SvgAttr { name: "xmlns:xlink".into(), value: SvgAttributeValue::Text("http://www.w3.org/1999/xlink".into()) }, SvgAttr { name: "viewBox".into(), value: SvgAttributeValue::ViewBox(ViewBox{min_x:0.0,min_y:0.0,width:100.0,height:100.0}) }],
         children: vec![
-            XmlNode::Comment { text: " demo scene ".into() },
-            XmlNode::ProcessingInstruction { target: "xml-stylesheet".into(), data: "text".into() },
-            XmlNode::Element {
+            SvgNode::Comment { text: " demo scene ".into() },
+            SvgNode::ProcessingInstruction { target: "xml-stylesheet".into(), data: "text".into() },
+            SvgNode::Element {
                 name: "rect".into(),
                 attrs: vec![
-                    XmlAttr { name: "x".into(), value: "0".into() },
-                    XmlAttr { name: "y".into(), value: "0".into() },
-                    XmlAttr { name: "width".into(), value: "10".into() },
-                    XmlAttr { name: "height".into(), value: "10".into() },
-                    XmlAttr { name: "fill".into(), value: "red".into() },
+                    SvgAttr { name: "x".into(), value: SvgAttributeValue::Length(SvgLength{magnitude:0.0,unit:String::new()}) },
+                    SvgAttr { name: "y".into(), value: SvgAttributeValue::Length(SvgLength{magnitude:0.0,unit:String::new()}) },
+                    SvgAttr { name: "width".into(), value: SvgAttributeValue::Length(SvgLength{magnitude:10.0,unit:String::new()}) },
+                    SvgAttr { name: "height".into(), value: SvgAttributeValue::Length(SvgLength{magnitude:10.0,unit:String::new()}) },
+                    SvgAttr { name: "fill".into(), value: SvgAttributeValue::Text("red".into()) },
                 ],
                 children: vec![],
             },
-            XmlNode::Element { name: "text".into(), attrs: vec![XmlAttr { name: "x".into(), value: "5".into() }], children: vec![XmlNode::Text { text: "Tom & Jerry".into() }] },
-            XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "cx".into(), value: "1".into() }], children: vec![] },
-            XmlNode::CData { text: "raw markup".into() },
+            SvgNode::Element { name: "text".into(), attrs: vec![SvgAttr { name: "x".into(), value: SvgAttributeValue::Length(SvgLength{magnitude:5.0,unit:String::new()}) }], children: vec![SvgNode::Text { text: "Tom & Jerry".into() }] },
+            SvgNode::Element { name: "circle".into(), attrs: vec![SvgAttr { name: "cx".into(), value: SvgAttributeValue::Length(SvgLength{magnitude:1.0,unit:String::new()}) }], children: vec![] },
+            SvgNode::CData { text: "raw markup".into() },
         ],
     };
     let snapshot = SvgSnapshot {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-        doc: XmlDocument {
+        doc: SvgDocument {
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
-            doctype: Some("<!DOCTYPE svg>".into()),
+            doctype: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype{name:"svg".into(),..Default::default()}),
             prolog: Vec::new(),
             epilog: Vec::new(),
             root: Some(root),
         },
     };
-    let _text = crate::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml(&snapshot.doc).expect("valid demo SVG");
     snapshot
 }
 //#endregion 🔖️DocumentHelpers

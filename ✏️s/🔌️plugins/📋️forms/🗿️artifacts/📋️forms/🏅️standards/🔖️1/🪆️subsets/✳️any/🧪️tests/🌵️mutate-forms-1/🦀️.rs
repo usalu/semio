@@ -70,7 +70,8 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
     use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::text::snapshot::{parse_forms_dsl, print_forms_dsl};
-    use semio_s_artifact_forms_forms::standards::v1::subsets::any::schema::mutations::{apply_form_mutation_outcome, inverse_form_mutation_steps, FormMutation};
+    use semio_s_artifact_forms_forms::standards::v1::subsets::any::schema::mutations::{apply_form_mutation_outcome,inverse_form_mutation_steps,FormMutation};
+
     use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::text::mutations::{seed_form_scene_json};
     use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::text::snapshot::{encode_form_snapshot_json};
     use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::text::snapshot::{decode_form_snapshot_json};

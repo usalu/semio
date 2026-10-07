@@ -408,3 +408,12 @@ async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Arbeitsablaufknoten um (40; -12,5) verschieben");
 }
 //#endregion 🔖️GestureLeaves
+
+#[test]
+fn sqlite_snapshot_workflow_borrowed_metadata_matches_the_neutral_manual_schema(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();
+ for(index,record)in[<MediaContract as semio_framework_dsl_record::BorrowedDslRecord>::RECORD,<WorkflowMediaPort as semio_framework_dsl_record::BorrowedDslRecord>::RECORD,<WorkflowInput as semio_framework_dsl_record::BorrowedDslRecord>::RECORD].iter().enumerate(){
+  let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);
+  let labels:Vec<_>=record.fields.iter().filter_map(|field|match field.shape{semio_framework_dsl_record::BorrowedShape::Enum(labels)=>Some(serde_json::json!([field.id,labels])),_=>None}).collect();assert_eq!(serde_json::json!(labels),fixture["records"][index]["enums"]);
+ }
+}

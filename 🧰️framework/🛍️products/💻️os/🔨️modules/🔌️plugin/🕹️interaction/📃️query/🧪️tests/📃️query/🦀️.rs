@@ -15,7 +15,7 @@ async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery,
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["not-captured"]}});
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-query-test", state, None);
-    let mut store = InteractionStore::new(envelope).await.unwrap();
+    let mut store = InteractionStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
     store.install_document_store_owners_exact(interaction_store_owners());
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };
     let hex = |bytes: &[u8; 32]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();

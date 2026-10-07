@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/timestamped/mutation/restore-n/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/testing/timestamped/mutation/restore-n/schema.json",
   "title": "RestoreN",
   "propertyNames": {
     "enum": [
@@ -20,10 +20,10 @@
       "const": "restoreN"
     },
     "n": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/NullableI32"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/schema.json#/$defs/NullableI32"
     },
     "physicalMs": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/U64"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/schema.json#/$defs/U64"
     }
   }
 }

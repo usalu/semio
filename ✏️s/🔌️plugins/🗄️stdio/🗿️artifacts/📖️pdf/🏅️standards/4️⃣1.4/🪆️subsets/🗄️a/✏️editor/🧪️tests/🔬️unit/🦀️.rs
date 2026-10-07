@@ -63,3 +63,5 @@ fn own14_typed_page_command_uses_the_own_mutation_codec() {
     for inverse in op.inverse(&original).unwrap() { restored = inverse.diff(&restored).diff().apply(&restored).unwrap(); }
     assert_eq!(restored, original);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio/Pdf14AEditor", Pdf14AEditor, || semio_framework_plugin::App { definition: create_pdf14_a_editor(), examples: Vec::new() }, "../..");

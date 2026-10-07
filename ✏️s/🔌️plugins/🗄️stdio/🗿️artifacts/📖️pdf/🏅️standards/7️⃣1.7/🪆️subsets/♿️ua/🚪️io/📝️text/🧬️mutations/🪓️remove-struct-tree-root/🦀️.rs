@@ -1,6 +1,6 @@
 //! 🪓️ Direct text codec for `remove-struct-tree-root`.
 
-use super::RemoveStructTreeRoot;
+use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveStructTreeRoot;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-struct-tree-root";

@@ -6,9 +6,11 @@ use crate::NoteBlockNode;
 /// completeness is not caught by `cargo check`, only a real round trip proves it.
 #[semio_framework_async_macros::async_test]
 async fn linked_artifact_and_text_content_round_trip_through_text_and_binary() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let mut snapshot = NoteSnapshot::default();
     snapshot.id = "doc-composed".into();
-    snapshot.linked_artifact = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.writer.writer@1/any").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "any".into() });
+    snapshot.linked_artifact = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-2!s.writer.writer@1/any").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "any".into() });
     snapshot.blocks.push(NoteBlockNode::Text {
         id: "text-1".into(),
         name: "Text".into(),

@@ -3,7 +3,7 @@
 
 use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
-use semio_framework_plugin::StandardId;
+use {semio_framework_artifact_reference::StandardId};
 
 /// 🏅️ `mimes` is a documented synthesis, not a literal carry-over — no real MIME registration
 /// exists anywhere in the pre-migration code for this artifact (the old `definition()`'s capability

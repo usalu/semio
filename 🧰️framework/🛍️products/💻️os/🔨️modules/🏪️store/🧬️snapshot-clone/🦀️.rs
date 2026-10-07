@@ -14,7 +14,7 @@ mod handoff;
 use handoff::RetainedCloneCursorHandoff;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum RetainedCloneEditStep {
+pub enum RetainedCloneEditStep {
     Progress(RetainedCloneProgress),
     Complete(RetainedCloneProgress),
 }
@@ -28,8 +28,8 @@ impl RetainedCloneEditStep {
 }
 
 /// ✏️ Applies one domain mutation to an exclusive cloned owner through bounded turns.
-pub(crate) trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
-    fn advance(&mut self, base: RetainedCloneRef<'_, P>, post: &mut P, mutation: &M, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String>;
+pub trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
+    fn advance(&mut self, base: RetainedCloneRef<'_, P>, post: &mut P, mutation: RetainedCloneRef<'_, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String>;
     fn take_inverse(&mut self) -> Option<Vec<M>>;
     fn cancel(&mut self);
     fn begin_close(&mut self) -> bool;
@@ -38,13 +38,13 @@ pub(crate) trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
 }
 
 /// 🪪 Admits and creates the domain cursor while the Store retains publication authority.
-pub(crate) trait RetainedCloneEdit<P: RetainedClone, M>: Send + Sync + 'static {
+pub trait RetainedCloneEdit<P: RetainedClone, M>: Send + Sync + 'static {
     type Cursor: RetainedCloneEditCursor<P, M>;
     fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin(&self) -> Self::Cursor;
 }
 
-pub(crate) struct RetainedClonePreparationFactory<P, M, E> {
+pub struct RetainedClonePreparationFactory<P, M, E> {
     edit: Arc<E>,
     mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
     snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>,
@@ -53,7 +53,7 @@ pub(crate) struct RetainedClonePreparationFactory<P, M, E> {
 }
 
 impl<P, M, E> RetainedClonePreparationFactory<P, M, E> {
-    pub(crate) fn new(edit: Arc<E>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>, maximum_depth: usize) -> Result<Self, String> {
+    pub fn new(edit: Arc<E>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>, maximum_depth: usize) -> Result<Self, String> {
         if maximum_depth == 0 {
             return Err("retained clone preparation requires a nonzero structural depth envelope".into());
         }
@@ -84,7 +84,7 @@ where
             copied: None,
             edit_cursor: self.edit.begin(),
             inverse: None,
-            mutation: Some(mutation),
+            mutation: Some(RetainedCloneSource::from_authority(Arc::new(mutation),Arc::clone(&authority))),
             authority: Some(authority),
             sealer: None,
             mutation_retirement: Some(Arc::clone(&self.mutation_retirement)),
@@ -113,14 +113,14 @@ enum RetainedClonePreparationPhase {
     Prepared,
 }
 
-struct RetainedClonePreparation<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> {
+struct RetainedClonePreparation<P: RetainedClone, M: Send + Sync + 'static, E: RetainedCloneEdit<P, M>> {
     source: Option<RetainedCloneSource<P>>,
     clone_cursor: Option<P::Cursor>,
     clone_handoff: Option<RetainedCloneCursorHandoff<P>>,
     copied: Option<P>,
     edit_cursor: E::Cursor,
     inverse: Option<Vec<M>>,
-    mutation: Option<M>,
+    mutation: Option<RetainedCloneSource<M>>,
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     sealer: Option<ArtifactStoreOneItemSealer<P, M>>,
     mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,
@@ -136,7 +136,7 @@ struct RetainedClonePreparation<P: RetainedClone, M, E: RetainedCloneEdit<P, M>>
     closing: bool,
 }
 
-impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P, M, E> {
+impl<P: RetainedClone, M: Send + Sync + 'static, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P, M, E> {
     fn handoff_clone_cursor(&mut self) -> Result<(), semio_framework_value::ValueError> {
         if self.clone_handoff.is_some() {
             return Ok(());
@@ -195,6 +195,14 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
             .ok_or_else(|| "retained clone preparation build capacity overflow".into())
     }
 
+    fn take_mutation(&mut self)->Result<Option<M>,String> {
+        let Some(source)=self.mutation.take() else {return Ok(None)};
+        match Arc::try_unwrap(source.into_owner()) {
+            Ok(mutation)=>Ok(Some(mutation)),
+            Err(owner)=>{self.mutation=Some(RetainedCloneSource::from_authority(owner,()));Err("retained clone mutation still has an active reader".into())}
+        }
+    }
+
     fn build_sealer(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<bool, String> {
         let required = self.build_capacity()?;
         if grant.maximum_items == 0 || grant.maximum_bytes < required {
@@ -207,8 +215,8 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
             line: authority.line_id().map(str::to_owned),
             id,
             actor: Some(authority.actor().to_string()),
-            forwards: vec![self.mutation.take().ok_or("retained clone preparation lost its forward mutation")?],
-            inverse: self.inverse.take().ok_or("retained clone preparation lost its inverse mutations")?,
+            forwards: vec![self.take_mutation()?.ok_or("retained clone preparation lost its forward mutation")?],
+            inverse: self.inverse.take().ok_or("retained clone preparation lost its inverse mutations")?.into(),
             mutation_meta: vec![MutationMeta {
                 mutation_id: Some(mutation_id),
                 dependencies: Vec::new(),
@@ -308,7 +316,7 @@ where
                 let step = self.edit_cursor.advance(
                     self.source.as_ref().ok_or("retained clone preparation lost its edit source")?.borrow(),
                     self.copied.as_mut().ok_or("retained clone preparation lost its exclusive post snapshot")?,
-                    self.mutation.as_ref().ok_or("retained clone preparation lost its forward mutation")?,
+                    self.mutation.as_ref().ok_or("retained clone preparation lost its forward mutation")?.borrow(),
                     clone_grant,
                 )?;
                 let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation typed edit").map_err(semio_framework_value::ValueError::into_message)?;
@@ -459,7 +467,7 @@ where
             self.active_retirement = Some(owned_retirement(copied));
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if let Some(mutation) = self.mutation.take() {
+        if let Some(mutation) = self.take_mutation().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error))? {
             self.active_retirement = Some(
                 self.mutation_retirement
                     .as_ref()

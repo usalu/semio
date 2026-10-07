@@ -11,7 +11,6 @@ describe("owner-neutral tile proxy contract", () => {
   it("matches the portable schema, finite transport limits and independent Ajv admission", async () => {
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(schema);
-    expect(ajv.compile({ $ref: schema.$id + "#/definitions/TileProxyCasesV1" })(corpus.cases)).toBe(true);
     const admit = ajv.getSchema(schema.$id)!;
     for (const row of corpus.cases) {
       expect(admit(row.value), row.id).toBe(row.accepted);

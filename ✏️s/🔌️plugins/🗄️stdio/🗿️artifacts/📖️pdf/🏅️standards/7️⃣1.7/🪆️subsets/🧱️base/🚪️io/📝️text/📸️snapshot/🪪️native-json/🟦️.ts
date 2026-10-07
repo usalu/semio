@@ -1,3 +1,4 @@
+import {pdfDateFromNativeJson} from "./📌️annotation/🟦️.ts";
 /** 🪪️ Explicit finite native JSON admission into PDF's canonical owned scalar model. */
 import type { PdfObject, PdfDictEntry, PdfStreamFilter, PdfFunction, PdfColorSpace, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
@@ -39,6 +40,8 @@ function cosShallow(input: unknown): PdfObject {
     case "bool": return { kind, value: boolean(row.value) };
     case "int": return { kind, value: BigInt(integer(row.value)) };
     case "real": return { kind, negative: boolean(row.negative), coefficient: text(row.coefficient), scale: integer(row.scale) };
+    case "text": return {kind,value:text(row.value)};
+    case "date": return {kind,value:pdfDateFromNativeJson(row.value)};
     case "str": return { kind, value: integers(row.value) };
     case "name": return { kind, value: text(row.value) };
     case "ref": return { kind, num: integer(row.num), gen: integer(row.gen) };

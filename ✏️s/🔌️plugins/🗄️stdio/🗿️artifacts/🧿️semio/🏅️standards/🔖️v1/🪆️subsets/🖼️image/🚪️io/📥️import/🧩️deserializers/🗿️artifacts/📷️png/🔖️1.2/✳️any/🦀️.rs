@@ -1,7 +1,7 @@
 //! 📥️ PNG 1.2 to Semio image through an explicit checked RGBA8 derivative.
 
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::{schema::snapshot::PngColorType, PngSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
@@ -26,9 +26,8 @@ impl ArtifactDeserializer for SemioImageFromPng {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let projection = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&from.bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
-        let expected = usize::try_from(projection.width).ok().and_then(|width| usize::try_from(projection.height).ok().and_then(|height| width.checked_mul(height))).and_then(|pixels| pixels.checked_mul(4)).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "png→semio/image: raster extent overflow")))?;
-        if projection.pixels.len() != expected { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "png→semio/image: decoded RGBA8 length does not match IHDR"))); }
+        let projection = &from.image;
+        let pixels = semio_s_artifact_stdio_png::schema::operations::png_rgba8_preview(projection).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         let metadata = projection.text_chunks.iter().map(|text| SemioImageMetadataEntry { key: text.keyword.clone(), value: text.value.clone() }).collect();
         Ok(SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
@@ -36,7 +35,7 @@ impl ArtifactDeserializer for SemioImageFromPng {
             height: projection.height,
             colorspace: colorspace_from_png(projection.color_type),
             bit_depth: projection.bit_depth,
-            frames: vec![SemioImageFrame { delay_ms: 0, rgba8: projection.pixels }],
+            frames: vec![SemioImageFrame { delay_ms: 0, rgba8: pixels }],
             icc: None,
             metadata,
         })

@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot
 #[value(deny_unknown_fields)]
 pub struct CreateProperties {
     pub child_id: String,
-    pub target: store::os_io::ArtifactRef,
+    pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for CreateProperties {

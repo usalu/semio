@@ -26,7 +26,7 @@ pub fn handle_window(
 ) -> Result<(Emit<FormMutation, FormsConfigMutation>, FormsTryWindowConfig), Fault> {
     if config.submitted_response_id.as_ref().is_some_and(|id| spec.responses.iter().any(|response| &response.id == id)) { return Ok((Emit::default(), config.clone())); }
     if spec.definition.steps.is_empty() { return Err(Fault::from("forms-submit-empty-form")); }
-    let values = crate::editor::forms::effective_try_values(spec, transient).iter().map(|(key, value)| (key.to_owned(), crate::schema::value_to_dsl(value))).collect();
+    let values = crate::editor::forms::effective_try_values(spec, transient).iter().map(|(key, value)| (key.to_owned(), crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl(value))).collect();
     let response = match crate::schema::response::prepare_response(&spec.definition, &values, crate::schema::create_form_id("response"), dsl::os_identity::unix_millis(), definition_version) {
         Ok(response) => response,
         Err(errors) => {

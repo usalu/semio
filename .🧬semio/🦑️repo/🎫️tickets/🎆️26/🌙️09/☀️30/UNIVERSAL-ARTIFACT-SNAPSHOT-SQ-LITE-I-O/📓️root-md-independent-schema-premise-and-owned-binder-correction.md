@@ -1,0 +1,7 @@
+# MD Independent Schema Premise And Actual Owned Binder
+
+Actual original81779 MD runs27 laws:25 pass/2fail/69skip2.413s, Nextest ead2873c-1b32-4336-82dd-cfba6c3ea3c4. Two fresh exact source guards contain one premise correction and one ownership authority policy correction; no error-message shim.
+
+The old rawSQL3625 exact schema premise conflicts with the same snapshot complete law independently accepting3901 and refusing3900. Native schema role separation suggested in the initial read-only audit is explicitly withdrawn because it breaks monotonicity and complete copied admission. Keep the provider full schema gate. The old exact/minusone law now obtains its dimension from the already existing independent Bun SQLite extent helper; both exact/short assertions, encodings and other grants remain. This is a documented invalid-premise correction supported by actual3901 table-name/statement extent, not arbitrary allowance.
+
+Borrowed Census retains reachability marks, every edge row/32byte charge, parent-forward topology, index/grammar/variant and orphan checks. Only duplicate exclusive-owner rejection is deferred to the actual paid_children Option::take binder, which already owns the definitive multiple-owners refusal after retaining partial deep constructed nodes. All original depth/grants, diagnostic assertions and partial cold-retirement requirements remain. The original owning27-law replay must execute existing cycle/reuse/orphan/mixedvariant and deep partial laws before qualification.

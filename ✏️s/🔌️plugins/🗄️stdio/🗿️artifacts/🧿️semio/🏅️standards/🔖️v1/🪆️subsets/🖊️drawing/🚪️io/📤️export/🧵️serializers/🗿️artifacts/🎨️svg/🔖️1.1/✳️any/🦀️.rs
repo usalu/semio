@@ -12,12 +12,14 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioRgba, SemioTransform};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_svg::{
-    schema::snapshot::{svg_element_to_xml_node, CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox},
+    schema::snapshot::{ CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox},
     SvgSnapshot,
 };
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+use semio_s_artifact_stdio_svg::schema::snapshot::SvgDocument;
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::attributes::{svg_element_to_xml_node,bind_svg_node};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
@@ -153,7 +155,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
             xmlns: Some("http://www.w3.org/2000/svg".into()),
             children: layer_groups,
         };
-        Ok(SvgSnapshot { schema: semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() } })
+        Ok(SvgSnapshot { schema: semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: SvgDocument { root: Some(bind_svg_node(svg_element_to_xml_node(&root)).map_err(|detail|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,detail)))?), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() } })
     }
 }
 //#endregion 🔖️Serializer

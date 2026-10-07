@@ -1,0 +1,296 @@
+{
+  "scope": "read-only prepared exact current Native test lines; preserve fixture visibility and constructors/assertions; no production edits",
+  "regions": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::base::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::base::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 58,
+      "before": " let malformed=crate::base::io::sqlite::snapshot::native_decoding::record::<2>(cases[\"malformedRecord\"][\"source\"].as_str().unwrap(),&mut NativeDecodeControl::new(usize::MAX,&mut |_|true)).unwrap_err();assert_eq!(malformed.kind.as_str(),cases[\"malformedRecord\"][\"kind\"].as_str().unwrap());\n",
+      "after": " let malformed=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::record::<2>(cases[\"malformedRecord\"][\"source\"].as_str().unwrap(),&mut NativeDecodeControl::new(usize::MAX,&mut |_|true)).unwrap_err();assert_eq!(malformed.kind.as_str(),cases[\"malformedRecord\"][\"kind\"].as_str().unwrap());\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 59,
+      "before": " let canceled=crate::base::io::sqlite::snapshot::native_decoding::float(cases[\"cancellation\"][\"source\"].as_str().unwrap(),&mut NativeDecodeControl::new(usize::MAX,&mut |_|false)).unwrap_err();assert_eq!(canceled.kind.as_str(),cases[\"cancellation\"][\"kind\"].as_str().unwrap());\n",
+      "after": " let canceled=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::float(cases[\"cancellation\"][\"source\"].as_str().unwrap(),&mut NativeDecodeControl::new(usize::MAX,&mut |_|false)).unwrap_err();assert_eq!(canceled.kind.as_str(),cases[\"cancellation\"][\"kind\"].as_str().unwrap());\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 60,
+      "before": " let limited=crate::base::io::sqlite::snapshot::native_decoding::entities(&mut 0,cases[\"rowAdmission\"][\"entities\"].as_u64().unwrap()as usize,SqliteDatabaseLimits{max_rows:cases[\"rowAdmission\"][\"maxRows\"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()}).unwrap_err();assert_eq!(limited.kind.as_str(),cases[\"rowAdmission\"][\"kind\"].as_str().unwrap());\n",
+      "after": " let limited=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::entities(&mut 0,cases[\"rowAdmission\"][\"entities\"].as_u64().unwrap()as usize,SqliteDatabaseLimits{max_rows:cases[\"rowAdmission\"][\"maxRows\"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()}).unwrap_err();assert_eq!(limited.kind.as_str(),cases[\"rowAdmission\"][\"kind\"].as_str().unwrap());\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 61,
+      "before": " let mut maximum=usize::MAX;let overflow=crate::base::io::sqlite::snapshot::native_decoding::entities(&mut maximum,1,SqliteDatabaseLimits::default()).unwrap_err();assert_eq!(overflow.kind.as_str(),cases[\"arithmeticOverflow\"][\"kind\"].as_str().unwrap());\n",
+      "after": " let mut maximum=usize::MAX;let overflow=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::entities(&mut maximum,1,SqliteDatabaseLimits::default()).unwrap_err();assert_eq!(overflow.kind.as_str(),cases[\"arithmeticOverflow\"][\"kind\"].as_str().unwrap());\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 67,
+      "before": " let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut bound=crate::base::io::sqlite::snapshot::sqlite::native::Bound::new(\"\",&mut control).unwrap();let bound_overflow=bound.entities(usize::MAX).unwrap_err();assert_eq!(bound_overflow.kind.as_str(),cases[\"arithmeticOverflow\"][\"kind\"].as_str().unwrap());\n",
+      "after": " let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut bound=crate::standards::v1::subsets::base::io::sqlite::snapshot::sqlite::native::Bound::new(\"\",&mut control).unwrap();let bound_overflow=bound.entities(usize::MAX).unwrap_err();assert_eq!(bound_overflow.kind.as_str(),cases[\"arithmeticOverflow\"][\"kind\"].as_str().unwrap());\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 136,
+      "before": " let error=crate::base::io::sqlite::snapshot::native_decoding::decode::<String>(&payload,crate::base::io::sqlite::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,&mut control,|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,\"authored refusal after field allocation\"))},|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,\"authored refusal after field allocation\"))}).unwrap_err();\n",
+      "after": " let error=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::decode::<String>(&payload,crate::standards::v1::subsets::base::io::sqlite::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,&mut control,|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,\"authored refusal after field allocation\"))},|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,\"authored refusal after field allocation\"))}).unwrap_err();\n",
+      "count": 2
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::flow::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::flow::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::video::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::video::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::model::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::model::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 2,
+      "before": "use crate::table::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::table::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::cad::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::cad::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::document::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::document::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::object::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::object::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::presentation::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::presentation::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::audio::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::audio::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 2,
+      "before": "use crate::value::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::value::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 69,
+      "before": " let depth=f[\"nativeAdmission\"][\"maximumDepth\"].as_u64().unwrap() as usize;let body=format!(\"[{},{}Z{},[]]\",crate::value::io::text::diff::enc_str(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA),\"L[\".repeat(depth+1),\"]\".repeat(depth+1));let envelope=store::semio_format::SemioEnvelope::from_envelope_id(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1).unwrap();let payload=store::os_io::IoPayload::Text(store::semio_format::wrap_text(&envelope,&body));assert!(SemioValueSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());\n",
+      "after": " let depth=f[\"nativeAdmission\"][\"maximumDepth\"].as_u64().unwrap() as usize;let body=format!(\"[{},{}Z{},[]]\",crate::standards::v1::subsets::value::io::text::diff::enc_str(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA),\"L[\".repeat(depth+1),\"]\".repeat(depth+1));let envelope=store::semio_format::SemioEnvelope::from_envelope_id(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1).unwrap();let payload=store::os_io::IoPayload::Text(store::semio_format::wrap_text(&envelope,&body));assert!(SemioValueSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::text::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::text::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::mesh::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::mesh::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::graph::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::graph::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::drawing::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::drawing::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::image::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::image::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::brep::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::brep::io::sqlite::snapshot::*;\n",
+      "count": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 1,
+      "before": "use crate::kit::io::sqlite::snapshot::*;\n",
+      "after": "use crate::standards::v1::subsets::kit::io::sqlite::snapshot::*;\n",
+      "count": 1
+    }
+  ],
+  "roster": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "✉️base",
+      "regions": 7,
+      "shortPaths": 8
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🌊️flow",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🎞️animation",
+      "regions": 0,
+      "shortPaths": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🎬️video",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🏛️model",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "📊️table",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "📐️cad",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "📑️document",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "📦️object",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "📽️presentation",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🔊️audio",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🔢️value",
+      "regions": 2,
+      "shortPaths": 2
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🔤️text",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🔺️mesh",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🕸️graph",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🖊️drawing",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🖼️image",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🧊️brep",
+      "regions": 1,
+      "shortPaths": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "subsetDirectory": "🧰️kit",
+      "regions": 1,
+      "shortPaths": 1
+    }
+  ]
+}

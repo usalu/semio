@@ -11627,10 +11627,10 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
       //#region 🏠️LocalInteractionCompositionTests
       it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
         const source = await import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts");
-        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../🛂️manifest/🧫️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../🛂️manifest/🧬️schema/🔣️.json"); const { default: localSchema } = await import("../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json");
-        const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
+        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../🛂️manifest/🧫️fixtures/🖱️tutorial-local-interaction.json"), "utf8")) as {cases: Array<{name:string;before:State;after:State;changes:Change[]}>};
+        const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
         type State = import("../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
-        const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).addSchema(schema).compile<{ cases: Array<{ name: string; before: State; after: State; changes: Change[] }> }>({ $ref: `${schema.$id}#/$defs/TutorialLocalInteractionFixture` }); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
+        enableMapSet();
         expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
         for (const row of fixture.cases) {
           const before = JSON.stringify(row.before); const changes = source.diffTutorialLocalInteractionCold(row.before, row.after); assert.deepStrictEqual(changes, row.changes, row.name);

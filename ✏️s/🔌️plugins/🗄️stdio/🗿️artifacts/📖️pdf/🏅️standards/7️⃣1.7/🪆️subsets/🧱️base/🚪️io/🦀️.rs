@@ -18,7 +18,8 @@ use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, PResult, P
 use crate::standards::v1_7::subsets::base::modules::lift::{lift_document, lift_document_with, Category};
 use crate::standards::v1_7::subsets::base::modules::lower::{lower_acro_form_standalone, lower_catalog_standalone, lower_document, lower_document_headless, lower_info, lower_page_standalone, LowerOptions, LoweredDocument};
 use crate::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, PdfWriter, WriteOptions, WRITER_TRAILER_KEYS};
-use crate::standards::v1_7::subsets::base::modules::xref::{build_xref, startxref_offset, GraphSource, ObjectSource, Resolver};
+use crate::standards::v1_7::subsets::base::modules::xref::{build_xref, startxref_offset, Resolver};
+use crate::standards::v1_7::subsets::base::schema::graph_source::{GraphSource,ObjectSource};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -29,7 +30,7 @@ pub use crate::standards::v1_7::subsets::base::modules::lexer::PdfEngineError as
 pub mod derived_composition {
     use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
     use crate::standards::v1_7::subsets::base::io::PdfAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -113,10 +114,11 @@ pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnaps
     if let Some(number) = encrypt_object {
         objects.retain(|object| object.id.num != number);
     }
-    let trailer: Vec<PdfDictEntry> = xref.trailer.iter().filter(|entry| !WRITER_TRAILER_KEYS.contains(&entry.key.as_str())).cloned().collect();
+    let mut trailer: Vec<PdfDictEntry> = xref.trailer.iter().filter(|entry| !WRITER_TRAILER_KEYS.contains(&entry.key.as_str())).cloned().collect();
     if !trailer.iter().any(|entry| entry.key == "Root") {
         return Err(PdfEngineError::Malformed("no /Root in any trailer and no /Catalog object to recover one from".into()));
     }
+    text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer);
     let mut source = GraphSource::new(&objects);
     let lifter = lift_document_with(&trailer, &declared_version, &mut source);
     let mut snapshot = lifter.snapshot;
@@ -1417,7 +1419,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.pdf.1.7` parts.

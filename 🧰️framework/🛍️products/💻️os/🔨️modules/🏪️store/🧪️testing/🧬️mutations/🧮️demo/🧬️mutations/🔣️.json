@@ -1,19 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/demo/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutations.json",
   "title": "DemoMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/demo/mutation/set-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/set-n/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/demo/mutation/delete-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/delete-n/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/demo/mutation/add-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/add-n/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/demo/mutation/restore-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/restore-n/schema.json"
     }
   ]
 }

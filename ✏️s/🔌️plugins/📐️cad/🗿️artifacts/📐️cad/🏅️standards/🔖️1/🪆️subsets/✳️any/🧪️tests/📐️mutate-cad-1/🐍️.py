@@ -94,24 +94,17 @@ TAGS = {kind: tag_of(kind) for kind in KINDS}
 
 # region 🔖️Document
 def parse_target(target, where):
-    """🎯️ `"<artifactId>!<artifactKind>@<standard>/<subset>"` expanded into the record a snapshot
-    carries. The wire spelling appears only in the mutation payloads; the snapshot always holds it
-    expanded, so a reader that never split it could not reproduce a single `create-` vector."""
-    if "!" not in target:
-        raise AssertionError("%s: a child target must be \"<artifactId>!<artifactKind>@<standard>/<subset>\", found %r" % (where, target))
-    artifact_id, dialect = target.split("!", 1)
-    if "@" not in dialect or "/" not in dialect:
-        raise AssertionError("%s: a child target's dialect must be \"<artifactKind>@<standard>/<subset>\", found %r" % (where, dialect))
-    artifact_kind, rest = dialect.split("@", 1)
-    standard, subset = rest.split("/", 1)
-    return {"artifactId": artifact_id, "dialect": {"artifactKind": artifact_kind, "standard": standard, "subset": subset}}
+    """🎯️ Validates the owned reference without native URI interpretation."""
+    if not isinstance(target, dict) or set(target) != {"artifactId", "dialect"} or not isinstance(target["dialect"], dict) or set(target["dialect"]) != {"artifactKind", "standard", "subset"}:
+        raise AssertionError("%s: target must be an owned artifact reference" % where)
+    if any(not isinstance(v, str) or not v for v in [target["artifactId"], *target["dialect"].values()]):
+        raise AssertionError("%s: target identity is empty" % where)
+    return copy.deepcopy(target)
 
 
 def print_target(handle):
-    """🎯️ The inverse spelling, so a `delete-` verb can be undone with the `create-` verb's own
-    argument."""
-    dialect = handle["target"]["dialect"]
-    return "%s!%s@%s/%s" % (handle["target"]["artifactId"], dialect["artifactKind"], dialect["standard"], dialect["subset"])
+    """🎯️ Retains the owned target in inverse mutation payloads."""
+    return copy.deepcopy(handle["target"])
 
 
 def validate(document, where):
@@ -375,7 +368,7 @@ def identity_handler(ctx):
     additionally requires, in role, that it really is the composition this case describes: all four
     fixed child slots occupied, a drawing child, a node tree and a reference list filed under the
     active model definition — and that every child target the snapshot carries expanded really does
-    round-trip through the single-string wire spelling the mutation payloads use."""
+    retain their exact fields through the owned mutation payload shape."""
     uri = uri_in(ctx, "⬅️before")
     committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
@@ -388,7 +381,7 @@ def identity_handler(ctx):
     for member in list(SLOTS.values()) + ["drawings"]:
         for handle in ([document[member]] if member in SLOTS.values() else document[member]):
             if parse_target(print_target(handle), "identity-round-trip") != handle["target"]:
-                raise AssertionError("identity-round-trip: the %s child target does not survive the single-string wire spelling" % member)
+                raise AssertionError("identity-round-trip: the %s child target does not survive the owned reference payload" % member)
     reserialized = json.dumps(document, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     if reserialized == committed:
         raise AssertionError("identity-round-trip: the committed file is pretty-printed and this writer is compact, so reproducing its bytes exactly would mean the handler returned the input unread")

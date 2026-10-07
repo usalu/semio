@@ -1,25 +1,27 @@
 // 🌳 `SvgSnapshot.doc` wraps an `XmlDocument`, and `SvgDiff`/`SvgNodeDiff` diff that same node
 // tree directly, per the plan's spec-mandated-reuse rule -- svg embeds xml's NODE model (real
 // import, the canonical shape), but declares its own DIFF types below.
-import { parseXmlDeclaration, parseXmlDoctype, parseXmlNode, type XmlDeclaration, type XmlDoctype, type XmlNode } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
-export type { XmlDeclaration, XmlDoctype, XmlNode };
+import { parseXmlDeclaration, parseXmlDoctype, type XmlDeclaration, type XmlDoctype } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+export type { XmlDeclaration, XmlDoctype };
+import {parseSvgNode,parseSvgAttributeValue,type SvgNode,type SvgAttributeValue}from "../📸️snapshot/🧩️document/🟦️.ts";
+export type {SvgNode};
 
 /** 🔺️ Diff for `stdio.svg`. `declaration`/`doctype` are tri-state (`null` = cleared, absent =
  * unchanged, present = set). No `snapshot`-shaped full-replace field anywhere -- even a
  * `setSnapshot` mutation's diff is the sparse field-by-field delta below. */
 export interface SvgDiff {
-  prolog?: XmlNode[];
-  epilog?: XmlNode[];
+  prolog?: SvgNode[];
+  epilog?: SvgNode[];
   declaration?: XmlDeclaration | null;
   doctype?: XmlDoctype | null;
   root?: SvgNodeDiff;
 }
 
-/** 🌳 Recursive per-node diff, shaped like the `XmlNode` it targets. */
+/** 🌳 Recursive per-node diff, shaped like the `SvgNode` it targets. */
 export type SvgNodeDiff =
   | { kind: 'element'; name?: string; attributes?: SvgAttributesDiff; children?: SvgChildrenDiff }
   | { kind: 'text'; text?: string }
-  | { kind: 'replace'; node?: XmlNode };
+  | { kind: 'replace'; node?: SvgNode };
 
 /** 🏷️ Name-keyed, order-preserving attribute triple. */
 export interface SvgAttributesDiff {
@@ -30,13 +32,13 @@ export interface SvgAttributesDiff {
 
 export interface SvgAttrModified {
   name: string;
-  value: string;
+  value: SvgAttributeValue;
 }
 
 export interface SvgAttrAdded {
   index: number;
   name: string;
-  value: string;
+  value: SvgAttributeValue;
 }
 
 /** 🌳 Index-keyed, recursive children triple. */
@@ -53,7 +55,7 @@ export interface SvgChildModified {
 
 export interface SvgChildAdded {
   index: number;
-  item: XmlNode;
+  item: SvgNode;
 }
 
 //#region 🚪️Parsers
@@ -106,8 +108,8 @@ export const stdioSvg11BaseDiffGuardConstant = <T extends string | number | bool
 export function parseSvgDiff(value: unknown, at = "$"): SvgDiff {
   const row = stdioSvg11BaseDiffGuardObject(value, at);
   return {
-    prolog: row["prolog"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => parseXmlNode(item, `${at}.prolog[${index}]`)),
-    epilog: row["epilog"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["epilog"], `${at}.epilog`).map((item, index) => parseXmlNode(item, `${at}.epilog[${index}]`)),
+    prolog: row["prolog"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => parseSvgNode(item, `${at}.prolog[${index}]`)),
+    epilog: row["epilog"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["epilog"], `${at}.epilog`).map((item, index) => parseSvgNode(item, `${at}.epilog[${index}]`)),
     declaration: row["declaration"] === undefined ? undefined : row["declaration"] === null ? null : parseXmlDeclaration(row["declaration"], `${at}.declaration`),
     doctype: row["doctype"] === undefined ? undefined : row["doctype"] === null ? null : parseXmlDoctype(row["doctype"], `${at}.doctype`),
     root: row["root"] === undefined ? undefined : parseSvgNodeDiff(row["root"], `${at}.root`),
@@ -119,14 +121,14 @@ export function parseSvgNodeDiff(value: unknown, at = "$"): SvgNodeDiff {
   const kind = stdioSvg11BaseDiffGuardMember(row["kind"], `${at}.kind`, ["element", "text", "replace"] as const);
   if (kind === "element") return { kind, ...parseSvgElementDiff(row, at) };
   if (kind === "text") return { kind, text: row["text"] === undefined ? undefined : stdioSvg11BaseDiffGuardString(row["text"], `${at}.text`) };
-  return { kind, node: row["node"] === undefined ? undefined : parseXmlNode(row["node"], `${at}.node`) };
+  return { kind, node: row["node"] === undefined ? undefined : parseSvgNode(row["node"], `${at}.node`) };
 }
 
 export function parseSvgAttrModified(value: unknown, at = "$"): SvgAttrModified {
   const row = stdioSvg11BaseDiffGuardObject(value, at);
   return {
     name: stdioSvg11BaseDiffGuardString(row["name"], `${at}.name`),
-    value: stdioSvg11BaseDiffGuardString(row["value"], `${at}.value`),
+    value: parseSvgAttributeValue(row["value"], `${at}.value`),
   };
 }
 
@@ -135,7 +137,7 @@ export function parseSvgAttrAdded(value: unknown, at = "$"): SvgAttrAdded {
   return {
     index: stdioSvg11BaseDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     name: stdioSvg11BaseDiffGuardString(row["name"], `${at}.name`),
-    value: stdioSvg11BaseDiffGuardString(row["value"], `${at}.value`),
+    value: parseSvgAttributeValue(row["value"], `${at}.value`),
   };
 }
 
@@ -160,7 +162,7 @@ export function parseSvgChildAdded(value: unknown, at = "$"): SvgChildAdded {
   const row = stdioSvg11BaseDiffGuardObject(value, at);
   return {
     index: stdioSvg11BaseDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
-    item: parseXmlNode(row["item"], `${at}.item`),
+    item: parseSvgNode(row["item"], `${at}.item`),
   };
 }
 

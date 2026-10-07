@@ -6,7 +6,7 @@ use crate::BmpSnapshot;
 use crate::schema::diff::BmpDiff;
 use semio_s_artifact_stdio_contract::editing;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, input_schema = Self::input_schema_at_path)]
 pub struct PatchSnapshot {
     pub patch: editing::SnapshotPatch,

@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::generation3d::transient::mutations::*;
 use crate::editor::generation3d::transient::Generation3dTransient;
-use set_generation_preview::SetGenerationPreview;
 
 impl protocol::OpBinary for Generation3dTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

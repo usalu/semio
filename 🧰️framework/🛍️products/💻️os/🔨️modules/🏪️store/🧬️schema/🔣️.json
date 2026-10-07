@@ -102,6 +102,24 @@
           "type": "string"
         }
       }
+    },
+    "HistoryOperationPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edit",
+        "op"
+      ],
+      "properties": {
+        "edit": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "op": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

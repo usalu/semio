@@ -1,5 +1,49 @@
-"Exact byte-authoritative PNG snapshot."
-type PngSnapshot {
-  schema: String!
-  bytes: [Int!]!
+"Native PNG samples and owned metadata."
+scalar UInt
+
+type PngSnapshot { schema: String!, image: PngImage! }
+type PngImage {
+  width: UInt!, height: UInt!, bitDepth: Int!, colorType: PngColorType!, interlace: Boolean!, samples: [Int!]!
+  palette: [PngRgb!], transparency: PngTransparency, gamma: UInt, chromaticities: PngChromaticities
+  srgb: PngSrgbIntent, physicalDims: PngPhysicalDims, timestamp: PngTimestamp, background: PngBackground
+  textChunks: [PngTextChunk!]!, ancillaryChunks: [PngAncillaryChunk!]!
 }
+enum PngColorType { grayscale rgb palette grayscaleAlpha rgba }
+enum PngSrgbIntent { perceptual relativeColorimetric saturation absoluteColorimetric }
+enum PngTextKind { text zText iText }
+type PngRgb { r: Int!, g: Int!, b: Int! }
+type PngIndexedTransparency { alpha: [Int!]! }
+type PngGrayTransparency { gray: Int! }
+type PngRgbTransparency { r: Int!, g: Int!, b: Int! }
+union PngTransparency = PngIndexedTransparency | PngGrayTransparency | PngRgbTransparency
+type PngChromaticities { whiteX: UInt!, whiteY: UInt!, redX: UInt!, redY: UInt!, greenX: UInt!, greenY: UInt!, blueX: UInt!, blueY: UInt! }
+type PngPhysicalDims { ppuX: UInt!, ppuY: UInt!, unitIsMeter: Boolean! }
+type PngTimestamp { year: Int!, month: Int!, day: Int!, hour: Int!, minute: Int!, second: Int! }
+type PngIndexedBackground { index: Int! }
+type PngGrayBackground { gray: Int! }
+type PngRgbBackground { r: Int!, g: Int!, b: Int! }
+union PngBackground = PngIndexedBackground | PngGrayBackground | PngRgbBackground
+type PngTextChunk { keyword: String!, value: String!, compressed: Boolean!, kind: PngTextKind!, languageTag: String!, translatedKeyword: String! }
+type PngAncillaryChunk { kind: [Int!]!, data: [Int!]!, afterRaster: Boolean! }
+
+input PngSnapshotInput { schema: String!, image: PngImageInput! }
+input PngImageInput {
+  width: UInt!, height: UInt!, bitDepth: Int!, colorType: PngColorType!, interlace: Boolean!, samples: [Int!]!
+  palette: [PngRgbInput!], transparency: PngTransparencyInput, gamma: UInt, chromaticities: PngChromaticitiesInput
+  srgb: PngSrgbIntent, physicalDims: PngPhysicalDimsInput, timestamp: PngTimestampInput, background: PngBackgroundInput
+  textChunks: [PngTextChunkInput!]!, ancillaryChunks: [PngAncillaryChunkInput!]!
+}
+input PngRgbInput { r: Int!, g: Int!, b: Int! }
+input PngIndexedTransparencyInput { alpha: [Int!]! }
+input PngGrayTransparencyInput { gray: Int! }
+input PngRgbTransparencyInput { r: Int!, g: Int!, b: Int! }
+input PngChromaticitiesInput { whiteX: UInt!, whiteY: UInt!, redX: UInt!, redY: UInt!, greenX: UInt!, greenY: UInt!, blueX: UInt!, blueY: UInt! }
+input PngPhysicalDimsInput { ppuX: UInt!, ppuY: UInt!, unitIsMeter: Boolean! }
+input PngTimestampInput { year: Int!, month: Int!, day: Int!, hour: Int!, minute: Int!, second: Int! }
+input PngIndexedBackgroundInput { index: Int! }
+input PngGrayBackgroundInput { gray: Int! }
+input PngRgbBackgroundInput { r: Int!, g: Int!, b: Int! }
+input PngTextChunkInput { keyword: String!, value: String!, compressed: Boolean!, kind: PngTextKind!, languageTag: String!, translatedKeyword: String! }
+input PngAncillaryChunkInput { kind: [Int!]!, data: [Int!]!, afterRaster: Boolean! }
+input PngTransparencyInput @oneOf { indexedTransparency: PngIndexedTransparencyInput grayTransparency: PngGrayTransparencyInput rgbTransparency: PngRgbTransparencyInput }
+input PngBackgroundInput @oneOf { indexedBackground: PngIndexedBackgroundInput grayBackground: PngGrayBackgroundInput rgbBackground: PngRgbBackgroundInput }

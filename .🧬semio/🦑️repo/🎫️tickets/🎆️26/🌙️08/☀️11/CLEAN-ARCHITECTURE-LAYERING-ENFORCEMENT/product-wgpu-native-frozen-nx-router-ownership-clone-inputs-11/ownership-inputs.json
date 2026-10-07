@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts",
+    "from": "../../📏️ownership/🟦️.ts",
+    "to": "../../🧪️tests/📏️ownership/🟦️.ts",
+    "symbol": "proveSchemaValidatorOwnershipV1"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+    "from": "../../🏷️entity-kinds/📏️ownership/🟦️.ts",
+    "to": "../../🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts",
+    "symbol": "proveEntityCatalogOwnership"
+  }
+]

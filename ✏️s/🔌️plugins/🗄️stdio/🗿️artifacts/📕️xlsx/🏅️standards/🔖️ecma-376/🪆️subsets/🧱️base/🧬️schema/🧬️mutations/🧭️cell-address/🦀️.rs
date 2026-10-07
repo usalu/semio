@@ -1,6 +1,6 @@
 //! 🧭️ Namespace-aware, lineage-bound addresses for authoritative SpreadsheetML cells.
 
-use crate::standards::v_ecma_376::subsets::base::io::{attribute_value, column_letter, element_matches, expanded_element_name, namespace_scope, REL_TYPE_OFFICE_DOCUMENT_STRICT, R_NS, R_NS_STRICT, SML_NS, SML_NS_STRICT};
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{attribute_value, column_letter, element_matches, expanded_element_name, namespace_scope, REL_TYPE_OFFICE_DOCUMENT_STRICT, R_NS, R_NS_STRICT, SML_NS, SML_NS_STRICT};
 use crate::XlsxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, REL_TYPE_OFFICE_DOCUMENT};

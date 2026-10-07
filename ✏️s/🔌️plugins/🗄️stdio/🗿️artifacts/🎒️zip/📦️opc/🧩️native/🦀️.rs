@@ -2,7 +2,8 @@
 use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,ValueError,ValueRefusalKind};
 use super::{OpcPackage,OpcPart,OpcContentTypes,OpcRelationship,OpcTargetMode,OpcRelationshipOwners};
 use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,XmlNativeEmission,XmlNativeInput,emit_xml_native_document,read_xml_native_document,sqlite::XmlDocumentView};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,ownership::XmlDocumentView};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{XmlNativeEmission,XmlNativeInput,emit_xml_native_document,read_xml_native_document};
 
 
 /// 🛫️ One cumulative stream for the actual OPC package and its enclosing fields.

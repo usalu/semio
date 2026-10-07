@@ -11,7 +11,7 @@ pub fn inverse(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot
         .iter()
         .flat_map(|delta| delta.patched.iter())
         .filter_map(|entry| match crate::schema::find_drawing_layer(base, &entry.id) {
-            Some(DrawingLayerNode::Path(path)) => Some(update_path_geometry(entry.id.clone(), path.segments.clone())),
+            Some(DrawingLayerNode::Path(path)) => Some(update_path_geometry(entry.id.clone().into(), path.segments.clone())),
             _ => None,
         })
         .collect()

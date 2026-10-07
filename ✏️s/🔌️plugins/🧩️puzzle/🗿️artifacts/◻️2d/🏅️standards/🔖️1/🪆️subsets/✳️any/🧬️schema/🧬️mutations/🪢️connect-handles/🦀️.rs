@@ -5,6 +5,8 @@
 //! `mutation.precondition-drifted` (design
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §22.13).
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
@@ -13,19 +15,19 @@ use crate::Puzzle2dSnapshot;
 /// 🔗 `connect-handles` payload — edge `id`, both endpoint handle ids, and the full initial
 /// connection-parameter payload (`edge_kind`/`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt`/`x`/`y`/
 /// `source_tip`/`target_tip`), and the proximity `tolerance` a drop recorded it under (`None`: no precondition).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "connect-handles")]
 pub struct ConnectHandles {
-    pub id: String,
+    pub id: PagedUtf8<{ usize::MAX }>,
     #[dsl(refs = "handle")]
-    pub source: String,
+    pub source: PagedUtf8<{ usize::MAX }>,
     #[dsl(refs = "handle")]
-    pub target: String,
-    pub edge_kind: Option<String>,
+    pub target: PagedUtf8<{ usize::MAX }>,
+    pub edge_kind: Option<PagedUtf8<{ usize::MAX }>>,
     pub gap: f64,
     pub shift: f64,
     pub rise: f64,
@@ -34,8 +36,8 @@ pub struct ConnectHandles {
     pub tilt: f64,
     pub x: f64,
     pub y: f64,
-    pub source_tip: Option<String>,
-    pub target_tip: Option<String>,
+    pub source_tip: Option<PagedUtf8<{ usize::MAX }>>,
+    pub target_tip: Option<PagedUtf8<{ usize::MAX }>>,
     #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub tolerance: Option<f64>,
@@ -44,10 +46,10 @@ pub struct ConnectHandles {
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
 pub fn connect_handles(
-    id: String,
-    source: String,
-    target: String,
-    edge_kind: Option<String>,
+    id: PagedUtf8<{ usize::MAX }>,
+    source: PagedUtf8<{ usize::MAX }>,
+    target: PagedUtf8<{ usize::MAX }>,
+    edge_kind: Option<PagedUtf8<{ usize::MAX }>>,
     gap: f64,
     shift: f64,
     rise: f64,
@@ -56,15 +58,15 @@ pub fn connect_handles(
     tilt: f64,
     x: f64,
     y: f64,
-    source_tip: Option<String>,
-    target_tip: Option<String>,
+    source_tip: Option<PagedUtf8<{ usize::MAX }>>,
+    target_tip: Option<PagedUtf8<{ usize::MAX }>>,
 ) -> Puzzle2dMutation {
     Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind, gap, shift, rise, rotation, turn, tilt, x, y, source_tip, target_tip, tolerance: None })
 }
 
 /// 🧲️ Builder — the connection a drop records from proximity: the default geometry and the `tolerance` its two
 /// handles lay within when it was recorded.
-pub fn connect_handles_in_proximity(id: String, source: String, target: String, tolerance: f64) -> Puzzle2dMutation {
+pub fn connect_handles_in_proximity(id: PagedUtf8<{ usize::MAX }>, source: PagedUtf8<{ usize::MAX }>, target: PagedUtf8<{ usize::MAX }>, tolerance: f64) -> Puzzle2dMutation {
     Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, tolerance: Some(tolerance) })
 }
 
@@ -84,7 +86,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectHandl
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.source, self.target), &format!("\"{}\" mit \"{}\" verbinden", self.source, self.target))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
+        vec![self.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

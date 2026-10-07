@@ -207,8 +207,6 @@ describe("hub harness quick contract", () => {
     const root = getWorkspaceRoot();
     const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "🔐️auth", "🧫️fixtures", "🔑️capability-v1", "🔣️.json"), "utf8"));
     const authExport = scopeExport(root, "hub.auth");
-    const validate = authExport("AuthCapabilityVectorsV1");
-    expect(validate(fixture), "validate rejected its own fixture").toBe(true);
     for (const [exportId, value] of [
       ["SessionCapabilityV1", fixture.session.capability],
       ["ShareCapabilityV1", fixture.share.capability],

@@ -21,7 +21,7 @@ fn replacing_a_materialized_document_plants_the_example_media_it_just_removed() 
     let example = raster_example_document(crate::examples::art_raster_demo::ID).expect("the demo example document");
     let operations = replace_document_operations(&current, example, crate::examples::art_raster_demo::ID);
     let removed = operations.iter().filter(|operation| matches!(operation, RasterMutation::RemoveLayerAsset(remove) if remove.asset_id == "semio-emblem")).count();
-    let planted = operations.iter().any(|operation| matches!(operation, RasterMutation::AddLayerAsset(add) if add.asset_id == "semio-emblem" && !add.asset.data.is_empty()));
+    let planted = operations.iter().any(|operation| matches!(operation, RasterMutation::AddLayerAsset(add) if add.asset_id == "semio-emblem" && !add.asset.frames.is_empty()));
     assert_eq!(removed, 1, "the batch removes the open pool");
     assert!(planted, "and plants real emblem pixels back in the same batch");
     for operation in operations {

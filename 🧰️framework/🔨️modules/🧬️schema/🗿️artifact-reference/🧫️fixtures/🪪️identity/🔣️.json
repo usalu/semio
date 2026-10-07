@@ -1,0 +1,58 @@
+{
+  "valid": [
+    {
+      "artifactId": "shape-1",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    },
+    {
+      "artifactId": "",
+      "dialect": {
+        "artifactKind": "",
+        "standard": "",
+        "subset": ""
+      }
+    }
+  ],
+  "invalid": [
+    null,
+    [],
+    {},
+    {
+      "artifactId": "shape-1",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      },
+      "extra": true
+    },
+    {
+      "artifactId": 1,
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    },
+    {
+      "artifactId": "x",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh",
+        "extra": true
+      }
+    },
+    {
+      "artifactId": "x",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1"
+      }
+    }
+  ]
+}

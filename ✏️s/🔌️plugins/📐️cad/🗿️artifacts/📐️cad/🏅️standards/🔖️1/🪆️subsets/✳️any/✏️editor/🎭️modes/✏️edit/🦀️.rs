@@ -9,7 +9,7 @@ use crate::editor::cad::engine::typology::resolve_typology_style;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
-use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
+use crate::standards::v1::subsets::any::schema::geometry::{CadGeometry, CadObject};
 use crate::standards::v1::subsets::any::schema::inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
 use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
 use semio_framework_value::DslValue;

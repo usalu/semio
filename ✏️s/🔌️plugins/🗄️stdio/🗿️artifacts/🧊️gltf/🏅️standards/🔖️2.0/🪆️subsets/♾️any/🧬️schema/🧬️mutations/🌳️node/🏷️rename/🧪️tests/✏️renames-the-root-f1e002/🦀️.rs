@@ -1,7 +1,10 @@
 //! ✏️ `change-node-name` implementation case `✏️renames`: the committed fixture bundle
 //! `♾️any/🧫️fixtures/🧬️mutations/🌳️node/🏷️rename/✏️renames/` holds every corpus law, and the leaf keeps its
 //! language-neutral semantic identity, its apply/restore laws, and its facade decoders.
+use crate::standards::v2_0::subsets::any::io::binary::mutations::decode_gltf_change_node_name_protobuf;
+use crate::standards::v2_0::subsets::any::io::text::mutations::{decode_gltf_change_node_name_graphql,decode_gltf_change_node_name_proto};
 use super::*;
+use semio_framework_value::DslValue;
 use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 
 fn value(entries: impl IntoIterator<Item = (&'static str, DslValue)>) -> DslValue {

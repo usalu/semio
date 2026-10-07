@@ -1,5 +1,6 @@
-/** 🧬️ Exact byte-authoritative BMP artifact. */
-export interface BmpArtifact {
-  schema: string;
-  bytes: number[];
-}
+/** 🧬️ Canonical owned BMP semantic vocabulary. */
+export * from "./📸️snapshot/🟦️.ts";
+export * from "./🔺️diff/🟦️.ts";
+export * from "./🧬️mutations/🟦️.ts";
+export * from "./💡️inferences/🟦️.ts";
+export * from "./⚙️operations/🟦️.ts";

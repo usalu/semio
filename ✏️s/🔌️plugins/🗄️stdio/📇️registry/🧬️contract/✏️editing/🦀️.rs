@@ -10,10 +10,7 @@ use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::FaultCode;
 use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactBoundedFirstStepProof, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Dialect, EditorApp, Emit,
-    InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
-};
+use {semio_framework_plugin::AppOperationContext,semio_framework_plugin::ArtifactBoundedFirstStepProof,semio_framework_plugin::ArtifactEditor,semio_framework_plugin::ArtifactOwnedToolJobFactory,semio_framework_plugin::ArtifactOwnedToolJobRequest,semio_framework_plugin::ArtifactToolFactoryRegistry,semio_framework_plugin::ArtifactToolPublicationContract,semio_framework_plugin::ArtifactToolPublicationLane,semio_framework_artifact_reference::Dialect,semio_framework_plugin::EditorApp,semio_framework_plugin::Emit,semio_framework_plugin::InteractiveJobClassification,semio_framework_plugin::ToolExecutionContract,semio_framework_plugin::ToolFactoryKey,semio_framework_plugin::ToolJobFactory,semio_framework_plugin::ToolJobFactoryError,semio_framework_plugin::ToolOperationSpec};
 use semio_framework_ui_locale::LocalizedLabel;
 use std::collections::{BTreeMap, BTreeSet};
 

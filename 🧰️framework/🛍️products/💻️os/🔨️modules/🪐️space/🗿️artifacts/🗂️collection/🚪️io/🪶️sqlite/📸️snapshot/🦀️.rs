@@ -7,7 +7,7 @@ use store::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell}};
 #[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
-pub const SQLITE_SNAPSHOT_DIALECT:store::os_io::Dialect=store::os_io::Dialect{artifact_kind:S_COLLECTION_SCHEMA,standard:store::os_io::StandardId("1"),subset:store::os_io::SubsetId("*")};
+pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_COLLECTION_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.
 pub fn register_sqlite_snapshot()->Result<(),store::os_io::ArtifactAssemblyRegistryError>{store::os_io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::ArtifactCodec::bare::<CollectionSnapshot,crate::CollectionMutation>(S_COLLECTION_SCHEMA))}
 fn rows(value:&CollectionSnapshot)->Result<usize,ValueError>{fields::add(fields::add(1,value.folders.len())?,value.entries.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit, "collection row count overflow"))?)}
@@ -42,7 +42,7 @@ impl ArtifactSqliteSnapshot for CollectionSnapshot{
    native.charge(std::mem::size_of::<ArtifactBody>())?;entries.push(CollectionEntry{id:fields::text(row,3,&mut native)?,folder_id:fields::optional(row,4,&mut native)?,name:fields::text(row,5,&mut native)?,kind_id:fields::text(row,6,&mut native)?,body:Box::new(body)});native.step()?;
   }native.checkpoint()?;Ok(Self{schema,name,folders,entries})})
  }
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
   (|| -> Result<store::io_schema::IoOutcome<()>,ValueError> {
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!=S_COLLECTION_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection does not own this SQLite coordinate"))}let candidate=Self::from_sqlite_database(database,control)?;if self!=&candidate{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection semantic state differs"))}Ok(store::io_schema::IoOutcome::clean(()))
  

@@ -5,12 +5,7 @@
 use crate::BmpSnapshot;
 
 //#region 🔖️Dimensions
-/// 📐️ BMP BITMAPINFOHEADER-derived raster geometry. `has_alpha` is a documented heuristic, not
-/// exact: `BmpSnapshot` retains `bits_per_pixel` but not the BI_BITFIELDS alpha mask
-/// `⚙️engine::decode_bmp` reads transiently (§ decode: `masks[3] != 0`) — `32`bpp is the closest
-/// honest proxy this snapshot's own persisted fields support (this codec's own `BI_RGB` default
-/// for 32bpp carries no alpha, `⚙️engine`'s own doc comment; a real `BI_BITFIELDS` alpha mask would
-/// flip this true, but that bit isn't retained on the snapshot to check).
+/// 📐️ Exact raster geometry and alpha lane presence from the owned native image.
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct BmpDimensions {
@@ -24,8 +19,8 @@ pub struct BmpDimensions {
 /// 📐️ Computes [`BmpDimensions`] from a snapshot's header fields — pure, total, O(1).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn compute_bmp_dimensions(snapshot: &BmpSnapshot) -> BmpDimensions {
-    let Ok(layout) = crate::standards::v_v3::subsets::any::io::bmp_layout(snapshot) else { return BmpDimensions::default() };
-    BmpDimensions { width: layout.width, height: layout.height, bit_depth: layout.bits_per_pixel, has_alpha: layout.masks[3] != 0, pixel_count: u64::from(layout.width) * u64::from(layout.height) }
+    let image = &snapshot.image;
+    BmpDimensions { width: image.width, height: image.height, bit_depth: image.profile.bits_per_pixel(), has_alpha: image.masks[3] != 0, pixel_count: u64::from(image.width) * u64::from(image.height) }
 }
 //#endregion 🔖️Dimensions
 

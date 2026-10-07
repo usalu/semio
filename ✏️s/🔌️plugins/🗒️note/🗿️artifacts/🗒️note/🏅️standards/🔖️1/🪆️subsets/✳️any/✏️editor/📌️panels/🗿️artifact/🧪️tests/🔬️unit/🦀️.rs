@@ -21,7 +21,7 @@ async fn renders_document_tree() {
     // `artifact envelope terminal shell reached Drop before its app-owned bounded retirement
     // authority detached every nested owner`, which is what this law used to die of.
     let files = {
-        let seed = crate::standards::v1::subsets::any::io::binary::snapshot::new_note_store(store::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None))
+        let seed = crate::host::owned::new_note_store(store::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
             .await
             .expect("seed store for the semio example");
         store::print_document_pack(seed.envelope()).await.expect("print semio example document pack")

@@ -2,6 +2,7 @@
 /** 📦️ gltf Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runDefinitionChecks } from "../../🧪️tests/📜️definition/🟦️.ts";
+import { runBorrowedCarrierChecks } from "../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/📦️pack/🧪️tests/🫳️borrowed-carriers/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
@@ -33,7 +34,7 @@ class NativeSchemaScript extends BundleScript {
     let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
     try {
       lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(workspace, "agents", "resource-leases"), buildDirectory: target, args, signal: controller.signal });
-      for (const law of ["definition_tests::native_codec_identity_matches_structural_graph_and_independent_blake3", "standards::v2_0::subsets::any::io::text::inferences::tests::canonical_json_bytes_matches_the_portable_byte_array_contract", "standards::v2_0::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_lists", "standards::v2_0::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_gltf_controlled_binding_retires_deep_completed_fields_after_failure_and_cancellation", "standards::v2_0::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_gltf_independent_bad_later_json_owner_retires_deep_completed_sibling"]) {
+      for (const law of ["definition_tests::native_codec_identity_matches_structural_graph_and_independent_blake3", "standards::v2_0::subsets::any::io::component::binary::snapshot::owned_pack::borrowed_carrier_tests::borrowed_gltf_carriers_match_the_neutral_owned_metadata_and_serde_oracle", "standards::v2_0::subsets::any::io::component::text::inferences::tests::canonical_json_bytes_matches_the_portable_byte_array_contract", "standards::v2_0::subsets::any::io::component::sqlite::snapshot::tests::sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_lists", "standards::v2_0::subsets::any::io::component::sqlite::snapshot::tests::sqlite_snapshot_gltf_controlled_binding_retires_deep_completed_fields_after_failure_and_cancellation", "standards::v2_0::subsets::any::io::component::sqlite::snapshot::tests::sqlite_snapshot_gltf_independent_bad_later_json_owner_retires_deep_completed_sibling"]) {
         let observed = false;
         await runOwnedCommand("cargo", [...args, law, "--", "--exact", "--nocapture"], workspace, "gltf-native-schema", budget, { env, signal: controller.signal, onLine: line => { if (line.includes(`test ${law} ... ok`)) observed = true; } });
         if (!observed) throw new Error(`Native GLTF law did not execute: ${law}`);
@@ -43,4 +44,4 @@ class NativeSchemaScript extends BundleScript {
     }
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-gltf", { commands: { "native-schema-check": NativeSchemaScript }, twins: [{ name: "gltf-definition", run: runDefinitionChecks }], snapshotSqliteTests: ["../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📜️schema/🟦️.ts", "../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-gltf", { commands: { "native-schema-check": NativeSchemaScript }, twins: [{ name: "gltf-definition", run: runDefinitionChecks }, { name: "gltf-borrowed-carriers", run: runBorrowedCarrierChecks }], snapshotSqliteTests: ["../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📜️schema/🟦️.ts", "../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

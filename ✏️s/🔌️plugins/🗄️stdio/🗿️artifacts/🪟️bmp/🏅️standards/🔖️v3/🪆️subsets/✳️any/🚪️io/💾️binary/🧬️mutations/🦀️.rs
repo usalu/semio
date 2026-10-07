@@ -2,7 +2,7 @@
 /// 📦 Encodes a recognized mutation payload or declines another variant.
 pub type BmpMutationPayloadEncoder = fn(&BmpMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>;
 
-use crate::schema::mutations::BmpMutation;
+use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
 
 //#region Registry
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -12,7 +12,7 @@ pub struct Entry {
     pub encode: BmpMutationPayloadEncoder,
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
-pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::schema::mutations::set_snapshot::CODEC, crate::standards::v_v3::subsets::any::schema::mutations::patch_snapshot::CODEC, crate::standards::v_v3::subsets::any::schema::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::schema::mutations::paint_direct_region::CODEC];
+pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::binary::mutations::set_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::patch_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::paint_direct_region::CODEC];
 //#endregion Registry
 
 //#region Framing

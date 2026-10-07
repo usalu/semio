@@ -19,32 +19,27 @@
     },
     "normalDependencies": {
       "type": "array",
-      "minItems": 4,
-      "maxItems": 4,
+      "minItems": 6,
+      "maxItems": 6,
       "uniqueItems": true,
       "items": {
         "enum": [
           "semio-framework-value",
           "semio-framework-value-derive",
           "semio-framework-diagnostic",
-          "semio-framework-schema-registry"
+          "semio-framework-schema-registry",
+          "semio-framework-artifact-reference",
+          "semio-framework-dsl-record"
         ]
       }
     },
     "exports": {
       "type": "array",
-      "minItems": 19,
-      "maxItems": 19,
+      "minItems": 12,
+      "maxItems": 12,
       "uniqueItems": true,
       "items": {
         "enum": [
-          "StandardId",
-          "SubsetId",
-          "Dialect",
-          "ArtifactDialect",
-          "ArtifactKindId",
-          "ArtifactRef",
-          "is_canonical_artifact_kind",
           "IoPayload",
           "CARRIER_BINARY",
           "CARRIER_TEXT",
@@ -65,7 +60,7 @@
       "minItems": 3,
       "maxItems": 3,
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef"
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef"
       }
     }
   }

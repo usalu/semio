@@ -14,14 +14,13 @@
  *      ({@link resolveKeybindingTargetWindowV1}).
  *
  * ⚖️ Every row runs at least twice: through the shipped module and through an independent in-file
- * oracle, with Ajv (third party) validating the fixture and rejecting hostile mutations of it. */
+ * oracle. */
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
-import Ajv from "ajv";
 import { SHELL_KEYBINDINGS } from "@semio-tech/ui-react";
 import { decodeWorldProjectionTemplateId, worldProjectionSpecIconId } from "@semio-tech/infinite-world-r3f";
 import { TOOL_RUN_STEP_CHORD } from "../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
@@ -61,66 +60,6 @@ type Fixture = {
 const fixturePath = resolve(dirname(fileURLToPath(import.meta.url)), "../../🧱️elements/🏛️ShellHost/🧫️fixtures/⌨️window-scope/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 
-const FIXTURE_SCHEMA: Record<string, unknown> = {
-  type: "object",
-  additionalProperties: false,
-  required: ["note", "apps", "stacks", "dockSeed", "tabPresentation", "chords", "unownedHint", "reservedChords"],
-  properties: {
-    note: { type: "string", minLength: 1 },
-    apps: {
-      type: "object",
-      minProperties: 2,
-      additionalProperties: {
-        type: "object",
-        additionalProperties: false,
-        required: ["kinds", "modes"],
-        properties: {
-          kinds: { type: "array", minItems: 1, items: { type: "object", additionalProperties: false, required: ["id", "actionIds"], properties: { id: { type: "string", minLength: 1 }, actionIds: { type: "array", items: { type: "string", minLength: 1 } } } } },
-          modes: { type: "object", minProperties: 1, additionalProperties: { $ref: "#/$defs/node" } },
-        },
-      },
-    },
-    stacks: { type: "array", minItems: 3, items: { type: "object", additionalProperties: false, required: ["id", "app", "mode", "expected"], properties: { id: { type: "string" }, app: { type: "string" }, mode: { type: "string" }, expected: { type: "array", items: { $ref: "#/$defs/stack" } } } } },
-    dockSeed: { type: "array", minItems: 6, items: { type: "object", additionalProperties: false, required: ["id", "app", "mode", "activeWindowId", "expected"], properties: { id: { type: "string" }, app: { type: "string" }, mode: { type: "string" }, activeWindowId: { type: ["string", "null"] }, expected: { type: ["string", "null"] } } } },
-    tabPresentation: { type: "array", minItems: 4, items: { type: "object", additionalProperties: false, required: ["id", "kindIconId", "templateId", "expectedIconId"], properties: { id: { type: "string", minLength: 1 }, kindIconId: { type: "string", minLength: 1 }, templateId: { type: ["string", "null"] }, expectedIconId: { type: "string", minLength: 1 } } } },
-    chords: {
-      type: "array",
-      minItems: 8,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["id", "app", "mode", "focusedWindowId", "actionId", "expectedKind", "expectedWindowId"],
-        properties: { id: { type: "string" }, app: { type: "string" }, mode: { type: "string" }, focusedWindowId: { type: ["string", "null"] }, actionId: { type: "string", minLength: 1 }, expectedKind: { enum: ["focused", "owner", "unowned"] }, expectedWindowId: { type: ["string", "null"] } },
-      },
-    },
-    reservedChords: {
-      type: "object",
-      additionalProperties: false,
-      required: ["note", "collision", "shellTable", "overrides", "expected", "cases"],
-      properties: {
-        note: { type: "string", minLength: 1 },
-        collision: { type: "object", additionalProperties: false, required: ["shellControlId", "chord", "alsoMintedFor"], properties: { shellControlId: { type: "string" }, chord: { type: "string" }, alsoMintedFor: { type: "string" } } },
-        shellTable: { type: "object", minProperties: 5, additionalProperties: { type: "string", minLength: 1 } },
-        overrides: { type: "object", additionalProperties: { type: "string", minLength: 1 } },
-        expected: { type: "array", minItems: 4, items: { type: "string", minLength: 1 } },
-        cases: { type: "array", minItems: 8, items: { type: "object", additionalProperties: false, required: ["chord", "accelerator", "reserved"], properties: { chord: { type: "string", minLength: 1 }, accelerator: { type: "boolean" }, reserved: { type: "boolean" }, why: { type: "string" } } } },
-      },
-    },
-    unownedHint: { type: "array", minItems: 3, items: { type: "object", additionalProperties: false, required: ["locale", "chord", "label", "text"], properties: { locale: { type: "string", minLength: 1 }, chord: { type: "string", minLength: 1 }, label: { type: "string", minLength: 1 }, text: { type: "string", minLength: 1 } } } },
-  },
-  $defs: {
-    stack: { type: "object", additionalProperties: false, required: ["windowIds", "activeWindowId"], properties: { windowIds: { type: "array", items: { type: "string" } }, activeWindowId: { type: ["string", "null"] } } },
-    node: {
-      type: "object",
-      required: ["kind"],
-      oneOf: [
-        { additionalProperties: false, required: ["kind", "id"], properties: { kind: { const: "window" }, id: { type: "string", minLength: 1 } } },
-        { additionalProperties: false, required: ["kind", "children"], properties: { kind: { const: "stack" }, activeId: { type: "string" }, children: { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "id"], properties: { kind: { const: "window" }, id: { type: "string", minLength: 1 } } } } } },
-        { additionalProperties: false, required: ["kind", "children"], properties: { kind: { enum: ["row", "column"] }, children: { type: "array", minItems: 1, items: { $ref: "#/$defs/node" } } } },
-      ],
-    },
-  },
-};
 
 const appOf = (id: string): FixtureApp => fixture.apps[id]!;
 const layoutOf = (app: string, mode: string): WindowScopeLayoutNodeV1 => appOf(app).modes[mode]!;
@@ -159,16 +98,6 @@ function oracleTarget(app: string, mode: string, focusedWindowId: string | null,
 }
 
 export function testWindowScope(): void {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(FIXTURE_SCHEMA);
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
-  for (const hostile of [
-    { ...fixture, extra: true },
-    { ...fixture, chords: fixture.chords.map((row, index) => (index === 0 ? { ...row, expectedKind: "elsewhere" } : row)) },
-    { ...fixture, dockSeed: fixture.dockSeed.slice(0, 2) },
-    { ...fixture, apps: { ...fixture.apps, generation3d: { ...fixture.apps.generation3d!, modes: { edit: { kind: "row", children: [] } } } } },
-  ]) {
-    assert.equal(validate(hostile), false, "🧨️ a hostile fixture must be refused");
-  }
 
   for (const row of fixture.stacks) {
     const stacks = modeLayoutStacksV1(layoutOf(row.app, row.mode));

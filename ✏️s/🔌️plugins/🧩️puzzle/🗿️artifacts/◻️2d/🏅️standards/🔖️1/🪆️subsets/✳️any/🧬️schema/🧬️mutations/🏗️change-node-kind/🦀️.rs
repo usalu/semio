@@ -1,24 +1,26 @@
 //! 🏗️ Puzzle2d mutation — `ChangeNodeKind`: changes a node's `node_kind` catalog reference.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 🏗️ `change-node-kind` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "change-node-kind")]
 pub struct ChangeNodeKind {
-    pub id: String,
-    pub new_node_kind: Option<String>,
+    pub id: PagedUtf8<{ usize::MAX }>,
+    pub new_node_kind: Option<PagedUtf8<{ usize::MAX }>>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_node_kind(id: String, new_node_kind: Option<String>) -> Puzzle2dMutation {
+pub fn change_node_kind(id: PagedUtf8<{ usize::MAX }>, new_node_kind: Option<PagedUtf8<{ usize::MAX }>>) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeNodeKind(ChangeNodeKind { id, new_node_kind })
 }
 
@@ -38,7 +40,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeNodeKi
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node \"{}\" kind", self.id), &format!("Art von Knoten \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
+        vec![self.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

@@ -49,7 +49,7 @@ fn number_json(value: f64) -> semio_framework_pack_json::Value {
 /// `box_minus_cylinder_bore_exact_volume_and_validates` case, so the exact engine is genuinely
 /// exercised (neither the containment shortcut nor the axis-box shortcut applies) and the result
 /// is known-good topology rather than an accidental validation failure.
-async fn bored_box_operands(registry: &neural_engine::ColdOwner<Registry>) -> (neural_engine::ColdOwner<Dictionary>, neural_engine::ColdOwner<Dictionary>) {
+async fn bored_box_operands(registry: &Registry) -> (neural_engine::ColdOwner<Dictionary>, neural_engine::ColdOwner<Dictionary>) {
     // 🧹️ Every neural `Dictionary` this helper owns crosses a cold boundary — `dispatch_cold`
     // retires the input it is handed and answers inside a `ColdOwner` — and the two OUT
     // dictionaries are RETURNED rather than dropped here: a dictionary that is the last owner of
@@ -73,7 +73,7 @@ async fn bored_box_operands(registry: &neural_engine::ColdOwner<Registry>) -> (n
 
 /// ➡️ One `brep.xform.translate` hop, so the two operands actually overlap the way the kernel
 /// suite's own bored-box case does.
-async fn translated(registry: &neural_engine::ColdOwner<Registry>, out: &Dictionary, channel: &str, offset: [f64; 3]) -> neural_engine::ColdOwner<Dictionary> {
+async fn translated(registry: &Registry, out: &Dictionary, channel: &str, offset: [f64; 3]) -> neural_engine::ColdOwner<Dictionary> {
     let geometry = channel_payload(out, channel).await;
     registry
         .dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(geometry.into_inner())).insert("offset", Value::Dictionary(vector_dictionary(offset))))

@@ -3,7 +3,7 @@ use crate::standards::v_commonmark::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 use std::collections::{BTreeMap,BTreeSet};
-use crate::standards::v_commonmark::subsets::any::schema::snapshot::owned_pack::{OwnedNodes,RetireNode};
+use crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::{OwnedNodes,RetireNode};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
@@ -117,7 +117,7 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
  if seen_blocks.len()!=reader.blocks.len()||seen_inlines.len()!=reader.inlines.len()||!inlines.is_empty()||!items.is_empty(){return Err(invalid("Markdown tree contains unreachable entities"));}Ok(MdSnapshot{schema:reconstruct_text(control,reader.document.text(1)?)?,blocks:std::mem::take(&mut blocks.0)})
 }
 
-impl MdSnapshot{pub(super)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut out)?;out.finish_borrowed()}pub(super)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:store::sqlite_snapshot::SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
+impl MdSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut out)?;out.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:store::sqlite_snapshot::SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
 impl ArtifactSqliteSnapshot for MdSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
@@ -165,7 +165,7 @@ impl ArtifactSqliteSnapshot for MdSnapshot{
   })();result
  }
 
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{validate_owned(self,dialect,database,control)}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{validate_owned(self,dialect,database,control)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{decode_hook(payload,control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{encode_hook(self,encoding,control)}
  fn retire_sqlite_snapshot(self){retire_hook(self)}
@@ -174,9 +174,11 @@ impl ArtifactSqliteSnapshot for MdSnapshot{
 }
 
 struct OwnedSnapshot(Option<MdSnapshot>);
-impl Drop for OwnedSnapshot{fn drop(&mut self){if let Some(value)=self.0.take(){crate::standards::v_commonmark::subsets::any::schema::snapshot::owned_pack::retire_owned(value)}}}
+impl Drop for OwnedSnapshot{fn drop(&mut self){if let Some(value)=self.0.take(){crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::retire_owned(value)}}}
 
-fn validate_owned(snapshot:&MdSnapshot,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+fn validate_owned(snapshot:&MdSnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
  let result=(||->Result<(),ValueError>{
  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.md"||dialect.standard!="commonmark"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,format!("CommonMark does not own semantic subset {}",dialect.to_coordinate())))}
  let restored=OwnedSnapshot(Some(<MdSnapshot as ArtifactSqliteSnapshot>::from_sqlite_database(database,control)?));let expected=project(snapshot,control)?;let candidate=project(restored.0.as_ref().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"CommonMark retained candidate is missing"))?,control)?;let total=expected.tables.iter().try_fold(0usize,|total,table|total.checked_add(table.rows.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"CommonMark comparison work overflow")))?;let mut completed=0;
@@ -185,11 +187,11 @@ fn validate_owned(snapshot:&MdSnapshot,dialect:&store::io_schema::ArtifactDialec
  })();result.map(|()|store::io_schema::IoOutcome::clean(())).map_err(store::io_schema::IoError::from_value_error)
 }
 
-fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<MdSnapshot,ValueError>{crate::standards::v_commonmark::subsets::any::schema::snapshot::owned_pack::decode_owned(payload,control)}
-fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_commonmark::subsets::any::schema::snapshot::owned_pack::encode_owned(value,encoding,control)}
-fn retire_hook(value:MdSnapshot){crate::standards::v_commonmark::subsets::any::schema::snapshot::owned_pack::retire_owned(value)}
+fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<MdSnapshot,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::decode_owned(payload,control)}
+fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::encode_owned(value,encoding,control)}
+fn retire_hook(value:MdSnapshot){crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::retire_owned(value)}
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 

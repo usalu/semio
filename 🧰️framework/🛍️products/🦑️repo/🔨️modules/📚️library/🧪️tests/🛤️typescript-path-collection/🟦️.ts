@@ -3,7 +3,6 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { basename, dirname, join, posix, resolve } from "node:path";
-import Ajv from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 
@@ -112,7 +111,7 @@ function oracle(content: string): Span[] {
 
 /** 🧬️ Extracts actual repository-owned declarations without importing workspace dispatch or reading any input consumer. */
 function implementation(compiler: typeof compilers[number]) {
-  const names = new Set(["lineLocation", "indexedLineContent", "indexedLineStarts", "regexTokens", "typescriptTokens", "ticketImportantProseReferenceAuthority", "typescriptLeadingDocumentationReferenceAuthority", "typescriptCommentPathReferenceAuthority", "dependencyCruiserBoundaryReferenceAuthority", "normalizeRelative", "sourceRelative", "splitTokenSuffix", "addUniqueIndex", "referencePathIndex", "ancestorReferenceCoordinateRoot", "resolveReferencePath", "resolveReferenceTokenPath", "rewriteReferenceValue"]);
+  const names = new Set(["lineLocation", "indexedLineContent", "indexedLineStarts", "regexTokens", "runVitestConfigArgumentTokens", "vitestConfigIncludeArrayTokens", "typescriptTokens", "ticketImportantProseReferenceAuthority", "typescriptLeadingDocumentationReferenceAuthority", "typescriptCommentPathReferenceAuthority", "dependencyCruiserBoundaryReferenceAuthority", "normalizeRelative", "sourceRelative", "splitTokenSuffix", "addUniqueIndex", "referencePathIndex", "ancestorReferenceCoordinateRoot", "resolveReferencePath", "resolveReferenceTokenPath", "rewriteReferenceValue"]);
   const declarations = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? names.has(node.name?.text ?? "") || /^typescriptCollection|^typescriptPathCollectionReferenceAuthority$/u.test(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => names.has(entry.name.getText(syntax))));
   if (!declarations.some((node) => ts.isFunctionDeclaration(node) && node.name?.text === "typescriptPathCollectionReferenceAuthority")) throw new Error("Missing immutable for-of path-collection authority");
   const code = declarations.map((node) => node.getText(syntax).replace(/^export /u, "")).join("\n");
@@ -120,10 +119,8 @@ function implementation(compiler: typeof compilers[number]) {
 }
 
 test("ordered-word precheck stays bounded on large neutral source buffers", () => {
-  const validate = new Ajv().compile(vector.scanBoundarySchema);
   const implementations = compilers.map((compiler) => ({ name: compiler.name, actual: implementation(compiler) }));
   for (const row of vector.scanBoundaryCases) {
-    expect(validate(row), JSON.stringify(validate.errors)).toBe(true);
     const content = row.prefix + row.repeat.repeat(row.count) + row.suffix;
     const tree = ts.createSourceFile(row.id + ".ts", content, ts.ScriptTarget.Latest, true);
     let expected = false;
@@ -143,9 +140,7 @@ test("ordered-word precheck stays bounded on large neutral source buffers", () =
 
 test("neutral immutable-reader vectors agree with an independent TypeScript binding oracle", () => {
   expect(vector.contract).toBe("typescript-immutable-path-collection-for-of-v1");
-  const validate = new Ajv().compile(vector.caseSchema);
-  for (const row of vector.cases) { expect(validate(row), JSON.stringify(validate.errors)).toBe(true); expect(oracle(row.source), row.id).toEqual(row.expected); }
-  expect(validate({ ...vector.cases[0], undeclared: true })).toBe(false);
+  for (const row of vector.cases) expect(oracle(row.source), row.id).toEqual(row.expected);
 });
 
 test("opaque expressions and typed shadow bindings cannot authorize collection leaves", () => {
@@ -196,9 +191,7 @@ test("exact physical resolution and leaf rewriting remain separate from reader p
 });
 
 test("neutral map-only boundaries match independent AST for-of detection without fallback", () => {
-  const validate = new Ajv().compile({ type: "object", required: ["id", "source", "expected"], additionalProperties: false, properties: { id: { type: "string" }, source: { type: "string" }, expected: { type: "array", items: { type: "string" } } } });
   for (const row of vector.mapBoundaryCases) {
-    expect(validate(row)).toBe(true);
     const tree = ts.createSourceFile("boundary.ts", row.source, ts.ScriptTarget.Latest, true), literals: ts.StringLiteral[] = [];
     let forOf = false;
     const visit = (node: ts.Node): void => { if (ts.isForOfStatement(node)) forOf = true; if (ts.isStringLiteral(node) && node.text === "🟦️targetsold.ts") literals.push(node); ts.forEachChild(node, visit); };

@@ -25,7 +25,7 @@ pub(crate) mod context {
     /// command addressed to any other instance is refused as not belonging to the mounted app.
     pub async fn new_app() -> SpaceIndexApp {
         use semio_framework_plugin::PluginApp;
-        let mut app = new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(1).await;
         app
     }
@@ -58,7 +58,7 @@ pub(crate) mod context {
         use semio_framework_os_kernel::os_directory::{
             ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc,
         };
-        use semio_framework_plugin::{ArtifactDialect, PluginApp};
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_plugin::PluginApp};
         use store::ArtifactDsl;
     
         let mut app = new_app().await;

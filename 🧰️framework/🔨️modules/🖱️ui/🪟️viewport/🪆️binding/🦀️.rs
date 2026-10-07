@@ -4,6 +4,28 @@ use semio_framework_dsl_record::{DslField,FieldSpec,FieldValue,RecordLayout,Reco
 use semio_framework_value::ValueError;
 use crate::{Viewport2d,Viewport3dOrbit};
 
+use semio_framework_dsl_record::{BorrowedDslField,BorrowedDslRecord,BorrowedFieldSpec,BorrowedRecordSpec,BorrowedShape};
+
+impl BorrowedDslRecord for Viewport2d {
+    const RECORD:BorrowedRecordSpec = BorrowedRecordSpec { keyword:None,layout:RecordLayout::Inline,fields:&[
+        BorrowedFieldSpec::new(1,"x",BorrowedShape::Float),BorrowedFieldSpec::new(2,"y",BorrowedShape::Float),BorrowedFieldSpec::new(3,"zoom",BorrowedShape::Float)
+    ] };
+}
+impl BorrowedDslField for Viewport2d { const SHAPE:BorrowedShape = BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>); }
+
+impl BorrowedDslRecord for Viewport3dOrbit {
+    const RECORD:BorrowedRecordSpec = {
+        const FIELDS:&[BorrowedFieldSpec] = &[
+            BorrowedFieldSpec::new(1,"position",BorrowedShape::Tuple(semio_framework_dsl_record::borrowed_field_shape::<f64>,Some(3))),
+            BorrowedFieldSpec::new(2,"target",BorrowedShape::Tuple(semio_framework_dsl_record::borrowed_field_shape::<f64>,Some(3))),
+            BorrowedFieldSpec::new(3,"zoom",BorrowedShape::Float),
+            BorrowedFieldSpec { optional:true,..BorrowedFieldSpec::new(4,"up",BorrowedShape::Tuple(semio_framework_dsl_record::borrowed_field_shape::<f64>,Some(3))) }
+        ];
+        BorrowedRecordSpec { keyword:None,layout:RecordLayout::Inline,fields:FIELDS }
+    };
+}
+impl BorrowedDslField for Viewport3dOrbit { const SHAPE:BorrowedShape = BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>); }
+
 fn planar_spec() -> RecordSpec {
     RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "x", Shape::Float), FieldSpec::new(2, "y", Shape::Float), FieldSpec::new(3, "zoom", Shape::Float)])
 }

@@ -519,6 +519,68 @@
         "value": ""
       },
       "error": true
+    },
+    {
+      "id": "inspector-number-move-down",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "move",
+        "index": 0,
+        "destination": 1,
+        "value": ""
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "id": "inspector-number-move-up",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "move",
+        "index": 1,
+        "destination": 0,
+        "value": ""
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          2,
+          1
+        ]
+      }
     }
   ],
   "cases": [

@@ -6,7 +6,7 @@ mod census;
 #[cfg(test)]
 #[path="🧪️tests/💰️backing/🦀️.rs"]
 mod backing_tests;
-use crate::standards::v2x3::subsets::base::schema::snapshot::component::native::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_contract::part21::{Part21Decimal, Part21Document, Part21Header, Part21Instance, Part21Value};
 use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::RetireOwned;
@@ -28,8 +28,6 @@ semio_framework_value::artifact_retire_struct!(Entity { name,arguments });
 semio_framework_value::artifact_retire_struct!(Instance { id,entities });
 semio_framework_value::artifact_retire_struct!(Edm { producer,module,creation_date,host,database,database_version,database_creation_date,schema,model,model_creation_date,header_model,header_model_creation_date,user,group,license,options });
 semio_framework_value::artifact_retire_struct!(Frame { schema,file_description,file_name,file_schema,instances,values,edm });
-semio_framework_value::artifact_retire_struct!(Ifc2x3EdmPreamble { producer,module,creation_date,host,database,database_version,database_creation_date,schema,model,model_creation_date,header_model,header_model_creation_date,user,group,license,options });
-semio_framework_value::artifact_retire_struct!(Ifc2x3Snapshot { schema,document,edm_preamble });
 pub(crate) fn close<T: RetireOwned>(value:T) { let mut cursor=semio_framework_value::retirement::owned_retirement(value);while !cursor.terminal_is_empty(){cursor.close_step(256,65536).expect("IFC2x3 native cold grant");} }
 fn positioned(error:ValueError)->TextError { TextError::from_value_error(error,TextSpan::at(1,1)) }
 fn invalid(message:&'static str)->ValueError { ValueError::new(ValueRefusalKind::InvalidValue,message) }

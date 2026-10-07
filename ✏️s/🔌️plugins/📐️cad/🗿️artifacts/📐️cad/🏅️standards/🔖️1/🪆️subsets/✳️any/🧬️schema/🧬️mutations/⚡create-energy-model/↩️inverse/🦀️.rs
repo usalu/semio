@@ -10,7 +10,7 @@ use crate::CadSnapshot;
 pub fn inverse(_payload: &CreateEnergyModel, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
     Ok((|| {
     match &base.energy_model {
-        Some(existing) => vec![CadMutation::CreateEnergyModel(CreateEnergyModel { child_id: existing.child_id.clone(), target: existing.target.to_uri() })],
+        Some(existing) => vec![CadMutation::CreateEnergyModel(CreateEnergyModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
         None => vec![CadMutation::DeleteEnergyModel(delete_energy_model::DeleteEnergyModel {})],
     }
 

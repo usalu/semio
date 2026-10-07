@@ -185,6 +185,7 @@ web-sys = { version = "0.3.98", features = [
 ] }
 
 [dev-dependencies]
+semio-framework-ui-runtime = { workspace = true }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
 
 # ♿️ The third-party oracle of the accessibility bridge's laws: AccessKit's own consumer tree (the one its platform adapters

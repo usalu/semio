@@ -34,3 +34,6 @@ pub mod mutations;
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+#[path = "💡️inferences/🛡️conformance/🦀️.rs"]
+pub mod conformance;

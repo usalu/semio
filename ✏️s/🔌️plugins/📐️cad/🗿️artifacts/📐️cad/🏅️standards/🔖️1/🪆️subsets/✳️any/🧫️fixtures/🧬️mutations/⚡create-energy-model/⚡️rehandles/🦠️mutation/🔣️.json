@@ -1,5 +1,12 @@
 {
   "mutation": "createEnergyModel",
   "childId": "cad-energy-2",
-  "target": "cad-energy-2!s.stdio.semio@v1/model"
+  "target": {
+    "artifactId": "cad-energy-2",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model"
+    }
+  }
 }

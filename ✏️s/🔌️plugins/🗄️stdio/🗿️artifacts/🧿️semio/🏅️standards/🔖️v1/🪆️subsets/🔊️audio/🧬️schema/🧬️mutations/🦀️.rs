@@ -29,7 +29,7 @@ use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, 
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "🎙️insert-channel/🦀️.rs"]
@@ -226,3 +226,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/🎧️rerates/🦀️.rs"]
 mod set_snapshot_rerates_to_48_khz_and_rewrites_the_right_channel;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

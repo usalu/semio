@@ -303,7 +303,7 @@ fn synchronize_presented_tooltip(window: &mut UiWindow, surface: UiSurfaceToken)
     false
 }
 
-fn mark_tooltip_paint_dirty(window: &mut UiWindow) {
+fn mark_window_paint_dirty(window: &mut UiWindow) {
     if let Some(root) = window.tree.root {
         window.tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
     }
@@ -1212,6 +1212,16 @@ const _: fn() = || {
     fn assert_send<T: Send>() {}
     assert_send::<Ui>();
 };
+
+/// 🧾️ The exact retained input generation and submitted text held until one dispatch settles.
+#[derive(Clone, Debug)]
+pub struct RetainedInputDraft {
+    pub surface: UiSurfaceToken,
+    pub node: NodeId,
+    pub key: crate::wgpu::tree::NodeKey,
+    pub text: String,
+    pub action: crate::wgpu::ActionDescriptor,
+}
 
 impl Ui {
     pub fn new(locale: crate::wgpu::Locale) -> Self {
@@ -3268,7 +3278,7 @@ impl Ui {
         if presented {
             window.advance_presented_interaction();
             if synchronize_presented_tooltip(window, surface) {
-                mark_tooltip_paint_dirty(window);
+                mark_window_paint_dirty(window);
             }
         }
         if layout_changed {
@@ -3307,7 +3317,7 @@ impl Ui {
         if presented {
             window.advance_presented_interaction();
             if synchronize_presented_tooltip(window, surface) {
-                mark_tooltip_paint_dirty(window);
+                mark_window_paint_dirty(window);
             }
         }
         if layout_changed {
@@ -3366,7 +3376,7 @@ impl Ui {
         if presented {
             window.advance_presented_interaction();
             if synchronize_presented_tooltip(window, surface) {
-                mark_tooltip_paint_dirty(window);
+                mark_window_paint_dirty(window);
             }
         }
         if layout_changed {
@@ -3508,7 +3518,7 @@ impl Ui {
             }
         };
         if tooltip_changed {
-            mark_tooltip_paint_dirty(window);
+            mark_window_paint_dirty(window);
         }
         let caret = step.caret.and_then(|step| presented_caret(surface, if presented { &window.presented_tree } else { &window.tree }, step));
         Some(UiWindowClockStep { surface, tooltip: step.tooltip, caret, interaction_changed: step.changed, next_deadline: step.next_deadline })
@@ -3615,6 +3625,37 @@ impl Ui {
     /// 🌲️ Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
     pub fn tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| if window.presented_ready { &window.presented_tree } else { &window.tree })
+    }
+
+    /// 🧾️ Captures only an addressed input commit's current focused edit buffer.
+    pub fn retained_input_draft(&self, window_id: &str, intent: &crate::wgpu::action::UiIntentCommand) -> Option<RetainedInputDraft> {
+        if intent.trigger != ui_contract::Trigger::Commit { return None; }
+        let surface = self.windows.token(window_id)?;
+        let tree = self.tree(window_id)?;
+        let id = tree.document_node(UiNodeId(intent.address.node))?;
+        let node = tree.node(id)?;
+        let UiNode::Input(input) = &node.spec.0 else { return None; };
+        if node.intent.as_ref()?.address != intent.address { return None; }
+        Some(RetainedInputDraft { surface, node: id, key: node.key.clone(), text: node.state.edit.as_ref()?.text.clone(), action: input.on_change.clone() })
+    }
+
+    /// 🛟️ Restores an explicitly discarded submission while preserving newer text and replacement generations.
+    pub fn discard_retained_input_draft(&mut self, window_id: &str, submitted: &RetainedInputDraft) -> bool {
+        if self.windows.token(window_id) != Some(submitted.surface) { return false; }
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return false };
+        let tree = if window.presented_ready { &mut window.presented_tree } else { &mut window.tree };
+        let Some(node) = tree.node_mut(submitted.node).filter(|node| node.key == submitted.key && matches!(&node.spec.0, UiNode::Input(input) if input.on_change == submitted.action)) else { return false };
+        let Some(published) = crate::wgpu::events::editable_value(&node.spec.0) else { return false };
+        let Some(edit) = node.state.edit.as_mut().filter(|edit| edit.text == submitted.text && edit.composition.is_none()) else { return false };
+        edit.text = published;
+        edit.caret = edit.text.len(); edit.anchor = edit.caret; edit.composition = None; edit.scroll_x = 0.0;
+        node.state.number_refusal = None;
+        tree.mark_dirty(submitted.node, crate::wgpu::tree::NodeFlags::DIRTY_PAINT);
+        if window.presented_ready {
+            window.advance_presented_interaction();
+            mark_window_paint_dirty(window);
+        }
+        true
     }
 
     /// 💬️ The disabled row action whose reason hint `window_id` shows (audit W1E-1) — its row's document id, the action index and

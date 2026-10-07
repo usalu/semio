@@ -89,7 +89,7 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, Semio
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
 /// too, not merely under `#[cfg(test)]` (same fix `🧊️brep`/`🌊️flow`'s own facets document).
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Leaves
 use super::change_material_base_color;
@@ -287,3 +287,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

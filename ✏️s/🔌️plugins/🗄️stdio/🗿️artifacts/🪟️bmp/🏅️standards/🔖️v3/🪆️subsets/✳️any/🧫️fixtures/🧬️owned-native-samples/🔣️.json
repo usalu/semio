@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "bitfields16-native-component-precision",
+      "snapshot": {
+        "schema": "stdio.bmp",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "rowOrder": "topDown",
+          "profile": "directBitfields16",
+          "masks": [
+            63488,
+            2016,
+            31,
+            0
+          ],
+          "palette": [],
+          "pixels": {
+            "storage": "direct",
+            "samples": [
+              {
+                "red": 17,
+                "green": 33,
+                "blue": 9,
+                "alpha": 0,
+                "reserved": 0
+              },
+              {
+                "red": 31,
+                "green": 63,
+                "blue": 15,
+                "alpha": 0,
+                "reserved": 0
+              }
+            ]
+          },
+          "xPixelsPerMeter": 2835,
+          "yPixelsPerMeter": 2835,
+          "colorsUsed": 0,
+          "colorsImportant": 0,
+          "reserved1": 7,
+          "reserved2": 11,
+          "opaqueGap": [
+            13,
+            47,
+            0
+          ],
+          "opaqueTrailer": [
+            222,
+            173
+          ]
+        }
+      },
+      "paint": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "red": 255,
+        "green": 0,
+        "blue": 0,
+        "alpha": 255
+      },
+      "expectedSamples": [
+        {
+          "red": 31,
+          "green": 0,
+          "blue": 0,
+          "alpha": 0,
+          "reserved": 0
+        },
+        {
+          "red": 31,
+          "green": 63,
+          "blue": 15,
+          "alpha": 0,
+          "reserved": 0
+        }
+      ],
+      "expectedRevision": "f6995054624e8b06"
+    },
+    {
+      "name": "indexed-duplicate-colors-preserve-indices",
+      "snapshot": {
+        "schema": "stdio.bmp",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "rowOrder": "bottomUp",
+          "profile": "indexedRgb4",
+          "masks": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "palette": [
+            {
+              "r": 20,
+              "g": 40,
+              "b": 60,
+              "reserved": 7
+            },
+            {
+              "r": 20,
+              "g": 40,
+              "b": 60,
+              "reserved": 11
+            }
+          ],
+          "pixels": {
+            "storage": "indexed",
+            "indices": [
+              0,
+              1
+            ]
+          },
+          "xPixelsPerMeter": 0,
+          "yPixelsPerMeter": 0,
+          "colorsUsed": 2,
+          "colorsImportant": 0,
+          "reserved1": 0,
+          "reserved2": 0,
+          "opaqueGap": [],
+          "opaqueTrailer": []
+        }
+      },
+      "paint": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "paletteIndex": 1
+      },
+      "expectedIndices": [
+        1,
+        1
+      ],
+      "expectedRevision": "8194611e21a9f56d"
+    },
+    {
+      "name": "rgb32-reserved-sample-retained",
+      "snapshot": {
+        "schema": "stdio.bmp",
+        "image": {
+          "width": 1,
+          "height": 1,
+          "rowOrder": "bottomUp",
+          "profile": "directRgb32",
+          "masks": [
+            16711680,
+            65280,
+            255,
+            0
+          ],
+          "palette": [],
+          "pixels": {
+            "storage": "direct",
+            "samples": [
+              {
+                "red": 17,
+                "green": 33,
+                "blue": 9,
+                "alpha": 0,
+                "reserved": 2147483648
+              }
+            ]
+          },
+          "xPixelsPerMeter": 0,
+          "yPixelsPerMeter": 0,
+          "colorsUsed": 0,
+          "colorsImportant": 0,
+          "reserved1": 0,
+          "reserved2": 0,
+          "opaqueGap": [],
+          "opaqueTrailer": []
+        }
+      },
+      "paint": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "red": 255,
+        "green": 0,
+        "blue": 0,
+        "alpha": 255
+      },
+      "expectedSamples": [
+        {
+          "red": 255,
+          "green": 0,
+          "blue": 0,
+          "alpha": 0,
+          "reserved": 2147483648
+        }
+      ],
+      "expectedRevision": "04e2c62489e89c18"
+    }
+  ]
+}

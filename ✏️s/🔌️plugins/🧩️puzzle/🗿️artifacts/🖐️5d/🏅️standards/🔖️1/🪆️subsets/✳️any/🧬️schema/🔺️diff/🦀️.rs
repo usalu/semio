@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the puzzle5d artifact.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dDiff {
@@ -40,21 +40,21 @@ pub struct Puzzle5dDiff {
 //#region 🔖️DeltaHelpers
 
 /// 📋 Kind-compatibility list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dKindCompatibilityList {
     pub values: Vec<Puzzle5dKindCompatibility>,
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dStringList {
     pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `parts`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dPartsDelta {
     pub added: Vec<Puzzle5dPart>,
@@ -64,7 +64,7 @@ pub struct Puzzle5dPartsDelta {
 }
 
 /// 🩹 One patched `Puzzle5dPart` entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dPartPatchEntry {
     pub id: String,
@@ -72,14 +72,14 @@ pub struct Puzzle5dPartPatchEntry {
 }
 
 /// 🩹 Sparse patch over `Puzzle5dPart` — whole-item replacement via `replacement`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dPartPatch {
     pub replacement: Option<Puzzle5dPart>,
 }
 
 /// 🧩 Identified-collection delta for `fasteners`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dFastenersDelta {
     pub added: Vec<Puzzle5dFastener>,
@@ -89,7 +89,7 @@ pub struct Puzzle5dFastenersDelta {
 }
 
 /// 🩹 One patched `Puzzle5dFastener` entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dFastenerPatchEntry {
     pub id: String,
@@ -97,14 +97,14 @@ pub struct Puzzle5dFastenerPatchEntry {
 }
 
 /// 🩹 Sparse patch over `Puzzle5dFastener` — whole-item replacement via `replacement`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dFastenerPatch {
     pub replacement: Option<Puzzle5dFastener>,
 }
 
 /// 🧩 Identified-collection delta for `target_volumes`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dTargetVolumesDelta {
     pub added: Vec<Puzzle5dTargetVolume>,
@@ -114,7 +114,7 @@ pub struct Puzzle5dTargetVolumesDelta {
 }
 
 /// 🩹 One patched `Puzzle5dTargetVolume` entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dTargetVolumePatchEntry {
     pub id: String,
@@ -122,7 +122,7 @@ pub struct Puzzle5dTargetVolumePatchEntry {
 }
 
 /// 🩹 Sparse patch over `Puzzle5dTargetVolume` — whole-item replacement via `replacement`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dTargetVolumePatch {
     pub replacement: Option<Puzzle5dTargetVolume>,

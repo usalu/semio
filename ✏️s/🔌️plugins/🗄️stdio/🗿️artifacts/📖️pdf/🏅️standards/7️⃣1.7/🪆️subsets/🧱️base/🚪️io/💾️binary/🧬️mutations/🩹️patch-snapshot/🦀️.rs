@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "patch-snapshot");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::PatchSnapshot;
+use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot::PatchSnapshot;
 
 /// 📤️ Encodes this direct payload as the patch's canonical JSON bytes.
 pub fn encode(payload: &PatchSnapshot) -> Result<Vec<u8>, String> {

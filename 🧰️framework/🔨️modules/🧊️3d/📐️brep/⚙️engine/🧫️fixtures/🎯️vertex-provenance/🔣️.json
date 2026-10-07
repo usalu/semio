@@ -1,5 +1,4 @@
 {
-  "schema": "brep.vertex-provenance.v1",
   "unselectable": 4294967295,
   "cases": [
     {
@@ -80,6 +79,49 @@
           0
         ]
       ]
+    },
+    {
+      "kind": "point",
+      "dimensions": [],
+      "points": [
+        [
+          1.25,
+          -2.5,
+          3.75
+        ]
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "row": 0,
+      "field": "start",
+      "value": 1
+    },
+    {
+      "row": 0,
+      "field": "count",
+      "value": 0
+    },
+    {
+      "row": 0,
+      "field": "count",
+      "value": 1.5
+    },
+    {
+      "row": 0,
+      "field": "count",
+      "value": 2
+    },
+    {
+      "row": 0,
+      "field": "entity_id",
+      "value": ""
+    },
+    {
+      "row": 0,
+      "field": "entity_id",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     }
   ]
 }

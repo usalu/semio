@@ -34,7 +34,7 @@ impl ArtifactSqliteSnapshot for SequenceSnapshot{
   native.begin_stage(6)?;native.charge(std::mem::size_of::<Self>())?;
   let schema=native.copy_text(document.text(1)?)?;native.step()?;let child_id=native.copy_text(child.text(2)?)?;native.step()?;let artifact_id=native.copy_text(child.text(3)?)?;native.step()?;
   let artifact_kind=native.copy_text(child.text(4)?)?;native.step()?;let standard=native.copy_text(child.text(5)?)?;native.step()?;let subset=native.copy_text(child.text(6)?)?;native.step()?;native.checkpoint()?;
-  Ok(Self{schema,content:store::ArtifactChild::new(child_id,store::io_schema::ArtifactRef{artifact_id,dialect:store::io_schema::ArtifactDialect{artifact_kind,standard,subset}})})})();(result,native.owned_bytes())})?
+  Ok(Self{schema,content:store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}})})})();(result,native.owned_bytes())})?
  }
 }
 

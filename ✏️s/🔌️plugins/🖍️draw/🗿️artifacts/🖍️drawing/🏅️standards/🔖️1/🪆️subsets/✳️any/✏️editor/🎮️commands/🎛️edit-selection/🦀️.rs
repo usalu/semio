@@ -58,7 +58,7 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
         "group" => {
             let mut group = crate::schema::create_drawing_group_layer("Group");
             let material = format!("{}:{}", document.id, selected.iter().map(|layer| layer_base(layer).id.as_str()).collect::<Vec<_>>().join("/"));
-            layer_base_mut(&mut group).id = crate::schema::create_drawing_id("group", material.as_bytes());
+            layer_base_mut(&mut group).id = crate::standards::v1::subsets::any::schema::create_drawing_id("group", material.as_bytes()).into();
             let group_id = layer_base(&group).id.clone();
             if find_drawing_layer(document, &group_id).is_some() { return Err(Fault::from("This group already exists")); }
             operations.push(crate::mutations::create_layer(parent, Some(locations[0].index), group));
@@ -72,7 +72,7 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
             let order=siblings.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>();
             let ids=selected.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>();
             let moves=stack::stack_moves(&order,&ids,operation).ok_or_else(||Fault::from("Invalid layer stack selection"))?;
-            operations.extend(moves.into_iter().map(|(id,index)|crate::mutations::reorder_layer(id,parent.clone(),index)));
+            operations.extend(moves.into_iter().map(|(id,index)|crate::mutations::reorder_layer(id.into(),parent.clone(),index)));
         }
         _ => return Err(Fault::from("Unknown selection operation")),
     }

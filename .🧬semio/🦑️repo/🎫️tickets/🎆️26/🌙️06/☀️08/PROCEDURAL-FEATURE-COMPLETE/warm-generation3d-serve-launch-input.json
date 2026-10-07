@@ -1,0 +1,35 @@
+{
+  "row": {
+    "name": "🛠️serve🌀️procedural🧊️generation3d⚛️react",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-os-dev:serve-generation3d-react-dev --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "S_OS_PORT": "6018",
+      "SEMIO_PLUGIN": "generation3d",
+      "SEMIO_RENDERER": "react",
+      "SEMIO_APP": "s.procedural.generation3d@1/*#editor"
+    },
+    "presentation": {
+      "group": "3_dev",
+      "order": 190.05
+    },
+    "serverReadyAction": {
+      "action": "openExternally",
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+      "uriFormat": "%s"
+    }
+  },
+  "receipts": [
+    {
+      "file": ".vscode/launch.json",
+      "exactInsertionCount": 1
+    },
+    {
+      "file": ".vscode/🧩️launch.seed.jsonc",
+      "exactInsertionReversible": true
+    }
+  ],
+  "discardedUnavailableGenericTarget": "bun nx run @semio-tech/framework-os-dev:serve -- generation3d react dev"
+}

@@ -1,9 +1,11 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import * as artifactSqlite0 from "../🟦️.ts";
 /** 🧩️ Native Puzzle5d parent identities and exact scalar domains share neutral oracle vectors. */
 import {expect,test} from 'bun:test';
 import Ajv from 'ajv';
 import laws from "../🧫️fixtures/🔣️.json";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
+import * as io from "../../../🟦️.ts";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {Database} from 'bun:sqlite';
 import {fileURLToPath} from 'node:url';
@@ -25,7 +27,7 @@ function specimen(bits:bigint):snapshot.Puzzle5dSnapshot {
  return{schema:'',domain:'',label:'',meta:{description:'literal\u0000😀'},kindCatalogs:laws.kindCatalogChild,kindCatalogsExtra:{parts:[partKind],grips:[{id:'',code:null,label:'',order:2147483647,compatibleWith:['',''],description:'',icon:'',color:'',defaultRopeKind:''}],fasteners:[{id:'',name:'',label:null}],ropes:[{id:'',name:'',label:'',defaultFastenerKind:''}]},kindCompatibility:[{source:'unresolved',target:'',bidirectional:false,important:true,specificity:'rope'}],parts:[part],fasteners:[{id:'',source:'',target:'unresolved',fastenerKind:null,gap:word,shift:word,rise:word,rotation:word,turn:word,tilt:word,x:word,y:word}],targetVolumes:[{id:'',origin:[word,word,word],orientation:null,scale:[word,word,word],hidden:false,locked:true}]};
 }
 test('SQLite Puzzle5d neutral child and IEEE boundaries agree with independent engines',()=>{
- expect(new Ajv({strict:true}).compile(laws.childSchema)(laws.kindCatalogChild)).toBe(true);
+ expect(new Ajv({strict:false}).addSchema(artifactReferenceSchema).addSchema(artifactSchema).getSchema(artifactSchema.$id+"#/$defs/ArtifactChildHandle")!(laws.kindCatalogChild)).toBe(true);
  for(const raw of laws.binary64Bits){const bytes=Buffer.from(raw,'hex'),view=new DataView(bytes.buffer,bytes.byteOffset,8);expect(view.getBigUint64(0)).toBe(BigInt('0x'+raw));}
 });
 test('SQLite Puzzle5d artifact catalog owns the actual independent persisted child',()=>{
@@ -99,14 +101,14 @@ test('SQLite Puzzle5d exact row frontier and real projection/reconstruction canc
  for(const phase of ['projectSnapshot','reconstructSnapshot'] as const){const controller=new AbortController();let seen=false;const options:ArtifactSqliteOptions={signal:controller.signal,onProgress:p=>{if(p.phase===phase&&p.completed>=256){seen=true;controller.abort()}}};await expect(phase==='projectSnapshot'?artifactSqlite0.puzzle5dSnapshotToSqliteDatabase(wide,options):artifactSqlite0.puzzle5dSnapshotFromSqliteDatabase(projected,options)).rejects.toThrow();expect(seen).toBe(true)}
 });
 test('SQLite Puzzle5d declared JSON schema admits the exact word-backed persisted parent',()=>{
- const ajv=new Ajv({strict:false});ajv.addSchema(ioSchema);ajv.addSchema(artifactSchema);const validate=ajv.compile(snapshotSchema);
+ const ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema);ajv.addSchema(ioSchema);ajv.addSchema(artifactSchema);const validate=ajv.compile(snapshotSchema);
  const json=JSON.parse(JSON.stringify(specimen(0x7ff0000000000042n),(_,v)=>typeof v==='bigint'?v.toString(16).padStart(16,'0'):v));
  expect(validate(json)).toBe(true);
  expect(validate({...json,parts:[{...json.parts[0],'2d':{...json.parts[0]['2d'],x:{bits:'fffffffffffffffff'}}}]})).toBe(false);
 });
 test('SQLite Puzzle5d declared JSON leaf preserves every native word without canonical numeric alternatives',()=>{
- const encode=Reflect.get(artifact,'puzzle5dSnapshotToJsonText') as ((value:snapshot.Puzzle5dSnapshot)=>string)|undefined;
- const decode=Reflect.get(artifact,'puzzle5dSnapshotFromJsonText') as ((value:string)=>snapshot.Puzzle5dSnapshot)|undefined;
+ const encode=Reflect.get(io,'puzzle5dSnapshotToJsonText') as ((value:snapshot.Puzzle5dSnapshot)=>string)|undefined;
+ const decode=Reflect.get(io,'puzzle5dSnapshotFromJsonText') as ((value:string)=>snapshot.Puzzle5dSnapshot)|undefined;
  expect(typeof encode).toBe('function');expect(typeof decode).toBe('function');
  for(const raw of laws.binary64Bits){const value=specimen(BigInt('0x'+raw)),json=encode!(value);expect(JSON.parse(json).parts[0]['2d'].x).toEqual({bits:raw});expect(decode!(json)).toEqual(value)}
  expect(decode!('{"schema":"","parts":[{"id":"","2d":{"x":1}}]}').parts[0]!['2d'].x).toEqual({bits:0x3ff0000000000000n});
@@ -150,7 +152,28 @@ test('SQLite Puzzle5d every persisted field retains its authored artifact state 
  for(const field of laws.persistedFields)expect(Reflect.get(artifactSchema.properties,field)['x-semio-state']).toBe('artifact');
 });
 for(let batch=0;batch<12;batch++)test('SQLite Puzzle5d neutral mutation snapshot batch '+batch+' retains declared JSON state through relational reconstruction',async()=>{
- const root=new URL('../../../../🧫️fixtures',import.meta.url),ajv=new Ajv({strict:false});ajv.addSchema(ioSchema);const validate=ajv.compile(artifactSchema);let index=0,count=0;
- for await(const path of new Bun.Glob('**/📸️snapshot/**/🔣️.json').scan({cwd:fileURLToPath(root)})){if(index++%12!==batch)continue;const source=await Bun.file(new URL(path,root)).text(),original=JSON.parse(source);expect(validate(original)).toBe(true);const value=artifact.puzzle5dSnapshotFromJsonText(source),database=await artifactSqlite0.puzzle5dSnapshotToSqliteDatabase(value),restored=await artifactSqlite0.puzzle5dSnapshotFromSqliteDatabase(database);expect(restored).toEqual(value);expect(artifact.puzzle5dSnapshotFromJsonText(artifact.puzzle5dSnapshotToJsonText(restored))).toEqual(value);count++}
+ const root=new URL('../../../../🧫️fixtures/',import.meta.url),ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema);ajv.addSchema(ioSchema);const validate=ajv.compile(artifactSchema);let index=0,count=0;
+ for await(const path of new Bun.Glob('**/📸️snapshot/**/🔣️.json').scan({cwd:fileURLToPath(root)})){if(index++%12!==batch)continue;const source=await Bun.file(new URL(path,root)).text(),original=JSON.parse(source);expect(validate(original)).toBe(true);const value=io.puzzle5dSnapshotFromJsonText(source),database=await artifactSqlite0.puzzle5dSnapshotToSqliteDatabase(value),restored=await artifactSqlite0.puzzle5dSnapshotFromSqliteDatabase(database);expect(restored).toEqual(value);expect(io.puzzle5dSnapshotFromJsonText(io.puzzle5dSnapshotToJsonText(restored))).toEqual(value);count++}
  expect(index).toBe(138);expect(count).toBe(Math.floor((laws.snapshotAssetCount+11-batch)/12));
+});
+
+test("Puzzle5d borrowed Scale and diff metadata preserve the authored neutral records",async()=>{
+ const validate=new Ajv({strict:true}).addSchema(artifactReferenceSchema).compile({type:"array",items:{type:"number"},oneOf:[{minItems:1,maxItems:1},{minItems:3,maxItems:3}]});
+ for(const sample of laws.scaleDsl.samples){expect(validate(sample)).toBe(true);expect(JSON.parse(JSON.stringify(sample))).toEqual(sample)}
+ for(const sample of laws.scaleDsl.invalidSamples)expect(validate(sample)).toBe(false);
+ const owner=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text();
+ expect(owner).toContain("impl semio_framework_dsl_record::BorrowedDslField for Puzzle5dScale");
+ expect(owner).toContain("<Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE");
+ const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
+ for(const name of laws.diffRecordOwners){expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"))}
+});
+
+test("Puzzle5d nullable delta retains omission, clearing and exact typed replacement",async()=>{
+ const nullable=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🪆️optional/🧫️fixtures/🔣️.json",import.meta.url)).json();
+ const validate=new Ajv({strict:true}).addSchema(artifactReferenceSchema).compile({type:"object",properties:{label:{type:"object",properties:{value:{type:"string"}},additionalProperties:false}},additionalProperties:false});
+ for(const sample of nullable.samples){expect(validate(sample.physical)).toBe(true);expect(JSON.parse(JSON.stringify(sample.physical))).toEqual(sample.physical);const semantic=!("label" in sample.physical)?{}:!("value" in sample.physical.label)?{label:null}:{label:sample.physical.label.value};expect(semantic).toEqual(sample.json)}
+ for(const sample of nullable.invalid)expect(validate(sample)).toBe(false);
+ const binding=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",import.meta.url)).text();
+ expect(binding).toContain('mod optional_field;');
+ const macro=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",import.meta.url)).text();const diffText=macro.slice(macro.indexOf('fn diff_text_tokens('),macro.indexOf('pub fn expand_diff_binary('));expect(diffText).toContain('::semio_framework_dsl_record::parse_exact(');
 });

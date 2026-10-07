@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "kind": "text",
+      "key": "Escape",
+      "base": "Original",
+      "draft": "Discarded",
+      "commits": []
+    },
+    {
+      "kind": "text",
+      "key": "Enter",
+      "base": "Original",
+      "draft": "Accepted",
+      "commits": [
+        "Accepted"
+      ]
+    },
+    {
+      "kind": "longText",
+      "key": "Escape",
+      "base": "Original\nvalue",
+      "draft": "Discarded\nvalue",
+      "commits": []
+    }
+  ]
+}

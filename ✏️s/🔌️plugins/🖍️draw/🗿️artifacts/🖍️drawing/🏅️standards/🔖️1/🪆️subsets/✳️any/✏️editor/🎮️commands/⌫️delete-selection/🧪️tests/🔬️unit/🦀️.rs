@@ -4,7 +4,7 @@ use crate::schema::geometry::editing::PathPoint;
 
 fn paths()->DrawingSnapshot {
     let layers=["first","second"].iter().map(|id| {
-        let mut path=crate::schema::create_drawing_path_layer(id,vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}]);
+        let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(id,vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}].into());
         crate::schema::layer_base_mut(&mut path).id=(*id).into();path
     }).collect();
     DrawingSnapshot {id:"delete-selection-test".into(),layers,..Default::default()}
@@ -26,7 +26,7 @@ fn multi_path_deletion_preserves_style_and_is_reversible() {
     for mutation in &emit.artifact_mutations {inverses.push(mutation.inverse(&after).expect("valid retained mutation inverse fixture"));crate::mutations::apply_drawing_mutation(&mut after,mutation).unwrap();}
     for (layer,original) in after.layers.iter().zip(&before.layers) {assert_eq!(crate::schema::layer_base(layer),crate::schema::layer_base(original));}
     let DrawingLayerNode::Path(first)=&after.layers[0] else {unreachable!()};
-    assert_eq!(first.segments,vec![crate::PathSegment::Move {to:[10.0,10.0]}]);
+    assert_eq!(first.segments,vec![crate::PathSegment::Move {to:[10.0,10.0]}].into());
     for group in inverses.into_iter().rev() {for mutation in group {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}}
     assert_eq!(after,before);
 }

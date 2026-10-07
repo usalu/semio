@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-06T13:39:43.616Z",
+  "session": 32497,
+  "status": "Active original replay, no terminal receipt",
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-after-shared-derive-native-artifacts' bun run nx run @semio-tech/stdio-pdf-rs:test '--args=--lib --features component-app-assembly --no-fail-fast --status-level all --final-status-level all' --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-current-explicit-actor-join.log' 2>&1",
+  "originalExecutionBudgetMs": 300000,
+  "controls": "Original quick whole --lib component-app-assembly --no-fail-fast all-status owner route; no limit/schema/fixture changes"
+}

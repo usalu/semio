@@ -6,7 +6,7 @@ use crate::{DrawingLayerNode, DrawingSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-layer` payload — full initial payload plus optional (parent, index) address.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -15,7 +15,7 @@ use crate::{DrawingLayerNode, DrawingSnapshot};
 pub struct CreateLayer {
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
-    pub parent_id: Option<String>,
+    pub parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub index: Option<usize>,
@@ -24,7 +24,7 @@ pub struct CreateLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_layer(parent_id: Option<String>, index: Option<usize>, layer: DrawingLayerNode) -> DrawingMutation {
+pub fn create_layer(parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, index: Option<usize>, layer: DrawingLayerNode) -> DrawingMutation {
     DrawingMutation::CreateLayer(CreateLayer { parent_id, index, layer: Box::new(layer) })
 }
 

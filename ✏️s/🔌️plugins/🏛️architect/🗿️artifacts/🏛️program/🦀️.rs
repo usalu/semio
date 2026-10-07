@@ -89,8 +89,8 @@ fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
     store::content_id("architect-benchmarks", content_json.as_bytes())
 }
 
-fn program_benchmarks_target(scene_id: &str) -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: scene_id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
+fn program_benchmarks_target(scene_id: &str) -> semio_framework_artifact_reference::ArtifactRef {
+    semio_framework_artifact_reference::ArtifactRef { artifact_id: scene_id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 /// 🏗️ Mints the composed-child handle and transfers rows into that exact owner.
@@ -156,8 +156,8 @@ fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
     store::content_id("architect-knowledge", content_json.as_bytes())
 }
 
-fn program_knowledge_target(scene_id: &str) -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: scene_id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
+fn program_knowledge_target(scene_id: &str) -> semio_framework_artifact_reference::ArtifactRef {
+    semio_framework_artifact_reference::ArtifactRef { artifact_id: scene_id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
 pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowledgeChild {

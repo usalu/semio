@@ -6,7 +6,6 @@ pub use crate::schema::operations::apply_jpg_mutation;
 
 //#region Owners
 pub use super::change_jfif_header::ChangeJfifHeaderMutation;
-pub use super::change_re_encode_quality::ChangeReEncodeQualityMutation;
 pub use super::change_restart_interval::ChangeRestartIntervalMutation;
 pub use super::insert_other_segment::InsertOtherSegmentMutation;
 pub use super::remove_huffman_table::RemoveHuffmanTableMutation;
@@ -36,24 +35,7 @@ pub enum JpgMutation {
     InsertOtherSegment(InsertOtherSegmentMutation),
     RemoveOtherSegment(RemoveOtherSegmentMutation),
     ReplacePixels(ReplacePixelsMutation),
-    ChangeReEncodeQuality(ChangeReEncodeQualityMutation),
 }
 
 //#endregion Aggregate
 
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
-    vec![
-        crate::schema::mutations::patch_snapshot::test_case(),
-        crate::schema::mutations::change_jfif_header::test_case(),
-        crate::schema::mutations::replace_quant_table::test_case(),
-        crate::schema::mutations::remove_quant_table::test_case(),
-        crate::schema::mutations::replace_huffman_table::test_case(),
-        crate::schema::mutations::remove_huffman_table::test_case(),
-        crate::schema::mutations::change_restart_interval::test_case(),
-        crate::schema::mutations::insert_other_segment::test_case(),
-        crate::schema::mutations::remove_other_segment::test_case(),
-        crate::schema::mutations::replace_pixels::test_case(),
-        crate::schema::mutations::change_re_encode_quality::test_case(),
-    ]
-}

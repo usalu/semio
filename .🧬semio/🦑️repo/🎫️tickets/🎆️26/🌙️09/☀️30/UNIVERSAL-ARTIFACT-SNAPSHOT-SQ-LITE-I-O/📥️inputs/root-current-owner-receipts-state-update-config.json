@@ -1,0 +1,82 @@
+{
+  "recordedAt": "2026-10-06T13:09:00Z",
+  "rootDeflateCurrentFactoryNativeAfter": {
+    "session": 2979,
+    "exitCode": 0,
+    "run": 12,
+    "pass": 12,
+    "skip": 51,
+    "nextestSeconds": 0.319,
+    "wholeOriginalOwner": true,
+    "observedDirectAndPublicDebug": true
+  },
+  "rootSemioPresentationSourceReceipt": {
+    "session": 87597,
+    "exitCode": 0,
+    "laws": 112,
+    "fail": 0,
+    "expects": 2305,
+    "cohorts": [
+      6,
+      6,
+      6,
+      6,
+      39,
+      29,
+      20
+    ],
+    "observedMatchedPresentationDebug": true,
+    "route": "Source Snapshot only"
+  },
+  "rootSemioCurrentHistoryNativeBeforeReceipt": {
+    "session": 79532,
+    "exitCode": 1,
+    "nextestEntered": false,
+    "csvCompilerErrors": 28,
+    "jsonCompilerErrors": 22,
+    "providersMounted": false
+  },
+  "rootSemioDrawingBrepSourceBeforeReceipt": {
+    "session": 72901,
+    "exitCode": 1,
+    "laws": 114,
+    "pass": 113,
+    "fail": 1,
+    "expects": 2334,
+    "brepMatchedDebug": true,
+    "drawingIndependentSqlKindMismatch": true
+  },
+  "rootSemioCurrentCanonicalNativeBefore": {
+    "session": 53163,
+    "pending": true,
+    "providersMounted": false
+  },
+  "rootSemioDrawingCompleteProvider": {
+    "held": true,
+    "paths": 5,
+    "demandsMounted": 4,
+    "originalNativeBeforePending": true,
+    "sourceDemandCorrectionRuntimePending": true
+  },
+  "rootSemioBrepCompleteProvider": {
+    "held": true,
+    "paths": 4,
+    "demandsMounted": 4,
+    "originalNativeBeforePending": true,
+    "sourceMatchedDemandDebug": true
+  },
+  "rootSemioBaseCompleteProvider": {
+    "held": false,
+    "preparing": true,
+    "defaultDemandsPrepared": 4,
+    "defaultCases": 18,
+    "separateFullEmptyCasesPending": 36
+  },
+  "rootSemio76ProviderReconciliation": {
+    "held": true,
+    "productionMounted": false,
+    "paths": 76,
+    "canonicalBeforeRebased": 17,
+    "crateInternalVisitorsExposed": 16
+  }
+}

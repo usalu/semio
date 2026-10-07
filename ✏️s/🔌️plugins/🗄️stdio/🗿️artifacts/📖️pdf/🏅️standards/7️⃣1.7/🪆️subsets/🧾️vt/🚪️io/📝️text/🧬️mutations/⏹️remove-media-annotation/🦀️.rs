@@ -1,6 +1,6 @@
 //! ⏹️ Direct text codec for `remove-media-annotation`.
 
-use super::RemoveMediaAnnotation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveMediaAnnotation;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-media-annotation";

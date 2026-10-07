@@ -30,41 +30,46 @@ fn text(bytes:&[u8],c:&mut NativeDecodeControl<'_>)->ReadResult<String>{
     let mut output=c.allocate_vec::<u8>(size)?;c.begin_stage(bytes.len())?;position=0;while position<bytes.len(){let(piece,count)=text_piece(bytes,position);output.extend_from_slice(piece.as_bytes());position+=count;c.advance(count)?;}String::from_utf8(output).map_err(|_|invalid("tiff: decoded ASCII invariant"))
 }
 fn sequence<T>(count:usize,c:&mut NativeDecodeControl<'_>,read:impl Fn(usize)->T)->ReadResult<Vec<T>>{let mut result=c.allocate_vec::<T>(count)?;c.begin_stage(count)?;for index in 0..count{result.push(read(index));c.step()?;}Ok(result)}
+fn ascii_values(src:&[u8],c:&mut NativeDecodeControl<'_>)->ReadResult<Vec<String>>{
+ if src.is_empty(){return Ok(Vec::new())}if src.last()!=Some(&0)||!src.is_ascii(){return Err(invalid("tiff: invalid native ASCII metadata"))}
+ let source=&src[..src.len()-1];let count=source.split(|byte|*byte==0).count();let mut output=c.allocate_vec::<String>(count)?;
+ for piece in source.split(|byte|*byte==0){output.push(c.copy_text(std::str::from_utf8(piece).map_err(|_|invalid("tiff: native ASCII invariant"))?)?);c.step()?;}Ok(output)
+}
 fn values(src:&[u8],kind:TiffFieldType,count:usize,e:Endian,c:&mut NativeDecodeControl<'_>)->ReadResult<TiffValues>{
     Ok(match kind{
-        TiffFieldType::Byte=>TiffValues::Byte(c.copy_bytes(src)?),TiffFieldType::Undefined=>TiffValues::Undefined(c.copy_bytes(src)?),TiffFieldType::Ascii=>TiffValues::Ascii(c.copy_bytes(src)?),
+        TiffFieldType::Byte=>TiffValues::Byte(c.copy_bytes(src)?),TiffFieldType::Undefined=>TiffValues::Undefined(c.copy_bytes(src)?),TiffFieldType::Ascii=>TiffValues::Ascii(ascii_values(src,c)?),
         TiffFieldType::Short=>TiffValues::Short(sequence(count,c,|i|e.u16(&src[i*2..i*2+2]))?),TiffFieldType::Long=>TiffValues::Long(sequence(count,c,|i|e.u32(&src[i*4..i*4+4]))?),
         TiffFieldType::Rational=>TiffValues::Rational(sequence(count,c,|i|(e.u32(&src[i*8..i*8+4]),e.u32(&src[i*8+4..i*8+8])))?),
         TiffFieldType::SByte=>TiffValues::SByte(sequence(count,c,|i|i8::from_ne_bytes([src[i]]))?),TiffFieldType::SShort=>TiffValues::SShort(sequence(count,c,|i|i16::from_ne_bytes(e.u16(&src[i*2..i*2+2]).to_ne_bytes()))?),TiffFieldType::SLong=>TiffValues::SLong(sequence(count,c,|i|i32::from_ne_bytes(e.u32(&src[i*4..i*4+4]).to_ne_bytes()))?),
         TiffFieldType::SRational=>TiffValues::SRational(sequence(count,c,|i|(i32::from_ne_bytes(e.u32(&src[i*8..i*8+4]).to_ne_bytes()),i32::from_ne_bytes(e.u32(&src[i*8+4..i*8+8]).to_ne_bytes())))?),
-        TiffFieldType::Float=>TiffValues::Float(sequence(count,c,|i|TiffBinary32{bits:e.u32(&src[i*4..i*4+4])})?),TiffFieldType::Double=>TiffValues::Double(sequence(count,c,|i|TiffBinary64{bits:e.u64(&src[i*8..i*8+8])})?),
+        TiffFieldType::Float=>TiffValues::Float(sequence(count,c,|i|TiffBinary32{bits:e.u32(&src[i*4..i*4+4])})?),TiffFieldType::Double=>TiffValues::Double(sequence(count,c,|i|TiffWord64::from_word(e.u64(&src[i*8..i*8+8])))?),
     })
 }
-fn directories(data:&[u8],first:usize,e:Endian,c:&mut NativeDecodeControl<'_>,maximum_rows:usize)->ReadResult<Vec<TiffIfd>>{
-    let count=census(data,first,e,c,maximum_rows)?;if count==0{return Err(invalid("tiff: no IFD present"))}let mut output=c.allocate_vec::<TiffIfd>(count)?;let mut offset=first;
+fn directories(data:&[u8],first:usize,e:Endian,c:&mut NativeDecodeControl<'_>,maximum_rows:usize)->ReadResult<Vec<NativeIfd>>{
+    let count=census(data,first,e,c,maximum_rows)?;if count==0{return Ok(Vec::new())}let mut output=c.allocate_vec::<NativeIfd>(count)?;let mut offset=first;
     while offset!=0{let count=usize::from(read_u16(data,offset,e)?);let mut entries=c.allocate_vec::<TiffTag>(count)?;
         for index in 0..count{c.begin_stage(0)?;let position=offset+2+index*12;let tag=read_u16(data,position,e)?;let kind=TiffFieldType::from_u16(read_u16(data,position+2,e)?)?;let count=usize::try_from(read_u32(data,position+4,e)?).map_err(|_|invalid("tiff: value count width"))?;let size=count.checked_mul(kind.element_size()).ok_or_else(||invalid("tiff: tag value size overflow"))?;let start=if size<=4{position+8}else{usize::try_from(read_u32(data,position+8,e)?).map_err(|_|invalid("tiff: tag offset width"))?};let src=window(data,start,size)?;entries.push(TiffTag{tag,values:values(src,kind,count,e,c)?});}
         super::controlled_ordering::order(&mut entries,|entry|entry.tag,c)?;
-        output.push(TiffIfd{entries,storage:TiffStorage::default()});offset=next(data,offset,e)?;
+        output.push(NativeIfd{entries,storage:NativeStorage::default()});offset=next(data,offset,e)?;
     }Ok(output)
 }
-fn numbers(ifd:&TiffIfd,tag:u16)->Option<&TiffValues>{match tag_values(ifd,tag){Some(value@TiffValues::Short(_))|Some(value@TiffValues::Long(_))=>Some(value),_=>None}}
+fn numbers(ifd:&NativeIfd,tag:u16)->Option<&TiffValues>{match tag_values(ifd,tag){Some(value@TiffValues::Short(_))|Some(value@TiffValues::Long(_))=>Some(value),_=>None}}
 fn number_count(value:Option<&TiffValues>)->usize{match value{Some(TiffValues::Short(v))=>v.len(),Some(TiffValues::Long(v))=>v.len(),_=>0}}
 fn number(value:Option<&TiffValues>,index:usize)->Option<u32>{match value{Some(TiffValues::Short(v))=>v.get(index).map(|v|u32::from(*v)),Some(TiffValues::Long(v))=>v.get(index).copied(),_=>None}}
-fn first(ifd:&TiffIfd,tag:u16)->Option<u32>{number(numbers(ifd,tag),0)}
-fn raw_storage(data:&[u8],ifd:&TiffIfd,c:&mut NativeDecodeControl<'_>)->ReadResult<TiffStorage>{
+fn first(ifd:&NativeIfd,tag:u16)->Option<u32>{number(numbers(ifd,tag),0)}
+fn raw_storage(data:&[u8],ifd:&NativeIfd,c:&mut NativeDecodeControl<'_>)->ReadResult<NativeStorage>{
     let strips=numbers(ifd,TAG_STRIP_OFFSETS);let tiles=numbers(ifd,TAG_TILE_OFFSETS);if number_count(strips)!=0&&number_count(tiles)!=0{return Err(invalid("tiff: one IFD cannot own both strips and tiles"))}
-    let(kind,offset_tag,count_tag,offsets)=if number_count(tiles)!=0{(TiffStorageKind::Tiles,TAG_TILE_OFFSETS,TAG_TILE_BYTE_COUNTS,tiles)}else if number_count(strips)!=0{(TiffStorageKind::Strips,TAG_STRIP_OFFSETS,TAG_STRIP_BYTE_COUNTS,strips)}else{return Ok(TiffStorage::default())};
+    let(kind,offset_tag,count_tag,offsets)=if number_count(tiles)!=0{(NativeStorageKind::Tiles,TAG_TILE_OFFSETS,TAG_TILE_BYTE_COUNTS,tiles)}else if number_count(strips)!=0{(NativeStorageKind::Strips,TAG_STRIP_OFFSETS,TAG_STRIP_BYTE_COUNTS,strips)}else if first(ifd,TAG_COMPRESSION)==Some(6)&&first(ifd,513).is_some()&&first(ifd,514).is_some(){let start=first(ifd,513).unwrap()as usize;let length=first(ifd,514).unwrap()as usize;let mut chunks=c.allocate_vec::<Vec<u8>>(1)?;chunks.push(c.copy_bytes(window(data,start,length)?)?);return Ok(NativeStorage{kind:NativeStorageKind::Strips,offsets_kind:TiffFieldType::Long,byte_counts_kind:TiffFieldType::Long,chunks})}else{return Ok(NativeStorage::default())};
     let counts=numbers(ifd,count_tag);let count=number_count(offsets);if number_count(counts)!=count{return Err(invalid("tiff: storage offset/count cardinality mismatch"))}
     let offsets_kind=tag_values(ifd,offset_tag).ok_or_else(||invalid("tiff: missing storage offsets"))?.kind();let byte_counts_kind=tag_values(ifd,count_tag).ok_or_else(||invalid("tiff: missing storage byte counts"))?.kind();if !matches!(offsets_kind,TiffFieldType::Short|TiffFieldType::Long)||!matches!(byte_counts_kind,TiffFieldType::Short|TiffFieldType::Long){return Err(invalid("tiff: storage words must be SHORT or LONG"))}
-    let mut chunks=c.allocate_vec::<Vec<u8>>(count)?;for index in 0..count{let start=usize::try_from(number(offsets,index).unwrap()).map_err(|_|invalid("tiff: storage offset width"))?;let length=usize::try_from(number(counts,index).unwrap()).map_err(|_|invalid("tiff: storage byte-count width"))?;chunks.push(c.copy_bytes(window(data,start,length)?)?);c.step()?;}Ok(TiffStorage{kind,offsets_kind,byte_counts_kind,chunks})
+    let mut chunks=c.allocate_vec::<Vec<u8>>(count)?;for index in 0..count{let start=usize::try_from(number(offsets,index).unwrap()).map_err(|_|invalid("tiff: storage offset width"))?;let length=usize::try_from(number(counts,index).unwrap()).map_err(|_|invalid("tiff: storage byte-count width"))?;chunks.push(c.copy_bytes(window(data,start,length)?)?);c.step()?;}Ok(NativeStorage{kind,offsets_kind,byte_counts_kind,chunks})
 }
 fn zeroes(count:usize,c:&mut NativeDecodeControl<'_>)->ReadResult<Vec<u8>>{let mut output=c.allocate_vec::<u8>(count)?;c.begin_stage(count)?;while output.len()<count{let length=(count-output.len()).min(65536);output.resize(output.len()+length,0);c.advance(length)?;}Ok(output)}
 fn packed_strip(data:&[u8],output:&mut[u8],c:&mut NativeDecodeControl<'_>)->ReadResult<()>{
     c.begin_stage(output.len())?;let(mut input,mut position)=(0usize,0usize);while input<data.len()&&position<output.len(){let n=i8::from_ne_bytes([data[input]]);input+=1;if n>=0{let count=usize::from(n.unsigned_abs())+1;let target=output.get_mut(position..position.checked_add(count).ok_or_else(||invalid("tiff: PackBits length overflow"))?).ok_or_else(||invalid("tiff: PackBits output overrun"))?;target.copy_from_slice(window(data,input,count)?);input+=count;position+=count;c.advance(count)?;}else if n!=i8::MIN{let count=usize::from(n.unsigned_abs())+1;let byte=*data.get(input).ok_or_else(||invalid("tiff: PackBits repeat missing byte"))?;input+=1;let target=output.get_mut(position..position.checked_add(count).ok_or_else(||invalid("tiff: PackBits length overflow"))?).ok_or_else(||invalid("tiff: PackBits output overrun"))?;target.fill(byte);position+=count;c.advance(count)?;}else{c.checkpoint()?;}}
     if position!=output.len(){return Err(invalid("tiff: PackBits decoded length mismatch"))}Ok(())
 }
-fn pixels(data:&[u8],ifd:&TiffIfd,c:&mut NativeDecodeControl<'_>)->ReadResult<Vec<u8>>{
+fn pixels(data:&[u8],ifd:&NativeIfd,c:&mut NativeDecodeControl<'_>)->ReadResult<Vec<u8>>{
     let width=usize::try_from(first(ifd,TAG_IMAGE_WIDTH).ok_or_else(||invalid("tiff: missing ImageWidth"))?).map_err(|_|invalid("tiff: image width"))?;let height=usize::try_from(first(ifd,TAG_IMAGE_LENGTH).ok_or_else(||invalid("tiff: missing ImageLength"))?).map_err(|_|invalid("tiff: image height"))?;if width==0||height==0{return Err(invalid("tiff: zero dimension"))}
     if first(ifd,TAG_BITS_PER_SAMPLE).unwrap_or(8)!=8{return Err(invalid("tiff: unsupported BitsPerSample"))}let samples=usize::try_from(first(ifd,TAG_SAMPLES_PER_PIXEL).unwrap_or(1)).map_err(|_|invalid("tiff: sample width"))?;if !matches!(samples,1|3|4){return Err(invalid("tiff: unsupported SamplesPerPixel"))}let compression=first(ifd,TAG_COMPRESSION).unwrap_or(1);if !matches!(compression,1|32773){return Err(invalid("tiff: unsupported compression"))}
     let offsets=numbers(ifd,TAG_STRIP_OFFSETS);if number_count(offsets)==0{return Err(invalid("tiff: missing StripOffsets"))}let counts=numbers(ifd,TAG_STRIP_BYTE_COUNTS);let rows_per_strip=usize::try_from(first(ifd,TAG_ROWS_PER_STRIP).unwrap_or(u32::try_from(height).map_err(|_|invalid("tiff: height width"))?)).map_err(|_|invalid("tiff: strip rows width"))?;
@@ -72,11 +77,11 @@ fn pixels(data:&[u8],ifd:&TiffIfd,c:&mut NativeDecodeControl<'_>)->ReadResult<Ve
     for index in 0..number_count(offsets){if row>=height{break}let rows=rows_per_strip.min(height-row);let length=rows.checked_mul(row_bytes).ok_or_else(||invalid("tiff: strip length overflow"))?;let start=usize::try_from(number(offsets,index).unwrap()).map_err(|_|invalid("tiff: strip offset width"))?;let target=&mut raster[row*row_bytes..row*row_bytes+length];if compression==32773{let count=usize::try_from(number(counts,index).ok_or_else(||invalid("tiff: missing StripByteCounts"))?).map_err(|_|invalid("tiff: strip length width"))?;packed_strip(window(data,start,count)?,target,c)?;}else{c.begin_stage(length)?;for(chunk,target)in window(data,start,length)?.chunks(65536).zip(target.chunks_mut(65536)){target.copy_from_slice(chunk);c.advance(chunk.len())?;}}row+=rows;}
     let photometric=first(ifd,TAG_PHOTOMETRIC).unwrap_or(1);let mut rgba=c.allocate_vec::<u8>(pixels.checked_mul(4).ok_or_else(||invalid("tiff: RGBA length overflow"))?)?;c.begin_stage(pixels)?;for index in 0..pixels{let src=&raster[index*samples..index*samples+samples];match samples{1=>{let gray=if photometric==0{255-src[0]}else{src[0]};rgba.extend_from_slice(&[gray,gray,gray,255]);},3=>rgba.extend_from_slice(&[src[0],src[1],src[2],255]),4=>rgba.extend_from_slice(src),_=>unreachable!()}c.step()?;}Ok(rgba)
 }
-fn read(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->ReadResult<TiffSnapshot>{
-    control.checkpoint()?;control.charge(std::mem::size_of::<TiffSnapshot>())?;window(data,0,8)?;let(e,byte_order)=match &data[..2]{b"II"=>(Endian::Little,TiffByteOrder::LittleEndian),b"MM"=>(Endian::Big,TiffByteOrder::BigEndian),_=>return Err(invalid("tiff: bad byte order"))};if read_u16(data,2,e)?!=42{return Err(invalid("tiff: bad magic"))}
+fn read(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->ReadResult<NativeSnapshot>{
+    control.checkpoint()?;control.charge(std::mem::size_of::<NativeSnapshot>())?;window(data,0,8)?;let(e,byte_order)=match &data[..2]{b"II"=>(Endian::Little,TiffByteOrder::LittleEndian),b"MM"=>(Endian::Big,TiffByteOrder::BigEndian),_=>return Err(invalid("tiff: bad byte order"))};if read_u16(data,2,e)?!=42{return Err(invalid("tiff: bad magic"))}
     let mut ifds=directories(data,usize::try_from(read_u32(data,4,e)?).map_err(|_|invalid("tiff: first IFD width"))?,e,control,maximum_rows)?;for ifd in &mut ifds{ifd.storage=raw_storage(data,ifd,control)?;ifd.entries.retain(|entry|!matches!(entry.tag,TAG_STRIP_OFFSETS|TAG_STRIP_BYTE_COUNTS|TAG_TILE_OFFSETS|TAG_TILE_BYTE_COUNTS));control.step()?;}
-    let schema=control.copy_text(STDIO_TIFF_DOCUMENT_SCHEMA)?;Ok(TiffSnapshot{schema,byte_order,ifds})
+    let schema=control.copy_text(STDIO_TIFF_DOCUMENT_SCHEMA)?;Ok(NativeSnapshot{schema,byte_order,ifds})
 }
 
 /// 📖️ Decodes only the actual TIFF carrier, admitting each field and work frontier.
-pub fn decode_tiff_controlled(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->Result<TiffSnapshot,ValueError>{read(data,control,maximum_rows).map_err(Refusal::into_value_error)}
+pub fn decode_tiff_controlled(data:&[u8],control:&mut NativeDecodeControl<'_>,maximum_rows:usize)->Result<TiffSnapshot,ValueError>{let native=read(data,control,maximum_rows).map_err(Refusal::into_value_error)?;super::owned_samples::admit(native,control,maximum_rows)}

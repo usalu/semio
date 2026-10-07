@@ -1,4 +1,4 @@
-//! 🧬️ PNG artifact schema over one exact persisted byte owner.
+//! 🧬️ PNG artifact schema over precise owned samples.
 
 use crate::PngSnapshot;
 use framework_schema::ArtifactSchema;
@@ -11,7 +11,7 @@ pub struct PngArtifact {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub bytes: Vec<u8>,
+    pub image: crate::schema::snapshot::PngImage,
 }
 
 impl Default for PngArtifact {
@@ -22,16 +22,16 @@ impl Default for PngArtifact {
 
 impl PngArtifact {
     pub fn to_snapshot(&self) -> PngSnapshot {
-        PngSnapshot { schema: self.schema.clone(), bytes: self.bytes.clone() }
+        PngSnapshot { schema: self.schema.clone(), image: self.image.clone() }
     }
 
     pub fn from_snapshot(snapshot: PngSnapshot) -> Self {
-        Self { schema: snapshot.schema, bytes: snapshot.bytes }
+        Self { schema: snapshot.schema, image: snapshot.image }
     }
 
     pub fn set_snapshot(&mut self, snapshot: PngSnapshot) {
         self.schema = snapshot.schema;
-        self.bytes = snapshot.bytes;
+        self.image = snapshot.image;
     }
 }
 
@@ -40,7 +40,7 @@ pub fn blank_png_snapshot() -> PngSnapshot {
 }
 
 pub fn demo_png_snapshot() -> PngSnapshot {
-    crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../📚️examples/🎬️demo/🖼️assets/🖼️.png")).expect("checked committed PNG demo")
+    PngSnapshot { schema: crate::STDIO_PNG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::PngImage { width:4,height:2,samples:vec![255,0,0,255,0,255,0,255,0,0,255,255,255,255,0,255,0,255,255,255,255,0,255,255,255,255,255,255,128,128,128,255],..Default::default() } }
 }
 
 pub fn png_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {

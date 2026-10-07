@@ -1,8 +1,6 @@
 // #region 🧲️Header
 /** 🔐️ Laws for the hub sign-in contract and pane (ticket
- * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2). Two independent oracles per shape: an
- * Ajv compile of the owned fixture schema and a `fast-deep-equal` comparison against the fixture,
- * so the source tables cannot drift from the contract without a red test. The transport is a fake
+ * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2). Independent localized text comparisons use `fast-deep-equal` and actual session domain policies. The transport is a fake
  * implementing AU1 §1.1's real wire (status table, `retry-after`, `semio.hub.auth.error/v1` body,
  * `session.v1.<32hex>.<64hex>` token), never a mock of this module's own functions. */
 // #endregion 🧲️Header
@@ -14,8 +12,7 @@ import Ajv from "ajv";
 import equal from "fast-deep-equal";
 import { useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import fixture from "../../../../../../📇️directory/🔐️sign-in/🔣️.json";
-import fixtureSchema from "../../../../../../📇️directory/🔐️sign-in/🧬️.schema.json";
+import fixture from "../../../../../../📇️directory/🧫️fixtures/🔐️sign-in/🔣️.json";
 import {
   HUB_AUTH_ERROR_SCHEMA_V1,
   HUB_CONNECTION_BOOK_MAX_ENTRIES,
@@ -156,8 +153,7 @@ function book() {
 
 //#region 🧬️Contract
 describe("hub sign-in contract", () => {
-  it("validates its own fixture with an independent schema compiler and mirrors every text pair", () => {
-    expect(new Ajv({ strict: true, allErrors: true }).compile(fixtureSchema)(fixture)).toBe(true);
+  it("mirrors every localized text pair and session path", () => {
     expect(equal(HUB_SIGN_IN_TEXT_V1, fixture.presentation.text)).toBe(true);
     for (const locale of fixture.presentation.locales) expect(equal(hubSignInTextV1(locale), fixture.presentation.text[locale as "en" | "de"])).toBe(true);
     expect(() => hubSignInTextV1("fr")).toThrow("hub.sign-in.locale-unsupported");

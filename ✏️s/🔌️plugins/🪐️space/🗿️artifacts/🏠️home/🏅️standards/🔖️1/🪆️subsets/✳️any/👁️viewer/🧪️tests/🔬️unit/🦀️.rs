@@ -108,7 +108,7 @@ where
     let hover = semio_framework_plugin::app::InteractionHoverState::new();
     let context = page_context::<A>(transient);
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "s.home".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
-    let inputs = ArtifactCommandInputs { command, snapshot, config, history: &history, interaction: &state, hover: &hover, context: Some(context.as_ref()), operation: &operation };
+    let inputs = ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history: &history, interaction: &state, hover: &hover, context: Some(context.as_ref()), operation: &operation };
     match work.step(&inputs, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))? {
         ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral } => {
             assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.draft_mutations.is_empty(), "a directory page writes neither the document nor the config history");
@@ -190,7 +190,7 @@ async fn the_viewer_declares_its_page_feed_as_a_chrome_only_transient_route() {
 async fn a_viewer_page_publishes_only_its_transient_item() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::VcsArtifactApp::<ViewerApp<HomeViewer>>::with_registry(Default::default(), semio_framework_plugin::AppActionRegistry::from_definition(&create_home_viewer().await)).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<ViewerApp<HomeViewer>>::with_registry(Default::default(), semio_framework_plugin::AppActionRegistry::from_definition(&create_home_viewer().await), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
     let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let pages = fixture["pages"].as_array().expect("pages");

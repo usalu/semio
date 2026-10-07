@@ -1,7 +1,8 @@
+import type { VizChartTextOutput } from "../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
 /** 🏠️ Chart inference owns worker lifetime, cancellation and atomic publication. */
 import type {VizChartSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {VizChartInference,VizChartInferenceProgress,VizChartInferenceControl} from "../../../🧬️schema/💡️inferences/🟦️.ts";
-type WorkerMessage = { readonly kind: "progress"; readonly progress: VizChartInferenceProgress } | { readonly kind: "result"; readonly result: VizChartInference };
+import type {VizChartInferenceProgress,VizChartInferenceControl} from "../../../🧬️schema/💡️inferences/🟦️.ts";
+type WorkerMessage = { readonly kind: "progress"; readonly progress: VizChartInferenceProgress } | { readonly kind: "result"; readonly result: VizChartTextOutput };
 type InferenceWorker = { postMessage(snapshot: VizChartSnapshot): void; terminate(): void; listen(message: (value: WorkerMessage) => void, error: (value: unknown) => void): () => void };
 
 async function createInferenceWorker(): Promise<InferenceWorker> {
@@ -31,13 +32,13 @@ async function createInferenceWorker(): Promise<InferenceWorker> {
 }
 
 /** 🧵️ Derives a complete result off the caller thread; abort terminates every expensive stage. */
-export async function inferVizChart(snapshot: VizChartSnapshot, control: VizChartInferenceControl = {}): Promise<VizChartInference> {
-  const diagnostic = (code: string, message: string): VizChartInference => ({ tikz: "", diagnostics: [{ code, path: "chart", message }], complete: false });
+export async function inferVizChart(snapshot: VizChartSnapshot, control: VizChartInferenceControl = {}): Promise<VizChartTextOutput> {
+  const diagnostic = (code: string, message: string): VizChartTextOutput => ({ tikz: "", diagnostics: [{ code, path: "chart", message }], complete: false });
   const cancelled = () => diagnostic("print.chart.cancelled", "chart inference cancelled");
   if (control.signal?.aborted) return cancelled();
   return new Promise(resolve => {
     let settled = false, worker: InferenceWorker | undefined, detach: (() => void) | undefined;
-    const finish = (result: VizChartInference) => {
+    const finish = (result: VizChartTextOutput) => {
       if (settled) return;
       settled = true;
       control.signal?.removeEventListener("abort", abort);

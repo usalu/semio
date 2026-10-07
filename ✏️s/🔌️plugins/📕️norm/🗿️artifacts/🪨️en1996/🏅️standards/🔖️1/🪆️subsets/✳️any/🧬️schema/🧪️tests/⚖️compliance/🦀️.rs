@@ -2,7 +2,7 @@
 
 use crate::app_surface::{get_value_at_path, parse_path, set_value_at_path};
 use crate::artifact_schema::{evaluate_building, f_k_pa, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
-use crate::artifact_schema::snapshot::text::parse_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use crate::document::{AnnexChoice, CheckReport, CheckStatus};
 use crate::{En1996Snapshot, MasonryClass, UnitMaterial};
 use crate::field_meta::en1996_field_meta;

@@ -516,7 +516,7 @@ fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contract::Action
 /// `IconSelect`'s value IS its icon string, which React edits through the `IconSelector`'s own
 /// textarea (`🎴️IconSelector/🟦️.tsx`'s `onEditorChange`), so the retained target edits it the same
 /// way rather than inventing a second gesture for it.
-fn editable_value(node: &UiNode) -> Option<String> {
+pub(crate) fn editable_value(node: &UiNode) -> Option<String> {
     match node {
         UiNode::Input(input) => Some(match input.display_factor.filter(|_| input.input_kind == "number").zip(input.value.trim().parse::<f64>().ok()) {
             Some((_, stored)) => number_field_text(input, stored),

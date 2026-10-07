@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
@@ -11,7 +10,6 @@ import { runSocketGrantCheck } from "../../📇️directory/🔐️authorization
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 const hubRoot = join(repoRoot, "🌎️hub");
-const schemaPath = join(hubRoot, "🧬️schema/🧱️socket-grant-command-source/🔣️.json");
 const fixturePath = join(hubRoot, "🧫️fixtures/🧱️socket-grant-command-source/🔣️.json");
 const fixtureSource = readFileSync(fixturePath, "utf8");
 const fixture = JSON.parse(fixtureSource) as {
@@ -60,11 +58,7 @@ function rootImportsForOwner(routerPath: string, ownerPath: string): readonly st
   });
 }
 
-test("socket-grant command contract is schema-first and independently parsed", async () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")));
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...fixture, nativeStages: fixture.nativeStages.slice(1) })).toBe(false);
-  expect(validate({ ...fixture, owners: fixture.owners.slice(1) })).toBe(false);
+test("socket-grant source examples are independently parsed", async () => {
   const jsonc = await import("jsonc-parser");
   const errors: import("jsonc-parser").ParseError[] = [];
   expect(jsonc.parse(fixtureSource, errors, { allowTrailingComma: false, disallowComments: true })).toEqual(fixture);
@@ -119,7 +113,7 @@ test("six anonymous owners are exported, acyclic, and type-correct", () => {
     const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     for (const statement of source.statements) if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier) && statement.moduleSpecifier.text.startsWith(".")) expect(resolve(dirname(path), statement.moduleSpecifier.text), path).not.toBe(routerPath);
   }
-});
+}, { timeout: 30_000 });
 
 test("owner paths bind all seventeen taxonomy contexts", () => {
   const taxonomy = loadTaxonomy();

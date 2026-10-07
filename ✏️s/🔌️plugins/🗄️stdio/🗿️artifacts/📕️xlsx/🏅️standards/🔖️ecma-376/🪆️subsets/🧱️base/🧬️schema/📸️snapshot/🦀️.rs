@@ -2,7 +2,7 @@
 
 use crate::STDIO_XLSX_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlDocument};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
 
@@ -35,7 +35,7 @@ pub enum XlsxCellValue {
 
 /// 🧮 One worksheet cell, addressed by `(row, col)` rather than an A1-style string — `row` is
 /// 1-based (the literal SpreadsheetML `<row r="N">` index), `col` is 0-based (matches
-/// `engine::column_letter`'s `0 -> "A"` convention). `row`/`col` are this cell's IDENTITY (the
+/// `schema::vocabulary::column_letter`'s `0 -> "A"` convention). `row`/`col` are this cell's IDENTITY (the
 /// key `XlsxCellsDiff` diffs by) and are never themselves diffed — only `value` is.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -87,7 +87,7 @@ pub struct XlsxXmlPart {
 pub fn xlsx_part_is_xml(path: &str, content_type: &str) -> bool {
     let lower_path = path.to_ascii_lowercase();
     let lower_type = content_type.to_ascii_lowercase();
-    lower_path.ends_with(".xml") || lower_type.ends_with("+xml") || lower_type.ends_with("/xml")
+    lower_path.ends_with(".xml") || lower_path.ends_with(".vml") || lower_type.ends_with("+xml") || lower_type.ends_with("/xml") || lower_type.contains("vmldrawing")
 }
 //#endregion 🔖️XmlParts
 
@@ -109,7 +109,7 @@ pub struct XlsxSnapshot {
 
 impl Default for XlsxSnapshot {
     fn default() -> Self {
-        crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default())
+        crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook::default())
     }
 }
 
@@ -132,8 +132,9 @@ impl XlsxSnapshot {
     }
 
     /// 🛡️ Refuses duplicate, mismatched, or unresolved XML/package authority.
-    pub fn validate_authority(&self) -> Result<(), crate::standards::v_ecma_376::subsets::base::io::XlsxError> {
-        use crate::standards::v_ecma_376::subsets::base::io::{XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT};
+    pub fn validate_authority(&self) -> Result<(), crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError> {
+        use crate::schema::refusal::XlsxError;
+        use crate::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
         fn valid_path(path: &str) -> bool {
             !path.is_empty() && !path.starts_with('/') && !path.contains('\\') && path.split('/').all(|segment| !segment.is_empty() && segment != "." && segment != "..")
         }
@@ -190,14 +191,14 @@ impl XlsxSnapshot {
     /// 📗️ Resolves the main workbook part from the package root's officeDocument relationship (Transitional or Strict
     /// relationship type).
     pub fn workbook_part_path(&self) -> Option<String> {
-        use crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_OFFICE_DOCUMENT_STRICT;
+        use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
         self.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| self.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
     }
 
     /// 📑️ Resolves every worksheet part by its ROLE — the targets of the main workbook's worksheet relationships
     /// (Transitional or Strict type), independent of the part's path or its declared content type.
     pub fn worksheet_part_paths(&self) -> Vec<String> {
-        use crate::standards::v_ecma_376::subsets::base::io::{REL_TYPE_WORKSHEET, REL_TYPE_WORKSHEET_STRICT};
+        use crate::schema::vocabulary::{REL_TYPE_WORKSHEET, REL_TYPE_WORKSHEET_STRICT};
         let Some(workbook) = self.workbook_part_path() else { return Vec::new() };
         self.opc
             .relationships_for(&workbook)
@@ -208,26 +209,10 @@ impl XlsxSnapshot {
     }
 
     /// 📘️ Projects the spreadsheet view without creating persisted semantic authority.
-    pub fn project_workbook(&self) -> Result<XlsxWorkbook, crate::standards::v_ecma_376::subsets::base::io::XlsxError> {
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::project_snapshot_workbook(self)
+    pub fn project_workbook(&self) -> Result<XlsxWorkbook, crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError> {
+        crate::standards::v_ecma_376::subsets::base::schema::inferences::workbook::project_snapshot_workbook(self)
     }
 
-    pub fn part_text(&self, path: &str) -> Option<String> {
-        let key = path.trim_start_matches('/');
-        self.xml_part(key).map(|part| xml_document_to_text(&part.document)).or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec()).ok()))
-    }
+
 }
 //#endregion 🔖️Snapshot
-
-//#region 🔖️HandcraftedArtifactCodecs
-
-
-//#endregion 🔖️HandcraftedArtifactCodecs
-
-
-
-#[path = "🧩️native/🦀️.rs"]
-mod native;
-
-#[path = "🛡️subset/🦀️.rs"]
-mod subset;

@@ -9,7 +9,7 @@ use crate::editor::cad::engine::interaction::apply_event;
 use crate::editor::cad::unit_tests::context::{close, member_rows, meta, new_app, pane_objects, settle, CadFixtureApp, TEST_INSTANCE};
 use crate::editor::cad::{start_interaction_session, try_commit_session_entries, CadCommand, CadPlayRuntime};
 use crate::sample_scene_fixture::sample_object;
-use crate::standards::v1::subsets::any::io::geometry_import::{objects_from_model_snapshot, semio_model_snapshot_from_objects};
+use crate::standards::v1::subsets::any::schema::geometry::{objects_from_model_snapshot, semio_model_snapshot_from_objects};
 use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::app::ChildEmitPreparationStep;
 use semio_framework_plugin::{AppOperationContext, HistoryView, PluginApp};
@@ -96,7 +96,7 @@ fn nothing_to_move_leaves_zero_trace() {
         vec![CadToolEntry::Transform(CadTransformRecord::drag(ids(&["object-a"]), [0.0, 0.0, 0.0]))],
         vec![CadToolEntry::Transform(CadTransformRecord::scale(ids(&["object-a"]), [1.0, 1.0, 1.0]))],
         vec![CadToolEntry::Transform(CadTransformRecord::rotate(ids(&["object-a"]), [0.0, 0.0, 0.0], 1.0))],
-        vec![CadToolEntry::Create { pane: CadPaneId::Energy, element: crate::standards::v1::subsets::any::io::geometry_import::model_element_from_cad_object(&sample_object("object-e", [0.0; 3])) }],
+        vec![CadToolEntry::Create { pane: CadPaneId::Energy, element: crate::standards::v1::subsets::any::schema::geometry::model_element_from_cad_object(&sample_object("object-e", [0.0; 3])) }],
         Vec::new(),
     ] {
         assert!(cad_transform_tool_commit("translateSelection", "seed-c", &models, entries.clone()).is_none(), "{entries:?} must commit nothing");
@@ -132,7 +132,7 @@ fn leaves_without_a_transaction_are_a_plain_child_edit() {
 #[test]
 fn created_elements_fold_onto_the_running_model() {
     let models = models();
-    let element = crate::standards::v1::subsets::any::io::geometry_import::model_element_from_cad_object(&sample_object("object-new", [2.0, 2.0, 0.0]));
+    let element = crate::standards::v1::subsets::any::schema::geometry::model_element_from_cad_object(&sample_object("object-new", [2.0, 2.0, 0.0]));
     let entries = vec![
         CadToolEntry::Create { pane: CadPaneId::Shape, element: element.clone() },
         CadToolEntry::Transform(CadTransformRecord::drag(ids(&["object-new"]), [1.0, 0.0, 0.0])),

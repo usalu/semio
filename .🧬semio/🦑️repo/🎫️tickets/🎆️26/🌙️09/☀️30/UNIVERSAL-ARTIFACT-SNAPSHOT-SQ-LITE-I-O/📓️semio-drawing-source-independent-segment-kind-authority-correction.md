@@ -1,0 +1,5 @@
+# Drawing Original Source Oracle Refusal
+
+Original whole Semio Source72901 exited1 with113pass/1fail/2334expects. BRep new matched law passed with observed DEBUG; Drawing new full-law comparison refused manual1992 versus actual1982. The manual SQLite input used Native/source object kind names moveTo/lineTo/cubicTo/quadTo/arcTo rather than the independently authored SQL canonical literal move/line/cubic/quad/arc. All five names added two UTF8 bytes each, accounting exactly for10. Corrected only the unique manual input literal list; copied limits and production provider stay unchanged. Independent Bun SQLite/Ajv/domain-parser/word replay is pending; only its actual terminal result will update neutral fixture extents.
+
+Original corrected-oracle Nx84856 exited1 before validation because Nx runs from the selected package cwd; input SQL relative paths were not rooted. The retained ticket script now resolves both authored SQL files from import.meta.url through the repository URL, without changing SQL/content/limits. Original registered Nxexec replay pending.

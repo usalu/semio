@@ -13,7 +13,7 @@ extern crate semio_framework_os_kernel as vcs;
 
 pub use crate::schema::snapshot::WFC_GRID3D_DOCUMENT_SCHEMA;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 //#region 🔖️Dialect
 /// 🪪️ The canonical surface-id coordinate for this artifact's ONE subset (`✳️any`) —
@@ -50,8 +50,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// one place the dialect is spelled, so every author (examples, editor affordances, importers) mints
 /// the handle here rather than restating it. `child_id` IS the mesh artifact id.
 pub fn mesh_child_handle(mesh_id: &str) -> store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot> {
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    store::ArtifactChild::new(mesh_id.to_string(), store::os_io::ArtifactRef { artifact_id: mesh_id.to_string(), dialect })
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    store::ArtifactChild::new(mesh_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: mesh_id.to_string(), dialect })
 }
 //#endregion 🧊️MeshChild
 
@@ -108,7 +108,7 @@ impl<PA> ArtifactApps for PA where
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.grid3d").expect("canonical wfc grid3d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 
@@ -539,8 +539,6 @@ pub mod mutations {
 }
 pub mod inferences {
     pub use crate::standards::v1::subsets::any::schema::inferences::*;
-    pub use crate::host::inferences::*;
-    pub use crate::host::inferences::*;
     pub use crate::host::inferences::*;
 }
 pub use crate::standards::v1::subsets::any::schema::diff::Grid3dDiff;

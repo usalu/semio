@@ -1,0 +1,156 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "drawing"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+    "references": 1,
+    "domains": [
+      "drawing"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "flow"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+    "references": 4,
+    "domains": [
+      "flow"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 15,
+    "domains": [
+      "text"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+    "references": 1,
+    "domains": [
+      "text"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "cad"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 15,
+    "domains": [
+      "table"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "mesh"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 14,
+    "domains": [
+      "object"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "presentation"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "video"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 15,
+    "domains": [
+      "graph"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 14,
+    "domains": [
+      "kit"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "brep"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "references": 1,
+    "domains": [
+      "value"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "image"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "base"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "audio"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "document"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "model"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+    "references": 12,
+    "domains": [
+      "value"
+    ]
+  }
+]

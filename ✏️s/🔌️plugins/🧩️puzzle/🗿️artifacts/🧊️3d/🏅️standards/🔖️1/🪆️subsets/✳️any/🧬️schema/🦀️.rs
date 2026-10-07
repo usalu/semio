@@ -4,7 +4,7 @@ use crate::{Puzzle3dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ puzzle3d document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dArtifact {
@@ -466,14 +466,14 @@ pub struct SceneConfig {
     pub(crate) weights: BrushKindWeights,
 }
 
-#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BrushCompatibleCandidate {
     pub object_kind_id: String,
     pub source_vortex_index: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -516,7 +516,7 @@ impl From<BrushPreviewState> for BrushPlacePayload {
 /// 🎯️ Public so `Puzzle3dEngineOutcome::BrushCandidates` can hand this back to callers (the app's
 /// brush slot) as a typed value instead of the JSON string the old `brush_candidates` wasm-bindgen
 /// method returned.
-#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BrushCollisionFreeResult {
     pub free: Vec<BrushCompatibleCandidate>,

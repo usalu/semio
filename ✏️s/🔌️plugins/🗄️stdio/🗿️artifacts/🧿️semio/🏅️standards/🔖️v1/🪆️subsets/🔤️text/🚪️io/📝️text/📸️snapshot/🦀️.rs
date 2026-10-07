@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::text::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
@@ -182,8 +182,8 @@ pub use snapshot_codec::*;
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::text::schema::snapshot::*;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use framework_schema::ArtifactSchema;
 
 

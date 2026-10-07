@@ -1,38 +1,561 @@
 {
   "feature": "Every PDF content operator has named operands, intrinsic bytes and ordered relationships",
   "operations": [
-    {"op":"setLineWidth","width":{"bits":"0x8000000000000000"}},
-    {"op":"setLineCap","cap":"square"},{"op":"setLineJoin","join":"bevel"},
-    {"op":"setMiterLimit","limit":{"bits":"0x7ff0000000000042"}},
-    {"op":"setDash","array":[{"bits":"0x0000000000000001"}],"phase":{"bits":"0xfff0000000000000"}},
-    {"op":"setRenderingIntent","intent":"Ω intent"},{"op":"setFlatness","flatness":{"bits":"0x3ff0000000000000"}},{"op":"setExtGState","name":"State"},
-    {"op":"save"},{"op":"restore"},{"op":"transform","matrix":[{"bits":"0x3ff0000000000000"},{"bits":"0x0000000000000000"},{"bits":"0x8000000000000000"},{"bits":"0x7ff0000000000042"},{"bits":"0x0000000000000001"},{"bits":"0xfff0000000000000"}]},
-    {"op":"moveTo","x":{"bits":"0x0000000000000001"},"y":{"bits":"0x8000000000000000"}},
-    {"op":"lineTo","x":{"bits":"0x3ff0000000000000"},"y":{"bits":"0x7ff0000000000042"}},
-    {"op":"curveTo","x1":{"bits":"0x0"},"y1":{"bits":"0x0"},"x2":{"bits":"0x0"},"y2":{"bits":"0x0"},"x3":{"bits":"0x0"},"y3":{"bits":"0x1"}},
-    {"op":"curveToInitial","x2":{"bits":"0x0"},"y2":{"bits":"0x0"},"x3":{"bits":"0x0"},"y3":{"bits":"0x1"}},
-    {"op":"curveToFinal","x1":{"bits":"0x0"},"y1":{"bits":"0x0"},"x3":{"bits":"0x0"},"y3":{"bits":"0x1"}},
-    {"op":"closePath"},{"op":"rectangle","x":{"bits":"0x0"},"y":{"bits":"0x1"},"width":{"bits":"0x3ff0000000000000"},"height":{"bits":"0x7ff0000000000042"}},
-    {"op":"stroke"},{"op":"closeStroke"},{"op":"fill"},{"op":"fillEvenOdd"},{"op":"fillStroke"},{"op":"fillStrokeEvenOdd"},{"op":"closeFillStroke"},{"op":"closeFillStrokeEvenOdd"},{"op":"endPath"},{"op":"clip"},{"op":"clipEvenOdd"},{"op":"beginText"},{"op":"endText"},
-    {"op":"setCharSpacing","spacing":{"bits":"0x1"}},{"op":"setWordSpacing","spacing":{"bits":"0x8000000000000000"}},{"op":"setHorizontalScale","scale":{"bits":"0x3ff0000000000000"}},{"op":"setLeading","leading":{"bits":"0x7ff0000000000042"}},
-    {"op":"setFont","name":"Ω Font","size":{"bits":"0xfff0000000000000"}},{"op":"setTextRenderingMode","mode":255},{"op":"setTextRise","rise":{"bits":"0x1"}},
-    {"op":"moveText","tx":{"bits":"0x0"},"ty":{"bits":"0x1"}},{"op":"moveTextSetLeading","tx":{"bits":"0x8000000000000000"},"ty":{"bits":"0x7ff0000000000042"}},
-    {"op":"setTextMatrix","matrix":[{"bits":"0x0"},{"bits":"0x1"},{"bits":"0x0"},{"bits":"0x1"},{"bits":"0x0"},{"bits":"0x1"}]},{"op":"nextLine"},
-    {"op":"showText","text":{"kind":"text","text":"Ω text"}},
-    {"op":"showTextArray","items":[{"kind":"text","text":"Ω"},{"kind":"codes","bytes":[0,255,128]},{"kind":"adjust","amount":{"bits":"0x7ff0000000000042"}}]},
-    {"op":"nextLineShowText","text":{"kind":"codes","bytes":[0,255,128]}},
-    {"op":"nextLineShowTextSpaced","wordSpacing":{"bits":"0x1"},"charSpacing":{"bits":"0x8000000000000000"},"text":{"kind":"text","text":"Spacing"}},
-    {"op":"setGlyphWidth","wx":{"bits":"0x0"},"wy":{"bits":"0x1"}},
-    {"op":"setGlyphWidthAndBox","wx":{"bits":"0x0"},"wy":{"bits":"0x1"},"llx":{"bits":"0x0"},"lly":{"bits":"0x1"},"urx":{"bits":"0x0"},"ury":{"bits":"0x1"}},
-    {"op":"setStrokeColorSpace","name":"Stroke"},{"op":"setFillColorSpace","name":"Fill"},
-    {"op":"setStrokeColor","components":[{"bits":"0x1"}]},{"op":"setStrokeColorN","components":[],"pattern":"Ω Pattern"},{"op":"setFillColor","components":[]},{"op":"setFillColorN","components":[{"bits":"0x8000000000000000"}],"pattern":null},
-    {"op":"setStrokeGray","gray":{"bits":"0x1"}},{"op":"setFillGray","gray":{"bits":"0x7ff0000000000042"}},
-    {"op":"setStrokeRgb","r":{"bits":"0x0"},"g":{"bits":"0x1"},"b":{"bits":"0x8000000000000000"}},{"op":"setFillRgb","r":{"bits":"0x7ff0000000000042"},"g":{"bits":"0x0"},"b":{"bits":"0x1"}},
-    {"op":"setStrokeCmyk","c":{"bits":"0x0"},"m":{"bits":"0x1"},"y":{"bits":"0x0"},"k":{"bits":"0x1"}},{"op":"setFillCmyk","c":{"bits":"0x1"},"m":{"bits":"0x0"},"y":{"bits":"0x1"},"k":{"bits":"0x0"}},
-    {"op":"paintShading","name":"Shade"},{"op":"paintXObject","name":"Object"},
-    {"op":"inlineImage","image":{"width":4294967295,"height":1,"bitsPerComponent":8,"colorSpace":{"kind":"deviceRgb"},"imageMask":false,"decode":[{"bits":"0x8000000000000000"},{"bits":"0x7ff0000000000042"}],"interpolate":true,"filters":[],"data":[0,255,128],"extra":[]}},
-    {"op":"markedContentPoint","tag":"Point"},{"op":"markedContentPointWithProperties","tag":"Properties","properties":{"kind":"named","name":"Ω"}},
-    {"op":"beginMarkedContent","tag":"Begin"},{"op":"beginMarkedContentWithProperties","tag":"Inline","properties":{"kind":"inline","entries":[{"key":"Kind","value":{"kind":"name","value":"Ω"}}]}},
-    {"op":"endMarkedContent"},{"op":"beginCompatibility"},{"op":"endCompatibility"},{"op":"unknown","operator":"Ω Future","operands":[{"kind":"name","value":"Ω"}]}
+    {
+      "op": "setLineWidth",
+      "width": {
+        "bits": "0x8000000000000000"
+      }
+    },
+    {
+      "op": "setLineCap",
+      "cap": "square"
+    },
+    {
+      "op": "setLineJoin",
+      "join": "bevel"
+    },
+    {
+      "op": "setMiterLimit",
+      "limit": {
+        "bits": "0x7ff0000000000042"
+      }
+    },
+    {
+      "op": "setDash",
+      "array": [
+        {
+          "bits": "0x0000000000000001"
+        }
+      ],
+      "phase": {
+        "bits": "0xfff0000000000000"
+      }
+    },
+    {
+      "op": "setRenderingIntent",
+      "intent": "Ω intent"
+    },
+    {
+      "op": "setFlatness",
+      "flatness": {
+        "bits": "0x3ff0000000000000"
+      }
+    },
+    {
+      "op": "setExtGState",
+      "name": "State"
+    },
+    {
+      "op": "save"
+    },
+    {
+      "op": "restore"
+    },
+    {
+      "op": "transform",
+      "matrix": [
+        {
+          "bits": "0x3ff0000000000000"
+        },
+        {
+          "bits": "0x0000000000000000"
+        },
+        {
+          "bits": "0x8000000000000000"
+        },
+        {
+          "bits": "0x7ff0000000000042"
+        },
+        {
+          "bits": "0x0000000000000001"
+        },
+        {
+          "bits": "0xfff0000000000000"
+        }
+      ]
+    },
+    {
+      "op": "moveTo",
+      "x": {
+        "bits": "0x0000000000000001"
+      },
+      "y": {
+        "bits": "0x8000000000000000"
+      }
+    },
+    {
+      "op": "lineTo",
+      "x": {
+        "bits": "0x3ff0000000000000"
+      },
+      "y": {
+        "bits": "0x7ff0000000000042"
+      }
+    },
+    {
+      "op": "curveTo",
+      "x1": {
+        "bits": "0x0"
+      },
+      "y1": {
+        "bits": "0x0"
+      },
+      "x2": {
+        "bits": "0x0"
+      },
+      "y2": {
+        "bits": "0x0"
+      },
+      "x3": {
+        "bits": "0x0"
+      },
+      "y3": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "curveToInitial",
+      "x2": {
+        "bits": "0x0"
+      },
+      "y2": {
+        "bits": "0x0"
+      },
+      "x3": {
+        "bits": "0x0"
+      },
+      "y3": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "curveToFinal",
+      "x1": {
+        "bits": "0x0"
+      },
+      "y1": {
+        "bits": "0x0"
+      },
+      "x3": {
+        "bits": "0x0"
+      },
+      "y3": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "closePath"
+    },
+    {
+      "op": "rectangle",
+      "x": {
+        "bits": "0x0"
+      },
+      "y": {
+        "bits": "0x1"
+      },
+      "width": {
+        "bits": "0x3ff0000000000000"
+      },
+      "height": {
+        "bits": "0x7ff0000000000042"
+      }
+    },
+    {
+      "op": "stroke"
+    },
+    {
+      "op": "closeStroke"
+    },
+    {
+      "op": "fill"
+    },
+    {
+      "op": "fillEvenOdd"
+    },
+    {
+      "op": "fillStroke"
+    },
+    {
+      "op": "fillStrokeEvenOdd"
+    },
+    {
+      "op": "closeFillStroke"
+    },
+    {
+      "op": "closeFillStrokeEvenOdd"
+    },
+    {
+      "op": "endPath"
+    },
+    {
+      "op": "clip"
+    },
+    {
+      "op": "clipEvenOdd"
+    },
+    {
+      "op": "beginText"
+    },
+    {
+      "op": "endText"
+    },
+    {
+      "op": "setCharSpacing",
+      "spacing": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "setWordSpacing",
+      "spacing": {
+        "bits": "0x8000000000000000"
+      }
+    },
+    {
+      "op": "setHorizontalScale",
+      "scale": {
+        "bits": "0x3ff0000000000000"
+      }
+    },
+    {
+      "op": "setLeading",
+      "leading": {
+        "bits": "0x7ff0000000000042"
+      }
+    },
+    {
+      "op": "setFont",
+      "name": "Ω Font",
+      "size": {
+        "bits": "0xfff0000000000000"
+      }
+    },
+    {
+      "op": "setTextRenderingMode",
+      "mode": 255
+    },
+    {
+      "op": "setTextRise",
+      "rise": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "moveText",
+      "tx": {
+        "bits": "0x0"
+      },
+      "ty": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "moveTextSetLeading",
+      "tx": {
+        "bits": "0x8000000000000000"
+      },
+      "ty": {
+        "bits": "0x7ff0000000000042"
+      }
+    },
+    {
+      "op": "setTextMatrix",
+      "matrix": [
+        {
+          "bits": "0x0"
+        },
+        {
+          "bits": "0x1"
+        },
+        {
+          "bits": "0x0"
+        },
+        {
+          "bits": "0x1"
+        },
+        {
+          "bits": "0x0"
+        },
+        {
+          "bits": "0x1"
+        }
+      ]
+    },
+    {
+      "op": "nextLine"
+    },
+    {
+      "op": "showText",
+      "text": {
+        "kind": "text",
+        "text": "Ω text"
+      }
+    },
+    {
+      "op": "showTextArray",
+      "items": [
+        {
+          "kind": "text",
+          "text": "Ω"
+        },
+        {
+          "kind": "codes",
+          "codes": [
+            0,
+            255,
+            128
+          ]
+        },
+        {
+          "kind": "adjust",
+          "amount": {
+            "bits": "0x7ff0000000000042"
+          }
+        }
+      ]
+    },
+    {
+      "op": "nextLineShowText",
+      "text": {
+        "kind": "codes",
+        "codes": [
+          0,
+          255,
+          128
+        ]
+      }
+    },
+    {
+      "op": "nextLineShowTextSpaced",
+      "wordSpacing": {
+        "bits": "0x1"
+      },
+      "charSpacing": {
+        "bits": "0x8000000000000000"
+      },
+      "text": {
+        "kind": "text",
+        "text": "Spacing"
+      }
+    },
+    {
+      "op": "setGlyphWidth",
+      "wx": {
+        "bits": "0x0"
+      },
+      "wy": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "setGlyphWidthAndBox",
+      "wx": {
+        "bits": "0x0"
+      },
+      "wy": {
+        "bits": "0x1"
+      },
+      "llx": {
+        "bits": "0x0"
+      },
+      "lly": {
+        "bits": "0x1"
+      },
+      "urx": {
+        "bits": "0x0"
+      },
+      "ury": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "setStrokeColorSpace",
+      "name": "Stroke"
+    },
+    {
+      "op": "setFillColorSpace",
+      "name": "Fill"
+    },
+    {
+      "op": "setStrokeColor",
+      "components": [
+        {
+          "bits": "0x1"
+        }
+      ]
+    },
+    {
+      "op": "setStrokeColorN",
+      "components": [],
+      "pattern": "Ω Pattern"
+    },
+    {
+      "op": "setFillColor",
+      "components": []
+    },
+    {
+      "op": "setFillColorN",
+      "components": [
+        {
+          "bits": "0x8000000000000000"
+        }
+      ],
+      "pattern": null
+    },
+    {
+      "op": "setStrokeGray",
+      "gray": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "setFillGray",
+      "gray": {
+        "bits": "0x7ff0000000000042"
+      }
+    },
+    {
+      "op": "setStrokeRgb",
+      "r": {
+        "bits": "0x0"
+      },
+      "g": {
+        "bits": "0x1"
+      },
+      "b": {
+        "bits": "0x8000000000000000"
+      }
+    },
+    {
+      "op": "setFillRgb",
+      "r": {
+        "bits": "0x7ff0000000000042"
+      },
+      "g": {
+        "bits": "0x0"
+      },
+      "b": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "setStrokeCmyk",
+      "c": {
+        "bits": "0x0"
+      },
+      "m": {
+        "bits": "0x1"
+      },
+      "y": {
+        "bits": "0x0"
+      },
+      "k": {
+        "bits": "0x1"
+      }
+    },
+    {
+      "op": "setFillCmyk",
+      "c": {
+        "bits": "0x1"
+      },
+      "m": {
+        "bits": "0x0"
+      },
+      "y": {
+        "bits": "0x1"
+      },
+      "k": {
+        "bits": "0x0"
+      }
+    },
+    {
+      "op": "paintShading",
+      "name": "Shade"
+    },
+    {
+      "op": "paintXObject",
+      "name": "Object"
+    },
+    {
+      "op": "inlineImage",
+      "image": {
+        "width": 4294967295,
+        "height": 1,
+        "bitsPerComponent": 8,
+        "colorSpace": {
+          "kind": "deviceRgb"
+        },
+        "imageMask": false,
+        "decode": [
+          {
+            "bits": "0x8000000000000000"
+          },
+          {
+            "bits": "0x7ff0000000000042"
+          }
+        ],
+        "interpolate": true,
+        "filters": [],
+        "data": [
+          0,
+          255,
+          128
+        ],
+        "extra": []
+      }
+    },
+    {
+      "op": "markedContentPoint",
+      "tag": "Point"
+    },
+    {
+      "op": "markedContentPointWithProperties",
+      "tag": "Properties",
+      "properties": {
+        "kind": "named",
+        "name": "Ω"
+      }
+    },
+    {
+      "op": "beginMarkedContent",
+      "tag": "Begin"
+    },
+    {
+      "op": "beginMarkedContentWithProperties",
+      "tag": "Inline",
+      "properties": {
+        "kind": "inline",
+        "entries": [
+          {
+            "key": "Kind",
+            "value": {
+              "kind": "name",
+              "value": "Ω"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "endMarkedContent"
+    },
+    {
+      "op": "beginCompatibility"
+    },
+    {
+      "op": "endCompatibility"
+    },
+    {
+      "op": "unknown",
+      "operator": "Ω Future",
+      "operands": [
+        {
+          "kind": "name",
+          "value": "Ω"
+        }
+      ]
+    }
   ]
 }

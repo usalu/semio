@@ -9,7 +9,8 @@ use super::*;
 use crate::standards::v1_1::subsets::base::schema::snapshot::*;
 use crate::STDIO_SVG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text_checked, XmlAttr, XmlDocument, XmlNode};
+use crate::schema::snapshot::{SvgAttr, SvgDocument, SvgNode};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text_checked};
 
 /// 🧪️ P2-FG3: `stdio.svg` is TEXT-NATIVE (per the W0 census row) — there is no "binary SVG"; the
 /// pack container is the SEMIO envelope wrapping the artifact's own REAL wire text
@@ -27,7 +28,7 @@ impl store::ArtifactPack for SvgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
-        crate::schema::mutation_support::encode_snapshot_binary(self, &mut raw);
+        crate::standards::v1_1::subsets::base::io::binary::snapshot::encode_snapshot_binary(self, &mut raw);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -42,7 +43,7 @@ impl store::ArtifactPack for SvgSnapshot {
         if version != 1 {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("unsupported svg snapshot state version {version}"))));
         }
-        crate::schema::mutation_support::decode_snapshot_binary(&mut reader).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
+        crate::standards::v1_1::subsets::base::io::binary::snapshot::decode_snapshot_binary(&mut reader).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 }
@@ -54,10 +55,10 @@ use crate::standards::v1_1::subsets::base::schema::mutation_support::*;
 use crate::schema::diff::{diff_at_path, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::node_at;
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
+use crate::schema::snapshot::{SvgDocument, SvgNode};
 
 pub(crate) fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8>) {
-    use crate::schema::diff::{enc_xml_node_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::diff::enc_svg_node_bin;
     use crate::standards::v1_1::subsets::base::io::binary::diff::{write_str_lp};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{enc_declaration_bin};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{enc_doctype_bin};
@@ -65,7 +66,7 @@ pub(crate) fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8
     write_str_lp(output, &snapshot.schema);
     output.push(u8::from(snapshot.doc.root.is_some()));
     if let Some(root) = &snapshot.doc.root {
-        enc_xml_node_bin(root, output);
+        enc_svg_node_bin(root, output);
     }
     output.push(u8::from(snapshot.doc.doctype.is_some()));
     if let Some(doctype) = &snapshot.doc.doctype {
@@ -80,18 +81,18 @@ pub(crate) fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8
 }
 
 pub(crate) fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_xml_node_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_svg_node_bin};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{read_str_lp};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_declaration_bin};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_doctype_bin};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_prolog_bin};
     let schema = read_str_lp(reader)?;
-    let root = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+    let root = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_svg_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
     let declaration = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
     let prolog = dec_prolog_bin(reader)?;
     let epilog = dec_prolog_bin(reader)?;
-    let snapshot = SvgSnapshot { schema, doc: XmlDocument { root, doctype, declaration, prolog, epilog } };
+    let snapshot = SvgSnapshot { schema, doc: SvgDocument { root, doctype, declaration, prolog, epilog } };
     Ok(snapshot)
 }
 }

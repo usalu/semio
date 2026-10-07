@@ -5,7 +5,7 @@
 //! candidate instead of asserting an absolute emptiness that its sibling's success would break.
 
 use crate::app::{declarations::fixture, ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, Plugin};
-use store::os_io::ArtifactKindId;
+use {semio_framework_artifact_reference::ArtifactKindId};
 
 fn definition(kind: &str) -> ArtifactDefinition {
     ArtifactDefinition::new(ArtifactIdentity::parse(kind).expect("syntactically valid definition identity"))

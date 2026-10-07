@@ -29,8 +29,8 @@ fn drill_step(id: &str) -> ProcessStep {
 /// catalog `Process3dPlayApp::build_document_store_owners` hands the runtime, which in turn obliges
 /// every fixture to finish through [`close_store`].
 async fn new_store() -> Process3dStore {
-    let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None)).await.expect("new store");
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_owners());
+    let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
+    store.install_document_store_owners_exact(crate::host::owned::process3d_document_store_owners());
     store
 }
 
@@ -175,8 +175,8 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 #[semio_framework_async_macros::async_test]
 async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
     let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
-    let mut store = Process3dStore::new(envelope).await.expect("new store");
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_owners());
+    let mut store = Process3dStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
+    store.install_document_store_owners_exact(crate::host::owned::process3d_document_store_owners());
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![

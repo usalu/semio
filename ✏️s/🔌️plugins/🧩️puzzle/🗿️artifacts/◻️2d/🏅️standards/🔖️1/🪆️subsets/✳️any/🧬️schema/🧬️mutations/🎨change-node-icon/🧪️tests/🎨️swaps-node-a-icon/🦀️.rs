@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-node-icon/🎨️swaps-node-a-icon/📸️snapshot/⬅️before/🔣️.json");
@@ -36,7 +37,7 @@ fn applies_to_committed_after() {
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("change-node-icon applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-node-icon/swaps-node-a-icon: applied state differs from committed after-snapshot");
     let node = snapshot.nodes.iter().find(|node| node.id == "node-a").expect("node-a survives its icon swap");
-    assert_eq!(node.icon_kind.as_deref(), Some("icon-omega"), "change-node-icon/swaps-node-a-icon: node-a kept its old icon");
+    assert_eq!(node.icon_kind.as_ref().map(|text| text.eq_str("icon-omega")), Some(true), "change-node-icon/swaps-node-a-icon: node-a kept its old icon");
     assert_eq!(node.text, before().nodes[0].text, "change-node-icon/swaps-node-a-icon: an icon swap must not rewrite the text");
 }
 

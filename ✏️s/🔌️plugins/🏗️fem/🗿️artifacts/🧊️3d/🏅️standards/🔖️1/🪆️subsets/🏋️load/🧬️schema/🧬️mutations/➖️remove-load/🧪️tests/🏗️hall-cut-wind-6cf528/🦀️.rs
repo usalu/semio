@@ -13,7 +13,8 @@
 //! The gable wind node load is dropped — the trailing load of its case, so the inverse re-appends it exactly.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-load/🏗️hall-cut-wind-6cf528/📸️snapshot/⬅️before/🔣️.json");

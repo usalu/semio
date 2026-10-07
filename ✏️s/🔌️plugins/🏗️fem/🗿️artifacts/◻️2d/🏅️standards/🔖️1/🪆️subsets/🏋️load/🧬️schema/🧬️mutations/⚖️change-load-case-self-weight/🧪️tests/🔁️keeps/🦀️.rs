@@ -13,7 +13,8 @@
 //! 🔁️ The dead case already carries self-weight, so this is `change-load-case-self-weight`'s no-op branch: a NO-OP with a Warning, an empty diff, and a document that does not move. `change-load-case-self-weight` has no Fatal branch at all.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🔁️keeps/📸️snapshot/⬅️before/🔣️.json");

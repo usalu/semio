@@ -583,7 +583,7 @@ impl ArtifactSqliteSnapshot for Puzzle3dSnapshot {
     fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         reconstruct(d, c)
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.puzzle.puzzle3d" || dialect.standard != "1" || dialect.subset != "*" {
             return Err(store::io_schema::IoError::from_value_error(invalid("Puzzle3d owned dialect differs")));
@@ -894,7 +894,7 @@ impl ArtifactSqliteSnapshot for crate::Puzzle3dPlaySnapshot {
     fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
         self.typed().encode_sqlite_snapshot_native(encoding, c)
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         self.typed().validate_sqlite_snapshot_subset(dialect, d, c)
     }
 }

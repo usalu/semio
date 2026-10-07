@@ -19,7 +19,7 @@ impl Drop for Generation3dAppFixture {
 
 /// 🏗️ Supplies the artifact's registered tool catalog without installing geometry implementations.
 pub(crate) async fn app_with_registry() -> Generation3dAppFixture {
-    let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(|| semio_framework_plugin::App { definition: create_generation3d_app(), examples: Vec::new() }).await;
+    let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(|| semio_framework_plugin::App { definition: create_generation3d_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
     Generation3dAppFixture(app)
 }

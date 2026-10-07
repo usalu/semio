@@ -140,16 +140,16 @@ impl DrawingDiff {
             }
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
+                next.schema = schema.clone().into();
             }
             if let Some(id) = &self.id {
-                next.id = id.clone();
+                next.id = id.clone().into();
             }
             if let Some(title) = &self.title {
                 next.title = title.clone();
             }
             if let Some(delta) = &self.layers {
-                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
+                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?.into();
             }
             if let Some(assets) = &self.assets {
                 apply_assets_delta(&mut next.assets, assets).map_err(|error| error.under(["assets"]))?;
@@ -273,7 +273,7 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
     if let Some(segments) = &patch.path_segments {
         if !segments.iter().all(crate::schema::valid_path_segment) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Invalid path geometry")); }
         let DrawingLayerNode::Path(path) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Geometry target is not a path")); };
-        path.segments = segments.clone();
+        path.segments = segments.clone().into();
     }
     if patch.text_content.is_some() || patch.text_size.is_some() {
         let DrawingLayerNode::Text(text) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Text target has another kind")); };
@@ -281,7 +281,7 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
             if !size.is_finite() || size <= 0.0 { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Invalid text size")); }
             text.size = size;
         }
-        if let Some(content) = &patch.text_content { text.content = content.clone(); }
+        if let Some(content) = &patch.text_content { text.content = content.clone().into(); }
     }
     if let Some(isolation)=patch.isolation {
         let DrawingLayerNode::Group(group)=layer else {return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target","Isolation needs a group"));};
@@ -295,7 +295,7 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         base.locked = locked;
     }
     if let Some(name) = &patch.name {
-        base.name = name.clone();
+        base.name = name.clone().into();
     }
     if let Some(opacity) = patch.opacity {
         base.opacity = opacity;
@@ -303,7 +303,7 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
     if let Some(fill_rule) = patch.fill_rule {base.attributes.fill_rule=fill_rule;}
     if let Some(blend_mode) = &patch.blend_mode {
         if !crate::DRAWING_BLEND_MODES.contains(&blend_mode.as_str()) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Unsupported blend mode.").at(["blendMode"])); }
-        base.blend_mode = blend_mode.clone();
+        base.blend_mode = blend_mode.clone().into();
     }
     if let Some(transform) = &patch.transform {
         base.transform = transform.clone();
@@ -318,7 +318,7 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         let DrawingLayerNode::Boolean(boolean) = layer else {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "boolean operation patch requires a boolean layer").at(["booleanOperation"]));
         };
-        boolean.operation = operation.clone();
+        boolean.operation = operation.clone().into();
     }
     if let Some(params_json) = &patch.trace_params {
         let DrawingLayerNode::Trace(trace) = layer else {
@@ -386,16 +386,16 @@ impl MutationDiff<DrawingSnapshot> for DrawingDiff {
             }
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
+                next.schema = schema.clone().into();
             }
             if let Some(id) = &self.id {
-                next.id = id.clone();
+                next.id = id.clone().into();
             }
             if let Some(title) = &self.title {
                 next.title = title.clone();
             }
             if let Some(delta) = &self.layers {
-                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
+                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?.into();
             }
             if let Some(assets) = &self.assets {
                 apply_assets_delta(&mut next.assets, assets).map_err(|error| error.under(["assets"]))?;

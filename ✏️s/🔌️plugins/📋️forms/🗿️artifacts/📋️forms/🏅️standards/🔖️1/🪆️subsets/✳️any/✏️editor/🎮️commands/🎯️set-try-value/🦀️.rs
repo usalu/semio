@@ -82,6 +82,10 @@ impl semio_framework_value::FromValue for ChunkAddressableJson {
     }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for ChunkAddressableJson {
+ const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Text;
+}
+
 impl semio_framework_dsl_record::DslField for ChunkAddressableJson {
     fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Text }
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Text(self.to_string()) }

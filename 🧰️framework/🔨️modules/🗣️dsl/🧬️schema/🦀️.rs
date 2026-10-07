@@ -43,6 +43,9 @@ pub use producer::{NativeSchemaControl,RecordSpecProducer};
 #[path = "🫳️borrowed/🦀️.rs"]
 mod borrowed_schema;
 pub use borrowed_schema::{BorrowedShape,BorrowedFieldSpec,BorrowedRecordSpec,measure_print_borrowed};
+#[path="🫳️borrowed/🏭️authored/🦀️.rs"]
+mod authored_borrowed_schema;
+pub use authored_borrowed_schema::{BorrowedRecordSpecProducer,BorrowedDslField,BorrowedDslRecord,BorrowedDslVariants,borrowed_field_shape,borrowed_record,borrowed_unit};
 
 //#region 🔖️Shape
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

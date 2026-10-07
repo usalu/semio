@@ -1,0 +1,17 @@
+# Const Unit Static Array Runtime Refusal
+
+On October 6 the resumed lane first polled original NativeAfter handle 97684. The handle was unavailable; authoritative process readback showed no active const-unit DSL native process. Its retained original log `🗑️generated/immutable-const-unit-schema-owning-after.log` contains a genuine Rust compile followed by Nextest: 1 test run, 0 passed, 1 failed, 83 skipped. The failure is the original `std::ptr::eq(DEGREE.unwrap(), &UNITS[11])` assertion. No assertion or fixture was weakened. The earlier genuine Before remains exactly three E0015 errors.
+
+The mounted provider made the original table a static slice reference backed by a promoted array. The next narrowly guarded correction makes the table an actual static `[UnitSpec; 41]` array; all entries and exact UTF8 lookup are unchanged. `const-unit-array-stage` and `const-unit-array-mount` live in the existing ticket input Script, with launch entries. The first Nx exec attempt failed to locate a relative input path because Nx exec selected the project cwd; the retry uses its absolute input path. No compile or runtime result belongs to that preparation failure.
+
+The actual DSL Record authored static metadata demand is already mounted. Its genuine original registered Native MissingBefore is now running as handle 45236, logged to `🗑️generated/immutable-borrowed-authored-schema-owning-before.log`. Required traits and generic metadata macro providers remain held. No descriptor allocation, producer, symbol scratch, ChildEmit, OS transport or complete-family credit follows from these attempts.
+
+## Genuine Narrowed Owning After and Metadata MissingBefore
+
+After handle65975 terminated successfully through the unchanged original DSL Native target: Rust completed in3.04s and Nextest ran1 test,1passed,0failed,83skipped,13ms runtime. Nx retained10m30s cache-skipped preparation/run duration. The original constant/runtime pointer assertions and all41+12 literal corpus queries passed. Actual log: `🗑️generated/immutable-const-unit-array-owning-after.log`. Whole unchanged DSL plus constant demand is running as handle10884; no whole-suite pass is claimed yet.
+
+Metadata MissingBefore handle45236 terminated exit1 after actual Rust compilation, with exactly2 errors: E0432 missing required BorrowedDslField/BorrowedDslRecord/BorrowedDslVariants imports, and E0599 missing projected_borrowed_variant_identity on the actual authored variant. Nextest was not entered. Nx duration10m34s,193 warnings retained. This qualifies the original authored metadata MissingBefore. The strengthened producer demand was subsequently mounted with the unchanged descriptor corpus and zero allocator authority, and the provider mount is now being run with10 exact narrow source guards. No metadata Native After or producer credit is claimed.
+
+## Genuine Whole DSL Preservation
+
+Original registered DSL Native whole-suite handle10884 terminated exit0. Nextest ran84tests,84passed,0failed,0skipped in3.237s. This preserves all83original tests plus the new constant-unit demand; no test was ignored or disabled. Log: `🗑️generated/immutable-const-unit-array-whole-dsl-after.log`. The const lookup provider therefore has genuine compile-time Before, runtime pointer-identity refusal, narrowed runtime After, independent53-query Source oracle, and unchanged whole owning-suite preservation. This closes the unit metadata prerequisite only. Borrowed descriptor/producer NativeAfter56950, symbol scratch and all operation/ChildEmit/transport joins remain independent.

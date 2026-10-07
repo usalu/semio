@@ -1,6 +1,6 @@
 //! 🏷️ Direct binary codec for `set-dpart-metadata`.
 
-use super::SetDpartMetadata;
+use crate::standards::v1_7::subsets::vt::schema::mutations::SetDpartMetadata;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 16;

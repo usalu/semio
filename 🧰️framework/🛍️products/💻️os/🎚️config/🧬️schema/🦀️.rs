@@ -7,7 +7,7 @@
 //! crate root) — imported here, never redefined. The plugin host mounts this schema together with
 //! every direct mutation leaf in its Rust glue.
 
-use semio_framework::{AppRef, AppRole, ArtifactDialect};
+use {semio_framework::AppRef,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

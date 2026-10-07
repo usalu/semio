@@ -4,7 +4,6 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpat
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import Ajv from "ajv";
 
 type Owner = Readonly<{ id: string; path: string; exports: readonly string[] }>;
 type PackageExport = string | Readonly<{ types: string; import: string }>;
@@ -26,7 +25,6 @@ const sourcePath = fileURLToPath(import.meta.url).replaceAll("\\", "/");
 const workspaceMarker = "/🧰️framework/";
 const workspaceRoot = sourcePath.slice(0, sourcePath.indexOf(workspaceMarker));
 const ownershipRoot = dirname(dirname(dirname(sourcePath)));
-const schemaPath = join(ownershipRoot, "🧬️schema", "🔣️.json");
 const fixturePath = join(ownershipRoot, "🧫️fixtures", "🔣️.json");
 
 function sorted(values: readonly string[]): string[] {
@@ -49,11 +47,7 @@ async function moduleExportNames(path: string): Promise<string[]> {
 /** 🧪️ Runs the portable Flow browser ownership, projection, package and bundle oracle. */
 export async function testFlowBrowserOwnership(): Promise<void> {
   await testColdFlowDeclaration();
-  const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = ajv.compile(schema);
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   assert.equal(fixture.owners.length, 4);
 
   for (const owner of fixture.owners) {

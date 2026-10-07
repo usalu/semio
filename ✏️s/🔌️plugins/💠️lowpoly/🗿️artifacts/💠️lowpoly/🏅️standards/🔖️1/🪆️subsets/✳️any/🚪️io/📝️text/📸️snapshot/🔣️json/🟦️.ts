@@ -3,7 +3,7 @@ import{parseLowpolyArtifact,lowpolyLowpolyArtifactGuardObject as object,lowpolyL
 import type{LowpolySnapshot}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {binary32} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import{base64StandardDecode}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
-import{decodeLowpolyMeshJson}from"../../../../🧬️schema/🕸️mesh/🟦️.ts";
+import {decodeLowpolyMeshJson} from "../🕸️mesh/🔣️json/🟦️.ts";
 function vector(value:unknown):ReturnType<typeof binary32>[] {return array(value,"vector",{minItems:3,maxItems:3}).map(value=>binary32(number(value,"component")));}
 /** 📥️ Decode the actual numeric/base64 JSON transport without widening the canonical schema. */
 export function decodeLowpolyJsonSnapshot(value:unknown):LowpolySnapshot{

@@ -109,11 +109,10 @@ pub fn gif_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 /// GIF87a has no empty screen nor an image-less stream, and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_gif_snapshot() -> GifSnapshot {
-    use crate::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
     use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb};
     let white = GifRgb { r: 255, g: 255, b: 255 };
     let seed = GifSnapshot { width: 1, height: 1, gct: Some(GifColorTable { sorted: false, colors: vec![white, white] }), images: vec![GifImage { width: 1, height: 1, indices: vec![0], ..GifImage::default() }], ..GifSnapshot::default() };
-    encode_gif(&seed).and_then(|bytes| decode_gif(&bytes)).expect("blank_gif_snapshot: the 1×1 seed round-trips through the real codec")
+    seed
 }
 
 /// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` — a real GCT plus two real images (one

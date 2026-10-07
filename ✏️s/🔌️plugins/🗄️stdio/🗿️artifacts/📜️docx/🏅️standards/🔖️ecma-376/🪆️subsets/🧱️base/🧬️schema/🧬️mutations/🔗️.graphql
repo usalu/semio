@@ -21,3 +21,9 @@ enum DocxMutationKind {
 }
 scalar MutationPayload
 input DocxMutationInput { kind: DocxMutationKind!, payload: MutationPayload! }
+
+# 📦️ Exactly one content branch is populated according to kind.
+enum DocxPartContentKind { XML BINARY }
+scalar XmlDocument
+input DocxPartContentInput { kind: DocxPartContentKind!, document: XmlDocument, bytes: [Int!] }
+input DocxSetPartInput { path: String!, content_type: String!, payload: DocxPartContentInput! }

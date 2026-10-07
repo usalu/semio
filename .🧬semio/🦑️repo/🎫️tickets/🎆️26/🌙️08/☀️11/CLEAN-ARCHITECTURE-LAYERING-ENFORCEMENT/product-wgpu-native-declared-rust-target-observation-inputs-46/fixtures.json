@@ -1,0 +1,56 @@
+[
+  {
+    "id": "explicit-root",
+    "source": "#[path = \"../../🦀️.rs\"] mod component;",
+    "modules": [
+      {
+        "name": "component",
+        "pathTarget": "../../🦀️.rs",
+        "cfgTest": false
+      }
+    ],
+    "includes": []
+  },
+  {
+    "id": "test-provider",
+    "source": "#[cfg(test)] #[path = \"unit.rs\"] mod tests;",
+    "modules": [
+      {
+        "name": "tests",
+        "pathTarget": "unit.rs",
+        "cfgTest": true
+      }
+    ],
+    "includes": []
+  },
+  {
+    "id": "comment-decoy",
+    "source": "// #[path=\"bad.rs\"] mod false_one;\nconst TEXT:&str=\"mod false_two;\";",
+    "modules": [],
+    "includes": []
+  },
+  {
+    "id": "literal-data",
+    "source": "const DATA:&str=include_str!(\"vectors.json\");",
+    "modules": [],
+    "includes": [
+      {
+        "macro": "include_str",
+        "expression": "\"vectors.json\"",
+        "usesOutDir": false
+      }
+    ]
+  },
+  {
+    "id": "nested-inline",
+    "source": "mod nested { #[path=\"unit.rs\"] mod tests; }",
+    "modules": [
+      {
+        "name": "tests",
+        "pathTarget": "unit.rs",
+        "cfgTest": false
+      }
+    ],
+    "includes": []
+  }
+]

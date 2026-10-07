@@ -2,7 +2,7 @@
   "schema": "./framework.collection.sqlite.semantic-admission/v1",
   "owner": "Collection",
   "rows": 10,
-  "baselineBytes": 377,
+  "baselineBytes": 379,
   "tableRows": {
     "collection_document": 1,
     "collection_folder": 3,
@@ -22,7 +22,7 @@
         "schema"
       ],
       "previous": "literal schema\u0000",
-      "semanticBytes": 45418
+      "semanticBytes": 45420
     },
     {
       "id": "collection-role-1",
@@ -33,7 +33,7 @@
         "name"
       ],
       "previous": "Collection 世界",
-      "semanticBytes": 45416
+      "semanticBytes": 45418
     },
     {
       "id": "collection-role-2",
@@ -46,7 +46,7 @@
         "id"
       ],
       "previous": "cycle",
-      "semanticBytes": 45428
+      "semanticBytes": 45430
     },
     {
       "id": "collection-role-3",
@@ -59,7 +59,7 @@
         "parent_id"
       ],
       "previous": "cycle",
-      "semanticBytes": 45428
+      "semanticBytes": 45430
     },
     {
       "id": "collection-role-4",
@@ -72,7 +72,7 @@
         "name"
       ],
       "previous": "",
-      "semanticBytes": 45433
+      "semanticBytes": 45435
     },
     {
       "id": "collection-role-5",
@@ -85,7 +85,7 @@
         "id"
       ],
       "previous": "id",
-      "semanticBytes": 45431
+      "semanticBytes": 45433
     },
     {
       "id": "collection-role-6",
@@ -98,7 +98,7 @@
         "folder_id"
       ],
       "previous": "unresolved",
-      "semanticBytes": 45423
+      "semanticBytes": 45425
     },
     {
       "id": "collection-role-7",
@@ -111,7 +111,7 @@
         "name"
       ],
       "previous": "doc",
-      "semanticBytes": 45430
+      "semanticBytes": 45432
     },
     {
       "id": "collection-role-8",
@@ -124,7 +124,7 @@
         "kind_id"
       ],
       "previous": "independent",
-      "semanticBytes": 45422
+      "semanticBytes": 45424
     },
     {
       "id": "collection-role-9",
@@ -138,7 +138,7 @@
         "schema"
       ],
       "previous": "not known\u0000",
-      "semanticBytes": 45423
+      "semanticBytes": 45425
     },
     {
       "id": "collection-role-10",
@@ -152,7 +152,7 @@
         "document_id"
       ],
       "previous": "different id",
-      "semanticBytes": 45421
+      "semanticBytes": 45423
     },
     {
       "id": "collection-role-11",
@@ -167,7 +167,7 @@
         "hash"
       ],
       "previous": "literal\u0000hash",
-      "semanticBytes": 45421
+      "semanticBytes": 45423
     },
     {
       "id": "collection-role-12",
@@ -182,7 +182,7 @@
         "mediaType"
       ],
       "previous": "",
-      "semanticBytes": 45433
+      "semanticBytes": 45435
     }
   ]
 }

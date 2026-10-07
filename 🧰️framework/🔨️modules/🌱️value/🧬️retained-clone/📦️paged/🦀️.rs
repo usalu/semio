@@ -286,9 +286,96 @@ impl<const N: usize> RetainedClone for PagedUtf8<N> {
     }
 }
 
+/// 🔎️ Compares original paged UTF-8 identifiers with stable chunk and byte offsets.
+#[derive(Default)]
+pub struct PagedUtf8BoundedOrdCursor<const N: usize> {
+    left: Option<RetainedCloneBinding>,
+    right: Option<RetainedCloneBinding>,
+    left_chunk: usize,
+    right_chunk: usize,
+    left_byte: usize,
+    right_byte: usize,
+    complete: Option<std::cmp::Ordering>,
+    closing: bool,
+}
+
+impl<const N: usize> PagedUtf8BoundedOrdCursor<N> {
+    pub fn begin_close(&mut self) -> bool {
+        if self.closing { return false; }
+        self.closing = true;
+        true
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
+        if !self.closing {
+            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged identifier comparator close was not begun"));
+        }
+        let binding = if self.left.is_some() { &mut self.left } else { &mut self.right };
+        RetainedCloneBinding::close_one(binding, maximum_items)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.left.is_none() && self.right.is_none() }
+}
+
+impl<const N: usize> super::ordered_map::BoundedOrdCursor<PagedUtf8<N>> for PagedUtf8BoundedOrdCursor<N> {
+    fn compare(&mut self, left: RetainedCloneRef<'_, PagedUtf8<N>>, right: RetainedCloneRef<'_, PagedUtf8<N>>, grant: super::ordered_map::BoundedOrdGrant) -> Result<super::ordered_map::BoundedOrdStep, ValueError> {
+        use super::ordered_map::{BoundedOrdProgress, BoundedOrdStep};
+        if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged identifier comparator is closing")); }
+        let first = self.left.is_none();
+        if first && grant.maximum_items == 0 { return Ok(BoundedOrdStep::Progress(BoundedOrdProgress::default())); }
+        left.bind(&mut self.left)?;
+        right.bind(&mut self.right)?;
+        if let Some(ordering) = self.complete { return Ok(BoundedOrdStep::Complete { ordering, progress: BoundedOrdProgress::default() }); }
+        if first { return Ok(BoundedOrdStep::Progress(BoundedOrdProgress { compared_items: 1, compared_bytes: 0 })); }
+        let left = left.get().retained_chunks();
+        let right = right.get().retained_chunks();
+        if left.get(self.left_chunk).is_some_and(|chunk| chunk.len() == self.left_byte) {
+            if grant.maximum_items == 0 { return Ok(BoundedOrdStep::Progress(BoundedOrdProgress::default())); }
+            self.left_chunk += 1;
+            self.left_byte = 0;
+            return Ok(BoundedOrdStep::Progress(BoundedOrdProgress { compared_items: 1, compared_bytes: 0 }));
+        }
+        if right.get(self.right_chunk).is_some_and(|chunk| chunk.len() == self.right_byte) {
+            if grant.maximum_items == 0 { return Ok(BoundedOrdStep::Progress(BoundedOrdProgress::default())); }
+            self.right_chunk += 1;
+            self.right_byte = 0;
+            return Ok(BoundedOrdStep::Progress(BoundedOrdProgress { compared_items: 1, compared_bytes: 0 }));
+        }
+        let mut progress = BoundedOrdProgress::default();
+        while progress.compared_bytes < grant.maximum_bytes {
+            let l = left.get(self.left_chunk).and_then(|chunk| chunk.as_bytes().get(self.left_byte)).copied();
+            let r = right.get(self.right_chunk).and_then(|chunk| chunk.as_bytes().get(self.right_byte)).copied();
+            let ordering = match (l, r) {
+                (None, None) | (None, Some(_)) | (Some(_), None) => {
+                    if grant.maximum_items == 0 { return Ok(BoundedOrdStep::Progress(progress)); }
+                    progress.compared_items = 1;
+                    l.cmp(&r)
+                }
+                (Some(l), Some(r)) => {
+                    progress.compared_bytes += 1;
+                    self.left_byte += 1;
+                    self.right_byte += 1;
+                    if self.left_byte == left[self.left_chunk].len() { self.left_chunk += 1; self.left_byte = 0; }
+                    if self.right_byte == right[self.right_chunk].len() { self.right_chunk += 1; self.right_byte = 0; }
+                    if l == r { continue; }
+                    l.cmp(&r)
+                }
+            };
+            self.complete = Some(ordering);
+            return Ok(BoundedOrdStep::Complete { ordering, progress });
+        }
+        Ok(BoundedOrdStep::Progress(progress))
+    }
+}
+
+impl<const N: usize> super::ordered_map::BoundedOrd for PagedUtf8<N> {
+    type Cursor = PagedUtf8BoundedOrdCursor<N>;
+    fn bounded_ord_cursor() -> Self::Cursor { PagedUtf8BoundedOrdCursor::default() }
+}
+
 pub struct PagedMapCursor<V: RetainedClone, const N: usize> {
-    inner: <PagedList<(String, V), N> as RetainedClone>::Cursor,
-    entries: Option<PagedList<(String, V), N>>,
+    inner: <PagedList<(PagedUtf8<{usize::MAX}>, V), N> as RetainedClone>::Cursor,
+    entries: Option<PagedList<(PagedUtf8<{usize::MAX}>, V), N>>,
     output: Option<PagedMap<V, N>>,
     source: Option<RetainedCloneBinding>,
     phase: u8,

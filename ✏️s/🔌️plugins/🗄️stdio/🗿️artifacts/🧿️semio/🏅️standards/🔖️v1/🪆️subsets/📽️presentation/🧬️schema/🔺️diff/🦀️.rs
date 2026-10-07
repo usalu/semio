@@ -21,13 +21,8 @@ use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 
 
-/// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
-/// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND
-/// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
-/// module (matching the pre-existing convention where this file is the one place that owns every
-/// value codec presentation's other facets import from).
-pub(crate) use crate::document::io::text::diff::{dec_block};
-pub(crate) use crate::document::io::text::diff::{enc_block};
+
+
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
 use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};

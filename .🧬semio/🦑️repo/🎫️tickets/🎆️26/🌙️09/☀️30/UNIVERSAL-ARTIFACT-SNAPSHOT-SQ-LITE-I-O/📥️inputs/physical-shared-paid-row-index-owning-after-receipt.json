@@ -1,0 +1,22 @@
+{
+  "session": 57745,
+  "exitCode": 0,
+  "nextestRunId": "f4c28180-fa87-4c0e-a0b4-cd24845a0f0e",
+  "nativePass": 45,
+  "nativeFail": 0,
+  "nativeSkip": 0,
+  "seconds": 0.26,
+  "rustSeconds": 1.59,
+  "includesNewNative": 3,
+  "helperExact": true,
+  "oracleAfter": {
+    "session": 34331,
+    "exitCode": 0,
+    "pass": 57,
+    "fail": 0,
+    "expects": 899,
+    "files": 4,
+    "seconds": 1.331,
+    "debug": "rows=4 groups=2 foreign=0"
+  }
+}

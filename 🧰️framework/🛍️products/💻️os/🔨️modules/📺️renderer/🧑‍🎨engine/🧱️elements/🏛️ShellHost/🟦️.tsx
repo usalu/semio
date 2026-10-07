@@ -231,7 +231,8 @@ import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, localPrese
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellHumanChangeRecoveryV1, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1, type ShellHumanV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
 import { contributionsReceiverSessionV1, focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, createProgramHistoryStoreV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
-import { causalOrderKeyV1, createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputActionWindowV1, inputActionWithWindowV1, inputAppliedV1, inputAwaitsHubIdentityV1, inputCommitReceiptV1, inputDiagnosticV1, inputIdentitySettleNoticeTextV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type HubIdentityGateV1, type InputCommitReceiptV1, type InputDiagnosticV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
+import { causalOrderKeyV1, createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputActionWindowV1, inputActionWithWindowV1, inputAppliedV1, inputAwaitsHubIdentityV1, inputCommitReceiptV1, inputDiagnosticV1, inputIdentitySettleNoticeTextV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type HubIdentityGateV1, type InputCommitReceiptV1, type InputDiagnosticV1,
+  type InputDraftDispositionV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
@@ -629,6 +630,7 @@ import {
   HISTORY_REFUSAL_LABEL_KEYS,
   appFaultNoticeV1,
   historyFaultNoticeV1,
+  historyInputDraftDispositionV1,
   historyLaneNoticeV1,
   historyOutputNoticeV1,
   historyRefusalCodeV1,
@@ -7997,8 +7999,8 @@ function FrameworkOsShellInner({
       const requestedWindowId = inputActionWindowV1(requested, activeWindowIdRef.current);
       const ledger = inputLedgerRef.current;
       const entry = ledger.issue(requested, { windowId: requestedWindowId ?? activeWindowIdRef.current ?? null, origin: requested.provenance?.origin ?? "user" });
-      const refuse = (reason: InputRefusalReasonV1, detail?: string, alreadyNotified = false, diagnostic?: InputDiagnosticV1): InputOutcomeV1 => {
-        const outcome = inputRefusedV1(entry.provenance.inputSeq, reason, detail, diagnostic);
+      const refuse = (reason: InputRefusalReasonV1, detail?: string, alreadyNotified = false, diagnostic?: InputDiagnosticV1, draftDisposition?: InputDraftDispositionV1): InputOutcomeV1 => {
+        const outcome = inputRefusedV1(entry.provenance.inputSeq, reason, detail, diagnostic, draftDisposition);
         if (ledger.settle(outcome) && outcome.kind === "refused") {
           console.warn(inputRefusalTextV1(entry.action, outcome, entry.provenance));
           if (!alreadyNotified && inputRefusalNotifiesV1(outcome, entry.provenance) && refusalNoticeThrottleRef.current.admit(reason, performance.now())) {
@@ -8014,15 +8016,16 @@ function FrameworkOsShellInner({
       };
       /** 🚦️ The one place a thrown dispatch error becomes a reason — shared by the direct-actor route and
        * the `handleAction` route so both speak the ledger's vocabulary. */
-      const refusalReasonForError = (error: unknown): { readonly reason: InputRefusalReasonV1; readonly detail?: string; readonly diagnostic?: InputDiagnosticV1 } => {
+      const refusalReasonForError = (error: unknown): { readonly reason: InputRefusalReasonV1; readonly detail?: string; readonly diagnostic?: InputDiagnosticV1; readonly draftDisposition?: InputDraftDispositionV1 } => {
         const diagnostic = error instanceof SemioFaultError ? inputDiagnosticV1(error.fault) : undefined;
-        if (isViewerReadOnlyFault(error)) return { reason: "viewer-read-only", diagnostic };
-        if (isMutationRejectedFault(error)) return { reason: "mutation-rejected", diagnostic };
+        const draftDisposition = error instanceof SemioFaultError ? historyInputDraftDispositionV1(error.fault) : undefined;
+        if (isViewerReadOnlyFault(error)) return { reason: "viewer-read-only", diagnostic, draftDisposition };
+        if (isMutationRejectedFault(error)) return { reason: "mutation-rejected", diagnostic, draftDisposition };
         const text = String(error instanceof Error ? error.message : error);
-        if (/queue is full|queue full|another action pending|action-busy/u.test(text)) return { reason: "queue-full", detail: text, diagnostic };
-        if (/action-catching-up/u.test(text)) return { reason: "catching-up", detail: text, diagnostic };
-        if (/action-owner-mismatch|owner retired|ambiguous document owner/u.test(text)) return { reason: "owner-mismatch", detail: text, diagnostic };
-        return { reason: "dispatch-failed", detail: text, diagnostic };
+        if (/queue is full|queue full|another action pending|action-busy/u.test(text)) return { reason: "queue-full", detail: text, diagnostic, draftDisposition };
+        if (/action-catching-up/u.test(text)) return { reason: "catching-up", detail: text, diagnostic, draftDisposition };
+        if (/action-owner-mismatch|owner retired|ambiguous document owner/u.test(text)) return { reason: "owner-mismatch", detail: text, diagnostic, draftDisposition };
+        return { reason: "dispatch-failed", detail: text, diagnostic, draftDisposition };
       };
       try {
         const action = pasteActionWithRetainedFragment(requested, clipboardFragmentRef.current);
@@ -8529,11 +8532,11 @@ function FrameworkOsShellInner({
           } catch (actionError) {
             const mailboxReason = browserActorActionRefusalReasonV1(actionError);
             const mapped = refusalReasonForError(actionError);
-            const { reason, detail, diagnostic } = mailboxReason === null ? mapped : { ...mapped, reason: mailboxReason, detail: String(actionError instanceof Error ? actionError.message : actionError) };
+            const { reason, detail, diagnostic, draftDisposition } = mailboxReason === null ? mapped : { ...mapped, reason: mailboxReason, detail: String(actionError instanceof Error ? actionError.message : actionError) };
             if (reason === "mutation-rejected") showMutationRejectedNotice((actionError as SemioFaultError).fault);
             const appNotice = reason === "dispatch-failed" && actionError instanceof SemioFaultError ? appFaultNoticeV1(actionError.fault, targetSession.app, uiTerminologyRef.current) : null;
             if (appNotice !== null) showTransientNotice(appNotice.text, appNotice.kind, appNotice.code);
-            const outcome = refuse(reason, appNotice?.code ?? detail, reason === "mutation-rejected" || appNotice !== null, diagnostic);
+            const outcome = refuse(reason, appNotice?.code ?? detail, reason === "mutation-rejected" || appNotice !== null, diagnostic, draftDisposition);
             if (propagateFailure) throw actionError;
             return outcome;
           }
@@ -8578,18 +8581,19 @@ function FrameworkOsShellInner({
           const diagnostic = actionError instanceof SemioFaultError ? inputDiagnosticV1(actionError.fault) : undefined;
           const historyNotice = actionError instanceof SemioFaultError ? historyFaultNoticeV1(actionError.fault, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(targetSession), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount) : null;
           const silentRefusal = actionError instanceof SemioFaultError ? historySilentRefusalOfFaultV1(actionError.fault) : null;
+          const draftDisposition = actionError instanceof SemioFaultError ? historyInputDraftDispositionV1(actionError.fault) : undefined;
           const appNotice = actionError instanceof SemioFaultError ? appFaultNoticeV1(actionError.fault, targetSession.app, uiTerminologyRef.current) : null;
           if (isViewerReadOnlyFault(actionError)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
-            outcome = refuse("viewer-read-only", undefined, true, diagnostic);
+            outcome = refuse("viewer-read-only", undefined, true, diagnostic, draftDisposition);
           } else if (isMutationRejectedFault(actionError)) {
             showMutationRejectedNotice((actionError as SemioFaultError).fault);
-            outcome = refuse("mutation-rejected", undefined, true, diagnostic);
+            outcome = refuse("mutation-rejected", undefined, true, diagnostic, draftDisposition);
           } else if (silentRefusal !== null) {
-            outcome = refuse("dispatch-failed", silentRefusal, true, diagnostic);
+            outcome = refuse("dispatch-failed", silentRefusal, true, diagnostic, draftDisposition);
           } else if (historyNotice !== null) {
             showTransientNotice(historyNotice.text, historyNotice.kind, historyNotice.code);
-            outcome = refuse("dispatch-failed", historyNotice.code, true, diagnostic);
+            outcome = refuse("dispatch-failed", historyNotice.code, true, diagnostic, draftDisposition);
           } else if (appNotice !== null) {
             showTransientNotice(appNotice.text, appNotice.kind, appNotice.code);
             outcome = refuse("dispatch-failed", appNotice.code, true, diagnostic);
@@ -8598,8 +8602,8 @@ function FrameworkOsShellInner({
           } else if (dropForRetiredInstance(targetSession, `action ${action.action}`, actionError)) {
             outcome = refuse("instance-retired", `${targetSession.pluginId}#${targetSession.instanceId}`);
           } else {
-            const { reason, detail, diagnostic } = refusalReasonForError(actionError);
-            outcome = refuse(reason, detail, false, diagnostic);
+            const { reason, detail, diagnostic, draftDisposition } = refusalReasonForError(actionError);
+            outcome = refuse(reason, detail, false, diagnostic, draftDisposition);
           }
           if (propagateFailure) throw actionError;
           return outcome;
@@ -8609,7 +8613,7 @@ function FrameworkOsShellInner({
       } catch (unexpected) {
         // 🧯️ L1: an input never dangles — a throw anywhere above that no branch mapped still settles the
         // entry (`settle` is idempotent, so an already-settled entry keeps its first outcome).
-        const outcome = refuse("dispatch-failed", `unexpected: ${String(unexpected instanceof Error ? unexpected.message : unexpected)}`, false, unexpected instanceof SemioFaultError ? inputDiagnosticV1(unexpected.fault) : undefined);
+        const outcome = refuse("dispatch-failed", `unexpected: ${String(unexpected instanceof Error ? unexpected.message : unexpected)}`, false, unexpected instanceof SemioFaultError ? inputDiagnosticV1(unexpected.fault) : undefined, unexpected instanceof SemioFaultError ? historyInputDraftDispositionV1(unexpected.fault) : undefined);
         if (propagateFailure) throw unexpected;
         return ledger.outcome(entry.provenance.inputSeq) ?? outcome;
       }

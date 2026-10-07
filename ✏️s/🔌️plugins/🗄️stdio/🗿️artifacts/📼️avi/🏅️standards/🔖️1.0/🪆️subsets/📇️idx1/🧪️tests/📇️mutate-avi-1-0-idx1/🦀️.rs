@@ -91,7 +91,8 @@ mod subject {
     use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::io::{decode_avi, encode_avi};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_avi::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
+    use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation,AviMutation};
+
     use semio_s_artifact_stdio_avi_test_oracle::standards::v1_0::subsets::hdrl::project_avi_1_0;
 
     //#region 🔖️SpecCodec

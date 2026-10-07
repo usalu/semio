@@ -52,7 +52,7 @@ impl store::ArtifactPack for Din18599Snapshot {
         Some(Self::__dsl_spec())
     }
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(sqlite::sqlite_codec())
+        Some(crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec())
     }
 }
 }

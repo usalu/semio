@@ -1,0 +1,95 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" proofs
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[DEBUG] Plugin15 actual owned source proof 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts [
+  [0m[32m"service-operation-conversion-check"[0m[0m
+]
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+plugin-host-service-operation-source: effects=2 wit=1 sync=1 async=1 mutation=1 passed
+[DEBUG] Plugin15 actual owned source proof ✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts [
+  [0m[32m"publication-authority-audit"[0m[0m
+]
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts:
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[6.26ms[0m[2m][0m
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[4.34ms[0m[2m][0m
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m nakagin-capsule: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[1.12ms[0m[2m][0m
+[0m[32m✓[0m [0mblock5d io[2m >[0m[1m nakagin-capsule: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[1.09ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts:
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[1.99ms[0m[2m][0m
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-left: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[5.70ms[0m[2m][0m
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-right: declared JSON input retains complete canonical fields and stable emitted words[0m [0m[2m[6.98ms[0m[2m][0m
+[0m[32m✓[0m [0mblock2d io[2m >[0m[1m hexagonal-cut-concrete-forest-right: actual Text example agrees with the declared JSON semantic input[0m [0m[2m[5.16ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mnakagin-capsule[2m >[0m[1m ships primary asset[0m [0m[2m[0.47ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mhexagonal-cut-concrete-forest-left[2m >[0m[1m ships primary asset[0m [0m[2m[0.23ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mnakagin-capsule[2m >[0m[1m ships primary asset[0m [0m[2m[0.10ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mhexagonal-cut-concrete-forest-left[2m >[0m[1m ships primary asset[0m [0m[2m[0.17ms[0m[2m][0m
+[0m
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts:
+[0m[32m✓[0m [0mhexagonal-cut-concrete-forest-left[2m >[0m[1m ships primary asset[0m [0m[2m[0.28ms[0m[2m][0m
+
+[0m[32m 13 pass[0m
+[0m[2m 0 fail[0m
+ 25 expect() calls
+Ran 13 tests across 7 files. [0m[2m[[1m320.00ms[0m[2m][0m
+[0m[1m79 |[0m     [0m[35mconst[0m plugin = resolve([0m[33mthis[0m.root, [0m[32m"../.."[0m)[0m[2m;[0m
+[0m[1m80 |[0m     const authority = resolve(plugin, "🧫️fixtures/🧪️publication-authority");
+[0m[1m81 |[0m     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
+[0m[1m82 |[0m     [0m[35mconst[0m sources = [0m[35mnew[0m Map[0m<[0m[0m[34mstring[0m, [0m[34mstring[0m>()[0m[2m;[0m
+[0m[1m83 |[0m     [0m[35mfor[0m ([0m[35mconst[0m app of fixture.apps) sources[0m[3m[1m.set[0m(app.owner, [0m[35mawait[0m Bun[0m[3m[1m.file[0m(resolve(plugin, app.source))[0m[3m[1m.text[0m())[0m[2m;[0m
+[0m[1m84 |[0m     [0m[35mif[0m (!oracle(fixture, sources)) [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m"Block publication-authority oracle rejected production"[0m)[0m[2m;[0m
+                                                  [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mBlock publication-authority oracle rejected production[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts[0m[2m:[0m[33m84[0m[2m:[33m46[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync run[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts[0m[2m:[0m[33m74[0m[2m:[33m19[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync runScriptMain[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts[0m[2m:[0m[33m15[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+[0m[1m39 |[0m  const path=plugin+"/🔣️codec/🧵️send/🧫️fixtures/🔣️.json",before=read(path),fixture=JSON.parse(before);for(const site of fixture.native.sites){site.header=site.header.replaceAll("Serialize + DeserializeOwned","semio_framework_value::ToValue + semio_framework_value::FromValue").replace("schema: impl Into<String>) -> Self",site.qualification==="bare"?"schema: impl Into<String>, dialect: Dialect) -> Self":"schema: impl Into<String>) -> Self");site.body=site.body.replaceAll("Serialize + DeserializeOwned","semio_framework_value::ToValue + semio_framework_value::FromValue").replaceAll("store::ArtifactCodec::of::<","store::ArtifactCodec::bare::<").replaceAll("resolve_ready(","::semio_framework_async::poll::resolve_ready(").replaceAll("schema.into(), extension:","schema.into(), dialect: A::DIALECT, extension:").replaceAll("A::DOCUMENT_SCHEMA.to_string(), extension:","A::DOCUMENT_SCHEMA.to_string(), dialect: A::DIALECT, extension:").replaceAll("ArtifactIdentityClaim::new(ArtifactIdentityNamespace::ex[0m[2m | ... truncated [0m
+[0m[1m40 |[0m  fixture.native.specFields=[0m[32m"schema: String, dialect: Dialect, extension: &'static str, codec: fn(String) -> store::ArtifactCodec, app_id: &'static str, foreign: bool,"[0m[0m[2m;[0mfixture.native.mutationField=[0m[32m"type Mutation: protocol::SemanticMutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;"[0m[0m[2m;[0mfixture.native.protocolTrait=[0m[32m"pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue"[0m[0m[2m;[0mfixture.native.codecFields[[0m[33m3[0m]=[0m[32m"pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,"[0m[0m[2m;[0m[0m[35mconst[0m registration=fixture.native.sites[0m[3m[1m.find[0m((site:[0m[34many[0m)=>site.id===[0m[32m"registration.app"[0m)[0m[2m;[0mregistration.header=[0m[32m"fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), PluginAssemblyError>"[0m[0m[2m;[0mregistration.body=[0m[32m'let codec = store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema); let plan = semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: semio_framework::io[0m[0m[2m | ... truncated [0m
+[0m[1m41 |[0m }[0m[35melse[0m [0m[35mif[0m(command===[0m[32m"frontier"[0m){
+[0m[1m42 |[0m  const value="🧰️framework/🔨️modules/🎒️pack/🌱️value",policy=value+"/🧬️schema/🎞️intrinsic-media/🔣️.json",domain=value+"/🧬️schema/🔣️.json",test=value+"/🧪️tests/🎞️intrinsic-media/🟦️.ts",world="🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎯️component-target-capacity/🔣️.json",before=read(test),document=JSON.parse(read(policy)),after=before.replace('../../🧬️schema/🎞️intrinsic-media/🔣️.json','../../🧬️schema/🔣️.json').replace('const validator=new Ajv({strict:true});expect(validator.validate(schema,fixture)).toBe(true);expect(validator.validate(schema,{...fixture,json:"hidden"})).toBe(false);','const validator=new Ajv({strict:true});').replace('expect(read(reopened.query("SELECT id,name,kind,literal FROM node WHERE parent IS NULL").get() as Row)).toEqual(fixture.value);','const produced=read(reopened.query("SELECT id,name,kind,literal FROM node WHERE parent IS NULL").get([0m[2m | ... truncated [0m
+[0m[1m43 |[0m }[0m[35melse[0m [0m[35mif[0m(command===[0m[32m"proofs"[0m){
+[0m[1m44 |[0m  for(const [path,...args]of[[plugin+"/🖥️host/📦️packages/🦀️rust/📜️script.ts","service-operation-conversion-check"],["✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts","publication-authority-audit"],["✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts","publication-authority-audit"],["🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts","test","editor-catalog-contract"]]){console.log("[DEBUG] Plugin15 actual owned source proof",path,args);const child=Bun.spawn([process.execPath,join(root,path),...args],{cwd:root,env:process.env,stdout:"inherit",stderr:"inherit"});assert.equal(await child.exited,0);}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    [31m[1m^[0m
+[0m[31mAssertionError[0m[2m:[0m [1mExpected values to be strictly equal:
+
+1 !== 0
+[0m
+ generatedMessage[0m[2m:[0m [0m[33mtrue[0m[0m[2m,[0m
+     actual[0m[2m:[0m [0m[33m1[0m[0m[2m,[0m
+   expected[0m[2m:[0m [0m[33m0[0m[0m[2m,[0m
+   operator[0m[2m:[0m [0m[32m"strictEqual"[0m[0m[2m,[0m
+       code[0m[2m:[0m [32m"ERR_ASSERTION"[0m
+
+[0m      [2mat [0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts[0m[2m:[0m[33m44[0m[2m:[33m624[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" proofs" exited with non-zero status code

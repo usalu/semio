@@ -34,7 +34,7 @@ pub(crate) mod context {
 
     /// 🪪️ A registry-backed app with an exact runtime identity for parallel ownership laws.
     pub async fn note_app_with_registry_id(instance_id: u32) -> OwnedNoteApp {
-        let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(instance_id).await;
         OwnedNoteApp(app)
     }

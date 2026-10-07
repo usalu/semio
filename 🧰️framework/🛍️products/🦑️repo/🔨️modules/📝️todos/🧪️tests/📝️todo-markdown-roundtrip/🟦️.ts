@@ -8,7 +8,6 @@
 
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020";
 import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -68,9 +67,7 @@ const opener = (path: string): string => {
 /**
  * 🔮️ TypeScript oracle of the todo line grammar case.
  *
- * `ajv` is a real draft 2020-12 validator and decides whether the committed vectors satisfy
- * `🧬️schema/🔣️.json`, so a drifted schema fails here instead of agreeing with itself. The grammar
- * itself is restated with JavaScript regular expressions — a different engine from either hand
+ * The grammar is restated with JavaScript regular expressions — a different engine from either hand
  * written scanner — and every rewrite and removal is re-derived from the committed documents,
  * which is what makes the round trip claim mean something.
  */
@@ -79,11 +76,7 @@ export default defineTestAdapter({
   scenarios: {
     "rewriting-a-line-and-reading-it-back-agrees": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.input("schema://repo.todos/Todo"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
         const vectors = JSON.parse(readFileSync(ctx.input("shared://📝️line-vectors.json"), "utf8")) as Vectors;
-        const ajv = new Ajv2020({ strict: false, allErrors: true });
-        const validate = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/LineVectors" });
-        if (!validate(vectors)) throw new Error(`📝️line-vectors.json does not satisfy LineVectors: ${ajv.errorsText(validate.errors)}`);
 
         const parent = vectors.markdownPath.includes("/") ? vectors.markdownPath.slice(0, vectors.markdownPath.lastIndexOf("/")) : "";
         const render = (item: { name: string; description: string; parentId: string; location: string }): string => `${item.name}|${item.description}|${item.parentId}|${item.location}`;

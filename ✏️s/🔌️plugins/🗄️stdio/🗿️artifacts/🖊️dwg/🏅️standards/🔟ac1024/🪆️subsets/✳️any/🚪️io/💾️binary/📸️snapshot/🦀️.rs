@@ -74,14 +74,7 @@ pub(crate) fn parse_version_header_fields(bytes: &[u8]) -> Result<(u8, u16), Str
     let codepage = bytes.get(0x13..0x15).ok_or("DWG header is too short for codepage")?;
     Ok((maintenance_version, u16::from_le_bytes([codepage[0], codepage[1]])))
 }
-/// 🫙️ Whether `snapshot` carries the empty document — the preamble triple and nothing else. Compared
-/// against a freshly defaulted snapshot wearing the same triple rather than by inspecting fields one
-/// at a time, so a field added to `DwgSnapshot` later cannot quietly fall out of the question.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn is_preamble_only_document(snapshot: &DwgSnapshot) -> bool {
-    let bare = DwgSnapshot { schema: snapshot.schema.clone(), version: snapshot.version.clone(), maintenance_version: snapshot.maintenance_version, codepage: snapshot.codepage, ..DwgSnapshot::default() };
-    *snapshot == bare
-}
+
 /// 🖨️ The empty document's bytes: the preamble region, version stamp and preamble triple written in,
 /// every other byte zero — byte for byte what the committed demo example already is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

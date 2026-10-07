@@ -236,7 +236,7 @@ pub fn create_layer_of_kind(kind: &str) -> RasterLayerNode {
 
 #[cfg(test)]
 #[path = "🧪️testing/🦀️.rs"]
-mod testing;
+pub(crate) mod testing;
 #[cfg(test)]
 pub use testing::raster_image_test_snapshot;
 
@@ -244,9 +244,7 @@ pub use testing::raster_image_test_snapshot;
 
 /// 📚️ The committed example document behind one registered example id, or `None` when the id is not
 /// one this subset registers — the lookup `🎮️commands/🎬️set-active-example` resolves against.
-pub fn raster_example_document(example_id: &str) -> Option<RasterSnapshot> {
-    (example_id == crate::examples::art_raster_demo::ID).then(default_raster_document)
-}
+
 
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).
 pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
@@ -298,7 +296,7 @@ mod boot_document_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::RasterImageAsset;
+pub use crate::SemioImageSnapshot;
 pub use crate::RasterLayerNode;
 pub use crate::RasterViewportSize;
 //#endregion 🔁️Re-exports
@@ -306,3 +304,19 @@ pub use crate::RasterViewportSize;
 #[cfg(test)]
 #[path="🧪️tests/🔒️protection/🦀️.rs"]
 mod protection_tests;
+
+/// 🖼️ A one-frame straight-alpha RGBA8 image of `width × height` over `rgba8`.
+pub fn semio_image_from_rgba8(width: u32, height: u32, rgba8: Vec<u8>) -> SemioImageSnapshot {
+    SemioImageSnapshot { schema: "s.stdio.semio.image".into(), width, height, colorspace: semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioColorspace::Rgba, bit_depth: 8, frames: vec![semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() }
+}
+
+
+#[cfg(test)]
+#[path="🧪️tests/🖼️decoded-image/🦀️.rs"]
+mod decoded_image_tests;
+
+use crate::create_raster_id;
+
+pub fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {
+    RasterLayerNode::Pixel { id: create_raster_id("layer"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(width), height: Some(height), image_key: None }
+}

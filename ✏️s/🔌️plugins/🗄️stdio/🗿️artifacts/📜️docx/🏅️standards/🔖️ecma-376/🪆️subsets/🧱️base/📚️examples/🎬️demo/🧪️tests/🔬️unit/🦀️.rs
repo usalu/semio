@@ -19,8 +19,8 @@ impl SubsetRoundtripSpec for DocxAnyRoundtrip {
     type Mutation = DocxMutation;
     type Inference = DocxInference;
 
-    async fn dialect() -> store::os_io::ArtifactDialect {
-        store::os_io::ArtifactDialect { artifact_kind: "s.stdio.docx".into(), standard: "ecma-376".into(), subset: "*".into() }
+    async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
+        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.docx".into(), standard: "ecma-376".into(), subset: "*".into() }
     }
 
     async fn fidelity() -> IoFidelityClass {

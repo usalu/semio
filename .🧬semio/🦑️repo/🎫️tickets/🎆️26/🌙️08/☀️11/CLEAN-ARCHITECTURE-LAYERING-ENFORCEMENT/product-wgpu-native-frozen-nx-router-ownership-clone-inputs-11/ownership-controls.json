@@ -1,0 +1,75 @@
+[
+  {
+    "id": "single",
+    "input": {
+      "path": "owner/📜️script.ts",
+      "before": "import(\"../old\");",
+      "after": "import(\"../new\");",
+      "from": "../old",
+      "to": "../new"
+    },
+    "accepted": true,
+    "schemaAccepted": true
+  },
+  {
+    "id": "no-match",
+    "input": {
+      "path": "owner/📜️script.ts",
+      "before": "import(\"../old\");",
+      "after": "import(\"../new\");",
+      "from": "../absent",
+      "to": "../new"
+    },
+    "accepted": false,
+    "schemaAccepted": true
+  },
+  {
+    "id": "wrong-after",
+    "input": {
+      "path": "owner/📜️script.ts",
+      "before": "import(\"../old\");",
+      "after": "extra",
+      "from": "../old",
+      "to": "../new"
+    },
+    "accepted": false,
+    "schemaAccepted": true
+  },
+  {
+    "id": "multiple",
+    "input": {
+      "path": "owner/📜️script.ts",
+      "before": "../old ../old",
+      "after": "../new ../old",
+      "from": "../old",
+      "to": "../new"
+    },
+    "accepted": false,
+    "schemaAccepted": true
+  },
+  {
+    "id": "empty",
+    "input": {
+      "path": "owner/📜️script.ts",
+      "before": "import(\"../old\");",
+      "after": "import(\"../new\");",
+      "from": "",
+      "to": "../new"
+    },
+    "accepted": false,
+    "schemaAccepted": false
+  },
+  {
+    "id": "foreign-field",
+    "input": {
+      "path": "owner/📜️script.ts",
+      "before": "import(\"../old\");",
+      "after": "import(\"../new\");",
+      "from": "../old",
+      "to": "../new",
+      "foreign": true
+    },
+    "accepted": false,
+    "schemaAccepted": false
+  }
+]

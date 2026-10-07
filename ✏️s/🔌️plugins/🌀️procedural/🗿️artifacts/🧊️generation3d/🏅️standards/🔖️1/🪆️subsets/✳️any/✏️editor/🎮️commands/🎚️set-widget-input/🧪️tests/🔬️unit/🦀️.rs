@@ -20,7 +20,8 @@ fn widget_input_language_neutral_mesh_source_cases() {
 
 #[test]
 fn widget_input_mesh_source_preserves_connected_owner_and_inverse() {
-    use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation, inverse_generation3d_mutation};
+    use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,inverse_generation3d_mutation};
+
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut base = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
     base.host_snapshot.widgets.push(Widget::InputNote { id: "source".into(), text: fixture["meshSource"]["mesh"].to_string() });
@@ -81,7 +82,8 @@ fn widget_input_language_neutral_cases() {
 
 #[test]
 fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
-    use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation, inverse_generation3d_mutation};
+    use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,inverse_generation3d_mutation};
+
     use semio_framework_os_flow::{FlowHost, FlowExtensionSpec};
     let _serial = crate::test_serial::lock();
     fn install(registry: &mut semio_framework_os_flow::neural::Registry) {
@@ -127,7 +129,8 @@ fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
 
 #[test]
 fn widget_input_explicit_widget_facets_use_one_existing_widget_leaf() {
-    use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation, inverse_generation3d_mutation};
+    use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,inverse_generation3d_mutation};
+
     let _serial = crate::test_serial::lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["facets"].as_array().unwrap() {

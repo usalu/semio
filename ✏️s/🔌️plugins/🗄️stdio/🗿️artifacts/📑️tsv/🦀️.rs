@@ -64,7 +64,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.tsv", standard: semio_framework_plugin::StandardId("iana"), subset: semio_framework_plugin::SubsetId("*") }).try_build()
+    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tsv", standard: semio_framework_artifact_reference::StandardId("iana"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -101,15 +101,15 @@ pub fn register() {
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    use crate::standards::iana::subsets::any::schema::snapshot;
+    use crate::standards::iana::subsets::any::io;
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.tsv",
         extension: Some("tsv"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.tsv"),
     });
 }
@@ -118,7 +118,7 @@ pub fn register_pilot_languages() {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::iana::subsets::any::io::io_registry as std_composer;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -194,16 +194,7 @@ pub mod standards {
                         pub use component::*;
                     }
                 }
-            
-#[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-pub mod io;
-
-#[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-pub mod io;
-}
+            }
         }
     }
 }

@@ -100,7 +100,7 @@ pub fn empty_block5d_snapshot() -> Block5dSnapshot {
 /// carry identity across examples. Booting on the same fixture the id assertions name keeps the boot
 /// document and its own identity consistent.
 pub fn default_block5d_snapshot() -> Block5dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
+    crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
 }
 }
 pub use snapshot_wire_codec::*;

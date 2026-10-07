@@ -2,7 +2,7 @@ grammar Stdio_jpg_snapshot;
 document : 'semio' 'stdio.jpg.dsl' 'v1' snapshot EOF;
 snapshot : 'schema' '=' TEXT 'width' '=' UINT 'height' '=' UINT 'pixels' '=' TEXT
  'jfifXDensity' '=' UINT 'jfifYDensity' '=' UINT 'sofMarker' '=' UINT 'arithmetic' '=' boolean
- 'reEncodeQuality' '=' optionalUint 'jfifVersion' '=' '[' UINT UINT ']'
+ 'jfifVersion' '=' '[' UINT UINT ']'
  'jfifDensityUnits' '=' TEXT 'jfifThumbnail' '=' thumbnail 'frame' '=' frame
  'quantTables' '=' '[' quantization* ']' 'huffmanTables' '=' '[' huffman* ']'
  'restartInterval' '=' optionalUint 'otherSegments' '=' '[' segment* ']';

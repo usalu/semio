@@ -1253,3 +1253,7 @@ impl Model {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+impl semio_framework_dsl_record::BorrowedDslField for EntityId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }
+
+impl semio_framework_dsl_record::BorrowedDslField for ScheduleId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }

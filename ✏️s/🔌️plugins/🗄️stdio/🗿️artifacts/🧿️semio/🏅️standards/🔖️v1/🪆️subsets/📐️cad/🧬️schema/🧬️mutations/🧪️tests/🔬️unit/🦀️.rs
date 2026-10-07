@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;
+use crate::standards::v1::subsets::cad::io::binary::mutations::wire_tag;
 use crate::standards::v1::subsets::cad::io::text::mutations::print_cad_mutation;
 use super::*;
 

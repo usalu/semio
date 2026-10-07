@@ -34,26 +34,13 @@
         {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/TransformOp"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json#/$defs/TransformOp"
           }
         },
         {
           "type": "null"
         }
-      ],
-      "x-semio-ui": {
-        "role": "value",
-        "label": {
-          "en": "Transform",
-          "de": "Transformation"
-        },
-        "description": {
-          "en": "Ordered transform operations (matrix, translate, scale, rotate, skewX, skewY); cleared, the attribute is removed.",
-          "de": "Geordnete Transformationsoperationen (matrix, translate, scale, rotate, skewX, skewY); geleert wird das Attribut entfernt."
-        },
-        "group": "value",
-        "order": 20
-      }
+      ]
     }
   },
   "$defs": {

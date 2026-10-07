@@ -1,0 +1,5 @@
+# Ten Held Erased Semantic Retirement Hooks
+
+Root exact10heldsource digests and unique trait-impl anchors nowinstallfirst-party declaredRetireOwned throughsameactualBaseNativeOwned hook usedbyeight existingowners. PhysicalownsremainingModelhook withrelationalreconstructionrepair. No productionprovider filesmounted.
+
+Void ArtifactSqliteSnapshot retirement hasnoexternalprogress/cancellation/parentgrant. CommonOwnedDrop pumps256items/65536bytes synchronously and String/Vec allocationcapacity mayreleasewholebacking atfinaldrop. This semanticcursorroute isnotobservedphysical1/4096retirement anddoesnotclose retainedsource backing/controlfrontier.

@@ -6,9 +6,10 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::audio::schema::diff::*;
+use crate::standards::v1::subsets::audio::schema::diff::*;
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot as triples;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
@@ -159,6 +160,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::audio::io::text::diff::{hex_encode, hex_decode, hex_decode_string, parse_u32, split_top_level, strip_brackets, enc_format, dec_format, enc_f32_list, dec_f32_list, enc_channel, dec_channel, enc_channel_diff, dec_channel_diff, enc_tag, dec_tag};
+use crate::standards::v1::subsets::audio::io::text::diff::{hex_encode, hex_decode, hex_decode_string, parse_u32, split_top_level, strip_brackets, enc_format, dec_format, enc_f32_list, dec_f32_list, enc_channel, dec_channel, enc_channel_diff, dec_channel_diff, enc_tag, dec_tag};
 }
 pub use diff_codec::*;

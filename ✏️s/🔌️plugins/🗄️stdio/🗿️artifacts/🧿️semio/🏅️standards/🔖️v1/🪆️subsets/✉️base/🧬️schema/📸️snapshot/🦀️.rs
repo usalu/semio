@@ -105,7 +105,7 @@ impl Default for SemioSnapshot {
 
 
 
-const PACK_BINARY_FORMAT: u8 = 1;
+
 
 
 
@@ -167,3 +167,58 @@ impl semio_framework_value::retirement::RetireOwned for SemioSubsetSnapshot{
 #[cfg(test)]
 #[path="🧪️tests/🛫️native/🦀️.rs"]
 pub(crate) mod native_output_tests;
+
+/// 🏷️ The wire tag naming which of the 13 domain subsets is carried — shared by the text DSL's
+/// `subset=<tag>` header line and used to select which subset's own REAL codec to delegate to.
+/// `pub(crate)` (not private) since `💡️inferences/🏷️kind/🦀️.rs`
+/// (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING) is a sibling
+/// module, not a descendant, and needs this same dispatch as its own honest derivation.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
+    match s {
+        SemioSubsetSnapshot::Brep(_) => "brep",
+        SemioSubsetSnapshot::Mesh(_) => "mesh",
+        SemioSubsetSnapshot::Model(_) => "model",
+        SemioSubsetSnapshot::Value(_) => "value",
+        SemioSubsetSnapshot::Document(_) => "document",
+        SemioSubsetSnapshot::Cad(_) => "cad",
+        SemioSubsetSnapshot::Drawing(_) => "drawing",
+        SemioSubsetSnapshot::Image(_) => "image",
+        SemioSubsetSnapshot::Video(_) => "video",
+        SemioSubsetSnapshot::Audio(_) => "audio",
+        SemioSubsetSnapshot::Animation(_) => "animation",
+        SemioSubsetSnapshot::Presentation(_) => "presentation",
+        SemioSubsetSnapshot::Flow(_) => "flow",
+        SemioSubsetSnapshot::Text(_) => "text",
+        SemioSubsetSnapshot::Table(_) => "table",
+        SemioSubsetSnapshot::Graph(_) => "graph",
+        SemioSubsetSnapshot::Object(_) => "object",
+        SemioSubsetSnapshot::Kit(_) => "kit",
+    }
+}
+
+/// 🔢️ The binary sibling of [`subset_tag`] — a real, individually protocol-walkable `u8` ordinal
+/// (0-13, enum declaration order), used by the binary pack header instead of a length-prefixed name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
+    match s {
+        SemioSubsetSnapshot::Brep(_) => 0,
+        SemioSubsetSnapshot::Mesh(_) => 1,
+        SemioSubsetSnapshot::Model(_) => 2,
+        SemioSubsetSnapshot::Value(_) => 3,
+        SemioSubsetSnapshot::Document(_) => 4,
+        SemioSubsetSnapshot::Cad(_) => 5,
+        SemioSubsetSnapshot::Drawing(_) => 6,
+        SemioSubsetSnapshot::Image(_) => 7,
+        SemioSubsetSnapshot::Video(_) => 8,
+        SemioSubsetSnapshot::Audio(_) => 9,
+        SemioSubsetSnapshot::Animation(_) => 10,
+        SemioSubsetSnapshot::Presentation(_) => 11,
+        SemioSubsetSnapshot::Flow(_) => 12,
+        SemioSubsetSnapshot::Text(_) => 13,
+        SemioSubsetSnapshot::Table(_) => 14,
+        SemioSubsetSnapshot::Graph(_) => 15,
+        SemioSubsetSnapshot::Object(_) => 16,
+        SemioSubsetSnapshot::Kit(_) => 17,
+    }
+}

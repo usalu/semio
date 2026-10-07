@@ -5,14 +5,14 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 📐️ `scale-layers` payload — the scaled layer ids, the world-space pivot that stays in place and the axis factors.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "scale-layers")]
 pub struct ScaleLayers {
-    pub targets: Vec<String>,
+    pub targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
     pub pivot_x: f64,
     pub pivot_y: f64,
     pub scale_x: f64,
@@ -20,7 +20,7 @@ pub struct ScaleLayers {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_layers(targets: Vec<String>, pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> DrawingMutation {
+pub fn scale_layers(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> DrawingMutation {
     DrawingMutation::ScaleLayers(ScaleLayers { targets, pivot_x, pivot_y, scale_x, scale_y })
 }
 
@@ -42,7 +42,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ScaleLayers {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({x_en}, {y_en})"), &format!("{de} um ({x_de}; {y_de}) skalieren"))
     }
     fn target(&self) -> Vec<String> {
-        self.targets.clone()
+        self.targets.iter().map(|target| target.to_string_owner()).collect()
     }
 }
 //#endregion 🔖️Mutation

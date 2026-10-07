@@ -25,7 +25,7 @@ pub(super) fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotCo
  let vlrs=rows::Entities::new(database.table("las_vlr")?,6,control)?;let octets=rows::Octets::new(database.table("las_vlr_octet")?,&vlrs,control)?;
  output.as_mut().vlrs=reserve(vlrs.rows.len(),control)?;
  for(index,row)in vlrs.rows.iter().enumerate(){
-  let mut owner=DecodedFieldOwner::new(super::super::LasVlr::default(),|value:super::super::LasVlr|{<String as FromValue>::retire_decoded(value.user_id);<String as FromValue>::retire_decoded(value.description);<Vec<u8> as FromValue>::retire_decoded(value.data);});
+  let mut owner=DecodedFieldOwner::new(LasVlr::default(),|value:LasVlr|{<String as FromValue>::retire_decoded(value.user_id);<String as FromValue>::retire_decoded(value.description);<Vec<u8> as FromValue>::retire_decoded(value.data);});
   owner.as_mut().user_id=reconstruct_text(control,row.text(3)?)?;owner.as_mut().record_id=u16_at(row,4)?;owner.as_mut().description=reconstruct_text(control,row.text(5)?)?;
   let children=octets.children(row.rowid,control)?;owner.as_mut().data=reserve(children.len(),control)?;
   for(ordinal,child)in children.iter().enumerate(){owner.as_mut().data.push(u8_at(child,3)?);if ordinal%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,ordinal,children.len())?;}}

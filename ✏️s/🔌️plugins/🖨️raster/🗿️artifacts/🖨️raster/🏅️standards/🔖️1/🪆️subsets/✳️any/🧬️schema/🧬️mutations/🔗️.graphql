@@ -1,3 +1,4 @@
+# import SemioImageSnapshot from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🔗️.graphql"
 # 🧬️ RasterMutation — closed semantic mutation vocabulary for the raster document.
 
 type CreateLayer {
@@ -57,7 +58,7 @@ type ChangeLayerAdjustmentKind {
 
 type AddLayerAsset {
   assetId: String!
-  asset: RasterImageAsset!
+  asset: SemioImageSnapshot!
 }
 
 type RemoveLayerAsset {

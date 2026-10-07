@@ -16,7 +16,7 @@ pub fn cad_from_wire(bytes: &[u8]) -> Result<crate::CadSnapshot, store::PackErro
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::CadAnalyzer;
     use crate::CadSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.cad.cad", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -71,7 +71,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::standards::v1::subsets::any::io::CadBuilder as CadAnyBuilder;
     use crate::standards::v1::subsets::any::io::CadComposer as CadAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoConfidence,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -459,7 +459,7 @@ pub fn unwrap_spatial_load_payload(raw: &DslValue) -> Option<DslValue> {
 /// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
 /// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
 pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::CadSnapshot> {
-    use crate::standards::v1::subsets::any::io::geometry_import::{objects_from_host_snapshot_model, parse_geometry, semio_model_snapshot_from_objects};
+    use crate::standards::v1::subsets::any::schema::geometry::{objects_from_host_snapshot_model, parse_geometry, semio_model_snapshot_from_objects};
     use crate::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
     use crate::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
     let schema = payload.get("schema").and_then(|value| value.as_str());
@@ -548,7 +548,7 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawi
 /// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
 pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<DslValue, String> {
-    use crate::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
+    use crate::standards::v1::subsets::any::schema::geometry::semio_model_snapshot_from_objects;
     use crate::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::{cad_model_child_handle, CadPaneId};
     let working = cad_working_scene_from_dwg(drawing);
@@ -674,7 +674,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::CadSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct CadParts {

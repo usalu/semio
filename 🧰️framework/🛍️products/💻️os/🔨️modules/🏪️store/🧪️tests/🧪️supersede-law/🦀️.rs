@@ -271,6 +271,9 @@ async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table
             unit => panic!("unknown unit {unit}"),
         };
         assert_eq!(store.unit_id(&target).expect("the unit"), unit, "{name}: unit");
+        hot_path_census::take();
+        assert_eq!(store.applied_mutation(&target).expect("the indexed opening row").unit, unit, "{name}: indexed opening unit");
+        assert_eq!(hot_path_census::take(), hot_path_census::HotPathCensus::default(), "{name}: opening consumes captured unit facts without prefix folding or hashing");
         assert_eq!(store.unit_operations(&target).expect("the unit's operations"), vec![target.clone()], "{name}: this store's part");
         let (generation, transitions, state) = (store.generation(), store.envelope().transitions.len(), store.snapshot_ref().n);
         let authored = store.dispatch(supersede(&target, None)).await;

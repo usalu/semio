@@ -21,6 +21,7 @@ test-serde = ["semio-s-plugin-block/test-serde"]
 component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-s-plugin-block-catalog = { path = "../../../../🗂️catalog/📦️packages/🦀️rust" }
 semio-s-plugin-block = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -41,7 +42,6 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }

@@ -47,6 +47,8 @@ export type PdfObject =
   | { kind: "int"; value: bigint }
   | ({ kind: "real" } & PdfDecimal)
   | { kind: "str"; value: number[] }
+  | { kind: "text"; value: string }
+  | { kind: "date"; value: PdfDate }
   | { kind: "name"; value: string }
   | { kind: "array"; value: PdfObject[] }
   | { kind: "dict"; value: PdfDictEntry[] }
@@ -462,11 +464,11 @@ export interface PdfInlineImage {
 
 export type PdfTextString =
   | { kind: "text"; text: string }
-  | { kind: "codes"; bytes: number[] };
+  | { kind: "codes"; codes: number[] };
 
 export type PdfTextArrayItem =
   | { kind: "text"; text: string }
-  | { kind: "codes"; bytes: number[] }
+  | { kind: "codes"; codes: number[] }
   | { kind: "adjust"; amount: Binary64 };
 
 export type PdfLineJoin =
@@ -809,57 +811,143 @@ export const schema = {
   "type": "object",
   "properties": {
     "schema": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "declaredVersion": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Declared PDF version",
+          "de": "Deklarierte PDF-Version"
+        },
+        "description": {
+          "en": "Version from the file header, e.g. 1.7.",
+          "de": "Version aus dem Dateikopf, z. B. 1.7."
+        }
+      }
     },
     "pages": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfPage"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Pages",
+          "de": "Seiten"
+        }
       }
     },
     "fonts": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfFont"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Fonts",
+          "de": "Schriften"
+        },
+        "description": {
+          "en": "Font resources shared by the pages.",
+          "de": "Von den Seiten gemeinsam genutzte Schriftressourcen."
+        }
       }
     },
     "images": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfImage"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Images",
+          "de": "Bilder"
+        },
+        "description": {
+          "en": "Image XObjects shared by the pages.",
+          "de": "Von den Seiten gemeinsam genutzte Bild-XObjekte."
+        }
       }
     },
     "forms": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfFormXObject"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Form XObjects",
+          "de": "Formular-XObjekte"
+        },
+        "description": {
+          "en": "Reusable content streams shared by the pages.",
+          "de": "Von den Seiten gemeinsam genutzte wiederverwendbare Inhaltsströme."
+        }
       }
     },
     "extGStates": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfExtGState"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Graphics states",
+          "de": "Grafikzustände"
+        },
+        "description": {
+          "en": "Extended graphics state parameter dictionaries (ExtGState).",
+          "de": "Wörterbücher erweiterter Grafikzustandsparameter (ExtGState)."
+        }
       }
     },
     "shadings": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfShading"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Shadings",
+          "de": "Schattierungen"
+        }
       }
     },
     "patterns": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfPattern"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Patterns",
+          "de": "Muster"
+        }
       }
     },
     "colorSpaces": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfNamedColorSpace"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Color spaces",
+          "de": "Farbräume"
+        }
       }
     },
     "properties": {
@@ -872,30 +960,72 @@ export const schema = {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfOutlineItem"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Bookmarks",
+          "de": "Lesezeichen"
+        },
+        "description": {
+          "en": "Document outline in reading order.",
+          "de": "Dokumentgliederung in Lesereihenfolge."
+        }
       }
     },
     "namedDestinations": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfNamedDestination"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Named destinations",
+          "de": "Benannte Ziele"
+        }
       }
     },
     "pageLabels": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfPageLabelRange"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Page labels",
+          "de": "Seitenbeschriftungen"
+        },
+        "description": {
+          "en": "Page numbering ranges, e.g. roman front matter.",
+          "de": "Seitennummerierungsbereiche, z. B. römisch nummerierte Titelei."
+        }
       }
     },
     "embeddedFiles": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfEmbeddedFile"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Embedded files",
+          "de": "Eingebettete Dateien"
+        }
       }
     },
     "outputIntents": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfOutputIntent"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Output intents",
+          "de": "Ausgabebedingungen"
+        },
+        "description": {
+          "en": "Intended output devices and their ICC profiles.",
+          "de": "Vorgesehene Ausgabegeräte und ihre ICC-Profile."
+        }
       }
     },
     "acroForm": {
@@ -906,7 +1036,17 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Interactive form",
+          "de": "Interaktives Formular"
+        },
+        "description": {
+          "en": "AcroForm fields and their defaults.",
+          "de": "AcroForm-Felder und ihre Vorgaben."
+        }
+      }
     },
     "optionalContent": {
       "anyOf": [
@@ -916,7 +1056,17 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Optional content",
+          "de": "Optionale Inhalte"
+        },
+        "description": {
+          "en": "Layers (optional content groups) and their default visibility.",
+          "de": "Ebenen (optionale Inhaltsgruppen) und ihre Standardsichtbarkeit."
+        }
+      }
     },
     "pageLayout": {
       "anyOf": [
@@ -926,7 +1076,44 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Page layout",
+          "de": "Seitenlayout"
+        },
+        "description": {
+          "en": "Page arrangement when the document opens.",
+          "de": "Seitenanordnung beim Öffnen des Dokuments."
+        },
+        "options": {
+          "singlePage": {
+            "en": "Single page",
+            "de": "Einzelne Seite"
+          },
+          "oneColumn": {
+            "en": "One column",
+            "de": "Fortlaufend"
+          },
+          "twoColumnLeft": {
+            "en": "Two columns, odd pages left",
+            "de": "Zwei Spalten, ungerade Seiten links"
+          },
+          "twoColumnRight": {
+            "en": "Two columns, odd pages right",
+            "de": "Zwei Spalten, ungerade Seiten rechts"
+          },
+          "twoPageLeft": {
+            "en": "Two pages, odd pages left",
+            "de": "Doppelseite, ungerade Seiten links"
+          },
+          "twoPageRight": {
+            "en": "Two pages, odd pages right",
+            "de": "Doppelseite, ungerade Seiten rechts"
+          }
+        }
+      }
     },
     "pageMode": {
       "anyOf": [
@@ -936,7 +1123,44 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Page mode",
+          "de": "Seitenmodus"
+        },
+        "description": {
+          "en": "Panel shown when the document opens.",
+          "de": "Beim Öffnen des Dokuments angezeigte Leiste."
+        },
+        "options": {
+          "useNone": {
+            "en": "Page only",
+            "de": "Nur Seite"
+          },
+          "useOutlines": {
+            "en": "Bookmarks panel",
+            "de": "Lesezeichenfenster"
+          },
+          "useThumbs": {
+            "en": "Page thumbnails",
+            "de": "Seitenminiaturen"
+          },
+          "fullScreen": {
+            "en": "Full screen",
+            "de": "Vollbild"
+          },
+          "useOc": {
+            "en": "Layers panel",
+            "de": "Ebenenfenster"
+          },
+          "useAttachments": {
+            "en": "Attachments panel",
+            "de": "Anlagenfenster"
+          }
+        }
+      }
     },
     "viewerPreferences": {
       "anyOf": [
@@ -946,7 +1170,13 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Viewer preferences",
+          "de": "Anzeigeeinstellungen"
+        }
+      }
     },
     "openAction": {
       "anyOf": [
@@ -956,7 +1186,17 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Open action",
+          "de": "Aktion beim Öffnen"
+        },
+        "description": {
+          "en": "Destination or action performed when the document opens.",
+          "de": "Ziel oder Aktion beim Öffnen des Dokuments."
+        }
+      }
     },
     "language": {
       "anyOf": [
@@ -966,7 +1206,18 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Document language",
+          "de": "Dokumentsprache"
+        },
+        "description": {
+          "en": "BCP 47 tag of the natural language, e.g. de-DE.",
+          "de": "BCP-47-Kennung der natürlichen Sprache, z. B. de-DE."
+        }
+      }
     },
     "markInfo": {
       "anyOf": [
@@ -976,7 +1227,17 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Tagged PDF marks",
+          "de": "Tagged-PDF-Kennzeichnung"
+        },
+        "description": {
+          "en": "Whether the document is a tagged PDF and how it is marked.",
+          "de": "Ob das Dokument ein Tagged PDF ist und wie es gekennzeichnet ist."
+        }
+      }
     },
     "metadata": {
       "anyOf": [
@@ -986,7 +1247,18 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "multiline",
+        "label": {
+          "en": "XMP metadata",
+          "de": "XMP-Metadaten"
+        },
+        "description": {
+          "en": "Document-level XMP packet.",
+          "de": "XMP-Paket auf Dokumentebene."
+        }
+      }
     },
     "documentId": {
       "anyOf": [
@@ -1005,7 +1277,17 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Document ID",
+          "de": "Dokument-ID"
+        },
+        "description": {
+          "en": "Permanent and changing identifier byte strings of the trailer ID.",
+          "de": "Beständige und veränderliche Kennungsbytefolgen der Trailer-ID."
+        }
+      }
     },
     "encryption": {
       "anyOf": [
@@ -1015,27 +1297,65 @@ export const schema = {
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Encryption",
+          "de": "Verschlüsselung"
+        }
+      }
     },
     "info": {
-      "$ref": "#/$defs/PdfInfo"
+      "$ref": "#/$defs/PdfInfo",
+      "x-semio-ui": {
+        "label": {
+          "en": "Document information",
+          "de": "Dokumentinformationen"
+        }
+      }
     },
     "catalogExtra": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfDictEntry"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Other catalog entries",
+          "de": "Weitere Katalogeinträge"
+        },
+        "description": {
+          "en": "Document catalog entries kept verbatim.",
+          "de": "Unverändert erhaltene Einträge des Dokumentkatalogs."
+        }
       }
     },
     "objects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfIndirectObject"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Indirect objects",
+          "de": "Indirekte Objekte"
+        }
       }
     },
     "trailer": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfDictEntry"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Trailer",
+          "de": "Trailer"
+        },
+        "description": {
+          "en": "Trailer dictionary entries.",
+          "de": "Einträge des Trailer-Wörterbuchs."
+        }
       }
     }
   },
@@ -1067,11 +1387,25 @@ export const schema = {
       "properties": {
         "num": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Object number",
+              "de": "Objektnummer"
+            }
+          }
         },
         "gen": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Generation number",
+              "de": "Generationsnummer"
+            }
+          }
         }
       },
       "required": [
@@ -1086,14 +1420,42 @@ export const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfFormField"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Form fields",
+              "de": "Formularfelder"
+            }
           }
         },
         "needAppearances": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Generate appearances",
+              "de": "Erscheinungsbilder erzeugen"
+            },
+            "description": {
+              "en": "NeedAppearances: viewers regenerate field appearances.",
+              "de": "NeedAppearances: Anzeigeprogramme erzeugen Feld-Erscheinungsbilder neu."
+            }
+          }
         },
         "signatureFlags": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Signature flags",
+              "de": "Signatur-Flags"
+            },
+            "description": {
+              "en": "SigFlags: 1 signatures exist, 2 append only.",
+              "de": "SigFlags: 1 Signaturen vorhanden, 2 nur anhängen."
+            }
+          }
         },
         "defaultAppearance": {
           "anyOf": [
@@ -1103,7 +1465,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Default appearance",
+              "de": "Standard-Erscheinungsbild"
+            },
+            "description": {
+              "en": "DA: content stream operators for variable text, e.g. /Helv 12 Tf 0 g.",
+              "de": "DA: Inhaltsstrom-Operatoren für variablen Text, z. B. /Helv 12 Tf 0 g."
+            }
+          }
         },
         "quadding": {
           "anyOf": [
@@ -1114,18 +1487,49 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Text alignment",
+              "de": "Textausrichtung"
+            },
+            "description": {
+              "en": "Q: 0 left, 1 centered, 2 right.",
+              "de": "Q: 0 links, 1 zentriert, 2 rechts."
+            }
+          }
         },
         "defaultFonts": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Default resources",
+              "de": "Standardressourcen"
+            },
+            "description": {
+              "en": "DR: font resources available to form fields.",
+              "de": "DR: Schriftressourcen für Formularfelder."
+            }
           }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       }
@@ -1140,6 +1544,12 @@ export const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Next actions",
+              "de": "Folgeaktionen"
+            }
           }
         }
       },
@@ -1300,7 +1710,18 @@ export const schema = {
             "volume": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -1579,10 +2000,33 @@ export const schema = {
         "rect": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Rectangle",
+              "de": "Rechteck"
+            },
+            "description": {
+              "en": "Annotation location on the page as [llx lly urx ury].",
+              "de": "Position der Anmerkung auf der Seite als [llx lly urx ury]."
+            },
+            "unit": "pt"
+          }
         },
         "kind": {
           "$ref": "#/$defs/PdfAnnotationKind"
@@ -1595,7 +2039,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "multiline",
+            "label": {
+              "en": "Contents",
+              "de": "Inhalt"
+            },
+            "description": {
+              "en": "Text shown for the annotation or its alternate description.",
+              "de": "Angezeigter Text der Anmerkung oder ihre Ersatzbeschreibung."
+            }
+          }
         },
         "name": {
           "anyOf": [
@@ -1615,11 +2070,29 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Last modified",
+              "de": "Zuletzt geändert"
+            }
+          }
         },
         "flags": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Annotation flags",
+              "de": "Anmerkungs-Flags"
+            },
+            "description": {
+              "en": "F: bit set, e.g. 1 invisible, 2 hidden, 4 print.",
+              "de": "F: Bitmenge, z. B. 1 unsichtbar, 2 ausgeblendet, 4 drucken."
+            }
+          }
         },
         "border": {
           "anyOf": [
@@ -1629,12 +2102,29 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Border",
+              "de": "Rahmen"
+            }
+          }
         },
         "color": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           }
         },
         "appearance": {
@@ -1645,7 +2135,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Appearance",
+              "de": "Erscheinungsbild"
+            }
+          }
         },
         "appearanceState": {
           "anyOf": [
@@ -1655,7 +2151,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Appearance state",
+              "de": "Erscheinungszustand"
+            },
+            "description": {
+              "en": "AS: selected state of the appearance dictionary, e.g. On or Off.",
+              "de": "AS: gewählter Zustand des Erscheinungsbilds, z. B. On oder Off."
+            }
+          }
         },
         "markup": {
           "anyOf": [
@@ -1675,7 +2182,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Optional content",
+              "de": "Optionaler Inhalt (Ebene)"
+            },
+            "description": {
+              "en": "OC: layer or membership that controls visibility.",
+              "de": "OC: Ebene oder Zugehörigkeit, die die Sichtbarkeit steuert."
+            }
+          }
         },
         "structParent": {
           "anyOf": [
@@ -1686,12 +2204,33 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Structure parent",
+              "de": "Strukturelternschlüssel"
+            },
+            "description": {
+              "en": "Key into the structural parent tree.",
+              "de": "Schlüssel in den Strukturelternbaum."
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -1786,7 +2325,18 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -1813,7 +2363,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1857,7 +2418,18 @@ export const schema = {
             "points": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -1882,7 +2454,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1893,7 +2476,18 @@ export const schema = {
             "leaderLength": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -1921,7 +2515,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1934,7 +2539,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1960,7 +2576,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -1973,7 +2600,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1997,7 +2635,18 @@ export const schema = {
             "vertices": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "interiorColor": {
@@ -2005,7 +2654,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -2028,7 +2688,18 @@ export const schema = {
             "vertices": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "lineEndings": {
@@ -2051,7 +2722,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -2074,7 +2756,18 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -2092,7 +2785,18 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -2110,7 +2814,18 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -2128,7 +2843,18 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -2169,7 +2895,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -2205,7 +2942,18 @@ export const schema = {
               "items": {
                 "type": "array",
                 "items": {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -2224,8 +2972,10 @@ export const schema = {
             "parent": {
               "anyOf": [
                 {
+                  "type": "integer",
                   "minimum": 0,
-                  "semioPrimitive": "u64"
+                  "semioPrimitive": "u64",
+                  "maximum": 18446744073709551615
                 },
                 {
                   "type": "null"
@@ -2532,7 +3282,18 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "interiorColor": {
@@ -2540,7 +3301,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -2621,7 +3393,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Rollover appearance",
+              "de": "Erscheinungsbild „Rollover“"
+            }
+          }
         },
         "down": {
           "anyOf": [
@@ -2631,7 +3409,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Down appearance",
+              "de": "Erscheinungsbild „Gedrückt“"
+            }
+          }
         }
       },
       "required": [
@@ -2703,7 +3487,18 @@ export const schema = {
       "type": "object",
       "properties": {
         "width": {
-          "semioPrimitive": "binary64"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "style": {
           "anyOf": [
@@ -2720,20 +3515,52 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Dash pattern",
+              "de": "Strichmuster"
+            },
+            "description": {
+              "en": "Dash and gap lengths in points.",
+              "de": "Strich- und Lückenlängen in Punkt."
+            }
+          }
         },
         "radii": {
           "anyOf": [
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 2,
               "maxItems": 2
@@ -2741,7 +3568,19 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Corner radii",
+              "de": "Eckenradien"
+            },
+            "description": {
+              "en": "Horizontal and vertical corner radius of the border.",
+              "de": "Horizontaler und vertikaler Eckenradius des Rahmens."
+            },
+            "unit": "pt"
+          }
         }
       },
       "required": [
@@ -2848,7 +3687,18 @@ export const schema = {
           "$ref": "#/$defs/PdfFontDescriptor"
         },
         "defaultWidth": {
-          "semioPrimitive": "binary64"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "widths": {
           "type": "array",
@@ -2861,7 +3711,18 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 2,
               "maxItems": 2
@@ -3027,7 +3888,18 @@ export const schema = {
           "items": {
             "type": "array",
             "items": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "minItems": 3,
             "maxItems": 3
@@ -3049,7 +3921,18 @@ export const schema = {
         "widths": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           }
         }
       },
@@ -3124,7 +4007,18 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -3134,7 +4028,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3147,7 +4052,18 @@ export const schema = {
             "gamma": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3169,7 +4085,18 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -3179,7 +4106,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3194,7 +4132,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3209,7 +4158,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 9,
                   "maxItems": 9
@@ -3234,7 +4194,18 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -3244,7 +4215,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3259,7 +4241,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -3307,7 +4300,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -3458,23 +4462,58 @@ export const schema = {
         },
         "month": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Month",
+              "de": "Monat"
+            }
+          }
         },
         "day": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Day",
+              "de": "Tag"
+            }
+          }
         },
         "hour": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Hour",
+              "de": "Stunde"
+            }
+          }
         },
         "minute": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minute",
+              "de": "Minute"
+            }
+          }
         },
         "second": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Second",
+              "de": "Sekunde"
+            }
+          }
         },
         "offsetMinutes": {
           "anyOf": [
@@ -3484,7 +4523,19 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "UTC offset",
+              "de": "UTC-Versatz"
+            },
+            "description": {
+              "en": "Offset of local time from UTC in minutes.",
+              "de": "Abweichung der Ortszeit von UTC in Minuten."
+            },
+            "unit": "min"
+          }
         }
       },
       "required": [
@@ -3581,7 +4632,18 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3591,7 +4653,18 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3601,7 +4674,18 @@ export const schema = {
             "zoom": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3633,7 +4717,18 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3654,7 +4749,18 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3675,7 +4781,18 @@ export const schema = {
             "rect": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -3706,7 +4823,18 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3727,7 +4855,18 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -3819,7 +4958,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "MIME type",
+              "de": "MIME-Typ"
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -3836,7 +4982,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Creation date",
+              "de": "Erstellungsdatum"
+            }
+          }
         },
         "modificationDate": {
           "anyOf": [
@@ -3846,7 +4998,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Modification date",
+              "de": "Änderungsdatum"
+            }
+          }
         },
         "relationship": {
           "anyOf": [
@@ -3859,7 +5017,18 @@ export const schema = {
           ]
         },
         "listed": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Listed as attachment",
+              "de": "Als Anlage aufgeführt"
+            },
+            "description": {
+              "en": "Listed in the document's EmbeddedFiles name tree.",
+              "de": "Im Namensbaum EmbeddedFiles des Dokuments aufgeführt."
+            }
+          }
         }
       },
       "required": [
@@ -3888,13 +5057,56 @@ export const schema = {
       "type": "object",
       "properties": {
         "algorithm": {
-          "$ref": "#/$defs/PdfEncryptionAlgorithm"
+          "$ref": "#/$defs/PdfEncryptionAlgorithm",
+          "x-semio-ui": {
+            "widget": "select",
+            "label": {
+              "en": "Encryption algorithm",
+              "de": "Verschlüsselungsverfahren"
+            },
+            "options": {
+              "rc4_40": {
+                "en": "RC4, 40-bit",
+                "de": "RC4, 40 Bit"
+              },
+              "rc4_128": {
+                "en": "RC4, 128-bit",
+                "de": "RC4, 128 Bit"
+              },
+              "aes128": {
+                "en": "AES, 128-bit",
+                "de": "AES, 128 Bit"
+              },
+              "aes256": {
+                "en": "AES, 256-bit",
+                "de": "AES, 256 Bit"
+              }
+            }
+          }
         },
         "permissions": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Permissions",
+              "de": "Berechtigungen"
+            },
+            "description": {
+              "en": "P: bit set of allowed operations (print, modify, copy, annotate, …).",
+              "de": "P: Bitmenge erlaubter Vorgänge (Drucken, Ändern, Kopieren, Kommentieren, …)."
+            }
+          }
         },
         "userPassword": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Document open password",
+              "de": "Kennwort zum Öffnen des Dokuments"
+            }
+          }
         },
         "ownerPassword": {
           "anyOf": [
@@ -3904,10 +5116,28 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Permissions password",
+              "de": "Berechtigungskennwort"
+            },
+            "description": {
+              "en": "Owner password that lifts the permission restrictions.",
+              "de": "Besitzerkennwort, das die Berechtigungseinschränkungen aufhebt."
+            }
+          }
         },
         "encryptMetadata": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Encrypt metadata",
+              "de": "Metadaten verschlüsseln"
+            }
+          }
         }
       },
       "required": [
@@ -3932,12 +5162,34 @@ export const schema = {
         "lineWidth": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Line width",
+              "de": "Linienstärke"
+            },
+            "description": {
+              "en": "LW: stroke width in user space units.",
+              "de": "LW: Konturbreite in Einheiten des Benutzerraums."
+            }
+          }
         },
         "lineCap": {
           "anyOf": [
@@ -3947,7 +5199,28 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Line cap",
+              "de": "Linienende"
+            },
+            "options": {
+              "butt": {
+                "en": "Butt cap",
+                "de": "Abgeschnitten"
+              },
+              "round": {
+                "en": "Round cap",
+                "de": "Rund"
+              },
+              "square": {
+                "en": "Projecting square cap",
+                "de": "Überstehend quadratisch"
+              }
+            }
+          }
         },
         "lineJoin": {
           "anyOf": [
@@ -3957,17 +5230,56 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Line join",
+              "de": "Linienverbindung"
+            },
+            "options": {
+              "miter": {
+                "en": "Miter join",
+                "de": "Gehrung"
+              },
+              "round": {
+                "en": "Round join",
+                "de": "Rund"
+              },
+              "bevel": {
+                "en": "Bevel join",
+                "de": "Abgeflacht"
+              }
+            }
+          }
         },
         "miterLimit": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Miter limit",
+              "de": "Gehrungsgrenze"
+            }
+          }
         },
         "dash": {
           "anyOf": [
@@ -3977,11 +5289,33 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 }
               ],
               "minItems": 2,
@@ -3990,7 +5324,17 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Dash pattern",
+              "de": "Strichmuster"
+            },
+            "description": {
+              "en": "[dash array, phase] of the line dash pattern.",
+              "de": "[Strichmuster, Phase] des Linienstrichmusters."
+            }
+          }
         },
         "renderingIntent": {
           "anyOf": [
@@ -4000,7 +5344,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Rendering intent",
+              "de": "Rendering Intent"
+            }
+          }
         },
         "overprintStroke": {
           "anyOf": [
@@ -4010,7 +5361,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Overprint stroke",
+              "de": "Kontur überdrucken"
+            }
+          }
         },
         "overprintFill": {
           "anyOf": [
@@ -4020,7 +5378,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Overprint fill",
+              "de": "Füllung überdrucken"
+            }
+          }
         },
         "overprintMode": {
           "anyOf": [
@@ -4031,7 +5396,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Overprint mode",
+              "de": "Überdruckmodus"
+            },
+            "description": {
+              "en": "OPM: 0 or 1 (non-zero overprint).",
+              "de": "OPM: 0 oder 1 (Überdrucken ungleich null)."
+            }
+          }
         },
         "font": {
           "anyOf": [
@@ -4042,7 +5418,18 @@ export const schema = {
                   "type": "string"
                 },
                 {
-                  "semioPrimitive": "binary64"
+                  "type": "object",
+                  "semioPrimitive": "binary64",
+                  "properties": {
+                    "bits": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{16}$"
+                    }
+                  },
+                  "required": [
+                    "bits"
+                  ],
+                  "additionalProperties": false
                 }
               ],
               "minItems": 2,
@@ -4051,7 +5438,17 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Font",
+              "de": "Schrift"
+            },
+            "description": {
+              "en": "[font reference, size] set by the graphics state.",
+              "de": "[Schriftreferenz, Größe], die der Grafikzustand setzt."
+            }
+          }
         },
         "blendMode": {
           "anyOf": [
@@ -4064,7 +5461,17 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Blend mode",
+              "de": "Füllmethode"
+            },
+            "description": {
+              "en": "BM: blend mode names, the first supported one applies.",
+              "de": "BM: Namen von Füllmethoden; die erste unterstützte gilt."
+            }
+          }
         },
         "softMask": {
           "anyOf": [
@@ -4074,27 +5481,77 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Soft mask",
+              "de": "Weiche Maske"
+            }
+          }
         },
         "strokeAlpha": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Stroke opacity",
+              "de": "Deckkraft der Kontur"
+            },
+            "description": {
+              "en": "CA: constant alpha for stroke operations, 0 to 1.",
+              "de": "CA: konstanter Alphawert für Konturen, 0 bis 1."
+            }
+          }
         },
         "fillAlpha": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Fill opacity",
+              "de": "Deckkraft der Füllung"
+            },
+            "description": {
+              "en": "ca: constant alpha for fill operations, 0 to 1.",
+              "de": "ca: konstanter Alphawert für Füllungen, 0 bis 1."
+            }
+          }
         },
         "alphaIsShape": {
           "anyOf": [
@@ -4104,7 +5561,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Alpha is shape",
+              "de": "Alpha als Form"
+            },
+            "description": {
+              "en": "AIS: soft mask and alpha are shape instead of opacity.",
+              "de": "AIS: Weiche Maske und Alpha gelten als Form statt als Deckkraft."
+            }
+          }
         },
         "strokeAdjust": {
           "anyOf": [
@@ -4114,27 +5582,78 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Automatic stroke adjustment",
+              "de": "Automatische Konturanpassung"
+            }
+          }
         },
         "flatness": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Flatness tolerance",
+              "de": "Flachheitstoleranz"
+            },
+            "description": {
+              "en": "FL: maximum curve approximation error in device pixels.",
+              "de": "FL: maximaler Fehler der Kurvennäherung in Gerätepixeln."
+            }
+          }
         },
         "smoothness": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Smoothness tolerance",
+              "de": "Glättungstoleranz"
+            },
+            "description": {
+              "en": "SM: maximum color error of shading approximation, 0 to 1.",
+              "de": "SM: maximaler Farbfehler der Verlaufsnäherung, 0 bis 1."
+            }
+          }
         },
         "textKnockout": {
           "anyOf": [
@@ -4144,12 +5663,29 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Text knockout",
+              "de": "Text-Aussparung"
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -4208,12 +5744,32 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "ToUnicode CMap",
+              "de": "ToUnicode-CMap"
+            },
+            "description": {
+              "en": "Maps character codes to Unicode for text extraction.",
+              "de": "Ordnet Zeichencodes für die Textextraktion Unicode zu."
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -4235,30 +5791,107 @@ export const schema = {
         "fontBbox": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
           "maxItems": 4
         },
         "italicAngle": {
-          "semioPrimitive": "binary64"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "ascent": {
-          "semioPrimitive": "binary64"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "descent": {
-          "semioPrimitive": "binary64"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "capHeight": {
-          "semioPrimitive": "binary64"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "stemV": {
-          "semioPrimitive": "binary64"
+          "type": "object",
+          "semioPrimitive": "binary64",
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "required": [
+            "bits"
+          ],
+          "additionalProperties": false
         },
         "stemH": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4268,7 +5901,18 @@ export const schema = {
         "xHeight": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4278,7 +5922,18 @@ export const schema = {
         "leading": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4288,7 +5943,18 @@ export const schema = {
         "avgWidth": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4298,7 +5964,18 @@ export const schema = {
         "maxWidth": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4308,7 +5985,18 @@ export const schema = {
         "missingWidth": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4338,7 +6026,18 @@ export const schema = {
         "fontWeight": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -4387,7 +6086,18 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "descriptor": {
@@ -4438,7 +6148,18 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "descriptor": {
@@ -4479,7 +6200,18 @@ export const schema = {
             "fontMatrix": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -4487,7 +6219,18 @@ export const schema = {
             "fontBbox": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -4502,7 +6245,18 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "charProcs": {
@@ -4682,7 +6436,18 @@ export const schema = {
         },
         "flags": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Field flags",
+              "de": "Feld-Flags"
+            },
+            "description": {
+              "en": "Ff: bit set, e.g. 1 read-only, 2 required, 4 no export.",
+              "de": "Ff: Bitmenge, z. B. 1 schreibgeschützt, 2 erforderlich, 4 nicht exportieren."
+            }
+          }
         },
         "alternateName": {
           "anyOf": [
@@ -4692,7 +6457,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Tooltip",
+              "de": "QuickInfo"
+            },
+            "description": {
+              "en": "TU: user-facing field name shown as tooltip.",
+              "de": "TU: für Benutzer sichtbarer Feldname, als QuickInfo angezeigt."
+            }
+          }
         },
         "mappingName": {
           "anyOf": [
@@ -4702,7 +6478,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Export name",
+              "de": "Exportname"
+            },
+            "description": {
+              "en": "TM: field name used when exporting form data.",
+              "de": "TM: Feldname beim Export der Formulardaten."
+            }
+          }
         },
         "defaultAppearance": {
           "anyOf": [
@@ -4712,7 +6499,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Default appearance",
+              "de": "Standard-Erscheinungsbild"
+            },
+            "description": {
+              "en": "DA: content stream operators for variable text, e.g. /Helv 12 Tf 0 g.",
+              "de": "DA: Inhaltsstrom-Operatoren für variablen Text, z. B. /Helv 12 Tf 0 g."
+            }
+          }
         },
         "quadding": {
           "anyOf": [
@@ -4723,7 +6521,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Text alignment",
+              "de": "Textausrichtung"
+            },
+            "description": {
+              "en": "Q: 0 left, 1 centered, 2 right.",
+              "de": "Q: 0 links, 1 zentriert, 2 rechts."
+            }
+          }
         },
         "widgets": {
           "type": "array",
@@ -4735,24 +6544,56 @@ export const schema = {
             },
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Widget annotations",
+              "de": "Widget-Anmerkungen"
+            }
           }
         },
         "children": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfFormField"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Child fields",
+              "de": "Untergeordnete Felder"
+            }
           }
         },
         "additionalActions": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional actions",
+              "de": "Zusätzliche Aktionen"
+            },
+            "description": {
+              "en": "Trigger events (AA) and the actions they run.",
+              "de": "Auslöseereignisse (AA) und die ausgeführten Aktionen."
+            }
           }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -4952,18 +6793,61 @@ export const schema = {
         "bbox": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Bounding box",
+              "de": "Begrenzungsrahmen"
+            },
+            "description": {
+              "en": "[llx lly urx ury] in the object's coordinate space.",
+              "de": "[llx lly urx ury] im Koordinatenraum des Objekts."
+            }
+          }
         },
         "matrix": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 6,
-          "maxItems": 6
+          "maxItems": 6,
+          "x-semio-ui": {
+            "label": {
+              "en": "Form matrix",
+              "de": "Formularmatrix"
+            },
+            "description": {
+              "en": "Maps form space to user space [a b c d e f].",
+              "de": "Bildet den Formularraum auf den Benutzerraum ab [a b c d e f]."
+            }
+          }
         },
         "content": {
           "type": "array",
@@ -4979,7 +6863,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Transparency group",
+              "de": "Transparenzgruppe"
+            }
+          }
         },
         "optionalContent": {
           "anyOf": [
@@ -4989,7 +6879,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Optional content",
+              "de": "Optionaler Inhalt (Ebene)"
+            },
+            "description": {
+              "en": "OC: layer or membership that controls visibility.",
+              "de": "OC: Ebene oder Zugehörigkeit, die die Sichtbarkeit steuert."
+            }
+          }
         },
         "structParent": {
           "anyOf": [
@@ -5000,12 +6901,33 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Structure parent",
+              "de": "Strukturelternschlüssel"
+            },
+            "description": {
+              "en": "Key into the structural parent tree.",
+              "de": "Schlüssel in den Strukturelternbaum."
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -5025,13 +6947,35 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "size": {
@@ -5061,7 +7005,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5074,7 +7029,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5108,7 +7074,18 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
@@ -5116,7 +7093,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5127,17 +7115,50 @@ export const schema = {
             "c0": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "c1": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "n": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -5157,7 +7178,18 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
@@ -5165,7 +7197,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -5182,13 +7225,35 @@ export const schema = {
             "bounds": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "encode": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -5209,13 +7274,35 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "code": {
@@ -5271,26 +7358,89 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Color space",
+              "de": "Farbraum"
+            }
+          }
         },
         "bitsPerComponent": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bits per component",
+              "de": "Bits pro Komponente"
+            },
+            "unit": "bit"
+          }
         },
         "imageMask": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Image mask",
+              "de": "Bildmaske"
+            },
+            "description": {
+              "en": "The image is a 1-bit stencil mask painted with the current fill color.",
+              "de": "Das Bild ist eine 1-Bit-Schablone, gemalt mit der aktuellen Füllfarbe."
+            }
+          }
         },
         "decode": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Decode array",
+              "de": "Decode-Array"
+            },
+            "description": {
+              "en": "Maps sample values to the color space range, one pair per component.",
+              "de": "Bildet Abtastwerte auf den Farbraumbereich ab, ein Paar je Komponente."
+            }
           }
         },
         "interpolate": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Interpolate",
+              "de": "Interpolieren"
+            }
+          }
         },
         "codec": {
-          "$ref": "#/$defs/PdfImageCodec"
+          "$ref": "#/$defs/PdfImageCodec",
+          "x-semio-ui": {
+            "label": {
+              "en": "Image encoding",
+              "de": "Bildkodierung"
+            },
+            "description": {
+              "en": "Filter and parameters the image data is stored with.",
+              "de": "Filter und Parameter, mit denen die Bilddaten gespeichert sind."
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -5307,7 +7457,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Soft mask",
+              "de": "Weiche Maske"
+            }
+          }
         },
         "softMaskInData": {
           "anyOf": [
@@ -5318,7 +7475,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Soft mask in data",
+              "de": "Weiche Maske im Datenstrom"
+            },
+            "description": {
+              "en": "SMaskInData for JPX images: 0 ignore, 1 alpha, 2 pre-blended alpha.",
+              "de": "SMaskInData für JPX-Bilder: 0 ignorieren, 1 Alpha, 2 vorgemischtes Alpha."
+            }
+          }
         },
         "mask": {
           "anyOf": [
@@ -5328,20 +7496,47 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Mask",
+              "de": "Maske"
+            }
+          }
         },
         "matte": {
           "anyOf": [
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Matte color",
+              "de": "Matte-Farbe"
+            },
+            "description": {
+              "en": "Color the soft-mask image was pre-blended with.",
+              "de": "Farbe, mit der das Bild der weichen Maske vorgemischt wurde."
+            }
+          }
         },
         "intent": {
           "anyOf": [
@@ -5351,7 +7546,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Rendering intent",
+              "de": "Rendering Intent"
+            }
+          }
         },
         "optionalContent": {
           "anyOf": [
@@ -5361,7 +7563,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Optional content",
+              "de": "Optionaler Inhalt (Ebene)"
+            },
+            "description": {
+              "en": "OC: layer or membership that controls visibility.",
+              "de": "OC: Ebene oder Zugehörigkeit, die die Sichtbarkeit steuert."
+            }
+          }
         },
         "structParent": {
           "anyOf": [
@@ -5372,12 +7585,33 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Structure parent",
+              "de": "Strukturelternschlüssel"
+            },
+            "description": {
+              "en": "Key into the structural parent tree.",
+              "de": "Schlüssel in den Strukturelternbaum."
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -5560,7 +7794,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Subject",
+              "de": "Thema"
+            }
+          }
         },
         "keywords": {
           "anyOf": [
@@ -5570,7 +7811,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Keywords",
+              "de": "Stichwörter"
+            }
+          }
         },
         "creator": {
           "anyOf": [
@@ -5580,7 +7828,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Creator application",
+              "de": "Erstellt mit"
+            },
+            "description": {
+              "en": "Application that created the original document.",
+              "de": "Anwendung, die das Originaldokument erstellt hat."
+            }
+          }
         },
         "producer": {
           "anyOf": [
@@ -5590,7 +7849,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "PDF producer",
+              "de": "PDF erstellt mit"
+            },
+            "description": {
+              "en": "Application that converted the document to PDF.",
+              "de": "Anwendung, die das Dokument in PDF umgewandelt hat."
+            }
+          }
         },
         "creationDate": {
           "anyOf": [
@@ -5600,7 +7870,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Creation date",
+              "de": "Erstellungsdatum"
+            }
+          }
         },
         "modificationDate": {
           "anyOf": [
@@ -5610,7 +7886,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Modification date",
+              "de": "Änderungsdatum"
+            }
+          }
         },
         "trapped": {
           "anyOf": [
@@ -5620,12 +7902,33 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Trapped",
+              "de": "Überfüllt"
+            },
+            "description": {
+              "en": "True, False or Unknown.",
+              "de": "True, False oder Unknown."
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       }
@@ -5661,7 +7964,18 @@ export const schema = {
         "decode": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           }
         },
         "interpolate": {
@@ -5713,13 +8027,42 @@ export const schema = {
       "type": "object",
       "properties": {
         "marked": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Tagged PDF",
+              "de": "Getaggtes PDF"
+            },
+            "description": {
+              "en": "The document conforms to the Tagged PDF conventions.",
+              "de": "Das Dokument folgt den Konventionen für getaggtes PDF."
+            }
+          }
         },
         "userProperties": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "User properties",
+              "de": "Benutzereigenschaften"
+            }
+          }
         },
         "suspects": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Suspects",
+              "de": "Verdächtige Tags"
+            },
+            "description": {
+              "en": "The tag structure may be inaccurate.",
+              "de": "Die Tag-Struktur ist möglicherweise ungenau."
+            }
+          }
         }
       }
     },
@@ -5739,18 +8082,42 @@ export const schema = {
         "popup": {
           "anyOf": [
             {
+              "type": "integer",
               "minimum": 0,
-              "semioPrimitive": "u64"
+              "semioPrimitive": "u64",
+              "maximum": 18446744073709551615
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Pop-up",
+              "de": "Popup"
+            },
+            "description": {
+              "en": "Object number of the associated pop-up annotation.",
+              "de": "Objektnummer der zugehörigen Popup-Anmerkung."
+            }
+          }
         },
         "opacity": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
@@ -5765,7 +8132,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "multiline",
+            "label": {
+              "en": "Rich text",
+              "de": "Formatierter Text"
+            },
+            "description": {
+              "en": "RC: XHTML formatted contents.",
+              "de": "RC: Inhalt als formatiertes XHTML."
+            }
+          }
         },
         "creationDate": {
           "anyOf": [
@@ -5775,18 +8153,37 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Creation date",
+              "de": "Erstellungsdatum"
+            }
+          }
         },
         "inReplyTo": {
           "anyOf": [
             {
+              "type": "integer",
               "minimum": 0,
-              "semioPrimitive": "u64"
+              "semioPrimitive": "u64",
+              "maximum": 18446744073709551615
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "In reply to",
+              "de": "Antwort auf"
+            },
+            "description": {
+              "en": "Object number of the annotation this one replies to.",
+              "de": "Objektnummer der Anmerkung, auf die diese antwortet."
+            }
+          }
         },
         "subject": {
           "anyOf": [
@@ -5796,7 +8193,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Subject",
+              "de": "Betreff"
+            }
+          }
         },
         "replyType": {
           "anyOf": [
@@ -5806,7 +8210,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Reply type",
+              "de": "Antworttyp"
+            },
+            "description": {
+              "en": "R (reply) or Group.",
+              "de": "R (Antwort) oder Group."
+            }
+          }
         },
         "intent": {
           "anyOf": [
@@ -5816,7 +8231,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Intent",
+              "de": "Zweck"
+            },
+            "description": {
+              "en": "IT: purpose of the markup, e.g. FreeTextCallout.",
+              "de": "IT: Zweck der Markierung, z. B. FreeTextCallout."
+            }
+          }
         }
       }
     },
@@ -5827,7 +8253,13 @@ export const schema = {
           "type": "string"
         },
         "colorSpace": {
-          "$ref": "#/$defs/PdfColorSpace"
+          "$ref": "#/$defs/PdfColorSpace",
+          "x-semio-ui": {
+            "label": {
+              "en": "Color space",
+              "de": "Farbraum"
+            }
+          }
         }
       },
       "required": [
@@ -5842,7 +8274,13 @@ export const schema = {
           "type": "string"
         },
         "destination": {
-          "$ref": "#/$defs/PdfDestination"
+          "$ref": "#/$defs/PdfDestination",
+          "x-semio-ui": {
+            "label": {
+              "en": "Destination",
+              "de": "Ziel"
+            }
+          }
         }
       },
       "required": [
@@ -5860,6 +8298,12 @@ export const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Entries",
+              "de": "Einträge"
+            }
           }
         }
       },
@@ -5903,7 +8347,10 @@ export const schema = {
               "const": "int"
             },
             "value": {
-              "semioPrimitive": "i64"
+              "type": "integer",
+              "semioPrimitive": "i64",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
             }
           },
           "required": [
@@ -6049,6 +8496,38 @@ export const schema = {
             "data",
             "filters"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "date"
+            },
+            "value": {
+              "$ref": "#/$defs/PdfDate"
+            }
+          }
         }
       ]
     },
@@ -6061,7 +8540,18 @@ export const schema = {
               "const": "setLineWidth"
             },
             "width": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6106,7 +8596,18 @@ export const schema = {
               "const": "setMiterLimit"
             },
             "limit": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6123,11 +8624,33 @@ export const schema = {
             "array": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "phase": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6158,7 +8681,18 @@ export const schema = {
               "const": "setFlatness"
             },
             "flatness": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6212,7 +8746,18 @@ export const schema = {
             "matrix": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -6230,10 +8775,32 @@ export const schema = {
               "const": "moveTo"
             },
             "x": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6249,10 +8816,32 @@ export const schema = {
               "const": "lineTo"
             },
             "x": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6268,22 +8857,88 @@ export const schema = {
               "const": "curveTo"
             },
             "x1": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y1": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x2": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y2": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x3": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y3": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6303,16 +8958,60 @@ export const schema = {
               "const": "curveToInitial"
             },
             "x2": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y2": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x3": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y3": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6330,16 +9029,60 @@ export const schema = {
               "const": "curveToFinal"
             },
             "x1": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y1": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "x3": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y3": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6368,16 +9111,60 @@ export const schema = {
               "const": "rectangle"
             },
             "x": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "width": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "height": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6538,7 +9325,18 @@ export const schema = {
               "const": "setCharSpacing"
             },
             "spacing": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6553,7 +9351,18 @@ export const schema = {
               "const": "setWordSpacing"
             },
             "spacing": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6568,7 +9377,18 @@ export const schema = {
               "const": "setHorizontalScale"
             },
             "scale": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6583,7 +9403,18 @@ export const schema = {
               "const": "setLeading"
             },
             "leading": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6601,7 +9432,18 @@ export const schema = {
               "type": "string"
             },
             "size": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6633,7 +9475,18 @@ export const schema = {
               "const": "setTextRise"
             },
             "rise": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6648,10 +9501,32 @@ export const schema = {
               "const": "moveText"
             },
             "tx": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "ty": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6667,10 +9542,32 @@ export const schema = {
               "const": "moveTextSetLeading"
             },
             "tx": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "ty": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6688,7 +9585,18 @@ export const schema = {
             "matrix": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -6765,10 +9673,32 @@ export const schema = {
               "const": "nextLineShowTextSpaced"
             },
             "wordSpacing": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "charSpacing": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "text": {
               "$ref": "#/$defs/PdfTextString"
@@ -6788,10 +9718,32 @@ export const schema = {
               "const": "setGlyphWidth"
             },
             "wx": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "wy": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6807,22 +9759,88 @@ export const schema = {
               "const": "setGlyphWidthAndBox"
             },
             "wx": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "wy": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "llx": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "lly": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "urx": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "ury": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6874,7 +9892,18 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -6892,7 +9921,18 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "pattern": {
@@ -6920,7 +9960,18 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             }
           },
@@ -6938,7 +9989,18 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "pattern": {
@@ -6964,7 +10026,18 @@ export const schema = {
               "const": "setStrokeGray"
             },
             "gray": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6979,7 +10052,18 @@ export const schema = {
               "const": "setFillGray"
             },
             "gray": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -6994,13 +10078,46 @@ export const schema = {
               "const": "setStrokeRgb"
             },
             "r": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "g": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "b": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7017,13 +10134,46 @@ export const schema = {
               "const": "setFillRgb"
             },
             "r": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "g": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "b": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7040,16 +10190,60 @@ export const schema = {
               "const": "setStrokeCmyk"
             },
             "c": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "m": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "k": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7067,16 +10261,60 @@ export const schema = {
               "const": "setFillCmyk"
             },
             "c": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "m": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "y": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "k": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -7298,6 +10536,12 @@ export const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfOptionalContentGroup"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Optional content groups",
+              "de": "Ebenen (optionale Inhalte)"
+            }
           }
         },
         "name": {
@@ -7311,18 +10555,41 @@ export const schema = {
           ]
         },
         "baseStateOff": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Base state off",
+              "de": "Grundzustand aus"
+            },
+            "description": {
+              "en": "Groups start hidden unless listed as on.",
+              "de": "Ebenen sind ausgeblendet, sofern nicht als eingeblendet aufgeführt."
+            }
+          }
         },
         "on": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible groups",
+              "de": "Eingeblendete Ebenen"
+            }
           }
         },
         "off": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Hidden groups",
+              "de": "Ausgeblendete Ebenen"
+            }
           }
         },
         "order": {
@@ -7335,6 +10602,16 @@ export const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       }
@@ -7352,12 +10629,28 @@ export const schema = {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Intent",
+              "de": "Zweck"
+            },
+            "description": {
+              "en": "View and/or Design.",
+              "de": "View und/oder Design."
+            }
           }
         },
         "usage": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Usage",
+              "de": "Verwendung"
+            }
           }
         }
       },
@@ -7380,7 +10673,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Destination",
+              "de": "Ziel"
+            }
+          }
         },
         "action": {
           "anyOf": [
@@ -7397,7 +10696,18 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 3,
               "maxItems": 3
@@ -7408,24 +10718,61 @@ export const schema = {
           ]
         },
         "italic": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Italic",
+              "de": "Kursiv"
+            }
+          }
         },
         "bold": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Bold",
+              "de": "Fett"
+            }
+          }
         },
         "open": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Expanded",
+              "de": "Aufgeklappt"
+            }
+          }
         },
         "children": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfOutlineItem"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Child bookmarks",
+              "de": "Untergeordnete Lesezeichen"
+            }
           }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -7440,7 +10787,14 @@ export const schema = {
           "type": "string"
         },
         "conditionIdentifier": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Output condition identifier",
+              "de": "Kennung der Ausgabebedingung"
+            }
+          }
         },
         "condition": {
           "anyOf": [
@@ -7450,7 +10804,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Output condition",
+              "de": "Ausgabebedingung"
+            },
+            "description": {
+              "en": "Human-readable output condition, e.g. FOGRA39.",
+              "de": "Lesbare Ausgabebedingung, z. B. FOGRA39."
+            }
+          }
         },
         "registryName": {
           "anyOf": [
@@ -7460,7 +10825,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Registry name",
+              "de": "Registrierungsname"
+            },
+            "description": {
+              "en": "Registry of the output condition, e.g. http://www.color.org.",
+              "de": "Register der Ausgabebedingung, z. B. http://www.color.org."
+            }
+          }
         },
         "info": {
           "anyOf": [
@@ -7470,7 +10846,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Additional information",
+              "de": "Zusatzinformationen"
+            }
+          }
         },
         "profile": {
           "anyOf": [
@@ -7484,7 +10867,17 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "ICC output profile",
+              "de": "ICC-Ausgabeprofil"
+            },
+            "description": {
+              "en": "DestOutputProfile bytes.",
+              "de": "Bytes des DestOutputProfile."
+            }
+          }
         }
       },
       "required": [
@@ -7498,17 +10891,51 @@ export const schema = {
         "mediaBox": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Media box",
+              "de": "Medienrahmen (MediaBox)"
+            },
+            "description": {
+              "en": "Physical medium boundaries as [llx lly urx ury].",
+              "de": "Grenzen des physischen Mediums als [llx lly urx ury]."
+            },
+            "unit": "pt"
+          }
         },
         "cropBox": {
           "anyOf": [
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -7516,14 +10943,37 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Crop box",
+              "de": "Maskenrahmen (CropBox)"
+            },
+            "description": {
+              "en": "Visible region of the page as [llx lly urx ury].",
+              "de": "Sichtbarer Bereich der Seite als [llx lly urx ury]."
+            },
+            "unit": "pt"
+          }
         },
         "bleedBox": {
           "anyOf": [
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -7531,14 +10981,37 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Bleed box",
+              "de": "Anschnittrahmen (BleedBox)"
+            },
+            "description": {
+              "en": "Clip region for production output as [llx lly urx ury].",
+              "de": "Beschnittbereich für die Druckausgabe als [llx lly urx ury]."
+            },
+            "unit": "pt"
+          }
         },
         "trimBox": {
           "anyOf": [
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -7546,14 +11019,37 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Trim box",
+              "de": "Endformatrahmen (TrimBox)"
+            },
+            "description": {
+              "en": "Finished page size after trimming as [llx lly urx ury].",
+              "de": "Endformat der Seite nach dem Beschnitt als [llx lly urx ury]."
+            },
+            "unit": "pt"
+          }
         },
         "artBox": {
           "anyOf": [
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -7561,20 +11057,67 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Art box",
+              "de": "Objektrahmen (ArtBox)"
+            },
+            "description": {
+              "en": "Meaningful page content as [llx lly urx ury].",
+              "de": "Sinnvoller Seiteninhalt als [llx lly urx ury]."
+            },
+            "unit": "pt"
+          }
         },
         "rotate": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Rotation",
+              "de": "Drehung"
+            },
+            "description": {
+              "en": "Clockwise page rotation in multiples of 90°.",
+              "de": "Seitendrehung im Uhrzeigersinn in Vielfachen von 90°."
+            },
+            "unit": "deg",
+            "step": 90
+          }
         },
         "userUnit": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "User unit",
+              "de": "Benutzereinheit"
+            },
+            "description": {
+              "en": "Size of one default user space unit in multiples of 1/72 inch.",
+              "de": "Größe einer Einheit des Standard-Benutzerraums in Vielfachen von 1/72 Zoll."
+            }
+          }
         },
         "content": {
           "type": "array",
@@ -7586,6 +11129,12 @@ export const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfAnnotation"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Annotations",
+              "de": "Anmerkungen"
+            }
           }
         },
         "group": {
@@ -7596,7 +11145,13 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Transparency group",
+              "de": "Transparenzgruppe"
+            }
+          }
         },
         "thumbnail": {
           "anyOf": [
@@ -7606,7 +11161,14 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Thumbnail",
+              "de": "Seitenminiatur"
+            }
+          }
         },
         "structParents": {
           "anyOf": [
@@ -7617,7 +11179,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Structure parents",
+              "de": "Strukturelternschlüssel"
+            },
+            "description": {
+              "en": "Key into the structural parent tree for the page's content.",
+              "de": "Schlüssel in den Strukturelternbaum für den Seiteninhalt."
+            }
+          }
         },
         "transition": {
           "anyOf": [
@@ -7630,17 +11203,46 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Page transition",
+              "de": "Seitenübergang"
+            }
+          }
         },
         "duration": {
           "anyOf": [
             {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Display duration",
+              "de": "Anzeigedauer"
+            },
+            "description": {
+              "en": "Seconds the page is shown during a presentation.",
+              "de": "Sekunden, die die Seite in einer Präsentation angezeigt wird."
+            },
+            "unit": "s"
+          }
         },
         "metadata": {
           "anyOf": [
@@ -7650,18 +11252,45 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Metadata stream",
+              "de": "Metadatenstrom"
+            }
+          }
         },
         "additionalActions": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional actions",
+              "de": "Zusätzliche Aktionen"
+            },
+            "description": {
+              "en": "Trigger events (AA) and the actions they run.",
+              "de": "Auslöseereignisse (AA) und die ausgeführten Aktionen."
+            }
           }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -7674,7 +11303,18 @@ export const schema = {
       "properties": {
         "startIndex": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "First page",
+              "de": "Erste Seite"
+            },
+            "description": {
+              "en": "Zero-based page index where the range starts.",
+              "de": "Nullbasierter Seitenindex, an dem der Bereich beginnt."
+            }
+          }
         },
         "style": {
           "anyOf": [
@@ -7684,7 +11324,31 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "decimal": {
+                "en": "Arabic numerals (1, 2, 3)",
+                "de": "Arabische Ziffern (1, 2, 3)"
+              },
+              "romanUpper": {
+                "en": "Uppercase Roman (I, II, III)",
+                "de": "Römisch, groß (I, II, III)"
+              },
+              "romanLower": {
+                "en": "Lowercase Roman (i, ii, iii)",
+                "de": "Römisch, klein (i, ii, iii)"
+              },
+              "lettersUpper": {
+                "en": "Uppercase letters (A, B, C)",
+                "de": "Großbuchstaben (A, B, C)"
+              },
+              "lettersLower": {
+                "en": "Lowercase letters (a, b, c)",
+                "de": "Kleinbuchstaben (a, b, c)"
+              }
+            }
+          }
         },
         "prefix": {
           "anyOf": [
@@ -7694,11 +11358,29 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Label prefix",
+              "de": "Präfix der Beschriftung"
+            }
+          }
         },
         "start": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "First number",
+              "de": "Startnummer"
+            },
+            "description": {
+              "en": "Numeric value of the first page label in the range.",
+              "de": "Zahlenwert der ersten Seitenbeschriftung im Bereich."
+            }
+          }
         }
       },
       "required": [
@@ -7746,10 +11428,31 @@ export const schema = {
         "matrix": {
           "type": "array",
           "items": {
-            "semioPrimitive": "binary64"
+            "type": "object",
+            "semioPrimitive": "binary64",
+            "properties": {
+              "bits": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              }
+            },
+            "required": [
+              "bits"
+            ],
+            "additionalProperties": false
           },
           "minItems": 6,
-          "maxItems": 6
+          "maxItems": 6,
+          "x-semio-ui": {
+            "label": {
+              "en": "Pattern matrix",
+              "de": "Mustermatrix"
+            },
+            "description": {
+              "en": "Maps pattern space to the default space of the parent [a b c d e f].",
+              "de": "Bildet den Musterraum auf den Standardraum des Elternobjekts ab [a b c d e f]."
+            }
+          }
         },
         "kind": {
           "$ref": "#/$defs/PdfPatternKind"
@@ -7758,6 +11461,16 @@ export const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -7785,16 +11498,49 @@ export const schema = {
             "bbox": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
             },
             "xStep": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "yStep": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             },
             "content": {
               "type": "array",
@@ -7911,7 +11657,13 @@ export const schema = {
           "type": "string"
         },
         "colorSpace": {
-          "$ref": "#/$defs/PdfColorSpace"
+          "$ref": "#/$defs/PdfColorSpace",
+          "x-semio-ui": {
+            "label": {
+              "en": "Color space",
+              "de": "Farbraum"
+            }
+          }
         },
         "kind": {
           "$ref": "#/$defs/PdfShadingKind"
@@ -7921,20 +11673,52 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Background color",
+              "de": "Hintergrundfarbe"
+            },
+            "description": {
+              "en": "Color components in the shading's color space.",
+              "de": "Farbkomponenten im Farbraum des Verlaufs."
+            }
+          }
         },
         "bbox": {
           "anyOf": [
             {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -7942,15 +11726,43 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Bounding box",
+              "de": "Begrenzungsrahmen"
+            },
+            "description": {
+              "en": "[llx lly urx ury] in the object's coordinate space.",
+              "de": "[llx lly urx ury] im Koordinatenraum des Objekts."
+            }
+          }
         },
         "antiAlias": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Anti-aliasing",
+              "de": "Kantenglättung"
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       },
@@ -7973,7 +11785,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -7988,7 +11811,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 6,
                   "maxItems": 6
@@ -8016,7 +11850,18 @@ export const schema = {
             "coords": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 4,
               "maxItems": 4
@@ -8026,7 +11871,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -8064,7 +11920,18 @@ export const schema = {
             "coords": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               },
               "minItems": 6,
               "maxItems": 6
@@ -8074,7 +11941,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -8146,7 +12024,18 @@ export const schema = {
             "decode": {
               "type": "array",
               "items": {
-                "semioPrimitive": "binary64"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "function": {
@@ -8251,7 +12140,18 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "semioPrimitive": "binary64"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -8477,17 +12377,18 @@ export const schema = {
             "kind": {
               "const": "codes"
             },
-            "bytes": {
+            "codes": {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 4294967295
               }
             }
           },
           "required": [
             "kind",
-            "bytes"
+            "codes"
           ]
         },
         {
@@ -8497,7 +12398,18 @@ export const schema = {
               "const": "adjust"
             },
             "amount": {
-              "semioPrimitive": "binary64"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -8530,17 +12442,18 @@ export const schema = {
             "kind": {
               "const": "codes"
             },
-            "bytes": {
+            "codes": {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 4294967295
               }
             }
           },
           "required": [
             "kind",
-            "bytes"
+            "codes"
           ]
         }
       ]
@@ -8550,12 +12463,30 @@ export const schema = {
       "properties": {
         "byteWidth": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Code width",
+              "de": "Codebreite"
+            },
+            "description": {
+              "en": "Bytes per character code in the CMap.",
+              "de": "Bytes je Zeichencode in der CMap."
+            },
+            "unit": "B"
+          }
         },
         "mappings": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfToUnicodeMapping"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Character mappings",
+              "de": "Zeichenzuordnungen"
+            }
           }
         }
       },
@@ -8623,13 +12554,33 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Color space",
+              "de": "Farbraum"
+            }
+          }
         },
         "isolated": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Isolated group",
+              "de": "Isolierte Gruppe"
+            }
+          }
         },
         "knockout": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Knockout group",
+              "de": "Aussparungsgruppe"
+            }
+          }
         }
       }
     },
@@ -8637,22 +12588,64 @@ export const schema = {
       "type": "object",
       "properties": {
         "hideToolbar": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Hide toolbars",
+              "de": "Werkzeugleisten ausblenden"
+            }
+          }
         },
         "hideMenubar": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Hide menu bar",
+              "de": "Menüleiste ausblenden"
+            }
+          }
         },
         "hideWindowUi": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Hide window controls",
+              "de": "Fenstersteuerelemente ausblenden"
+            }
+          }
         },
         "fitWindow": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Fit window",
+              "de": "Fenster an Seite anpassen"
+            }
+          }
         },
         "centerWindow": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Center window",
+              "de": "Fenster zentrieren"
+            }
+          }
         },
         "displayDocTitle": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Display document title",
+              "de": "Dokumenttitel anzeigen"
+            }
+          }
         },
         "nonFullScreenPageMode": {
           "anyOf": [
@@ -8662,7 +12655,40 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "label": {
+              "en": "Page mode after full screen",
+              "de": "Seitenmodus nach Vollbild"
+            },
+            "options": {
+              "useNone": {
+                "en": "Page only",
+                "de": "Nur Seite"
+              },
+              "useOutlines": {
+                "en": "Bookmarks panel",
+                "de": "Lesezeichenfenster"
+              },
+              "useThumbs": {
+                "en": "Page thumbnails",
+                "de": "Seitenminiaturen"
+              },
+              "fullScreen": {
+                "en": "Full screen",
+                "de": "Vollbild"
+              },
+              "useOc": {
+                "en": "Layers panel",
+                "de": "Ebenenfenster"
+              },
+              "useAttachments": {
+                "en": "Attachments panel",
+                "de": "Anlagenfenster"
+              }
+            }
+          }
         },
         "direction": {
           "anyOf": [
@@ -8672,7 +12698,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Reading direction",
+              "de": "Leserichtung"
+            },
+            "description": {
+              "en": "L2R or R2L.",
+              "de": "L2R oder R2L."
+            }
+          }
         },
         "viewArea": {
           "anyOf": [
@@ -8682,7 +12719,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "View area",
+              "de": "Anzeigebereich"
+            },
+            "description": {
+              "en": "Page boundary box used for display.",
+              "de": "Seitenrahmen für die Anzeige."
+            }
+          }
         },
         "viewClip": {
           "anyOf": [
@@ -8692,7 +12740,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "View clip",
+              "de": "Anzeigebeschnitt"
+            },
+            "description": {
+              "en": "Page boundary box displayed content is clipped to.",
+              "de": "Seitenrahmen, auf den angezeigter Inhalt beschnitten wird."
+            }
+          }
         },
         "printArea": {
           "anyOf": [
@@ -8702,7 +12761,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Print area",
+              "de": "Druckbereich"
+            },
+            "description": {
+              "en": "Page boundary box used when printing.",
+              "de": "Seitenrahmen, der beim Drucken verwendet wird."
+            }
+          }
         },
         "printClip": {
           "anyOf": [
@@ -8712,7 +12782,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Print clip",
+              "de": "Druckbeschnitt"
+            },
+            "description": {
+              "en": "Page boundary box printed content is clipped to.",
+              "de": "Seitenrahmen, auf den gedruckter Inhalt beschnitten wird."
+            }
+          }
         },
         "printScaling": {
           "anyOf": [
@@ -8722,7 +12803,18 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Print scaling",
+              "de": "Druckskalierung"
+            },
+            "description": {
+              "en": "None or AppDefault.",
+              "de": "None oder AppDefault."
+            }
+          }
         },
         "duplex": {
           "anyOf": [
@@ -8732,16 +12824,44 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Duplex mode",
+              "de": "Duplexmodus"
+            },
+            "description": {
+              "en": "Simplex, DuplexFlipShortEdge or DuplexFlipLongEdge.",
+              "de": "Simplex, DuplexFlipShortEdge oder DuplexFlipLongEdge."
+            }
+          }
         },
         "pickTrayByPdfSize": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Choose paper source by PDF page size",
+              "de": "Papierquelle nach PDF-Seitengröße wählen"
+            }
+          }
         },
         "printPageRange": {
           "type": "array",
           "items": {
             "type": "integer",
             "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Print page ranges",
+              "de": "Druckseitenbereiche"
+            },
+            "description": {
+              "en": "Pairs of first and last page for the print dialog.",
+              "de": "Paare aus erster und letzter Seite für den Druckdialog."
+            }
           }
         },
         "numCopies": {
@@ -8753,12 +12873,29 @@ export const schema = {
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of copies",
+              "de": "Anzahl der Exemplare"
+            }
+          }
         },
         "extra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional entries",
+              "de": "Weitere Einträge"
+            },
+            "description": {
+              "en": "Dictionary entries without a dedicated field, kept verbatim.",
+              "de": "Wörterbucheinträge ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       }

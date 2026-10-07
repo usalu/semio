@@ -26,3 +26,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<EnergyModelMutation, protocol::Protocol
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod native_codec {
+use super::*;
+pub use crate::mutations::EnergyModelMutation;
+
+impl protocol::OpBinary for EnergyModelMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

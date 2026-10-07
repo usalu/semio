@@ -9,12 +9,7 @@ use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 
 
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-/// 🧱️ REUSE, don't reinvent — the sibling `🔺️diff` facet re-exports document's own real, already-
-/// tested `DocBlock` codec (`enc_block`/`dec_block`) plus the entity value-codecs it owns
-/// (`enc_master`/`enc_layout`/`enc_slide`, `enc_str`, `enc_list`) — this facet imports them rather
-/// than duplicating a third independent copy (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-
-/// EVOLUTION presentation wave, following `document`'s own snapshot-imports-from-diff convention).
-use crate::presentation::io::text::diff::{dec_slide};
+
 
 
 

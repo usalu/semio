@@ -79,7 +79,7 @@ impl ArtifactSqliteSnapshot for Puzzle5dSnapshot{
   out.checkpoint_total(total)?;out.finish()
  }
  fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(d,c)}
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.puzzle.puzzle5d"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("Puzzle5d owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.puzzle.puzzle5d"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("Puzzle5d owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
 }
 struct Cursor<'a,'c,'p>{row:&'a SqliteRow,index:usize,control:&'c mut SqliteSnapshotControl<'p>}
 impl<'a,'c,'p> Cursor<'a,'c,'p>{
@@ -119,7 +119,7 @@ impl<'a> Rows<'a>{
 }
 fn reconstruct(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Puzzle5dSnapshot,ValueError>{
  let mut rows=Rows::new(d,c)?;let doc=rows.one(0,0,true)?.ok_or_else(||invalid("Puzzle5d document missing"))?;let mut root=Cursor::new(doc,1,c);let schema=root.text()?;let domain=root.text()?;let label=root.optional_text()?;let meta=Puzzle5dMeta{description:root.text()?};root.done()?;
- let kind_catalogs=if let Some(row)=rows.one(1,doc.rowid,false)?{let mut value=Cursor::new(row,2,c);let child_id=value.text()?;let target=store::os_io::ArtifactRef{artifact_id:value.text()?,dialect:store::os_io::ArtifactDialect{artifact_kind:value.text()?,standard:value.text()?,subset:value.text()?}};value.done()?;Some(store::ArtifactChild::new(child_id,target))}else{None};
+ let kind_catalogs=if let Some(row)=rows.one(1,doc.rowid,false)?{let mut value=Cursor::new(row,2,c);let child_id=value.text()?;let target=semio_framework_artifact_reference::ArtifactRef{artifact_id:value.text()?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value.text()?,standard:value.text()?,subset:value.text()?}};value.done()?;Some(store::ArtifactChild::new(child_id,target))}else{None};
  let kind_catalogs_extra=if let Some(extra)=rows.one(2,doc.rowid,false)?{
   let(mut parts,mut grips,mut fasteners,mut ropes)=(Vec::new(),Vec::new(),Vec::new(),Vec::new());
   for row in rows.take(3,extra.rowid,c)?{let mut value=Cursor::new(row,3,c);let id=value.text()?;let name=value.text()?;let label=value.text()?;let description=value.text()?;let icon=value.text()?;let image=value.text()?;let unit=value.text()?;let is_abstract=value.boolean()?;value.done()?;
@@ -154,7 +154,7 @@ impl ArtifactSqliteSnapshot for crate::Puzzle5dPlaySnapshot{
  fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Puzzle5dSnapshot::from_sqlite_database(d,c).map(Self::from_typed)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Puzzle5dSnapshot::decode_sqlite_snapshot_native(payload,c).map(Self::from_typed)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{self.typed().encode_sqlite_snapshot_native(encoding,c)}
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,d,c)}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,d,c)}
 }
 
 #[cfg(test)]

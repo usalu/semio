@@ -21,11 +21,11 @@ fn sample_semio() -> SemioImageSnapshot {
 async fn real_byte_round_trip_through_tiff_codec() {
     let semio = sample_semio();
     let tiff = ::semio_framework_async::poll::resolve_ready(SemioImageToTiff::serialize(&semio)).expect("serialize");
-    let bytes = semio_s_artifact_stdio_tiff::engine::encode_tiff(&tiff).expect("encode real tiff bytes");
-    let decoded = semio_s_artifact_stdio_tiff::engine::decode_tiff(&bytes).expect("decode real tiff bytes");
+    let bytes = semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::encode_tiff(&tiff).expect("encode real tiff bytes");
+    let decoded = semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::decode_tiff(&bytes).expect("decode real tiff bytes");
     assert_eq!(decoded.width(), Some(2));
     assert_eq!(decoded.height(), Some(1));
-    let page = semio_s_artifact_stdio_tiff::engine::decode_tiff_page_rgba(&decoded, 0).expect("project the decoded page");
+    let page = semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::decode_tiff_page_rgba(&decoded, 0).expect("project the decoded page");
     assert_eq!(page.pixels, semio.frames[0].rgba8, "RGBA must survive exactly");
     assert!(decoded.ifds[0].entries.iter().any(|t| t.tag == 270 && matches!(&t.values, TiffValues::Ascii(s) if s.strip_suffix(&[0]).unwrap_or(s) == b"semio fixture")));
 }

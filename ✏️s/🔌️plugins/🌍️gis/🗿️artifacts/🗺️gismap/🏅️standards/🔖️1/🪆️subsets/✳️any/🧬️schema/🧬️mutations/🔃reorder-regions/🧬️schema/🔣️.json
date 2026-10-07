@@ -29,7 +29,17 @@
     },
     "toIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Destination index",
+          "de": "Zielindex"
+        },
+        "step": 1,
+        "group": "order"
+      }
     }
   }
 }

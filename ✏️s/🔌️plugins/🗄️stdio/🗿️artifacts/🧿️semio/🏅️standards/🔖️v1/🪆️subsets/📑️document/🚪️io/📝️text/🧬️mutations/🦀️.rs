@@ -6,17 +6,18 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::document::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::document::schema::diff::{diff_block, diff_set_snapshot, BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
-use crate::document::io::text::diff::{dec_run_style};
-use crate::document::io::text::diff::{enc_run_style};
-use crate::document::io::text::diff::{dec_u8};
-use crate::document::io::text::diff::{enc_u8};
-use crate::document::io::text::diff::{dec_image};
-use crate::document::io::text::diff::{enc_image};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_run_style};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_run_style};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_u8};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_u8};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_image};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_image};
 use crate::standards::v1::subsets::video::io::text::snapshot::{dec_bool};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_style};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_style};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_bool};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
@@ -109,12 +110,12 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// `pub(crate)` `enc_block`/`enc_style`/`enc_image` for the shared per-item shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_block(b: &DocBlock) -> String {
-    crate::document::io::text::diff::enc_block(b)
+    crate::standards::v1::subsets::document::io::text::diff::enc_block(b)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_block(s: &str) -> Result<DocBlock, String> {
-    crate::document::io::text::diff::dec_block(s)
+    crate::standards::v1::subsets::document::io::text::diff::dec_block(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -155,11 +156,11 @@ pub(crate) fn print_document_mutation(m: &SemioDocumentMutation) -> String {
         SemioDocumentMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) => format!("set-block-content path={} block={}", enc_block_path(path), enc_block(block)),
         SemioDocumentMutation::SetParagraphStyle(set_paragraph_style::SetParagraphStyle { path, style_id }) => format!("set-paragraph-style path={} style-id={}", enc_block_path(path), encode_option(style_id, |v| enc_str(v))),
         SemioDocumentMutation::SetHeadingLevel(set_heading_level::SetHeadingLevel { path, level }) => format!("set-heading-level path={} level={}", enc_block_path(path), enc_u8(level)),
-        SemioDocumentMutation::SetListOrdered(set_list_ordered::SetListOrdered { path, ordered }) => format!("set-list-ordered path={} ordered={}", enc_block_path(path), enc_bool(ordered)),
+        SemioDocumentMutation::SetListOrdered(set_list_ordered::SetListOrdered { path, ordered }) => format!("set-list-ordered path={} ordered={}", enc_block_path(path), enc_bool(*ordered)),
         SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path, run_index, text }) => format!("set-run-text path={} run-index={} text={}", enc_block_path(path), run_index, enc_str(text)),
         SemioDocumentMutation::SetRunStyle(set_run_style::SetRunStyle { path, run_index, style }) => format!("set-run-style path={} run-index={} style={}", enc_block_path(path), run_index, enc_run_style_full(style)),
         SemioDocumentMutation::SetImageBlock(set_image_block::SetImageBlock { path, image_id, alt, width, height }) => {
-            format!("set-image-block path={} image-id={} alt={} width={} height={}", enc_block_path(path), enc_str(image_id), enc_str(alt), encode_option(width, enc_f64), encode_option(height, enc_f64))
+            format!("set-image-block path={} image-id={} alt={} width={} height={}", enc_block_path(path), enc_str(image_id), enc_str(alt), encode_option(width, |value|enc_f64(*value)), encode_option(height, |value|enc_f64(*value)))
         }
         SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style }) => format!("insert-style style={}", enc_style(style)),
         SemioDocumentMutation::RemoveStyle(remove_style::RemoveStyle { id }) => format!("remove-style id={}", enc_str(id)),

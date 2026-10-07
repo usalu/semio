@@ -57,7 +57,7 @@ pub(crate) mod context {
     /// 🪪️ Bound to the `local` instance id, as the runtime mounts it — an unbound app refuses every
     /// retained typed command with `interactive-job.live-instance`.
     pub async fn app_with_registry() -> Block2dAppFixture {
-        let mut app = new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Block2dAppFixture(app)
     }

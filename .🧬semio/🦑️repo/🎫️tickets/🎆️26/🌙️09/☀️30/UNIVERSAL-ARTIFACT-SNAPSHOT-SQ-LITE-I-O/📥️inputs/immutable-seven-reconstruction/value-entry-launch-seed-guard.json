@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/.vscode/🧩️launch.seed.jsonc",
+  "before": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n",
+  "after": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n    {\n        \"name\": \"🧿️semio🪶️sqlite Value Partial Entry Held\",\n        \"type\": \"node-terminal\",\n        \"request\": \"launch\",\n        \"command\": \"bun nx exec --projects=@semio-tech/stdio-semio-rs --excludeTaskDependencies --nxIgnoreCycles -- bun \\\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts\\\" value-entry\",\n        \"cwd\": \"${workspaceFolder}\",\n        \"presentation\": {\n            \"group\": \"4_build\",\n            \"order\": 206.902\n        }\n    },\n"
+}

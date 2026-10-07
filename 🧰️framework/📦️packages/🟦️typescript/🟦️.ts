@@ -1,3 +1,4 @@
+export * from "../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 export * from "../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 export{parseIntrinsicValue,parseIntrinsicValueControlled}from"../../🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
 export type{IntrinsicValue,IntrinsicMember}from"../../🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";

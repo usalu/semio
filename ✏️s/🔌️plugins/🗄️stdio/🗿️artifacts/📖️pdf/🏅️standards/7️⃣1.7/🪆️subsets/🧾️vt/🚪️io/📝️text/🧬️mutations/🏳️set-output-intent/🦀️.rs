@@ -1,6 +1,6 @@
 //! 🏳️ Direct text codec for `set-output-intent`.
 
-use super::SetOutputIntent;
+use crate::standards::v1_7::subsets::vt::schema::mutations::SetOutputIntent;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-output-intent";

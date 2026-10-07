@@ -83,7 +83,7 @@ fn sqlite_snapshot_gltf_independent_sql_reserialization_preserves_ieee_words_uns
 fn sqlite_snapshot_gltf_erased_binary_and_text_preserve_every_owned_field() {
     use store::sqlite_snapshot::SnapshotEncoding;
     let codec = <GltfSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
-    let dialect = semio_framework_os_kernel::io_schema::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     for bits in words() {
         let snapshot = word_snapshot(bits);
         let limits = SqliteDatabaseLimits::default();
@@ -112,10 +112,7 @@ fn fixture() -> GltfSnapshot {
 
 #[test]
 fn sqlite_snapshot_gltf_exact_typed_guard_budget_and_cancellation() {
-    use semio_framework_os_kernel::{
-        io_schema::ArtifactDialect,
-        sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase},
-    };
+    use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase};
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
@@ -247,7 +244,7 @@ fn sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_dept
     let limits = SqliteDatabaseLimits::default();
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
     let codec = (crate::native_codecs()[0].codec)().snapshot_sqlite.expect("actual GLTF owned provider");
-    let dialect = semio_framework_os_kernel::io_schema::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = (codec.import)(&snapshot.schema, &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
         let restored = (codec.export)(&snapshot.schema, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
@@ -450,7 +447,7 @@ fn sqlite_snapshot_gltf_typed_guard_rejects_independently_changed_owned_state() 
     let limits = SqliteDatabaseLimits::default();
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
     let edited = independent(&database, "UPDATE gltf_material SET name='Different valid state' WHERE id=1");
-    let dialect = semio_framework_os_kernel::io_schema::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     assert!(snapshot.validate_sqlite_snapshot_subset(&dialect, &edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err(), "typed guard must compare all owned state");
     let restored = GltfSnapshot::from_sqlite_database(&edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
     assert!(restored.validate_sqlite_snapshot_subset(&dialect, &edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_ok());
@@ -462,7 +459,7 @@ fn sqlite_snapshot_gltf_typed_guard_accepts_independently_renumbered_surrogate()
     let limits = SqliteDatabaseLimits::default();
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
     let edited = independent(&database, "UPDATE gltf_scene_node SET id=99 WHERE id=1");
-    let dialect = semio_framework_os_kernel::io_schema::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     assert!(snapshot.validate_sqlite_snapshot_subset(&dialect, &edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_ok(), "surrogate row identity must not change typed state");
 }
 

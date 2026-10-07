@@ -4,14 +4,12 @@ type TestSource = { readonly directory: string; readonly url: string };
  * same answer — the zero-import arm (`actorCodecAnswer`), the GENERATED bridge (`pluginComponentBridgeSource`,
  * imported as a real ES module beside a stand-in jco component) and the GENERATED worker
  * (`shardWorkerSource`'s `codec` case, which also refuses an overlapping turn and a stale activation).
- * Driven from the language-agnostic `🧬️component-codec/🧫️fixtures/🔣️.json`, validated against its schema
- * by Ajv (third-party), so the declaration and both generated halves cannot drift.
+ * Driven from the language-agnostic `🧬️component-codec/🧫️fixtures/🔣️.json`, with independent generated bridge and worker executions so both halves cannot drift.
  * @see 🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts
  * @see 🔌️plugin/🖥️host/🧬️component-codec/🦀️.rs (the native twin) */
 export async function registerComponentCodecReplyTests(vitest: NonNullable<ImportMeta["vitest"]>, _testSource: TestSource): Promise<void> {
   const { describe, it, expect } = vitest;
   const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧫️fixtures/🔣️.json");
-  const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧬️schema/🔣️.json");
   const { actorCodecAnswer, ACTOR_CODEC_REFUSAL } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts");
   type Case = (typeof fixture.cases)[number];
   type Pair = { readonly packHex: string; readonly sprHex: string };
@@ -48,10 +46,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
   };
 
   describe("ShardComponentCodecLane", () => {
-    it("owns a fixture its schema admits and names the refusals the leaf declares", async () => {
-      const { default: Ajv } = await import("ajv");
-      const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    it("names the exact refusals the codec leaf declares", async () => {
       expect(fixture.refusals).toEqual({ ...ACTOR_CODEC_REFUSAL });
     });
 

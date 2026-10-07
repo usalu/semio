@@ -69,11 +69,13 @@ pub(super) fn write_dictionary(out:&mut Projection<'_,'_>,entries:&[PdfDictEntry
 }
 pub(super) fn write_object(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{let key=write_shallow(out,value)?;if let Some(children)=object_children(value,key){write_children(out,children)?;}Ok(key)}
 fn write_shallow(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{
-    let mut fields = [C::Null; 11];
+    let mut fields = [C::Null; 12];
     let kind = match value {
         PdfObject::Null => "null", PdfObject::Bool(value) => { fields[0] = C::Integer(i64::from(*value)); "boolean" },
         PdfObject::Int(value) => { fields[1] = C::Integer(*value); "integer" },
         PdfObject::Real(value) => { fields[2] = C::Integer(i64::from(value.negative)); fields[3] = C::Text(&value.coefficient); fields[4] = C::Integer(i64::from(value.scale)); "decimal" },
+        PdfObject::Text(value) => {fields[6]=C::Text(value);"text"},
+        PdfObject::Date(value) => {fields[11]=C::Integer(super::metadata::write_date(out,value)?);"date"},
         PdfObject::Str(value) => { fields[5] = C::Blob(value); "string" }, PdfObject::Name(value) => { fields[6] = C::Text(value); "name" },
         PdfObject::Array(_) => "array", PdfObject::Dict(_) => "dictionary",
         PdfObject::Ref(value) => { fields[7] = C::Integer(i64::from(value.num)); fields[8] = C::Integer(i64::from(value.gen)); "reference" },
@@ -99,13 +101,14 @@ pub(super) fn read_object(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfObjec
 }
 fn read_shallow(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfObject,ValueError>{
     reader.control.checkpoint(Phase::ReconstructSnapshot, reader.used.len(), reader.total)?;
-    let row = reader.take("pdf_cos_value", key, 13)?;
+    let row = reader.take("pdf_cos_value", key, 14)?;
     let kind = row.text(1)?;
-    let present: &[usize] = match kind { "null" | "array" | "dictionary" => &[], "boolean" => &[2], "integer" => &[3], "decimal" => &[4, 5, 6], "string" => &[7], "name" => &[8], "reference" => &[9, 10], "stream" => &[11, 12], _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF COS value kind")) };
-    null_except(row, 2..13, present)?;
+    let present: &[usize] = match kind { "null" | "array" | "dictionary" => &[], "boolean" => &[2], "integer" => &[3], "decimal" => &[4, 5, 6], "string" => &[7], "name" | "text" => &[8], "date" => &[13], "reference" => &[9, 10], "stream" => &[11, 12], _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF COS value kind")) };
+    null_except(row, 2..14, present)?;
     Ok(match kind {
         "null" => PdfObject::Null, "boolean" => PdfObject::Bool(boolean(row, 2)?), "integer" => PdfObject::Int(row.integer(3)?),
         "decimal" => PdfObject::Real(PdfDecimal { negative: boolean(row, 4)?, coefficient: reader.text(row,5)?, scale: integer(row, 6)? }),
+        "text"=>PdfObject::Text(reader.text(row,8)?),"date"=>PdfObject::Date(super::metadata::read_date(reader,row.integer(13)?)?),
         "string" => PdfObject::Str(reader.blob(row,7)?), "name" => PdfObject::Name(reader.text(row,8)?),
         "reference" => PdfObject::Ref(ObjRef { num: integer(row, 9)?, gen: integer(row, 10)? }),
         "array" => PdfObject::Array(Vec::new()),

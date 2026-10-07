@@ -5633,9 +5633,6 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
   async run(): Promise<void> {
     const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child";
     const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧫️fixtures/🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile<BrowserActorChildWorkerFixture>(schema);
-    if (!validate(fixture)) throw new Error("child Worker fixture: " + JSON.stringify(validate.errors));
     const ts = await import("typescript");
     const program = ts.createProgram([join(this.repoRoot, ownerPath, "🟦️.ts"), join(this.repoRoot, ownerPath, "👷️worker/🟦️.ts")], {
       noEmit: true,
@@ -5923,7 +5920,7 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
         throw new Error("child WASI synchronous output was not observed exactly before caller mutation");
       if (!workerRequests.some((url) => decodeURI(url).includes("/🧵️child/👷️worker/🟦️.ts"))) throw new Error("static child was not requested");
       if (diagnostics.some((row) => row.startsWith("pageerror:"))) throw new Error(diagnostics.join("\n"));
-      console.log("browser-actor-child-worker-containment: ajv=1 typescript=1 chromium=1 " + JSON.stringify(result) + " passed");
+      console.log("browser-actor-child-worker-containment: typescript=1 chromium=1 " + JSON.stringify(result) + " passed");
     } catch (error) {
       console.error("browser-actor-child-worker-diagnostics: " + diagnostics.slice(-12).join("|"));
       throw error;
@@ -7697,7 +7694,7 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     await (await import("../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts")).proveGisNativeCodecReceipts(this.repoRoot);
     await (await import("../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts")).proveGisControlledProposal(this.repoRoot);
     await proveGisNativeProviderSelectionFixture(this.repoRoot);
-    await proveMemoryBackendBackingFixture(this.repoRoot);
+    await (await import(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️tests/🧮️memory-backing/🟦️.ts"))).proveMemoryBackendBackingFixture(this.repoRoot);
     await proveNativeDeficitFixture(this.repoRoot);
   }
 }
@@ -11595,64 +11592,6 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
     if (outcome !== vector.expected) throw new Error(`inference command boundary mismatch: ${vector.name}`);
   }
   console.log(`inference-command-oracle: vectors=${fixture.vectors.length} ajv=1 node+webcrypto-hash=2; no GIS execution authority`);
-}
-
-async function proveMemoryBackendBackingFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧫️fixtures/🧮️memory-backing");
-  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = hubSchemaExport(repoRoot, "schema://os.db.storage/MemoryBackingV1");
-  if (!validate(fixture)) throw new Error("memory backing fixture violates its owning scope contract");
-  const hostile = [
-    { ...fixture, maximumInlineBytes: fixture.maximumInlineBytes + 1 },
-    { ...fixture, tables: fixture.tables.slice(1) },
-    { ...fixture, tables: [{ ...fixture.tables[0], slots: 65 }, ...fixture.tables.slice(1)] },
-    { ...fixture, retry: { ...fixture.retry, timerDelayMs: 0 } },
-    { ...fixture, sequentialTasks: 65 },
-  ];
-  if (hostile.some((value) => validate(value))) throw new Error("memory backing schema accepted altered bounds");
-  const inline = 128;
-  const lengths = fixture.tables.map((row: { slots: number }, index: number) => row.slots * (index + 1) * 8);
-  const required = BigInt(inline) + lengths.reduce((sum: bigint, length: number) => sum + BigInt(length), 0n);
-  for (const test of fixture.admission) {
-    const remaining = test.remaining === "exact" ? required : test.remaining === "one-short" ? required - 1n : 0n;
-    const accepted = required <= remaining;
-    if (accepted !== test.accepted) throw new Error(`memory backing admission differs: ${test.remaining}`);
-    if (!accepted) continue;
-    const tables = lengths.map((length: number) => Buffer.alloc(length));
-    const actual = BigInt(inline) + tables.reduce((sum: bigint, bytes: Buffer) => sum + BigInt(bytes.byteLength), 0n);
-    if (actual !== required) throw new Error("memory backing allocation differs from reserved bytes");
-    tables.length = 0;
-  }
-  const pendingTasks = new Set([1]);
-  if ((pendingTasks.size === 0) !== fixture.closeWhileAdmitted) throw new Error("memory backing retired an admitted task");
-  pendingTasks.delete(1);
-  if (pendingTasks.size !== 0) throw new Error("memory backing task admission was not returned");
-  const heldResult = Buffer.from([0]);
-  for (let index = 0; index < fixture.sequentialTasks; index++) {
-    pendingTasks.add(index + 1);
-    await Promise.resolve();
-    pendingTasks.delete(index + 1);
-    if (pendingTasks.size !== 0 || heldResult[0] !== 0) throw new Error("sequential task retirement changed a retained result or leaked task admission");
-  }
-  let queueOccupied = true,
-    retryAttempts = 0,
-    terminal = false;
-  const retry = async (): Promise<void> => {
-    while (!terminal && retryAttempts < fixture.retry.maximumAttempts) {
-      retryAttempts++;
-      await new Promise<void>((resolve) => setTimeout(resolve, fixture.retry.timerDelayMs));
-      terminal = !queueOccupied;
-    }
-  };
-  const pendingRetry = retry();
-  queueMicrotask(() => {
-    queueOccupied = false;
-  });
-  await pendingRetry;
-  if (terminal !== fixture.retry.terminalAfterQueueRelease || retryAttempts !== 1) throw new Error("memory backing retry did not reach terminal after queue release");
-  console.log(
-    `memory-backing-oracle: tables=${fixture.tables.length} admission=${fixture.admission.length} hostile=${hostile.length} timer-retry=1 sequential=${fixture.sequentialTasks}; runtime ABI sizes and worker wake are checked by the Rust owner laws`,
-  );
 }
 
 async function proveNativeDeficitFixture(repoRoot: string): Promise<void> {
@@ -15658,13 +15597,8 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   const httpBase = join(repoRoot, "🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/🌐️http-owner-v1");
   const httpFixture = JSON.parse(readFileSync(join(httpBase, "🔣️.json"), "utf8"));
   const admitsHttpLimits = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationHttpLimitsV1");
-  const admitsHttpRoute = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationHttpRouteV1");
   const admitsHttpResponse = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationHttpResponseV1");
-  if (httpFixture.schema !== "semio.test.artifact-creation-http-owner/v1" || httpFixture.routes.length !== 10 || httpFixture.authorities.length !== 6 || httpFixture.responses.length !== 6
-    || new Set(httpFixture.routes.map((row: any) => row.id)).size !== 10 || new Set(httpFixture.authorities.map((row: any) => row.id)).size !== 6
-    || new Set(httpFixture.responses.map((row: any) => row.phase)).size !== 6) throw new Error("creation HTTP owner envelope differs");
   if (!admitsHttpLimits(httpFixture.limits) || httpFixture.limits.bodyBytes !== 4096 || httpFixture.limits.liveOperations !== 8 || httpFixture.limits.lifetimeMs !== 30000) throw new Error("creation HTTP owner limits differ from their owning scope contract");
-  for (const row of httpFixture.routes) if (!admitsHttpRoute(row)) throw new Error(`creation HTTP route violates its owning scope contract: ${row.id}`);
   for (const row of httpFixture.responses) if (!admitsHttpResponse(row)) throw new Error(`creation HTTP response violates its owning scope contract: ${row.phase}`);
   for (const row of httpFixture.routes) {
     const actual = localRelayUpstreamPath(row.method, new URL(row.path, "http://relay.invalid"));

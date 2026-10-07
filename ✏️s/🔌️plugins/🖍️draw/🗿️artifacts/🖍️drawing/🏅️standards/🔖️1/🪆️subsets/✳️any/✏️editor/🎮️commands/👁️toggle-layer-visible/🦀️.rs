@@ -20,7 +20,7 @@ pub fn handle(payload: &ToggleLayerVisible, doc: &ArtifactView<'_, DrawingSnapsh
     match find_drawing_layer(document, &payload.layer_id) {
         Some(layer) => {
             let visible = !crate::schema::layer_base(layer).visible;
-            Ok(Emit::mutations(vec![crate::mutations::set_layer_visible(payload.layer_id.clone(), visible)]))
+            Ok(Emit::mutations(vec![crate::mutations::set_layer_visible(payload.layer_id.clone().into(), visible)]))
         }
         None => Ok(Emit::default()),
     }

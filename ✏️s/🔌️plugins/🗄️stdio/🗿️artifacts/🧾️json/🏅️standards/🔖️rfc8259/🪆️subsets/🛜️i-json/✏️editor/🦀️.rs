@@ -20,7 +20,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -36,8 +36,8 @@ use semio_framework_plugin::NoPresence;
 use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::StandardId;
-use semio_framework_plugin::SubsetId;
+use {semio_framework_artifact_reference::StandardId};
+use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::ToolExecutionContract;
 use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;
@@ -382,7 +382,7 @@ impl ArtifactEditor for JsonIJsonEditor {
         let snapshot = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(text)
             .map(JsonSnapshot::from_value)
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        if let Some(diagnostic) = crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance(&snapshot)
+        if let Some(diagnostic) = crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance(&snapshot)
             .into_iter()
             .find(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
         {

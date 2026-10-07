@@ -1064,3 +1064,55 @@ pub fn generation3d_mounted_pack_session(expected_bytes: usize, maximum_items: u
 #[cfg(test)]
 #[path = "🧪️tests/🔬️retained-mounted-laws/🦀️.rs"]
 mod retained_mounted_laws;
+
+mod native_codec {
+use super::*;
+use crate::Generation3dSnapshot;
+use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
+use std::collections::BTreeMap;
+use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as ProjectionView, projection_path_error};
+use semio_framework_artifact_flow_flow::{FlowUi, FlowNodeGui, NodeChrome, FlowPreviewGui, FlowChannelRef};
+use semio_framework_artifact_flow_flow::neural::{Tree, Neuron, Synapse};
+use semio_framework_value::ordered::{OrderedMap, OrderedSet};
+use semio_framework_value::{DslValue, Number, ValueError};
+pub(crate) use controlled::{decode as decode_sqlite_native,encode as encode_sqlite_native};
+pub use source_examples::*;
+use crate::standards::v1::subsets::any::io::text::snapshot::{Generation3dSnapshotDsl,generation3d_document_to_dsl,generation3d_document_from_dsl};
+
+impl store::ArtifactPack for Generation3dSnapshotDsl {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+
+impl store::ArtifactPack for Generation3dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        <Generation3dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&generation3d_document_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let parsed = <Generation3dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
+        generation3d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
+    }
+
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
+        <Generation3dSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
+}
+}

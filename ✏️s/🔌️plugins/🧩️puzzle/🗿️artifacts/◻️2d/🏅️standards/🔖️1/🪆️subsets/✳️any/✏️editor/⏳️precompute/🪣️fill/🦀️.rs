@@ -10,8 +10,11 @@ use crate::editor::puzzle2d::engine::{
     BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage,
 };
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dPlaySnapshot};
+
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
-use crate::standards::v1::subsets::any::schema::mutations::{connect_handles, create_node};
+
+use crate::standards::v1::subsets::any::schema::mutations::{connect_handles,create_node};
+
 use semio_framework_job::{Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_REASON_CONFLICT};
 use serde_json::Value;
@@ -280,8 +283,11 @@ impl FillRunCheckpoint {
 
 //#region 🧱️Placement
 /// 🆔️ Stable provisional entity of a placed node: the first eight little-endian bytes of its id digest.
-pub(crate) fn fill_run_entity(node_id: &str) -> u64 {
-    u64::from_le_bytes(semio_framework_hash::hash(node_id.as_bytes()).as_bytes()[..8].try_into().expect("eight digest bytes"))
+pub(crate) fn fill_run_entity(node_id: &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>) -> u64 {
+    use semio_framework_value::paged::Utf8Text;
+    let mut hasher=semio_framework_hash::Hasher::new();
+    for index in 0..node_id.text_chunk_count(){hasher.update(node_id.text_chunk(index).expect("native text chunk").as_bytes());}
+    u64::from_le_bytes(hasher.finalize().as_bytes()[..8].try_into().expect("eight digest bytes"))
 }
 
 /// 🗂️ The node kind rows a fill places: the document's own `meta.kindCatalogs.nodes`, else the engine catalog
@@ -311,25 +317,25 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
     let handles = (0..placement.handle_count())
         .map(|index| {
             let (id, handle_kind, angle, radius) = placement.handle(index).ok_or("puzzle2d-fill-apply-handle")?;
-            Ok(crate::Puzzle2dHandle { id: id.to_string(), handle_kind: Some(handle_kind.to_string()), angle, radius, ..Default::default() })
+            Ok(crate::Puzzle2dHandle { id: id.into(), handle_kind: Some(handle_kind.into()), angle, radius, ..Default::default() })
         })
-        .collect::<Result<Vec<_>, &'static str>>()?;
+        .collect::<Result<semio_framework_value::list::PagedList<_, { usize::MAX }>, &'static str>>()?;
     let node = crate::Puzzle2dNode {
-        id: placement.node_id.as_str().to_string(),
-        node_kind: Some(placement.node_kind.as_str().to_string()),
-        shape: Some(placement.shape.to_string()),
+        id: placement.node_id.as_str().into(),
+        node_kind: Some(placement.node_kind.as_str().into()),
+        shape: Some(placement.shape.into()),
         x: placement.x,
         y: placement.y,
         radius: (!rectangle).then_some(placement.radius),
         width: rectangle.then_some(placement.width),
         height: rectangle.then_some(placement.height),
-        text: Some(placement.node_id.as_str().to_string()),
-        icon_kind: placement.icon_kind.as_ref().map(|icon| icon.as_str().to_string()),
+        text: Some(placement.node_id.as_str().into()),
+        icon_kind: placement.icon_kind.as_ref().map(|icon| icon.as_str().into()),
         anchor: crate::Puzzle2dNodeAnchor::Fixed,
         handles,
         ..Default::default()
     };
-    let edge = connect_handles(placement.edge_id.as_str().to_string(), placement.source_handle_id.as_str().to_string(), placement.target_handle_id.as_str().to_string(), Some(placement.edge_kind.as_str().to_string()), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None);
+    let edge = connect_handles(placement.edge_id.as_str().into(), placement.source_handle_id.as_str().into(), placement.target_handle_id.as_str().into(), Some(placement.edge_kind.as_str().into()), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None);
     Ok([create_node(node, None), edge])
 }
 
@@ -1242,7 +1248,7 @@ impl Puzzle2dFillRunJob {
         let [create, connect] = mutations?;
         if let Puzzle2dMutation::CreateNode(payload) = &create {
             let node = &payload.node;
-            let rectangle = node.shape.as_deref() == Some("rectangle");
+            let rectangle = node.shape.as_ref().is_some_and(|shape|shape.eq_str("rectangle"));
             let bounds = fill_node_bounds(node.x, node.y, node.scale, rectangle, if rectangle { node.width } else { node.radius }, node.height);
             if !fill_regions_admit(&self.target_regions, bounds) {
                 if let Some(live) = self.live.take() {
@@ -1549,9 +1555,9 @@ impl Puzzle2dFillRevalidateJob {
         }
     }
 
-    fn placement(&self, index: usize) -> Option<(&crate::Puzzle2dNode, &str)> {
+    fn placement(&self, index: usize) -> Option<(&crate::Puzzle2dNode, &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>)> {
         match self.ops.get(index * FILL_RUN_OPS_PER_PLACEMENT..(index + 1) * FILL_RUN_OPS_PER_PLACEMENT)? {
-            [Puzzle2dMutation::CreateNode(create), Puzzle2dMutation::ConnectHandles(connect)] => Some((&create.node, connect.source.as_str())),
+            [Puzzle2dMutation::CreateNode(create), Puzzle2dMutation::ConnectHandles(connect)] => Some((&create.node, &connect.source)),
             _ => None,
         }
     }
@@ -1579,11 +1585,11 @@ impl Puzzle2dFillRevalidateJob {
             return (true, ToolRunTraceSubject::Placement2d { shape, position: [0.0, 0.0], rotation: 0.0 });
         };
         let subject = ToolRunTraceSubject::Placement2d { shape, position: [node.x as f32, node.y as f32], rotation: 0.0 };
-        let rectangle = node.shape.as_deref() == Some("rectangle");
+        let rectangle = node.shape.as_ref().is_some_and(|shape|shape.eq_str("rectangle"));
         let bounds = fill_node_bounds(node.x, node.y, node.scale, rectangle, if rectangle { node.width } else { node.radius }, node.height);
         let slack = self.placement_slack;
-        let conflict = self.head_ids.contains(&node.id) || !self.handles.contains(source) || self.head_bounds.iter().any(|head| fill_bounds_overlap_with(bounds, *head, slack));
-        let handles: Vec<String> = if conflict { Vec::new() } else { node.handles.iter().map(|handle| handle.id.clone()).collect() };
+        let conflict = self.head_ids.iter().any(|id| node.id.eq_str(id)) || !self.handles.iter().any(|id| source.eq_str(id)) || self.head_bounds.iter().any(|head| fill_bounds_overlap_with(bounds, *head, slack));
+        let handles: Vec<String> = if conflict { Vec::new() } else { node.handles.iter().map(|handle| handle.id.to_string_owner()).collect() };
         self.handles.extend(handles);
         (conflict, subject)
     }

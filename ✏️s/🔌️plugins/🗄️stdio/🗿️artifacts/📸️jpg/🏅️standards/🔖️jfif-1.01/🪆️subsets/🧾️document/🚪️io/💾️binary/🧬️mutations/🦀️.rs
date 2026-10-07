@@ -13,18 +13,17 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<JpgMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::patch_snapshot::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::set_snapshot::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::change_jfif_header::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::replace_quant_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::remove_quant_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::replace_huffman_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::remove_huffman_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::change_restart_interval::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::insert_other_segment::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::remove_other_segment::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::replace_pixels::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::schema::mutations::change_re_encode_quality::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::patch_snapshot::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::set_snapshot::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::change_jfif_header::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_quant_table::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::remove_quant_table::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_huffman_table::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::remove_huffman_table::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::change_restart_interval::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::insert_other_segment::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::remove_other_segment::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_pixels::CODEC,
 ];
 //#endregion Registry
 
@@ -47,13 +46,13 @@ impl protocol::OpBinary for JpgMutation {
 //#endregion Framing
 
 #[path = "📊️replace-quant/🦀️.rs"]
-pub mod replace_quant;
+pub mod replace_quant_table;
 
 #[path = "🪪️change-jfif/🦀️.rs"]
-pub mod change_jfif;
+pub mod change_jfif_header;
 
 #[path = "🧹️remove-quant/🦀️.rs"]
-pub mod remove_quant;
+pub mod remove_quant_table;
 
 #[path = "🩹️patch-snapshot/🦀️.rs"]
 pub mod patch_snapshot;
@@ -62,22 +61,20 @@ pub mod patch_snapshot;
 pub mod set_snapshot;
 
 #[path = "🌳️replace-huffman/🦀️.rs"]
-pub mod replace_huffman;
+pub mod replace_huffman_table;
 
 #[path = "🗑️remove-other/🦀️.rs"]
-pub mod remove_other;
+pub mod remove_other_segment;
 
 #[path = "📥️insert-other/🦀️.rs"]
-pub mod insert_other;
+pub mod insert_other_segment;
 
-#[path = "🎚️change-re/🦀️.rs"]
-pub mod change_re;
 
 #[path = "🔲️replace-pixels/🦀️.rs"]
 pub mod replace_pixels;
 
 #[path = "🔁️change-restart/🦀️.rs"]
-pub mod change_restart;
+pub mod change_restart_interval;
 
 #[path = "🪓️remove-huffman/🦀️.rs"]
-pub mod remove_huffman;
+pub mod remove_huffman_table;

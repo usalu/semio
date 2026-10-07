@@ -1,6 +1,6 @@
 /** 🪆️ Persisted child identity excludes process-local materializations. */
 import { hexLower, sha256 } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
-import { parseArtifactRef, type ArtifactRef } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { parseArtifactRef, type ArtifactRef } from "../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 export interface ArtifactChild { childId: string; target: ArtifactRef }
 
 /** 🪆️ Decodes only the two fields that cross a child-document boundary. */

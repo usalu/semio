@@ -1,0 +1,143 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts" native
+
+[DEBUG] isolated Nx verification test-owner-command
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[DEBUG] Actual native Print control process-controls
+note: generating format "latex"
+warning: open of input /dev/null failed
+caused by: access to the path `/dev/null` is forbidden
+note: Running TeX ...
+note: Running BibTeX on light.aux ...
+note: Rerunning TeX because bibtex was run ...
+note: Rerunning TeX because "light.aux" changed ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.log` (82.1025390625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.aux` (1.7607421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.probe.jsonl` (12.384765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.window-breaks` (377 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.blg` (217 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.run.xml` (2.5322265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.pdf` (40.8564453125 KiB)
+note: Not writing `light.out`: it would be empty.
+[TRACE] print built .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/light/🧪️probe-out/light.pdf
+note: Running TeX ...
+note: Running BibTeX on dark.aux ...
+note: Rerunning TeX because bibtex was run ...
+note: Rerunning TeX because "dark.aux" changed ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.pdf` (40.978515625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.window-breaks` (377 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.aux` (1.759765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.probe.jsonl` (12.384765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.log` (82.0771484375 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.run.xml` (2.5234375 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark-blx.bib` (340 B)
+note: Not writing `dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.blg` (215 B)
+[TRACE] print built .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-process/dark/🧪️probe-out/dark.pdf
+[DEBUG] Native process 26 actual bilingual/theme size/coords/fragments/order effects matched neutral schema, D3 and bounded PDF paint
+[DEBUG] Native Print process-controls PASS
+[DEBUG] Actual native Print control kind-paint
+note: Running TeX ...
+note: Running BibTeX on paint.aux ...
+note: Rerunning TeX because bibtex was run ...
+note: Rerunning TeX because "paint.aux" changed ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.run.xml` (2.5322265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.aux` (1.474609375 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.pdf` (17.1181640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.log` (82.5625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.blg` (217 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.window-breaks` (124 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.register-toc` (51 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.bbl` (512 B)
+note: Not writing `paint.out`: it would be empty.
+[TRACE] print built .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/en-light/out/paint.pdf
+[DEBUG] Kind paint en/light: 15 actual graphic/glyph/empty/outer-only/transparent/clip controls PASS
+note: Running TeX ...
+note: Running BibTeX on paint.aux ...
+note: Rerunning TeX because bibtex was run ...
+note: Rerunning TeX because "paint.aux" changed ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.run.xml` (2.5322265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.bbl` (512 B)
+note: Not writing `paint.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.aux` (1.474609375 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.window-breaks` (124 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.blg` (217 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.register-toc` (51 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.log` (82.5537109375 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.pdf` (17.166015625 KiB)
+[TRACE] print built .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.kind-paint-pC0JhQ/de-dark/out/paint.pdf
+[DEBUG] Kind paint de/dark: 15 actual graphic/glyph/empty/outer-only/transparent/clip controls PASS
+[DEBUG] Native Print kind-paint PASS
+[DEBUG] Actual native Print control gallery-carrier
+note: Running TeX ...
+warning: carrier.tex:57: Underfull \vbox (badness 10000) has occurred while \output is active
+note: Running BibTeX on carrier.aux ...
+note: Rerunning TeX because bibtex was run ...
+warning: carrier.tex:57: Underfull \vbox (badness 10000) has occurred while \output is active
+note: Rerunning TeX because "carrier.aux" changed ...
+warning: carrier.tex:57: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.run.xml` (2.5498046875 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.blg` (221 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.register-toc` (238 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.aux` (2.314453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.pdf` (20.123046875 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.window-breaks` (165 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.log` (83.0185546875 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier-blx.bib` (340 B)
+note: Not writing `carrier.out`: it would be empty.
+[TRACE] print built .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/en-light/out/carrier.pdf
+[DEBUG] Gallery carrier en/spatial-density-map: frame=[99.77003,326.54340646484377,568.5284300000001,693.253756538086] body=[94.29051002578736,523.66781171875,563.0489100257873,698.7332795898437] ink=[116.947845211792,298.0269052636719,568.5284349898816,693.2537577172852] textItems=0
+[DEBUG] Gallery carrier en/hexbin-map: frame=[99.77003,326.54340646484377,403.07430000000005,527.7996265380859] body=[94.29051002578736,523.66781171875,397.59478002578743,533.2791495898439] ink=[128.66758512573244,286.30716344238283,403.07430498988157,527.7996277172851] textItems=0
+[DEBUG] Gallery carrier en/choropleth-map: frame=[99.77002999389649,326.9170064648438,248.14883018341072,362.3451831420899] body=[94.29051002578736,523.66781171875,242.66948002578738,367.8248731494141] ink=[96.40758,319.31438764160157,248.14883018341072,365.7076064331055] textItems=0
+[DEBUG] Gallery carrier en/column-chart: frame=[77.09287,303.86624646484375,525.96138,747.3148651074218] body=[71.61335002578735,500.99065171875,520.4818600257875,752.7943881591798] ink=[95.22385,296.26362764160154,536.454929118164,745.4253881904297] textItems=15
+[print] Gallery carrier en/light: 4 actual frames, marked path/text extents, explicit-height control, 4 PDF.js pages measured
+note: Running TeX ...
+warning: carrier.tex:57: Underfull \vbox (badness 10000) has occurred while \output is active
+note: Running BibTeX on carrier.aux ...
+note: Rerunning TeX because bibtex was run ...
+warning: carrier.tex:57: Underfull \vbox (badness 10000) has occurred while \output is active
+note: Rerunning TeX because "carrier.aux" changed ...
+warning: carrier.tex:57: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.log` (83.009765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.run.xml` (2.5498046875 KiB)
+note: Not writing `carrier.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.register-toc` (238 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.pdf` (20.4853515625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.window-breaks` (165 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.aux` (2.314453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.blg` (221 B)
+[TRACE] print built .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/current-print-native-pipeline/.gallery-carrier-q19yjX/de-dark/out/carrier.pdf
+[DEBUG] Gallery carrier de/spatial-density-map: frame=[99.77003,326.54340646484377,572.72361,697.448936538086] body=[94.29051002578736,523.66781171875,567.2440900257874,702.9284595898438] ink=[116.947845211792,298.0269052636719,572.7236149898815,697.4489377172852] textItems=0
+[DEBUG] Gallery carrier de/hexbin-map: frame=[99.77003,326.54340646484377,407.26948000000004,531.994806538086] body=[94.29051002578736,523.66781171875,401.7899600257874,537.4743295898438] ink=[128.66758512573244,286.30716344238283,407.26948498988156,531.9948077172852] textItems=0
+[DEBUG] Gallery carrier de/choropleth-map: frame=[99.77002999389649,326.9170064648438,252.34401018341066,366.54036314208986] body=[94.29051002578736,523.66781171875,246.86466002578743,372.02005314941414] ink=[96.40758,319.31438764160157,252.34401018341066,369.90278643310546] textItems=0
+[DEBUG] Gallery carrier de/column-chart: frame=[77.09287,303.86624646484375,525.96138,747.3148651074218] body=[71.61335002578735,500.99065171875,520.4818600257875,752.7943881591798] ink=[95.22385,296.26362764160154,536.454929118164,745.4253881904297] textItems=15
+[print] Gallery carrier de/dark: 4 actual frames, marked path/text extents, explicit-height control, 4 PDF.js pages measured
+[DEBUG] Native Print gallery-carrier PASS
+[DEBUG] Actual native Print results {
+  [0mattempted[2m:[0m [0m[33m3[0m[0m[2m,[0m
+  [0mfailed[2m:[0m [0m[33m0[0m[0m[2m,[0m
+  [0mfailures[2m:[0m [][0m[2m,[0m
+}

@@ -39,7 +39,7 @@ use protocol::Mutation;
 /// calls `Self::parse_op(...)` via trait method syntax, which needs `OpText` in scope in
 /// production code too, not merely under `#[cfg(test)]` (same fix `stdio.semio.flow`'s own
 /// mutations facet needed).
-use protocol::{OpBinary, OpText};
+
 use semio_s_artifact_stdio_contract::deserialize_double_option;
 
 //#region 🔖️Mutation
@@ -379,3 +379,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/🔥️slides/🦀️.rs"]
 mod set_snapshot_slides_the_wall_and_attaches_a_fire_rating_pset;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

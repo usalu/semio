@@ -10,473 +10,46 @@ use protocol::{Mutation, OpBinary};
 //#region 🔖️OwnedSprCatalog
 const DRAWING_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
+#[derive(semio_framework_value::RetireOwned)]
 enum DrawingRetirementOwner {
     Snapshot(DrawingSnapshot),
     Mutation(DrawingMutation),
-    MutationFields(DrawingMutationFields),
     Layer(DrawingLayerNode),
-    LayerFields(DrawingLayerFields),
-    Base(DrawingLayerBase),
-    Attributes(DrawingAttributes),
     Fill(FillStyle),
     Stroke(StrokeStyle),
-    Asset(DrawingImageAsset),
-    AssetEntry { key: String, value: Option<DrawingImageAsset> },
-    String(String),
-    Strings(Vec<String>),
-    Segments(Vec<PathSegment>),
-    Stops(Vec<GradientStop>),
-    Points(Vec<[f64; 2]>),
-}
-
-enum DrawingMutationFields {
-    String(String),
-    Strings { first: String, second: Option<String> },
-    Fill { id: String, value: Option<FillStyle> },
-    Stroke { id: String, value: Option<StrokeStyle> },
-    Segments { id: String, value: Option<Vec<PathSegment>> },
-    Layer { parent: Option<String>, value: Option<Box<DrawingLayerNode>> },
-    Targets(Option<Vec<String>>),
-    PointTargets(Vec<crate::mutations::DrawingPathPointTarget>),
-}
-
-enum DrawingLayerFields {
-    Shape { base: Option<DrawingLayerBase>, shape_kind: String, points: Option<Vec<[f64; 2]>> },
-    Path { base: Option<DrawingLayerBase>, segments: Option<Vec<PathSegment>> },
-    Text { base: Option<DrawingLayerBase>, content: String },
-    Image { base: Option<DrawingLayerBase>, image_key: String },
-    Group { base: Option<DrawingLayerBase>, children: Option<Vec<DrawingLayerNode>> },
-    Boolean { base: Option<DrawingLayerBase>, operation: String, children: Option<Vec<String>> },
-    Trace { base: Option<DrawingLayerBase>, source_key: String },
+    String(semio_framework_value::paged::PagedUtf8<{usize::MAX}>),
+    Segments(semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>),
 }
 
 struct DrawingOwnedRetirement {
-    owner: std::mem::ManuallyDrop<Option<DrawingRetirementOwner>>,
-    active: std::mem::ManuallyDrop<Option<Box<DrawingOwnedRetirement>>>,
-    phase: u8,
+    owner: Box<dyn store::ErasedSnapshotRetirement>,
 }
 
 impl DrawingOwnedRetirement {
     fn new(owner: DrawingRetirementOwner) -> Self {
-        Self { owner: std::mem::ManuallyDrop::new(Some(owner)), active: std::mem::ManuallyDrop::new(None), phase: 0 }
-    }
-
-    fn spawn(active: &mut Option<Box<Self>>, owner: DrawingRetirementOwner) -> store::SnapshotRetirementStep {
-        *active = Some(Box::new(Self::new(owner)));
-        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
-    }
-
-    /// 🧵️ Releases one owned string within the grant. A string larger than one grant is released
-    /// in pages from its tail (`truncate` + `shrink_to_fit`, so the allocation really shrinks) —
-    /// `DrawingImageAsset.data` is a base64 PNG of tens of KiB while every hydration/retirement
-    /// cursor grants at most `OWNED_SCHEMA_DECODE_PAGE_BYTES` (4 KiB) per step; refusing it outright
-    /// pinned the cursor in `Pending { 0, 0 }` forever, so the demo example's `LoadDocument` never
-    /// settled (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-16).
-    fn release_string(value: &mut String, phase: &mut u8, next: u8, maximum_items: usize, maximum_bytes: usize) -> store::SnapshotRetirementStep {
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if value.len() > maximum_bytes {
-            let mut cut = value.len() - maximum_bytes;
-            while cut < value.len() && !value.is_char_boundary(cut) {
-                cut += 1;
-            }
-            let released_bytes = value.len() - cut;
-            if released_bytes == 0 {
-                return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            value.truncate(cut);
-            value.shrink_to_fit();
-            return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes };
-        }
-        let value = std::mem::take(value);
-        let released_bytes = value.len();
-        drop(value);
-        *phase = next;
-        store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes }
-    }
-
-    fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let Some(owner) = self.owner.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        match owner {
-            DrawingRetirementOwner::Snapshot(value) => match self.phase {
-                0 => {
-                    if let Some(value) = value.layers.pop() {
-                        return Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Layer(value)));
-                    }
-                    self.phase = 1;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                }
-                1 => {
-                    if let Some((key, value)) = value.assets.pop_last() {
-                        return Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::AssetEntry { key, value: Some(value) }));
-                    }
-                    self.phase = 2;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                }
-                2 => Ok(Self::release_string(&mut value.schema, &mut self.phase, 3, maximum_items, maximum_bytes)),
-                3 => Ok(Self::release_string(&mut value.id, &mut self.phase, 4, maximum_items, maximum_bytes)),
-                4 if value.title.is_some() => {
-                    let title = value.title.take().expect("Drawing title remains retained");
-                    self.phase = 5;
-                    Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::String(title)))
-                }
-                _ => {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            },
-            DrawingRetirementOwner::Layer(_) => {
-                let layer = match self.owner.take() {
-                    Some(DrawingRetirementOwner::Layer(value)) => value,
-                    _ => unreachable!("Drawing layer owner variant remains exact"),
-                };
-                let fields = match layer {
-                    DrawingLayerNode::Shape(value) => DrawingLayerFields::Shape { base: Some(value.base), shape_kind: value.shape_kind, points: value.polygon.map(|polygon| polygon.points) },
-                    DrawingLayerNode::Path(value) => DrawingLayerFields::Path { base: Some(value.base), segments: Some(value.segments) },
-                    DrawingLayerNode::Text(value) => DrawingLayerFields::Text { base: Some(value.base), content: value.content },
-                    DrawingLayerNode::Image(value) => DrawingLayerFields::Image { base: Some(value.base), image_key: value.image_key },
-                    DrawingLayerNode::Group(value) => DrawingLayerFields::Group { base: Some(value.base), children: Some(value.children) },
-                    DrawingLayerNode::Boolean(value) => DrawingLayerFields::Boolean { base: Some(value.base), operation: value.operation, children: Some(value.children) },
-                    DrawingLayerNode::Trace(value) => DrawingLayerFields::Trace { base: Some(value.base), source_key: value.source_key },
-                };
-                *self.owner = Some(DrawingRetirementOwner::LayerFields(fields));
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-            }
-            DrawingRetirementOwner::LayerFields(fields) => {
-                if self.phase == 0 {
-                    let base = match fields {
-                        DrawingLayerFields::Shape { base, .. }
-                        | DrawingLayerFields::Path { base, .. }
-                        | DrawingLayerFields::Text { base, .. }
-                        | DrawingLayerFields::Image { base, .. }
-                        | DrawingLayerFields::Group { base, .. }
-                        | DrawingLayerFields::Boolean { base, .. }
-                        | DrawingLayerFields::Trace { base, .. } => base.take(),
-                    }
-                    .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing layer base owner missing"))?;
-                    self.phase = 1;
-                    return Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Base(base)));
-                }
-                let nested = match fields {
-                    DrawingLayerFields::Shape { shape_kind, points, .. } if self.phase == 1 => Some(DrawingRetirementOwner::String(std::mem::take(shape_kind))),
-                    DrawingLayerFields::Shape { points, .. } => points.take().map(DrawingRetirementOwner::Points),
-                    DrawingLayerFields::Path { segments, .. } => segments.take().map(DrawingRetirementOwner::Segments),
-                    DrawingLayerFields::Text { content, .. } => (!content.is_empty()).then(|| DrawingRetirementOwner::String(std::mem::take(content))),
-                    DrawingLayerFields::Image { image_key, .. } => (!image_key.is_empty()).then(|| DrawingRetirementOwner::String(std::mem::take(image_key))),
-                    DrawingLayerFields::Group { children, .. } => children.as_mut().and_then(Vec::pop).map(DrawingRetirementOwner::Layer),
-                    DrawingLayerFields::Boolean { operation, .. } if self.phase == 1 => Some(DrawingRetirementOwner::String(std::mem::take(operation))),
-                    DrawingLayerFields::Boolean { children, .. } => children.take().map(DrawingRetirementOwner::Strings),
-                    DrawingLayerFields::Trace { source_key, .. } => (!source_key.is_empty()).then(|| DrawingRetirementOwner::String(std::mem::take(source_key))),
-                };
-                if let Some(nested) = nested {
-                    self.phase = self.phase.saturating_add(1);
-                    return Ok(Self::spawn(&mut self.active, nested));
-                }
-                drop(self.owner.take());
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            DrawingRetirementOwner::Base(value) => match self.phase {
-                0 => Ok(Self::release_string(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => Ok(Self::release_string(&mut value.name, &mut self.phase, 2, maximum_items, maximum_bytes)),
-                2 => Ok(Self::release_string(&mut value.blend_mode, &mut self.phase, 3, maximum_items, maximum_bytes)),
-                3 => {
-                    let attributes = std::mem::take(&mut value.attributes);
-                    self.phase = 4;
-                    Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Attributes(attributes)))
-                }
-                _ => {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            },
-            DrawingRetirementOwner::Attributes(value) => {
-                if let Some(fill) = value.fill.take() {
-                    return Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Fill(fill)));
-                }
-                if let Some(stroke) = value.stroke.take() {
-                    return Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Stroke(stroke)));
-                }
-                drop(self.owner.take());
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            DrawingRetirementOwner::Fill(value) => match value {
-                FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. } if !stops.is_empty() => Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Stops(std::mem::take(stops)))),
-                _ => {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            },
-            DrawingRetirementOwner::Stroke(value) => {
-                if let Some(dash) = value.dash.as_mut() {
-                    if dash.pop().is_some() {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                    }
-                }
-                value.dash = None;
-                drop(self.owner.take());
-                Ok(store::SnapshotRetirementStep::Complete)
-            },
-            DrawingRetirementOwner::Asset(value) => match self.phase {
-                0 => Ok(Self::release_string(&mut value.mime, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => Ok(Self::release_string(&mut value.data, &mut self.phase, 2, maximum_items, maximum_bytes)),
-                _ => {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            },
-            DrawingRetirementOwner::AssetEntry { key, value } => match self.phase {
-                0 => Ok(Self::release_string(key, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => {
-                    self.phase = 2;
-                    Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Asset(value.take().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing asset owner missing"))?)))
-                }
-                _ => {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            },
-            DrawingRetirementOwner::String(value) => {
-                if self.phase == 0 {
-                    return Ok(Self::release_string(value, &mut self.phase, 1, maximum_items, maximum_bytes));
-                }
-                drop(self.owner.take());
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            DrawingRetirementOwner::Strings(values) => {
-                if let Some(value) = values.pop() {
-                    return Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::String(value)));
-                }
-                drop(self.owner.take());
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            DrawingRetirementOwner::Segments(values) => {
-                if values.pop().is_some() {
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                } else {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            }
-            DrawingRetirementOwner::Stops(values) => {
-                if values.pop().is_some() {
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                } else {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            }
-            DrawingRetirementOwner::Points(values) => {
-                if values.pop().is_some() {
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                } else {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-            }
-            DrawingRetirementOwner::Mutation(_) => {
-                use DrawingMutation::*;
-                let mutation = match self.owner.take() {
-                    Some(DrawingRetirementOwner::Mutation(value)) => value,
-                    _ => unreachable!("Drawing mutation owner variant remains exact"),
-                };
-                let fields = match mutation {
-                    SetLayerVisible(payload) => DrawingMutationFields::String(payload.layer_id),
-                    SetLayerLocked(payload) => DrawingMutationFields::String(payload.layer_id),
-                    SetLayerOpacity(payload) => DrawingMutationFields::String(payload.layer_id),
-                    SetLayerFillRule(payload) => DrawingMutationFields::String(payload.layer_id),
-                    SetGroupIsolation(payload) => DrawingMutationFields::String(payload.layer_id),
-                    SetLayerBlendMode(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.blend_mode) },
-                    RenameLayer(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_name) },
-                    UpdateText(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.content) },
-                    UpdateLayerTransform(payload) => DrawingMutationFields::String(payload.layer_id),
-                    UpdatePathGeometry(payload) => DrawingMutationFields::Segments { id: payload.layer_id, value: Some(payload.segments) },
-                    ReplaceLayerFill(payload) => DrawingMutationFields::Fill { id: payload.layer_id, value: payload.fill },
-                    ReplaceLayerStroke(payload) => DrawingMutationFields::Stroke { id: payload.layer_id, value: payload.stroke },
-                    SetLayerBooleanOperation(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.boolean_operation) },
-                    UpdateLayerTraceParams(payload) => DrawingMutationFields::String(payload.layer_id),
-                    CreateLayer(payload) => DrawingMutationFields::Layer { parent: payload.parent_id, value: Some(payload.layer) },
-                    DuplicateLayer(payload) => DrawingMutationFields::String(payload.layer_id),
-                    DeleteLayer(payload) => DrawingMutationFields::String(payload.layer_id),
-                    ReorderLayer(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: payload.parent_id },
-                    DragLayers(payload) => DrawingMutationFields::Targets(Some(payload.targets)),
-                    RotateLayers(payload) => DrawingMutationFields::Targets(Some(payload.targets)),
-                    ScaleLayers(payload) => DrawingMutationFields::Targets(Some(payload.targets)),
-                    DragPathPoints(payload) => DrawingMutationFields::PointTargets(payload.targets),
-                };
-                *self.owner = Some(DrawingRetirementOwner::MutationFields(fields));
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-            }
-            DrawingRetirementOwner::MutationFields(fields) => match fields {
-                DrawingMutationFields::String(value) => {
-                    if self.phase == 0 {
-                        return Ok(Self::release_string(value, &mut self.phase, 1, maximum_items, maximum_bytes));
-                    }
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-                DrawingMutationFields::Strings { first, second } => match self.phase {
-                    0 => Ok(Self::release_string(first, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                    1 if second.is_some() => {
-                        self.phase = 2;
-                        Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::String(second.take().expect("Drawing second string remains exact"))))
-                    }
-                    _ => {
-                        drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
-                    }
-                },
-                DrawingMutationFields::Fill { id, value } => match self.phase {
-                    0 => Ok(Self::release_string(id, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                    1 if value.is_some() => {
-                        self.phase = 2;
-                        Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Fill(value.take().expect("Drawing fill remains exact"))))
-                    }
-                    _ => {
-                        drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
-                    }
-                },
-                DrawingMutationFields::Segments { id, value } => match self.phase {
-                    0 => Ok(Self::release_string(id, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                    1 if value.is_some() => {
-                        self.phase = 2;
-                        Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Segments(value.take().expect("Path geometry owner remains exact"))))
-                    }
-                    _ => { drop(self.owner.take()); Ok(store::SnapshotRetirementStep::Complete) }
-                },
-                DrawingMutationFields::Stroke { id, value } => match self.phase {
-                    0 => Ok(Self::release_string(id, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                    1 if value.is_some() => {
-                        self.phase = 2;
-                        Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Stroke(value.take().expect("Drawing stroke remains exact"))))
-                    }
-                    _ => {
-                        drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
-                    }
-                },
-                DrawingMutationFields::Layer { parent, value } => match self.phase {
-                    0 if parent.is_some() => {
-                        self.phase = 1;
-                        Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::String(parent.take().expect("Drawing parent remains exact"))))
-                    }
-                    0 => {
-                        self.phase = 1;
-                        Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                    }
-                    1 if value.is_some() => {
-                        self.phase = 2;
-                        Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Layer(*value.take().expect("Drawing layer remains exact"))))
-                    }
-                    _ => {
-                        drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
-                    }
-                },
-                DrawingMutationFields::Targets(values) => match values.take() {
-                    Some(values) => Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Strings(values))),
-                    None => {
-                        drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
-                    }
-                },
-                DrawingMutationFields::PointTargets(values) => match values.pop() {
-                    Some(target) => Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::String(target.layer_id))),
-                    None => {
-                        drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
-                    }
-                },
-            },
-        }
+        Self { owner: semio_framework_value::retirement::owned_retirement(owner) }
     }
 }
 
 impl store::ErasedSnapshotRetirement for DrawingOwnedRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if let Some(active) = self.active.as_mut() {
-            return match active.close_step(maximum_items.min(1), maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
-                    drop(self.active.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing nested retirement reported false terminal")),
-                step => Ok(step),
-            };
-        }
-        self.advance(maximum_items.min(1), maximum_bytes)
+        self.owner.close_step(maximum_items, maximum_bytes)
     }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.owner.is_none() && self.active.is_none()
-    }
-}
-
-impl Drop for DrawingOwnedRetirement {
-    fn drop(&mut self) {
-        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self) || std::thread::panicking(), "Drawing owner reached Drop before cursor retirement reached terminal-empty");
-    }
+    fn terminal_is_empty(&self) -> bool { self.owner.terminal_is_empty() }
+    fn next_close_byte_demand(&self) -> usize { self.owner.next_close_byte_demand() }
 }
 
 pub struct DrawingSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<DrawingSnapshot> for DrawingSnapshotRetirementFactory {
     fn retire_owned(&self, value: DrawingSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::Snapshot(value)))
-    }
-}
-
-struct DrawingSnapshotRootRetirement {
-    owner: std::mem::ManuallyDrop<Option<std::sync::Arc<DrawingSnapshot>>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-}
-
-impl store::ErasedSnapshotRetirement for DrawingSnapshotRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.retirement.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing snapshot root retirement reported false terminal")),
-                step => Ok(step),
-            };
-        }
-        let Some(owner) = self.owner.take() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        match std::sync::Arc::try_unwrap(owner) {
-            Ok(value) => {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&DrawingSnapshotRetirementFactory, value));
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-            }
-            Err(owner) => {
-                *self.owner = Some(owner);
-                Ok(store::SnapshotRetirementStep::Blocked)
-            }
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.owner.is_none() && self.retirement.is_none()
-    }
-}
-
-impl Drop for DrawingSnapshotRootRetirement {
-    fn drop(&mut self) {
-        assert!((self.owner.is_none() && self.retirement.is_none()) || std::thread::panicking(), "Drawing snapshot root reached Drop before exact Arc handback");
+        semio_framework_value::retirement::owned_retirement(value)
     }
 }
 
 impl store::SnapshotRetirementFactory<DrawingSnapshot> for DrawingSnapshotRetirementFactory {
     fn retire(&self, snapshot: std::sync::Arc<DrawingSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(DrawingSnapshotRootRetirement { owner: std::mem::ManuallyDrop::new(Some(snapshot)), retirement: std::mem::ManuallyDrop::new(None) })
+        semio_framework_value::retirement::shared_lease_retirement(snapshot)
     }
 }
 
@@ -484,7 +57,7 @@ pub struct DrawingMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<DrawingMutation> for DrawingMutationRetirementFactory {
     fn retire_owned(&self, value: DrawingMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::Mutation(value)))
+        semio_framework_value::retirement::owned_retirement(value)
     }
 }
 
@@ -5350,6 +4923,7 @@ pub fn drawing_document_store_owners() -> store::DocumentStoreOwners<DrawingSnap
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum DrawingStoreInitializationPhase {
     InitializeArena,
+    BindGenesis,
     ValidateEnvelope,
     ValidateEditId { edit: usize },
     ValidateEditMeta { edit: usize, meta: usize },
@@ -5376,6 +4950,7 @@ enum DrawingStoreInitializationPhase {
 }
 
 struct DrawingStoreInitializationAuthority {
+    actor: protocol::ActorId,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     arena_bootstrap_job: DrawingMutationArenaBootstrapJob,
@@ -5387,9 +4962,8 @@ struct DrawingStoreInitializationAuthority {
     owner_catalog: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationOwnerCatalog>>,
     mutation_candidate: std::mem::ManuallyDrop<Option<DrawingMutationCandidateAuthority>>,
     prepared_history_id: std::mem::ManuallyDrop<Option<String>>,
-    prepared_actor: std::mem::ManuallyDrop<Option<String>>,
     edit_index: store::ArtifactStoreInitializationEditIndex,
-    /// 🧬️ The paged clone of `envelope.vcs.initial_snapshot` that becomes the runtime's live fold —
+    /// 🧬️ The paged clone of `envelope.vcs.genesis.snapshot()` that becomes the runtime's live fold —
     /// the envelope keeps its own initial snapshot, which `print_document_pack` / the cold from-scratch
     /// fold read back (moving it out left every loaded document's `.pack` empty — ticket
     /// 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17).
@@ -5397,6 +4971,7 @@ struct DrawingStoreInitializationAuthority {
     initial_layer_clone: std::mem::ManuallyDrop<Option<Box<DrawingLayerCloneAuthority>>>,
     initial_clone_digest: Option<store::ArtifactStoreInitializationDigest>,
     phase: DrawingStoreInitializationPhase,
+    resume_phase: Option<DrawingStoreInitializationPhase>,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
     terminal_handoff: bool,
@@ -5408,6 +4983,7 @@ impl DrawingStoreInitializationAuthority {
         owner_catalog: Result<store::ArtifactStoreInitializationOwnerCatalog, &'static str>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Self {
         let bootstrap_job = DrawingMutationArenaBootstrapJob::new(operation, generation);
         let (owner_catalog, arena_bootstrap_job, phase, fault) = match (owner_catalog, bootstrap_job) {
@@ -5419,6 +4995,7 @@ impl DrawingStoreInitializationAuthority {
             (_, Err(error)) => (None, DrawingMutationArenaBootstrapJob::inactive(operation, generation), DrawingStoreInitializationPhase::RetireFault, Some(error.as_bytes().to_vec())),
         };
         Self {
+            actor,
             operation,
             generation,
             arena_bootstrap_job,
@@ -5430,7 +5007,6 @@ impl DrawingStoreInitializationAuthority {
             owner_catalog: std::mem::ManuallyDrop::new(owner_catalog),
             mutation_candidate: std::mem::ManuallyDrop::new(None),
             prepared_history_id: std::mem::ManuallyDrop::new(None),
-            prepared_actor: std::mem::ManuallyDrop::new(None),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             initial_clone: std::mem::ManuallyDrop::new(None),
             initial_layer_clone: std::mem::ManuallyDrop::new(None),
@@ -5478,10 +5054,6 @@ impl DrawingStoreInitializationAuthority {
             return Ok(false);
         }
         if let Some(value) = self.prepared_history_id.take() {
-            *self.active = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::String(value))));
-            return Ok(false);
-        }
-        if let Some(value) = self.prepared_actor.take() {
             *self.active = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::String(value))));
             return Ok(false);
         }
@@ -5553,7 +5125,6 @@ impl DrawingStoreInitializationAuthority {
             && self.owner_catalog.is_none()
             && self.mutation_candidate.is_none()
             && self.prepared_history_id.is_none()
-            && self.prepared_actor.is_none()
             && self.initial_clone.is_none()
             && self.initial_layer_clone.is_none()
     }
@@ -5574,6 +5145,15 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
         } else if self.active.is_some() {
             return semio_framework_job::StepOutcome::Yield;
         }
+        if !matches!(self.phase, DrawingStoreInitializationPhase::RetireCancelled | DrawingStoreInitializationPhase::RetireFault | DrawingStoreInitializationPhase::Cancelled | DrawingStoreInitializationPhase::Fault | DrawingStoreInitializationPhase::Complete) {
+            if let Some(runtime) = self.runtime.as_mut() {
+                match runtime.settle_current_retirement_step(1, DRAWING_OWNED_FIELD_BYTES) {
+                    Ok(store::SnapshotRetirementStep::Complete) => {}
+                    Ok(_) => { cx.consume_fuel(1); return semio_framework_job::StepOutcome::Yield; }
+                    Err(error) => { self.fault = Some(error.into_message().into_bytes()); self.phase = DrawingStoreInitializationPhase::RetireFault; }
+                }
+            }
+        }
         match self.phase {
             DrawingStoreInitializationPhase::InitializeArena => {
                 match self.arena_bootstrap_job.step(cx) {
@@ -5582,6 +5162,14 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     DrawingMutationArenaBootstrapStep::Cancelled => self.phase = DrawingStoreInitializationPhase::RetireCancelled,
                     DrawingMutationArenaBootstrapStep::Fault(error) => self.fail(error.as_bytes()),
                 }
+                semio_framework_job::StepOutcome::Yield
+            }
+            DrawingStoreInitializationPhase::BindGenesis => {
+                let envelope = self.envelope.as_ref().expect("retained initializer genesis");
+                let owner_catalog = self.owner_catalog.take().expect("pre-admitted Drawing owner catalog");
+                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone(), owner_catalog));
+                self.phase = DrawingStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
             DrawingStoreInitializationPhase::ValidateEnvelope => {
@@ -5629,7 +5217,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("validated Drawing envelope remains retained");
                 match self.edit_index.admit(&envelope.vcs.edits, index, usize::MAX) {
-                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = DrawingStoreInitializationPhase::CloneInitialHeader,
+                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = DrawingStoreInitializationPhase::BindGenesis,
                     store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = DrawingStoreInitializationPhase::ValidateEdit { index: index + 1 },
                     store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"drawing-store.initializer-duplicate-edit"),
                 }
@@ -5637,7 +5225,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 semio_framework_job::StepOutcome::Yield
             }
             DrawingStoreInitializationPhase::CloneInitialHeader => {
-                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.initial_snapshot;
+                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.genesis.snapshot();
                 let header = (|| -> Result<DrawingSnapshot, &'static str> {
                     let mut layers = Vec::new();
                     layers.try_reserve_exact(source.layers.len().max(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY)).map_err(|_| "drawing-store.initializer-layer-admission")?;
@@ -5662,7 +5250,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 semio_framework_job::StepOutcome::Yield
             }
             DrawingStoreInitializationPhase::CloneInitialLayer { index } => {
-                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.initial_snapshot;
+                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.genesis.snapshot();
                 let Some(layer) = source.layers.get(index) else {
                     self.phase = DrawingStoreInitializationPhase::CloneInitialAsset { index: 0, cursor: 0 };
                     cx.consume_fuel(1);
@@ -5690,7 +5278,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::CloneInitialAsset { index, cursor } => {
                 // 🖼️ One asset entry per index; its base64 `data` (tens of KiB for a PNG) is copied one
                 // `DRAWING_OWNED_FIELD_BYTES` page per step so no step exceeds the owned-field grant.
-                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.initial_snapshot;
+                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.genesis.snapshot();
                 let Some((key, asset)) = source.assets.iter().nth(index) else {
                     self.phase = DrawingStoreInitializationPhase::MoveInitialOwner;
                     cx.consume_fuel(1);
@@ -5736,10 +5324,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained during initial owner move");
                 self.initial_clone_digest = None;
                 let initial = self.initial_clone.take().expect("Drawing initial clone remains retained until the runtime adopts it");
-                let initial_digest = store::artifact_initial_digest(&initial);
-                let owner_catalog = self.owner_catalog.take().expect("Drawing owner catalog was pre-admitted before initialization");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, initial, initial_digest, owner_catalog));
-                self.phase = DrawingStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(DrawingSnapshotRetirementFactory)) {
+                    Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
+                    Err(initial) => {
+                        *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&DrawingSnapshotRetirementFactory, initial));
+                        self.fail(b"initializer-owned-workspace-adoption");
+                    }
+                }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
@@ -5814,6 +5405,18 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 semio_framework_job::StepOutcome::Yield
             }
             DrawingStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
+                let needs_workspace = {
+                    let envelope = self.envelope.as_ref().expect("retained initializer envelope");
+                    let runtime = self.runtime.as_ref().expect("retained initializer runtime");
+                    envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
+                };
+                if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
+                    self.resume_phase = Some(self.phase);
+                    
+                    self.phase = DrawingStoreInitializationPhase::CloneInitialHeader;
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
                 if self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).is_none_or(|entry| mutation >= entry.forwards.len()) {
                     self.phase = DrawingStoreInitializationPhase::PrepareApplied { position, edit, field: 0 };
                     return semio_framework_job::StepOutcome::Yield;
@@ -5863,17 +5466,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 match field {
                     0 => {
                         *self.prepared_history_id = Some(clone_drawing_string(&entry.id).expect("validated Drawing applied id remains admitted"));
-                        self.phase = DrawingStoreInitializationPhase::PrepareApplied { position, edit, field: 1 };
-                        cx.consume_fuel(entry.id.len().max(1) as u64);
-                    }
-                    1 => {
-                        if let Some(actor) = entry.actor.as_deref() {
-                            *self.prepared_actor = Some(clone_drawing_string(actor).expect("validated Drawing actor remains admitted"));
-                            cx.consume_fuel(actor.len().max(1) as u64);
-                        } else {
-                            cx.consume_fuel(1);
-                        }
                         self.phase = DrawingStoreInitializationPhase::CommitApplied { position, edit };
+                        cx.consume_fuel(entry.id.len().max(1) as u64);
                     }
                     _ => self.fail(b"drawing-store.initializer-applied-preparation"),
                 }
@@ -5881,14 +5475,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             }
             DrawingStoreInitializationPhase::CommitApplied { position, edit } => {
                 let id = self.prepared_history_id.take().expect("Drawing applied id was retained in its own preparation grant");
-                let actor = self.prepared_actor.take();
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing applied edit remains retained");
                 let runtime = self.runtime.as_mut().expect("Drawing runtime remains retained");
-                if let Err(error) = runtime.push_applied_admitted(id, entry) {
+                if let Err(error) = runtime.push_applied_admitted(id, entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
                     self.fault = Some(error.into_bytes());
                     self.phase = DrawingStoreInitializationPhase::RetireFault;
                 } else {
-                    runtime.set_local_actor_id(actor);
+
                     self.phase = DrawingStoreInitializationPhase::FindApplied { position: position + 1 };
                 }
                 cx.consume_fuel(1);
@@ -5924,7 +5517,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::CommitRedo { position, edit } => {
                 let id = self.prepared_history_id.take().expect("Drawing redo id was retained in its own preparation grant");
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing redo edit remains retained");
-                if let Err(error) = self.runtime.as_mut().expect("Drawing runtime remains retained").push_redo_admitted(id, entry) {
+                if let Err(error) = self.runtime.as_mut().expect("Drawing runtime remains retained").push_redo_admitted(id, entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
                     self.fault = Some(error.into_bytes());
                     self.phase = DrawingStoreInitializationPhase::RetireFault;
                 } else {
@@ -6032,9 +5625,10 @@ pub fn drawing_document_store_initialization_job(
     envelope: store::ArtifactEnvelope<DrawingSnapshot, DrawingMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
+    actor: protocol::ActorId,
 ) -> semio_framework_plugin::ArtifactStoreInitializationJob<DrawingSnapshot, DrawingMutation> {
     let owner_catalog = store::ArtifactStoreInitializationOwnerCatalog::try_new();
-    semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(DrawingStoreInitializationAuthority::new(envelope, owner_catalog, operation, generation)))
+    semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(DrawingStoreInitializationAuthority::new(envelope, owner_catalog, operation, generation, actor)))
 }
 //#endregion 🔖️RetainedStoreInitialization
 

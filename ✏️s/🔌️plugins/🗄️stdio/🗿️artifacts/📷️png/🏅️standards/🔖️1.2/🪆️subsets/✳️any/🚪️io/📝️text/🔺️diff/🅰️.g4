@@ -1,22 +1,30 @@
-// 🅰️ `PngDiff`'s wire text IS its JSON serialization (serde `camelCase`, sparse — see
-// 🦀️.rs). This grammar names the real top-level fields rather than a placeholder;
-// it does not restate RFC 8259's own JSON grammar in full.
-grammar Stdio_png_diff;
-
-diff   : '{' member (',' member)* '}' | '{' '}' ;
-member : WIDTH ':' INT | HEIGHT ':' INT | BIT_DEPTH ':' INT | COLOR_TYPE ':' STRING
-       | INTERLACE ':' BOOL | PLTE ':' plteDiff | TRNS ':' value | GAMA ':' value
-       | CHRM ':' value | SRGB ':' value | PHYS ':' value | TIME ':' value | BKGD ':' value
-       | TEXT_CHUNKS ':' triple | PIXELS ':' '[' INT* ']' | CHUNK_ORDER ':' triple
-       | UNKNOWN_CHUNKS ':' triple ;
-plteDiff : '{' '}' | 'null' | triple ;
-triple   : '{' '}' | '{' 'removed' ':' '[' INT* ']' (',' 'modified' ':' '[' value* ']')? (',' 'added' ':' '[' value* ']')? '}' ;
-value    : '{' member (',' member)* '}' | STRING | INT | BOOL | 'null' ;
-
-WIDTH: '"width"'; HEIGHT: '"height"'; BIT_DEPTH: '"bitDepth"'; COLOR_TYPE: '"colorType"';
-INTERLACE: '"interlace"'; PLTE: '"plte"'; TRNS: '"trns"'; GAMA: '"gama"'; CHRM: '"chrm"';
-SRGB: '"srgb"'; PHYS: '"phys"'; TIME: '"time"'; BKGD: '"bkgd"'; TEXT_CHUNKS: '"textChunks"';
-PIXELS: '"pixels"'; CHUNK_ORDER: '"chunkOrder"'; UNKNOWN_CHUNKS: '"unknownChunks"';
-BOOL: 'true' | 'false';
-INT: [0-9]+;
-STRING: '"' (~["\\] | '\\' .)* '"';
+grammar PngDiff;
+diff: image? EOF;
+image: 'image' '{' image_field* '}';
+image_field: integer_field | boolean_field | color_field | samples_field | palette_field | gamma_field | chromaticities_field | srgb_field | physical_field | timestamp_field | text_field | ancillary_field | transparency_block | background_block;
+integer_field: ('width' | 'height' | 'bit-depth') '=' INT;
+boolean_field: 'interlace' '=' boolean;
+color_field: 'color-type' '=' ('grayscale' | 'rgb' | 'palette' | 'grayscale-alpha' | 'rgba');
+samples_field: 'samples' '=' '[' INT* ']';
+palette_field: 'palette' '=' '[' rgb_record* ']';
+rgb_record: '{' 'r' '=' INT 'g' '=' INT 'b' '=' INT '}';
+gamma_field: 'gamma' '=' INT;
+chromaticities_field: 'chromaticities' '=' 'white-x' '=' INT 'white-y' '=' INT 'red-x' '=' INT 'red-y' '=' INT 'green-x' '=' INT 'green-y' '=' INT 'blue-x' '=' INT 'blue-y' '=' INT;
+srgb_field: 'srgb' '=' ('perceptual' | 'relative-colorimetric' | 'saturation' | 'absolute-colorimetric');
+physical_field: 'physical-dims' '=' 'ppu-x' '=' INT 'ppu-y' '=' INT 'unit-is-meter' '=' boolean;
+timestamp_field: 'timestamp' '=' 'year' '=' INT 'month' '=' INT 'day' '=' INT 'hour' '=' INT 'minute' '=' INT 'second' '=' INT;
+text_field: 'text-chunks' '=' '[' text_record* ']';
+text_record: '{' 'keyword' '=' text 'value' '=' text 'compressed' '=' boolean 'kind' '=' ('text' | 'z-text' | 'i-text') 'language-tag' '=' text 'translated-keyword' '=' text '}';
+ancillary_field: 'ancillary-chunks' '=' '[' ancillary_record* ']';
+ancillary_record: '{' 'kind' '=' INT ',' INT ',' INT ',' INT 'after-raster' '=' boolean 'data' '=' '[' INT* ']' '}';
+transparency_block: 'transparency' '{' transparency? '}';
+transparency: 'indexed' 'alpha' '=' '[' INT* ']' | 'grayscale' 'gray' '=' INT | 'rgb' 'r' '=' INT 'g' '=' INT 'b' '=' INT;
+background_block: 'background' '{' background? '}';
+background: 'indexed' 'index' '=' INT | 'grayscale' 'gray' '=' INT | 'rgb' 'r' '=' INT 'g' '=' INT 'b' '=' INT;
+boolean: 'true' | 'false';
+text: STRING | IDENT | INT | FLOAT;
+STRING: '"' ('\\' . | ~["\\])* '"';
+INT: '-'? [0-9]+;
+FLOAT: '-'? [0-9]+ '.' [0-9]+;
+IDENT: [a-zA-Z_] [a-zA-Z0-9_.-]*;
+WS: [ \t\r\n]+ -> skip;

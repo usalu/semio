@@ -111,9 +111,9 @@ fn optional_number(row: &SqliteRow, index: usize) -> Result<Option<f64>, ValueEr
     if ieee754_is_null(row, index, NUMBERS)? { Ok(None) } else { read_binary64(row, index, NUMBERS).map(Some) }
 }
 fn child<S: Send + 'static>(row: &SqliteRow, start: usize, subset: &str, control: &mut NativeDecodeControl<'_>) -> Result<store::ArtifactChild<S>, ValueError> {
-    let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef {
+    let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef {
         artifact_id: String::new(),
-        dialect: store::io_schema::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() },
+        dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() },
     }), close::<store::ArtifactChild<S>>);
     value.as_mut().child_id = control.copy_text(row.text(start)?)?;
     value.as_mut().target.artifact_id = control.copy_text(row.text(start + 1)?)?;

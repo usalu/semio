@@ -1,6 +1,6 @@
 //! 📐️ Direct binary codec for `set-trim-box`.
 
-use super::SetTrimBox;
+use crate::standards::v1_7::subsets::vt::schema::mutations::SetTrimBox;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 4;

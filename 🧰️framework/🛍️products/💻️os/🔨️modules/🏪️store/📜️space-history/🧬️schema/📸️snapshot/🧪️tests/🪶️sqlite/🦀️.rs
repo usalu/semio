@@ -1,6 +1,8 @@
 //! 📣️ Explicit owner registration separates generic history construction from registry I/O.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_framework_space_history_explicit_owner_registration_after_create_reload_and_retained() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     const CASE: &str = "SEMIO_SQLITE_HISTORY_REGISTRATION_CASE";
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/📣️registration/🔣️.json")).unwrap();
     let Ok(case) = std::env::var(CASE) else {
@@ -34,10 +36,12 @@ async fn sqlite_snapshot_framework_space_history_explicit_owner_registration_aft
         let saved = store::print_document_pack(&envelope).await.unwrap();
         envelope.retire_unadopted();
         let history = store::os_spr::decode_history(&saved.spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
-        let mut open = store::RetainedPersistedDocumentHydration::<SpaceHistorySnapshot, SpaceHistoryMutation>::from_initial(
+        let mut open = store::RetainedPersistedDocumentHydration::<SpaceHistorySnapshot, SpaceHistoryMutation>::from_decoded_pack(
             source.clone(),
+            saved.pack.clone(),
+            *semio_framework_hash::hash(&saved.pack).as_bytes(),
             history,
-            store::os_io::ArtifactRef { artifact_id: "sqlite-history-registration".into(), dialect: dialect() },
+            semio_framework_artifact_reference::ArtifactRef { artifact_id: "sqlite-history-registration".into(), dialect: dialect() },
             None,
             S_SPACE_HISTORY_SCHEMA.into(),
             store::test_support::plain_document_store_owners(),
@@ -45,6 +49,7 @@ async fn sqlite_snapshot_framework_space_history_explicit_owner_registration_aft
             semio_framework_job::Generation(1),
             u64::MAX,
             store::PersistedDocumentHydrationTarget::Store { generation: 0 },
+            store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into()),
         );
         let cancellation = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
@@ -76,7 +81,7 @@ async fn sqlite_snapshot_framework_space_history_explicit_owner_registration_aft
         } else {
             envelope
         };
-        let mut live = store::ArtifactStore::new(envelope).await.unwrap();
+        let mut live = store::ArtifactStore::new(envelope, store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into())).await.unwrap();
         live.install_document_store_owners_exact(store::test_support::plain_document_store_owners());
         live
     };
@@ -84,7 +89,7 @@ async fn sqlite_snapshot_framework_space_history_explicit_owner_registration_aft
     assert_eq!(live.envelope().dialect, expected_envelope_dialect);
     assert_eq!(*live.snapshot_ref(), source);
     assert_eq!(dialect().to_coordinate(), corpus["coordinate"].as_str().unwrap());
-    assert_eq!(store::os_io::ArtifactDialect::from(store::space_history_sqlite::SQLITE_SNAPSHOT_DIALECT), dialect());
+    assert_eq!(semio_framework_artifact_reference::ArtifactDialect::from(store::space_history_sqlite::SQLITE_SNAPSHOT_DIALECT), dialect());
     let limits = SqliteDatabaseLimits::default();
     let mut independent = database();
     store::os_io::io_mechanism::attach_sqlite_snapshot_metadata(&mut independent, &dialect(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
@@ -108,10 +113,10 @@ async fn sqlite_snapshot_framework_space_history_explicit_owner_registration_aft
     assert!(imported.diagnostics.is_empty());
     assert_eq!(imported.value, source);
     assert_eq!(store::os_io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &independent_bytes, limits, &mut |_| true).await.unwrap().value, source);
-    let route = store::os_io::io_mechanism::io_route(&dialect(), &store::os_io::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
+    let route = store::os_io::io_mechanism::io_route(&dialect(), &semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
     assert_eq!(route.hops.len(), sample["routeHops"].as_u64().unwrap() as usize);
     assert_eq!(route.hops[0].from, dialect());
-    assert_eq!(route.hops[0].into, store::os_io::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT));
+    assert_eq!(route.hops[0].into, semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT));
     assert_eq!(live.envelope().dialect, expected_envelope_dialect);
     assert_eq!(*live.snapshot_ref(), source);
     store::test_support::close_plain_test_store(&mut live);
@@ -143,7 +148,7 @@ async fn sqlite_snapshot_framework_space_history_actual_typed_io_file_metadata_a
         assert_eq!(store::os_io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(), (dialect(), encoding));
         assert_eq!(store::os_io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &bytes, limits, &mut |_| true).await.unwrap().value, source);
     }
-    let route = store::os_io::io_mechanism::io_route(&dialect(), &store::os_io::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
+    let route = store::os_io::io_mechanism::io_route(&dialect(), &semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
     assert_eq!(route.hops.len(), 1);
 }
 #[test]
@@ -180,8 +185,8 @@ fn fixture() -> SpaceHistorySnapshot {
 fn database() -> SqliteDatabase {
     oracle::database(&f(), SQL)
 }
-fn dialect() -> store::os_io::ArtifactDialect {
-    store::os_io::ArtifactDialect { artifact_kind: S_SPACE_HISTORY_SCHEMA.into(), standard: "1".into(), subset: "*".into() }
+fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
+    semio_framework_artifact_reference::ArtifactDialect { artifact_kind: S_SPACE_HISTORY_SCHEMA.into(), standard: "1".into(), subset: "*".into() }
 }
 fn codec() -> store::ArtifactSqliteSnapshotCodec {
     store::ArtifactCodec::bare::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA).snapshot_sqlite.expect("actual builtin native factory requires its owned semantic SQLite capability")
@@ -356,7 +361,7 @@ fn sqlite_snapshot_framework_space_history_all_owned_phases_cancel_and_wrong_dia
             );
             assert!(result.is_err() && seen);
         }
-        let wrong = store::os_io::ArtifactDialect { subset: "invented".into(), ..dialect() };
+        let wrong = semio_framework_artifact_reference::ArtifactDialect { subset: "invented".into(), ..dialect() };
         assert!((codec.export)(S_SPACE_HISTORY_SCHEMA, &wrong, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err());
     }
 }

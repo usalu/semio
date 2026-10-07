@@ -163,24 +163,6 @@
         "💾️binary/🦀️.rs",
         "🧪️test/🔣️s.json"
       ]
-    },
-    {
-      "kind": "change-re-encode-quality",
-      "variant": "ChangeReEncodeQuality",
-      "directory": "🎚️change-re",
-      "textOpcode": "change-re-encode-quality",
-      "binaryTag": 11,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
     }
   ]
 }

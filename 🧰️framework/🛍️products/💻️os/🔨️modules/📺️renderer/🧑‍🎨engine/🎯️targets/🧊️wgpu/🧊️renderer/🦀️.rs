@@ -11141,6 +11141,17 @@ struct FrameActionEnvelope {
     cancelled: bool,
 }
 
+/// 🧾️ Routes a renderer-local completion to the exact owner that admitted it.
+fn settle_renderer_action_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, outcome: engine_canvas::TextEditorActionOutcome<'_>) {
+    match receipt.source {
+        ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor => engine_canvas::settle_text_editor_action_receipt(receipt, outcome),
+        ui_wgpu::wgpu::ActionQueueReceiptSource::RetainedInput => {
+            let discard = matches!(outcome, engine_canvas::TextEditorActionOutcome::Refused(reason) if shell::dispatch_refusal_discards_input_draft(reason));
+            interpreter::settle_retained_input_receipt(receipt, discard);
+        }
+    }
+}
+
 /// 🛟️ Settles the checked-out receipt even when its async dispatch future is cancelled.
 struct FrameActionReceiptOwner {
     receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
@@ -11149,7 +11160,7 @@ struct FrameActionReceiptOwner {
 impl FrameActionReceiptOwner {
     fn settle(&mut self, outcome: engine_canvas::TextEditorActionOutcome<'_>) {
         if let Some(receipt) = self.receipt.take() {
-            engine_canvas::settle_text_editor_action_receipt(receipt, outcome);
+            settle_renderer_action_receipt(receipt, outcome);
         }
     }
 }
@@ -11163,7 +11174,7 @@ impl Drop for FrameActionReceiptOwner {
 impl FrameActionEnvelope {
     fn cancel(self) {
         if let Some(receipt) = self.receipt {
-            engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+            settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
         }
     }
 }
@@ -11343,7 +11354,7 @@ impl FrameActionOwners {
             match input.take_action_step() {
                 Ok(Some(action)) => {
                     if let Some(receipt) = action.receipt() {
-                        engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+                        settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
                     }
                     batch.source_remaining -= 1;
                     return Some(Ok(FrameInputActionStep::Pending));
@@ -11439,7 +11450,7 @@ fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, actions
     };
     if !actions.consume_batch_source() {
         if let Some(receipt) = action.receipt() {
-            engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+            settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
         }
         return fail_frame_action_batch(input, actions, "bounded frame input action batch source accounting faulted");
     }
@@ -11448,7 +11459,7 @@ fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, actions
         Ok(action) => FrameActionEnvelope::from(action),
         Err(_) => {
             if let Some(receipt) = receipt {
-                engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+                settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
             }
             return fail_frame_action_batch(input, actions, "bounded frame input action failed materialization");
         }
@@ -13266,7 +13277,7 @@ impl RuntimeMailbox {
         interaction
             .input
             .close_step_with_receipt(|receipt| {
-                engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+                settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
             })
             .is_ok_and(|complete| complete)
             && interaction.input.terminal_is_empty()

@@ -207,7 +207,7 @@ fn find_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
 fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪟️collection-tree-shape/🔣️.json")).expect("collection tree fixture");
     let source = serde_json::to_string(&fixture["snapshot"]).expect("third-party snapshot oracle");
-    let schema = serde_json::to_string(&fixture["schema"]).expect("third-party schema oracle");
+    let schema = serde_json::to_string(&fixture["input"]["schema"]).expect("third-party schema oracle");
     let collection_key = fixture["collectionKey"].as_str().expect("collection key");
     let expected_values = fixture["expectedValues"].as_array().expect("expected values");
     let snapshot: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native fixture parse");
@@ -301,7 +301,7 @@ fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() 
 fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
     let source = serde_json::to_string(&fixture["snapshot"]).unwrap();
-    let schema = serde_json::to_string(&fixture["schema"]).unwrap();
+    let schema = serde_json::to_string(&fixture["input"]["schema"]).unwrap();
     let snapshot: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&super::super::snapshot_edit_source(&snapshot)).unwrap(), fixture["snapshot"]);
     let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value_and_schema(snapshot, &schema);

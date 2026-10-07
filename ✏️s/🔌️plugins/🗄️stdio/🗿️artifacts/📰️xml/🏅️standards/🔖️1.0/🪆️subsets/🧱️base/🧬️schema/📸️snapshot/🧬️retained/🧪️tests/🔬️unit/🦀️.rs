@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::snapshot::{xml_document_from_text, xml_document_to_text_checked};
+use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text_checked};
 use semio_framework_value::{
     SnapshotRetirementStep,
     retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep},

@@ -16,3 +16,21 @@ fn check<T:DslField+serde::de::DeserializeOwned+serde::Serialize+std::fmt::Debug
 fn viewport_canonical_record_owner_preserves_planar_and_orbit_projection(){let fixture=fixture();for case in fixture["cases"].as_array().unwrap(){if case["type"]=="Viewport2d"{check::<Viewport2d>(case,&fixture)}else{check::<Viewport3dOrbit>(case,&fixture)}}}
 #[test]
 fn viewport_canonical_record_owner_rejects_invalid_pose_and_foreign_fields(){let value=Viewport3dOrbit{position:[8.0,-3.0,5.0],target:[0.0;3],zoom:1.25,up:None};for invalid in [0.0,-1.0,f64::NAN,f64::INFINITY]{let FieldValue::Record(mut record)=<Viewport3dOrbit as DslField>::to_value(&value)else{unreachable!()};record.fields.insert(3,FieldValue::Float(invalid));assert!(<Viewport3dOrbit as DslField>::from_value(&FieldValue::Record(record)).is_err());}let FieldValue::Record(mut record)=<Viewport3dOrbit as DslField>::to_value(&value)else{unreachable!()};record.fields.insert(42,FieldValue::Text("foreign locale".into()));assert!(<Viewport3dOrbit as DslField>::from_value(&FieldValue::Record(record)).is_err());}
+
+/// 🫳️ Static viewport metadata preserves the schema-owned ordinary Record fields.
+#[test]
+fn viewport_borrowed_metadata_matches_the_neutral_record_law() {
+    use semio_framework_dsl_record::{BorrowedDslField, BorrowedDslRecord, BorrowedShape};
+    fn check<T:BorrowedDslField+BorrowedDslRecord>(name:&str, fixture:&serde_json::Value) {
+        let BorrowedShape::Record(produce) = T::SHAPE else { panic!("viewport retains its Record role") };
+        let spec = produce();
+        assert!(spec.keyword.is_none());
+        assert!(matches!(spec.layout,semio_framework_dsl_record::RecordLayout::Inline));
+        assert_eq!(spec.fields.len(),T::RECORD.fields.len());
+        let fields:Vec<_> = spec.fields.iter().map(|field|serde_json::json!({"id":field.id,"key":field.key,"shape":match field.shape { BorrowedShape::Float=>"Float", BorrowedShape::Tuple(inner,Some(3)) if matches!(inner(),BorrowedShape::Float)=>"Tuple3", _=>panic!("closed viewport shapes retain their typed roles") },"optional":field.optional})).collect();
+        assert_eq!(serde_json::json!(fields),fixture["fields"][name]);
+    }
+    let fixture=fixture();
+    check::<Viewport2d>("Viewport2d",&fixture);
+    check::<Viewport3dOrbit>("Viewport3dOrbit",&fixture);
+}

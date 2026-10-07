@@ -1,6 +1,5 @@
 // #region 🔌️Adapters
 import * as React from "react";
-import Ajv2020 from "ajv/dist/2020.js";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import sliderPresentationFixture from "../../../../🧫️fixtures/🎚️slider-presentation/🔣️.json";
@@ -363,3 +362,32 @@ describe("Slider", () => {
   });
 });
 // #endregion 🎚️SliderMatrix
+
+import exactEntry from "../../🧫️fixtures/⌨️exact-entry/🔣️.json";
+import { computeAccessibleName } from "dom-accessibility-api";
+
+
+for (const key of exactEntry.keys) it(`opens slider exact entry with ${key} and restores keyboard focus`, () => {
+  const commit = vi.fn();
+  const view = render(<Slider id="slider.exact-entry" aria-label={exactEntry.label} defaultValue={[exactEntry.initial]} min={0} max={1} step={0.01} onValueCommit={commit} />);
+  const readout = view.container.querySelector<HTMLElement>('[data-slot="slider-value"]')!;
+  const thumb = view.getByRole("slider");
+  expect(readout.tabIndex).toBe(0);
+  expect(thumb.className).toContain("focus-visible:ring-2");
+  readout.focus();
+  fireEvent.keyDown(readout, { key });
+  const editor = view.getByRole("spinbutton");
+  expect(computeAccessibleName(editor)).toBe(exactEntry.label);
+  fireEvent.change(editor, { target: { value: exactEntry.typed } });
+  fireEvent.keyDown(editor, { key: "Enter" });
+  expect(commit).toHaveBeenCalledExactlyOnceWith([exactEntry.expected]);
+  expect(document.activeElement).toBe(view.container.querySelector('[data-slot="slider-value"]'));
+});
+
+for (const blocked of exactEntry.blocked) it(`keeps ${blocked} slider exact entry unavailable`, () => {
+  const view = render(<Slider id="slider.exact-disabled" defaultValue={[exactEntry.initial]} min={0} max={1} {...{ [blocked]: true }} />);
+  const readout = view.container.querySelector<HTMLElement>('[data-slot="slider-value"]')!;
+  expect(readout.tabIndex).toBe(-1);
+  for (const key of exactEntry.keys) fireEvent.keyDown(readout, { key });
+  expect(view.queryByRole("spinbutton")).toBeNull();
+});

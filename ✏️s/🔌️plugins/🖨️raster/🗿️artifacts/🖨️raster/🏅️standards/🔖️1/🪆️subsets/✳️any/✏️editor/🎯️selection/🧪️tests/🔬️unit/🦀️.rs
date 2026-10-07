@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::{layer_node_id, snapshot::retire_raster_snapshot};
-use crate::standards::v1::subsets::any::io::text::snapshot::{create_pixel_layer};
+use crate::standards::v1::subsets::any::schema::create_pixel_layer;
 #[semio_framework_async_macros::async_test]
 async fn completed_selection_checks_revision_extent_and_visibility_without_requiring_an_unlocked_layer(){
     let mut doc=crate::RasterSnapshot::default();doc.layers.push(create_pixel_layer("Paint",3,2));

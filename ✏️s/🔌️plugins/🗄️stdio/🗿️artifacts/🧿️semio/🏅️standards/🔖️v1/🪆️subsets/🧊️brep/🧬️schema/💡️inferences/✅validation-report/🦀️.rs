@@ -1,7 +1,7 @@
 //! ✅️ Semio document referential-integrity inference over canonical collection dependencies.
 //! Pure computational geometry validation belongs to `semio_framework_3d::brep::queries::validation`.
 
-use crate::standards::v1::subsets::brep::io::check_brep_referential_integrity;
+use crate::standards::v1::subsets::brep::schema::check_brep_referential_integrity;
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Value
@@ -32,6 +32,7 @@ pub struct BrepValidationDiagnostic {
 pub struct BrepValidationReport;
 
 impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = Vec<BrepValidationDiagnostic>;
     const FIELD_ID: &'static str = "s.stdio.semio.brep.inference.validationReport";
@@ -45,17 +46,9 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
         vec![store::InferenceStep { key: "document".to_string(), parents: vec![] }]
     }
 
-    /// 🔑 Canonical dependency-input bytes — EXACTLY the six collections `compute` reads, nothing
-    /// else (the schema field, an identity field, never appears here). `pack::to_json_string` over
-    /// the snapshot's own already-`ToValue` collections is deterministic per snapshot value and
-    /// covers every field the check touches — cheaper and less error-prone than hand-rolling a
-    /// bespoke byte encoder for a root-only, single-key chain.
-    fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        // 🌉️ Owned clones, not `&[T]` borrows: no `ToValue` impl exists for a slice/array
-        // reference (only `Vec<T>` itself, via the blanket `impl<T: ToValue> ToValue for
-        // Vec<T>`), so the derive below needs owned collections. One clone per `dep_input` call
-        // is the accepted cost for a root-only, single-key chain (see this method's own doc
-        // comment) — cheaper than hand-rolling a borrowing byte encoder.
+    /// 🔑 Owned dependency-input values — EXACTLY the six collections `compute` reads, nothing
+    /// 🧩️ All six owned topology collections define this field dependency.
+    fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         #[derive(value_derive::ToValue)]
         struct DepInput {
             vertices: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepVertex>,
@@ -65,8 +58,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
             shells: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepShell>,
             solids: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepSolid>,
         }
-        semio_framework_pack_json::to_json_string(&DepInput { vertices: snapshot.vertices.clone(), edges: snapshot.edges.clone(), loops: snapshot.loops.clone(), faces: snapshot.faces.clone(), shells: snapshot.shells.clone(), solids: snapshot.solids.clone() })
-            .into_bytes()
+        semio_framework_value::ToValue::to_value(&DepInput { vertices: snapshot.vertices.clone(), edges: snapshot.edges.clone(), loops: snapshot.loops.clone(), faces: snapshot.faces.clone(), shells: snapshot.shells.clone(), solids: snapshot.solids.clone() })
     }
 
     fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

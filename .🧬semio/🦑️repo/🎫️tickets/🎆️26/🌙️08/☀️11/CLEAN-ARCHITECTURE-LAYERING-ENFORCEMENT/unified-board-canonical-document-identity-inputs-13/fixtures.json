@@ -1,0 +1,121 @@
+[
+  {
+    "id": "canonical",
+    "input": {
+      "schema": "dag.hostDocument",
+      "nodeIds": [
+        "slider",
+        "mode",
+        "scale",
+        "combine",
+        "screen"
+      ],
+      "edgeIds": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ]
+    },
+    "accepted": true
+  },
+  {
+    "id": "retired-identity",
+    "input": {
+      "schema": "dag.host_snapshot",
+      "nodeIds": [
+        "slider",
+        "mode",
+        "scale",
+        "combine",
+        "screen"
+      ],
+      "edgeIds": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "id": "missing-schema",
+    "input": {
+      "nodeIds": [
+        "slider",
+        "mode",
+        "scale",
+        "combine",
+        "screen"
+      ],
+      "edgeIds": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "id": "missing-node",
+    "input": {
+      "schema": "dag.hostDocument",
+      "nodeIds": [
+        "slider",
+        "mode",
+        "scale",
+        "combine"
+      ],
+      "edgeIds": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "id": "duplicate-edge",
+    "input": {
+      "schema": "dag.hostDocument",
+      "nodeIds": [
+        "slider",
+        "mode",
+        "scale",
+        "combine",
+        "screen"
+      ],
+      "edgeIds": [
+        "e1",
+        "e1",
+        "e3",
+        "e4"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "id": "foreign-field",
+    "input": {
+      "schema": "dag.hostDocument",
+      "nodeIds": [
+        "slider",
+        "mode",
+        "scale",
+        "combine",
+        "screen"
+      ],
+      "edgeIds": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ],
+      "foreign": true
+    },
+    "accepted": false
+  }
+]

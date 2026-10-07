@@ -1,7 +1,7 @@
 //! 🧬️ XlsxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
-use crate::schema::diff::{dec_cell_value, dec_cell_value_bin, dec_sheet, dec_sheet_bin, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_sheet, enc_sheet_bin, read_str_lp, write_str_lp, XlsxDiff};
+use crate::schema::diff::{diff_set_snapshot, XlsxDiff};
 
 
 #[cfg(test)]
@@ -10,8 +10,7 @@ use crate::schema::snapshot::XlsxCell;
 use crate::schema::snapshot::XlsxWorkbook;
 use crate::schema::snapshot::{XlsxCellValue, XlsxSheet};
 use crate::XlsxSnapshot;
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
+use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::OpcRelationship;
@@ -187,7 +186,7 @@ pub(crate) fn agg_inverse(this: &XlsxMutation, base: &XlsxSnapshot) -> Result<Ve
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> XlsxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
         shared_strings: vec!["hello".into()],
     })
@@ -208,7 +207,7 @@ const SWEEP_BINARY_CONTENT_TYPE: &str = "application/octet-stream";
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_a() -> XlsxSnapshot {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "toModify".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }, XlsxCell { row: 2, col: 0, value: XlsxCellValue::Boolean(false) }] },
             XlsxSheet { name: "stay".into(), cells: vec![] },
@@ -234,7 +233,7 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_b() -> XlsxSnapshot {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
                 name: "toModify".into(),

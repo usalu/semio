@@ -1,0 +1,10 @@
+{
+  "contractId": "semio.plugin.checkpoint.actor/v1",
+  "cases": [
+    {"id": "two-distinct-opened-actors", "expected": true, "pack": {"instances": [{"id": 7, "app_id": "editor.one", "actor": "actor:alice", "document_pack": [0, 255]}, {"id": 9, "app_id": "editor.two", "actor": "actor:bob🧑", "document_pack": [3]}], "timers": [1], "pending_requests": [2], "task_restarts": [{"instance": 9, "command": [4]}]}},
+    {"id": "no-open-instances", "expected": true, "pack": {"instances": [], "timers": [], "pending_requests": [], "task_restarts": []}},
+    {"id": "actor-required", "expected": false, "pack": {"instances": [{"id": 7, "app_id": "editor.one", "document_pack": []}], "timers": [], "pending_requests": [], "task_restarts": []}},
+    {"id": "task-restarts-required", "expected": false, "pack": {"instances": [], "timers": [], "pending_requests": []}},
+    {"id": "undeclared-instance-authority", "expected": false, "pack": {"instances": [{"id": 7, "app_id": "editor.one", "actor": "actor:alice", "document_pack": [], "fallback_actor": "local"}], "timers": [], "pending_requests": [], "task_restarts": []}}
+  ]
+}

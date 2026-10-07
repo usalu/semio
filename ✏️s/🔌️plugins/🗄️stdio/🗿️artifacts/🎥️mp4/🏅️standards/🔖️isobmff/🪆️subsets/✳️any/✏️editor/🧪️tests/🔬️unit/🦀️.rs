@@ -19,7 +19,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let handle = app.submit_media_export(semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID).await.expect("registered MP4 playback producer");
     app.cancel_media_export(&handle).await.expect("cancel live MP4 producer");
     assert!(app.poll_media_export(&handle).await.is_err(), "cancelled handle transfers to bounded close");
@@ -39,7 +39,7 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     use semio_framework_plugin::{app::ArtifactMediaExportPoll, PluginApp};
     let source = include_bytes!("../../../🧫️fixtures/🎬️.mp4");
     let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(source).expect("real MP4 fixture decodes");
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_MP4_DOCUMENT_SCHEMA) else {
         panic!("MP4 snapshot builds one document load");
     };
@@ -160,7 +160,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source.to_vec(),
     };
     let initial = <Mp4Editor as ArtifactEditor>::initial_snapshot();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
@@ -179,7 +179,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let observed = semio_s_artifact_stdio_mp4_test_oracle::standards::v_isobmff::subsets::any::project_mp4_mutation(&saved.data).expect("project MP4 export");
     let expected = semio_s_artifact_stdio_mp4_test_oracle::standards::v_isobmff::subsets::any::project_mp4_mutation(&oracle).expect("project independent MP4 output");
     assert_eq!(observed, expected);
-    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }).await;
+    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
     artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.expect("fresh owner import publishes");

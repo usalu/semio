@@ -147,7 +147,7 @@ impl ArtifactSqliteSnapshot for TxtSnapshot {
         control.check_value_bytes(if encoding == SnapshotEncoding::Binary { size.checked_add(physical).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native text ownership overflow"))? } else { size })
     }
 
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         use store::io_schema::IoError;
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
         if dialect.artifact_kind != "s.stdio.txt" || dialect.standard != "utf-8" || dialect.subset != "*" { return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"unsupported owned TXT SQLite dialect"))); }

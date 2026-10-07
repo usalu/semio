@@ -53,7 +53,7 @@ pub fn plugin()->Result<Plugin<FixtureApps>,PluginAssemblyError> {
     let descriptor=ArtifactSchemaDescriptor{id:KIND,artifact:facet("artifact",include_str!("🧬️schema/🔣️.json")),snapshot:facet("snapshot",include_str!("🧬️schema/📸️snapshot/🔣️.json")),diff:facet("diff",include_str!("🧬️schema/🔺️diff/🔣️.json")),mutations:facet("mutations",include_str!("🧬️schema/🧬️mutations/🔣️.json"))};
     let pair=LanguagePair{text:None,binary:None};
     let subset=SubsetDeclaration {dialect:DIALECT,schema:SchemaDeclaration{descriptor,inferences:&[],inference_services:Vec::new()},io:IoDeclaration{native:NativeCodecs{snapshot:pair,diff:pair,mutations:pair,inferences:None,codec:store::ArtifactCodec::bare::<crate::Snapshot,crate::Mutation>(KIND)},entries:&[]},editor:surface::<false>(),viewer:surface::<true>(),examples:&[]};
-    let artifact=DeclaredArtifact{kind:store::os_io::ArtifactKindId::parse(KIND).map_err(|error|PluginAssemblyError::new("fixture.kind",error))?,localization:&[],standards:vec![StandardDeclaration{id:StandardId("1"),media:MediaDeclaration{mimes:&[],extensions:&["neutral-host-fixture"]},subsets:vec![subset]}]};
+    let artifact=DeclaredArtifact{kind:semio_framework_artifact_reference::ArtifactKindId::parse(KIND).map_err(|error|PluginAssemblyError::new("fixture.kind",error))?,localization:&[],standards:vec![StandardDeclaration{id:StandardId("1"),media:MediaDeclaration{mimes:&[],extensions:&["neutral-host-fixture"]},subsets:vec![subset]}]};
     Plugin::<FixtureApps>::builder("neutral-host-fixture").label("Neutral Host Fixture").version("1.0.0").package_id("semio:neutral-host-fixture").declare_artifact(artifact).declare_artifact(refusal_artifact()?).try_build()
 }
 
@@ -118,6 +118,6 @@ where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<
  SubsetDeclaration{dialect:<RefusalApp<C,false> as ArtifactApp>::DIALECT,schema:SchemaDeclaration{descriptor,inferences:&[],inference_services:Vec::new()},io:IoDeclaration{native:NativeCodecs{snapshot:pair,diff:pair,mutations:pair,inferences:None,codec:store::ArtifactCodec::bare::<refusal::Snapshot,refusal::Mutation>(refusal::KIND)},entries:&[]},editor:refusal_surface::<C,false>(),viewer:refusal_surface::<C,true>(),examples:&[]}
 }
 fn refusal_artifact()->Result<DeclaredArtifact<FixtureApps>,PluginAssemblyError>{
- let kind=store::os_io::ArtifactKindId::parse(refusal::KIND).map_err(|error|PluginAssemblyError::new("fixture.refusal-kind",error))?;
+ let kind=semio_framework_artifact_reference::ArtifactKindId::parse(refusal::KIND).map_err(|error|PluginAssemblyError::new("fixture.refusal-kind",error))?;
  Ok(DeclaredArtifact{kind,localization:&[],standards:vec![StandardDeclaration{id:StandardId("1"),media:MediaDeclaration{mimes:&[],extensions:&["snapshot-refusal"]},subsets:vec![refusal_subset::<InvalidRefusal>(),refusal_subset::<CanceledRefusal>(),refusal_subset::<OwnershipRefusal>(),refusal_subset::<AllocationRefusal>(),refusal_subset::<WorkRefusal>(),refusal_subset::<DepthRefusal>(),refusal_subset::<UnsupportedRefusal>(),refusal_subset::<InvariantRefusal>()]}]})
 }

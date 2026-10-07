@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../../🧬️schema/🔀️projection-pane/🔣️.json",
   "windowId": "pane-top",
   "windowSegment": "paneTop",
   "paneId": "framework.worldOrbit.projection.paneTop",

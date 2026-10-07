@@ -1,0 +1,79 @@
+{
+  "regions": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::base::schema::snapshot::*;",
+      "after": "use crate::standards::v1::subsets::base::schema::snapshot::*;\nuse crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;\nuse crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;\nuse crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;\nuse crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;\nuse crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;\nuse crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;\nuse crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;\nuse crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;\nuse crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;\nuse crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;\nuse crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;\nuse crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;\nuse crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;\nuse crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;\nuse crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;\nuse crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;\nuse crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;\nuse crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "before": "crate::standards::v1::subsets::base::io::sqlite::snapshot::sqlite::native::Bound",
+      "after": "crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::diff::{dec_layer};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_layer};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::diff::{enc_layer};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_layer};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{dec_node};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_node};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{enc_node};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_node};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::diff::{dec_layer};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_layer};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::diff::{enc_layer};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_layer};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{dec_node};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_node};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{enc_node};",
+      "after": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_node};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs",
+      "before": "#[value(serialize_controlled_with=\"native_binding::nodes::encode_node\",deserialize_controlled_with=\"native_binding::nodes::decode_node\",retire_with=\"native_binding::nodes::retire_node\")]",
+      "after": "#[value(serialize_controlled_with=\"crate::standards::v1::subsets::drawing::io::text::snapshot::encode_node\",deserialize_controlled_with=\"crate::standards::v1::subsets::drawing::io::text::snapshot::decode_node\",retire_with=\"crate::standards::v1::subsets::drawing::io::text::snapshot::retire_node\")]"
+    }
+  ]
+}

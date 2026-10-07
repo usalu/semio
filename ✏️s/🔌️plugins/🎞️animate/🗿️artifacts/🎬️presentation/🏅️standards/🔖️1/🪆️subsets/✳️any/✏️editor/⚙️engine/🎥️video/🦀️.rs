@@ -773,8 +773,8 @@ pub mod writer {
     //#endregion 🔖️Mp4RawCodec
 
     //#region 🔖️GifQuantize
-    use semio_s_artifact_stdio_gif::engine::encode_gif;
-    use semio_s_artifact_stdio_gif::schema::snapshot::{GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot};
+    use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::io::encode_gif;
+    use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot};
 
     const GIF_CUBE_LEVELS: [u8; 6] = [0, 51, 102, 153, 204, 255];
     const GIF_TARGET_FPS: f64 = 15.0;

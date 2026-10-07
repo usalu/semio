@@ -248,6 +248,7 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-framework-artifact-reference = { path = "../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust" }
@@ -372,7 +373,6 @@ semio-s-spatial-kernel-semio-session = { path = "../✏️s/🔨️modules/🌐�
 semio-framework-os-kernel-neural-engine = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
 semio-framework-os-mcp = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
-# REMOVED missing: semio-s-kernel-flow-extension-wasm = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }  # 10 refs
 
 # ---- math (13) ----
 

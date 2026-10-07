@@ -237,11 +237,12 @@ fn dialog_choices_fixture_lays_out_gates_and_dispatches_like_every_renderer() {
         let key = if locale == Locale::De { "de" } else { "en" };
         assert_eq!(request.choices[0].label, fixture["dialog"]["choices"][0]["label"]["native"][key].as_str().expect("label"));
         let theme = Theme::light();
-        for case in fixture["cases"].as_array().expect("cases") {
+        for (case, width) in fixture["cases"].as_array().expect("cases").iter().flat_map(|case| [1440.0, 360.0].map(|width| (case, width))) {
             let name = case["case"].as_str().expect("case");
             let mut request = request.clone();
             stage_dialog_case(&mut request, case);
-            let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme);
+            let mut atlas = FontAtlas::builtin();
+            let ops = ShellState::chrome_dialog_paint_ops(&request, width, 900.0, &theme, &mut atlas);
             let button = |entry: &serde_json::Value| {
                 ops.iter()
                     .find_map(|op| match op {
@@ -266,6 +267,20 @@ fn dialog_choices_fixture_lays_out_gates_and_dispatches_like_every_renderer() {
                 _ => None,
             });
             assert_eq!(destructive.flatten().as_deref(), fixture["dialog"]["choices"][0]["description"]["native"][key].as_str());
+            let rect = ops.iter().find_map(|op| match op {
+                ChromeDialogPaintOp::Hit { stop: ChromeDialogStop::Choice(0), rect, .. } => Some(*rect),
+                _ => None,
+            }).expect("the choice has a visible button");
+            let consequence = fixture["dialog"]["choices"][0]["description"]["native"][key].as_str().expect("consequence");
+            let lines: Vec<_> = ops.iter().filter_map(|op| match op {
+                ChromeDialogPaintOp::Text { value, x, y, max_w, .. } if consequence.contains(value.as_str()) => Some((value.as_str(), *x, *y, *max_w)),
+                _ => None,
+            }).collect();
+            assert_eq!(lines.iter().map(|(value, ..)| *value).collect::<Vec<_>>().join(" "), consequence);
+            assert!(lines.iter().all(|(_, x, y, width)| *x >= rect.x && *x + *width <= rect.x + rect.w + 0.01 && *y > rect.y + rect.h), "the consequence stays beneath its own choice");
+            assert!(lines.iter().all(|(value, _, _, width)| atlas.measure_text(value, theme.font_size_small).0 <= *width + 0.01), "consequences wrap to their measured width");
+            let modal = ops.iter().find_map(|op| match op { ChromeDialogPaintOp::Modal(rect) => Some(*rect), _ => None }).expect("modal");
+            assert!(ops.iter().all(|op| match op { ChromeDialogPaintOp::Hit { rect, .. } => rect.x >= modal.x && rect.x + rect.w <= modal.x + modal.w + 0.01, _ => true }), "actions stay inside the modal at every tested width");
             assert!(ops.iter().any(|op| matches!(op, ChromeDialogPaintOp::Fill { color, .. } if *color == theme.error)), "the destructive choice paints in the error colour");
         }
     }
@@ -383,7 +398,7 @@ fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
         assert_eq!(request.fields.iter().map(|field| field.label.as_str()).take(2).collect::<Vec<_>>(), [if locale == Locale::En { "Fill" } else { "Füllung" }, opacity]);
         assert_eq!(request.fields[0].draft, "#ff000080");
         let theme = Theme::light();
-        let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme);
+        let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme, &mut FontAtlas::builtin());
         assert!(ops.iter().any(|op| matches!(op, ChromeDialogPaintOp::Fill { color, .. } if *color == Rgba::from_srgb8(255, 0, 0, 128))), "the swatch paints the staged colour");
         let alpha = ops.iter().find_map(|op| match op {
             ChromeDialogPaintOp::Hit { control_id, semantics, label, .. } if control_id == "shell.dialog.paint.field.fill.alpha" => Some((label.clone(), semantics.clone())),

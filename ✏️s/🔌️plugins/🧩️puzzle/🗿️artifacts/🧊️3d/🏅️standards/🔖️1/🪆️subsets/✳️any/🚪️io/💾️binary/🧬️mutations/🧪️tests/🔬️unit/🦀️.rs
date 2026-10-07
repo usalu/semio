@@ -6,7 +6,7 @@ async fn puzzle3d_document_vcs_replays_granular_operations() {
     use crate::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store = (puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None))).await.expect("store");
+    let mut store = (puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     (store.dispatch(ArtifactCommand::Apply {
         mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(
             Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },

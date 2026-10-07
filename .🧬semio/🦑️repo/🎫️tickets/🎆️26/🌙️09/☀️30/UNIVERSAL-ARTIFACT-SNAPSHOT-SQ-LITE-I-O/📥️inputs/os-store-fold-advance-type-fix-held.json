@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udd80\ufe0f.rs",
+    "before": "                    running.advance(next);",
+    "after": "                    <Arc<P> as FoldProjection<P, Mutation>>::advance(running, next);"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udd80\ufe0f.rs",
+    "before": "if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { state.advance(next); }",
+    "after": "if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { <Arc<P> as FoldProjection<P, Mutation>>::advance(state, next); }"
+  }
+]

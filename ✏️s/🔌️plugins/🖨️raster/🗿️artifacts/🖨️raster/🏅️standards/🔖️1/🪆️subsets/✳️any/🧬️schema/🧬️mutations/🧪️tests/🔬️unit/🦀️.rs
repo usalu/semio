@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::mutations::{apply_raster_mutation_json,undo_raster_mutation_json};
 use super::*;
 use crate::standards::v1::subsets::any::schema::{layer_name, layer_visible};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
@@ -55,7 +56,7 @@ fn every_mutation() -> Vec<RasterMutation> {
         RasterMutation::MoveLayer(move_layer::MoveLayer { layer_id: "l1".into(), new_x: 10.0, new_y: 20.0 }),
         RasterMutation::ResizeLayer(resize_layer::ResizeLayer { layer_id: "l1".into(), new_width: 256, new_height: 256 }),
         RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
-        RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: "asset-1".into(), asset: RasterImageAsset { mime: "image/png".into(), data: ABC_ASSET_PNG.to_vec() } }),
+        RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: "asset-1".into(), asset: crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(ABC_ASSET_PNG).expect("fixture image decodes") }),
         RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: "asset-1".into() }),
         RasterMutation::ChangeLayerTransform(crate::mutations::change_layer_transform::ChangeLayerTransform {layer_id:"l1".into(),expected:RasterTransform::default(),transform:RasterTransform {x:3.0,y:-2.0,a:2.0,b:1.0,c:-2.0,d:1.0}}),
         RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id: "l1".into(), expected: None, mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: None, height: None, image_key: None, transform: RasterTransform::default() }) }),
@@ -143,11 +144,11 @@ async fn resize_layer_is_a_graceful_no_op_on_a_group() {
 
 #[semio_framework_async_macros::async_test]
 async fn store_applies_layer_create() {
-    let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners());
+    store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners());
     store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     store::os_store::test_support::close_plain_test_store(&mut store);

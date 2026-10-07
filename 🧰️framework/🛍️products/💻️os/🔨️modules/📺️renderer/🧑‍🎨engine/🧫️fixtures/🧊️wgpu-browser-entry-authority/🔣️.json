@@ -22,6 +22,12 @@
   ],
   "browserImports": [
     {
+      "source": "🎬️renderer-boot/🟦️.ts",
+      "module": "./🧩️selection/🟦️.ts",
+      "binding": "resolveEmbeddedWgpuBoot",
+      "target": "🎬️renderer-boot/🧩️selection/🟦️.ts"
+    },
+    {
       "source": "🚀️browser-boot/🟦️.ts",
       "module": "../🌐️browser-host/🟦️.ts",
       "binding": "mountWgpuBrowserHost",

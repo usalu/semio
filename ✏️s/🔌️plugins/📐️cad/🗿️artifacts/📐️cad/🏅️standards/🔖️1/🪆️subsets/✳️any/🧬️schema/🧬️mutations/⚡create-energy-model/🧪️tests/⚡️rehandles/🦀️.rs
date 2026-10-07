@@ -34,6 +34,8 @@ fn applied() -> CadSnapshot {
 /// ▶️ `create-energy-model` writes the fixed `energy_model` slot even when it is already occupied; the other three slots never move.
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_energy_handle_in_place() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let after = applied();
     let handle = after.energy_model.as_ref().expect("create-energy-model leaves the slot occupied");
     assert_eq!(handle.child_id, "cad-energy-2", "create-energy-model must install the payload's child id");

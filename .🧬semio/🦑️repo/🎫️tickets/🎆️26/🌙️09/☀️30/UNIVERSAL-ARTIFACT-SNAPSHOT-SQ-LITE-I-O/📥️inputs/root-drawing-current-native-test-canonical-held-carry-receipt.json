@@ -1,0 +1,12 @@
+{
+  "mountedProductionProviders": false,
+  "heldPathsChecked": 78,
+  "changes": [
+    {
+      "pair": 4,
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "beforeSha256": "dc82771c599fb3e32f19bed357d09499cc5ee80df3f1df08330f8af7a4340a79",
+      "afterSha256": "6ae87d64d1350e2d642ce99fc980c6f619018c2db45d190fdf0777bc827ff0de"
+    }
+  ]
+}

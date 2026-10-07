@@ -21,6 +21,21 @@ fn retained_load_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/📥️retained-pack-load/🔣️.json")).expect("retained-load fixture")
 }
 
+#[test]
+fn window_config_opened_actor_owns_new_and_hydrated_partitions_before_publication(){
+    run_retained_window_load_lane("window-config-opened-actor",||{
+        let fixture=retained_load_fixture();let law=&fixture["actorAuthority"];let history_actor=law["historyActor"].as_str().unwrap().to_string();let opened_actor=law["openedActor"].as_str().unwrap().to_string();let camera=saved_camera(&fixture);
+        assert_ne!(history_actor,opened_actor);assert_eq!(law["binding"],"before-construction");assert_eq!(law["ambientDefault"],"refuse");
+        block_on_retained_window_load(Box::pin(async move{
+            let mut source=WindowConfigOwnerRegistry::new(protocol::ActorId(history_actor.clone()));source.register::<RetainedLoadOwnerA>().unwrap();let source_owner=source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap();drop(source_owner.capture("actor-window").await.unwrap());source_owner.dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())})).await.unwrap();let pack=source.packs().await.unwrap().pop().unwrap();let history=pack.files.spr.clone();let stored_pack=pack.files.pack.clone();assert!(!history.is_empty());close_retained_load_registry(&mut source);
+            let mut reopened=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone()));reopened.register::<RetainedLoadOwnerA>().unwrap();let refused=reopened.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap().dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("foreign-actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())})).await.unwrap_err();assert_eq!(refused.code.0,"window-config.actor");assert!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"foreign-actor-window").is_none());let mut load=reopened.begin_retained_load(pack).unwrap();let mut ready=false;for _ in 0..65536{let grant=load.next_grant();match reopened.advance_retained_load(&mut load,grant){WindowConfigPackLoadStep::Ready=>{ready=true;break},WindowConfigPackLoadStep::Pending(_)=>{},other=>panic!("opened actor hydration {other:?}")}}assert!(ready);let candidate_actor=load.candidate_actor_for_test::<RetainedLoadOwnerA>().unwrap();let committed=reopened.commit_retained_load(&mut load);assert!(matches!(committed,WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::Complete));for _ in 0..65536{let grant=load.next_grant();if matches!(reopened.close_retained_load_step(&mut load,grant).unwrap(),PluginCloseStep::Complete)&&load.terminal_is_empty(){break}}assert!(load.terminal_is_empty());assert_eq!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"actor-window").unwrap().get::<RetainedLoadOwnerA>(),Some(&camera));let restored=reopened.packs().await.unwrap().pop().unwrap();assert_eq!(restored.files.spr,history);assert_eq!(restored.files.pack,stored_pack);close_retained_load_registry(&mut reopened);
+            let mut partition=TypedWindowConfigStoreOwner::<RetainedLoadOwnerA>{partitions:BTreeMap::new(),actor:Some(protocol::ActorId(opened_actor.clone())),actor_retirement:None};let new_actor=partition.partition("fresh-actor-window").await.unwrap().store.local_actor_id().clone();for _ in 0..65536{if matches!(partition.close_step(1,store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap(),PluginCloseStep::Complete)&&partition.terminal_is_empty(){break}}assert!(partition.terminal_is_empty());
+            let mut empty=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone()));assert!(!empty.terminal_is_empty());let mut closed=false;for _ in 0..65536{match empty.close_step(law["retirementItems"].as_u64().unwrap()as usize,law["retirementBytes"].as_u64().unwrap()as usize).unwrap(){PluginCloseStep::Complete if empty.terminal_is_empty()=>{closed=true;break},PluginCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=3)},_=>{}}}assert!(closed);assert_eq!(candidate_actor.0,opened_actor);assert_eq!(new_actor.0,opened_actor);
+            eprintln!("[DEBUG] original window config new/hydrated owners retain opened actor before publication; historical SPR unchanged;1-item3-byte actor retirement");
+        }));
+    });
+}
+
 /// 📷️ A real schema-first window camera: enveloped Pack, record spec, and a whole-record snapshot mutation.
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -207,7 +222,7 @@ fn window_config_retained_pack_load_current_registry_identity_and_reopen_baselin
         assert_eq!(fixture["budgets"]["typedMutationBytes"], 4_096);
         assert_eq!(fixture["requiredScenarios"].as_array().expect("required scenarios").len(), 13);
         block_on_retained_window_load(Box::pin(async {
-            let mut source = WindowConfigOwnerRegistry::default();
+            let mut source = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["actorAuthority"]["historyActor"].as_str().unwrap().to_owned()));
             register_retained_load_owners(&mut source);
             for (kind, id) in [("retained-load-a", "left"), ("retained-load-a", "right"), ("retained-load-b", "other")] {
                 drop(source.owners.get_mut(kind).expect("registered source owner").capture(id).await.expect("materialize baseline source"));
@@ -217,7 +232,7 @@ fn window_config_retained_pack_load_current_registry_identity_and_reopen_baselin
             let expected_bytes = keyed_packs(expected.iter().map(|pack| WindowConfigPack { window_id: pack.window_id.clone(), window_kind_id: pack.window_kind_id.clone(), files: pack.files.clone() }).collect());
             close_retained_load_registry(&mut source);
 
-            let mut reopened = WindowConfigOwnerRegistry::default();
+            let mut reopened = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["actorAuthority"]["openedActor"].as_str().unwrap().to_owned()));
             register_retained_load_owners(&mut reopened);
             for pack in expected {
                 reopened.load(pack).await.expect("current exact registry load");
@@ -243,7 +258,7 @@ fn window_config_retained_pack_load_round_trips_a_saved_camera_with_history() {
         let camera = saved_camera(&fixture);
         assert_ne!(camera, RetainedLoadCameraConfig::default());
         block_on_retained_window_load(Box::pin(async move {
-            let mut source = WindowConfigOwnerRegistry::default();
+            let mut source = WindowConfigOwnerRegistry::new(protocol::ActorId("camera-actor".to_owned()));
             register_retained_load_owners(&mut source);
             let owner = source.owners.get_mut(kind.as_str()).expect("registered camera owner");
             drop(owner.capture(&window_id).await.expect("materialize camera partition"));
@@ -254,7 +269,7 @@ fn window_config_retained_pack_load_round_trips_a_saved_camera_with_history() {
             let saved_bytes = keyed_packs(saved.iter().map(|pack| WindowConfigPack { window_id: pack.window_id.clone(), window_kind_id: pack.window_kind_id.clone(), files: pack.files.clone() }).collect());
             close_retained_load_registry(&mut source);
 
-            let mut reopened = WindowConfigOwnerRegistry::default();
+            let mut reopened = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["actorAuthority"]["openedActor"].as_str().unwrap().to_owned()));
             register_retained_load_owners(&mut reopened);
             for pack in saved {
                 reopened.load(pack).await.expect("saved camera load");
@@ -272,7 +287,7 @@ fn window_config_retained_pack_load_refuses_exhausted_turn_bounds_and_over_bound
         let fixture = retained_load_fixture();
         let camera = saved_camera(&fixture);
         block_on_retained_window_load(Box::pin(async move {
-            let mut source = WindowConfigOwnerRegistry::default();
+            let mut source = WindowConfigOwnerRegistry::new(protocol::ActorId("camera-actor".to_owned()));
             register_retained_load_owners(&mut source);
             let owner = source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).expect("registered camera owner");
             drop(owner.capture("left").await.expect("materialize camera partition"));
@@ -280,7 +295,7 @@ fn window_config_retained_pack_load_refuses_exhausted_turn_bounds_and_over_bound
             let saved = source.packs().await.expect("saved camera packs").remove(0);
             close_retained_load_registry(&mut source);
 
-            let mut reopened = WindowConfigOwnerRegistry::default();
+            let mut reopened = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["actorAuthority"]["openedActor"].as_str().unwrap().to_owned()));
             register_retained_load_owners(&mut reopened);
             let copy = |pack: &WindowConfigPack| WindowConfigPack { window_id: pack.window_id.clone(), window_kind_id: pack.window_kind_id.clone(), files: pack.files.clone() };
             let exhausted = reopened.load_within(copy(&saved), 1).await.expect_err("a load that exhausts its turn bound must fault, never answer Ok");
@@ -318,7 +333,7 @@ fn window_config_retained_pack_load_reloads_a_coordinate_valued_window_state() {
         let camera = saved_camera(&fixture);
         assert_ne!(camera.eye, RetainedLoadCameraConfig::default().eye, "the saved coordinate differs from Default, so a lost coordinate cannot pass unnoticed");
         block_on_retained_window_load(Box::pin(async move {
-            let mut source = WindowConfigOwnerRegistry::default();
+            let mut source = WindowConfigOwnerRegistry::new(protocol::ActorId("coordinate-actor".to_owned()));
             register_retained_load_owners(&mut source);
             let owner = source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).expect("registered coordinate owner");
             drop(owner.capture("left").await.expect("materialize coordinate partition"));
@@ -327,7 +342,7 @@ fn window_config_retained_pack_load_reloads_a_coordinate_valued_window_state() {
             let saved_bytes = keyed_packs(saved.iter().map(|pack| WindowConfigPack { window_id: pack.window_id.clone(), window_kind_id: pack.window_kind_id.clone(), files: pack.files.clone() }).collect());
             close_retained_load_registry(&mut source);
 
-            let mut reopened = WindowConfigOwnerRegistry::default();
+            let mut reopened = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["actorAuthority"]["openedActor"].as_str().unwrap().to_owned()));
             register_retained_load_owners(&mut reopened);
             for pack in saved {
                 reopened.load(pack).await.expect("a window config Pack carrying a coordinate loads");

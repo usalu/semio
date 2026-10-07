@@ -13,7 +13,8 @@
 //! 🪟️ The opening grows from 1.2 x 1.4 m to 1.6 x 1.4 m and the mesh is refined to 0.4 m — a whole-entity patch, outline, holes and mesh size together.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace-region/🪟️widens/📸️snapshot/⬅️before/🔣️.json");

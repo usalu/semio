@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "maximumFreshAgeMs": 120000,
+  "cases": [
+    { "name": "live-running", "status": "running", "alive": true, "ageMs": 0, "preserve": true },
+    { "name": "live-scheduled", "status": "scheduled", "alive": true, "ageMs": 0, "preserve": true },
+    { "name": "dead-runner", "status": "running", "alive": false, "ageMs": 0, "preserve": false },
+    { "name": "stale-output", "status": "running", "alive": true, "ageMs": 120001, "preserve": false },
+    { "name": "terminal-output", "status": "passed", "alive": true, "ageMs": 0, "preserve": false }
+  ]
+}

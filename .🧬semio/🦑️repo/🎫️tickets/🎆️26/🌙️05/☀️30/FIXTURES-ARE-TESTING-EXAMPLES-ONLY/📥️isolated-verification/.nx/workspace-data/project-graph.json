@@ -7,6 +7,536 @@
         "root": ".",
         "name": "ticket-fixture-verification",
         "targets": {
+          "plugin-energy-admission-closure": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" energy-closure",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-energy-sqlite-proof": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" energy-proof",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-energy-extent-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" energy-native",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-completed-output-receipts": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" completed-receipts",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-reference-owners": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" reference-owners",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-reference-inputs": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" reference-inputs",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-reference-proof": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" reference-proof",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-final-ghosts": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" final-ghosts",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-shell-proof": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" shell-proof",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-renderer-owner-final": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" renderer-owner-final",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "registry-rebuild-current-resume": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" registry-guarded",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-pack-intrinsic-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" pack-native-final",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-world-capacity-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" world-native-final",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-frontier-final": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" frontier-final",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-ledger": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" ledger",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-owner-final": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" owner-final",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-publication-final": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" publication-final",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-welcome": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" welcome",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-diagnostics": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" diagnostics",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-oracle-final": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" oracle-final",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-behavior": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" behavior",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-oracles": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" oracles",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-frontier": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" frontier",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-followup": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" followup",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-proofs": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" proofs",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-plan": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" plan",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" apply",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-integrity": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" integrity",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-admission-current-actor": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" actor",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "registry-rebuild-current": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts\" rebuild-all --to check",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-route": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" route",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-preflight-owner": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test preflight-reference-basis",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-output": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" followup-output",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-directory-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" directory-native",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-followup": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" followup",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-followup-integrity": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" followup-integrity",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-plan": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" plan",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" apply",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-integrity": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" integrity",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-embedded-closure/📜️script.ts\" native",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "embedded-current-directory": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts\" document-http-check",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "ui-layered": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts\" test long ../../../../🔨️modules/🥞️layered-overview-geometry/🧪️tests/🔬️unit/🟦️.ts ../../../../🧱️elements/🥞️LayeredOverview/🧪️tests/🧩️component/🟦️.tsx",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "empty-facet": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🫙️artifact-empty-facet-authority/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "distribution-session": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts\" session s",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "pptx-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" pptx-examples",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "pptx-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" pptx-verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "hub-puzzle-current-repin": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" hub-repin",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-value-policy-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" plugin-values-owner",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-value-policy-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" plugin-values-verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-value-policy-current-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" plugin-values-native",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "register-current-profiles": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️verification-registration/📜️script.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
           "structural-catalog-test": {
             "executor": "nx:run-commands",
             "cache": false,
@@ -194,6 +724,636 @@
             },
             "configurations": {},
             "parallelism": true
+          },
+          "plugin-current-plan": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️final-plugin-closure/📜️script.ts\" plan",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️final-plugin-closure/📜️script.ts\" apply",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-current-integrity": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️final-plugin-closure/📜️script.ts\" integrity",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️final-plugin-closure/📜️script.ts\" verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "plugin-current-refs": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️final-plugin-closure/📜️script.ts\" refs",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev-corpus": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\" test long ../../🧪️tests/🧪️time-travel/🚀️boot/🧪️tests/🟦️.ts ../../🧪️tests/🧪️time-travel/🪞️inventory/🧪️tests/🟦️.ts",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "pack-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts\" test quick --lib -E \"test(borrowed_operation_symbols_preserve_first_source_and_all_paid_pages) | test(borrowed_static_projected_pack)\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "gltf-twin": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📜️script.ts\" canonical-architecture",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "gltf-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📜️script.ts\" test --lib -E \"test(borrowed_gltf_carriers_match_the_neutral_owned_metadata_and_serde_oracle)\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "en1997-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📜️script.ts\" test --lib -E \"test(sqlite_snapshot_en1997_independent_complete_nested_edit_both_annex_public_io)\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-plan": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" plan",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" apply",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-integrity": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" integrity",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-behavior": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" behavior",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "distribution-generate": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\" distribution generate",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-followup": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" followup",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-office": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" office",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" native",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-inference": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" inference",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "geometry-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" geometry",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "geometry-current-integrity": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" geometry-integrity",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "geometry-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" geometry-verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "ui-corpus": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts\" test long ../../../../🧱️elements/✏️Input/🧪️tests/🧩️component/🟦️.tsx ../../../../🧱️elements/📨️UIDialog/🧪️tests/🧩️component/🟦️.tsx ../../../../🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx ../../../../🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-prepare-tex": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts\" prepare",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-current-prepare-toolchain": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts\" prepare",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "source-current-apply": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" source-followup",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "source-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" source-followup-verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "boolean-current-verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-print-closure/📜️script.ts\" boolean-verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "core-corpus": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts\" \"🧰️framework/🔨️modules/⏪️time-travel/🧪️tests/🧪️conformance/🟦️.ts\" \"🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🧪️conformance/🟦️.ts\" \"🧰️framework/🔨️modules/🖼️assets/🗺️tile-proxy/🧪️tests/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "dev-latency": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\" test long ../../🧪️tests/⏱️interaction-latency/🧮️reducers/🟦️.ts",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "hub-core-corpus": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🌎️hub/📦️packages/🟦️typescript/📜️script.ts\" test long ../../🧪️tests/🤝️integration/🟦️.ts ../../🧪️tests/🤝️two-client-document/🟦️.ts ../../🧪️tests/📈️document-growth/🟦️.ts",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "parser-input-oracles": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts parser-input-oracles",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-stale-consumers": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-stale-consumer-checks/📜️script.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-child-worker": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🌎️hub/📦️packages/🦀️rust/📜️script.ts\" browser-actor-child-worker-containment-check",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "parser-python": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts parser-python",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "draft07-oracle": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts draft07-oracle",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "camera-corpus": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts\" test long ../../../../🧪️tests/🎥️world3d-camera-framing/🟦️.ts",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "hub-final-corpus": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🌎️hub/🧩️compositions/📜️script.ts\" ownership",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "hub-memory-oracle": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️tests/🧮️memory-backing/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "storage-frontiers": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/💰️operation/🟦️.ts\" \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/💰️frontiers/🟦️.ts\" \"✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "parser-input-tests": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🟦️.ts\" \"🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧪️tests/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-caps/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-input-declarations/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-payload-parity/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🫙️artifact-empty-facet-authority/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-parser-native-manifest": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"🧰️framework/📦️packages/🦀️rust/📜️script.ts\" test-mutation-inputs",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-parser-native-schema": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts\" test --lib -E \"test(owned_validator_agrees_with_the_shared_draft07_vectors) | test(fragment_validation_uses_only_the_smallest_required_post_edit_frontier)\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-parser-native-stdio": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/📜️script.ts\" test --lib -E \"test(schema_constraints_reject_an_addressed_value_atomically) | test(collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls) | test(table_details_first_paint_keeps_fields_reachable_across_repeated_projection)\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-collision-oracle": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/💥️generic-stem-collision-resolution/🟦️.ts\" \"🧰️framework/🔨️modules/🧬️schema/🧪️tests/🩹️fragment-validation-oracle/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-closure-ingress": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🚮️absence/🟦️.ts\" \"🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-new-authority": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-new-authority-checks/📜️script.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-channel-wire": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts kernel-command test wire_matches_the_language_neutral_fixture -- --nocapture",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-lexical-oracles": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️storybook-discovery/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧪️tests/🟦️.ts\" \"🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts\" \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/🔁️context/🟦️.ts\" \"🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧱️ownership/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-batch59": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-runtime-batch59-checks/📜️script.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-story-inspect": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts root-story-inspect",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-node-oracles": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts root-node-oracles",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-composition-ownership": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts\" \"🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-schema-generate": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts schema generate",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-schema-check": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts schema check",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-schema-docs": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts schema docs",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-member-open-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts kernel-command test member_open_request_rejection_retains_exact_pages_and_identity -- --nocapture",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-asset-dedup": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📜️script.ts\" test-asset-transport",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "runtime-dsl-producer-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts kernel-command test sqlite_snapshot_native_schema -- --nocapture",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-store-payload-tests": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔢️testing-payload-contracts/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-store-replay-oracles": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts\"",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "root-store-scalar-wide": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts root-store-scalar-wide",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
           }
         },
         "implicitDependencies": [],
@@ -207,5 +1367,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1791252750668
+  "computedAt": 1791317764854
 }

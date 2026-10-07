@@ -41,11 +41,27 @@ message PdfDictEntry {
 }
 
 message PdfObject {
-  string kind = 1;
-  optional bool value = 2;
-  repeated PdfDictEntry dict = 3;
-  optional bytes data = 4;
-  repeated PdfStreamFilter filters = 5;
+  oneof value {
+    bool null_value = 1;
+    bool boolean_value = 2;
+    sint64 integer_value = 3;
+    PdfDecimal decimal_value = 4;
+    bytes opaque_octets = 5;
+    string text_value = 6;
+    PdfDate date_value = 7;
+    string name_value = 8;
+    PdfObjectArray array_value = 9;
+    PdfObjectDictionary dictionary_value = 10;
+    ObjRef reference_value = 11;
+    PdfObjectStream stream_value = 12;
+  }
+}
+message PdfObjectArray { repeated PdfObject value = 1; }
+message PdfObjectDictionary { repeated PdfDictEntry value = 1; }
+message PdfObjectStream {
+  repeated PdfDictEntry dict = 1;
+  bytes opaque_data = 2;
+  repeated PdfStreamFilter filters = 3;
 }
 
 message PdfStreamFilter {
@@ -484,13 +500,13 @@ message PdfInlineImage {
 message PdfTextString {
   string kind = 1;
   optional string text = 2;
-  optional bytes bytes = 3;
+  repeated uint32 codes = 3;
 }
 
 message PdfTextArrayItem {
   string kind = 1;
   optional string text = 2;
-  optional bytes bytes = 3;
+  repeated uint32 codes = 3;
   optional double amount = 4;
 }
 

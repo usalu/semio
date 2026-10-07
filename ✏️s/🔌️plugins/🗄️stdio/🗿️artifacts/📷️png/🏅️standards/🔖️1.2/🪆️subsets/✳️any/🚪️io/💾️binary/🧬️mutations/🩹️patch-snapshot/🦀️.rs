@@ -1,6 +1,8 @@
 //! 💾️ Direct compact PNG snapshot-patch binary codec.
 
 use crate::standards::v1_2::subsets::any::io::binary::mutations::*;
+use crate::schema::mutations::PatchSnapshot;
+use semio_s_artifact_stdio_contract::editing;
 use crate::standards::v1_2::subsets::any::io::binary::mutations::Entry;
 use protocol::OpBinary;
 

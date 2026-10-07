@@ -197,20 +197,20 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
 /** 🔮️ The oracle phase — proves the reference library actually supports the case before any local code exists, except an explicit byte-decoder oracle, which first receives its subject artifact. */
 export class OracleScript extends Script {
   run(segments: string[]): void {
-    process.exit(runPhases(this.repoRoot, segments, ["oracle"]));
+    process.exitCode = runPhases(this.repoRoot, segments, ["oracle"]);
   }
 }
 
 /** 🎯️ The subject phase — this repository's implementations, on the same inputs. */
 export class SubjectScript extends Script {
   run(segments: string[]): void {
-    process.exit(runPhases(this.repoRoot, segments, ["subject"]));
+    process.exitCode = runPhases(this.repoRoot, segments, ["subject"]);
   }
 }
 
 /** ⚖️ Oracle + subject + semantic comparison + pairwise subject equivalence. */
 export class ParityScript extends Script {
   run(segments: string[]): void {
-    process.exit(runPhases(this.repoRoot, segments, ["oracle", "subject"]));
+    process.exitCode = runPhases(this.repoRoot, segments, ["oracle", "subject"]);
   }
 }

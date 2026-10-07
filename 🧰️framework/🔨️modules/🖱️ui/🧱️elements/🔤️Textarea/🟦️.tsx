@@ -38,12 +38,13 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
 
 /**
  **/
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, mixed, rows, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, onFocus, onBlur, onKeyDown, id, showLabel, placeholderId, placeholder, mixed, rows, ...props }: TextareaProps) {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [localValue, setLocalValue] = reactHostPort.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const textareaRef = reactHostPort.useRef<HTMLTextAreaElement>(null);
+  const skipLazyBlurCommitRef = reactHostPort.useRef(false);
   const placeholderIdLabel = useIdLabel(placeholderId);
   const computedPlaceholder: UiLabel | undefined = placeholderId ? placeholderIdLabel : placeholder !== undefined ? uiDataLabel(placeholder) : undefined;
   const mixedLabel = useLabel("ui.common.mixedValues");
@@ -72,27 +73,29 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     if (lazy) {
       setIsEditing(true);
     }
-    props.onFocus?.(e);
+    onFocus?.(e);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     setIsFocused(false);
     if (lazy) {
       setIsEditing(false);
-      onLazyChange?.(localValue);
+      if (skipLazyBlurCommitRef.current) skipLazyBlurCommitRef.current = false;
+      else onLazyChange?.(localValue);
     }
-    props.onBlur?.(e);
+    onBlur?.(e);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (lazy) {
+    if (lazy && !e.nativeEvent.isComposing) {
       if (e.key === "Escape") {
+        skipLazyBlurCommitRef.current = true;
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
         (e.target as HTMLTextAreaElement).blur();
       }
     }
-    props.onKeyDown?.(e);
+    onKeyDown?.(e);
   };
 
   const textareaValue = lazy ? localValue : externalValue;

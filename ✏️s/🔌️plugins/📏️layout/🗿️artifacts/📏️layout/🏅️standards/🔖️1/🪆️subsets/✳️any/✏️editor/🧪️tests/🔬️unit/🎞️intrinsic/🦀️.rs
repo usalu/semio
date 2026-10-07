@@ -43,7 +43,7 @@ async fn live_vcs_forms_dictionary_out_to_layout_fields_in_retains_complete_intr
  let mut envelope=store::create_document_envelope::<FormsSnapshot,FormMutation>("forms.form","live-form",snapshot,None).into_owners();
  envelope.dialect=Some(<FormsPlayApp as semio_framework_plugin::ArtifactEditor>::DIALECT.into());
  let files=store::print_document_pack(&envelope).await.expect("actual typed form document pack");
- let mut producer=LiveFormsOwner(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_framework_plugin::EditorApp<FormsPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>(live_forms_manifest).await);
+ let mut producer=LiveFormsOwner(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_framework_plugin::EditorApp<FormsPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>(live_forms_manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
  producer.0.bind_instance_id(context::INSTANCE).await;
  semio_framework_plugin::artifact_app_laws::load_document(&mut producer.0, &files).await.expect("real VCS form load");
  assert_eq!(semio_s_artifact_forms_forms::schema::configured_dictionary(&producer.0.snapshot().unwrap()).unwrap(),expected);

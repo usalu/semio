@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "patch-snapshot";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::PatchSnapshot;
+use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot::PatchSnapshot;
 
 /// 🖨️ Prints this direct payload as its shared `patch-snapshot` op line.
 pub fn print(payload: &PatchSnapshot) -> Result<String, String> {

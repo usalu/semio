@@ -6,8 +6,6 @@ use super::*;
 use crate::editor::model::config::mutations::*;
 use crate::editor::model::config::EnergyModelConfig;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use change_simulation_settings::ChangeSimulationSettings;
-use change_result_field::ChangeResultField;
 
 impl protocol::OpText for EnergyModelConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -26,8 +24,6 @@ use super::*;
 use crate::editor::model::config::mutations::*;
 use crate::editor::model::config::EnergyModelConfig;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use change_simulation_settings::ChangeSimulationSettings;
-use change_result_field::ChangeResultField;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `EnergyModelConfig`.

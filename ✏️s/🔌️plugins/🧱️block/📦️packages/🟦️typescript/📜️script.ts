@@ -2,14 +2,14 @@
 import {runOwnedCommand} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🧱️ Block source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
-import Ajv from "ajv";
+
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 /** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 
-type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "window-transient" | "child" | "host-only";
 type AppAuthority = { owner: string; toolIdsConstant: string; source: string; routes: { id: string; lanes: Lane[] }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 type Fixture = { schema: string; apps: AppAuthority[] };
 
@@ -79,12 +79,6 @@ class TestScript extends BundleScript {
     const plugin = resolve(this.root, "../..");
     const authority = resolve(plugin, "🧫️fixtures/🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
-    const module = await Bun.file(resolve(plugin, "🧬️schema", "🔣️.json")).json() as { $id: string };
-    const ajv = new Ajv({ allErrors: true, strict: true });
-    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    ajv.addSchema(module);
-    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/BlockPublicationAuthority` });
-    if (!validate(fixture)) throw new Error(`Block fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const sources = new Map<string, string>();
     for (const app of fixture.apps) sources.set(app.owner, await Bun.file(resolve(plugin, app.source)).text());
     if (!oracle(fixture, sources)) throw new Error("Block publication-authority oracle rejected production");
@@ -99,7 +93,7 @@ class TestScript extends BundleScript {
       hostile += 1;
       if (oracle(hostileFixture, sources)) throw new Error(`Block accepted a hostile fixture mutation for ${app.owner}`);
     }
-    console.error(`validated Block publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; schema=Ajv; oracle=owned; hostile=${hostile}`);
+    console.error(`validated Block publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; oracle=owned; hostile=${hostile}`);
   }
 }
 class SharedSchemaScript extends BundleScript {

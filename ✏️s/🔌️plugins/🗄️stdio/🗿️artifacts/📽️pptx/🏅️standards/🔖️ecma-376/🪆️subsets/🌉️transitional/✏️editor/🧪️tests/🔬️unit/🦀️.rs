@@ -3,7 +3,7 @@ use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSl
 use semio_framework_plugin::app::DocumentWindowKit;
 
 fn deck(shapes: Vec<PptxShape>) -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
+    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -50,3 +50,5 @@ async fn op_text_roundtrip() {
 async fn missing_set_page_payload_is_rejected() {
     assert!(<PptxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", None).is_err());
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio/PptxTransitionalEditor", PptxTransitionalEditor, || semio_framework_plugin::App { definition: create_pptx_transitional_editor(), examples: Vec::new() }, "../..");

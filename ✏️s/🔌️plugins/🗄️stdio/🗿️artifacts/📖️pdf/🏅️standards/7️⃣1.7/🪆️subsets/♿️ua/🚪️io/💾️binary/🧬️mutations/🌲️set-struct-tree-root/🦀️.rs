@@ -1,6 +1,6 @@
 //! 🌲️ Direct binary codec for `set-struct-tree-root`.
 
-use super::SetStructTreeRoot;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetStructTreeRoot;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 2;

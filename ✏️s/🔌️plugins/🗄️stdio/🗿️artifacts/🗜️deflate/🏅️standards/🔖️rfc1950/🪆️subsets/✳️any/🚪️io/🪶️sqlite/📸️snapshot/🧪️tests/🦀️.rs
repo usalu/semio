@@ -63,7 +63,7 @@ fn deflate_native_control_snapshot()->DeflateSnapshot{let input=deflate_native_c
 fn deflate_native_payload(snapshot:&DeflateSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io_schema::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(<DeflateSnapshot as store::ArtifactPack>::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(<DeflateSnapshot as store::ArtifactDsl>::print_dsl(snapshot))}}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_deflate_actual_factory_canonical_external_carrier(){
- use semio_framework_os_kernel::io::ArtifactDialect;
+ use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Deflate full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::document_codec(crate::STDIO_DEFLATE_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().expect("actual owning declaration publishes semantic SQLite");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<DeflateSnapshot>()));
@@ -104,7 +104,7 @@ fn deflate_canonical_carrier_snapshot()->DeflateSnapshot{let mut snapshot=deflat
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_deflate_actual_typed_file_preserves_complete_literal_owned_fields(){
- use semio_framework_os_kernel::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Deflate typed SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.deflate".into(),standard:"rfc1950".into(),subset:"*".into()};
@@ -144,7 +144,7 @@ fn norm_independent_public_file_extent(bytes:&[u8])->serde_json::Value{use std::
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_deflate_complete_actual_typed_public_io_limits(){
- use semio_framework_os_kernel::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};use store::sqlite_snapshot::*;
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};use store::sqlite_snapshot::*;
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("deflate complete public file scope").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.deflate".into(),standard:"rfc1950".into(),subset:"*".into()};let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️semantic.json")).unwrap();let public=&contract["publicIo"];
  for case in contract["cases"].as_array().unwrap(){let source=norm_complete_source(case);let domain=SqliteDatabaseLimits{max_rows:case["rows"].as_u64().unwrap()as usize,max_value_bytes:case["valueBytes"].as_u64().unwrap()as usize,max_schema_bytes:contract["schemaBytes"].as_u64().unwrap()as usize,max_tables:2,max_columns:6,..SqliteDatabaseLimits::default()};let expected=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,domain)).unwrap();let public_case=public["cases"].as_array().unwrap().iter().find(|value|value["id"]==case["id"]).unwrap();

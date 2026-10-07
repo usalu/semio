@@ -3,7 +3,7 @@
 pub const TAG: u8 = 1;
 pub const BINARY_TAG: u8 = TAG;
 
-use super::SetInfoAuthor;
+use crate::standards::v1_7::subsets::h::schema::mutations::SetInfoAuthor;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetInfoAuthor) -> Result<Vec<u8>, String> {

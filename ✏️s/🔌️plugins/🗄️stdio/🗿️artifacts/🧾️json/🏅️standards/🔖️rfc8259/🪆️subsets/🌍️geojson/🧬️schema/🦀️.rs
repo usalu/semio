@@ -17,7 +17,7 @@
 //! `crs` fail here rather than land in the ocean off Africa). The writer never writes `crs`.
 
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot, JsonValue};
-use serde_json::{Map, Number, Value};
+use std::collections::BTreeMap;
 
 //#region 🔹Model
 /// 📍️ One position: longitude, latitude and, when present, the ellipsoidal height (RFC 7946 §3.1.1).
@@ -39,7 +39,7 @@ pub enum GeoJsonGeometry {
 #[derive(Clone, Debug, PartialEq)]
 pub enum GeoJsonId {
     Text(String),
-    Number(Number),
+    Number(JsonValue),
 }
 
 /// 🗺️ An RFC 7946 §3.2 feature; `properties: None` is the JSON `null` the RFC allows.
@@ -47,7 +47,7 @@ pub enum GeoJsonId {
 pub struct GeoJsonFeature {
     pub id: Option<GeoJsonId>,
     pub geometry: Option<GeoJsonGeometry>,
-    pub properties: Option<Map<String, Value>>,
+    pub properties: Option<BTreeMap<String, JsonValue>>,
 }
 
 /// 🧭️ The coordinate reference a document declared, after the policy above resolved it.
@@ -266,10 +266,7 @@ pub(crate) fn feature(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left
     let id = match member(value, "id") {
         None => None,
         Some(JsonValue::String { value }) => Some(GeoJsonId::Text(value.clone())),
-        Some(number @ JsonValue::Number { .. }) => match exact_serde_value(number) {
-            Value::Number(number) => Some(GeoJsonId::Number(number)),
-            _ => return fail(&format!("{path}/id"), "a numeric feature id is a finite number"),
-        },
+        Some(value @ JsonValue::Number { .. }) if number(value).is_some() => Some(GeoJsonId::Number(value.clone())),
         Some(_) => return fail(&format!("{path}/id"), "a feature id is a string or a number (RFC 7946 §3.2)"),
     };
     let geometry = match member(value, "geometry") {
@@ -280,10 +277,7 @@ pub(crate) fn feature(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left
     let properties = match member(value, "properties") {
         None => return fail(&format!("{path}/properties"), "a feature has a `properties` member (an object or null)"),
         Some(JsonValue::Null) => None,
-        Some(object @ JsonValue::Object { .. }) => match exact_serde_value(object) {
-            Value::Object(members) => Some(members),
-            _ => unreachable!("an object converts to an object"),
-        },
+        Some(JsonValue::Object { members }) => Some(members.iter().map(|member| (member.key.clone(), member.value.clone())).collect()),
         Some(_) => return fail(&format!("{path}/properties"), "feature properties are an object or null"),
     };
     Ok(GeoJsonFeature { id, geometry, properties })
@@ -349,22 +343,7 @@ pub(crate) fn polygon(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn geometry_value(geometry: &GeoJsonGeometry, path: &str) -> Result<Value, GeoJsonError> {
-    let coordinates_path = format!("{path}/coordinates");
-    let (kind, coordinates) = match geometry {
-        GeoJsonGeometry::Point(position) => ("Point", position_value(position, &coordinates_path)?),
-        GeoJsonGeometry::MultiPoint(positions) => ("MultiPoint", positions_value(positions, &coordinates_path, 0, "a MultiPoint")?),
-        GeoJsonGeometry::LineString(positions) => ("LineString", positions_value(positions, &coordinates_path, 2, "a LineString")?),
-        GeoJsonGeometry::MultiLineString(lines) => ("MultiLineString", lines.iter().enumerate().map(|(index, line)| positions_value(line, &format!("{coordinates_path}/{index}"), 2, "a LineString")).collect::<Result<Vec<_>, _>>().map(Value::Array)?),
-        GeoJsonGeometry::Polygon(rings) => ("Polygon", polygon_value(rings, &coordinates_path)?),
-        GeoJsonGeometry::MultiPolygon(polygons) => ("MultiPolygon", polygons.iter().enumerate().map(|(index, rings)| polygon_value(rings, &format!("{coordinates_path}/{index}"))).collect::<Result<Vec<_>, _>>().map(Value::Array)?),
-        GeoJsonGeometry::GeometryCollection(members) => {
-            let geometries = members.iter().enumerate().map(|(index, member)| geometry_value(member, &format!("{path}/geometries/{index}"))).collect::<Result<Vec<_>, _>>()?;
-            return Ok(serde_json::json!({ "type": "GeometryCollection", "geometries": geometries }));
-        }
-    };
-    Ok(serde_json::json!({ "type": kind, "coordinates": coordinates }))
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wgs84_range(position: &[f64], path: &str) -> Result<(), GeoJsonError> {
@@ -375,28 +354,26 @@ pub(crate) fn wgs84_range(position: &[f64], path: &str) -> Result<(), GeoJsonErr
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn position_value(position: &GeoJsonPosition, path: &str) -> Result<Value, GeoJsonError> {
-    if position.len() < 2 {
-        return fail(path, "a position has at least longitude and latitude");
-    }
-    let numbers = position.iter().map(|number| Number::from_f64(*number).map(Value::Number)).collect::<Option<Vec<_>>>();
-    let Some(numbers) = numbers else { return fail(path, "a coordinate is a finite number") };
-    wgs84_range(position, path)?;
-    Ok(Value::Array(numbers))
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn positions_value(positions: &[GeoJsonPosition], path: &str, minimum: usize, what: &str) -> Result<Value, GeoJsonError> {
-    if positions.len() < minimum {
-        return fail(path, format!("{what} needs at least {minimum} positions"));
-    }
-    positions.iter().enumerate().map(|(index, position)| position_value(position, &format!("{path}/{index}"))).collect::<Result<Vec<_>, _>>().map(Value::Array)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn polygon_value(rings: &[Vec<GeoJsonPosition>], path: &str) -> Result<Value, GeoJsonError> {
-    if rings.is_empty() {
-        return fail(path, "a Polygon has an exterior ring");
+
+
+pub fn ring_signed_area2(ring: &[GeoJsonPosition]) -> f64 {
+    ring.windows(2).map(|pair| pair[0][0] * pair[1][1] - pair[1][0] * pair[0][1]).sum()
+}
+pub fn right_handed_ring(ring: &[GeoJsonPosition], exterior: bool) -> Vec<GeoJsonPosition> {
+    let mut closed = ring.to_vec();
+    if let (Some(first), Some(last)) = (ring.first(), ring.last()) {
+        if first != last {
+            closed.push(first.clone());
+        }
     }
-    rings.iter().enumerate().map(|(index, ring)| positions_value(&right_handed_ring(ring, index == 0), &format!("{path}/{index}"), 4, "a linear ring")).collect::<Result<Vec<_>, _>>().map(Value::Array)
+    if (ring_signed_area2(&closed) > 0.0) != exterior {
+        closed.reverse();
+    }
+    closed
 }

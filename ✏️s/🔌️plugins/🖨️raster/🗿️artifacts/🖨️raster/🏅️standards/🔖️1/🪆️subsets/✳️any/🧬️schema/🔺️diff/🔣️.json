@@ -73,7 +73,7 @@
           "additionalProperties": {
             "anyOf": [
               {
-                "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterImageAsset"
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/image/snapshot.json"
               },
               {
                 "type": "null"

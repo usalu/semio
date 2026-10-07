@@ -1,28 +1,12 @@
-//! 🧬️ GltfSnapshot schema — the FULLY TYPED glTF 2.0 JSON document model (ticket
-//! ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, F4: kills `document:
-//! serde_json::Value` outright, replaced by [`GltfDocument`] — one struct per spec object type,
-//! `extras`/`extensions` typed via this module's own [`GltfJson`] value enum, never
-//! `serde_json::Value`). Byte/container codecs (base64, accessor decode, `.gltf`/`.glb`
-//! parse+serialize) live in `🏅️standards/🔖️2.0/🚪️io` and now round-trip `GltfDocument` through
-//! [`dsl::ToValue`]/[`dsl::FromValue`] + `pack::json` (ticket
-//! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`), not `serde_json`. Every
-//! struct here still ALSO derives real `Serialize`/`Deserialize`, additive alongside `ToValue`/
-//! `FromValue` and kept UNCONDITIONAL (not `#[cfg(test)]`): [`GltfSnapshot`] itself is still
-//! serialized through it by a production call site outside this module (the `wasm32-wasip2`
-//! component build) — see its own doc comment. `extras`/`extensions` are typed via this module's
-//! own [`GltfJson`] value enum, never `serde_json::Value`.
-//!
-//! 🔀️ The two codecs AGREE on empty arrays, and must: `🚪️io`'s `.gltf`/`.glb` writer serializes the
-//! real file through `#[value]` (`to_json_string_pretty` → `pack::json`), not through `serde`, and
-//! glTF 2.0 declares `scene.nodes`, `node.children`, `mesh.weights`, … optional with `minItems: 1`
-//! — an empty array on the wire is a spec-INVALID `.gltf`. Both therefore carry
-//! `skip_serializing_if = "Vec::is_empty"`, which `glb_json_padding_is_space_and_bin_padding_is_zero`
-//! also depends on (it predicts the JSON chunk's real length with `serde_json`). `#[value(default)]`
-//! keeps the read direction lenient, so an encoder that does spell `"children": []` still decodes.
+//! 🧬️ Owned glTF 2.0 document, buffer records, and decoded accessor input.
+//! Native JSON, GLB, URI, and accessor byte codecs belong to IO.
+//! Serde derives are test-only independent codec oracles.
 
-pub use crate::engine::GltfAccessorType;
 
-pub use crate::engine::GltfComponentType;
+#[cfg(test)]
+use crate::standards::v2_0::subsets::any::io::text::snapshot::ordered_attr_map;
+
+
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
@@ -63,17 +47,7 @@ pub enum GltfJson {
     Object(Vec<(String, GltfJson)>),
 }
 
-/// 🌱️ Additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below, not a replacement: `🚪️io/🦀️.rs`'s
-/// `.gltf`/`.glb` codec no longer needs this pair (it round-trips `GltfDocument` through `pack::json`
-/// now), but [`GltfSnapshot`]'s own `serde` derive stays UNCONDITIONAL (not `#[cfg(test)]`, see its
-/// doc comment) because some other production call site outside this module still serializes it —
-/// gating it broke the `wasm32-wasip2` component build. This `GltfJson` leaf needs the same pair for
-/// that outer derive to keep compiling.
-/// 🌉️ `ToValue`/`FromValue` — structurally identical to the `#[cfg(test)]`-only `Serialize`/
-/// `Deserialize` pair above (unit -> `Null`, same scalar/array/object mapping): this is now the
-/// REAL runtime mapping — `🚪️io/🦀️.rs`'s `.gltf`/`.glb` codec parses/serializes `GltfDocument`
-/// through `pack::json` + `ToValue`/`FromValue`, not `serde_json`, and this is what a `Mutation`/
-/// `MutationDiff` payload carrying `extras`/`extensions` needs too.
+/// 🌉️ Retains the ordered extension value tree through canonical owned values.
 impl semio_framework_value::ToValue for GltfJson {
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
         control.scoped_depth(64, |control| control.scoped_stage(|control| match self {
@@ -151,20 +125,6 @@ pub mod present_json {
 //#endregion 🔖️GltfJson
 
 //#region 🔖️OrderedAttrMap
-/// 🧩️ `primitive.attributes` (and morph-target maps) are a JSON OBJECT of `semantic -> accessor
-/// index`, but `Vec<(String, usize)>` is the right in-memory shape (attribute count is always
-/// small and order-preserving matters for stable diffs) -- this hand-rolled serde adapter makes
-/// the pair-vec serialize/deserialize AS a JSON object instead of Serde's default array-of-tuples.
-/// Additive alongside `ordered_attr_map_to_value`/`ordered_attr_map_from_value` below (same
-/// object-shaped mapping for [`dsl::ToValue`]/[`dsl::FromValue`]) — kept unconditional since
-/// [`GltfSnapshot`]'s own `serde` derive is (see its doc comment).
-
-
-/// 🧩️ `ToValue`/`FromValue` analogs of `crate::standards::v2_0::subsets::any::io::text::snapshot::ordered_attr_map::{serialize,deserialize}` above — same
-/// object-shaped (never array-of-tuples) wire mapping, referenced via `#[value(serialize_with =
-/// "ordered_attr_map_to_value", deserialize_with = "ordered_attr_map_from_value")]` on
-/// [`GltfPrimitive::attributes`] and by [`GltfMorphTarget`]'s hand-written impls above.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 /// 🔢️ Retains ordered accessor names under cumulative ownership and cancellation.
 fn ordered_attr_map_to_value_controlled(attrs: &[(String, usize)], control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
     control.scoped_stage(|control| {
@@ -1052,25 +1012,6 @@ pub enum GltfCameraProjection {
     Orthographic(GltfOrthographic),
 }
 
-/// 🌱️ Additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below — kept UNCONDITIONAL (not
-/// `#[cfg(test)]`) for the same reason [`GltfSnapshot`]'s own `serde` derive is (see its doc
-/// comment): some production call site outside this module still serializes a snapshot that
-/// recursively contains this type.
-impl Serialize for GltfCameraProjection {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        #[derive()]
-#[cfg_attr(test, derive(Serialize))]
-        #[cfg_attr(test, serde(tag = "type", rename_all = "lowercase"))]
-        enum Wire<'a> {
-            Perspective { perspective: &'a GltfPerspective },
-            Orthographic { orthographic: &'a GltfOrthographic },
-        }
-        match self {
-            Self::Perspective(perspective) => Wire::Perspective { perspective }.serialize(serializer),
-            Self::Orthographic(orthographic) => Wire::Orthographic { orthographic }.serialize(serializer),
-        }
-    }
-}
 
 
 
@@ -1089,7 +1030,7 @@ pub struct GltfCamera {
 
 
 /// 🌉️ Hand-written `ToValue`/`FromValue` for the tagged-union `type`+sibling-key wire shape —
-/// mirrors the two hand-rolled `Serialize`/`Deserialize` impls above exactly (`{"type":
+/// mirrors the test-only IO Serde oracle exactly (`{"type":
 /// "perspective", "perspective": {...}}`), which neither `#[value(tag = "…")]` (fixed content
 /// key, not one named after the tag value) nor `#[value(tag = "…", content = "…")]` (same
 /// mismatch) can express generically.
@@ -1125,7 +1066,7 @@ impl semio_framework_value::FromValue for GltfCameraProjection {
 
 /// 🌉️ Hand-written `ToValue`/`FromValue` for `GltfCamera` — flattens `projection`'s own
 /// `type`+sibling-key entries alongside `name`/`extensions`/`extras`, mirroring the hand-rolled
-/// `Serialize`/`Deserialize` impls above.
+/// test-only IO Serde oracle.
 impl semio_framework_value::ToValue for GltfCamera {
     fn to_value(&self) -> semio_framework_value::DslValue {
         let mut entries = match semio_framework_value::ToValue::to_value(&self.projection) {
@@ -1239,10 +1180,6 @@ pub struct GltfDocument {
 /// resolved raw bytes for each `document.buffers[i]` (index-aligned), since a `.glb`-sourced
 /// buffer may have no `uri` at all and its bytes must live somewhere other than the JSON.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-/// 🌱️ serde is UNCONDITIONAL, not `#[cfg_attr(test, …)]`: production call sites still serialize this
-/// snapshot, so gating it breaks the `s` plugin's `wasm32-wasip2` build. Re-gate once those move to
-/// `ToValue`/`FromValue`.
-#[derive()]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1271,4 +1208,72 @@ impl Default for GltfSnapshot {
 }
 //#endregion 🔖️Snapshot
 
+/// 🔢️ `accessor.componentType` — the 6 values glTF 2.0 permits (§5.1.1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_dsl_record_derive::DslScalar)]
+pub enum GltfComponentType {
+    Byte,
+    UnsignedByte,
+    Short,
+    UnsignedShort,
+    UnsignedInt,
+    Float,
+}
+/// 🔢️ `accessor.type` — the 7 shapes glTF 2.0 permits (§5.1.2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_dsl_record_derive::DslScalar)]
+pub enum GltfAccessorType {
+    Scalar,
+    Vec2,
+    Vec3,
+    Vec4,
+    Mat2,
+    Mat3,
+    Mat4,
+}
+impl GltfComponentType {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn byte_size(self) -> usize {
+        match self {
+            Self::Byte | Self::UnsignedByte => 1,
+            Self::Short | Self::UnsignedShort => 2,
+            Self::UnsignedInt | Self::Float => 4,
+        }
+    }
+}
+impl GltfAccessorType {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn components(self) -> usize {
+        match self {
+            Self::Scalar => 1,
+            Self::Vec2 => 2,
+            Self::Vec3 => 3,
+            Self::Vec4 | Self::Mat2 => 4,
+            Self::Mat3 => 9,
+            Self::Mat4 => 16,
+        }
+    }
+}
 
+/// 📦️ One decoded accessor: flat row-major `count * accessor_type.components()` values, widened
+/// to `f64` and normalized when requested by the accessor before any consumer observes them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GltfDecodedAccessor {
+    pub component_type: GltfComponentType,
+    pub accessor_type: GltfAccessorType,
+    pub count: usize,
+    pub normalized: bool,
+    pub components: Vec<f64>,
+}
+
+/// 🧮️ Request-scoped geometry input whose accessor values are decoded before semantic inference.
+pub struct GltfDecodedSnapshot<'a> {
+    pub document:&'a GltfDocument,
+    pub accessors:Vec<Result<GltfDecodedAccessor,String>>,
+    pub buffer_fingerprints:Vec<String>,
+}
+impl GltfDecodedSnapshot<'_> {
+    pub fn accessor(&self,index:usize)->Result<&GltfDecodedAccessor,String> {
+        self.accessors.get(index).ok_or_else(||format!("accessor index {index} out of range"))?.as_ref().map_err(Clone::clone)
+    }
+}

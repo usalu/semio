@@ -963,10 +963,27 @@
             },
             "expectedText": "4294967298"
           },
-          {"port":"sourceIndex","en":"Source index","de":"Quellindex","value":{"$schema":"number","value":1},"expectedText":"1"}
+          {
+            "port": "sourceIndex",
+            "en": "Source index",
+            "de": "Quellindex",
+            "value": {
+              "$schema": "number",
+              "value": 1
+            },
+            "expectedText": "1"
+          }
         ],
         "readOnlyInputs": [
-          {"channel":"sourceHandle","en":"Source geometry","de":"Quellgeometrie","value":"4294967300","labels":["4294967300"]},
+          {
+            "channel": "sourceHandle",
+            "en": "Source geometry",
+            "de": "Quellgeometrie",
+            "value": "4294967300",
+            "labels": [
+              "4294967300"
+            ]
+          },
           {
             "channel": "edgeLabels",
             "en": "Selected edge labels",
@@ -1065,6 +1082,25 @@
         "4294968297",
         "4294968298"
       ]
+    }
+  },
+  "reactCommits": {
+    "scope": "procedural3d-play",
+    "action": "setWidgetInput",
+    "gestures": [
+      "blur",
+      "enter"
+    ],
+    "drafts": {
+      "number": "4.5",
+      "longText": "edited\nvalue",
+      "toggle": false
+    },
+    "counts": {
+      "untouched": 0,
+      "draft": 0,
+      "committed": 1,
+      "repeated": 1
     }
   }
 }

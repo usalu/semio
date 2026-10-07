@@ -1,0 +1,5 @@
+> bun ./📜️script.ts schema check --fixture-boundary
+
+[DEBUG] isolated Nx verification schema
+[schema check] modules=4423 scopes=3639 findings=0
+[schema check] shared-code-table=46 unshared-codes=0

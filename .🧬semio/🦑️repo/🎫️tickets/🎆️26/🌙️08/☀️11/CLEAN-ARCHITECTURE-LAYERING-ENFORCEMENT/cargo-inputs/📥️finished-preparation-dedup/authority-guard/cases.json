@@ -1,0 +1,38 @@
+[
+  {
+    "mutation": "valid",
+    "expected": true
+  },
+  {
+    "mutation": "authority-hash",
+    "expected": false
+  },
+  {
+    "mutation": "bank",
+    "expected": false
+  },
+  {
+    "mutation": "header-bank",
+    "expected": false
+  },
+  {
+    "mutation": "prepared-path",
+    "expected": false
+  },
+  {
+    "mutation": "completion-path",
+    "expected": false
+  },
+  {
+    "mutation": "driver",
+    "expected": false
+  },
+  {
+    "mutation": "ready",
+    "expected": false
+  },
+  {
+    "mutation": "evidence",
+    "expected": false
+  }
+]

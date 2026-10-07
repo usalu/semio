@@ -1,0 +1,7 @@
+input PatchSetInput { path: String! value: DslValueInput! }
+input PatchInsertInput { path: String! value: DslValueInput! index: UInt64 }
+input PatchRemoveInput { path: String! }
+input PatchMoveInput { from: String! path: String! index: UInt64 }
+input PatchRenameInput { path: String! key: String! }
+input PatchSpliceInput { path: String! offset: UInt64! remove: UInt64! value: DslValueInput! continued: Boolean! }
+input SnapshotPatchInput @oneOf { set: PatchSetInput insert: PatchInsertInput remove: PatchRemoveInput move: PatchMoveInput rename: PatchRenameInput splice: PatchSpliceInput }

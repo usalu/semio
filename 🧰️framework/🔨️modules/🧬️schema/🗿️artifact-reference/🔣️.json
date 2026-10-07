@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json",
+  "title": "Artifact References",
+  "$defs": {
+    "ArtifactKindId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"
+    },
+    "ArtifactDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Artifact kind",
+              "de": "Artefaktart"
+            }
+          }
+        },
+        "standard": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Standard",
+              "de": "Standard"
+            }
+          }
+        },
+        "subset": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Subset",
+              "de": "Teilmenge"
+            }
+          }
+        }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Artifact",
+              "de": "Artefakt"
+            },
+            "description": {
+              "en": "The referenced artifact.",
+              "de": "Das referenzierte Artefakt."
+            },
+            "ref": {
+              "kind": "artifact"
+            }
+          }
+        },
+        "dialect": {
+          "$ref": "#/$defs/ArtifactDialect",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dialect",
+              "de": "Dialekt"
+            },
+            "description": {
+              "en": "Artifact kind, standard and subset of the referenced artifact.",
+              "de": "Artefaktart, Standard und Teilmenge des referenzierten Artefakts."
+            }
+          }
+        }
+      }
+    }
+  }
+}

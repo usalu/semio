@@ -1,6 +1,6 @@
 (* Direct text registry; payload productions are owned by each leaf. *)
 mutation = opcode, { " ", argument } ;
-opcode = "change-jfif-header" | "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" | "insert-other-segment" | "remove-other-segment" | "replace-pixels" | "change-re-encode-quality" ;
+opcode = "change-jfif-header" | "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" | "insert-other-segment" | "remove-other-segment" | "replace-pixels" ;
 argument = name, "=", value ;
 name = letter, { letter | digit | "-" } ;
 value = character, { character } ;

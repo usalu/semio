@@ -32,7 +32,7 @@ fn forgets_the_folder_and_keeps_its_sibling() {
     let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("detach applies to its committed before-bindings");
     assert_eq!(applied, expected_after(), "detach-local-folder: the bindings differ from the committed after-snapshot");
     assert!(!applied.bindings.iter().any(|entry| entry.document_id == "cad.drawing.fixture"), "detach-local-folder: the drawing keeps no folder");
-    assert_eq!(applied.bindings[0], base.bindings[1], "detach-local-folder: the sibling must survive untouched");
+    assert_eq!(applied.bindings[0], base.bindings[0], "detach-local-folder: the sibling must survive untouched");
 }
 
 /// ↩️ Undoing the detachment attaches the drawing to its prior folder and restores the committed before-bindings exactly.

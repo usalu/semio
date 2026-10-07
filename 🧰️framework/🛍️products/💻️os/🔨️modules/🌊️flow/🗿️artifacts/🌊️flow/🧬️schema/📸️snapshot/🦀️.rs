@@ -12,6 +12,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 use crate::widget_id_for;
+#[path = "../💡️inferences/🌳️cluster-tree/🦀️.rs"]
+mod cluster_tree;
+pub use cluster_tree::{cluster_tree_from_property, cluster_tree_property};
 
 // #region 🔖️Document
 fn default_slider_value() -> f64 {
@@ -704,7 +707,7 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
         Widget::Cluster { name, tree, .. } => {
             let mut bag = PropertyBag::new();
             bag.insert("name".into(), PropertyValue::String(name.clone()));
-            bag.insert("clusterTree".into(), PropertyValue::String(semio_framework_pack_json::to_json_string(tree)));
+            bag.insert("clusterTree".into(), cluster_tree_property(tree));
             bag
         }
         _ => PropertyBag::new(),

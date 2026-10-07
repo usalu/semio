@@ -6,7 +6,8 @@ mod census;
 #[cfg(test)]
 #[path="🧪️tests/💰️backing/🦀️.rs"]
 mod backing_tests;
-use crate::standards::v_ap214::subsets::base::schema::snapshot::component::native::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepValue,STDIO_STEP_DOCUMENT_SCHEMA};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepValue};
+use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_framework_diagnostic::{TextError,TextSpan};

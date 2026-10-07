@@ -91,7 +91,7 @@ pub fn empty_block2d_snapshot() -> Block2dSnapshot {
 /// example fixture (the same DSL text `setActiveExample` loads), falling back to the empty snapshot
 /// only when that fixture fails to parse. Shared by `Block2dPlayApp` and `Block2dViewer`.
 pub fn default_block2d_snapshot() -> Block2dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block2d_snapshot())
+    crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block2d_snapshot())
 }
 }
 pub use snapshot_wire_codec::*;

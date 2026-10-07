@@ -2,8 +2,7 @@
 /** 📎️ The offer to reconnect a remembered folder is accessible in both shell languages: one polite status region named
  * "Folder of this document" / "Ordner dieses Dokuments" that names the folder, a "Reconnect folder" button that is the
  * person's own gesture and a "Forget folder" button; while reconnecting both are disabled and the reconnect is busy.
- * The shared `🧫️local-folder-bindings` corpus (the one the wgpu shell asserts) holds on React: validated by Ajv against its
- * schema and the two leaf payload schemas, its commits, stored logs, offers, folder names and copy are React's.
+ * The shared `🧫️local-folder-bindings` corpus (the one the wgpu shell asserts) holds on React: checked against the two leaf payload schemas, its commits, stored logs, offers, folder names and copy are React's.
  * Accessible names are computed by `dom-accessibility-api` (third party), clicks are driven by `@testing-library/user-event`. */
 // #endregion 🧲️Header
 
@@ -123,13 +122,14 @@ describe("📎️ the shared local-folder corpus holds on React", () => {
     syncShellLabelLocale("en");
   });
 
-  it("validates against its schema and the attach and detach payload schemas", () => {
+  it("admits actual attach and detach payloads", () => {
     const ajv = new Ajv({ allErrors: true, strict: false });
     ajv.addSchema(readJson(join(mutations, "📎️attach-local-folder", "🧬️schema", "🔣️.json")));
     ajv.addSchema(readJson(join(mutations, "✂️detach-local-folder", "🧬️schema", "🔣️.json")));
-    const validate = ajv.compile(readJson(join(engine, "🧬️schema", "🔣️local-folder-bindings", "🔣️.json")));
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...corpus, commits: { ...corpus.commits, log: { version: 1, events: [{ mutation: "shareLocalFolder", documentId: "doc-a" }] } } }), "an unknown mutation is not a facet event").toBe(false);
+    const attach = ajv.getSchema(readJson(join(mutations, "📎️attach-local-folder", "🧬️schema", "🔣️.json")).$id)!;
+    const detach = ajv.getSchema(readJson(join(mutations, "✂️detach-local-folder", "🧬️schema", "🔣️.json")).$id)!;
+    for (const { mutation } of corpus.commits.steps) expect(attach(mutation) || detach(mutation)).toBe(true);
+    expect(attach({ mutation: "shareLocalFolder", documentId: "doc-a" }) || detach({ mutation: "shareLocalFolder", documentId: "doc-a" })).toBe(false);
     expect(corpus.schema).toBe(LOCAL_FOLDERS_CONFIG_SCHEMA);
   });
 

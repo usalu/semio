@@ -5,7 +5,7 @@ use crate::Puzzle2dSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::DisconnectKindCompatibility, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if !base.meta.kind_compatibility.iter().any(|row| row.source == payload.source && row.target == payload.target) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} not found", "kind-compatibility"), vec![payload.source.clone(), payload.target.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} not found", "kind-compatibility"), vec![payload.source.to_string_owner(), payload.target.to_string_owner()]);
     }
     let mut meta = base.meta.clone();
     meta.kind_compatibility.retain(|row| !(row.source == payload.source && row.target == payload.target));

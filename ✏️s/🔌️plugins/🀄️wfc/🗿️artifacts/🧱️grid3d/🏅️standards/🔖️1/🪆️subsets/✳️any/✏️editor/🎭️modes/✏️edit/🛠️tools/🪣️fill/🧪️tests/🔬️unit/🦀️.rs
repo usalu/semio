@@ -149,7 +149,7 @@ fn aborting_mid_run_cancels_and_never_stores_residency() {
 }
 
 #[test]
-fn the_final_payload_matches_solve_with_job_for_blocks() {
+fn the_final_payload_matches_solve_for_blocks() {
     preview::clear_fill_commit_for_test();
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
     let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("blocks solves");

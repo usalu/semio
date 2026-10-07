@@ -64,7 +64,7 @@ fn publish(image: EncodedPngImage, candidate: &Candidate, document: &RasterSnaps
     if mask.as_ref()==Some(&replacement) { return Ok(Emit::default()); }
     let mut operations=Vec::new();
     if !document.assets.contains_key(&key) {
-        operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset:RasterImageAsset {mime:"image/png".into(),data:image.data}}));
+        operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset:crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(&image.data).expect("mask PNG decodes")}));
     }
     operations.push(RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask {layer_id:candidate.layer_id.clone(),expected:mask.clone(),mask:Some(replacement)}));
     if let Some(previous)=mask.as_ref().and_then(|mask|mask.image_key.as_ref()).filter(|previous|*previous!=&key) {

@@ -47,7 +47,7 @@ fn render_node(question: &FormQuestion, expression: Option<&FormExpr>, path: &st
             if let semio_framework_value::DslValue::Bool(value) = value {
                 rows.push(row(&format!("{id}.value"), labels.value.as_str(), ui::toggle(*value).text(ui_label(labels.value.as_str())?), "patchQuestions", args(question, path, "value", false)?)?);
             } else if kind == "text" || kind == "number" {
-                rows.push(input_row(&format!("{id}.value"), labels.value.as_str(), if kind == "number" { ui::InputKind::Number } else { ui::InputKind::Text }, crate::schema::dsl_string_value(value), "patchQuestions", args(question, path, "value", false)?)?);
+                rows.push(input_row(&format!("{id}.value"), labels.value.as_str(), if kind == "number" { ui::InputKind::Number } else { ui::InputKind::Text }, crate::standards::v1::subsets::any::io::text::snapshot::dsl_string_value(value), "patchQuestions", args(question, path, "value", false)?)?);
             }
         }
         Some(FormExpr::Eq { left, right }) => {

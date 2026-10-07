@@ -42,3 +42,5 @@ pub fn encode_en1994_pack(snapshot: &En1994Snapshot) -> Vec<u8> {
 }
 }
 pub use native_snapshot_codec::*;
+
+crate::impl_norm_artifact_record!(@binary crate::En1994Snapshot, extension="en1994", envelope_id="norm.en1994", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);

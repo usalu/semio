@@ -1,6 +1,6 @@
 //! 🚫️ Direct binary codec for `remove-javascript-action`.
 
-use super::RemoveJavascriptAction;
+use crate::standards::v1_7::subsets::x::schema::mutations::RemoveJavascriptAction;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 9;

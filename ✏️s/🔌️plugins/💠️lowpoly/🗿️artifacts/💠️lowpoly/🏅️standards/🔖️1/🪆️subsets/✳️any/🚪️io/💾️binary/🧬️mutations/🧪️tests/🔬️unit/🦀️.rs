@@ -18,7 +18,7 @@ async fn document_text_round_trip_after_applying_an_operation() {
     let projection = crate::schema::snapshot::snapshot_from_mesh_json(r#"{"vertices":[],"faces":[]}"#, "obj-1", "Fixture");
     let object_id = projection.objects[0].id.clone();
     let envelope = store::create_document_envelope::<crate::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
-    let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🏪️ A bare store carries no owner catalog and refuses its first edit (`edit history insertion
     // requires its exact mutation retirement factory`); install the exact owners production installs
     // through `LowpolyPlayApp::build_document_store_owners`, and close them before drop.

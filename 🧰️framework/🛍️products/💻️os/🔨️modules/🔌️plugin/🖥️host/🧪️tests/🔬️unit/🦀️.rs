@@ -7,8 +7,8 @@ use super::*;
 /// directly, no `PluginInstanceHandle`/real wasm component needed — so these run on every
 /// CI/dev machine, unlike `//#region 🔖️IoRouterPostTurnRelay` below. Unchanged from before the
 /// `WasmPluginRuntime` deletion — never depended on it.
-async fn io_dialect(kind: &str, standard: &str, subset: &str) -> semio_framework::io_schema::ArtifactDialect {
-    semio_framework::io_schema::ArtifactDialect { artifact_kind: kind.to_string(), standard: standard.to_string(), subset: subset.to_string() }
+async fn io_dialect(kind: &str, standard: &str, subset: &str) -> semio_framework_artifact_reference::ArtifactDialect {
+    semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.to_string(), standard: standard.to_string(), subset: subset.to_string() }
 }
 
 /// 🎯️ The fixture EVERY test in this region shares — TWO mock plugins:
@@ -231,6 +231,8 @@ async fn plugin_instance_handle_mutation_plan_passes_wire_bytes_through_to_done(
 /// not yet wired).
 #[semio_framework_async_macros::async_test]
 async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let router = IoRouter::new();
     let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
 
@@ -294,8 +296,8 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
     let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await);
 
     let dialects = vec![(
-        semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
-        vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }],
+        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
+        vec![semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }],
     )];
     router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
@@ -326,8 +328,8 @@ async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin()
     let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await);
 
     let dialects = vec![(
-        semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
-        vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }],
+        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
+        vec![semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }],
     )];
     router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 

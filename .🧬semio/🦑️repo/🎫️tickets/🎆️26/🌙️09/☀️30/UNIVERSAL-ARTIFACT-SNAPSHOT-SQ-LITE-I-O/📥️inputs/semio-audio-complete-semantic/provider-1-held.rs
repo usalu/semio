@@ -1,14 +1,14 @@
 //! 🔊️ Ordered audio channels, exact IEEE754 scalar samples and provenance tags.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::audio::schema::snapshot::{SemioAudioSnapshot,SemioAudioFormat,SemioAudioChannel,SemioAudioTag};
+use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot,SemioAudioFormat,SemioAudioChannel,SemioAudioTag};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use std::collections::{BTreeMap,BTreeSet};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 
 /// 🎼️ Emits the original five-column raw-word sample rows through one authored writer.
-fn visit_rows(snapshot:&SemioAudioSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioAudioSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_audio_document",1,&[Cell::Text(&snapshot.schema),Cell::Integer(i64::from(snapshot.sample_rate)),Cell::Text(format(snapshot.format))])?;
  for(ordinal,channel)in snapshot.channels.iter().enumerate(){let id=out.insert("semio_audio_channel",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?)])?;for(ordinal,sample)in channel.samples.iter().enumerate(){out.insert("semio_audio_sample",&[Cell::Integer(id),Cell::Integer(integer(ordinal)?),if sample.is_nan(){Cell::Null}else{Cell::Real(f64::from(*sample))},Cell::Integer(i64::from(sample.to_bits()))])?;}}
  for(ordinal,tag)in snapshot.tags.iter().enumerate(){out.insert("semio_audio_tag",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?),Cell::Text(&tag.key),Cell::Text(&tag.value)])?;}Ok(())
@@ -23,6 +23,7 @@ fn integer(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|er
 fn format(value:SemioAudioFormat)->&'static str{match value{SemioAudioFormat::Pcm8=>"pcm8",SemioAudioFormat::Pcm16=>"pcm16",SemioAudioFormat::Pcm24=>"pcm24",SemioAudioFormat::Pcm32=>"pcm32",SemioAudioFormat::Float32=>"f32",SemioAudioFormat::Float64=>"f64"}}
 fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio audio row identity or columns"))}else{Ok(())}}
 impl ArtifactSqliteSnapshot for SemioAudioSnapshot{
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::audio::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}
 fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::audio::io::sqlite::snapshot::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
@@ -68,7 +69,7 @@ semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHE
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

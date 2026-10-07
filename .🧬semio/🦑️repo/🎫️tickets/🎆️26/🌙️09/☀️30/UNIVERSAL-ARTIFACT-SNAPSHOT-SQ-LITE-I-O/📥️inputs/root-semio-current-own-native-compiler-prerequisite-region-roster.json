@@ -1,0 +1,469 @@
+{
+  "counts": {
+    "canonicalReferences": 236,
+    "wrongOwnerRegions": 32,
+    "missingNameRegions": 7,
+    "wholeFileAuthorities": 5,
+    "scalarRegions": 3
+  },
+  "paths": 45,
+  "regions": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::drawing::io::",
+      "after": "crate::standards::v1::subsets::drawing::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "crate::drawing::schema::",
+      "after": "crate::standards::v1::subsets::drawing::schema::",
+      "count": 1,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::flow::io::",
+      "after": "crate::standards::v1::subsets::flow::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "crate::flow::io::",
+      "after": "crate::standards::v1::subsets::flow::io::",
+      "count": 4,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::text::io::",
+      "after": "crate::standards::v1::subsets::text::io::",
+      "count": 15,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "crate::text::io::",
+      "after": "crate::standards::v1::subsets::text::io::",
+      "count": 1,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::cad::io::",
+      "after": "crate::standards::v1::subsets::cad::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::table::io::",
+      "after": "crate::standards::v1::subsets::table::io::",
+      "count": 15,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::mesh::io::",
+      "after": "crate::standards::v1::subsets::mesh::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::object::io::",
+      "after": "crate::standards::v1::subsets::object::io::",
+      "count": 14,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::presentation::io::",
+      "after": "crate::standards::v1::subsets::presentation::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::video::io::",
+      "after": "crate::standards::v1::subsets::video::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::graph::io::",
+      "after": "crate::standards::v1::subsets::graph::io::",
+      "count": 15,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::kit::io::",
+      "after": "crate::standards::v1::subsets::kit::io::",
+      "count": 14,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::brep::io::",
+      "after": "crate::standards::v1::subsets::brep::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "crate::value::io::",
+      "after": "crate::standards::v1::subsets::value::io::",
+      "count": 1,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::image::io::",
+      "after": "crate::standards::v1::subsets::image::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::base::io::",
+      "after": "crate::standards::v1::subsets::base::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::audio::io::",
+      "after": "crate::standards::v1::subsets::audio::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::document::io::",
+      "after": "crate::standards::v1::subsets::document::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::model::io::",
+      "after": "crate::standards::v1::subsets::model::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "before": "crate::value::io::",
+      "after": "crate::standards::v1::subsets::value::io::",
+      "count": 12,
+      "kind": "canonical-test-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};\n",
+      "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{dec_frame};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{enc_frame};\n",
+      "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{enc_frame};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+      "count": 3,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+      "count": 3,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};\n",
+      "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{dec_frame};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{enc_frame};\n",
+      "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{enc_frame};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{dec_edge};\n",
+      "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_edge};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{enc_edge};\n",
+      "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_edge};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{dec_edge};\n",
+      "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_edge};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::diff::{enc_edge};\n",
+      "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_edge};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::mutations::{dec_snapshot};\n",
+      "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_snapshot};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::mutations::{enc_snapshot};\n",
+      "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_snapshot};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::mutations::{dec_snapshot};\n",
+      "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_snapshot};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::image::io::text::mutations::{enc_snapshot};\n",
+      "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_snapshot};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+      "count": 2,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+      "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+      "count": 1,
+      "kind": "same-domain-codec"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧰️triples/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "use super::*;",
+      "after": "use super::*;\nuse crate::standards::v1::subsets::base::io::text::snapshot::{enc_indexed_triple,dec_indexed_triple,enc_named_triple,dec_named_triple,enc_named_added,dec_named_added,split_top_level,strip_brackets};",
+      "count": 1,
+      "kind": "existing-helper-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::flow::io::text::mutations::node;",
+      "after": "use crate::standards::v1::subsets::flow::schema::mutations::node;",
+      "count": 1,
+      "kind": "existing-helper-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "use super::*;",
+      "after": "use super::*;\nuse crate::standards::v1::subsets::animation::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;",
+      "count": 1,
+      "kind": "existing-helper-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "use super::*;",
+      "after": "use super::*;\nuse crate::standards::v1::subsets::video::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;",
+      "count": 1,
+      "kind": "existing-helper-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "before": "let mut native=semio_framework_value::native_decoding::NativeDecodeControl::new(SqliteDatabaseLimits::default().max_allocation_bytes,&mut |_|true);",
+      "after": "let mut accept=|_|true;let mut native=semio_framework_value::native_decoding::NativeDecodeControl::new(SqliteDatabaseLimits::default().max_allocation_bytes,&mut accept);",
+      "count": 1,
+      "kind": "existing-helper-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::object::io::sqlite::snapshot::*;",
+      "after": "use crate::standards::v1::subsets::object::io::sqlite::snapshot::*;\nuse crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child,dec_child};\nuse crate::standards::v1::subsets::kit::io::binary::snapshot::{write_child,read_child};",
+      "count": 1,
+      "kind": "existing-helper-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::kit::io::sqlite::snapshot::*;",
+      "after": "use crate::standards::v1::subsets::kit::io::sqlite::snapshot::*;\nuse crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child,dec_child,enc_link,dec_link};\nuse crate::standards::v1::subsets::kit::io::binary::snapshot::{write_child,read_child,write_link,read_link};",
+      "count": 1,
+      "kind": "existing-helper-owner"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::base::schema::triples::{NamedAdded, NamedModified, NamedTripleDiff};",
+      "after": "use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};",
+      "count": 1,
+      "kind": "actual-local-indexed-wrapper"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "enc_bool(ordered)",
+      "after": "enc_bool(*ordered)",
+      "count": 1,
+      "kind": "borrowed-scalar-callback"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "encode_option(width, enc_f64)",
+      "after": "encode_option(width, |value|enc_f64(*value))",
+      "count": 1,
+      "kind": "borrowed-scalar-callback"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+      "before": "encode_option(height, enc_f64)",
+      "after": "encode_option(height, |value|enc_f64(*value))",
+      "count": 1,
+      "kind": "borrowed-scalar-callback"
+    }
+  ],
+  "wholeFiles": 5,
+  "productionProvidersMounted": false
+}

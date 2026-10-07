@@ -58,7 +58,7 @@ pub(crate) mod context {
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn app_with_registry() -> LowpolyApp {
-        let mut app = new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(INSTANCE).await;
         LowpolyApp(app)
     }
@@ -380,7 +380,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
             let mut refused = false;
             loop {
                 let started = std::time::Instant::now();
-                let step = work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
+                let step = work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None,
                     command: &command,
                     snapshot: &snapshot,
                     config: &config,

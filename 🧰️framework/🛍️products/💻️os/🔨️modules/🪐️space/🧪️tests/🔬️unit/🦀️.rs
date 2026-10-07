@@ -620,7 +620,7 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     // `crate::host::resolve_kernel_future`, same as this file's other async fallout fixes — every
     // op here is an in-memory fixture operation, never real I/O.
     let mut nested_space_store =
-        crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None))).expect("valid artifact store fixture");
+        crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None })).expect("apply");
     crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() })).expect("commit checkpoint");
     let original_pack_files = crate::host::resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");
@@ -653,7 +653,7 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     assert_eq!(imported_pack, &original_pack_files.pack, "artifact pack bytes are byte-identical after the round trip");
     assert_eq!(imported_spr, &original_pack_files.spr, "artifact spr bytes are byte-identical after the round trip");
 
-    let restored_store = crate::host::resolve_kernel_future(import_document_artifact::<SpaceSnapshot, SpaceMutation>(imported_pack, imported_spr)).expect("reconstruct store");
+    let restored_store = crate::host::resolve_kernel_future(import_document_artifact::<SpaceSnapshot, SpaceMutation>(imported_pack, imported_spr, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("reconstruct store");
     assert_eq!(restored_store.snapshot().expect("projection"), nested_space_store.snapshot().expect("projection"), "reconstructed document projection matches the original exactly");
 
     let (imported_blob, imported_blob_bytes) = imported.blobs.iter().find(|(blob, _)| blob.hash == blob_ref.hash).expect("blob present");

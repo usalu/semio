@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/demo/mutation/add-n/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/add-n/schema.json",
   "title": "AddN",
   "propertyNames": {
     "enum": [
@@ -19,7 +19,7 @@
       "const": "addN"
     },
     "delta": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/I32"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/schema.json#/$defs/I32"
     }
   }
 }

@@ -17,8 +17,8 @@
 
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_gltf::engine::decode_accessor;
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::decode_accessor;
 use semio_s_artifact_stdio_gltf::schema::snapshot::GltfAnimationPath;
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
 

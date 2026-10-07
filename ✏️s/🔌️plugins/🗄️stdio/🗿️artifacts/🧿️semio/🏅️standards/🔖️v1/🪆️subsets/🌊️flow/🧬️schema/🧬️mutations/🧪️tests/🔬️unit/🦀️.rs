@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;
-use crate::standards::v1::subsets::flow::io::text::mutations::node;
+use crate::standards::v1::subsets::flow::io::binary::mutations::wire_tag;
+use crate::standards::v1::subsets::flow::schema::mutations::node;
 use crate::standards::v1::subsets::flow::io::text::mutations::print_flow_mutation;
 use super::*;
 use protocol::command::DiffAlgebra;
@@ -172,7 +172,7 @@ fn drag_nodes_labels_its_row_from_its_inputs() {
 
 #[test]
 fn paged_flow_original_source_keeps_all_fourteen_frames_and_exact_owner_policy(){
-    use protocol::io::binary::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
+    use semio_framework_os_kernel::os_spr::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
     use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️operation-source.json")).unwrap();
     let mut operations=Vec::new();

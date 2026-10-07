@@ -30,7 +30,7 @@ use protocol::OpText;
 /// `store::ArtifactChild<SemioBrepSnapshot>` handle, JSON-encoded the same way (it already derives
 /// `Serialize`/`Deserialize` regardless of `S`).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-enum Process3dMutationDsl {
+pub(crate) enum Process3dMutationDsl {
     CreateStep {
         index: usize,
         step_json: String,
@@ -101,14 +101,7 @@ impl OpText for Process3dMutationDsl {
     }
 }
 
-impl protocol::OpBinary for Process3dMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
@@ -167,15 +160,7 @@ impl OpText for Process3dMutation {
 
 /// 🧱️ Delegates binary ownership to the bounded structural Process3d codec; text conversion
 /// remains isolated to explicit text routes.
-impl protocol::OpBinary for Process3dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        crate::standards::v1::subsets::any::io::binary::mutations::encode_op(self)
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        crate::standards::v1::subsets::any::io::binary::mutations::decode_op(bytes)
-    }
-}
 //#endregion 🔖️OpText
 
 //#region 🧪️Tests

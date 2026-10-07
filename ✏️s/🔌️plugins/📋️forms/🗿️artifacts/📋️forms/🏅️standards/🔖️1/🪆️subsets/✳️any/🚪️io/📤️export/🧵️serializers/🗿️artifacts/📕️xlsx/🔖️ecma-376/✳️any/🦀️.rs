@@ -6,10 +6,10 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::question_grid;
 use crate::FormsSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
-use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{StandardId, SubsetId};
+use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
+use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
-use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+use semio_s_artifact_stdio_xlsx::schema::construction::build_minimal_xlsx;
 
 pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
 

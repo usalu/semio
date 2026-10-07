@@ -4,7 +4,7 @@
 #[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;
 
-use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_TERRAIN_EXAMPLE_TEXT;
+
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_surface::terrain::tiles;

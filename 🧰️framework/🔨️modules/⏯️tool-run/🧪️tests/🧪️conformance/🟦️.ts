@@ -41,21 +41,9 @@ describe("schema oracle (ajv)", () => {
   ajv.addSchema(schema);
   const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
 
-  test("every fixture validates against its schema definition", () => {
-    for (const [name, value] of [["LifecycleLawFixture", law], ["TracePageFixture", pagesFixture], ["TickFixture", ticksFixture]] as const) {
-      const validate = validator(name);
-      expect(validate(value), `${name}: ${JSON.stringify(validate.errors)}`).toBe(true);
-    }
-  });
 
-  test("hostile fixture mutations are rejected by the schema", () => {
-    const lifecycleValidate = validator("LifecycleLawFixture");
-    expect(lifecycleValidate({ ...law, extra: true })).toBe(false);
-    expect(lifecycleValidate({ ...law, matrix: law.matrix.slice(1) })).toBe(false);
-    expect(lifecycleValidate({ ...law, definition: { ...law.definition, reasons: [{ ...law.definition.reasons[0], code: 65280 }] } })).toBe(false);
-    expect(lifecycleValidate({ ...law, limits: { ...law.limits, stepRingCapacity: 12 } })).toBe(false);
-    expect(lifecycleValidate({ ...law, definition: { ...law.definition, member: "content" } })).toBe(true);
-    expect(lifecycleValidate({ ...law, definition: { ...law.definition, member: "" } })).toBe(false);
+
+  test("hostile trace-page and tick values are rejected by the domain schema", () => {
     const pageValidate = validator("ToolRunTracePage");
     const page = pagesFixture.pages[0].page;
     expect(pageValidate(page)).toBe(true);

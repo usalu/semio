@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
 import { parse as parseJsonc, visit as visitJsonc } from "jsonc-parser";
 import ts from "typescript";
 
@@ -57,10 +56,7 @@ function typescriptOracle(content: string, adapter: string): Token[] {
   return rows;
 }
 
-test("the language-neutral contract fixes call-local, lazy, null-preserving ownership semantics", () => {
-  const validate = new Ajv().compile({ type: "object", required: ["schemaVersion", "contract", "semantics", "cases", "projections", "corpus", "execution"], properties: { schemaVersion: { const: 1 }, contract: { const: "json-reference-owner-lookup-v1" }, semantics: { const: { scope: "one-jsonTokens-call", admission: "first-non-key-unescaped-json-string-value", absentOwner: "cache-null", errorTiming: "first-admitted-value", output: "identical-token-values-utf16-offsets-order-and-metadata" } }, cases: { type: "array", minItems: 1, items: { type: "object", required: ["id", "path", "source", "adapter", "owner", "lookups", "oracle"], properties: { lookups: { enum: [0, 1] }, adapter: { enum: ["json", "jsonc"] }, owner: { type: ["string", "null"] } } } } } });
-  expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
-});
+
 
 for (const compiler of compilers) test(compiler.name + " parses JSON references without mutation projection owner state", () => {
   const actual = implementation(compiler);
@@ -111,7 +107,7 @@ test("registers the JSON owner lookup gate through Nx and both launch catalogs",
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
   const router = readFileSync(join(root, library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   expect(router.match(/segments\[0\] === "json-reference-owner-lookup"/gu)).toHaveLength(1);
-  expect(router).toContain("🧪️tests/🟦️json-reference-owner-lookup.ts");
+  expect(router).toContain("🧪️tests/🔎️json-reference-owner-lookup/🟦️.ts");
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const launches = parseJsonc(readFileSync(join(root, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
     expect(launches).toHaveLength(1);

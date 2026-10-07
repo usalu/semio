@@ -64,8 +64,8 @@ mod tests;
 //#endregion 🧬️TestDocumentMutationAggregate
 
 impl TestMutation{
-    /// 🎞️ Emits this actual roster's canonical operation directly into its caller's retained paged source.
-    pub(crate) fn encode_op_into(&self,options:&protocol::codec::PackEncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),protocol::ProtocolError>{
-        dsl::variants_binary::encode_op_into(self,options,output,control)
+    /// 🎒️ Captures this original variant in caller-retained canonical scratch.
+    pub(crate) fn retained_pack_operation(&self)->semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{
+        semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(self)
     }
 }

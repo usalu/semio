@@ -1,6 +1,6 @@
 //! ⏹️ Direct binary codec for `remove-media-annotation`.
 
-use super::RemoveMediaAnnotation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveMediaAnnotation;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 13;

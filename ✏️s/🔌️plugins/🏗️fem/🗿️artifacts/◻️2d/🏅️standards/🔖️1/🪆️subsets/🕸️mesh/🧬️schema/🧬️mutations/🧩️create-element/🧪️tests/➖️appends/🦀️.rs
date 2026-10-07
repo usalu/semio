@@ -8,7 +8,8 @@
 //! A second span is added as an axial-only `Bar`, next to the existing `Beam` — the variant tag must survive the round trip.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/📸️snapshot/⬅️before/🔣️.json");

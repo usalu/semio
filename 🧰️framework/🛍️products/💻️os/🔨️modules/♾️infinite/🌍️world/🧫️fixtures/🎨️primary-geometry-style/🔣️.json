@@ -1,0 +1,33 @@
+{
+  "geometry": [
+    "point",
+    "wire",
+    "edgeOnlyWire"
+  ],
+  "states": [
+    {
+      "name": "neutral",
+      "selected": false,
+      "hovered": false,
+      "line": "var(--border-normal-color)"
+    },
+    {
+      "name": "hovered",
+      "selected": false,
+      "hovered": true,
+      "line": "var(--border-emphasized-color)"
+    },
+    {
+      "name": "selected",
+      "selected": true,
+      "hovered": false,
+      "line": "var(--color-primary)"
+    },
+    {
+      "name": "selected-hovered",
+      "selected": true,
+      "hovered": true,
+      "line": "var(--color-primary)"
+    }
+  ]
+}

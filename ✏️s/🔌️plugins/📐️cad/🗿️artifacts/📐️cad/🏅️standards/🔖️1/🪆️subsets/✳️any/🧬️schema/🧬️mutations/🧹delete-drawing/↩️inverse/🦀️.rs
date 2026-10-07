@@ -9,7 +9,7 @@ use crate::CadSnapshot;
 pub fn inverse(payload: &DeleteDrawing, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.drawings.iter().find(|c| c.child_id == payload.child_id) {
-        Some(existing) => vec![CadMutation::CreateDrawing(create_drawing::CreateDrawing { child_id: existing.child_id.clone(), target: existing.target.to_uri() })],
+        Some(existing) => vec![CadMutation::CreateDrawing(create_drawing::CreateDrawing { child_id: existing.child_id.clone(), target: existing.target.clone() })],
         None => Vec::new(),
     }
 

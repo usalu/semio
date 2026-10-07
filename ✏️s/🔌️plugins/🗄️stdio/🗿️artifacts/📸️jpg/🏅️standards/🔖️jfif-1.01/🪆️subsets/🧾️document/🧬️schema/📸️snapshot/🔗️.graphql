@@ -63,7 +63,6 @@ type JpgSnapshot {
   width: Int! @state(class: ARTIFACT)
   height: Int! @state(class: ARTIFACT)
   pixels: [Int!]! @state(class: ARTIFACT)
-  reEncodeQuality: Int @state(class: ARTIFACT)
   jfifVersion: [Int!]! @state(class: ARTIFACT)
   jfifDensityUnits: JfifDensityUnits! @state(class: ARTIFACT)
   jfifXDensity: Int! @state(class: ARTIFACT)

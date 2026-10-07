@@ -13,8 +13,8 @@ pub type ConvexHullMetrics = (f64, f64, Vec<(V3, f64)>);
 // with zero suspension points; consumed by ~79 sibling inference files across the gltf tree, so
 // R9 propagates outward from here rather than the other way around. Reverted 2026-08-20.
 
-use crate::engine::{GltfAccessorType, GltfComponentType};
-use crate::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
+use crate::schema::snapshot::GltfDecodedSnapshot;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
@@ -184,7 +184,7 @@ fn primitive_triangles(mode: u64, indices: &[usize]) -> Result<Vec<[usize; 3]>, 
     Ok(out)
 }
 
-fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, usize), matrix: M4, scene: Option<usize>, path: &[usize], weights: &[f64], diagnostics: &mut Vec<GltfDiagnostic>) -> Option<RawPart> {
+fn decode_part(snapshot: &GltfDecodedSnapshot<'_>, (mesh_index, primitive_index): (usize, usize), matrix: M4, scene: Option<usize>, path: &[usize], weights: &[f64], diagnostics: &mut Vec<GltfDiagnostic>) -> Option<RawPart> {
     let mesh = snapshot.document.meshes.get(mesh_index)?;
     let primitive = mesh.primitives.get(primitive_index)?;
     let Some(position_accessor) = primitive.attributes.iter().find(|(s, _)| s == "POSITION").map(|x| x.1) else {
@@ -214,7 +214,7 @@ fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, u
         diagnostics.push(GltfDiagnostic { id, severity: GltfSeverity::Error, code: "invalid-position-accessor-type".into(), message: "POSITION must use FLOAT VEC3".into(), paths: vec![format!("accessors/{position_accessor}")] });
         return None;
     }
-    let decoded = match crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, position_accessor) {
+    let decoded = match snapshot.accessor(position_accessor) {
         Ok(x) if x.components.len() % 3 == 0 => x,
         Ok(_) => return None,
         Err(message) => {
@@ -241,7 +241,7 @@ fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, u
             });
             continue;
         }
-        match crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
+        match snapshot.accessor(accessor) {
             Ok(delta) if delta.components.len() == local.len() * 3 => {
                 for (p, d) in local.iter_mut().zip(delta.components.as_chunks::<3>().0) {
                     *p = add(*p, mul([d[0], d[1], d[2]], weight));
@@ -272,7 +272,7 @@ fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, u
             diagnostics.push(GltfDiagnostic { id, severity: GltfSeverity::Error, code: "invalid-index-accessor-type".into(), message: "indices must use unsigned SCALAR components".into(), paths: vec![format!("accessors/{accessor}")] });
             return None;
         }
-        match crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
+        match snapshot.accessor(accessor) {
             Ok(v) => v.components.iter().filter_map(|x| if x.is_finite() && *x >= 0.0 && x.fract() == 0.0 { Some(*x as usize) } else { None }).collect(),
             Err(message) => {
                 let id = format!("gltf-geometry-{}", diagnostics.len());
@@ -313,8 +313,8 @@ fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, u
 /// 🌳️ Accumulated primitive instances, diagnostics, and instance count during traversal.
 type TraversalOutput<'a> = (&'a mut Vec<RawPart>, &'a mut Vec<GltfDiagnostic>, &'a mut u64);
 
-pub(crate) fn collect_parts(snapshot: &GltfSnapshot, diagnostics: &mut Vec<GltfDiagnostic>) -> (Vec<RawPart>, u64) {
-    fn visit(snapshot: &GltfSnapshot, scene: usize, node_index: usize, parent: M4, path: &mut Vec<usize>, stack: &mut BTreeSet<usize>, (parts, diagnostics, instances): TraversalOutput<'_>) {
+pub(crate) fn collect_parts(snapshot: &GltfDecodedSnapshot<'_>, diagnostics: &mut Vec<GltfDiagnostic>) -> (Vec<RawPart>, u64) {
+    fn visit(snapshot: &GltfDecodedSnapshot<'_>, scene: usize, node_index: usize, parent: M4, path: &mut Vec<usize>, stack: &mut BTreeSet<usize>, (parts, diagnostics, instances): TraversalOutput<'_>) {
         let Some(node) = snapshot.document.nodes.get(node_index) else { return };
         if !stack.insert(node_index) {
             let id = format!("gltf-geometry-{}", diagnostics.len());

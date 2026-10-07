@@ -1,6 +1,7 @@
 //! ♻️ Rewrite-rule document ownership retires bodies, keyed values, and semantic mutations incrementally.
 
-use crate::standards::v1::subsets::any::schema::mutations::{RewriteRuleMutation, RuleLayoutPlacement};
+use crate::standards::v1::subsets::any::schema::mutations::{RewriteRuleMutation,RuleLayoutPlacement};
+
 use crate::{LayoutPoint, RewritingSnapshot};
 use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
 

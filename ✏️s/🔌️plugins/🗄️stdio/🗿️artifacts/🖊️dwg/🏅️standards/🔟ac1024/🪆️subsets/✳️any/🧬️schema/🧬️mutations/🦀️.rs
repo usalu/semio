@@ -77,7 +77,7 @@ pub(crate) fn agg_diff(this: &DwgMutation, base: &DwgSnapshot) -> protocol::Muta
         DwgMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<DwgSnapshot, DwgMutation>>::diff(patch, base),
         DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version, maintenance_version, codepage }) => std::borrow::Cow::Owned(diff::version_info_next(base, version, *maintenance_version, *codepage)),
     };
-    let refusal=crate::standards::v_ac1024::subsets::any::io::text::snapshot::unwritable_version(&next).filter(|(code,_)|!matches!(this,DwgMutation::SetSnapshot(_))||*code=="version-sentinel");
+    let refusal=crate::standards::v_ac1024::subsets::any::schema::snapshot::unwritable_version(&next).filter(|(code,_)|!matches!(this,DwgMutation::SetSnapshot(_))||*code=="version-sentinel");
     match refusal {
         Some((_, message)) => protocol::MutationOutcome::fatal("mutation.invariant", message, Vec::<String>::new()),
         None => protocol::MutationOutcome::new(diff::diff_set_snapshot(base, &next)),
@@ -86,7 +86,7 @@ pub(crate) fn agg_diff(this: &DwgMutation, base: &DwgSnapshot) -> protocol::Muta
 
 /// 🛂️ The version-sentinel guard a path-scoped snapshot patch shares with snapshot assignment.
 pub(crate) fn version_sentinel_check(snapshot: &DwgSnapshot) -> Result<(), String> {
-    match crate::standards::v_ac1024::subsets::any::io::text::snapshot::unwritable_version(snapshot) {
+    match crate::standards::v_ac1024::subsets::any::schema::snapshot::unwritable_version(snapshot) {
         Some(("version-sentinel", message)) => Err(message),
         _ => Ok(()),
     }

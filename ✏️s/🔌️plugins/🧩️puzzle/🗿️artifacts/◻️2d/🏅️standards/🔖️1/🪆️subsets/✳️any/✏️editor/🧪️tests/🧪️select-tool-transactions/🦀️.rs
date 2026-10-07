@@ -435,7 +435,7 @@ fn a_selection_with_repeated_ids_drags_each_target_once() {
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec!["left".to_string(), "left".to_string(), "left".to_string()], anchor_id: None };
     let view = window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID);
     let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed-3", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit");
-    assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["left".to_string()], 5.0, 0.0)]);
+    assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(["left".into()].into_iter().collect(), 5.0, 0.0)]);
     assert!(emit.transaction.is_some(), "one transaction");
 }
 //#endregion 🔁️DispatchThreading
@@ -462,7 +462,7 @@ fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     let transaction = emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "{transaction:?}");
     assert_ne!(emit_for("seed-8").transaction.map(|other| other.id), Some(transaction.id), "two admissions never share a transaction id");
-    assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["left".to_string()], 3.0, 4.0)]);
+    assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(["left".into()].into_iter().collect(), 3.0, 4.0)]);
     assert_eq!(emit.interaction_writes.len(), 1, "the gesture's selection is an interaction write of the same dispatch");
     let unbound = emit_for("");
     assert_eq!(unbound.transaction, None, "a view without command authority publishes the leaf plainly");

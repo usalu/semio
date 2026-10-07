@@ -32,3 +32,17 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
 mod semio_protocol_conformance;
+
+mod native_codec {
+use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation,Fem2dMutation};
+
+impl protocol::OpBinary for Fem2dMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+}

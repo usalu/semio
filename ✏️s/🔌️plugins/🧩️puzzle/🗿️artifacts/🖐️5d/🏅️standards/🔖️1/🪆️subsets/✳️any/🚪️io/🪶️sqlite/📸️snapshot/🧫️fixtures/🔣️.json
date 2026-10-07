@@ -21,52 +21,6 @@
       }
     }
   },
-  "childSchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-      "childId",
-      "target"
-    ],
-    "properties": {
-      "childId": {
-        "type": "string"
-      },
-      "target": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "artifactId",
-          "dialect"
-        ],
-        "properties": {
-          "artifactId": {
-            "type": "string"
-          },
-          "dialect": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "artifactKind",
-              "standard",
-              "subset"
-            ],
-            "properties": {
-              "artifactKind": {
-                "type": "string"
-              },
-              "standard": {
-                "type": "string"
-              },
-              "subset": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "tableRowCounts": {
     "puzzle5_document": 1,
     "puzzle5_catalog_child": 1,
@@ -106,5 +60,47 @@
     "fasteners",
     "targetVolumes"
   ],
-  "snapshotAssetCount": 138
+  "snapshotAssetCount": 138,
+  "scaleDsl": {
+    "shape": "list",
+    "item": "float",
+    "samples": [
+      [
+        2
+      ],
+      [
+        2,
+        3,
+        4
+      ]
+    ],
+    "invalidSamples": [
+      [],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        3,
+        4,
+        5
+      ]
+    ]
+  },
+  "diffRecordOwners": [
+    "Puzzle5dDiff",
+    "Puzzle5dKindCompatibilityList",
+    "Puzzle5dStringList",
+    "Puzzle5dPartsDelta",
+    "Puzzle5dPartPatchEntry",
+    "Puzzle5dPartPatch",
+    "Puzzle5dFastenersDelta",
+    "Puzzle5dFastenerPatchEntry",
+    "Puzzle5dFastenerPatch",
+    "Puzzle5dTargetVolumesDelta",
+    "Puzzle5dTargetVolumePatchEntry",
+    "Puzzle5dTargetVolumePatch"
+  ],
+  "diffEmpty": {}
 }

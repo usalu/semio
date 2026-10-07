@@ -5628,11 +5628,15 @@ pub struct AppRef {
 
 /// 🪪️ The one canonical spelling of a surface id: `<artifact_kind>@<standard>/<subset>#<role>`.
 pub fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     format!("{}#{}", dialect.to_coordinate(), role.as_str())
 }
 
 /// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
 pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let (coordinate, role_str) = id.rsplit_once('#').ok_or_else(|| format!("surface id {id:?} missing '#'"))?;
     let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
     let role: AppRole = role_str.parse().map_err(|err| format!("surface id {id:?}: {err}"))?;
@@ -6743,6 +6747,8 @@ pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, 
 /// Deduped by dialect coordinate (first manifest/app wins — callers pass owner manifests first so the
 /// owner's label wins over a later contributor's), sorted by coordinate for determinism.
 pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRole]) -> Vec<ArtifactKindChoice> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let mut by_coordinate: BTreeMap<String, ArtifactKindChoice> = BTreeMap::new();
     for manifest in manifests {
         for app in &manifest.apps {

@@ -75,7 +75,7 @@ fn schema_vectors_match_owned_validator() {
 #[test]
 fn decoded_replies_obey_the_same_node_bounds_as_owner_inputs() {
     let fixture=fixture();let mut owner=declaration(&fixture["neutral"]);
-    owner.operations[0].output_schema=fixture["replyNodeBounds"]["ownerSchema"].to_string();
+    owner.operations[0].output_schema=serde_json::from_str::<serde_json::Value>(include_str!("../🧪️testing/📤️reply-node-bounds/🧬️schema/🔣️.json")).unwrap()["$defs"]["OwnerReply"].to_string();
     owner.operations[0].response_max_bytes=64*1024;
     let port=CompiledDocumentHttpPortV1::compile("neutral",owner).unwrap();
     for vector in fixture["replyNodeBounds"]["vectors"].as_array().unwrap() {

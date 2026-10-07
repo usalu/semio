@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 use crate::standards::v1::subsets::any::io::text::snapshot as dsl;
 use crate::schema::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_layer_base, layer_id};
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_drawing_document};
-use crate::standards::v1::subsets::any::io::text::snapshot::{create_drawing_path_layer};
+use crate::standards::v1::subsets::any::schema::{default_drawing_document};
+use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
 use crate::{
     DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
 };
@@ -13,8 +13,8 @@ fn representative_drawing_document() -> DrawingSnapshot {
 
     let mut rect_shape = create_drawing_shape_layer_rect("Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect_shape {
-        shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 10.0, y2: 10.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }] });
-        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Round, dash: Some(vec![2.0, 4.0]) });
+        shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 10.0, y2: 10.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }].into() });
+        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Round, dash: Some(vec![2.0, 4.0].into()) });
     }
     let rect_id = layer_id(&rect_shape).to_string();
 
@@ -28,11 +28,11 @@ fn representative_drawing_document() -> DrawingSnapshot {
         ellipse: None,
         circle: None,
         line: None,
-        polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]] }),
+        polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]].into() }),
     });
 
     let mut radial_circle = DrawingShapeBody { base: default_layer_base("RadialCircle"), shape_kind: "circle".into(), rect: None, ellipse: None, circle: Some(DrawingCircle { cx: 1.0, cy: 2.0, r: 3.0 }), line: None, polygon: None };
-    radial_circle.base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 0.0] }] });
+    radial_circle.base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 0.0] }].into() });
     let radial_circle = DrawingLayerNode::Shape(radial_circle);
 
     let path_layer = create_drawing_path_layer(
@@ -54,13 +54,13 @@ fn representative_drawing_document() -> DrawingSnapshot {
 
     let ellipse_shape =
         DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawingEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
-    let group_layer = DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: default_layer_base("Group \"nested\""), children: vec![ellipse_shape, radial_circle] });
+    let group_layer = DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: default_layer_base("Group \"nested\""), children: vec![ellipse_shape, radial_circle].into() });
 
     DrawingSnapshot {
         schema: DRAWING_DOCUMENT_SCHEMA.into(),
         id: "dsl-fixture".into(),
         title: Some("DSL Fixture \"Quotes\" \\ backslash".into()),
-        layers: vec![rect_shape, line_shape, polygon_shape, path_layer, text_layer, image_layer, trace_layer, boolean_layer, group_layer],
+        layers: vec![rect_shape, line_shape, polygon_shape, path_layer, text_layer, image_layer, trace_layer, boolean_layer, group_layer].into(),
         assets,
         artboard: Some(DrawingArtboard { width: 640.0, height: 480.0 }),
     }
@@ -99,12 +99,12 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let initial = default_drawing_document("doc-text-test", None);
     let envelope = store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
-    let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
     let layer = create_drawing_shape_layer_rect("Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }).await.expect("apply add layer");
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value, 0.5)], transaction: None }).await.expect("apply set opacity");
+    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }).await.expect("apply set opacity");
     let edit: &Edit<DrawingMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<DrawingSnapshot, DrawingMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;
     store::os_store::test_support::close_plain_test_store(&mut doc_store);

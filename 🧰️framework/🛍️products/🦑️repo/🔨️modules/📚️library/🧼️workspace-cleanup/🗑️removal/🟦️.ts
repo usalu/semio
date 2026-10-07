@@ -1,4 +1,4 @@
-import { exactCargoGeneratedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { existsSync, rmSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { runProbe } from "../../🟦️.ts";
@@ -34,7 +34,7 @@ export function cleanRemovePath(root: string, abs: string, dry: boolean, protect
     (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
   const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
   if (cleanIntersectsProtected(abs, applicablePrefixes) || (!allowedOpenTicket && cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0)) return false;
-  if (allowedOpenTicket && exactCargoGeneratedOutputHasLiveLease(abs)) return false;
+  if (allowedOpenTicket && generatedOutputHasLiveLease(abs)) return false;
   if (dry) return true;
   if (allowWindowsIllegal) {
     try {

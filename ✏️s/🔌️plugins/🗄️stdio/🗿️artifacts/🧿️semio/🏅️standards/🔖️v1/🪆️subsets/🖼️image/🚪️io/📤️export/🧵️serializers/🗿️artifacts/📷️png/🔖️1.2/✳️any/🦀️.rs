@@ -1,10 +1,9 @@
 //! 📤️ Semio image to a newly authored PNG 1.2 RGBA8 source.
 
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::{
-    io::PngProjection,
-    schema::snapshot::{PngChunkMarker, PngColorType, PngTextChunk, PngTextKind},
+    schema::snapshot::{PngImage, PngColorType, PngTextChunk, PngTextKind},
     PngSnapshot,
 };
 
@@ -26,16 +25,12 @@ impl ArtifactSerializer for SemioImageToPng {
         let expected = usize::try_from(from.width).ok().and_then(|width| usize::try_from(from.height).ok().and_then(|height| width.checked_mul(height))).and_then(|pixels| pixels.checked_mul(4)).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→png: raster extent overflow")))?;
         if frame.rgba8.len() != expected { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→png: frame RGBA8 length does not match geometry"))); }
         let text_chunks: Vec<PngTextChunk> = from.metadata.iter().map(|entry| PngTextChunk { keyword: entry.key.clone(), value: entry.value.clone(), kind: PngTextKind::Text, ..Default::default() }).collect();
-        let mut chunk_order = vec![PngChunkMarker::Ihdr];
-        chunk_order.extend((0..text_chunks.len()).map(|index| PngChunkMarker::Text { index }));
-        chunk_order.extend([PngChunkMarker::Idat, PngChunkMarker::Iend]);
-        let projection = PngProjection {
-            width: from.width, height: from.height, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false,
-            plte: None, trns: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None,
-            text_chunks, pixels: frame.rgba8.clone(), chunk_order, unknown_chunks: Vec::new(),
-        };
-        let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&projection).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
-        semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
+        let snapshot = PngSnapshot { schema: semio_s_artifact_stdio_png::STDIO_PNG_DOCUMENT_SCHEMA.into(), image: PngImage {
+            width: from.width, height: from.height, color_type: PngColorType::Rgba, bit_depth: 8,
+            samples: frame.rgba8.iter().copied().map(u16::from).collect(), text_chunks, ..Default::default()
+        } };
+        snapshot.validate().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        Ok(snapshot)
     }
 }
 

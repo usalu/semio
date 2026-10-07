@@ -26,7 +26,7 @@ fn full(word: u64) -> Block3dSnapshot {
         }],
         catalog: store::ArtifactChild::new(
             "local\0!@/😀".into(),
-            store::os_io::ArtifactRef { artifact_id: "target\0!@/😀".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() } },
+            semio_framework_artifact_reference::ArtifactRef { artifact_id: "target\0!@/😀".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() } },
         ),
         vortex_kind_extra: vec![Block3dVortexKindExtra { id: String::new(), name: text.into(), label: String::new(), color: String::new(), default_cable_kind: text.into() }],
         vortices: vec![Block3dVortexTemplate { id: String::new(), vortex_kind: l["nativeCase"]["unresolvedVortexKind"].as_str().unwrap().into(), position: [f; 3], direction: [f; 3], radius: f, label: Some(String::new()) }],
@@ -70,9 +70,9 @@ fn sqlite_snapshot_block3d_catalog_keeps_all_five_independent_literal_fields() {
         let mut s = full(0);
         s.catalog = store::ArtifactChild::new(
             address["childId"].as_str().unwrap().into(),
-            store::os_io::ArtifactRef {
+            semio_framework_artifact_reference::ArtifactRef {
                 artifact_id: address["artifactId"].as_str().unwrap().into(),
-                dialect: store::os_io::ArtifactDialect { artifact_kind: address["artifactKind"].as_str().unwrap().into(), standard: address["standard"].as_str().unwrap().into(), subset: address["subset"].as_str().unwrap().into() },
+                dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: address["artifactKind"].as_str().unwrap().into(), standard: address["standard"].as_str().unwrap().into(), subset: address["subset"].as_str().unwrap().into() },
             },
         );
         for p in [Block3dSnapshot::parse_dsl(&s.print_dsl()).unwrap(), Block3dSnapshot::decode_pack(&s.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()).unwrap()] {
@@ -235,7 +235,7 @@ fn sqlite_snapshot_block3d_row_frontier_and_real_four_phase_cancellation() {
 fn sqlite_snapshot_block3d_actual_erased_declared_binary_text_retains_full_domain() {
     use store::sqlite_snapshot::*;
     let codec = crate::standards::v1::subsets::any::io::io().native.codec.snapshot_sqlite.unwrap();
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.block.block3d".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.block.block3d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
         let expected = full(word);
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -273,14 +273,14 @@ fn exact(a:&Block3dSnapshot,b:&Block3dSnapshot){use semio_framework_value::{DslV
 fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("block").label("Populated public SQLite").version("0.0.1").package_id("semio:block").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_block3d_populated_actual_app_public_both_forms(){
-use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route}};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
+use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
 register();let dialect=ArtifactDialect{artifact_kind:"s.block.block3d".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
 for word in words(){let expected=PublicOwned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let actual=PublicOwned::new(io_import_sqlite_snapshot::<Block3dSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);exact(actual.get(),expected.get());assert_eq!((actual.get()).encode_pack(),(expected.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(expected.get()).print_dsl());}}
 eprintln!("[DEBUG] block3d actual app public both forms preserve complete owner and words");
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_block3d_populated_public_independent_edit_retirement(){
-use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};use std::{io::Write,process::{Command,Stdio}};
+use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};use std::{io::Write,process::{Command,Stdio}};
 register();let dialect=ArtifactDialect{artifact_kind:"s.block.block3d".into(),standard:"1".into(),subset:"*".into()};
 for word in words(){let expected=PublicOwned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
 let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==14n)throw Error('table census');if(d.query('SELECT COUNT(*) AS n FROM block3_document').get().n!==1n)throw Error('literalRows:block3_document');if(d.query('SELECT COUNT(*) AS n FROM block3_kind').get().n!==1n)throw Error('literalRows:block3_kind');if(d.query('SELECT COUNT(*) AS n FROM block3_catalog_child').get().n!==1n)throw Error('literalRows:block3_catalog_child');if(d.query('SELECT COUNT(*) AS n FROM block3_representation').get().n!==1n)throw Error('literalRows:block3_representation');if(d.query('SELECT COUNT(*) AS n FROM block3_representation_tag').get().n!==2n)throw Error('literalRows:block3_representation_tag');if(d.query('SELECT COUNT(*) AS n FROM block3_representation_attribute').get().n!==1n)throw Error('literalRows:block3_representation_attribute');if(d.query('SELECT COUNT(*) AS n FROM block3_vortex_kind_extra').get().n!==1n)throw Error('literalRows:block3_vortex_kind_extra');if(d.query('SELECT COUNT(*) AS n FROM block3_vortex').get().n!==1n)throw Error('literalRows:block3_vortex');if(d.query('SELECT COUNT(*) AS n FROM block3_compatibility').get().n!==1n)throw Error('literalRows:block3_compatibility');if(d.query('SELECT COUNT(*) AS n FROM block3_attribute').get().n!==1n)throw Error('literalRows:block3_attribute');if(d.query('SELECT COUNT(*) AS n FROM block3_author').get().n!==1n)throw Error('literalRows:block3_author');if(d.query('SELECT COUNT(*) AS n FROM block3_camera3d').get().n!==1n)throw Error('literalRows:block3_camera3d');if(d.query('SELECT COUNT(*) AS n FROM block3_meta').get().n!==1n)throw Error('literalRows:block3_meta');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.block.block3d'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE block3_kind SET description=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
@@ -301,7 +301,7 @@ fn sqlite_snapshot_block3d_json_transport_corpus_is_closed_and_third_party_measu
 fn sqlite_snapshot_block3d_typed_catalog_dialect_is_required_by_every_native_form() {
  use store::{ArtifactSqliteSnapshot,sqlite_snapshot::*};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔢️transport/🔣️.json")).unwrap();
- for row in corpus["childDialects"]["refused"].as_array().unwrap(){let mut s=full(0);s.catalog.target.dialect=store::os_io::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert!(s.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let payload=match encoding{SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(s.print_dsl()),SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(s.encode_pack_with(&Default::default()).unwrap())};assert!(Block3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());assert!(s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());}}
+ for row in corpus["childDialects"]["refused"].as_array().unwrap(){let mut s=full(0);s.catalog.target.dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert!(s.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let payload=match encoding{SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(s.print_dsl()),SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(s.encode_pack_with(&Default::default()).unwrap())};assert!(Block3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());assert!(s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());}}
 }
 
 #[test]

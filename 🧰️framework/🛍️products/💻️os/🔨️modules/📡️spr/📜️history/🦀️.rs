@@ -8,6 +8,10 @@
 //! them, but never interprets operation semantics (that is `protocol_command`'s concern, a sibling
 //! crate this one does not depend on).
 
+#[path = "🔁️fold/🦀️.rs"]
+mod retained_fold;
+pub use retained_fold::RetainedHistoryFold;
+
 #[path = "🛂️identity/🦀️.rs"]
 pub(crate) mod identity;
 
@@ -233,45 +237,14 @@ impl HistoryLog {
     /// [`crate::os_spr::mutation_ids_for_edit`] fallback). Edits owning an operation of a
     /// non-accepted quarantined conflict are excluded.
     pub fn fold(&self) -> Result<crate::os_spr::HistoryFold, ProtocolError> {
-        let mut edits = Vec::with_capacity(self.edits.len());
-        let mut owners: HashMap<String, &str> = HashMap::new();
-        for edit in &self.edits {
-            let meta = edit.meta.as_deref().unwrap_or_default();
-            let timestamp = match meta.first().and_then(|meta| meta.hlt) {
-                Some((actor, physical_ms, logical)) => crate::os_spr::HybridLogicalTimestamp {
-                    actor,
-                    physical_ms: u64::try_from(physical_ms).map_err(|_| ProtocolError::Malformed { what: "history fold", offset: 0, detail: format!("edit {} has a negative hybrid-clock time", edit.id) })?,
-                    logical,
-                },
-                None => crate::os_spr::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
-            };
-            let mutation_ids: Vec<crate::os_spr::MutationId> = (0..edit.ops.len())
-                .map(|index| crate::os_spr::MutationId(meta.get(index).and_then(|meta| meta.op_id.clone()).unwrap_or_else(|| format!("{}#{index}", edit.id))))
-                .collect();
-            for mutation_id in &mutation_ids {
-                owners.insert(mutation_id.0.clone(), edit.id.as_str());
-            }
-            edits.push(crate::os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp, mutation_ids, line: edit.line.clone() });
-        }
-        let mut excluded = HashSet::new();
-        for conflict in self.conflicts.iter().filter(|conflict| conflict.kind == 0 && conflict.status != 1) {
-            for bytes in &conflict.envelopes {
-                let mut position = 0;
-                let envelope = crate::os_spr::decode_envelope(bytes, &mut position)?;
-                if position != bytes.len() {
-                    return Err(ProtocolError::Malformed { what: "history fold", offset: position as u64, detail: format!("quarantined conflict {} envelope has trailing bytes", conflict.id) });
-                }
-                if let Some(owner) = owners.get(&envelope.mutation_id.0) {
-                    excluded.insert((*owner).to_string());
-                }
-            }
-        }
-        let transitions: Vec<crate::os_spr::MutationEnvelope> = self.transitions.iter().map(|transition| transition.to_envelope(&self.doc_id)).collect();
-        let document_id = crate::os_spr::ArtifactId(self.doc_id.clone());
-        let trunk = crate::os_spr::trunk_alternative_id(&document_id);
-        let head = crate::os_spr::ViewerHead { line_id: self.viewer_line.clone().filter(|line| line != &trunk).unwrap_or(trunk), checkpoint_id: self.viewer_checkpoint.clone() };
-        crate::os_spr::fold_history_for(&document_id, &edits, &transitions, &excluded, &head)
+        use semio_framework_value::ErasedSnapshotRetirement;
+        let (fold, transitions, replay_order, conflicts) = crate::os_spr::HistoryFoldJob::new(|control| async move { self.fold_controlled(crate::os_spr::HistoryShape::Document, &control).await }).finish_cold()?;
+        let mut retirement = semio_framework_value::retirement::owned_retirement((transitions, replay_order, conflicts));
+        while retirement.close_step(64, 4096).expect("normalized cold fold owners have exact retirement") != semio_framework_value::SnapshotRetirementStep::Complete {}
+        assert!(retirement.terminal_is_empty());
+        Ok(fold)
     }
+
 }
 //#endregion 🔖️Fold
 

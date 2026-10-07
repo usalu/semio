@@ -15,7 +15,7 @@ fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
         layer_base_mut(&mut layer).transform.scale_x=2.0;
         layer_base_mut(&mut layer).opacity=0.4;
         let original=layer_base(&layer).clone();
-        let mut document=DrawingSnapshot { layers:vec![crate::schema::create_drawing_shape_layer_rect("Behind"),layer,crate::schema::create_drawing_shape_layer_rect("Ahead")],..Default::default() };
+        let mut document=DrawingSnapshot { layers:vec![crate::schema::create_drawing_shape_layer_rect("Behind"),layer,crate::schema::create_drawing_shape_layer_rect("Ahead")].into(),..Default::default() };
         let order=document.layers.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>();
         let mutations=plan(&document,&["converted".into()],"toPath").unwrap();
         assert_eq!(mutations.len(),2);
@@ -23,7 +23,7 @@ fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
         assert_eq!(document.layers.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>(),order);
         let DrawingLayerNode::Path(path)=&document.layers[1] else { panic!("Expected path") };
         assert_eq!(path.base,original);
-        assert_eq!(path.segments,serde_json::from_value::<Vec<crate::PathSegment>>(case["segments"].clone()).unwrap());
+        assert_eq!(path.segments,serde_json::from_value::<Vec<crate::PathSegment>>(case["segments"].clone()).unwrap().into());
         assert!(plan(&document,&["converted".into()],"toPath").unwrap().is_empty());
     }
 }
@@ -38,7 +38,7 @@ fn conversion_preserves_distinct_parents_and_rejects_locked_or_unsupported_selec
     layer_base_mut(&mut group).id="group".into();
     let DrawingLayerNode::Group(body)=&mut group else { unreachable!() };
     body.children.push(b);
-    let original=DrawingSnapshot { layers:vec![a,group],..Default::default() };
+    let original=DrawingSnapshot { layers:vec![a,group].into(),..Default::default() };
     let ids=vec!["a".into(),"b".into()];
     let mut converted=original.clone();
     for mutation in plan(&original,&ids,"toPath").unwrap() { crate::mutations::apply_drawing_mutation(&mut converted,&mutation).unwrap(); }
@@ -84,7 +84,7 @@ fn repeated_duplication_preserves_unique_descendant_ids() {
     let mut group = crate::schema::create_drawing_group_layer("Group");
     if let DrawingLayerNode::Group(body) = &mut group { body.children.push(child); }
     let id = layer_base(&group).id.clone();
-    let mut document = DrawingSnapshot { layers: vec![group], ..Default::default() };
+    let mut document = DrawingSnapshot { layers: vec![group].into(), ..Default::default() };
     for _ in 0..2 {
         for mutation in plan(&document, &[id.clone()], "duplicate").unwrap() { crate::mutations::apply_drawing_mutation(&mut document, &mutation).unwrap(); }
     }
@@ -152,7 +152,7 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
         let layers=if nested {
             let mut layer=crate::schema::create_drawing_group_layer("Parent");
             let DrawingLayerNode::Group(group)=&mut layer else {unreachable!()};
-            group.base.id="parent".into();group.children=layers;vec![layer]
+            group.base.id="parent".into();group.children=layers.into();vec![layer]
         }else {layers};
         let document=DrawingSnapshot {layers,..Default::default()};
         let saved=document.clone();
@@ -197,6 +197,6 @@ fn ungroup_matches_shared_structure_transform_and_selection_cases() {
 fn ungroup_refuses_explicit_isolation_even_at_normal_blend_and_unit_opacity() {
     let mut layer=crate::schema::create_drawing_group_layer("Isolated");
     let crate::DrawingLayerNode::Group(group)=&mut layer else {unreachable!()};group.isolation=true;group.base.id="group".into();
-    let document=crate::DrawingSnapshot {layers:vec![layer],..Default::default()};
+    let document=crate::DrawingSnapshot {layers:vec![layer].into(),..Default::default()};
     assert!(super::plan(&document,&["group".into()],"ungroup").is_err());
 }

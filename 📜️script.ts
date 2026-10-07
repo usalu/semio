@@ -5485,47 +5485,9 @@ function toolJobFixedOperationFixtureIndex(operation: number, generation: number
   return Number(BigInt.asUintN(64, operation64 ^ rotated) % BigInt(capacity));
 }
 
-/** 🔢️ Wire-width formats that artifact-level modules annotate scalars with; draft-07 knows none of them. */
-const SCHEMA_NUMERIC_FORMATS = ["double", "float", "int32", "int64", "uint32", "uint64"] as const;
-
-/** 🏷️ Every `x-semio-*` annotation the module carries, so Ajv `strict: true` tolerates repo vocabulary. */
-function schemaVendorKeywords(node: unknown, found = new Set<string>()): Set<string> {
-  if (Array.isArray(node)) for (const child of node) schemaVendorKeywords(child, found);
-  else if (node && typeof node === "object")
-    for (const [key, child] of Object.entries(node)) {
-      if (key.startsWith("x-semio-")) found.add(key);
-      schemaVendorKeywords(child, found);
-    }
-  return found;
-}
-
-/**
- * 🧬️ Compiles one named `$defs` export of a scope-owned schema module — the only addressable form a
- * cross-document reference may take (`<$id>#/$defs/<ExportId>`). Vendor keywords are discovered from the
- * module itself and the numeric formats declared, because Ajv `strict: true` throws on an unknown keyword
- * before it validates anything.
- * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json
- */
-function compileScopeExport(root: string, modulePath: string, exportId: string): (data: unknown) => boolean {
-  const module = JSON.parse(policyReadFileSafe(root, modulePath)) as { $id?: string; $defs?: Record<string, unknown> };
-  if (typeof module.$id !== "string" || !module.$defs || !Object.hasOwn(module.$defs, exportId))
-    throw new Error(`[schema] ${modulePath} declares no $defs/${exportId} export.`);
-  const Ajv = createRequire(import.meta.url)("ajv");
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  for (const keyword of schemaVendorKeywords(module)) ajv.addKeyword({ keyword, metaSchema: true });
-  for (const numeric of SCHEMA_NUMERIC_FORMATS) ajv.addFormat(numeric, true);
-  ajv.addSchema(module);
-  const validate = ajv.getSchema(`${module.$id}#/$defs/${exportId}`);
-  if (!validate) throw new Error(`[schema] ${modulePath}#/$defs/${exportId} did not compile.`);
-  return validate as (data: unknown) => boolean;
-}
-
 function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOutput {
   const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json";
   const fixture = JSON.parse(policyReadFileSafe(root, fixturePath)) as FixedOperationFixture;
-  const validate = compileScopeExport(root, "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json", "FixedOperationRegistryFixture");
-  if (!validate(fixture))
-    throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] fixture does not satisfy framework.job#/$defs/FixedOperationRegistryFixture.");
   if (!fixture || fixture.schema !== "semio.framework.job.fixed-operation-registry-law.v1" || !Array.isArray(fixture.cases))
     throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] fixture root is not exact.");
   const requiredIds = ["aba", "byte-maximum-plus-one", "cancel-stale", "collision", "empty", "interrupted-repeated-close", "maximum-plus-one", "single"];
@@ -5635,7 +5597,7 @@ type SharedFrameworkActionRouteFixture = {
   routes: Array<{ id: string; factory: string; schemaId: string; descriptorDisposition: "migrated"; routeIndex: number; maximumRawBytes: number; maximumItems: number; workUnits: number; maximumOutputBytes: number }>;
   descriptorLaws: Array<{
     id: string;
-    ownerKind: "windowAction" | "appCommand" | "modeCommand";
+    ownerKind: "appAction" | "windowAction" | "appCommand" | "modeCommand";
     ownerId: string;
     actionIds: string[];
     initial: "missing" | "migrated";
@@ -5657,8 +5619,6 @@ type SharedFrameworkActionRouteFixture = {
 
 function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string; routes: string[]; descriptor: string[]; hostile: string[] } {
   const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
-  if (!compileScopeExport(root, "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json", "SharedFrameworkActionRoutesFixture")(fixture))
-    throw new Error("[verify interactivity tool-jobs shared-action-fixture] fixture does not satisfy framework.job#/$defs/SharedFrameworkActionRoutesFixture.");
   if (fixture.schema !== "semio.framework.plugin.shared-framework-action-routes.v1" || fixture.routes.length !== 12)
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] fixture root is not exact.");
   const expectedIds = TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter((id) => !["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "revertToCommand", "configuration-binary"].includes(id)).sort();
@@ -5676,30 +5636,22 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
     if (!source.includes(`FrameworkSharedActionDescriptorRoute { action_id: "${route.id}", schema_id: "${route.schemaId}" }`))
       throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${route.id} lacks its schema-driven descriptor disposition route.`);
   }
-  const dispositionJoinStart = source.indexOf("fn join_framework_shared_action_dispositions(definition: &mut AppDefinition)");
-  const dispositionJoinEnd = source.indexOf("//#endregion", dispositionJoinStart);
-  const dispositionJoin = source.slice(dispositionJoinStart, dispositionJoinEnd);
-  if (
-    dispositionJoinStart < 0 ||
-    dispositionJoinEnd < dispositionJoinStart ||
-    !dispositionJoin.includes("definition.window_kinds.iter_mut()") ||
-    !dispositionJoin.includes("window.actions") ||
-    dispositionJoin.includes("definition.commands") ||
-    dispositionJoin.includes("definition.modes") ||
-    !source.includes("join_framework_shared_action_dispositions(&mut app.definition);") ||
-    !source.includes("join_framework_shared_action_dispositions(&mut factory_definition);")
-  )
+  const sourceFailures: string[] = [];
+  const dispositionJoin = interactivityCheckedRustBlockScope(source, "fn join_framework_shared_action_dispositions(definition: &mut AppDefinition)", "shared-action descriptor join", sourceFailures)?.replace(/\s+/g, "");
+  const registration = interactivityCheckedRustBlockScope(source, "pub fn register_app_factory(mut self, mut app: App, factory: declarations::AppFactory<PA>) -> Self", "shared-action app registration", sourceFailures)?.replace(/\s+/g, "");
+  const exactJoin = "fnjoin_framework_shared_action_dispositions(definition:&mutAppDefinition){foractionindefinition.actions.iter_mut().chain(definition.window_kinds.iter_mut().flat_map(|window|window.actions.iter_mut())){ifframework_shared_action_descriptor_schema_id(&action.id).is_some(){action.semantics.execution.interactive_job=semio_framework::InteractiveJobClassification::Migrated;}}}";
+  if (sourceFailures.length || dispositionJoin !== exactJoin || !registration || !/^pubfnregister_app_factory\([^]*?\{letmutfactory=factory;join_framework_shared_action_dispositions\(&mutapp\.definition\);join_framework_shared_action_dispositions\(&mutfactory\.definition\);/.test(registration) || (registration.match(/join_framework_shared_action_dispositions\(/g) ?? []).length !== 2 || !/self\.manifest\.apps\.push\(app\.definition\);[^]*?self\.apps\.insert\(self\.manifest\.apps\.last\(\)\.unwrap\(\)\.id\.clone\(\),factory\);self\}$/.test(registration))
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] descriptor disposition join is not exact across manifest and runtime factory definitions.");
   const dispositionById = new Map(fixture.routes.map((route) => [route.id, route.descriptorDisposition]));
-  const requiredDescriptorLawIds = ["exact-app-command-owner", "exact-mode-command-owner", "exact-window-owner-primary", "exact-window-owner-secondary", "near-id-window-owner", "unaccepted-window-owner"];
+  const requiredDescriptorLawIds = ["exact-app-action-owner", "exact-app-command-owner", "exact-mode-command-owner", "exact-window-owner-primary", "exact-window-owner-secondary", "near-id-app-action-owner", "near-id-window-owner", "unaccepted-app-action-owner", "unaccepted-window-owner"];
   if (fixture.descriptorLaws.map((law) => law.id).sort().join("\0") !== requiredDescriptorLawIds.join("\0"))
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] descriptor law identities are not exact.");
   const descriptor = fixture.descriptorLaws.map((law) => {
     if (!law.ownerId.includes("/") && law.ownerKind === "windowAction") throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${law.id} lacks an exact window owner placement.`);
-    if (law.id.startsWith("exact-window-owner") && law.actionIds.slice().sort().join("\0") !== actualIds.join("\0"))
+    if ((law.id.startsWith("exact-window-owner") || law.id === "exact-app-action-owner") && law.actionIds.slice().sort().join("\0") !== actualIds.join("\0"))
       throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${law.id} does not cover every accepted shared action id.`);
     for (const actionId of law.actionIds) {
-      const result = law.ownerKind === "windowAction" ? dispositionById.get(actionId) ?? law.initial : law.initial;
+      const result = law.ownerKind === "windowAction" || law.ownerKind === "appAction" ? dispositionById.get(actionId) ?? law.initial : law.initial;
       if (result !== law.expected) throw new Error(`[verify interactivity tool-jobs shared-action-fixture] descriptor law ${law.id} changed ${law.ownerKind} ${law.ownerId}/${actionId} to ${result}.`);
     }
     return `${law.id}:${law.ownerKind}:${law.ownerId}:${law.expected}`;
@@ -5719,10 +5671,11 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
     return `${law.id}:${result}`;
   });
   const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
-  const arming = shell.indexOf("let record_tutorial_after_acceptance = action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID;");
-  const accepted = shell.indexOf("let result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;", arming);
-  const armed = shell.indexOf("if record_tutorial_after_acceptance {\n            self.tutorial_start_recording();", accepted);
-  if (arming < 0 || accepted < arming || armed < accepted || shell.slice(0, accepted).includes("if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {\n            self.tutorial_start_recording();"))
+  const dispatch = interactivityCheckedRustBlockScope(shell, "pub fn dispatch_action<'a>(&'a mut self, mut action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>>", "shared-action accepted tutorial dispatch", sourceFailures)?.replace(/\s+/g, "") ?? "";
+  const arming = dispatch.indexOf("letrecord_tutorial_after_acceptance=action.action==semio_framework::RECORD_TUTORIAL_ACTION_ID;");
+  const accepted = dispatch.indexOf("letanswer=program.handle_action(session.instance_id,&action_json,&live_view_state).await;letmutresult=answer.map_err(|refusal|self.refused_guest_call(refusal,&session.app))?;", arming);
+  const armed = dispatch.indexOf("ifrecord_tutorial_after_acceptance{self.tutorial_start_recording();}", accepted);
+  if (sourceFailures.length || arming < 0 || accepted < arming || armed < accepted || (dispatch.match(/self\.tutorial_start_recording\(\);/g) ?? []).length !== 1)
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] recordTutorial arms before the accepted retained route.");
   return { schema: fixture.schema, routes: fixture.routes.map((route) => `${route.id}:${route.factory}:${route.schemaId}:${route.descriptorDisposition}`), descriptor, hostile };
 }
@@ -15161,17 +15114,20 @@ export class SchemaScript extends Script {
     console.log(`[schema generate] ${rel}: ${Object.keys(inventory.catalog.scopes).length} scopes, ${inventory.diagnostics.length} diagnostics.`);
   }
 
-  /** 🚦️ Reports every scope invariant violation as stable JSON lines plus a summary. */
+  /** 🚦️ Reports scope invariant violations; --fixture-boundary runs the independent example-authority gate. */
   private async check(args: string[]): Promise<void> {
     const inventory = this.inventory();
     const rel = this.catalogPath();
     const abs = join(this.root, rel);
-    const findings: SchemaScopeDiagnostic[] = [...inventory.diagnostics, ...inventory.placement];
-    const rendered = renderSchemaCatalog(inventory.catalog);
-    const tracked = this.readCatalog();
-    if (!existsSync(abs)) findings.push({ code: "schema-catalog-missing", path: rel, detail: "Run bun ./📜️script.ts schema generate." });
-    else if (!tracked.parsed) findings.push({ code: "schema-catalog-malformed", path: rel, detail: "The catalog is not a JSON object after a re-read; a concurrent schema generate is still writing it." });
-    else if (tracked.text !== rendered) findings.push({ code: "schema-catalog-stale", path: rel, detail: "The catalog does not match the schema modules on disk." });
+    const fixtureBoundary = args.includes("--fixture-boundary");
+    const findings: SchemaScopeDiagnostic[] = [...inventory.diagnostics, ...inventory.placement].filter(finding => !fixtureBoundary || finding.code === "schema-fixture-defines-schema");
+    if (!fixtureBoundary) {
+      const rendered = renderSchemaCatalog(inventory.catalog);
+      const tracked = this.readCatalog();
+      if (!existsSync(abs)) findings.push({ code: "schema-catalog-missing", path: rel, detail: "Run bun ./📜️script.ts schema generate." });
+      else if (!tracked.parsed) findings.push({ code: "schema-catalog-malformed", path: rel, detail: "The catalog is not a JSON object after a re-read; a concurrent schema generate is still writing it." });
+      else if (tracked.text !== rendered) findings.push({ code: "schema-catalog-stale", path: rel, detail: "The catalog does not match the schema modules on disk." });
+    }
     const sorted = findings.slice().sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)) || Buffer.from(left.code).compare(Buffer.from(right.code)) || Buffer.from(left.detail).compare(Buffer.from(right.detail)));
     const reportIndex = args.indexOf("--report");
     if (reportIndex >= 0) {

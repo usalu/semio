@@ -1,0 +1,16 @@
+fn reconstruct_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>, declared_schema: &str) -> Result<Self,ValueError> {
+
+        control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?; validate_sqlite_database_schema(database, declared_schema, control.limits())?;
+        let document = database.table("semio_text_document")?.single_row()?; identity(document, 2)?; if document.rowid != 1 { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text document requires identifier 1")); }
+        let total = database.tables.iter().map(|table| table.rows.len()).sum(); let mut completed = 1usize; let mut ids = BTreeSet::new(); let ordered = database.table("semio_text_run")?.ordered_rows(2)?;
+        for row in &ordered { identity(row, 5)?; if row.integer(1)? != 1 || !ids.insert(row.rowid) { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text run document or identity is invalid")); } row.text(3)?; row.text(4)?; }
+        let mut marks = BTreeMap::<i64, Vec<&SqliteRow>>::new(); let mut mark_ids = BTreeSet::new();
+        for row in &database.table("semio_text_mark")?.rows { identity(row, 5)?; let run = row.integer(1)?; if !ids.contains(&run) || !mark_ids.insert(row.rowid) || row.integer(2)? < 0 { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text mark run, identity or ordinal is invalid")); } row.text(3)?; row.text(4)?; marks.entry(run).or_default().push(row); completed += 1; if completed % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, completed.min(total), total)?; } }
+        let mut runs = Vec::new(); completed = 1;
+        for row in ordered {
+            control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, completed, total)?; let mut ordered_marks = marks.remove(&row.rowid).unwrap_or_default(); ordered_marks.sort_by_key(|row| row.integer(2).unwrap_or(-1)); let mut native_marks = Vec::new();
+            for (ordinal, mark) in ordered_marks.into_iter().enumerate() { if mark.integer(2)? != integer(ordinal)? { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text mark ordinals must be contiguous and zero-based")); } let kind = match mark.text(3)? { "bold" => SemioTextMarkKind::Bold, "italic" => SemioTextMarkKind::Italic, "code" => SemioTextMarkKind::Code, "link" => SemioTextMarkKind::Link, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text mark kind is invalid")) }; if mark.text(4)?.len() > 65536 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, completed, total)?; } native_marks.push(SemioTextMark { kind, href: reconstruct_text(control,mark.text(4)?)? }); completed += 1; if completed % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, completed, total)?; } }
+            runs.push(SemioTextRun { language: reconstruct_text(control,row.text(3)?)?, content: reconstruct_text(control,row.text(4)?)?, marks: native_marks }); completed += 1;
+        }
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, total, total)?; Ok(Self { schema: reconstruct_text(control,document.text(1)?)?, runs })
+    }

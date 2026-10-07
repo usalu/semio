@@ -125,17 +125,15 @@ export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, c
             ))}
           </div>
         )}
-        {choices.some((choice) => choice.description != null) && (
-          <div className="mb-double flex flex-col gap-tiny">
-            {choices.map((choice) => choice.description == null ? null : <p key={choice.id} id={choiceDescriptionId(choice)} data-dialog-choice-description={choice.id} className="text-xs text-muted-foreground">{text(choice.description)}</p>)}
-          </div>
-        )}
-        <div className="flex flex-wrap items-center justify-between gap-single">
+        <div className="flex flex-wrap items-start justify-between gap-single">
           <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ? text(dialog.cancelLabel) : cancelLabel} onClick={onCancel} />
-          <div className="flex flex-wrap items-center justify-end gap-single">
+          <div className="flex min-w-0 flex-1 flex-wrap items-start justify-end gap-single">
             {choices.map((choice) => {
               const chrome = dialogChoiceChrome(choice);
-              return <Button key={choice.id} id={`ui.dialog.choice.${choice.id}`} variant={chrome.variant} className={chrome.className} icon={choice.destructive ? "triangle-alert" : "arrow-right"} text={text(choice.label)} data-dialog-choice={choice.id} data-tone={choice.tone ?? "neutral"} data-destructive={choice.destructive ? "true" : undefined} aria-describedby={choice.description == null ? undefined : choiceDescriptionId(choice)} disabled={!choiceEnabled(choice)} onClick={() => { if (choiceEnabled(choice)) onChoose(choice, dialogChoiceArgs(choice, dialog.args, effective)); }} />;
+              return <div key={choice.id} data-dialog-choice-group={choice.id} className="flex min-w-0 flex-col items-end gap-tiny">
+                <Button id={`ui.dialog.choice.${choice.id}`} variant={chrome.variant} className={chrome.className} icon={choice.destructive ? "triangle-alert" : "arrow-right"} text={text(choice.label)} data-dialog-choice={choice.id} data-tone={choice.tone ?? "neutral"} data-destructive={choice.destructive ? "true" : undefined} aria-describedby={choice.description == null ? undefined : choiceDescriptionId(choice)} disabled={!choiceEnabled(choice)} onClick={() => { if (choiceEnabled(choice)) onChoose(choice, dialogChoiceArgs(choice, dialog.args, effective)); }} />
+                {choice.description != null && <p id={choiceDescriptionId(choice)} data-dialog-choice-description={choice.id} className="max-w-full text-xs text-muted-foreground">{text(choice.description)}</p>}
+              </div>;
             })}
             <Button id="ui.dialog.submit" icon="check" text={text(dialog.submitLabel)} disabled={!canSubmit} onClick={submit} />
           </div>

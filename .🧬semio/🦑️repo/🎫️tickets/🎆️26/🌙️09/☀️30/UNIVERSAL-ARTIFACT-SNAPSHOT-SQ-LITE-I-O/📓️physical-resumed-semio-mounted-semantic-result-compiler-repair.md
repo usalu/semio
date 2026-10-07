@@ -1,0 +1,5 @@
+# Mounted Semantic Closure Result Compiler Repair
+
+Original DIN18599 After 62216 ended compiler-only after the new Semio80 provider mount. All twelve emitted diagnostics came from seven semantic census callback regions. This lane owns six regions in Kit, Model and Document; Root owns the remaining Mesh region. The Kit scoped decimal-width stage now states its existing usize/ValueError result explicitly. Five document-list callbacks now return Ok(()) after their unchanged fallible census work. Current full-source and exact narrowed guards preserve every field, extent calculation, cancellation checkpoint, grant and row traversal.
+
+The same three existing held owner records carry the repaired current after images for reproducible aggregate execution. These compiler-only return declarations add no owner path and do not qualify downstream behavior. Original Norm/PDF/CSVJSON routes remain ready for the concrete shared compiler join. The full current guard is physical-resumed-semio-mounted-kit-model-document-semantic-result-compiler-guards.json.

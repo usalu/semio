@@ -10,7 +10,7 @@ async fn definition_declares_a_canvas2d_try_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_node_for_the_default_document() {
-    let document = crate::schema::building_component_spec();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::building_component_spec();
     let node = render(&document).unwrap();
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
     assert!(json.contains("\"container\""));

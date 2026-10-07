@@ -1,10 +1,8 @@
 import { expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv";
 
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
-test("validates neutral owned process vectors with Ajv",()=>expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true));
 
 test("terminates a bounded owned descendant process", async () => {
   const owner = resolve(import.meta.dir, "../🟦️.ts");

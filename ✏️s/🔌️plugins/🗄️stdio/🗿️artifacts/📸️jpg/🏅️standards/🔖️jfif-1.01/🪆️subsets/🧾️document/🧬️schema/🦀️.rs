@@ -102,11 +102,7 @@ pub fn jpg_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 /// 🆕️ A new jpg document: one opaque white pixel as the real codec round-trips it — JPEG has no empty image (T.81 §B.2.2:
 /// a frame is at least 1×1), and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn blank_jpg_snapshot() -> JpgSnapshot {
-    use crate::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
-    let seed = JpgSnapshot { width: 1, height: 1, pixels: vec![255, 255, 255, 255], ..JpgSnapshot::default() };
-    encode_jpg(&seed).and_then(|bytes| decode_jpg(&bytes)).expect("blank_jpg_snapshot: the 1×1 seed round-trips through the real codec")
-}
+
 
 /// 🧪️ P2-FG2: the demo `JpgSnapshot` used by `conformance_laws::protocol_walk_law`/
 /// `fixture_honesty_law` — a real, `encode_jpg`-round-trippable 16x16 image (16x16 = exactly one
@@ -137,7 +133,6 @@ pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
         width: w,
         height: h,
         pixels,
-        re_encode_quality: Some(85),
         jfif_version: (1, 1),
         jfif_density_units: crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JfifDensityUnits::PixelsPerInch,
         jfif_x_density: 72,

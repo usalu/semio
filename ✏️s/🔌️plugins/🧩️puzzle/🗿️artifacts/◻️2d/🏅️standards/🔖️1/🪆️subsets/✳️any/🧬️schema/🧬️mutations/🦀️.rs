@@ -18,6 +18,7 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 use protocol::{Mutation, MutationDiff};
 use serde_json::Value;
+use semio_framework_value::{list::PagedList, paged::PagedUtf8};
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-2d document mutation vocabulary: id-keyed node/edge create-delete plus
@@ -29,7 +30,7 @@ use serde_json::Value;
 /// `setCamera`'s `ActionKind::View`), never a VCS-tracked document edit. There is deliberately no
 /// whole-document mutation: import/reset/example-load goes through `store::ArtifactStore::reset`
 /// (non-history), never through this enum.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -168,32 +169,32 @@ pub use super::scale_selection::{scale_selection, ScaleSelection};
 /// replays on any base.
 pub fn puzzle2d_selection_diff(
     base: &Puzzle2dSnapshot,
-    targets: &[String],
+    targets: &PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
     identity: bool,
     node: impl Fn(&crate::Puzzle2dNode) -> crate::Puzzle2dNode,
     region: Option<&dyn Fn(&crate::Puzzle2dTargetRegion) -> crate::Puzzle2dTargetRegion>,
 ) -> protocol::MutationOutcome<Puzzle2dDiff> {
     use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionPatchEntry, Puzzle2dTargetRegionsDelta};
     if let Err(reason) = puzzle2d_targets_invariant(targets) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>());
     }
-    let (mut missing, mut locked, mut fixed, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
+    let (mut missing, mut locked, mut fixed, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&PagedUtf8<{ usize::MAX }>>::new());
     for id in targets {
         match (base.nodes.iter().find(|entry| &entry.id == id), base.target_regions.iter().find(|entry| &entry.id == id)) {
             (Some(entry), _) if entry.locked != Some(true) => {
-                survivors.insert(id.as_str());
+                survivors.insert(id);
             }
-            (Some(_), _) => locked.push(id.clone()),
-            (None, Some(entry)) if entry.locked => locked.push(id.clone()),
-            (None, Some(_)) if region.is_none() => fixed.push(id.clone()),
+            (Some(_), _) => locked.push(id.to_string_owner()),
+            (None, Some(entry)) if entry.locked => locked.push(id.to_string_owner()),
+            (None, Some(_)) if region.is_none() => fixed.push(id.to_string_owner()),
             (None, Some(_)) => {
-                survivors.insert(id.as_str());
+                survivors.insert(id);
             }
-            (None, None) => missing.push(id.clone()),
+            (None, None) => missing.push(id.to_string_owner()),
         }
     }
     if survivors.is_empty() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked node or target region this transform applies to", targets.len()), targets.to_vec());
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked node or target region this transform applies to", targets.len()), targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>());
     }
     let partial: Vec<protocol::MutationMessage> = [(missing, "not on this board"), (locked, "locked"), (fixed, "axis-aligned target regions do not rotate")]
         .into_iter()
@@ -203,19 +204,19 @@ pub fn puzzle2d_selection_diff(
     let nodes: Vec<Puzzle2dNodePatchEntry> = if identity {
         Vec::new()
     } else {
-        base.nodes.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(node(entry)).filter(|next| next != entry).map(|next| Puzzle2dNodePatchEntry { id: entry.id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } })).collect()
+        base.nodes.iter().filter(|entry| survivors.contains(&entry.id)).filter_map(|entry| Some(node(entry)).filter(|next| next != entry).map(|next| Puzzle2dNodePatchEntry { id: entry.id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } })).collect()
     };
     let regions: Vec<Puzzle2dTargetRegionPatchEntry> = match region.filter(|_| !identity) {
         Some(transform) => base
             .target_regions
             .iter()
-            .filter(|entry| survivors.contains(entry.id.as_str()))
+            .filter(|entry| survivors.contains(&entry.id))
             .filter_map(|entry| Some(transform(entry)).filter(|next| next != entry).map(|next| Puzzle2dTargetRegionPatchEntry { id: entry.id.clone(), patch: Puzzle2dTargetRegionPatch { replacement: Some(next) } }))
             .collect(),
         None => Vec::new(),
     };
     if nodes.is_empty() && regions.is_empty() {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>())]));
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
         nodes: (!nodes.is_empty()).then(|| Puzzle2dNodesDelta { patched: nodes, ..Default::default() }),
@@ -294,19 +295,19 @@ pub fn puzzle2d_positive(values: &[(&str, Option<f64>)]) -> Result<(), String> {
 }
 
 /// 🔷️ A present shape names one of the two figures a node can be.
-pub fn puzzle2d_shape(name: &str, shape: Option<&str>) -> Result<(), String> {
+pub fn puzzle2d_shape(name: &str, shape: Option<&PagedUtf8<{ usize::MAX }>>) -> Result<(), String> {
     match shape {
-        Some(shape) if !matches!(shape, "circle" | "rectangle") => Err(format!("{name} must be circle or rectangle, not {shape:?}")),
+        Some(shape) if !(shape.eq_str("circle") || shape.eq_str("rectangle")) => Err(format!("{name} must be circle or rectangle, not {shape:?}")),
         _ => Ok(()),
     }
 }
 
 /// 🗃️ A selection target set names at least one id and no id twice.
-pub fn puzzle2d_targets_invariant(targets: &[String]) -> Result<(), String> {
+pub fn puzzle2d_targets_invariant(targets: &PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>) -> Result<(), String> {
     if targets.is_empty() {
         return Err("targets must name at least one id".to_string());
     }
-    match targets.iter().enumerate().find(|(at, id)| targets[..*at].contains(id)) {
+    match targets.iter().enumerate().find(|(at, id)| targets.iter().take(*at).any(|previous| previous == *id)) {
         Some((_, id)) => Err(format!("targets must not repeat {id:?}")),
         None => Ok(()),
     }
@@ -320,7 +321,7 @@ pub fn puzzle2d_handle_invariant(handle: &crate::Puzzle2dHandle) -> Result<(), S
 /// 🔵️ A node record's bounds: a finite position, a known shape, positive extents and scale, valid handles.
 pub fn puzzle2d_node_invariant(node: &crate::Puzzle2dNode) -> Result<(), String> {
     puzzle2d_finite(&[("node x", node.x), ("node y", node.y)])
-        .and_then(|()| puzzle2d_shape("node shape", node.shape.as_deref()))
+        .and_then(|()| puzzle2d_shape("node shape", node.shape.as_ref()))
         .and_then(|()| puzzle2d_positive(&[("node radius", node.radius), ("node width", node.width), ("node height", node.height), ("node scale", node.scale)]))
         .and_then(|()| node.handles.iter().try_for_each(puzzle2d_handle_invariant))
 }
@@ -358,10 +359,10 @@ pub fn puzzle2d_catalogs_invariant(catalogs: &crate::Puzzle2dKindCatalogs) -> Re
 /// same rim geometry the board engine draws with and the editor's proximity search measures
 /// (`puzzle2d_handle_world_position`) — a circle's east-zero angle on the node's radius, a rectangle's north-zero
 /// angle on its outline. `None` when no node carries the handle.
-pub fn puzzle2d_handle_position(document: &Puzzle2dSnapshot, handle_id: &str) -> Option<(f64, f64)> {
+pub fn puzzle2d_handle_position(document: &Puzzle2dSnapshot, handle_id: &PagedUtf8<{ usize::MAX }>) -> Option<(f64, f64)> {
     let (node, handle) = document.nodes.iter().find_map(|node| node.handles.iter().find(|handle| handle.id == handle_id).map(|handle| (node, handle)))?;
     let centre = semio_framework_geometry::Point::new(node.x, node.y);
-    let point = if node.shape.as_deref() == Some("rectangle") {
+    let point = if node.shape.as_ref().is_some_and(|shape| shape.eq_str("rectangle")) {
         semio_framework_graph::drawing::routing::handle_position_on_rectangle(centre, node.width.unwrap_or(48.0), node.height.unwrap_or(48.0), handle.angle)
     } else {
         semio_framework_graph::drawing::routing::handle_position_on_circle(centre, node.radius.unwrap_or(24.0), handle.angle)
@@ -371,7 +372,7 @@ pub fn puzzle2d_handle_position(document: &Puzzle2dSnapshot, handle_id: &str) ->
 
 /// 📏️ The board distance between the handles `source` and `target` of `document` — what a recorded proximity
 /// tolerance is measured against. `None` when either handle is on no node.
-pub fn puzzle2d_handle_distance(document: &Puzzle2dSnapshot, source: &str, target: &str) -> Option<f64> {
+pub fn puzzle2d_handle_distance(document: &Puzzle2dSnapshot, source: &PagedUtf8<{ usize::MAX }>, target: &PagedUtf8<{ usize::MAX }>) -> Option<f64> {
     let ((source_x, source_y), (target_x, target_y)) = (puzzle2d_handle_position(document, source)?, puzzle2d_handle_position(document, target)?);
     Some((target_x - source_x).hypot(target_y - source_y))
 }

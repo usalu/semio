@@ -1,49 +1,20 @@
-// 🅰️ `BmpDiff`'s wire text IS its JSON serialization (serde, camelCase, no bespoke textual
-// syntax). This grammar names the real sparse fields rather than a placeholder — it does
-// not restate RFC 8259's own JSON grammar in full.
-grammar Stdio_bmp_diff;
-
-diff       : '{' member (',' member)* '}' | '{' '}' ;
-member     : HEADER_SIZE ':' INT
-           | WIDTH ':' INT
-           | HEIGHT ':' INT
-           | ROW_ORDER ':' rowOrder
-           | PLANES ':' INT
-           | BITS_PER_PIXEL ':' INT
-           | COMPRESSION ':' INT
-           | IMAGE_SIZE ':' INT
-           | X_PPM ':' INT
-           | Y_PPM ':' INT
-           | COLORS_USED ':' INT
-           | COLORS_IMPORTANT ':' INT
-           | PALETTE ':' paletteDiff
-           | PIXELS ':' '[' INT* ']' ;
-rowOrder   : '"bottomUp"' | '"topDown"' ;
-paletteDiff: '{' pmember (',' pmember)* '}' | '{' '}' ;
-pmember    : REMOVED ':' '[' INT* ']'
-           | MODIFIED ':' '[' paletteModified* ']'
-           | ADDED ':' '[' paletteAdded* ']' ;
-paletteModified : '{' INDEX ':' INT ',' ENTRY ':' paletteEntry '}' ;
-paletteAdded    : '{' INDEX ':' INT ',' ENTRY ':' paletteEntry '}' ;
-paletteEntry    : '{' '"b"' ':' INT ',' '"g"' ':' INT ',' '"r"' ':' INT ',' '"reserved"' ':' INT '}' ;
-
-HEADER_SIZE: '"headerSize"' ;
-WIDTH: '"width"' ;
-HEIGHT: '"height"' ;
-ROW_ORDER: '"rowOrder"' ;
-PLANES: '"planes"' ;
-BITS_PER_PIXEL: '"bitsPerPixel"' ;
-COMPRESSION: '"compression"' ;
-IMAGE_SIZE: '"imageSize"' ;
-X_PPM: '"xPixelsPerMeter"' ;
-Y_PPM: '"yPixelsPerMeter"' ;
-COLORS_USED: '"colorsUsed"' ;
-COLORS_IMPORTANT: '"colorsImportant"' ;
-PALETTE: '"palette"' ;
-PIXELS: '"pixels"' ;
-REMOVED: '"removed"' ;
-MODIFIED: '"modified"' ;
-ADDED: '"added"' ;
-INDEX: '"index"' ;
-ENTRY: '"entry"' ;
-INT: [0-9]+ ;
+grammar BmpDiff;
+diff: image? EOF;
+image: 'image' '{' image_field* '}';
+image_field: integer_field | row_order_field | profile_field | masks_field | palette_field | bytes_field | pixels_block;
+integer_field: ('width' | 'height' | 'x-pixels-per-meter' | 'y-pixels-per-meter' | 'colors-used' | 'colors-important' | 'reserved-1' | 'reserved-2') '=' INT;
+row_order_field: 'row-order' '=' ('bottom-up' | 'top-down');
+profile_field: 'profile' '=' ('indexed-rgb1' | 'indexed-rgb4' | 'indexed-rgb8' | 'direct-rgb16' | 'direct-rgb24' | 'direct-rgb32' | 'direct-bitfields16' | 'direct-bitfields32');
+masks_field: 'masks' '=' INT ',' INT ',' INT ',' INT;
+palette_field: 'palette' '=' '[' palette_record* ']';
+palette_record: '{' 'b' '=' INT 'g' '=' INT 'r' '=' INT 'reserved' '=' INT '}';
+bytes_field: ('opaque-gap' | 'opaque-trailer') '=' '[' INT* ']';
+pixels_block: 'pixels' '{' pixels '}';
+pixels: 'indexed' 'indices' '=' '[' INT* ']' | 'direct' 'samples' '=' '[' sample_record* ']';
+sample_record: '{' 'red' '=' INT 'green' '=' INT 'blue' '=' INT 'alpha' '=' INT 'reserved' '=' INT '}';
+text: STRING | IDENT | INT | FLOAT;
+STRING: '"' ('\\' . | ~["\\])* '"';
+INT: '-'? [0-9]+;
+FLOAT: '-'? [0-9]+ '.' [0-9]+;
+IDENT: [a-zA-Z_] [a-zA-Z0-9_.-]*;
+WS: [ \t\r\n]+ -> skip;

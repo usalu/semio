@@ -5,7 +5,7 @@ mod tests {
     async fn typed_constructors_build_a_populated_snapshot() {
         let snapshot = SemioObjectBuilderConstruction::new()
             .with_transform(SemioTransform { translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() })
-            .with_brep("brep-a", store::os_io::ArtifactRef { artifact_id: "brep-a".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } })
+            .with_brep("brep-a", semio_framework_artifact_reference::ArtifactRef { artifact_id: "brep-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } })
             .expect("valid exact brep child")
             .build()
             .expect("build");

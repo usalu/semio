@@ -14,6 +14,6 @@ mod tests {
         snapshot.document.instances.push(violating);
         let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) }));
         let err = mutated.build().expect_err("a structural entity must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v2x3::subsets::cv20::schema::CODE_STRUCTURAL_ENTITY));
+        assert!(err.iter().any(|d| d.code.0 == crate::standards::v2x3::subsets::cv20::io::CODE_STRUCTURAL_ENTITY));
     }
 }

@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","finishedNative","terminalSha256"],"properties":{"version":{"const":1},"finishedNative":{"const":8},"terminalSha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}}

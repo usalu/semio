@@ -1,0 +1,31 @@
+> bun ./📜️script.ts test-owner-command "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts" distribution generate
+
+[DEBUG] isolated Nx verification test-owner-command
+[TRACE] compiling bounded distribution without static copies
+ 99 |     const operation = distributionFileWitness(canonical, path).then(row => { witnesses.set(path, row); if (witnesses.size % 500 === 0) distributionProgress(`recorded ${witnesses.size} compiler input witnesses`); });
+100 |     pending.set(path, operation);
+101 |     return operation;
+102 |   };
+103 |   for (const path of [...new Set([...authority.paths, ...await distributionStaticSourcePaths(workspace, authority.moduleEntries)])]) {
+104 |     if (path.startsWith("/") || path.includes("\\") || path.split("/").some(part => !part || part === "." || part === "..") || !existsSync(join(workspace, path))) throw new Error(`Missing or unsafe distribution static input: ${path}`);
+                                                                                                                                                                                   ^
+error: Missing or unsafe distribution static input: 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts
+      at renderDistributionBundle (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts:104:174)
+      at async materializeDistributionBundle (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts:15:22)
+
+Bun v1.3.14 (macOS arm64)
+137 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+138 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+139 |  */
+140 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+141 |   const status = runCmdInternal(cmd, args, opts);
+142 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                    ^
+error: bun --eval const api = await import(process.argv[1]); await api.materializeDistributionBundle(process.argv[2], process.argv[3]); file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%A7%91%E2%80%8D%F0%9F%92%BBdev/%F0%9F%9A%9A%EF%B8%8Fdistribution/%F0%9F%8F%97%EF%B8%8Fcompiler/%F0%9F%9F%A6%EF%B8%8F.ts /Users/ueli/Documents/semio /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/distribution-compiled-sPKINb exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts:142:31)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏃️execution/🟦️.ts:39:5)
+      at async run (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts:74:19)
+      at async runScriptMain (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts:15:16)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts test-owner-command "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts" distribution generate" exited with non-zero status code

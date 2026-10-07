@@ -10,7 +10,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::Puzzle2dAnalyzer;
     use crate::Puzzle2dSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle2d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -67,7 +67,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::standards::v1::subsets::any::io::Puzzle2dBuilder as Puzzle2dAnyBuilder;
     use crate::standards::v1::subsets::any::io::Puzzle2dComposer as Puzzle2dAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoConfidence,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -187,13 +187,13 @@ pub fn puzzle2d_board_drawing(snapshot: &crate::Puzzle2dSnapshot) -> semio_s_art
         .filter(|node| node.visible != Some(false))
         .map(|node| {
             let scale = node.scale.unwrap_or(1.0);
-            let rectangle = node.shape.as_deref() == Some("rectangle") || (node.shape.is_none() && node.width.is_some());
+            let rectangle = node.shape.as_ref().is_some_and(|shape| shape.eq_str("rectangle")) || (node.shape.is_none() && node.width.is_some());
             let shape = if rectangle { SemioDiagramShape::Rectangle { width: node.width.unwrap_or(48.0) * scale, height: node.height.unwrap_or(48.0) * scale } } else { SemioDiagramShape::Circle { radius: node.radius.unwrap_or(24.0) * scale } };
-            SemioDiagramNode { id: node.id.clone(), x: node.x, y: node.y, shape, label: node.text.clone().filter(|text| !text.is_empty()) }
+            SemioDiagramNode { id: node.id.to_string_owner(), x: node.x, y: node.y, shape, label: node.text.as_ref().filter(|text| !text.is_empty()).map(|text|text.to_string_owner()) }
         })
         .collect();
-    let links = snapshot.edges.iter().filter(|edge| edge.visible != Some(false)).map(|edge| SemioDiagramLink { from: edge.source.clone(), to: edge.target.clone(), label: None }).collect();
-    let frames = snapshot.target_regions.iter().filter(|region| !region.hidden).map(|region| SemioDiagramFrame { x: region.x, y: region.y, width: region.width, height: region.height, label: region.label.clone() }).collect();
+    let links = snapshot.edges.iter().filter(|edge| edge.visible != Some(false)).map(|edge| SemioDiagramLink { from: edge.source.to_string_owner(), to: edge.target.to_string_owner(), label: None }).collect();
+    let frames = snapshot.target_regions.iter().filter(|region| !region.hidden).map(|region| SemioDiagramFrame { x: region.x, y: region.y, width: region.width, height: region.height, label: region.label.as_ref().map(|text|text.to_string_owner()) }).collect();
     diagram_drawing(&SemioDiagram { nodes, links, frames })
 }
 //#endregion 🕸️BoardDrawing
@@ -265,7 +265,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::Puzzle2dSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle2dParts {

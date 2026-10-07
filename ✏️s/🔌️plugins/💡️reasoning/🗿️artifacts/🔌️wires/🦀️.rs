@@ -19,7 +19,7 @@ mod art_wires_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 
 use semio_framework_value::DslValue;
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 //#region 🔖️Constants
 /// 🪪️ This artifact's coordinate (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract
@@ -53,7 +53,7 @@ pub use crate::schema::WiresArtifact;
 
 //#region 🔖️EmptyFixtures
 /// 📭️ Empty `reasoning.wires.identity.snapshot` blob: the parent's identity layer, no identity yet.
-pub fn empty_wires_snapshot() -> DslValue {
+pub fn empty_wires_identity_snapshot() -> DslValue {
     DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![]))])
 }
 
@@ -69,7 +69,7 @@ pub fn empty_wires_content() -> SemioGraphSnapshot {
 
 /// 📭️ Fresh wires snapshot: no identity, the empty board child.
 pub fn empty_wires_snapshot() -> WiresSnapshot {
-    WiresSnapshot { wires_snapshot: empty_wires_snapshot(), content: wires_content_handle(&empty_wires_content()), meta: DslValue::Null }
+    WiresSnapshot { wires_snapshot: empty_wires_identity_snapshot(), content: wires_content_handle(&empty_wires_content()), meta: DslValue::Null }
 }
 //#endregion 🔖️EmptyFixtures
 
@@ -182,8 +182,8 @@ pub fn wires_content_snapshot(nodes: &[DslValue], edges: &[DslValue]) -> SemioGr
 /// minted the id names that child's store for good; its content then moves only through child leaves.
 pub fn wires_content_handle(content: &SemioGraphSnapshot) -> WiresContentChild {
     let child_id = store::content_id("wires-content", &<SemioGraphSnapshot as store::ArtifactPack>::encode_pack(content));
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
-    store::ArtifactChild::new(child_id.clone(), store::os_io::ArtifactRef { artifact_id: child_id, dialect })
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
+    store::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
 
 /// 🪪️ The child id the demo's parent asset names for its bundled board.
@@ -367,7 +367,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `## openQuestions` #2).
 pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.reasoning.wires").expect("canonical reasoning.wires kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 

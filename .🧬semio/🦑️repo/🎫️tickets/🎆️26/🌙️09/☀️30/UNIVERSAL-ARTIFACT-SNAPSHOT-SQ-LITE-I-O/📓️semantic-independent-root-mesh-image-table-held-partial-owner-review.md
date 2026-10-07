@@ -1,0 +1,9 @@
+# Root Mesh Image Table Held Partial Owner Review
+
+All three exact current held after SQL files parse with rustfmt skip_children=true (exit0). Actual Typed Owned authority is Base native_decoding::Owned; actual root retirement implementations cover all introduced Snapshot/Material/Mesh/Primitive/Texture, Image Frame/MetadataEntry and Table result fields. No FloatRow eligibility invention, additional provider path, or changed grants observed. Paid reserve capacities equal original row/group lengths, vectors assign into guards before fill, and completed nested owners transfer directly into live parent. Root schema now assigns while Snapshot is guarded, followed by final checkpoint then take. Table preserves forest/cells/rows guards and places columns under root early.
+
+One semantic authority caveat: field/refusal order changed from the previous held body. Mesh Material scalar Binary32 validation now precedes original ID copy; Mesh/Primitive ID/material copies now precede original geometric-array traversal. Image delay_ms conversion now precedes original sample traversal. Valid fixture output is unaffected, but malformed competing failures, allocation shortfalls and cancellation precedence differ. If original ordering is required, initialize empty harmless placeholders under guard and assign fields in the original sequence. This is a definite ordering difference, not an inferred compiler/runtime defect.
+
+Native selector follow-up remains open: the current repository root script contains no `test snapshot sqlite` dispatch or sqlite_snapshot_semio selector string. Parent has been asked for the actual registered argv/source before making a selection-count assertion. No duplicate runtime command run.
+
+No production edits, Rust type compilation or Native runtime credit. Aggregate guarded cleanup remains separate from physical4096 source release.

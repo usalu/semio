@@ -23,3 +23,15 @@ impl store::ArtifactDsl for MdSnapshot{
  fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&Snapshot::from(self).__dsl_to_record(),&Snapshot::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.md",store::semio_format::Component::Dsl,1).expect("valid CommonMark identity");store::semio_format::wrap_text(&envelope,&body)}
 }
 }
+
+impl crate::MdSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_text(text: &str) -> Self {
+        let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
+        Self { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_text(&self) -> String {
+        crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks)
+    }
+}

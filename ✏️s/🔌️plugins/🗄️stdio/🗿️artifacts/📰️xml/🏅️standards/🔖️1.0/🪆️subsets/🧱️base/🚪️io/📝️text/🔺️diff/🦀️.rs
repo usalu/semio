@@ -414,3 +414,15 @@ fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError>
 }
 }
 pub use diff_codec::*;
+
+impl crate::schema::diff::XmlChildrenDiff {
+    pub fn encode_text(&self) -> String {
+        crate::standards::v1_0::subsets::base::io::text::diff::enc_children_diff(self)
+    }
+}
+
+impl crate::schema::diff::XmlChildrenDiff {
+    pub fn decode_text(text: &str) -> Result<Self, String> {
+        crate::standards::v1_0::subsets::base::io::text::diff::dec_children_diff(text)
+    }
+}

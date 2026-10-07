@@ -1,0 +1,11 @@
+# Presentation Borrowed Census Draft Review
+
+Actual original Native decoder matches draft Binary tag/frame order and embedded blocks carrier: Binary list items borrow native text bytes and call shared document_block(false), correctly count one collection and per-block member/detail without reading Doc binary primitive lists. Presentation Text shape-table rows/cells are direct nested lists without Document Table record wrappers, exactly as current shape_text. Decimalu64 frame words and placeholderT/S/B/F/N/D/O records match actual original.
+
+Master24+id, layout32+id, slide32+id+optionalFK8, shape24+kind+four exactnumeric cells, picture8+asset+mime+bytes, placeholder8+kind+Othertext, table8/row24/cell32 and shared collection8 formulas agree with manual52/2220 and empty1/34. Literal external Doc refs use false mode; frame finite22/infinite32/NaN11 matches SQL. Shared doc Census future/blob/float methods must be pub(crate), and list count must use copied max_rows as Root already identified. No additional definite static grammar/type/formula error found. No compile/runtime credit.
+
+## Four providers and final Native partials
+
+All four current before/absence guards and held after artifacts match. Provider1 paid master/layout/slide identities preserve original authored row IDs, names resolve into locals before insert; notes collection is projected before slide/shape as original. Shared Document RowWriter companion fixes old Projection caller without adapter. Provider2 uses copied Census.max_rows and shared public(crate) future/blob/decimalfloat APIs. Provider4 keeps encode admission flow and common held dependencies.
+
+Updated Native3 Snapshot owns schema immediately; master/layout/slide ID and picture assetID guards retain all prior Strings/Vecs across later fallible parsing. Shapes-before-notes actual native order remains unchanged, distinct from SQL notes-before-shapes ordering. Actual RetireOwned452–458 establishes all nested partial struct eligibility. Rustfmt --emit stdout on actual held Native3 exited0: parser confirms balanced delimiters/syntax including mechanically removed wrappers, without modifying source. This is syntax parsing only, not Rust type compilation or runtime pass. No definite static blocker found.

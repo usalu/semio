@@ -1,6 +1,6 @@
 //! 🚫️ Direct binary codec for `remove-display-doc-title`.
 
-use super::RemoveDisplayDocTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveDisplayDocTitle;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 7;

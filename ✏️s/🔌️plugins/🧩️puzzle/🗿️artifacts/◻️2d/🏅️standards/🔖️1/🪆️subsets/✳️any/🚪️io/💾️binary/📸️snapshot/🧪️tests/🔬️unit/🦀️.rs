@@ -16,14 +16,14 @@ fn pack_round_trips_and_agrees_with_dsl() {
 /// `command_envelope_round_trip_holds_for_an_applied_operation`).
 #[test]
 fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::io::binary::mutations::{close_puzzle2d_store, puzzle2d_store};
+    use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
 
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
     use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None))).expect("store");
+    let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None })).expect("apply");
     let envelope = store.envelope();

@@ -1,7 +1,5 @@
 syntax = "proto3";
-package semio.s_stdio_bmp.artifact;
+package semio.s_stdio_bmp;
+import "s_stdio_bmp/snapshot.proto";
 
-message BmpArtifact {
-  string schema = 1;
-  bytes bytes = 2;
-}
+message BmpArtifact { string schema = 1; semio.s_stdio_bmp.snapshot.BmpImage image = 2; }

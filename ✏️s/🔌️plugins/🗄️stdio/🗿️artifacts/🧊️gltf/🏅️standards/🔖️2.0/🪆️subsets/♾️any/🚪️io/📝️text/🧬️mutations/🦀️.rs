@@ -1,4 +1,5 @@
 //! 📝️ Generic text framing for the visible glTF mutation aggregate.
+use crate::schema::snapshot::GltfSnapshot;
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
@@ -322,3 +323,34 @@ pub fn decode_gltf_change_node_name_proto(value: &DslValue) -> FacadeResult<Chan
 }
 pub use node_name_facades::{GltfChangeNodeNameFacadeError,decode_gltf_change_node_name_graphql,decode_gltf_change_node_name_proto};
 pub(crate) use node_name_facades::{FacadeResult,facade_error};
+
+fn gltf_bridge_read(document: &[u8]) -> Result<GltfSnapshot, String> {
+    if document.starts_with(b"glTF") { crate::engine::decode_glb(document) } else { crate::engine::parse_gltf_document(document) }
+}
+
+fn gltf_bridge_write(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
+    match snapshot.source_form {
+        crate::schema::snapshot::GltfSourceForm::Glb => crate::engine::encode_glb(snapshot),
+        crate::schema::snapshot::GltfSourceForm::Json => Ok(crate::engine::serialize_gltf_document(snapshot)),
+    }
+}
+
+pub fn gltf_mutated_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
+    let mutation = gltf_row_mutation(kind, params_json)?;
+    let mut snapshot = gltf_bridge_read(document)?;
+    gltf_bridge_apply(kind, "mutation", &mutation, &mut snapshot)?;
+    gltf_bridge_write(&snapshot)
+}
+
+pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
+    let mutation = gltf_row_mutation(kind, params_json)?;
+    let base = gltf_bridge_read(document)?;
+    let mut restored = base.clone();
+    gltf_bridge_apply(kind, "mutation", &mutation, &mut restored)?;
+    for step in <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
+        gltf_bridge_apply(kind, "inverse", &step, &mut restored)?;
+    }
+    gltf_bridge_write(&restored)
+}
+
+use crate::standards::v2_0::subsets::any::schema::mutations::gltf_bridge_apply;

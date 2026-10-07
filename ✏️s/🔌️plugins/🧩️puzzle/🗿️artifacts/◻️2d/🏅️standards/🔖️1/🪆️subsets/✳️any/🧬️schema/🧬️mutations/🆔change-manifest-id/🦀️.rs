@@ -1,23 +1,25 @@
 //! 🆔 Puzzle2d mutation — `ChangeManifestId`: changes the snapshot's catalog-manifest reference.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 🆔 `change-manifest-id` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "change-manifest-id")]
 pub struct ChangeManifestId {
-    pub new_manifest_id: Option<String>,
+    pub new_manifest_id: Option<PagedUtf8<{ usize::MAX }>>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_manifest_id(new_manifest_id: Option<String>) -> Puzzle2dMutation {
+pub fn change_manifest_id(new_manifest_id: Option<PagedUtf8<{ usize::MAX }>>) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeManifestId(ChangeManifestId { new_manifest_id })
 }
 

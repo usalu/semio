@@ -6,11 +6,12 @@
   "additionalProperties": false,
   "required": [
     "schema",
-    "bytes"
+    "image"
   ],
   "properties": {
     "schema": {
       "type": "string",
+      "const": "stdio.png",
       "x-semio-state": "artifact",
       "x-semio-ui": {
         "label": {
@@ -19,22 +20,963 @@
         }
       }
     },
-    "bytes": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 255
-      },
+    "image": {
+      "$ref": "#/definitions/image",
       "x-semio-state": "artifact",
       "x-semio-ui": {
         "label": {
-          "en": "Exact PNG bytes",
-          "de": "Exakte PNG-Bytes"
+          "en": "Native PNG image",
+          "de": "Natives PNG-Bild"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rgb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
-        "description": {
-          "en": "The complete source file, preserving chunk order, duplicate chunks, compressed image data, sample precision and interlace layout.",
-          "de": "Die vollständige Quelldatei mit Chunk-Reihenfolge, doppelten Chunks, komprimierten Bilddaten, Abtastpräzision und Interlace-Layout."
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
+        }
+      }
+    },
+    "transparency": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colorType",
+            "alpha"
+          ],
+          "properties": {
+            "colorType": {
+              "const": "indexed",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Color profile",
+                  "de": "Farbprofil"
+                }
+              }
+            },
+            "alpha": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Alpha samples",
+                  "de": "Alphawerte"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colorType",
+            "gray"
+          ],
+          "properties": {
+            "colorType": {
+              "const": "grayscale",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Color profile",
+                  "de": "Farbprofil"
+                }
+              }
+            },
+            "gray": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Gray sample",
+                  "de": "Grauwert"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colorType",
+            "r",
+            "g",
+            "b"
+          ],
+          "properties": {
+            "colorType": {
+              "const": "rgb",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Color profile",
+                  "de": "Farbprofil"
+                }
+              }
+            },
+            "r": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Red",
+                  "de": "Rot"
+                }
+              }
+            },
+            "g": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Green",
+                  "de": "Grün"
+                }
+              }
+            },
+            "b": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Blue",
+                  "de": "Blau"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "chromaticities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "whiteX",
+        "whiteY",
+        "redX",
+        "redY",
+        "greenX",
+        "greenY",
+        "blueX",
+        "blueY"
+      ],
+      "properties": {
+        "whiteX": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "White X",
+              "de": "Weiß X"
+            }
+          }
+        },
+        "whiteY": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "White Y",
+              "de": "Weiß Y"
+            }
+          }
+        },
+        "redX": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red X",
+              "de": "Rot X"
+            }
+          }
+        },
+        "redY": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red Y",
+              "de": "Rot Y"
+            }
+          }
+        },
+        "greenX": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green X",
+              "de": "Grün X"
+            }
+          }
+        },
+        "greenY": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green Y",
+              "de": "Grün Y"
+            }
+          }
+        },
+        "blueX": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue X",
+              "de": "Blau X"
+            }
+          }
+        },
+        "blueY": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue Y",
+              "de": "Blau Y"
+            }
+          }
+        }
+      }
+    },
+    "physicalDims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ppuX",
+        "ppuY",
+        "unitIsMeter"
+      ],
+      "properties": {
+        "ppuX": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal pixels per unit",
+              "de": "Horizontale Pixel je Einheit"
+            }
+          }
+        },
+        "ppuY": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertical pixels per unit",
+              "de": "Vertikale Pixel je Einheit"
+            }
+          }
+        },
+        "unitIsMeter": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit is metre",
+              "de": "Einheit ist Meter"
+            }
+          }
+        }
+      }
+    },
+    "timestamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Year",
+              "de": "Jahr"
+            }
+          }
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12,
+          "x-semio-ui": {
+            "label": {
+              "en": "Month",
+              "de": "Monat"
+            }
+          }
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31,
+          "x-semio-ui": {
+            "label": {
+              "en": "Day",
+              "de": "Tag"
+            }
+          }
+        },
+        "hour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 23,
+          "x-semio-ui": {
+            "label": {
+              "en": "Hour",
+              "de": "Stunde"
+            }
+          }
+        },
+        "minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 59,
+          "x-semio-ui": {
+            "label": {
+              "en": "Minute",
+              "de": "Minute"
+            }
+          }
+        },
+        "second": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "x-semio-ui": {
+            "label": {
+              "en": "Second",
+              "de": "Sekunde"
+            }
+          }
+        }
+      }
+    },
+    "background": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colorType",
+            "index"
+          ],
+          "properties": {
+            "colorType": {
+              "const": "indexed",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Color profile",
+                  "de": "Farbprofil"
+                }
+              }
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Palette index",
+                  "de": "Palettenindex"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colorType",
+            "gray"
+          ],
+          "properties": {
+            "colorType": {
+              "const": "grayscale",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Color profile",
+                  "de": "Farbprofil"
+                }
+              }
+            },
+            "gray": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Gray sample",
+                  "de": "Grauwert"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colorType",
+            "r",
+            "g",
+            "b"
+          ],
+          "properties": {
+            "colorType": {
+              "const": "rgb",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Color profile",
+                  "de": "Farbprofil"
+                }
+              }
+            },
+            "r": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Red",
+                  "de": "Rot"
+                }
+              }
+            },
+            "g": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Green",
+                  "de": "Grün"
+                }
+              }
+            },
+            "b": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Blue",
+                  "de": "Blau"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "textChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keyword",
+        "value",
+        "compressed",
+        "kind",
+        "languageTag",
+        "translatedKeyword"
+      ],
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Keyword",
+              "de": "Schlüsselwort"
+            }
+          }
+        },
+        "value": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        },
+        "compressed": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Compressed text",
+              "de": "Komprimierter Text"
+            }
+          }
+        },
+        "kind": {
+          "enum": [
+            "text",
+            "zText",
+            "iText"
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Metadata kind",
+              "de": "Metadatenart"
+            },
+            "options": {
+              "text": {
+                "en": "Plain text",
+                "de": "Einfacher Text"
+              },
+              "zText": {
+                "en": "zText",
+                "de": "zText"
+              },
+              "iText": {
+                "en": "iText",
+                "de": "iText"
+              }
+            }
+          }
+        },
+        "languageTag": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Language tag",
+              "de": "Sprachkennung"
+            }
+          }
+        },
+        "translatedKeyword": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Translated keyword",
+              "de": "Übersetztes Schlüsselwort"
+            }
+          }
+        }
+      }
+    },
+    "ancillaryChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "data",
+        "afterRaster"
+      ],
+      "properties": {
+        "kind": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "x-semio-ui": {
+            "label": {
+              "en": "Metadata kind",
+              "de": "Metadatenart"
+            }
+          }
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Opaque data",
+              "de": "Undurchsichtige Daten"
+            }
+          }
+        },
+        "afterRaster": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "After raster",
+              "de": "Nach dem Raster"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "bitDepth",
+        "colorType",
+        "interlace",
+        "samples",
+        "palette",
+        "transparency",
+        "gamma",
+        "chromaticities",
+        "srgb",
+        "physicalDims",
+        "timestamp",
+        "background",
+        "textChunks",
+        "ancillaryChunks"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            }
+          }
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            }
+          }
+        },
+        "bitDepth": {
+          "enum": [
+            1,
+            2,
+            4,
+            8,
+            16
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample depth",
+              "de": "Abtasttiefe"
+            }
+          }
+        },
+        "colorType": {
+          "enum": [
+            "grayscale",
+            "rgb",
+            "palette",
+            "grayscaleAlpha",
+            "rgba"
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Color profile",
+              "de": "Farbprofil"
+            },
+            "options": {
+              "grayscale": {
+                "en": "Grayscale",
+                "de": "Graustufen"
+              },
+              "rgb": {
+                "en": "RGB",
+                "de": "RGB"
+              },
+              "palette": {
+                "en": "Indexed palette",
+                "de": "Indizierte Palette"
+              },
+              "grayscaleAlpha": {
+                "en": "Grayscale and alpha",
+                "de": "Graustufen und Alpha"
+              },
+              "rgba": {
+                "en": "RGBA",
+                "de": "RGBA"
+              }
+            }
+          }
+        },
+        "interlace": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Adam7 interlace",
+              "de": "Adam7-Verschachtelung"
+            }
+          }
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Native samples",
+              "de": "Native Abtastwerte"
+            }
+          }
+        },
+        "palette": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/rgb"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Palette",
+              "de": "Palette"
+            }
+          }
+        },
+        "transparency": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/transparency"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Transparency",
+              "de": "Transparenz"
+            }
+          }
+        },
+        "gamma": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Gamma",
+              "de": "Gamma"
+            }
+          }
+        },
+        "chromaticities": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/chromaticities"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Chromaticities",
+              "de": "Farbkoordinaten"
+            }
+          }
+        },
+        "srgb": {
+          "anyOf": [
+            {
+              "enum": [
+                "perceptual",
+                "relativeColorimetric",
+                "saturation",
+                "absoluteColorimetric"
+              ],
+              "x-semio-ui": {
+                "options": {
+                  "perceptual": {
+                    "en": "perceptual",
+                    "de": "perceptual"
+                  },
+                  "relativeColorimetric": {
+                    "en": "relativeColorimetric",
+                    "de": "relativeColorimetric"
+                  },
+                  "saturation": {
+                    "en": "saturation",
+                    "de": "saturation"
+                  },
+                  "absoluteColorimetric": {
+                    "en": "absoluteColorimetric",
+                    "de": "absoluteColorimetric"
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "sRGB intent",
+              "de": "sRGB-Wiedergabeabsicht"
+            }
+          }
+        },
+        "physicalDims": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/physicalDims"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Physical resolution",
+              "de": "Physische Auflösung"
+            }
+          }
+        },
+        "timestamp": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Timestamp",
+              "de": "Zeitstempel"
+            }
+          }
+        },
+        "background": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/background"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Background",
+              "de": "Hintergrund"
+            }
+          }
+        },
+        "textChunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/textChunk"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text metadata",
+              "de": "Textmetadaten"
+            }
+          }
+        },
+        "ancillaryChunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ancillaryChunk"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Ancillary metadata",
+              "de": "Begleitmetadaten"
+            }
+          }
         }
       }
     }

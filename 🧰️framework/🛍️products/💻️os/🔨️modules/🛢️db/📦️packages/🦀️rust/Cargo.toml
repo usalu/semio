@@ -33,6 +33,7 @@ neo4j = ["dep:neo4rs", "dep:tokio"]
 claimed-backend-laws = []
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

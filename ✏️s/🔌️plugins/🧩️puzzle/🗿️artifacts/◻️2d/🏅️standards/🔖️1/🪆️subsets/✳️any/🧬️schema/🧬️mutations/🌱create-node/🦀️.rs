@@ -1,5 +1,7 @@
 //! 🌱 Puzzle2d mutation — `CreateNode`: brings a new id-keyed node into existence.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::{Puzzle2dNode, Puzzle2dSnapshot};
@@ -8,7 +10,7 @@ use crate::{Puzzle2dNode, Puzzle2dSnapshot};
 /// 🌱 `create-node` payload — full initial payload at an optional FINAL-state `index` (`None`
 /// appends). A duplicate `node.id` is a no-op (an id-keyed entity that already exists cannot be
 /// re-created).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -41,7 +43,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for CreateNode {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.id), &format!("Knoten \"{}\" erstellen", self.node.id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.node.id.clone()]
+        vec![self.node.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

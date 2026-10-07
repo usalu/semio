@@ -23,7 +23,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::mutations::{apply_en1990_mutation, inverse_en1990_mutation};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::mutations::{apply_en1990_mutation,inverse_en1990_mutation};
+
     use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::text::mutations::{decode_en1990_mutation_json};
     use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::snapshot::{En1990Snapshot};
     use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::binary::snapshot::{encode_en1990_pack};

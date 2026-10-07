@@ -42,7 +42,7 @@ use semio_framework_plugin::CommandDefinition;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::ContextMenuItemSpec;
 use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -528,7 +528,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
         }
@@ -1450,11 +1450,11 @@ impl ArtifactEditor for Process3dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::process3d_envelope_decode_owner_bundle())
+        Some(crate::host::owned::process3d_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_owners())
+        Some(crate::host::owned::process3d_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1465,16 +1465,17 @@ impl ArtifactEditor for Process3dPlayApp {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::host::owned::process3d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     /// 🔐️ The exact publication gate the host consults once, right before its non-rejecting commit
     /// — so a lease the app admitted for itself (`process3d_admit_app_publication_authority`, every
     /// host-begun `Effect::LoadDocument`) is consumed here; a host-admitted lease stays the host's.
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
-        crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_app_publication_authority(operation);
+        crate::host::owned::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
+        crate::host::owned::process3d_release_app_publication_authority(operation);
         Ok(())
     }
 

@@ -26,7 +26,7 @@ use protocol::Mutation;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code (was missing entirely, even test-gated) (W2b closer fix).
-use protocol::OpText;
+
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -198,21 +198,7 @@ pub(crate) fn agg_inverse(this: &SemioImageMutation, base: &SemioImageSnapshot) 
 
 
 
-/// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 12] = [
-    ("set-snapshot", "setSnapshot"),
-    ("set-dimensions", "setDimensions"),
-    ("set-colorspace", "setColorspace"),
-    ("set-bit-depth", "setBitDepth"),
-    ("set-icc", "setIcc"),
-    ("insert-frame", "insertFrame"),
-    ("remove-frame", "removeFrame"),
-    ("move-frame", "moveFrame"),
-    ("set-frame-delay", "setFrameDelay"),
-    ("set-frame-pixels", "setFramePixels"),
-    ("set-metadata-entry", "setMetadataEntry"),
-    ("remove-metadata-entry", "removeMetadataEntry"),
-];
+
 
 
 
@@ -282,3 +268,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpText};

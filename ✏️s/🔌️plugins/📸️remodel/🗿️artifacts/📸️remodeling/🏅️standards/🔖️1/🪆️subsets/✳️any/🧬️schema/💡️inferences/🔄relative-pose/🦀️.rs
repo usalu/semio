@@ -42,6 +42,7 @@ fn trajectory_poses(snapshot: &RemodelingSnapshot) -> &[CameraPosePreview] {
 pub struct RemodelingRelativeCameraPose;
 
 impl store::InferredField<RemodelingSnapshot> for RemodelingRelativeCameraPose {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = RemodelingPoseDelta;
 
@@ -59,21 +60,17 @@ impl store::InferredField<RemodelingSnapshot> for RemodelingRelativeCameraPose {
         poses.iter().enumerate().map(|(index, pose)| store::InferenceStep { key: pose.camera_id.clone(), parents: if index == 0 { Vec::new() } else { vec![poses[index - 1].camera_id.clone()] } }).collect()
     }
 
-    /// 🔑 Only `key`'s OWN rotation/translation — the predecessor's raw pose is covered by the
+    /// 🔑 Only `key`'s OWN rotation/translation — the predecessor's logical pose is covered by the
     /// predecessor's own `dep_input` and folded in via its already-computed `DepHash` through
     /// `plan`'s parent edge, exactly the "excluding parents' own upstream values" contract.
-    fn dep_input(snapshot: &RemodelingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &RemodelingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         let Some(pose) = trajectory_poses(snapshot).iter().find(|pose| &pose.camera_id == key) else {
-            return Vec::new();
+            return semio_framework_value::DslValue::Null;
         };
-        let mut bytes = Vec::with_capacity(28);
-        for component in pose.rotation_wxyz {
-            bytes.extend_from_slice(&component.to_le_bytes());
-        }
-        for component in pose.translation {
-            bytes.extend_from_slice(&component.to_le_bytes());
-        }
-        bytes
+        semio_framework_value::DslValue::object([
+            ("rotation".into(), semio_framework_value::DslValue::Array(pose.rotation_wxyz.into_iter().map(|value| semio_framework_value::DslValue::float(f64::from(value))).collect())),
+            ("translation".into(), semio_framework_value::DslValue::Array(pose.translation.into_iter().map(|value| semio_framework_value::DslValue::float(f64::from(value))).collect())),
+        ])
     }
 
     /// 🧮 Re-reads both this pose and its immediate predecessor straight off `snapshot` (cheaper and

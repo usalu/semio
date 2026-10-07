@@ -2,28 +2,30 @@
 //! `shape`+`radius`+`width`+`height` together are the node's one geometric representation, the
 //! same grouping cad's `replace-object-geometry` uses for `mesh_url`+`extent`+`solid_handle`.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 🧊 `replace-node-geometry` payload — new shape/extent, whichever fields the shape uses.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "replace-node-geometry")]
 pub struct ReplaceNodeGeometry {
-    pub id: String,
-    pub new_shape: Option<String>,
+    pub id: PagedUtf8<{ usize::MAX }>,
+    pub new_shape: Option<PagedUtf8<{ usize::MAX }>>,
     pub new_radius: Option<f64>,
     pub new_width: Option<f64>,
     pub new_height: Option<f64>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_node_geometry(id: String, new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>) -> Puzzle2dMutation {
+pub fn replace_node_geometry(id: PagedUtf8<{ usize::MAX }>, new_shape: Option<PagedUtf8<{ usize::MAX }>>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>) -> Puzzle2dMutation {
     Puzzle2dMutation::ReplaceNodeGeometry(ReplaceNodeGeometry { id, new_shape, new_radius, new_width, new_height })
 }
 
@@ -43,7 +45,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceNodeG
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace node \"{}\" geometry", self.id), &format!("Geometrie von Knoten \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
+        vec![self.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

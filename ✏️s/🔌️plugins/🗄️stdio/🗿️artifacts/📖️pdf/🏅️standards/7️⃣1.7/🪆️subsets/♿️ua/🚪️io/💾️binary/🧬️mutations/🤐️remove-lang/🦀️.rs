@@ -1,6 +1,6 @@
 //! 🤐️ Direct binary codec for `remove-lang`.
 
-use super::RemoveLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveLang;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 5;

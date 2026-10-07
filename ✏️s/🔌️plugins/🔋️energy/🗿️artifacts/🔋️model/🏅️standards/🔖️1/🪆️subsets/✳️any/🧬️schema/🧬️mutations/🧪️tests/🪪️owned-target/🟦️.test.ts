@@ -1,0 +1,10 @@
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import cadFixture from "../../../../../../../../../../../📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures/🪪️owned-target/🔣️.json";
+import energyFixture from "../../🧫️fixtures/🪪️owned-target/🔣️.json";
+import referenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import {parseCadChildPayload} from "../../../../../../../../../../../📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts";
+import {parseEnergyReferenceTarget} from "../../🟦️.ts";
+const reference=new Ajv({strict:false}).addSchema(referenceSchema).compile({$ref:referenceSchema.$id+"#/$defs/ArtifactRef"});
+test("CAD typed target admission preserves neutral identities and agrees with the independent reference schema",()=>{for(const row of cadFixture.cases){expect(reference(row.payload.target)).toBe(row.name==="model-rejects-drawing-dialect"||row.valid);if(row.valid){const owned=parseCadChildPayload(row.payload,row.subset as "model"|"drawing");expect(owned.target).toEqual(row.payload.target as unknown as typeof owned.target);expect(owned.childId).toBe(row.payload.childId);}else expect(()=>parseCadChildPayload(row.payload,row.subset as "model"|"drawing")).toThrow();}});
+test("Energy link targets admit owned identity fields and refuse native URI authority",()=>{for(const row of energyFixture.cases){expect(reference(row.target)).toBe(row.name==="empty-target-refuses"||row.valid);if(row.valid){const owned=parseEnergyReferenceTarget(row.target);expect(owned).toEqual(row.target as unknown as typeof owned);}else expect(()=>parseEnergyReferenceTarget(row.target)).toThrow();}});

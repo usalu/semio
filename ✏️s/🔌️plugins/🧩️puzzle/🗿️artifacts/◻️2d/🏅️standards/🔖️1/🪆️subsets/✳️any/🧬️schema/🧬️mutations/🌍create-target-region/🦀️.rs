@@ -1,5 +1,7 @@
 //! 🌍 Puzzle2d mutation — `CreateTargetRegion`: brings a new id-keyed fill target region into existence.
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::{Puzzle2dSnapshot, Puzzle2dTargetRegion};
@@ -8,7 +10,7 @@ use crate::{Puzzle2dSnapshot, Puzzle2dTargetRegion};
 /// 🌍 `create-target-region` payload — full initial payload at an optional FINAL-state `index`
 /// (`None` appends). A duplicate `target_region.id` is fatal (an id-keyed entity that already
 /// exists cannot be re-created).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -41,7 +43,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for CreateTarget
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target region \"{}\"", self.target_region.id), &format!("Zielregion \"{}\" erstellen", self.target_region.id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.target_region.id.clone()]
+        vec![self.target_region.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

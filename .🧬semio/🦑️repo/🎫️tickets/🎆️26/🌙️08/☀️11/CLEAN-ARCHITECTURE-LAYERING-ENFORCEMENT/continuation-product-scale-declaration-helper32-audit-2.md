@@ -1,0 +1,5 @@
+# Product Scale Declaration Helper Thirty Two
+
+Read complete source/clone/metadata producer. Exact qualified checkpoint31 ancestry preserves missing original terminal/process/Cargo/assertion claims. Five full current additions strictly absent from every oldpositive/null endpoint; hashes/bytes/current bodies/inverses exact. All3,822oldphysical endpoints exact,14rawbindings exact.261visited TypeScript literal/type import observations independently agree withpreProcessFile;698edges retained without dynamic/external physicalidentity inference. Heldrequester/Cargo/Library fullbody witness hashes match oldfloor; currenttargetmanifest name/root/positive declared Bun script routes joined. Fiveclosed controls own/system/external agree.
+
+Prep clones failedfloor separately, adds onlyfiveframes, preservesworkspace/originalrequest and guards oldfloor before/after; metadata usesheldexecutor and exactordinary/locked route. Fresh outputs absent. Finiteprep/metadata admission only, no compiler/originalterminal/publication result.

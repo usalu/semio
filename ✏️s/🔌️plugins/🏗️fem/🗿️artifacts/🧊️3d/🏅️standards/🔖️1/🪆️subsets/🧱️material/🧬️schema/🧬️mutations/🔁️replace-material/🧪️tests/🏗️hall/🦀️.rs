@@ -13,7 +13,8 @@
 //! The glulam is re-based from EN 14080 mean stiffness to its 5-percentile values for the stability check.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️hall/📸️snapshot/⬅️before/🔣️.json");

@@ -13,7 +13,8 @@
 //! The extension bay's second set-out point joins the grid as a trailing node.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚪️create-node/🏗️hall-new-node-b26700/📸️snapshot/⬅️before/🔣️.json");

@@ -7,13 +7,13 @@
 pub mod derived_composition {
     use crate::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipSnapshot};
     use crate::standards::v2_0::subsets::base::io::ZipComposer as ZipAnyComposer;
-    use crate::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
-    use crate::standards::v2_0::subsets::iso21320::schema::check_iso21320_wire_conformance;
+    use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_conformance;
+    use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_wire_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_ISO21320: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("iso21320") };
@@ -119,7 +119,7 @@ pub use derived_composition::*;
 pub mod derived_construction {
     use crate::standards::v2_0::subsets::base::schema::diff::ZipDiff;
     use crate::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipSnapshot};
-    use crate::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
+    use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_conformance;
     use crate::standards::v2_0::subsets::iso21320::schema::mutations::{add_deflated_entry, add_stored_entry, apply_zip_iso21320_mutation, ZipIso21320Mutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -210,13 +210,13 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
-    use crate::standards::v2_0::subsets::base::schema::{ZipAnalyzer as ZipAnyAnalyzer, ZipParts};
+    use crate::standards::v2_0::subsets::base::io::{ZipAnalyzer as ZipAnyAnalyzer, ZipParts};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("iso21320") };

@@ -77,8 +77,8 @@ pub struct IoRouteConflict {
 /// 🛤️ Conflicting ownership of one dialect conversion route.
 #[derive(Debug)]
 pub struct IoEntryRouteConflict {
-    pub from: semio_framework::io_schema::ArtifactDialect,
-    pub into: semio_framework::io_schema::ArtifactDialect,
+    pub from: semio_framework_artifact_reference::ArtifactDialect,
+    pub into: semio_framework_artifact_reference::ArtifactDialect,
     pub existing_plugin: String,
     pub incoming_plugin: String,
 }
@@ -6263,7 +6263,7 @@ struct IoRouterState {
 }
 
 /// 🌉️ One edge of the NEW mechanism's merged graph: `(from, into)`.
-type IoEntryKey = (semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect);
+type IoEntryKey = (semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect);
 
 /// 🌉️ One edge's owner + declared strength — erased from the owning plugin's `IoEntryDescriptor`,
 /// plus which plugin registered it (needed by `run_io`'s reentrancy guard and `identify`'s fan-out).
@@ -6303,6 +6303,8 @@ fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity {
 /// `io_mechanism`'s own `&'static IoEntry` registry; the algorithm is identical, only the storage
 /// differs.
 fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std::cmp::Reverse<u8>, usize, String) {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let mut min_fidelity: Option<u8> = None;
     for hop in hops {
         let rank = hop.fidelity.rank();
@@ -6324,11 +6326,11 @@ fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std
 /// `io_router_route_is_deterministic_across_load_order` below.
 fn walk_io_routes(
     graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
-    current: &semio_framework::io_schema::ArtifactDialect,
-    into: &semio_framework::io_schema::ArtifactDialect,
+    current: &semio_framework_artifact_reference::ArtifactDialect,
+    into: &semio_framework_artifact_reference::ArtifactDialect,
     remaining_hops: u8,
     path: &mut Vec<semio_framework::io_schema::IoEntryDescriptor>,
-    visited: &mut BTreeSet<semio_framework::io_schema::ArtifactDialect>,
+    visited: &mut BTreeSet<semio_framework_artifact_reference::ArtifactDialect>,
     candidates: &mut Vec<Vec<semio_framework::io_schema::IoEntryDescriptor>>,
 ) {
     if remaining_hops == 0 {
@@ -6358,14 +6360,16 @@ fn walk_io_routes(
 ///
 /// 🚫️async: R10 residue shape 1 — `io_route_rank` is async, so ranks are precomputed before
 /// the sync `sort_by` comparator rather than called from inside it.
-fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework::io_schema::ArtifactDialect, into: &semio_framework::io_schema::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
+fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework_artifact_reference::ArtifactDialect, into: &semio_framework_artifact_reference::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let max_hops = max_hops.min(3);
     if max_hops == 0 {
         return Err(PluginHostError::Plugin(format!("io_routes {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate())));
     }
     let mut candidates: Vec<Vec<semio_framework::io_schema::IoEntryDescriptor>> = Vec::new();
     let mut path: Vec<semio_framework::io_schema::IoEntryDescriptor> = Vec::new();
-    let mut visited: BTreeSet<semio_framework::io_schema::ArtifactDialect> = BTreeSet::new();
+    let mut visited: BTreeSet<semio_framework_artifact_reference::ArtifactDialect> = BTreeSet::new();
     visited.insert(from.clone());
     walk_io_routes(graph, from, into, max_hops, &mut path, &mut visited, &mut candidates);
     if candidates.is_empty() {
@@ -6413,7 +6417,7 @@ fn route_reenters_calling_plugin<'route>(
     graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
     route: &'route semio_framework::io_schema::IoRoute,
     calling_plugin_id: &str,
-) -> Option<(&'route semio_framework::io_schema::ArtifactDialect, &'route semio_framework::io_schema::ArtifactDialect)> {
+) -> Option<(&'route semio_framework_artifact_reference::ArtifactDialect, &'route semio_framework_artifact_reference::ArtifactDialect)> {
     route.hops.iter().find_map(|hop| {
         let owner = &graph.get(&(hop.from.clone(), hop.into.clone()))?.owner;
         (owner == calling_plugin_id).then_some((&hop.from, &hop.into))
@@ -6439,7 +6443,7 @@ impl IoRouter {
         &self,
         plugin_id: &str,
         handle: Arc<PluginInstanceHandle>,
-        artifact_dialect_entries: &[(semio_framework::ArtifactDialect, Vec<semio_framework::ArtifactDialect>)],
+        artifact_dialect_entries: &[(semio_framework_artifact_reference::ArtifactDialect, Vec<semio_framework_artifact_reference::ArtifactDialect>)],
         io_entries: &[semio_framework::io_schema::IoEntryDescriptor],
     ) -> Result<(), PluginHostError> {
         let mut candidate_routes = Vec::new();
@@ -6540,11 +6544,11 @@ impl IoRouter {
             other => return Err(PluginHostError::Plugin(format!("unknown io direction `{other}` (expected \"import\" or \"export\")"))),
         };
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
-        let dialects: Vec<semio_framework::ArtifactDialect> = state
+        let dialects: Vec<semio_framework_artifact_reference::ArtifactDialect> = state
             .routes
             .keys()
             .filter(|key| key.artifact_kind == artifact_kind && key.direction == direction)
-            .map(|key| semio_framework::ArtifactDialect { artifact_kind: key.format_kind.clone(), standard: key.format_standard.clone(), subset: key.format_subset.clone() })
+            .map(|key| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: key.format_kind.clone(), standard: key.format_standard.clone(), subset: key.format_subset.clone() })
             .collect();
         Ok(semio_framework_pack_json::to_json_string(&dialects).into_bytes())
     }
@@ -6553,8 +6557,10 @@ impl IoRouter {
     /// cycle-free route `from -> into` over the merged `io_entries` graph — the WIT `io-routes`
     /// host import. JSON `io_schema::IoRoute` bytes.
     pub async fn io_routes(&self, from: &str, into: &str) -> Result<Vec<u8>, PluginHostError> {
-        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+        let from = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(from).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        let into = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(into).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let route = resolve_io_route(&state.io_entries, &from, &into, 3)?;
         drop(state);
@@ -6574,8 +6580,10 @@ impl IoRouter {
     /// 🚫️async: R10 residue shape 1 — `to_coordinate` is external/async, hoisted out of
     /// the `ok_or_else` sync closures below.
     pub async fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+        let from_dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(from).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        let into_dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(into).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         let hops = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
             let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3)?;
@@ -6614,17 +6622,19 @@ impl IoRouter {
     /// 🚫️async: R10 residue shape 1 — `Confidence::rank`/`ArtifactDialect::to_coordinate` are
     /// external async accessors, so the sort key is precomputed before the sync `sort_by`.
     pub async fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let payload_text = std::str::from_utf8(&payload_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let payload: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
+        let carrier = semio_framework_artifact_reference::ArtifactDialect::from(match &payload {
             semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
             semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
         });
-        let candidates: Vec<(semio_framework::io_schema::ArtifactDialect, String)> = {
+        let candidates: Vec<(semio_framework_artifact_reference::ArtifactDialect, String)> = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
             state.io_entries.iter().filter(|((from, _into), route)| *from == carrier && route.sniffs && route.owner != calling_plugin_id).map(|((_from, into), route)| (into.clone(), route.owner.clone())).collect()
         };
-        let mut found: Vec<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::Confidence)> = Vec::new();
+        let mut found: Vec<(semio_framework_artifact_reference::ArtifactDialect, semio_framework::io_schema::Confidence)> = Vec::new();
         for (into, owner) in candidates {
             let runtime = {
                 let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
@@ -6645,7 +6655,7 @@ impl IoRouter {
             decorated.push((rank, coord, dialect, confidence));
         }
         decorated.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
-        let found: Vec<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::Confidence)> = decorated.into_iter().map(|(_, _, dialect, confidence)| (dialect, confidence)).collect();
+        let found: Vec<(semio_framework_artifact_reference::ArtifactDialect, semio_framework::io_schema::Confidence)> = decorated.into_iter().map(|(_, _, dialect, confidence)| (dialect, confidence)).collect();
         Ok(semio_framework_pack_json::to_json_string(&found).into_bytes())
     }
 
@@ -7375,7 +7385,7 @@ impl ArtifactMutationRouter {
                     if contributor != plugin_id {
                         return Err(PluginHostError::Plugin(format!("mutation roster row {:?} claims contributor `{contributor}` but was reported by plugin `{plugin_id}`", entry.mutation_id)));
                     }
-                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).map_err(|error| PluginHostError::Plugin(error.to_string()))?.plugin().to_string();
+                    let owner_plugin = semio_framework_artifact_reference::ArtifactKindId::parse(artifact_kind).map_err(|error| PluginHostError::Plugin(error.to_string()))?.plugin().to_string();
                     if !dependencies.iter().any(|dependency| dependency.plugin_id == owner_plugin) {
                         return Err(PluginHostError::Plugin(format!("plugin `{plugin_id}` contributes a mutation on `{artifact_kind}` (owner `{owner_plugin}`) without declaring `{owner_plugin}` as a dependency (contract §4 rule 1)")));
                     }
@@ -7419,7 +7429,7 @@ impl ArtifactMutationRouter {
                 None => MutationOwnership::Owner { plugin_id: plugin_id.clone() },
             });
         }
-        if let Ok(parsed) = semio_framework::io::ArtifactKindId::parse(artifact_kind) {
+        if let Ok(parsed) = semio_framework_artifact_reference::ArtifactKindId::parse(artifact_kind) {
             if let Some((plugin_id, _entry)) = routes.get(&(parsed.plugin().to_string(), mutation_id.to_string())) {
                 return Ok(MutationOwnership::Owner { plugin_id: plugin_id.clone() });
             }
@@ -7905,7 +7915,7 @@ struct AppRouterState {
     /// 🗂️ `(dialect, role) -> registered AppRefs`, unsorted insertion order — `surfaces_for` sorts
     /// lazily against the CURRENT `owners` snapshot (never stale, since ownership never changes once
     /// claimed).
-    surfaces: HashMap<(semio_framework::ArtifactDialect, semio_framework::AppRole), Vec<semio_framework::AppRef>>,
+    surfaces: HashMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework::AppRole), Vec<semio_framework::AppRef>>,
     /// 🚧️ Every `(plugin_id, app_id)` seen so far, for O(1) `surface.conflict` detection.
     registered_refs: std::collections::HashSet<(String, String)>,
     /// 🧯️ `plugin_id -> the fault that excluded it` (ticket 26/09/05/S-END-TO-END lane H). A
@@ -7935,13 +7945,15 @@ impl AppRouter {
     /// whatever `PluginManifest` it already has on hand (mirrors `IoRouter`/`ArtifactInferenceRouter`'s
     /// own post-`WasmPluginRuntime` registration idiom: pre-decoded data in, no runtime dependency).
     pub async fn register_manifest(&self, plugin_id: &str, manifest: &PluginManifest) -> Result<(), semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let dependencies: BTreeSet<String> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
         state.dependencies.insert(plugin_id.to_string(), dependencies);
         for spec in &manifest.artifact_kinds {
             state.owners.entry(spec.id.clone()).or_insert_with(|| plugin_id.to_string());
         }
-        let mut staged: Vec<((semio_framework::ArtifactDialect, semio_framework::AppRole), semio_framework::AppRef)> = Vec::with_capacity(manifest.apps.len());
+        let mut staged: Vec<((semio_framework_artifact_reference::ArtifactDialect, semio_framework::AppRole), semio_framework::AppRef)> = Vec::with_capacity(manifest.apps.len());
         let mut staged_refs: BTreeSet<String> = BTreeSet::new();
         let mut breach: Option<semio_framework::Fault> = None;
         for app in &manifest.apps {
@@ -8002,7 +8014,7 @@ impl AppRouter {
     /// 📚️ Every `AppRef` serving `(dialect, role)`, deterministically ordered: the dialect's owner
     /// plugin's surface first (if it has one), then the rest sorted `plugin_id` asc / `app_id` asc
     /// (contract §3).
-    pub async fn surfaces_for(&self, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> Vec<semio_framework::AppRef> {
+    pub async fn surfaces_for(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::AppRole) -> Vec<semio_framework::AppRef> {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let owner = state.owners.get(&dialect.artifact_kind).cloned();
         let mut refs = state.surfaces.get(&(dialect.clone(), role)).cloned().unwrap_or_default();
@@ -8052,8 +8064,10 @@ impl AppRouter {
     /// job in `📜️script.ts`, not a host runtime concern — a wasm plugin host cannot walk the repo
     /// filesystem.
     pub async fn owned_surface_gaps(&self) -> Vec<semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut dialects: Vec<semio_framework::ArtifactDialect> = state.surfaces.keys().map(|(dialect, _)| dialect.clone()).collect();
+        let mut dialects: Vec<semio_framework_artifact_reference::ArtifactDialect> = state.surfaces.keys().map(|(dialect, _)| dialect.clone()).collect();
         dialects.sort();
         dialects.dedup();
         let mut gaps = Vec::new();
@@ -8102,7 +8116,9 @@ pub struct OpeningResolver;
 impl OpeningResolver {
     /// 🚫️async: R10 residue shape 2 — a future is consumed by one `.await`; awaited once here
     /// instead of once inside the `if let` and again (moved) at `.into_iter()` below.
-    pub async fn resolve(router: &AppRouter, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole, user_default: Option<&semio_framework::AppRef>) -> Result<semio_framework::AppRef, semio_framework::Fault> {
+    pub async fn resolve(router: &AppRouter, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::AppRole, user_default: Option<&semio_framework::AppRef>) -> Result<semio_framework::AppRef, semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let candidates = router.surfaces_for(dialect, role).await;
         if let Some(default_ref) = user_default {
             if candidates.contains(default_ref) {

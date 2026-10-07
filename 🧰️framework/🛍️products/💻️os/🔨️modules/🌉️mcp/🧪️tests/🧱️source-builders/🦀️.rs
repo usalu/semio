@@ -23,7 +23,7 @@ use semio_framework::manifest::{
     self, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppRole, ArgSchema, ContributionSet, ExecutionMode, ModeDefinition, Modes, PackageDescriptor, PackageHashes, PackageRole, UtilityDefinition, WindowKindDefinition,
     WindowKinds,
 };
-use semio_framework::{ArtifactDialect, IconName};
+use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::IconName};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui::wgpu::SurfaceKind;
 

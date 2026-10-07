@@ -1,6 +1,6 @@
 //! 🛬️ Direct binary codec for `remove-launch-action`.
 
-use super::RemoveLaunchAction;
+use crate::standards::v1_7::subsets::x::schema::mutations::RemoveLaunchAction;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 11;

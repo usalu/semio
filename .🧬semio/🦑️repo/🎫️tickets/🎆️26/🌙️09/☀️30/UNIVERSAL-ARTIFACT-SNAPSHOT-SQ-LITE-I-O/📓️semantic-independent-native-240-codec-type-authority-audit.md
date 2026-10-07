@@ -1,0 +1,13 @@
+# Actual Native 240 Codec Type Authority Audit
+
+Root37268 terminal1 is compiler-only, no Nextest. E0308/E0631 contexts establish real wrong-owner imports, not relational held-provider failures. Narrowed import regions are captured independently where canonical defining owner was verified; current source must be rechecked before mount.
+
+Document block/style codecs actually belong document::io::text::diff (enc_block177/dec_block191, enc_style261/dec_style266), not CAD blocks or Drawing styles. Presentation text mutations and binary Snapshot also need Document block codecs; SlideFrame codecs belong presentation::io::text::diff134/139, not Image frames. BRep enc_edge/dec_edge are existing scoped brep::io::text::snapshot functions362/367, not Flow edge codecs. Audio enc_snapshot/dec_snapshot belong audio::io::text::snapshot241/246, not Image mutations. Drawing DrawStyle/DrawLayer/DrawNode helpers must all import drawing::io::text::snapshot, rather than same-named Document/CAD/Flow helpers. Primitive generic helpers may share grammar only when signatures match actual arguments.
+
+Four mutation test wire_tag mismatches (Flow/CAD/Document/Audio) import Animation wire_tag. Each actual owner's binary mutations module defines its own ordinal authority; use that same-owner function, retain fixtures and ordinal assertions.
+
+Mesh text diff imports base::schema::triples::NamedAdded explicitly, shadowing mesh::schema::diff::*'s actual local NamedAdded<T>. Mesh local wrapper adds real target index and is the actual NamedTripleDiff added payload. Keep shared NamedModified/NamedTripleDiff but remove/replace explicit base NamedAdded with actual mesh::schema::diff::NamedAdded. Base enc_named_triple is generic over T and already accepts the local wrapper; no adapter or helper redesign needed. This resolves the four enc_named_added_* signature pairs and decoder incompatible local-wrapper results.
+
+Document mutations enc_bool(ordered) passes &bool to by-value function: dereference the scalar or use matching borrowed closure. encode_option expects Fn(&T), while imported enc_f64 accepts f64: retain existing numeric grammar with |value|enc_f64(*value) for width/height. Do not change generic encode_option API or reinterpret float words. These two closure sites plus scalar dereference are actual caller fixes rather than wrong domain owner types.
+
+No production edits, compiler rerun or runtime success claimed. Short root crate::<subset>::io/schema namespace errors are Root's separate canonical hierarchy repair. Static syntax cannot qualify these type fixes; owning compilation must do so.

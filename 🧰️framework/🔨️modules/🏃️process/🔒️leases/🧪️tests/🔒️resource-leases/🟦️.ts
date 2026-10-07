@@ -24,6 +24,31 @@ export async function testResourceLeases(generated: string): Promise<void> {
   const api = await import(pathToFileURL(implementation).href);
   const root = mkdtempSync(join(generated, "resource-leases-")), directory = join(root, "store");
   const worker = join(root, "📜️script.ts");
+  const readLaw = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🔁️interrupted-read.json"), "utf8"));
+  const readRoot = join(root, "interrupted-read");
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync(readRoot);
+  for (const file of readLaw.files) writeFileSync(join(readRoot, file), "");
+  const { default: glob } = await import("fast-glob");
+  const oracle = glob.sync("*", { cwd: readRoot, onlyFiles: true }).sort();
+  let readCalls = 0;
+  const read = await api.retryInterruptedFilesystemRead(new AbortController().signal, () => {
+    if (readCalls++ < readLaw.interruptions) throw Object.assign(new Error("interrupted read"), { code: "EINTR" });
+    return readdirSync(readRoot).sort();
+  });
+  assert.deepEqual(read, readLaw.files);
+  assert.deepEqual(read, oracle);
+  assert.equal(readCalls, readLaw.interruptions + 1);
+  const readAbort = new AbortController();
+  let cancelCalls = 0;
+  await assert.rejects(() => api.retryInterruptedFilesystemRead(readAbort.signal, () => {
+    if (++cancelCalls === readLaw.cancellationAfterInterruptions) readAbort.abort();
+    throw Object.assign(new Error("interrupted read"), { code: "EINTR" });
+  }), /abort/i);
+  assert.equal(cancelCalls, readLaw.cancellationAfterInterruptions);
+  const refused = Object.assign(new Error("denied read"), { code: readLaw.unrecoverableCode });
+  await assert.rejects(() => api.retryInterruptedFilesystemRead(new AbortController().signal, () => { throw refused; }), error => error === refused);
+  console.log("[DEBUG] interrupted filesystem read preserves exact fast-glob oracle output and cancellation");
   writeFileSync(worker, `import { acquireResourceLease } from ${JSON.stringify(implementation)};
 const [directory, resource, mode] = process.argv.slice(2), controller = new AbortController();
 const timer = setTimeout(() => controller.abort(), 15000);

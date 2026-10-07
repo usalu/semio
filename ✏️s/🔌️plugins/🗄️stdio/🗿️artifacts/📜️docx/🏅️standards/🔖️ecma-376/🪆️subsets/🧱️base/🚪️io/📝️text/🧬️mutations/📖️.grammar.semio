@@ -31,7 +31,7 @@ insert-style = "insert-style" "style" "=" style
 remove-style = "remove-style" "id" "=" hex
 set-style-name = "set-style-name" "id" "=" hex "name" "=" hex
 set-style-based-on = "set-style-based-on" "id" "=" hex "based-on" "=" opt-hex
-set-part = "set-part" "path" "=" hex "content-type" "=" hex "bytes" "=" hex
+set-part = "set-part" "path" "=" hex "content-type" "=" hex "payload" "=" hex
 remove-part = "remove-part" "path" "=" hex
 
 bool-lit = "0" | "1"

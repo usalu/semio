@@ -5,7 +5,7 @@
 
 use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 
-use crate::standards::v1::subsets::base::schema::triples::split_top_level;
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level};
 use crate::standards::v1::subsets::kit::schema::mutations::{
     set_snapshot::SetSnapshot,
     add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel, create_object::CreateObject, create_properties::CreateProperties,
@@ -17,10 +17,10 @@ use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_piece};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_piece};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_pin};
 use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_pin};
-use crate::standards::v1::subsets::object::io::text::snapshot::{dec_ref};
-use crate::standards::v1::subsets::object::io::text::snapshot::{enc_ref};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_ref};
+use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_ref};
+use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_str};
+use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_str};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -164,7 +164,7 @@ impl protocol::OpText for SemioKitMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioKitMutation> {
-    let ref_of = |subset: &str, id: &str| store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
+    let ref_of = |subset: &str, id: &str| semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
         SemioKitMutation::PatchSnapshot(crate::standards::v1::subsets::kit::schema::mutations::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioKitMutation::CreateObject(CreateObject { child_id: "o1".into(), target: ref_of("object", "t1") }),

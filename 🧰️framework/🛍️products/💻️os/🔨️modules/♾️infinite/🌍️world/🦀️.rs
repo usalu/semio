@@ -575,7 +575,7 @@ fn default_grid_factor() -> f64 {
     10.0
 }
 
-#[derive(Clone, Debug, Default, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct WorldSelectionTargets {
@@ -1838,6 +1838,8 @@ pub struct World3dState {
     /// or by Escape (abort) — React's `relocateSessionRef` (`🌐️World3dHost/🟦️.tsx:6845`).
     relocate: Option<World3dRelocateSession>,
     selected_ids: Vec<String>,
+    /// 🎯️ The Guest Scene's exact source-bound component interaction targets.
+    gumball_selection_ids: Vec<String>,
     /// 📇️ The action ids the WINDOW KIND hosting this surface declares — the app manifest's
     /// `window_kind_action_refs`, republished by the shell on every engine-surface sync
     /// ([`set_world3d_declared_actions`]). A surface may only mint a verb that appears here.
@@ -2184,6 +2186,7 @@ impl World3dState {
             drag_last_position: None,
             relocate: None,
             selected_ids: Vec::new(),
+            gumball_selection_ids: Vec::new(),
             declared_action_ids: Vec::new(),
             transform_mode: "translate".into(),
             gumball_config: None,
@@ -4075,7 +4078,7 @@ impl WorldMarqueePickCursor {
         let crossing = self.crossing.expect("crossing resolved");
         if let Some(kind) = self.component_kind {
             let count = match kind {
-                WorldComponentKind::Vertex => admitted.vertices,
+                WorldComponentKind::Vertex => if schema.vertex_ids == schema.vertices { admitted.vertices } else { 0 },
                 WorldComponentKind::Edge => admitted.edges,
                 WorldComponentKind::Face => admitted.triangles,
             };
@@ -4092,6 +4095,10 @@ impl WorldMarqueePickCursor {
                 WorldComponentKind::Edge => world_mesh_component_id(mesh, Mesh3dField::EdgeIds, index),
                 WorldComponentKind::Face => world_mesh_component_id(mesh, Mesh3dField::FaceIds, index),
             };
+            if kind == WorldComponentKind::Vertex && id == u32::MAX {
+                context.consume_fuel(1);
+                return WorldInteractionStep::Pending;
+            }
             let mut selected = false;
             match kind {
                 WorldComponentKind::Vertex => {
@@ -4721,7 +4728,7 @@ struct WorldRayHitRef {
     mesh: WorldInteractionMeshToken,
     draw: u16,
     instance: u16,
-    triangle: u32,
+    triangle: Option<u32>,
     distance: f32,
     bary_u: f32,
     bary_v: f32,
@@ -4735,9 +4742,14 @@ pub struct WorldRayPickCursor {
     purpose: WorldRayPickPurpose,
     origin: Vec3,
     direction: Vec3,
+    local_x: f32,
+    local_y: f32,
+    viewport: Rect,
+    view_projection: Mat4,
+    projection_spec: Viewport3dProjectionSpec,
     draw: usize,
     instance: usize,
-    triangle: usize,
+    primitive: usize,
     mesh: Option<WorldInteractionMeshToken>,
     mesh_probe: u16,
     merge: u8,
@@ -4762,9 +4774,14 @@ impl WorldRayPickCursor {
             purpose,
             origin,
             direction,
+            local_x,
+            local_y,
+            viewport,
+            view_projection: ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, viewport.w, viewport.h),
+            projection_spec: state.projection_spec,
             draw: 0,
             instance: 0,
-            triangle: 0,
+            primitive: 0,
             mesh: None,
             mesh_probe: 0,
             merge: 0,
@@ -4780,7 +4797,7 @@ impl WorldRayPickCursor {
     fn skip_draw(&mut self) {
         self.draw += 1;
         self.instance = 0;
-        self.triangle = 0;
+        self.primitive = 0;
         self.mesh = None;
         self.mesh_probe = 0;
     }
@@ -4867,15 +4884,50 @@ impl WorldRayPickCursor {
         let Some(instance) = draw.instances.get(self.instance) else {
             self.draw += 1;
             self.instance = 0;
-            self.triangle = 0;
+            self.primitive = 0;
             self.mesh = None;
             self.mesh_probe = 0;
             context.consume_fuel(1);
             return WorldInteractionStep::Pending;
         };
-        let Some(indices) = u32::try_from(self.triangle).ok().and_then(|triangle| world_mesh_triangle(mesh, triangle)) else {
+        if schema.indices == 0 && matches!(self.purpose, WorldRayPickPurpose::Instance | WorldRayPickPurpose::Hover) {
+            let count = if schema.edges > 0 { schema.edges } else if schema.vertex_ids == schema.vertices { schema.vertices } else { 0 };
+            if self.primitive >= count as usize {
+                self.instance += 1;
+                self.primitive = 0;
+                context.consume_fuel(1);
+                return WorldInteractionStep::Pending;
+            }
+            let index = self.primitive as u32;
+            let project = |point| ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, point, self.viewport.w, self.viewport.h);
+            let point = if schema.edges > 0 {
+                mesh.edge(index).ok().and_then(|edge| {
+                    let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
+                    let b = instance.model.transform_point(Vec3::new(edge[1][0], edge[1][1], edge[1][2]));
+                    let (screen_a, screen_b) = (project(a)?, project(b)?);
+                    (ui_wgpu::wgpu::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]) <= PICK_EDGE_SCREEN_PX).then_some(a.add(b).scale(0.5))
+                })
+            } else if world_mesh_component_id(mesh, Mesh3dField::VertexIds, index) != u32::MAX {
+                world_mesh_vertex(mesh, index).and_then(|point| {
+                    let point = instance.model.transform_point(point);
+                    let screen = project(point)?;
+                    ((screen[0] - self.local_x).hypot(screen[1] - self.local_y) <= PICK_VERTEX_SCREEN_PX).then_some(point)
+                })
+            } else { None };
+            if let Some(point) = point {
+                let distance = point.sub(self.origin).dot(self.direction);
+                if distance.is_finite() && distance >= 0.0 && self.best.is_none_or(|best| distance < best.distance) {
+                    let (Ok(draw), Ok(instance)) = (u16::try_from(self.draw), u16::try_from(self.instance)) else { self.faulted = true; return WorldInteractionStep::Fault; };
+                    self.best = Some(WorldRayHitRef { mesh: token, draw, instance, triangle: None, distance, bary_u: 0.0, bary_v: 0.0, point, normal: Vec3::ZERO });
+                }
+            }
+            self.primitive += 1;
+            context.consume_fuel(1);
+            return WorldInteractionStep::Pending;
+        }
+        let Some(indices) = u32::try_from(self.primitive).ok().and_then(|triangle| world_mesh_triangle(mesh, triangle)) else {
             self.instance += 1;
-            self.triangle = 0;
+            self.primitive = 0;
             context.consume_fuel(1);
             return WorldInteractionStep::Pending;
         };
@@ -4909,14 +4961,14 @@ impl WorldRayPickCursor {
                     self.faulted = true;
                     return WorldInteractionStep::Fault;
                 };
-                let Ok(triangle_index) = u32::try_from(self.triangle) else {
+                let Ok(triangle_index) = u32::try_from(self.primitive) else {
                     self.faulted = true;
                     return WorldInteractionStep::Fault;
                 };
-                self.best = Some(WorldRayHitRef { mesh: token, draw: draw_index, instance: instance_index, triangle: triangle_index, distance, bary_u, bary_v, point, normal });
+                self.best = Some(WorldRayHitRef { mesh: token, draw: draw_index, instance: instance_index, triangle: Some(triangle_index), distance, bary_u, bary_v, point, normal });
             }
         }
-        self.triangle += 1;
+        self.primitive += 1;
         context.consume_fuel(1);
         WorldInteractionStep::Pending
     }
@@ -4982,7 +5034,7 @@ impl WorldRayPickCursor {
         let object = plan.push_string(target_id).ok_or(WorldInteractionStep::Fault)?;
         let action = match self.purpose {
             WorldRayPickPurpose::Paint => {
-                let (u, v) = interpolate_mesh_uv(mesh, hit.triangle as usize, hit.bary_u, hit.bary_v).ok_or(WorldInteractionStep::Fault)?;
+                let (u, v) = interpolate_mesh_uv(mesh, hit.triangle.ok_or(WorldInteractionStep::Fault)? as usize, hit.bary_u, hit.bary_v).ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction { kind: WorldFlatActionKind::PaintAt, strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None], numbers: [u as f64, v as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] }
             }
             WorldRayPickPurpose::Surface => WorldFlatAction {
@@ -5310,8 +5362,9 @@ impl WorldComponentPickCursor {
         let Some(&mesh) = state.meshes.get(admitted.id.as_str()) else {
             return WorldInteractionStep::Fault;
         };
+        let Ok(schema) = mesh.schema() else { return WorldInteractionStep::Stale; };
         let count = match self.kind {
-            WorldComponentKind::Vertex => admitted.vertices,
+            WorldComponentKind::Vertex => if schema.vertex_ids == schema.vertices { admitted.vertices } else { 0 },
             WorldComponentKind::Edge => admitted.edges,
             WorldComponentKind::Face => admitted.triangles,
         };
@@ -5323,6 +5376,10 @@ impl WorldComponentPickCursor {
         }
         let index = self.topology;
         self.topology += 1;
+        if self.kind == WorldComponentKind::Vertex && world_mesh_component_id(mesh, Mesh3dField::VertexIds, index) == u32::MAX {
+            context.consume_fuel(1);
+            return WorldInteractionStep::Pending;
+        }
         let candidate = match self.kind {
             WorldComponentKind::Vertex => mesh.vec3(Mesh3dField::Positions, index).ok().and_then(|point| {
                 let world = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
@@ -5418,8 +5475,10 @@ impl WorldComponentPickCursor {
     }
 }
 
+const WORLD_COMPONENT_TARGET_BYTE_CAPACITY: usize = WORLD_INTERACTION_ID_BYTE_CAPACITY + 1 + 6 + 1 + 10 + 1 + 64 + 1 + 20 + 1 + 64;
+
 struct WorldComponentTarget {
-    bytes: [u8; WORLD_INTERACTION_ID_BYTE_CAPACITY + 168],
+    bytes: [u8; WORLD_COMPONENT_TARGET_BYTE_CAPACITY],
     len: usize,
 }
 
@@ -5433,7 +5492,7 @@ impl std::fmt::Write for WorldComponentTarget {
 impl WorldComponentTarget {
     fn new(state: &World3dState, entry: &WorldInteractionObjectSlot, kind: WorldComponentKind, group: u32) -> Result<Self, ui_wgpu::wgpu::BoundedActionFault> {
         use std::fmt::Write;
-        let mut target = Self { bytes: [0; WORLD_INTERACTION_ID_BYTE_CAPACITY + 168], len: 0 };
+        let mut target = Self { bytes: [0; WORLD_COMPONENT_TARGET_BYTE_CAPACITY], len: 0 };
         write!(target, "{}.{}.{}", entry.id.as_str(), kind.as_str(), group).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::StringCredits)?;
         if let Some(source) = entry.component_source {
             let admitted = entry.mesh.and_then(|mesh| state.interaction_meshes.resolve(mesh)).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
@@ -5458,7 +5517,69 @@ impl WorldComponentKind {
     }
 }
 
-const WORLD_GUMBALL_SELECTED_CAPACITY: usize = 64;
+const WORLD_GUMBALL_SELECTED_CAPACITY: usize = ui_wgpu::wgpu::ACTION_NODE_CAPACITY - 11;
+
+#[derive(Clone, Copy)]
+struct WorldGumballTarget {
+    object: WorldInteractionObjectToken,
+    source_index: Option<u32>,
+}
+
+impl WorldGumballTarget {
+    fn text<'a>(&self, state: &'a World3dState, mode: Option<WorldComponentKind>) -> Option<&'a str> {
+        let entry = state.interaction_objects.resolve(self.object)?;
+        match (self.source_index, mode) {
+            (None, None) => Some(entry.id.as_str()),
+            (Some(index), Some(kind)) => {
+                let id = state.gumball_selection_ids.get(index as usize)?.as_str();
+                let address = WorldComponentAddress::parse(id, kind.as_str())?;
+                (address.object == entry.id.as_str() && address.matches_registry(state, entry)).then_some(id)
+            }
+            _ => None,
+        }
+    }
+}
+
+struct WorldComponentAddress<'a> {
+    object: &'a str,
+    group: u32,
+    field: Mesh3dField,
+    source: Option<(ComponentSource3d, u64)>,
+}
+
+impl<'a> WorldComponentAddress<'a> {
+    fn parse(id: &'a str, kind: &str) -> Option<Self> {
+        if id.len() > WORLD_COMPONENT_TARGET_BYTE_CAPACITY { return None; }
+        let (address, source) = id.split_once('~').map_or((id, None), |(address, source)| (address, Some(source)));
+        let (prefix, group) = address.rsplit_once('.')?;
+        let (object, actual_kind) = prefix.rsplit_once('.')?;
+        if actual_kind != kind || group.is_empty() || (group.len() > 1 && group.starts_with('0')) || !group.bytes().all(|byte| byte.is_ascii_digit()) { return None; }
+        let field = match kind { "vertex" => Mesh3dField::VertexIds, "edge" => Mesh3dField::EdgeIds, "face" => Mesh3dField::FaceIds, _ => return None };
+        let source = match source {
+            None => None,
+            Some(source) => {
+                let mut fields = source.split('~');
+                let handle = fields.next()?; let label = fields.next()?; let revision = fields.next()?;
+                if fields.next().is_some() || label.is_empty() || label.starts_with('0') || label.len() > 20 || !label.bytes().all(|byte| byte.is_ascii_digit()) { return None; }
+                Some((ComponentSource3d::new(handle, revision)?, label.parse().ok()?))
+            }
+        };
+        Some(Self { object, group: group.parse().ok()?, field, source })
+    }
+
+    fn matches_source(&self, state: &World3dState, source: Option<ComponentSource3d>, mesh_id: &str) -> bool {
+        match (self.source, source) {
+            (None, None) => true,
+            (Some((expected, label)), Some(actual)) if expected == actual => state.meshes.get(mesh_id).is_some_and(|mesh| mesh.component_label(self.field, self.group).ok().flatten() == Some(label)),
+            _ => false,
+        }
+    }
+
+    fn matches_registry(&self, state: &World3dState, entry: &WorldInteractionObjectSlot) -> bool {
+        let Some(mesh) = entry.mesh.and_then(|mesh| state.interaction_meshes.resolve(mesh)) else { return false; };
+        self.matches_source(state, entry.component_source, mesh.id.as_str())
+    }
+}
 
 struct WorldGumballPickCursor {
     revision: u64,
@@ -5466,8 +5587,11 @@ struct WorldGumballPickCursor {
     x: f32,
     y: f32,
     slot: u16,
-    selected: Box<[Option<WorldInteractionObjectToken>; WORLD_GUMBALL_SELECTED_CAPACITY]>,
-    selected_len: u8,
+    source_cursor: usize,
+    source_probe: u16,
+    mode: Option<WorldComponentKind>,
+    selected: Box<[Option<WorldGumballTarget>; WORLD_GUMBALL_SELECTED_CAPACITY]>,
+    selected_len: u16,
     selected_bytes: u16,
     sum: Vec3,
     pivot: Option<Vec3>,
@@ -5476,7 +5600,7 @@ struct WorldGumballPickCursor {
     eye: Vec3,
     extent: f32,
     handle: u8,
-    validate: u8,
+    validate: u16,
     best: Option<(f32, GumballHandle)>,
     complete: bool,
     faulted: bool,
@@ -5492,10 +5616,11 @@ struct WorldGumballGesture {
     translate: Vec3,
     angle: f32,
     scale: Vec3,
-    selected: Box<[Option<WorldInteractionObjectToken>; WORLD_GUMBALL_SELECTED_CAPACITY]>,
-    selected_len: u8,
+    mode: Option<WorldComponentKind>,
+    selected: Box<[Option<WorldGumballTarget>; WORLD_GUMBALL_SELECTED_CAPACITY]>,
+    selected_len: u16,
     selected_bytes: u16,
-    validation: u8,
+    validation: u16,
     pending: Option<WorldGumballUpdate>,
     live: bool,
     streamed: bool,
@@ -5536,6 +5661,9 @@ impl WorldGumballPickCursor {
             x,
             y,
             slot: 0,
+            source_cursor: 0,
+            source_probe: 0,
+            mode: match state.granularity.as_str() { "vertex" => Some(WorldComponentKind::Vertex), "edge" => Some(WorldComponentKind::Edge), "face" | "component" => Some(WorldComponentKind::Face), _ => None },
             selected: Box::new([None; WORLD_GUMBALL_SELECTED_CAPACITY]),
             selected_len: 0,
             selected_bytes: 0,
@@ -5551,6 +5679,17 @@ impl WorldGumballPickCursor {
             complete: false,
             faulted: false,
         }
+    }
+
+    fn retain(&mut self, target: WorldGumballTarget, bytes: usize, position: Vec3) -> bool {
+        let index = usize::from(self.selected_len);
+        let Some(bytes) = usize::from(self.selected_bytes).checked_add(bytes).filter(|bytes| *bytes <= WORLD_INTERACTION_BYTE_CAPACITY) else { return false; };
+        let Some(slot) = self.selected.get_mut(index) else { return false; };
+        *slot = Some(target);
+        self.selected_bytes = bytes as u16;
+        self.selected_len += 1;
+        self.sum = self.sum.add(position);
+        true
     }
 
     /// 🎛️ ONE gate for every handle: the resolved `gumballConfig` (authored, else the mode's
@@ -5570,26 +5709,45 @@ impl WorldGumballPickCursor {
             return WorldInteractionStep::Complete;
         }
         if self.pivot.is_none() {
-            let index = usize::from(self.slot);
-            if let Some(entry) = state.interaction_objects.slots.get(index) {
-                self.slot += 1;
-                if let Some(entry) = entry.as_ref().filter(|entry| entry.revision == self.revision && entry.kind == WorldInteractionObjectKind::Instance && entry.values[2] != 0.0) {
-                    let selected_index = usize::from(self.selected_len);
-                    if selected_index == WORLD_GUMBALL_SELECTED_CAPACITY {
-                        self.faulted = true;
-                        return WorldInteractionStep::Fault;
-                    }
-                    self.selected[selected_index] = Some(WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision });
-                    let Some(selected_bytes) = usize::from(self.selected_bytes).checked_add(entry.id.as_str().len()).filter(|bytes| *bytes <= WORLD_INTERACTION_BYTE_CAPACITY) else {
+            if let Some(kind) = self.mode {
+                if let Some(id) = state.gumball_selection_ids.get(self.source_cursor) {
+                    let Some(address) = WorldComponentAddress::parse(id, kind.as_str()) else {
                         self.faulted = true;
                         return WorldInteractionStep::Fault;
                     };
-                    self.selected_bytes = selected_bytes as u16;
-                    self.selected_len += 1;
-                    self.sum = self.sum.add(Vec3::new(entry.values[3], entry.values[4], entry.values[5]));
+                    if usize::from(self.source_probe) == WORLD_INTERACTION_OBJECT_CAPACITY {
+                        self.faulted = true;
+                        return WorldInteractionStep::Fault;
+                    }
+                    let index = (WorldInteractionObjectRegistry::hash(WorldInteractionObjectKind::Instance, address.object) + usize::from(self.source_probe)) % WORLD_INTERACTION_OBJECT_CAPACITY;
+                    self.source_probe += 1;
+                    if let Some(entry) = state.interaction_objects.slots[index].as_ref().filter(|entry| entry.revision == self.revision && entry.kind == WorldInteractionObjectKind::Instance && entry.id.as_str() == address.object) {
+                        let Some(source_index) = u32::try_from(self.source_cursor).ok() else { self.faulted = true; return WorldInteractionStep::Fault; };
+                        let target = WorldGumballTarget { object: WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision }, source_index: Some(source_index) };
+                        if !address.matches_registry(state, entry) || !self.retain(target, id.len(), Vec3::new(entry.values[3], entry.values[4], entry.values[5])) {
+                            self.faulted = true;
+                            return WorldInteractionStep::Fault;
+                        }
+                        self.source_cursor += 1;
+                        self.source_probe = 0;
+                    }
+                    context.consume_fuel(1);
+                    return WorldInteractionStep::Pending;
                 }
-                context.consume_fuel(1);
-                return WorldInteractionStep::Pending;
+            } else {
+                let index = usize::from(self.slot);
+                if let Some(entry) = state.interaction_objects.slots.get(index) {
+                    self.slot += 1;
+                    if let Some(entry) = entry.as_ref().filter(|entry| entry.revision == self.revision && entry.kind == WorldInteractionObjectKind::Instance && entry.values[2] != 0.0) {
+                        let target = WorldGumballTarget { object: WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision }, source_index: None };
+                        if !self.retain(target, entry.id.as_str().len(), Vec3::new(entry.values[3], entry.values[4], entry.values[5])) {
+                            self.faulted = true;
+                            return WorldInteractionStep::Fault;
+                        }
+                    }
+                    context.consume_fuel(1);
+                    return WorldInteractionStep::Pending;
+                }
             }
             if self.selected_len == 0 {
                 self.complete = true;
@@ -5628,9 +5786,9 @@ impl WorldGumballPickCursor {
         ];
         let Some(handle) = handles.get(usize::from(self.handle)).copied() else {
             if self.validate < self.selected_len {
-                let token = self.selected[usize::from(self.validate)].expect("gumball selected token");
+                let target = self.selected[usize::from(self.validate)].expect("gumball selected target");
                 self.validate += 1;
-                if state.interaction_objects.resolve(token).is_none() {
+                if target.text(state, self.mode).is_none() {
                     return WorldInteractionStep::Stale;
                 }
                 context.consume_fuel(1);
@@ -5713,6 +5871,7 @@ impl WorldGumballPickCursor {
             translate: Vec3::ZERO,
             angle: 0.0,
             scale: Vec3::new(1.0, 1.0, 1.0),
+            mode: self.mode,
             selected: std::mem::replace(&mut self.selected, Box::new([None; WORLD_GUMBALL_SELECTED_CAPACITY])),
             selected_len: self.selected_len,
             selected_bytes: self.selected_bytes,
@@ -5840,6 +5999,7 @@ impl WorldGumballGesture {
             translate,
             angle,
             scale,
+            mode: self.mode,
             selected: self.selected.clone(),
             selected_len: self.selected_len,
             selected_bytes: self.selected_bytes,
@@ -5876,9 +6036,9 @@ impl WorldGumballGesture {
             return WorldInteractionStep::Fault;
         };
         if self.validation < self.selected_len {
-            let token = self.selected[usize::from(self.validation)].expect("gumball selected token");
+            let target = self.selected[usize::from(self.validation)].expect("gumball selected target");
             self.validation += 1;
-            return if state.interaction_objects.resolve(token).is_some() { WorldInteractionStep::Pending } else { WorldInteractionStep::Stale };
+            return if target.text(state, self.mode).is_some() { WorldInteractionStep::Pending } else { WorldInteractionStep::Stale };
         }
         let Some((local_x, local_y, viewport)) = pointer_in_pick_rect(state, pending.x, pending.y) else {
             self.pending = None;
@@ -6185,7 +6345,7 @@ impl WorldGumballCommitJob {
         } else {
             &["surfaceId", "windowId", "mode", "ids", "sx", "sy", "sz"]
         };
-        let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&state.controller_id, self.action_id(), &state.surface_id, &state.surface_id, "mesh"])?;
+        let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&state.controller_id, self.action_id(), &state.surface_id, &state.surface_id, self.gesture.mode.map_or("mesh", WorldComponentKind::as_str)])?;
         for key in keys {
             bytes = bytes.checked_add(key.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
         }
@@ -6249,10 +6409,10 @@ impl WorldGumballCommitJob {
             context.consume_fuel(1);
             return Ok(WorldInteractionStep::Pending);
         }
-        let selected_end = 5 + u16::from(self.gesture.selected_len);
+        let selected_end = 5 + self.gesture.selected_len;
         let selected = if self.stage >= 5 && self.stage < selected_end {
-            let token = self.gesture.selected[usize::from(self.stage - 5)].expect("gumball selected token");
-            Some(state.interaction_objects.resolve(token).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.id)
+            let target = self.gesture.selected[usize::from(self.stage - 5)].expect("gumball selected target");
+            Some(target.text(state, self.gesture.mode).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?)
         } else {
             None
         };
@@ -6264,12 +6424,12 @@ impl WorldGumballCommitJob {
             0 => draft.builder().begin_object(None)?,
             1 => draft.builder().string(Some("surfaceId"), &state.surface_id)?,
             2 => draft.builder().string(Some("windowId"), &state.surface_id)?,
-            3 => draft.builder().string(Some("mode"), "mesh")?,
+            3 => draft.builder().string(Some("mode"), self.gesture.mode.map_or("mesh", WorldComponentKind::as_str))?,
             4 => draft.builder().begin_array(Some("ids"))?,
             stage if usize::from(stage - 5) < usize::from(self.gesture.selected_len) => {
-                draft.builder().string(None, selected.expect("selected id resolved").as_str())?;
+                draft.builder().string(None, selected.expect("selected id resolved"))?;
             }
-            stage if stage == 5 + u16::from(self.gesture.selected_len) => draft.builder().end_container()?,
+            stage if stage == 5 + self.gesture.selected_len => draft.builder().end_container()?,
             _ => {
                 if let Some((key, value)) = numeric {
                     draft.builder().number(Some(key), value)?;
@@ -6320,7 +6480,7 @@ fn world_mesh_triangle(mesh: Mesh3dLease, triangle: u32) -> Option<[u32; 3]> {
 }
 
 fn world_mesh_component_id(mesh: Mesh3dLease, field: Mesh3dField, index: u32) -> u32 {
-    mesh.u32(field, index).unwrap_or(index)
+    mesh.u32(field, index).unwrap_or(if field == Mesh3dField::VertexIds { u32::MAX } else { index })
 }
 
 fn world_ray_triangle_barycentric(origin: Vec3, direction: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<(f32, f32, f32)> {
@@ -6755,7 +6915,7 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
         }
-        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down && state.active_utility == "select" && !component_mode_active(state) && self.gumball.is_none() && world3d_offers_transform_gumball(state) {
+        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down && state.active_utility == "select" && self.gumball.is_none() && world3d_offers_transform_gumball(state) {
             self.active = Some(WorldInteractionActive::GumballPick { cursor: WorldGumballPickCursor::new(state, generation, intent.x, intent.y), retirement: None });
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Pending;
@@ -8243,6 +8403,18 @@ pub enum MeshStyleKind {
     Neutral,
 }
 
+/// 🖍️ Resolves an original instance's semantic object flags for surface and primary geometry paint.
+fn world_instance_style(state: &World3dState, instance: &Instance3d) -> MeshStyleState {
+    MeshStyleState {
+        disabled: state.disabled_instance_ids.contains(&instance.id),
+        provisional: state.provisional_instance_ids.contains(&instance.id),
+        celebrating: state.celebrating_instance_ids.contains(&instance.id),
+        selected: instance.selected,
+        highlighted: state.highlighted_instance_ids.contains(&instance.id),
+        hovered: instance.hovered,
+    }
+}
+
 /// 🎨️ What an instance is, before a row is chosen for it — React's `resolveMeshStyle` argument
 /// (`🌐️World3dHost/🟦️.tsx`).
 #[derive(Clone, Copy, Debug, Default)]
@@ -9322,6 +9494,8 @@ enum WorldPlaceholderMeshPhase {
     EdgeIds,
     Materials,
     Textures,
+    Provenance,
+    AdmitProvenance,
     Seal,
     Publish,
 }
@@ -9345,6 +9519,10 @@ impl WorldMeshSource {
     fn position(&self, item: u32) -> [f32; 3] {
         match self {
             Self::Placeholder(kind) => placeholder_triangle(*kind, item / 3)[(item % 3) as usize],
+            Self::Inline(buffers) if buffers.positions.is_empty() => {
+                let offset = item as usize * 3;
+                [buffers.edge_positions[offset], buffers.edge_positions[offset + 1], buffers.edge_positions[offset + 2]]
+            }
             Self::Inline(buffers) => buffers.position(item),
         }
     }
@@ -9375,6 +9553,7 @@ struct WorldPlaceholderMeshCursor {
     close_started: bool,
     faulted: bool,
     expanded: bool,
+    source_tail_start: u32,
     schema:Mesh3dSchema,
     uv_role:usize,
     texture_cursor:usize,
@@ -9413,16 +9592,24 @@ impl WorldPlaceholderMeshCursor {
     /// vertex and index counts are independent (the marker primitives above emit one vertex per
     /// face corner, a tessellated preview mesh does not).
     fn inline(key: &str, buffers: WorldMeshBuffers, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
-        let vertex_items = u32::try_from(buffers.vertex_count()).map_err(|_| ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+        let edge_only = buffers.positions.is_empty() && !buffers.edge_positions.is_empty();
+        if !buffers.positions.len().is_multiple_of(3) || !buffers.edge_positions.len().is_multiple_of(6)
+            || (edge_only && (!buffers.indices.is_empty() || !buffers.vertex_ids.is_empty())) {
+            return Err(ui_wgpu::wgpu::Mesh3dFault::Schema);
+        }
+        let vertex_items = u32::try_from(if edge_only { buffers.edge_positions.len() / 3 } else { buffers.vertex_count() }).map_err(|_| ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
         let index_items = u32::try_from(buffers.indices.len()).map_err(|_| ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
-        if vertex_items == 0 || index_items == 0 || !index_items.is_multiple_of(3) || buffers.indices.iter().any(|index| *index >= vertex_items) {
+        if vertex_items == 0 || !index_items.is_multiple_of(3) || buffers.indices.iter().any(|index| *index >= vertex_items) {
             return Err(ui_wgpu::wgpu::Mesh3dFault::Schema);
         }
         semio_framework::validate_mesh_surface_assets(&buffers.materials,&buffers.textures).map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Schema)?;
         for(name,attribute)in &buffers.attributes {let uses=if attribute.domain==semio_framework::MeshAttributeDomain::Edge{buffers.edge_ids.len()}else{index_items as usize};semio_framework::validate_mesh_attribute(name,attribute,vertex_items as usize,index_items as usize/3,uses,&buffers.materials).map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Schema)?;}
-        let expanded=buffers.attributes.values().any(|attribute|attribute.domain==semio_framework::MeshAttributeDomain::Corner || attribute.domain==semio_framework::MeshAttributeDomain::Face);
-        let mut cursor=Self::begin(key,WorldMeshSource::Inline(Box::new(buffers)),if expanded {index_items}else{vertex_items},index_items,generation,revision)?;
+        let expanded=!buffers.indices.is_empty() && buffers.attributes.values().any(|attribute|attribute.domain==semio_framework::MeshAttributeDomain::Corner || attribute.domain==semio_framework::MeshAttributeDomain::Face);
+        let source_tail_start = if expanded { buffers.vertex_ids.iter().position(|id| *id != u32::MAX).map_or(vertex_items, |item| item as u32) } else { vertex_items };
+        let expanded_items = index_items.checked_add(vertex_items - source_tail_start).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+        let mut cursor=Self::begin(key,WorldMeshSource::Inline(Box::new(buffers)),if expanded {expanded_items}else{vertex_items},index_items,generation,revision)?;
         cursor.expanded=expanded;
+        cursor.source_tail_start=source_tail_start;
         Ok(cursor)
     }
 
@@ -9434,14 +9621,15 @@ impl WorldPlaceholderMeshCursor {
         let (face_ids,vertex_ids,edges,edge_ids)=match &source {WorldMeshSource::Inline(mesh)=>(mesh.face_ids.len() as u32,if mesh.vertex_ids.is_empty(){0}else{vertex_items},mesh.edge_positions.len() as u32/6,mesh.edge_ids.len() as u32),_ => (0,0,0,0)};
         let schema=Mesh3dSchema{face_ids,vertex_ids,edges,edge_ids,uvs:if uvs {vertex_items}else{0},colors:if colors {vertex_items}else{0},surface_uvs:if uvs {[vertex_items;4]}else{[0;4]},tangents:if matches!(&source,WorldMeshSource::Inline(mesh) if mesh.attributes.contains_key("tangent")){vertex_items}else{0},..Mesh3dSchema::triangle_mesh(vertex_items,index_items)};
         let owner = WorldPlaceholderOwner::Writing(mesh3d_begin(generation, revision, schema)?);
-        Ok(Self { key: key.to_owned(), source, vertex_items, index_items, phase: WorldPlaceholderMeshPhase::Allocate, item: 0, owner, close_started: false, faulted: false,expanded:false,schema,uv_role:0,texture_cursor:0,texture_role:0,texture_name:None,texture_job:None,texture_image:None,texture_digest:[0;2],texture_bytes:Vec::new(),texture_byte:0,texture_scan:0,texture_required:false,texture_hash:Default::default(),texture_submission:None,texture_cancelled:std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),texture_worker:None,primitives:Vec::new(),textures:Vec::new(),appearance:None,source_retirement:None })
+        Ok(Self { key: key.to_owned(), source, vertex_items, index_items, phase: WorldPlaceholderMeshPhase::Allocate, item: 0, owner, close_started: false, faulted: false,expanded:false,source_tail_start:0,schema,uv_role:0,texture_cursor:0,texture_role:0,texture_name:None,texture_job:None,texture_image:None,texture_digest:[0;2],texture_bytes:Vec::new(),texture_byte:0,texture_scan:0,texture_required:false,texture_hash:Default::default(),texture_submission:None,texture_cancelled:std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),texture_worker:None,primitives:Vec::new(),textures:Vec::new(),appearance:None,source_retirement:None })
     }
 
-    fn source_vertex(&self,item:u32)->u32 {if self.expanded {self.source.index(item)}else{item}}
+    fn source_vertex(&self,item:u32)->u32 {if self.expanded {if item < self.index_items {self.source.index(item)}else{self.source_tail_start + item - self.index_items}}else{item}}
 
     fn sample<const N:usize>(&self,semantic:semio_framework::MeshAttributeSemantic,item:u32,fallback:[f32;N])->Result<[f32;N],ui_wgpu::wgpu::Mesh3dFault> {
         let WorldMeshSource::Inline(mesh)=&self.source else{return Ok(fallback)};
         let Some(attribute)=mesh.attributes.values().find(|attribute|attribute.semantic==semantic) else{return Ok(fallback)};
+        if self.expanded && item >= self.index_items && attribute.domain != semio_framework::MeshAttributeDomain::Vertex { return Ok(fallback); }
         let domain=match attribute.domain {semio_framework::MeshAttributeDomain::Vertex=>self.source_vertex(item) as usize,semio_framework::MeshAttributeDomain::Corner=>item as usize,semio_framework::MeshAttributeDomain::Face=>item as usize/3,_=>return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};
         let values=attribute.value_at(domain).and_then(|value|value.as_array()).filter(|values|values.len()==N).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;
         let mut result=[0.0;N];for axis in 0..N {result[axis]=values[axis].as_f64().filter(|value|value.is_finite()&&value.abs()<=f32::MAX as f64).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)? as f32;}Ok(result)
@@ -9457,6 +9645,7 @@ impl WorldPlaceholderMeshCursor {
         let declared=mesh.attributes.get(if set==0{"uv"}else{""}).or_else(||mesh.attributes.get(&format!("uv{set}")));
         let attribute=declared.or_else(||(set==0).then(||mesh.attributes.values().find(|attribute|attribute.semantic==semio_framework::MeshAttributeSemantic::Uv)).flatten());
         let Some(attribute)=attribute else {if set!=0{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)}let at=self.source_vertex(item) as usize*2;return Ok([mesh.uvs.get(at).copied().unwrap_or(0.0),mesh.uvs.get(at+1).copied().unwrap_or(0.0)])};
+        if self.expanded && item >= self.index_items && attribute.domain != semio_framework::MeshAttributeDomain::Vertex { let at=self.source_vertex(item) as usize*2;return Ok([mesh.uvs.get(at).copied().unwrap_or(0.0),mesh.uvs.get(at+1).copied().unwrap_or(0.0)]); }
         let domain=match attribute.domain{semio_framework::MeshAttributeDomain::Vertex=>self.source_vertex(item) as usize,semio_framework::MeshAttributeDomain::Corner=>item as usize,semio_framework::MeshAttributeDomain::Face=>item as usize/3,_=>return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};
         let values=attribute.value_at(domain).and_then(|value|value.as_array()).filter(|values|values.len()==2).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;
         Ok([values[0].as_f64().ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)? as f32,values[1].as_f64().ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)? as f32])
@@ -9560,7 +9749,18 @@ impl WorldPlaceholderMeshCursor {
                 }
             }
             WorldPlaceholderMeshPhase::Tangents=>{
-                if self.schema.tangents>0 {let WorldMeshSource::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};let attribute=mesh.attributes.get("tangent").ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;let domain=match attribute.domain{semio_framework::MeshAttributeDomain::Vertex=>self.source_vertex(self.item) as usize,semio_framework::MeshAttributeDomain::Corner=>self.item as usize,semio_framework::MeshAttributeDomain::Face=>self.item as usize/3,_=>return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};let values=attribute.value_at(domain).and_then(|value|value.as_array()).filter(|values|values.len()==4).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;let mut value=[0.0;4];for axis in 0..4 {value[axis]=values[axis].as_f64().filter(|value|value.is_finite() && value.abs()<=f32::MAX as f64).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)? as f32;}if value[..3].iter().all(|value|*value==0.0) || value[3].abs()!=1.0{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)}mesh3d_write_vec4(self.token()?,Mesh3dField::Tangents,value)?;self.item+=1;}
+                if self.schema.tangents>0 {
+                    let WorldMeshSource::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};
+                    let attribute=mesh.attributes.get("tangent").ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;
+                    let mut value=[1.0,0.0,0.0,1.0];
+                    if !(self.expanded && self.item>=self.index_items && attribute.domain!=semio_framework::MeshAttributeDomain::Vertex) {
+                        let domain=match attribute.domain{semio_framework::MeshAttributeDomain::Vertex=>self.source_vertex(self.item) as usize,semio_framework::MeshAttributeDomain::Corner=>self.item as usize,semio_framework::MeshAttributeDomain::Face=>self.item as usize/3,_=>return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};
+                        let values=attribute.value_at(domain).and_then(|value|value.as_array()).filter(|values|values.len()==4).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;
+                        for axis in 0..4 {value[axis]=values[axis].as_f64().filter(|value|value.is_finite() && value.abs()<=f32::MAX as f64).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)? as f32;}
+                    }
+                    if value[..3].iter().all(|value|*value==0.0) || value[3].abs()!=1.0{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)}
+                    mesh3d_write_vec4(self.token()?,Mesh3dField::Tangents,value)?;self.item+=1;
+                }
                 if self.schema.tangents==0 || self.item==self.vertex_items{self.item=0;self.phase=WorldPlaceholderMeshPhase::Uvs;}
             }
             WorldPlaceholderMeshPhase::Uvs => {
@@ -9573,9 +9773,10 @@ impl WorldPlaceholderMeshCursor {
                 if self.schema.colors==0 || self.item==self.vertex_items {self.item=0;self.phase=WorldPlaceholderMeshPhase::Indices;}
             }
             WorldPlaceholderMeshPhase::Indices => {
-                mesh3d_write_u32(self.token()?, Mesh3dField::Indices, if self.expanded {self.item}else{self.source.index(self.item)})?;
-                self.item += 1;
-                if self.item == self.index_items {
+                if self.item < self.index_items {
+                    mesh3d_write_u32(self.token()?, Mesh3dField::Indices, if self.expanded {self.item}else{self.source.index(self.item)})?;
+                    self.item += 1;
+                } else {
                     self.item = 0;
                     self.phase = WorldPlaceholderMeshPhase::FaceIds;
                 }
@@ -9603,12 +9804,18 @@ impl WorldPlaceholderMeshCursor {
             WorldPlaceholderMeshPhase::Textures => {
                 if self.texture_step()? {
                     if !self.primitives.is_empty() {self.appearance=Some(World3dMeshAppearance::new(std::mem::take(&mut self.primitives),std::mem::take(&mut self.textures)).map_err(|(primitives,textures)|{self.primitives=primitives;self.textures=textures;ui_wgpu::wgpu::Mesh3dFault::ByteCapacity})?);}
-                    self.phase=WorldPlaceholderMeshPhase::Seal;
+                    self.phase=WorldPlaceholderMeshPhase::Provenance;
                 }
             }
-            WorldPlaceholderMeshPhase::Seal => {
+            WorldPlaceholderMeshPhase::Provenance => {
                 let token = self.token()?;
                 if let WorldMeshSource::Inline(mesh) = &mut self.source { ui_wgpu::wgpu::mesh3d_move_component_references(token, &mut mesh.component_references)?; }
+                self.phase = WorldPlaceholderMeshPhase::AdmitProvenance;
+            }
+            WorldPlaceholderMeshPhase::AdmitProvenance => {
+                if ui_wgpu::wgpu::mesh3d_component_admission_step(self.token()?, 1, 4096)?.complete { self.phase = WorldPlaceholderMeshPhase::Seal; }
+            }
+            WorldPlaceholderMeshPhase::Seal => {
                 let lease = mesh3d_seal(self.token()?)?;
                 self.owner = WorldPlaceholderOwner::Ready(lease);
                 self.phase = WorldPlaceholderMeshPhase::Publish;
@@ -10302,18 +10509,20 @@ fn append_engagement_preview_lines(state: &World3dState, lines: &mut Vec<LineVer
 fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
     let wire_color = [0.55, 0.65, 0.8, 0.75];
     let outline_color = state.show_edges.then(|| environment_outline_color(&state.environment, theme)).flatten();
-    if state.interaction_mode == "paint" || component_mode_active(state) || outline_color.is_some() || state.selection_targets.edge || (state.granularity == "mesh" && !state.component_ids.is_empty()) {
+    let requested_wire = state.interaction_mode == "paint" || component_mode_active(state) || outline_color.is_some() || state.selection_targets.edge || (state.granularity == "mesh" && !state.component_ids.is_empty());
+    {
         for draw in &state.draws {
             let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
                 continue;
             };
             let Ok(schema) = mesh.schema() else { continue };
+            let primary_wire = schema.indices == 0 && schema.edges > 0;
             let semantic = schema.edge_ids == schema.edges;
-            if schema.edges == 0 || (outline_color.is_none() && !semantic) {
+            if schema.edges == 0 || (!requested_wire && !primary_wire) || (outline_color.is_none() && !semantic && !primary_wire) {
                 continue;
             }
-            let color = outline_color.unwrap_or(wire_color);
             for instance in &draw.instances {
+                let color = if primary_wire { mesh_style_paint(theme, resolve_mesh_style(world_instance_style(state, instance))).line } else { outline_color.unwrap_or(wire_color) };
                 for edge_index in 0..schema.edges {
                     let Ok(edge) = mesh.edge(edge_index) else { continue };
                     let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
@@ -10324,8 +10533,6 @@ fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme,
             }
         }
     }
-    let selected: HashSet<String> = state.component_ids.iter().cloned().collect();
-    let preview: HashSet<String> = state.marquee_preview_ids.iter().cloned().collect();
     for draw in &state.draws {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
             continue;
@@ -10335,6 +10542,8 @@ fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme,
             continue;
         }
         for instance in &draw.instances {
+            let selected = world_instance_selected_components(state,instance,&state.granularity);
+            let preview: HashSet<String> = state.marquee_preview_ids.iter().filter(|_|state.active_object_id.as_deref()==Some(&instance.id)).cloned().collect();
             let hovered = instance_hovered_component_id(state, &instance.id);
             if state.granularity.as_str() != "edge" {
                 continue;
@@ -10361,6 +10570,8 @@ fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme,
             };
             let Ok(schema) = mesh.schema() else { continue };
             for instance in &draw.instances {
+                let selected = world_instance_selected_components(state,instance,&state.granularity);
+                let preview: HashSet<String> = state.marquee_preview_ids.iter().filter(|_|state.active_object_id.as_deref()==Some(&instance.id)).cloned().collect();
                 let hovered = instance_hovered_component_id(state, &instance.id);
                 if hovered.is_none() && selected.is_empty() && preview.is_empty() {
                     continue;
@@ -10383,21 +10594,29 @@ fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme,
             }
         }
     }
-    if state.selection_targets.vertex || state.granularity == "vertex" {
+    {
         let wire_color = [0.55, 0.65, 0.8, 0.9];
         for draw in &state.draws {
             let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
                 continue;
             };
             let Ok(schema) = mesh.schema() else { continue };
+            if schema.vertex_ids != schema.vertices { continue; }
+            let primary_point = schema.indices == 0 && schema.edges == 0;
+            if !primary_point && !state.selection_targets.vertex && state.granularity != "vertex" { continue; }
             for instance in &draw.instances {
+                let selected = world_instance_selected_components(state,instance,"vertex");
+                let preview: HashSet<String> = state.marquee_preview_ids.iter().filter(|_|state.active_object_id.as_deref()==Some(&instance.id)).cloned().collect();
                 let hovered = instance_hovered_component_id(state, &instance.id);
                 for vertex_index in 0..schema.vertices {
                     let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
-                    let id = world_mesh_component_id(mesh, Mesh3dField::VertexIds, vertex_index).to_string();
+                    let group = world_mesh_component_id(mesh, Mesh3dField::VertexIds, vertex_index);
+                    if group == u32::MAX { continue; }
+                    let id = group.to_string();
                     let center = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
-                    let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered).unwrap_or((wire_color, VERTEX_BASE_SCALE));
-                    if !state.selection_targets.vertex && component_overlay_color(&id, &selected, &preview, &hovered).is_none() {
+                    let base_color = if primary_point { mesh_style_paint(theme, resolve_mesh_style(world_instance_style(state, instance))).line } else { wire_color };
+                    let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered).unwrap_or((base_color, VERTEX_BASE_SCALE));
+                    if !primary_point && !state.selection_targets.vertex && component_overlay_color(&id, &selected, &preview, &hovered).is_none() {
                         continue;
                     }
                     let d = vertex_marker_half_extent(camera, viewport, center, scale);
@@ -10466,16 +10685,23 @@ impl WorldFaceOverlayScan {
 
     fn step(&mut self, state: &World3dState) -> WorldFaceOverlayScanStep {
         if let Some(face_id) = self.candidate {
+            let instance = &state.draws.get(usize::from(self.draw)).expect("retained overlay draw").instances[usize::from(self.instance)];
             if self.preview < state.marquee_preview_ids.len() {
-                let matches = decimal_component_id_matches(&state.marquee_preview_ids[self.preview], face_id);
+                let matches = state.active_object_id.as_deref()==Some(&instance.id) && decimal_component_id_matches(&state.marquee_preview_ids[self.preview], face_id);
                 self.preview += 1;
                 return if matches { self.finish_candidate(Some(0)) } else { WorldFaceOverlayScanStep::Pending };
             }
             if self.hovered {
                 return self.finish_candidate(Some(1));
             }
-            if self.selected < state.component_ids.len() {
-                let matches = decimal_component_id_matches(&state.component_ids[self.selected], face_id);
+            if self.selected < state.gumball_selection_ids.len() {
+                let matches = world_component_preview_target(state,&state.gumball_selection_ids[self.selected],"face").is_some_and(|(object,group)|object==instance.id && group==face_id);
+                self.selected += 1;
+                return if matches { self.finish_candidate(Some(2)) } else { WorldFaceOverlayScanStep::Pending };
+            }
+            let numeric = self.selected - state.gumball_selection_ids.len();
+            if instance.component_source.is_none() && state.active_object_id.as_deref()==Some(&instance.id) && numeric < state.component_ids.len() {
+                let matches = decimal_component_id_matches(&state.component_ids[numeric],face_id);
                 self.selected += 1;
                 return if matches { self.finish_candidate(Some(2)) } else { WorldFaceOverlayScanStep::Pending };
             }
@@ -11128,7 +11354,7 @@ fn retained_gumball_preview_model(state: &World3dState, draw_index: usize, insta
     let selected = gesture.selected[..usize::from(gesture.selected_len)]
         .iter()
         .flatten()
-        .any(|token| state.interaction_objects.resolve(*token).is_some_and(|entry| entry.kind == WorldInteractionObjectKind::Instance && entry.values[0] == draw_index as f32 && entry.values[1] == instance_index as f32));
+        .any(|target| state.interaction_objects.resolve(target.object).is_some_and(|entry| entry.kind == WorldInteractionObjectKind::Instance && entry.values[0] == draw_index as f32 && entry.values[1] == instance_index as f32));
     if !selected {
         return model;
     }
@@ -12000,15 +12226,12 @@ struct World3dSceneMeshEntry {
 }
 
 impl World3dSceneMeshEntry {
-    /// 🧊️ Whether the entry carries a drawable triangle buffer of its own. `false` means the entry
-    /// is a REFERENCE (`url` or `kind`) the renderer resolves, not a mesh the wire already spelled.
+    /// 🧊️ Retains original surface, wire, and point geometry in the Scene mesh owner.
     fn has_inline_geometry(&self) -> bool {
-        self.data.vertex_count() > 0 && self.data.indices.len() >= 3
+        !self.data.edge_positions.is_empty() || (self.data.vertex_count() > 0 && (self.data.indices.len() >= 3 || (self.data.indices.is_empty() && self.data.vertex_ids.iter().any(|id|*id!=u32::MAX))))
     }
 
-    /// 🌉️ Whether this entry names a mesh at all. A wire-only record (a polyline preview that
-    /// carries `data` with fewer than three indices and neither a url nor a kind) names none, and is
-    /// dropped exactly as it always was.
+    /// 🌉️ Resolves retained inline geometry or an authored mesh reference.
     fn names_a_mesh(&self) -> bool {
         self.has_inline_geometry() || self.url.is_some() || self.kind.is_some()
     }
@@ -12138,6 +12361,10 @@ struct World3dSceneFitRecord {
 /// snapshot boundary used by the camera-fit lane.
 fn sync_world3d_projection_content_frame(state: &mut World3dState) {
     if state.projection_frame_policy == Viewport3dProjectionFramePolicy::PreserveCamera || !state.projection_frame_owed {
+        return;
+    }
+    if state.camera_user_moved {
+        state.projection_frame_owed = false;
         return;
     }
     if state.scene_bridge.is_some()
@@ -12360,6 +12587,7 @@ pub fn step_world3d_camera_fit(state: &mut World3dState) -> World3dCameraFitStep
     {
         return World3dCameraFitStep::Pending;
     }
+    sync_world3d_projection_content_frame(state);
     if let Some((minimum, maximum)) = request.bounds {
         return apply_world3d_camera_fit(state, key, request, minimum, maximum);
     }
@@ -12444,6 +12672,10 @@ struct World3dSceneSelectionRecord {
     method: Option<String>,
     #[serde(default)]
     ids: Vec<String>,
+    #[serde(default)]
+    gumball_selection_ids: Vec<String>,
+    #[serde(default)]
+    gumball_target: Option<[f32; 3]>,
     #[serde(default)]
     hovered_id: Option<String>,
     #[serde(default)]
@@ -13080,29 +13312,35 @@ fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) 
     }
     state.scene_selection_digest = Some(digest);
     let Ok(record) = serde_json::from_str::<World3dSceneSelectionRecord>(selection_json) else { return };
+    let component_ids:Vec<String>=record.component_ids.iter().filter_map(scene_component_id_text).collect();
+    let (hovered_object,hovered_mode,hovered_id)=record.hovered_component.map_or((None,None,None),|hovered|(hovered.object_id,hovered.mode,hovered.id.as_ref().and_then(scene_component_id_text)));
+    let gumball_target=record.gumball_target.filter(|target|target.iter().all(|value|value.is_finite()));
+    let changed=state.selected_ids!=record.ids || state.gumball_selection_ids!=record.gumball_selection_ids || state.gumball_target!=gumball_target
+        || state.local_hover_id!=record.hovered_id || state.local_hover_granularity_id.is_some() || state.component_ids!=component_ids
+        || state.hovered_component_object_id!=hovered_object || state.hovered_component_mode!=hovered_mode || state.hovered_component_id!=hovered_id
+        || state.active_object_id!=record.active_object_id || state.gumball_config!=record.gumball_config || state.gumball_live_dispatch!=record.gumball_live_dispatch.unwrap_or(false)
+        || record.method.as_ref().is_some_and(|method|state.selection_method!=*method) || record.granularity.as_ref().is_some_and(|granularity|state.granularity!=*granularity)
+        || record.targets.as_ref().is_some_and(|targets|state.selection_targets!=*targets) || record.show_edges.is_some_and(|show_edges|state.show_edges!=show_edges)
+        || record.transform_mode.as_ref().is_some_and(|mode|state.transform_mode!=*mode);
     if let Some(method) = record.method {
         state.selection_method = method;
     }
     state.selected_ids = record.ids;
+    state.gumball_selection_ids = record.gumball_selection_ids;
+    state.gumball_target = gumball_target;
     state.local_hover_id = record.hovered_id;
     state.local_hover_granularity_id = None;
     if let Some(granularity) = record.granularity {
         state.granularity = granularity;
     }
-    if !record.component_ids.is_empty() {
-        state.component_ids = record.component_ids.iter().filter_map(scene_component_id_text).collect();
-    }
-    if let Some(hovered) = record.hovered_component {
-        state.hovered_component_object_id = hovered.object_id;
-        state.hovered_component_mode = hovered.mode;
-        state.hovered_component_id = hovered.id.as_ref().and_then(scene_component_id_text);
-    }
+    state.component_ids = component_ids;
+    state.hovered_component_object_id = hovered_object;
+    state.hovered_component_mode = hovered_mode;
+    state.hovered_component_id = hovered_id;
     if let Some(targets) = record.targets {
         state.selection_targets = targets;
     }
-    if let Some(active) = record.active_object_id {
-        state.active_object_id = Some(active);
-    }
+    state.active_object_id = record.active_object_id;
     if let Some(show_edges) = record.show_edges {
         state.show_edges = show_edges;
     }
@@ -13111,6 +13349,7 @@ fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) 
     }
     state.gumball_config = record.gumball_config;
     state.gumball_live_dispatch = record.gumball_live_dispatch.unwrap_or(false);
+    if changed {advance_world3d_view_revision(state);}
 }
 
 /// 🖼️ Applies the scene's vortex/attraction/target-volume/reference JSON lanes — the same payloads
@@ -13380,14 +13619,7 @@ pub fn render_world_3d(
         let paint_texture = schema.filter(|schema| schema.uvs == schema.vertices && schema.uvs > 0).and_then(|_| state.mesh_paint_textures.get(&draw.mesh_key)).map(|raster| raster.identity);
         let [metalness, roughness] = world3d_standard_material_for_mesh(state, &draw.mesh_key, neutral_material);
         for (instance_index, source) in draw.instances.iter().enumerate() {
-            let style = MeshStyleState {
-                disabled: state.disabled_instance_ids.contains(&source.id),
-                provisional: state.provisional_instance_ids.contains(&source.id),
-                celebrating: state.celebrating_instance_ids.contains(&source.id),
-                selected: source.selected,
-                highlighted: state.highlighted_instance_ids.contains(&source.id),
-                hovered: source.hovered,
-            };
+            let style = world_instance_style(state, source);
             let mut instance = world3d_style_paint(theme, style, has_vertex_colors, source.clone());
             let style_kind = resolve_mesh_style(style);
             instance.material.metalness = metalness;
@@ -14249,25 +14481,16 @@ fn selection_method_wire_str(method: SelectionMethod) -> &'static str {
 ///
 /// 🎯️ Validates a component target against the original retained instance and mesh label.
 fn world_component_preview_target<'a>(state: &World3dState, id: &'a str, granularity: &str) -> Option<(&'a str, u32)> {
-    let (address, source) = id.split_once('~').map_or((id, None), |(address, source)| (address, Some(source)));
-    let (prefix, group) = address.rsplit_once('.')?;
-    let (instance_id, kind) = prefix.rsplit_once('.')?;
-    if kind != granularity || !matches!(kind, "vertex" | "edge" | "face") || group.is_empty() || (group.len() > 1 && group.starts_with('0')) || !group.bytes().all(|byte| byte.is_ascii_digit()) { return None; }
-    let group = group.parse::<u32>().ok()?;
-    let (draw, instance) = state.draws.iter().find_map(|draw| draw.instances.iter().find(|instance| instance.id == instance_id).map(|instance| (draw, instance)))?;
-    match (source, instance.component_source) {
-        (None, None) => {},
-        (Some(source), Some(current)) => {
-            let mut fields = source.split('~');
-            let handle = fields.next()?; let label = fields.next()?; let revision = fields.next()?;
-            if fields.next().is_some() || ComponentSource3d::new(handle, revision)? != current || label.is_empty() || label.starts_with('0') || label.len() > 20 || !label.bytes().all(|byte| byte.is_ascii_digit()) { return None; }
-            let label = label.parse::<u64>().ok()?;
-            let field = match kind { "vertex" => Mesh3dField::VertexIds, "edge" => Mesh3dField::EdgeIds, _ => Mesh3dField::FaceIds };
-            if state.meshes.get(&draw.mesh_key)?.component_label(field, group).ok()?? != label { return None; }
-        }
-        _ => return None,
-    }
-    Some((instance_id, group))
+    let address = WorldComponentAddress::parse(id, granularity)?;
+    let (draw, instance) = state.draws.iter().find_map(|draw| draw.instances.iter().find(|instance| instance.id == address.object).map(|instance| (draw, instance)))?;
+    address.matches_source(state, instance.component_source, &draw.mesh_key).then_some((address.object, address.group))
+}
+
+/// 🖍️ Resolves source targets per instance while retaining the ordinary active-object projection.
+fn world_instance_selected_components(state:&World3dState,instance:&Instance3d,kind:&str)->HashSet<String> {
+    let mut selected: HashSet<String> = state.gumball_selection_ids.iter().filter_map(|id|world_component_preview_target(state,id,kind)).filter(|(object,_)|*object==instance.id).map(|(_,group)|group.to_string()).collect();
+    if instance.component_source.is_none() && state.active_object_id.as_deref()==Some(&instance.id) { selected.extend(state.component_ids.iter().cloned()); }
+    selected
 }
 
 /// 🕹️ Projects the original encoded interaction targets into the existing local preview fields.
@@ -14293,12 +14516,18 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
     }
     if action.action == "interactionSelect" {
         let Some(merge) = args.get("merge").and_then(|value| value.as_str()).and_then(MergeMode::from_wire_label) else { return; };
-        state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
         if let Some(mode) = component_mode {
-            state.component_ids = merge_string_ids(&state.component_ids, &components, merge);
+            state.gumball_selection_ids = merge_string_ids(&state.gumball_selection_ids, &ids, merge);
+            let selected: Vec<(String,u32)> = state.gumball_selection_ids.iter().filter_map(|id| world_component_preview_target(state,id,&mode).map(|(object,group)|(object.to_string(),group))).collect();
+            state.selected_ids = selected.iter().map(|(object,_)|object.clone()).collect::<std::collections::BTreeSet<_>>().into_iter().collect();
+            let retained = |object:&str|selected.iter().any(|(selected,_)|selected==object);
+            state.active_object_id = component_object.filter(|object|retained(object)).or_else(||state.active_object_id.take().filter(|object|retained(object))).or_else(||selected.first().map(|(object,_)|object.clone()));
+            state.component_ids = selected.iter().filter(|(object,_)|Some(object)==state.active_object_id.as_ref()).map(|(_,group)|group.to_string()).collect::<std::collections::BTreeSet<_>>().into_iter().collect();
             state.granularity = mode;
-            state.active_object_id = component_object;
-        } else if merge == MergeMode::Replace { state.component_ids.clear(); }
+        } else {
+            state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
+            if merge == MergeMode::Replace { state.gumball_selection_ids.clear();state.component_ids.clear();state.active_object_id=None; }
+        }
     } else if component_mode.is_some() {
         state.hovered_component_id = components.into_iter().next();
         state.hovered_component_object_id = component_object;
@@ -14583,7 +14812,9 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
                         let dy = screen[1] - local_y;
                         let dist = (dx * dx + dy * dy).sqrt();
                         if dist <= PICK_VERTEX_SCREEN_PX && best.as_ref().is_none_or(|(best_dist, _, _)| dist < *best_dist) {
-                            let id = world_mesh_component_id(mesh, Mesh3dField::VertexIds, vertex_index).to_string();
+                            let group = world_mesh_component_id(mesh, Mesh3dField::VertexIds, vertex_index);
+                    if group == u32::MAX { continue; }
+                    let id = group.to_string();
                             best = Some((dist, id, instance.id.clone()));
                         }
                     }

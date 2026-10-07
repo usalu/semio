@@ -53,7 +53,7 @@ pub fn definition() -> WindowKindDefinition {
 /// independent of the editor (contract §2.2) by sharing the schema, never an editor window.
 pub fn render(composed: &WiresComposed) -> UiAssemblyResult<BuiltNode> {
     let (camera_x, camera_y, zoom) = board_snapshot_camera(&composed.board);
-    let layers = crate::schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot);
+    let layers: Vec<semio_framework_pack_json::Value> = crate::schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot).iter().map(semio_framework_pack_json::from_dsl_value).collect();
     semio_framework_plugin::scene_surface(
         WIRES_VIEW_CANVAS_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,

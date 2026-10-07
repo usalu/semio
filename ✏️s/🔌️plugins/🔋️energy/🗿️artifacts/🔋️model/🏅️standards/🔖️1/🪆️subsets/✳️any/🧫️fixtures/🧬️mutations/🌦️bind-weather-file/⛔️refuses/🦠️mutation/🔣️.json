@@ -1,4 +1,11 @@
 {
   "mutation": "bindWeatherFile",
-  "targetUri": "not a uri"
+  "target": {
+    "artifactId": "",
+    "dialect": {
+      "artifactKind": "",
+      "standard": "",
+      "subset": ""
+    }
+  }
 }

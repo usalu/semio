@@ -3,7 +3,8 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::ScaleTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_transform_diff, generation3d_vector_literal, GENERATION3D_SCALE_KINDS};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_transform_diff,generation3d_vector_literal,GENERATION3D_SCALE_KINDS};
+
 use crate::standards::v1::subsets::any::schema::transforms::compose_scale;
 use crate::Generation3dSnapshot;
 

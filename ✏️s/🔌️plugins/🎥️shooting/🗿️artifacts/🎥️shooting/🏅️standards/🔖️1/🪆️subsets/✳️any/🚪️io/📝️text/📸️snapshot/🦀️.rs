@@ -139,7 +139,7 @@ pub(crate) fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Re
         format_subset: "*".into(),
     };
     let source = semio_framework_plugin::ErasedComposeSource {
-        dialect: semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("drawing") },
+        dialect: semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("drawing") },
         payload: semio_framework_plugin::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing)),
     };
     let composed = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
@@ -152,3 +152,70 @@ pub(crate) fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Re
 }
 }
 pub use snapshot_wire_codec::*;
+
+mod scene_native_codec {
+use super::*;
+use crate::standards::v1::subsets::any::schema::*;
+use semio_framework_pack_json::{json,Value};
+pub fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, u32, u32), String> {
+    let (drawing, width, height) = shooting_scene_to_semio_drawing(snapshot);
+    let svg = shooting_drawing_to_svg_text(&drawing)?;
+    Ok((svg, width, height))
+}
+
+pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    let dsl_value: semio_framework_value::DslValue = semio_framework_pack_json::to_dsl_value(value);
+    let snapshot: ShootingSnapshot = semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| error.to_string())?;
+    shooting_scene_svg(&snapshot)
+}
+
+pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera, fit: bool) -> String {
+    let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
+    let camera = crate::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
+    let scene = &snapshot.scene;
+    let mut camera_value = json!({
+        "position": vec3(camera.position),
+        "target": vec3(camera.target),
+        "zoom": camera.zoom,
+        "fov": camera.fov,
+        "projection": camera.projection.clone().unwrap_or_else(|| "perspective".into()),
+    });
+    if let (Some(object), Some(up)) = (camera_value.as_object_mut(), camera.up) {
+        object.insert("up", vec3(up));
+    }
+    let mut value = json!({
+        "assetUrl": asset.url.as_str(),
+        "camera": camera_value,
+        "fit": { "enabled": fit, "padding": 1.25 },
+        "lights": {
+            "ambientIntensity": scene.ambient.intensity,
+            "ambientColor": scene.ambient.color.as_str(),
+            "sunAzimuth": scene.sun.azimuth,
+            "sunElevation": scene.sun.elevation,
+            "sunIntensity": scene.sun.intensity,
+            "sunColor": scene.sun.color.as_str(),
+        },
+        "width": shot.width,
+        "height": shot.height,
+        "format": shot.format.as_str(),
+        "shape": if shot.shape == "ellipse" { "ellipse" } else { "rectangle" },
+        "shadowEnabled": scene.shadow.enabled,
+        "material": {
+            "color": scene.material.color.as_str(),
+            "metalness": scene.material.metalness,
+            "roughness": scene.material.roughness,
+            "emissive": scene.material.emissive.as_str(),
+            "emissiveIntensity": scene.material.emissive_intensity,
+            "stroke": scene.material.stroke.as_str(),
+        },
+    });
+    if let Some(object) = value.as_object_mut() {
+        let background = shot.background.clone().unwrap_or_else(|| scene.background.clone());
+        if !is_transparent_shooting_background(&background) {
+            object.insert("background", json!(background.as_str()));
+        }
+    }
+    value.to_string()
+}
+}
+pub use scene_native_codec::{shooting_scene_svg,shooting_document_json_to_svg,shooting_icon_render_request_json};

@@ -26,7 +26,7 @@ fn optional_bool(value:&F)->Result<Option<bool>>{match value{F::Absent=>Ok(None)
 struct Census{limits:SqliteDatabaseLimits,rows:usize,bytes:usize}
 impl Census{
  fn row(&mut self,bytes:usize,native:&mut NativeDecodeControl<'_>)->Result<()>{let rows=self.rows.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"CommonMark semantic rows overflow"))?;let total=sum(self.bytes,bytes)?;if rows>self.limits.max_rows{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"CommonMark semantic rows exceed caller limit"))}if total>self.limits.max_value_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark semantic cells exceed caller limit"))}native.step()?;self.rows=rows;self.bytes=total;Ok(())}
- fn edges(&mut self,values:&[F],owners:&mut[u8],parent:Option<usize>,native:&mut NativeDecodeControl<'_>)->Result<()>{for value in values{let index=usize::try_from(uint(value,u64::MAX)?).map_err(|_|invalid())?;if parent.is_some_and(|parent|index<=parent){return Err(invalid())}let Some(owner)=owners.get_mut(index)else{return Err(invalid())};if *owner!=0{return Err(invalid())}*owner=1;self.row(32,native)?;}Ok(())}
+ fn edges(&mut self,values:&[F],owners:&mut[u8],parent:Option<usize>,native:&mut NativeDecodeControl<'_>)->Result<()>{for value in values{let index=usize::try_from(uint(value,u64::MAX)?).map_err(|_|invalid())?;if parent.is_some_and(|parent|index<=parent){return Err(invalid())}let Some(owner)=owners.get_mut(index)else{return Err(invalid())};*owner=1;self.row(32,native)?;}Ok(())}
 }
 /// 🫳️ Pays only actual borrowed graph frontiers before the owner's existing flat binder.
 pub(super)fn admit_record(value:&R,limits:SqliteDatabaseLimits,native:&mut NativeDecodeControl<'_>)->Result<()>{

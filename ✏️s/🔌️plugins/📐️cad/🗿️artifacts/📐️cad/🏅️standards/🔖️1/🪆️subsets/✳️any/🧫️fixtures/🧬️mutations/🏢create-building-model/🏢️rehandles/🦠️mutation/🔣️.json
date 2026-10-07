@@ -1,5 +1,12 @@
 {
   "mutation": "createBuildingModel",
   "childId": "cad-building-2",
-  "target": "cad-building-2!s.stdio.semio@v1/model"
+  "target": {
+    "artifactId": "cad-building-2",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model"
+    }
+  }
 }

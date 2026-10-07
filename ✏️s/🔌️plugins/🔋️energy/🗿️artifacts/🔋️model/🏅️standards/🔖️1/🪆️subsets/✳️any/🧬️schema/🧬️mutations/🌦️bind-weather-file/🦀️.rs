@@ -1,4 +1,4 @@
-//! 🌦️ Energy model mutation — `BindWeatherFile`: Attaches the `weather` link slot to an `🌦️epw` stdio artifact addressed by its `ArtifactRef` URI. The link is pinned to the target's head; the model never embeds weather bytes.
+//! 🌦️ Energy model mutation — `BindWeatherFile`: Attaches the `weather` link slot to an `🌦️epw` stdio artifact addressed by its `ArtifactRef` identity. The link is pinned to the target's head; the model never embeds weather bytes.
 
 use crate::diff::EnergyModelDiff;
 use crate::mutations::EnergyModelMutation;
@@ -6,18 +6,18 @@ use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
-/// 🌦️ `bind-weather-file` payload. Attaches the `weather` link slot to an `🌦️epw` stdio artifact addressed by its `ArtifactRef` URI. The link is pinned to the target's head; the model never embeds weather bytes.
+/// 🌦️ `bind-weather-file` payload. Attaches the `weather` link slot to an `🌦️epw` stdio artifact addressed by its `ArtifactRef` identity. The link is pinned to the target's head; the model never embeds weather bytes.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "bind-weather-file")]
 pub struct BindWeatherFile {
-    pub target_uri: String,
+    pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn bind_weather_file(target_uri: String) -> EnergyModelMutation {
-    EnergyModelMutation::BindWeatherFile(BindWeatherFile { target_uri })
+pub fn bind_weather_file(target: semio_framework_artifact_reference::ArtifactRef) -> EnergyModelMutation {
+    EnergyModelMutation::BindWeatherFile(BindWeatherFile { target })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for BindWeatherFile {
@@ -35,11 +35,11 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for BindWe
 }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind weather file {}", self.target_uri), &format!("Wetterdatei {} binden", self.target_uri))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind weather file {}", self.target.artifact_id), &format!("Wetterdatei {} binden", self.target.artifact_id))
     }
 
     fn target(&self) -> Vec<String> {
-        vec![self.target_uri.clone()]
+        vec![self.target.artifact_id.clone()]
     }
 }
 //#endregion 🔖️Mutation

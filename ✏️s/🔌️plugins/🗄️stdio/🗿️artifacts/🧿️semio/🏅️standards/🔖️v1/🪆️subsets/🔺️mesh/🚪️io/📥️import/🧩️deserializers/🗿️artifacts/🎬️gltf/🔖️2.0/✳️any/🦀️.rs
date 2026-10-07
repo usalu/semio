@@ -14,8 +14,9 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_gltf::engine::{decode_accessor, decode_data_uri, GltfComponentType};
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{decode_accessor, decode_data_uri};
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
 use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfDocument, GltfImage, GltfPrimitive};
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
 

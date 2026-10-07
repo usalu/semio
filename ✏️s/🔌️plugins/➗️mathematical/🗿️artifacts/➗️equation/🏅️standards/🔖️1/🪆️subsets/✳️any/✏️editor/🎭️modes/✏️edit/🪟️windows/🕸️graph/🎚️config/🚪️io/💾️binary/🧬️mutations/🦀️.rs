@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::equation::modes::edit::windows::graph::config::mutations::*;
 use crate::editor::equation::modes::edit::windows::graph::config::{EquationCamera, EquationGraphWindowConfig};
-use set_camera::SetCamera;
 
 impl protocol::OpBinary for EquationGraphWindowConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

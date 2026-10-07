@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::{shooting_scene_svg,shooting_document_json_to_svg,shooting_icon_render_request_json};
 use super::*;
 use crate::SHOOTING_DOCUMENT_SCHEMA;
 

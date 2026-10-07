@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "path",
-    "markup"
+    "document"
   ],
   "properties": {
     "path": {
@@ -25,18 +25,13 @@
         "order": 10
       }
     },
-    "markup": {
-      "type": "string",
+    "document": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument",
       "x-semio-ui": {
-        "widget": "multiline",
         "role": "value",
         "label": {
-          "en": "VML markup",
-          "de": "VML-Markup"
-        },
-        "description": {
-          "en": "XML source of the legacy VML drawing part.",
-          "de": "XML-Quelltext des veralteten VML-Zeichnungsteils."
+          "en": "VML document",
+          "de": "VML-Dokument"
         },
         "group": "value",
         "order": 20

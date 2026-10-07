@@ -1,16 +1,17 @@
 syntax = "proto3";
 package semio.s.stdio.semio.v1.kit.mutations;
+import "framework/schema/artifact-reference.proto";
 import "📸️set-snapshot/🛰️.proto";
 import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🛰️.proto";
-message CreateObject { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message CreateObject { string child_id = 1 [json_name = "child_id"]; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
 message DeleteObject { string child_id = 1 [json_name = "child_id"]; }
-message CreateModel { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message CreateModel { string child_id = 1 [json_name = "child_id"]; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
 message DeleteModel { string child_id = 1 [json_name = "child_id"]; }
-message CreateProperties { string child_id = 1 [json_name = "child_id"]; semio.framework.io.ArtifactRef target = 2; }
+message CreateProperties { string child_id = 1 [json_name = "child_id"]; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
 message DeleteProperties {}
-message BindRepresentation { semio.framework.io.ArtifactRef target = 1; semio.os.store.LinkPin pin = 2; string role = 3; }
+message BindRepresentation { semio.framework.schema.artifact_reference.ArtifactRef target = 1; semio.os.store.LinkPin pin = 2; string role = 3; }
 message UnbindRepresentation { uint64 index = 1; }
 message ChangeRepresentationPin { uint64 index = 1; semio.os.store.LinkPin pin = 2; }
 message AddType { string id = 1; string name = 2; string category = 3; }

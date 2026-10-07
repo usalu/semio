@@ -94,3 +94,9 @@ pub fn export_responses_json(responses: &[FormsResponse]) -> String { collect(re
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+
+/// 📋️ One response answer as logical cells before native CSV encoding.
+pub fn response_row(response: &FormsResponse, answer: &FormsAnswer) -> Vec<String> {
+    vec![response.id.clone(), response.submitted_at.to_string(), response.definition_version.clone(), answer.question_id.clone(), answer.label.clone(), answer.kind.clone(), semio_framework_pack_json::to_json_string(&answer.value)]
+}

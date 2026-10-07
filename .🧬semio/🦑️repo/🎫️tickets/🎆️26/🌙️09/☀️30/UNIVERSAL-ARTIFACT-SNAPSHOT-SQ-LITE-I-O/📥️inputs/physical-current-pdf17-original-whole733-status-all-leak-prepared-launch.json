@@ -1,8 +1,9 @@
 {
-  "status": "prepared, not executed; pending single private Native lane",
+  "status": "Original prepared command launched in resumed physical lane",
   "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/pdf17-status-all-leak-native-artifacts' bun run nx run @semio-tech/stdio-pdf-rs:test '--args=--lib --features component-app-assembly --no-fail-fast --status-level all --final-status-level all' --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-pdf17-original-whole733-status-all-leak-diagnostic.log' 2>&1",
   "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-pdf17-original-whole733-status-all-leak-diagnostic.log",
   "profile": "quick",
   "originalExecutionBudgetMs": 300000,
-  "scope": "Full actual owning test route, component-app-assembly; evidence-directed status all to retain pending frontier. Previous733/733 receipt distinct from prior leak-only timeout; no timeout or scope change."
+  "scope": "Full actual owning test route, component-app-assembly; evidence-directed status all to retain pending frontier. Previous733/733 receipt distinct from prior leak-only timeout; no timeout or scope change.",
+  "launchedAt": "2026-10-06T11:36:00.587752+00:00"
 }

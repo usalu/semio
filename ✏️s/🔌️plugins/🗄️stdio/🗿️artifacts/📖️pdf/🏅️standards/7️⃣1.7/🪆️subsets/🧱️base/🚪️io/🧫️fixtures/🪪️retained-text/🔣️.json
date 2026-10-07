@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "pdfdoc-title",
+      "native": "<52e973756de9>",
+      "text": "Résumé",
+      "date": "D:20261007",
+      "ownedDate": {
+        "year": 2026,
+        "month": 10,
+        "day": 7,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "offsetMinutes": null
+      }
+    },
+    {
+      "id": "unicode-title",
+      "native": "<FEFF0047007200FC00DF0065002003BB>",
+      "text": "Grüße λ",
+      "date": "D:20260918120000+02'00'",
+      "ownedDate": {
+        "year": 2026,
+        "month": 9,
+        "day": 18,
+        "hour": 12,
+        "minute": 0,
+        "second": 0,
+        "offsetMinutes": 120
+      }
+    }
+  ]
+}

@@ -15,7 +15,7 @@ async fn home_document_text_round_trips_through_the_store() {
     use crate::SHomeSnapshot;
     let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
     let envelope = store::create_document_envelope::<SHomeSnapshot, SHomeMutation>("s.home", "home", projection, None);
-    let mut store: store::ArtifactStore<SHomeSnapshot, SHomeMutation> = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut store: store::ArtifactStore<SHomeSnapshot, SHomeMutation> = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<SHomeSnapshot, SHomeMutation>());
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_catalog_generation(3)], transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;

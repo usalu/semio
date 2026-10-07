@@ -9,7 +9,7 @@
 
 use crate::STDIO_JPG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot as owned_text;
+
 
 //#region Jfif
 /// 📏️ JFIF APP0 `units` byte (ITU-T T.871 / JFIF 1.02 §). `Aspect` means `x_density`/
@@ -186,11 +186,6 @@ pub struct JpgSnapshot {
     #[state(artifact)]
     #[value(default, with = "pack::value::bytes", serialize_controlled_with = "pack::value::bytes::to_value_controlled")]
     pub pixels: Vec<u8>,
-    /// 🎚️ Quality parameter `engine::encode_jpg` scales the Annex K quantization tables by
-    /// (IJG convention, `1..=100`). `None` = the engine's own default (90).
-    #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub re_encode_quality: Option<u8>,
 
     // JFIF APP0 (ITU-T T.871 / JFIF 1.02). Always first-class (non-optional): every JFIF file
     // carries exactly one of these; a never-decoded snapshot keeps the spec's own defaults
@@ -250,7 +245,6 @@ impl Default for JpgSnapshot {
             width: 0,
             height: 0,
             pixels: Vec::new(),
-            re_encode_quality: None,
             jfif_version: (1, 1),
             jfif_density_units: JfifDensityUnits::Aspect,
             jfif_x_density: 1,

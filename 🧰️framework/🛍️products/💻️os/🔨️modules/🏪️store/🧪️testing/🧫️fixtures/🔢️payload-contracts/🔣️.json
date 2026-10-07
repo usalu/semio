@@ -1,0 +1,197 @@
+{
+  "scalars": [
+    {
+      "export": "I32",
+      "value": -2147483649,
+      "accepted": false
+    },
+    {
+      "export": "I32",
+      "value": -2147483648,
+      "accepted": true
+    },
+    {
+      "export": "I32",
+      "value": -1,
+      "accepted": true
+    },
+    {
+      "export": "I32",
+      "value": 0,
+      "accepted": true
+    },
+    {
+      "export": "I32",
+      "value": 2147483647,
+      "accepted": true
+    },
+    {
+      "export": "I32",
+      "value": 2147483648,
+      "accepted": false
+    },
+    {
+      "export": "I32",
+      "value": null,
+      "accepted": false
+    },
+    {
+      "export": "I32",
+      "value": true,
+      "accepted": false
+    },
+    {
+      "export": "I32",
+      "value": {},
+      "accepted": false
+    },
+    {
+      "export": "I32",
+      "value": [],
+      "accepted": false
+    },
+    {
+      "export": "I32",
+      "value": 1.5,
+      "accepted": false
+    },
+    {
+      "export": "I32",
+      "value": "1",
+      "accepted": false
+    },
+    {
+      "export": "NullableI32",
+      "value": null,
+      "accepted": true
+    },
+    {
+      "export": "NullableI32",
+      "value": -2147483648,
+      "accepted": true
+    },
+    {
+      "export": "NullableI32",
+      "value": 2147483647,
+      "accepted": true
+    },
+    {
+      "export": "NullableI32",
+      "value": -2147483649,
+      "accepted": false
+    },
+    {
+      "export": "NullableI32",
+      "value": 2147483648,
+      "accepted": false
+    },
+    {
+      "export": "NullableI32",
+      "value": true,
+      "accepted": false
+    },
+    {
+      "export": "NullableI32",
+      "value": "1",
+      "accepted": false
+    },
+    {
+      "export": "U64",
+      "value": -1,
+      "accepted": false
+    },
+    {
+      "export": "U64",
+      "value": 0,
+      "accepted": true
+    },
+    {
+      "export": "U64",
+      "value": 1,
+      "accepted": true
+    },
+    {
+      "export": "U64",
+      "value": 9007199254740991,
+      "accepted": true
+    },
+    {
+      "export": "U64",
+      "value": 1.5,
+      "accepted": false
+    },
+    {
+      "export": "U64",
+      "value": true,
+      "accepted": false
+    },
+    {
+      "export": "U64",
+      "value": "1",
+      "accepted": false
+    },
+    {
+      "export": "U64",
+      "value": null,
+      "accepted": false
+    },
+    {
+      "export": "U64",
+      "value": {},
+      "accepted": false
+    }
+  ],
+  "wideUnsigned": [
+    {
+      "wire": "-1",
+      "accepted": false
+    },
+    {
+      "wire": "0",
+      "accepted": true
+    },
+    {
+      "wire": "18446744073709551614",
+      "accepted": true
+    },
+    {
+      "wire": "18446744073709551615",
+      "accepted": true
+    },
+    {
+      "wire": "18446744073709551616",
+      "accepted": false
+    }
+  ],
+  "mutations": [
+    {
+      "operation": "setN",
+      "n": 1
+    },
+    {
+      "operation": "setN",
+      "n": 2147483648
+    },
+    {
+      "operation": "restoreN",
+      "n": null
+    },
+    {
+      "operation": "setN",
+      "n": 1,
+      "physicalMs": 0
+    },
+    {
+      "operation": "setN",
+      "n": 1,
+      "physicalMs": -1
+    }
+  ],
+  "mutationValidity": [
+    true,
+    false,
+    true,
+    true,
+    false
+  ]
+}

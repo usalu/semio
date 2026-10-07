@@ -25,7 +25,7 @@ use crate::editor::cad::modes::edit::windows::{building, energy, shape, structur
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
 use crate::op::CadMutation;
-use crate::standards::v1::subsets::any::io::geometry_import::{cad_object_from_model_element, model_element_from_cad_object, objects_from_model_snapshot, CadObject, CAD_OBJECT_PSET};
+use crate::standards::v1::subsets::any::schema::geometry::{cad_object_from_model_element, model_element_from_cad_object, objects_from_model_snapshot, CadObject, CAD_OBJECT_PSET};
 use crate::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
 use crate::standards::v1::subsets::any::schema::inferences::{
     cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE,
@@ -1358,7 +1358,7 @@ fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot, _interacti
 /// the operation carries — the panes' composed model children the object writers decide against, the addressed
 /// window's engagement transient in and its next state out (design §17.4, §20.15).
 fn cad_retained_reduce(input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>) -> Result<(Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Option<CadWorldWindowTransient>), Fault> {
-    let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
+    let ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
     let doc = match context {
         Some(context) => ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone()),
         None => ArtifactView::with_operation(snapshot, history, operation.clone()),
@@ -1651,7 +1651,7 @@ struct CadArtifactStorePreparation {
 }
 
 fn cad_child_retained_bytes<S>(child: &store::ArtifactChild<S>) -> usize {
-    child.child_id.len().saturating_add(child.target.to_uri().len())
+    child.child_id.len()+child.target.artifact_id.len()+child.target.dialect.artifact_kind.len()+child.target.dialect.standard.len()+child.target.dialect.subset.len()
 }
 
 fn cad_snapshot_retained_bytes(snapshot: &CadSnapshot) -> usize {
@@ -2466,12 +2466,12 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
 //#region 🔖️WorkingSceneFixtures
 /// 🌲️ The Concrete Forest Left example's REAL per-pane object content, built straight from the
 /// same fixture JSON `forest_play_scene()`'s (persisted, handle-only) `CadSnapshot` is built from —
-/// see `crate::standards::v1::subsets::any::schema::inferences::forest_pane_bundle`.
+/// see `crate::standards::v1::subsets::any::io::geometry_import::forest_pane_bundle`.
 /// This is the app-layer `CadWorkingScene` counterpart to `forest_play_scene()`: use `forest_play_scene()`
 /// for `drive`/render dispatch (a `CadSnapshot`, composed-child HANDLES only) and this for reading
 /// actual object data in tests/render-path exemplars.
 pub fn forest_working_scene() -> CadWorkingScene {
-    use crate::standards::v1::subsets::any::schema::inferences::forest_pane_bundle;
+    use crate::standards::v1::subsets::any::io::geometry_import::forest_pane_bundle;
     let (objects, geometry) = forest_pane_bundle(CadPaneId::Shape);
     let (building_objects, building_geometry) = forest_pane_bundle(CadPaneId::Building);
     let (energy_objects, energy_geometry) = forest_pane_bundle(CadPaneId::Energy);

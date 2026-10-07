@@ -1,3 +1,4 @@
+import { pdfAnnotationFromNativeJson,pdfAnnotationKindFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts";
 /** 📌️ Independent SQL queries verify appearance states, border geometry and ownership. */
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
@@ -11,7 +12,7 @@ import { writePdfAnnotation,readPdfAnnotation } from "../../📌️annotation/�
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("Native annotation JSON admits complete canonical IEEE scalars and bigint indices",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../../../../🧬️schema/📸️snapshot/🪪️native-json/📌️annotation/🧫️fixtures/🔣️.json",import.meta.url)).text());const value=parsePdfAnnotation(fixture.annotation);expect(value.rect[2]).toEqual({bits:0x3ff0000000000000n});expect(value.border!.width).toEqual({bits:0x3ff0000000000000n});expect(value.markup!.opacity).toEqual({bits:0x3ff0000000000000n});expect(value.markup!.popup).toBe(4294967295n);expect(value.markup!.inReplyTo).toBe(4294967296n);const popup=parsePdfAnnotationKind(fixture.popup);if(popup.kind!=="popup")throw new Error("Fixture popup");expect(popup.parent).toBe(4294967295n);
+  const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/📌️annotation/🧫️fixtures/🔣️.json",import.meta.url)).text());const value=parsePdfAnnotation(pdfAnnotationFromNativeJson(fixture.annotation));expect(value.rect[2]).toEqual({bits:0x3ff0000000000000n});expect(value.border!.width).toEqual({bits:0x3ff0000000000000n});expect(value.markup!.opacity).toEqual({bits:0x3ff0000000000000n});expect(value.markup!.popup).toBe(4294967295n);expect(value.markup!.inReplyTo).toBe(4294967296n);const popup=parsePdfAnnotationKind(pdfAnnotationKindFromNativeJson(fixture.popup));if(popup.kind!=="popup")throw new Error("Fixture popup");expect(popup.parent).toBe(4294967295n);
 });
 
 test("PDF annotation appearances and borders retain optional entity and geometry states",async()=>{

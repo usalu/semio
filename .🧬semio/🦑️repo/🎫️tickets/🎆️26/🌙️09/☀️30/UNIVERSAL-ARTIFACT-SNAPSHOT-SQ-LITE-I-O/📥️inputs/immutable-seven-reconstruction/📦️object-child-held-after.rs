@@ -1,0 +1,8 @@
+fn child<S:Send+'static>(database:&SqliteDatabase,table:&str,subset:&str,references:&mut semio_framework_os_kernel::sqlite_snapshot::artifact::RowIndex<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<Option<store::ArtifactChild<S>>,ValueError>{
+ use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
+ let rows=database.table(table)?;if rows.rows.is_empty(){return Ok(None)}let row=SqliteRow::new(rows.single_row()?,float_columns(table))?;identity(row,4)?;if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio object child owner"))}
+ let reference=references.take(row.integer(3)?,control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"dangling or multiply owned Semio object reference"))?;
+ let mut child=Owned::new(store::ArtifactChild::<S>::new(String::new(),store::os_io::ArtifactRef{artifact_id:String::new(),dialect:store::os_io::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}));
+ child.get_mut().target.artifact_id=reconstruct_text(control,reference.text(1)?)?;child.get_mut().target.dialect.artifact_kind=reconstruct_text(control,reference.text(2)?)?;child.get_mut().target.dialect.standard=reconstruct_text(control,reference.text(3)?)?;child.get_mut().target.dialect.subset=reconstruct_text(control,reference.text(4)?)?;child.get_mut().child_id=reconstruct_text(control,row.text(2)?)?;
+ let view=child.get_mut();validate_semio_child_identity(&view.child_id,&view.target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Ok(Some(child.take()))
+}

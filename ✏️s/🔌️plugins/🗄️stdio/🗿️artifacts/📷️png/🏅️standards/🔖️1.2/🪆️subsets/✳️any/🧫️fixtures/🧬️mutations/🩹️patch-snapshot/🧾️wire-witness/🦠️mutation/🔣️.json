@@ -3,8 +3,8 @@
   "payload": {
     "patch": {
       "operation": "set",
-      "path": "/gama",
-      "value": 45455
+      "path": "/image/samples/0",
+      "value": 7
     }
   }
 }

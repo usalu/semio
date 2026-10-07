@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-media-annotation";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::RemoveMediaAnnotation;
+use crate::standards::v1_7::subsets::e::schema::mutations::RemoveMediaAnnotation;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveMediaAnnotation) -> Result<String, String> {

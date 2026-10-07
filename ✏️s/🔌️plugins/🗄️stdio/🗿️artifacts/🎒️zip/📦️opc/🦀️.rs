@@ -13,7 +13,8 @@ pub use relationship_owners::OpcRelationshipOwners;
 
 use crate::schema::snapshot::ZipEntry;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_xml::schema::snapshot::{validate_xml_document_boundaries, xml_document_from_text, xml_document_to_text_checked, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{validate_xml_document_boundaries, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text_checked};
 
 //#region 🔖️Error
 /// ⚠️ Typed OPC decode/encode failure — an unreadable or non-conformant container never silently

@@ -9,54 +9,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub type JsonDiffText = String;
 //#endregion 🚚️Carrier
 
-#[allow(unused_imports)]
-mod diff_codec {
-use super::*;
-use crate::standards::v_rfc8259::subsets::base::schema::diff::*;
-use crate::schema::snapshot::JsonMember;
-use crate::JsonSnapshot;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use framework_schema::ArtifactSchema;
-use protocol::os_spr::command::DiffAlgebra;
-use std::collections::{HashMap, HashSet};
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::schema::snapshot::JsonValue;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-pub use diff_codec::*;
 
 #[allow(unused_imports)]
 mod diff_codec {

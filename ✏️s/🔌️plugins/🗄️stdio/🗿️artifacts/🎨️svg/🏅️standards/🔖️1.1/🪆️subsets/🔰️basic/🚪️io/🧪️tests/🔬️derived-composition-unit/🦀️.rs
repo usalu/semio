@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1_1::subsets::basic::schema::CODE_FILTER_PRIMITIVE;
+    use crate::standards::v1_1::subsets::basic::schema::conformance::CODE_FILTER_PRIMITIVE;
     use crate::standards::v1_1::subsets::basic::io::SvgBasicBuilder;
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
@@ -12,9 +12,9 @@ mod tests {
         let composed = SvgBasicComposerComposition::compose(&sources).expect("clean document must compose to basic");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         match &composed.snapshot.doc.root {
-            Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. }) => {
-                assert!(attrs.iter().any(|a| a.name == "baseProfile" && a.value == "basic"));
-                assert!(attrs.iter().any(|a| a.name == "version" && a.value == "1.1"));
+            Some(crate::schema::snapshot::SvgNode::Element { attrs, .. }) => {
+                assert!(attrs.iter().any(|a| a.name == "baseProfile" && a.value.text() == Some("basic")));
+                assert!(attrs.iter().any(|a| a.name == "version" && a.value.text() == Some("1.1")));
             }
             other => panic!("expected element root, got {other:?}"),
         }

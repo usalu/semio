@@ -1,5 +1,5 @@
 /** 🧩️ Native chunk fields and exact compression recipes preserve every byte occurrence. */
-import {CompressionSyntaxError,parseCompression,encodeCompression,type DeflateStream, type CompressionCheckpoint} from "../🗜️compression/🟦️.ts";
+import {CompressionSyntaxError,parseCompression,encodeCompression,type DeflateStream, type CompressionCheckpoint} from "../../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
 import {PngSyntaxError,validateHeader,parseScanlines,encodeScanlines,type PngHeader,type PngScanlines} from "../🌈️scanline/🟦️.ts";
 export interface PngText { readonly keyword:string; readonly value:string; readonly language:string; readonly translated:string; readonly compressed:number; readonly stream:DeflateStream|null }
 export interface PngChunk { readonly kind:string; readonly fields:readonly number[]; readonly octets:readonly number[]; readonly text:PngText|null }
@@ -16,7 +16,7 @@ function terminated(bytes:readonly number[],start:number):[number[],number]{cons
 const singleton=["IHDR","PLTE","tRNS","gAMA","cHRM","sRGB","pHYs","tIME","bKGD","IEND"];
 export function validateChunks(header:PngHeader,chunks:readonly PngChunk[]):void{
  validateHeader(header);if(chunks[0]?.kind!=="IHDR"||chunks.at(-1)?.kind!=="IEND")invalid("first or last chunk");for(const kind of singleton)if(chunks.filter(chunk=>chunk.kind===kind).length>1)invalid("singleton chunk");for(const chunk of chunks)if(!/^[A-Za-z]{2}[A-Z][A-Za-z]$/.test(chunk.kind))invalid("chunk type bits");
- const first=chunks.findIndex(chunk=>chunk.kind==="IDAT"),last=chunks.findLastIndex(chunk=>chunk.kind==="IDAT"),palette=chunks.findIndex(chunk=>chunk.kind==="PLTE");if(first<0||chunks.slice(first,last+1).some(chunk=>chunk.kind!=="IDAT"))invalid("IDAT adjacency");const entries=palette<0?0:chunks[palette]!.fields.length/3;
+ const first=chunks.findIndex(chunk=>chunk.kind==="IDAT"),last=chunks.reduce((last,chunk,index)=>chunk.kind==="IDAT"?index:last,-1),palette=chunks.findIndex(chunk=>chunk.kind==="PLTE");if(first<0||chunks.slice(first,last+1).some(chunk=>chunk.kind!=="IDAT"))invalid("IDAT adjacency");const entries=palette<0?0:chunks[palette]!.fields.length/3;
  if(palette>=0&&(palette>first||[0,4].includes(header.colorType)||entries<1||entries>256||!Number.isInteger(entries)||header.colorType===3&&entries>2**header.bitDepth)||palette<0&&header.colorType===3)invalid("palette profile");
  const maximum=2**header.bitDepth-1;for(let at=0;at<chunks.length;at++){const chunk=chunks[at]!,fields=chunk.fields;
   if(["gAMA","cHRM","sRGB"].includes(chunk.kind)&&(at>first||palette>=0&&at>palette))invalid("color metadata order");

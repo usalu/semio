@@ -1,5 +1,5 @@
 import {failTxtProtobufDecode} from "../🔣️protobuf/🟦️.ts";
-import {TxtProtobufReader,txtProtobufKey} from "../🔣️protobuf/🟦️.ts";
+import {TxtProtobufReader, txtProtobufKey} from "../🔣️protobuf/🟦️.ts";
 import {RemoveLinePayload} from "../../../../🧬️schema/🧬️mutations/🗑️remove-line/🟦️.ts";
 
 export const decodeRemoveLineProtobuf = (bytes: Uint8Array): RemoveLinePayload => {

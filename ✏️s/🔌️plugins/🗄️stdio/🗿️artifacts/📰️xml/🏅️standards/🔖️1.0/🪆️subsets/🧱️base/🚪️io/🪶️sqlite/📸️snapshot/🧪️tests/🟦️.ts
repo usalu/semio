@@ -1,3 +1,4 @@
+import {parseXmlSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 /** 🧫️ Shared XML semantic corpus with independent typed SQL queries and edits. */
@@ -94,7 +95,7 @@ test("XML schema-admitted declaration metadata survives logical SQLite independe
 
 test("XML schema-admitted intermediate boundaries preserve every owned field", async () => {
   expect(new AjvDraft07({ strict: false }).validate(snapshotSchema, logical)).toBe(true);
-  const snapshot = parseXmlSnapshot(logical);expect(()=>validateXmlDocumentWireBoundary(snapshot.doc)).toThrow();
+  const snapshot = parseXmlSnapshotJson(logical);expect(()=>validateXmlDocumentWireBoundary(snapshot.doc)).toThrow();
   const db = Database.deserialize(await exportSqliteDatabase(await xmlSnapshotToSqliteDatabase(snapshot)));
   try {
     expect(db.query("SELECT prolog_position_decimal FROM xml_doctype").get()).toEqual({ prolog_position_decimal: "9" });

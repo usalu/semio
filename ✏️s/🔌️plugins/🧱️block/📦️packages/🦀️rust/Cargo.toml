@@ -25,6 +25,7 @@ path = "../../🧬️schema/🧱️shared/🧪️tests/🦀️.rs"
 required-features = ["test-serde"]
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }

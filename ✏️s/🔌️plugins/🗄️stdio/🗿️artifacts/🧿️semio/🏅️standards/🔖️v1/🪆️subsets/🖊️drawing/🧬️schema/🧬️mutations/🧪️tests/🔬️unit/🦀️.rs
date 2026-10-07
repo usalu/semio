@@ -205,7 +205,7 @@ async fn replace_fill_and_change_stroke_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_declared_variant() {
-    assert_eq!(SemioDrawingMutation::kinds().len(), 18);
+    assert_eq!(SemioDrawingMutation::kinds().len(), 19);
     let mutation = SemioDrawingMutation::DeleteLayer(delete_layer::DeleteLayer { id: "l0".into() });
     assert_eq!(mutation.semantics().kind, "delete-layer");
     assert_eq!(mutation.semantics().record, "DeletedLayer");
@@ -227,4 +227,23 @@ fn kinds_match_the_enum_and_the_catalog() {
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
+}
+
+#[test]
+fn drawing_geometry_is_owned_by_schema_and_matches_tiny_skia() {
+    use crate::standards::v1::subsets::drawing::schema::geometry::{compose_affine, transform_point};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/📐️intrinsic-geometry/🔣️.json")).unwrap();
+    let matrix=|key:&str|-> [f64;6]{std::array::from_fn(|at|fixture[key][at].as_f64().unwrap())};
+    let (outer,inner)=(matrix("outer"),matrix("inner"));
+    let actual=compose_affine(&outer,&inner);
+    assert_eq!(actual,matrix("composed"));
+    let point:[f64;2]=std::array::from_fn(|at|fixture["point"][at].as_f64().unwrap());
+    let expected:[f64;2]=std::array::from_fn(|at|fixture["transformed"][at].as_f64().unwrap());
+    assert_eq!(transform_point(&actual,point),expected);
+    let oracle=|m:[f64;6]|resvg::tiny_skia::Transform::from_row(m[0] as f32,m[1] as f32,m[2] as f32,m[3] as f32,m[4] as f32,m[5] as f32);
+    let oracle=oracle(outer).pre_concat(oracle(inner));
+    assert_eq!(actual,[oracle.sx as f64,oracle.ky as f64,oracle.kx as f64,oracle.sy as f64,oracle.tx as f64,oracle.ty as f64]);
+    let mut point=resvg::tiny_skia::Point::from_xy(point[0] as f32,point[1] as f32);oracle.map_point(&mut point);
+    assert_eq!(expected,[point.x as f64,point.y as f64]);
+    eprintln!("[DEBUG] Drawing owned geometry composition and vertices oracle=tiny-skia");
 }

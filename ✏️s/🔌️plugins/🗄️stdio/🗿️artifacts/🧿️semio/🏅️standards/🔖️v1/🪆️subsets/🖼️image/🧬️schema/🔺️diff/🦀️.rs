@@ -9,7 +9,8 @@
 //! following the docx/gif precedent (`f6-docx-ecma-376-report.md`, `f6-final-summary.md` §4.4). No
 //! `snapshot: Option<SemioImageSnapshot>` full-replace slot anywhere.
 
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+
 
 
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
@@ -19,7 +20,7 @@ use protocol::command::DiffAlgebra;
 /// `encode_diff`/`decode_diff` via method syntax on `SemioImageDiff`, which needs `DiffCodec` in
 /// scope (the `impl protocol::DiffCodec for SemioImageDiff` block itself compiles fine unqualified,
 /// but callers using method syntax do not get the trait for free) (W2b closer fix).
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::MutationDiff;
 
 //#region 🔖️FrameDiff
@@ -627,3 +628,6 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioImageDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

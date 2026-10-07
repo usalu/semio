@@ -49,7 +49,7 @@ impl protocol::InferenceSpec<PngSnapshot> for PngInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.png.inference.dimensions", reads: &["bytes"] }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.png.inference.dimensions", reads: &["image"] }]
     }
 }
 //#endregion 🔖️Inference

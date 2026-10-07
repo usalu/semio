@@ -11,7 +11,7 @@ use crate::{schema, WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::{ArtifactViewer, ViewEmit, Viewer};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
@@ -79,7 +79,7 @@ impl ArtifactViewer for WriterViewer {
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::writer_document_store_owners())
+        Some(crate::host::owned::writer_document_store_owners())
     }
 
     fn initial_snapshot() -> WriterSnapshot {

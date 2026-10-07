@@ -13,6 +13,7 @@ use std::collections::HashSet;
 use crate::os_spr::Mutation;
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
+pub use crate::os_spr::ActorId;
 use crate::os_spr::{Identified, MutationDiff, Patchable};
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
@@ -476,11 +477,17 @@ pub type DagEnvelope = ArtifactEnvelope<DagSnapshot, DagMutation>;
 pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 
 /// 🏭️ Creates a DAG store with the exact snapshot, mutation, and cursor retirement owners installed.
-pub async fn create_dag_store(id: &str, snapshot: DagSnapshot) -> Result<DagStore, crate::os_store::VcsError> {
+pub async fn create_dag_store(id: &str, snapshot: DagSnapshot, actor: ActorId) -> Result<DagStore, crate::os_store::VcsError> {
     use crate::os_store::MemberStoreOwner as _;
-    let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None)).await?;
+    let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None), actor).await?;
     store.install_document_store_owners_exact(DagSnapshot::member_store_owners());
     Ok(store)
+}
+
+#[cfg(test)]
+fn opened_dag_test_actor() -> ActorId {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
+    ActorId(fixture["openedActor"].as_str().unwrap().into())
 }
 
 #[cfg(test)]

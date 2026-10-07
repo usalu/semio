@@ -44,7 +44,7 @@ pub fn plan(document: &DrawingSnapshot, payload: &MoveLayer) -> Result<DrawingMu
         ancestor = find_drawing_layer_location(document, &id).and_then(|location| location.parent_id);
     }
     if source.parent_id == parent_id && source.index < index { index -= 1; }
-    Ok(crate::mutations::reorder_layer(payload.layer_id.clone(), parent_id, index))
+    Ok(crate::mutations::reorder_layer(payload.layer_id.clone().into(), parent_id, index))
 }
 
 pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {

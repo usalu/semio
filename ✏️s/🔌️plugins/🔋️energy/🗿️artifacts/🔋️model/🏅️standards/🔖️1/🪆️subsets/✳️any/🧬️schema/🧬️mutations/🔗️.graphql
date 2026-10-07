@@ -82,7 +82,7 @@ type RemoveOutputVariable {
 }
 
 type BindWeatherFile {
-  targetUri: String!
+  target: ArtifactRef!
 }
 
 type UnbindWeatherFile {
@@ -90,7 +90,7 @@ type UnbindWeatherFile {
 }
 
 type ConnectReferencedModel {
-  targetUri: String!
+  target: ArtifactRef!
 }
 
 type DisconnectReferencedModel {

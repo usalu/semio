@@ -1,6 +1,6 @@
 //! 🧬️ Raster diff schema — sparse field delta over the artifact.
 
-use crate::{RasterImageAsset, RasterLayerNode, RasterLayerPatch};
+use crate::{SemioImageSnapshot, RasterLayerNode, RasterLayerPatch};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -30,7 +30,7 @@ pub struct RasterDiff {
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct RasterAssetsDelta {
-    pub entries: BTreeMap<String, Option<RasterImageAsset>>,
+    pub entries: BTreeMap<String, Option<SemioImageSnapshot>>,
 }
 
 /// 🧩 Identified-collection delta for `layers` — every entry is tree-aware (`parent_id: None` means
@@ -348,7 +348,7 @@ impl RasterDiff {
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
-                            next.assets.insert(key.clone(), crate::mint_raster_asset_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
+                            next.assets.insert(key.clone(), crate::mint_raster_image_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
                         // 🗑️ A removal used to be refused outright ("asset removal requires the retained
                         // Raster initialization authority"), which made `remove-layer-asset` unusable on
@@ -503,7 +503,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
-                            next.assets.insert(key.clone(), crate::mint_raster_asset_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
+                            next.assets.insert(key.clone(), crate::mint_raster_image_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
                         // 🗑️ A removal used to be refused outright ("asset removal requires the retained
                         // Raster initialization authority"), which made `remove-layer-asset` unusable on
@@ -692,7 +692,7 @@ pub fn diff_move_layer(layer_id: &str, parent_id: Option<String>, index: usize) 
 }
 
 /// 🖇️ Sparse asset-map insertion diff (`add-layer-asset`).
-pub fn diff_add_asset(asset_id: &str, asset: crate::RasterImageAsset) -> RasterDiff {
+pub fn diff_add_asset(asset_id: &str, asset: crate::SemioImageSnapshot) -> RasterDiff {
     let mut entries = std::collections::BTreeMap::new();
     entries.insert(asset_id.to_string(), Some(asset));
     RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }

@@ -1,5 +1,5 @@
 {
-  "note": "♿️ The language-neutral accessibility projection every renderer publishes from a UiNodeRecord. `roles` pins the role a Component IMPLIES — AccessibilitySpec deliberately carries no `role` field, so this table is the ONE place that implication is written down, and React reaches the same roles implicitly through the HTML element each component view renders. Every expected projection row may additionally pin `valueMin`/`valueMax`/`valueNow`/`valueText`/`busy`/`valueStep`/`tone` (absent means null/false): a determinate progress bar announces its value, an indeterminate one announces only `busy`, a range control its step in display units, and a tree row the semantic tone it paints (`info`, `success`, `warning`, `danger`; the neutral tone and the brand roles announce none). `invalid`, `setSize` and `posInSet` are never part of the pure projection: a refused draft and a windowed row's place are stamped by a renderer's own walk. `document` is one real flat snapshot plus the pre-order projection it must produce, so a renderer that walks a tree (the wgpu target, which has no DOM to carry aria-* attributes) is measured on order, depth and reach as well as per-node fields. Answered in Rust by `accessibility_role`/`accessibility_is_focusable`/`accessibility_projection_node`, in TypeScript by `uiAccessibilityRoleV1`/`uiAccessibilityIsFocusableV1`/`uiAccessibilityProjectionNodeV1`, and walked by the wgpu target's own `accessibility_projection`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "note": "♿️ The language-neutral accessibility projection every renderer publishes from a UiNodeRecord. `roles` pins the role a Component IMPLIES — AccessibilitySpec deliberately carries no `role` field, so this table is the ONE place that implication is written down, and React reaches the same roles implicitly through the HTML element each component view renders. A tree item announces its component description unless its AccessibilitySpec supplies an explicit description; that override wins. Every expected projection row may additionally pin `valueMin`/`valueMax`/`valueNow`/`valueText`/`busy`/`valueStep`/`tone` (absent means null/false): a determinate progress bar announces its value, an indeterminate one announces only `busy`, a range control its step in display units, and a tree row the semantic tone it paints (`info`, `success`, `warning`, `danger`; the neutral tone and the brand roles announce none). `invalid`, `setSize` and `posInSet` are never part of the pure projection: a refused draft and a windowed row's place are stamped by a renderer's own walk. `document` is one real flat snapshot plus the pre-order projection it must produce, so a renderer that walks a tree (the wgpu target, which has no DOM to carry aria-* attributes) is measured on order, depth and reach as well as per-node fields. Answered in Rust by `accessibility_role`/`accessibility_is_focusable`/`accessibility_projection_node`, in TypeScript by `uiAccessibilityRoleV1`/`uiAccessibilityIsFocusableV1`/`uiAccessibilityProjectionNodeV1`, and walked by the wgpu target's own `accessibility_projection`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
   "roles": [
     { "id": "a-plain-container-is-a-group", "component": { "type": "container" }, "activatable": false, "role": "group", "focusable": false },
     { "id": "a-container-you-can-press-is-a-button", "component": { "type": "container" }, "activatable": true, "role": "button", "focusable": true },
@@ -127,7 +127,7 @@
       {
         "id": 9,
         "key": "#intrinsic-tree-item",
-        "component": { "type": "treeItem", "label": "Intrinsic row" },
+        "component": { "type": "treeItem", "label": "Intrinsic row", "description": "Items: 2 · Maximum 2 items" },
         "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
         "style": {},
         "activity": "idle",
@@ -136,11 +136,11 @@
       {
         "id": 10,
         "key": "#explicit-tree-item",
-        "component": { "type": "treeItem", "label": "Visible row" },
+        "component": { "type": "treeItem", "label": "Visible row", "description": "Visible description" },
         "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
         "style": { "tone": "warning" },
         "activity": "idle",
-        "accessibility": { "label": "Explicit override" }
+        "accessibility": { "label": "Explicit override", "description": "Explicit description" }
       },
       {
         "id": 11,
@@ -163,8 +163,8 @@
     { "nodeId": 6, "key": "#canvas", "depth": 1, "role": "application", "label": "Preview", "description": "3D preview canvas. Arrow keys orbit, Enter selects.", "live": "polite", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false },
     { "nodeId": 7, "key": "#evaluation", "depth": 1, "role": "progressbar", "label": "Evaluation progress", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "tabbable": false, "actionable": false, "valueMin": 0, "valueMax": 100, "valueNow": 12, "valueText": "Meshing faces (2/3): 12 of 100 faces (12 %)", "busy": false },
     { "nodeId": 8, "key": "#preparation", "depth": 1, "role": "progressbar", "label": "Preparation progress", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "tabbable": false, "actionable": false, "valueMin": null, "valueMax": null, "valueNow": null, "valueText": null, "busy": true },
-    { "nodeId": 9, "key": "#intrinsic-tree-item", "depth": 1, "role": "treeitem", "label": "Intrinsic row", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false },
-    { "nodeId": 10, "key": "#explicit-tree-item", "depth": 1, "role": "treeitem", "label": "Explicit override", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false, "tone": "warning" },
+    { "nodeId": 9, "key": "#intrinsic-tree-item", "depth": 1, "role": "treeitem", "label": "Intrinsic row", "description": "Items: 2 · Maximum 2 items", "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false },
+    { "nodeId": 10, "key": "#explicit-tree-item", "depth": 1, "role": "treeitem", "label": "Explicit override", "description": "Explicit description", "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "tabbable": true, "actionable": false, "tone": "warning" },
     { "nodeId": 11, "key": "#caption", "depth": 1, "role": "paragraph", "label": "6 Handle Kinds, 11 Handles", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "tabbable": false, "actionable": false }
   ],
   "announcedNote": "🏷️ The subset a reader can reach BY NAME: not hidden, focusable or actionable, and carrying a label of its own. The mirror still exposes the whole projection — a live region is announced without ever being reachable — so this is the reach law, not the exposure law.",

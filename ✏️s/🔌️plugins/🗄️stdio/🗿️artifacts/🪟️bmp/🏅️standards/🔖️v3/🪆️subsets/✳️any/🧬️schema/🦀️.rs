@@ -1,6 +1,7 @@
 //! 🧬️ BmpArtifact schema — full artifact state.
 
 use crate::BmpSnapshot;
+use crate::standards::v_v3::subsets::any::schema::snapshot;
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -11,7 +12,7 @@ pub struct BmpArtifact {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub bytes: Vec<u8>,
+    pub image: snapshot::BmpImage,
 }
 
 impl Default for BmpArtifact {
@@ -22,16 +23,16 @@ impl Default for BmpArtifact {
 
 impl BmpArtifact {
     pub fn to_snapshot(&self) -> BmpSnapshot {
-        BmpSnapshot { schema: self.schema.clone(), bytes: self.bytes.clone() }
+        BmpSnapshot { schema: self.schema.clone(), image: self.image.clone() }
     }
 
     pub fn from_snapshot(snapshot: BmpSnapshot) -> Self {
-        Self { schema: snapshot.schema, bytes: snapshot.bytes }
+        Self { schema: snapshot.schema, image: snapshot.image }
     }
 
     pub fn set_snapshot(&mut self, snapshot: BmpSnapshot) {
         self.schema = snapshot.schema;
-        self.bytes = snapshot.bytes;
+        self.image = snapshot.image;
     }
 }
 
@@ -94,19 +95,9 @@ pub fn empty_bmp_snapshot() -> BmpSnapshot {
     BmpSnapshot::default()
 }
 
-/// 🎬 P2-FG2: canonical demo snapshot — the same value the real `.dsl.semio`/`.pack.semio`
-/// fixtures under `📚️examples/🎬️demo/🖼️assets/` are genuine `print_dsl`/`encode_pack` output
-/// of (regenerated this wave via a real `encode_bmp`/`print_dsl`/`encode_pack` call, replacing
-/// the pre-existing fake "hello" placeholder text). 4x2 24-bit `BI_RGB`, bottom-up, 8 distinct
-/// non-solid RGBA pixels (`row_bytes(4, 24) == 12`, already a multiple of 4, so this fixture
-/// does NOT exercise row padding — `gradient_checkerboard_24bit_round_trip`'s own 6-wide fixture
-/// in `../🚪️io`'s own tests already covers that) — `header_size`/`planes`/`bits_per_pixel`/
-/// `compression` are exactly what `encode_bmp` always hardcodes (40/1/24/0, see its own
-/// `EncodeScopeNote`), so this snapshot is safe against `encode_bmp`'s own canonicalization (any
-/// other value here would silently "self-correct" on the first decode and break
-/// `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` identity). No palette (bpp=24 has none).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🎬️ Authored eight-color BMP native image demo.
 pub fn demo_bmp_snapshot() -> BmpSnapshot {
-    BmpSnapshot { schema: crate::STDIO_BMP_DOCUMENT_SCHEMA.into(), bytes: crate::standards::v_v3::subsets::any::io::demo_bmp_bytes() }
+    let image = snapshot::BmpImage { width: 4, height: 2, x_pixels_per_meter: 2835, y_pixels_per_meter: 2835, pixels: snapshot::BmpPixels::Direct { samples: [[255,0,0],[0,255,0],[0,0,255],[255,255,0],[0,255,255],[255,0,255],[255,255,255],[128,128,128]].into_iter().map(|[red,green,blue]| snapshot::BmpNativeSample { red,green,blue,alpha:0,reserved:0 }).collect() }, ..snapshot::BmpImage::default() };
+    BmpSnapshot { schema: crate::STDIO_BMP_DOCUMENT_SCHEMA.into(), image }
 }
 //#endregion 🔖️DocumentHelpers

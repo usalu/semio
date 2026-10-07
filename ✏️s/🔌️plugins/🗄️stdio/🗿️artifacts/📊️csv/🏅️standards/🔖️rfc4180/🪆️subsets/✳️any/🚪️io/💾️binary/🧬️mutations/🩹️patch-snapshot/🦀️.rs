@@ -1,6 +1,8 @@
 //! 💾️ Direct compact CSV snapshot-patch binary codec.
 
-use crate::standards::v_rfc4180::subsets::any::io::binary::mutations::*;
+use crate::standards::v_rfc4180::subsets::any::schema::mutations::{CsvMutation,patch_snapshot::PatchSnapshot};
+
+use semio_s_artifact_stdio_contract::editing;
 use protocol::OpBinary;
 
 pub const BINARY_TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "patch-snapshot");

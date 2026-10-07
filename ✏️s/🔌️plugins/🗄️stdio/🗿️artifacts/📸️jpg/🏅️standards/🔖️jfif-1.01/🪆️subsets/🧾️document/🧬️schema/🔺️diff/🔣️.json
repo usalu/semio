@@ -19,13 +19,6 @@
       },
       "x-semio-state": "artifact"
     },
-    "reEncodeQuality": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
     "jfifVersion": {
       "type": "array",
       "items": {

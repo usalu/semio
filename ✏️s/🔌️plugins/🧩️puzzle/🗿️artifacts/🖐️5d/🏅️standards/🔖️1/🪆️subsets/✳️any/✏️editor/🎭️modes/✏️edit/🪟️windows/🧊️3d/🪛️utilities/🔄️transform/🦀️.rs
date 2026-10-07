@@ -16,14 +16,15 @@ use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, puzzle5d_grip_full_id, quat_rotate_vector, PUZZLE5D_PLAY_CONTROLLER_ID};
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation, connect_grips, drag_selection_2d, drag_selection_3d, rotate_selection_3d, scale_selection_3d, Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation,connect_grips,drag_selection_2d,drag_selection_3d,rotate_selection_3d,scale_selection_3d,Puzzle5dMutation};
+
 use crate::Puzzle5dSnapshot;
 
 use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
+use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolYield};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::{puzzle3d_unique_targets, Puzzle3dSelectionMotion, Puzzle3dSelectionRecord};
 use std::sync::Arc;
 
@@ -279,15 +280,39 @@ impl machine::Host<transform_tool::TransformTool> for TransformToolHost {
     }
 }
 
-/// 🛠️ Runs `records` through a transform tool at rest as ONE transaction on `clock` — the ref minted from the
-/// admission's `authoring_seed`, the clock and `<appId>#<verb>`, and the yielded mutations in order. `None`
-/// when no record moves anything: an all-locked, all-missing, motionless or empty request leaves zero trace.
-pub fn puzzle5d_transform_tool_commit(verb: &str, authoring_seed: &str, clock: protocol::HybridLogicalTimestamp, request: TransformToolRequest) -> Option<(protocol::TransactionRef, Vec<Puzzle5dMutation>)> {
-    let mut runner = ToolMachineRunner::<transform_tool::TransformTool, TransformToolHost>::start(format!("{PUZZLE5D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), TransformToolContext, TransformToolHost).ok()?;
-    match runner.send(transform_tool::Event::Records(request), clock).ok()? {
-        ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
-        ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
+/// 🧭️ The released transform on the shared gesture runner; every event is a one-step transaction and no
+/// chart context survives its release. The parametric leaves fold against the document the dispatch receives.
+impl GestureChart for transform_tool::TransformTool {
+    type Tick = TransformToolRequest;
+    type Host = TransformToolHost;
+
+    const BASE_BOUND: bool = false;
+
+    fn tool(verb: &str) -> String {
+        format!("{PUZZLE5D_EDITOR_APP_ID}#{verb}")
     }
+
+    fn host() -> TransformToolHost {
+        TransformToolHost
+    }
+
+    fn input() -> TransformToolContext {
+        TransformToolContext
+    }
+
+    fn restore(_entries: &[(String, Puzzle5dMutation)], _context: &semio_framework_value::DslValue) -> Option<TransformToolContext> {
+        None
+    }
+
+    fn event(phase: GesturePhase, _at_rest: bool, tick: Option<TransformToolRequest>) -> Option<transform_tool::Event> {
+        tick.filter(|_| phase == GesturePhase::Once).map(transform_tool::Event::Records)
+    }
+}
+
+/// 🛠️ One release through the shared gesture driver: its transaction and yielded mutations, or zero trace
+/// for an empty, locked, missing or motionless request. The framework owns the clock and transaction identity.
+pub fn puzzle5d_transform_tool_commit(verb: &str, authoring_seed: &str, request: TransformToolRequest) -> Option<(protocol::TransactionRef, Vec<Puzzle5dMutation>)> {
+    semio_framework_tool_machine::drive_chart_gesture::<transform_tool::TransformTool>(None, verb, GesturePhase::Once, Some(request), authoring_seed, "").ok()?.committed
 }
 
 /// 🧮️ What the transform tool yields for `records` on `base`, keyed: each moving record's parametric leaf,

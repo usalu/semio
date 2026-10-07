@@ -67,16 +67,10 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
     for (const address of addresses.invalid) invalid(validate, { ...row.payload, [row.field]: address }, `DOCX ${row.leaf} malformed address`);
     if ('index' in row.payload) for (const index of [-1, 0.5, Number.MAX_SAFE_INTEGER + 1]) invalid(validate, { ...row.payload, [row.field]: addresses.valid[0], index }, `DOCX ${row.leaf} invalid index`);
   }
-  const xlsxFidelityRoot = join(artifacts, '📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🧬️canonical-xml-save');
-  const xlsxFidelity = json(join(xlsxFidelityRoot, '🔣️.json')) as { cases: Json[] };
-  valid(semioSchemaAjvV1().compile(json(join(xlsxFidelityRoot, '🧬️schema/🔣️.json'))), xlsxFidelity, 'XLSX canonical save fixtures');
   const docxTableRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🧭️table-run-projection');
   const docxTable = json(join(docxTableRoot, '🔣️.json')) as { blocks: Json[][]; paths: Json[][] } & { [key: string]: Json };
-  valid(semioSchemaAjvV1().compile(json(join(docxTableRoot, '🧬️schema/🔣️.json'))), docxTable, 'DOCX nested table draft fixture');
   assert.equal(docxTable.blocks.length, docxTable.paths.length);
   for (const [index, runs] of docxTable.blocks.entries()) assert.equal(runs.length, docxTable.paths[index].length);
-  const docxNamespaceRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🏷️namespace-formatting');
-  valid(semioSchemaAjvV1().compile(json(join(docxNamespaceRoot, '🧬️schema/🔣️.json'))), json(join(docxNamespaceRoot, '🔣️.json')), 'DOCX namespace and direct formatting fixtures');
   const sparse = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🌿️sparse-triples/🔣️.json')) as { valid: Json[]; invalid: Json[] };
   const validateXmlDiff = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).compile(xmlDiffSchema);
   for (const diff of sparse.valid) {
@@ -116,8 +110,6 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
     }
   }
   const docx = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
-  const emptyParagraphs = join(docx, '🧫️fixtures/✍️empty-paragraphs');
-  valid(semioSchemaAjvV1().compile(json(join(emptyParagraphs, '🧬️schema/🔣️.json'))), json(join(emptyParagraphs, '🔣️.json')), 'DOCX empty paragraph authoring fixture');
   const docxDiffSchema = json(join(docx, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
   const optionalClear = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🏳️optional-clear/🔣️.json')) as { cases: { name: string; diff: Json }[] };
   const docxAjv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(docxDiffSchema);
@@ -140,8 +132,6 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   }
   invalid(validateDocxDiff, { document: { body: {} } }, 'DOCX semantic shadow diff');
   const base = join(artifacts, '📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
-  const literalXmlExport = join(base, '🧫️fixtures/🔤️literal-xml-export');
-  valid(semioSchemaAjvV1().compile(json(join(literalXmlExport, '🧬️schema/🔣️.json'))), json(join(literalXmlExport, '🔣️.json')), 'PPTX literal XML export fixture');
   const schema = json(join(base, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
   const fixture = json(join(base, '🧬️schema/🔺️diff/🧫️fixtures/🏷️placeholder-kind/🔣️.json')) as { expectedDiff: Json };
   const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));

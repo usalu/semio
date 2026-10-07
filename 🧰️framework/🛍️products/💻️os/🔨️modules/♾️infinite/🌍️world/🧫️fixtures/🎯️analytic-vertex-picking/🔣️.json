@@ -1,5 +1,4 @@
 {
-  "schema": "world.analytic-vertex-picking.v1",
   "instance": "shape@solid#0",
   "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -82,5 +81,131 @@
       0
     ],
     "fov": 50
+  },
+  "marquee": {
+    "start": [
+      0,
+      0
+    ],
+    "end": [
+      400,
+      400
+    ],
+    "groups": [
+      0
+    ]
+  },
+  "nonselectableVertexId": 4294967295,
+  "expandedAttributes": {
+    "normal": {
+      "domain": "face",
+      "semantic": "normal",
+      "interpolation": "linear",
+      "values": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ]
+    },
+    "color": {
+      "domain": "face",
+      "semantic": "color",
+      "interpolation": "linear",
+      "values": [
+        [
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ]
+      ]
+    },
+    "uv": {
+      "domain": "corner",
+      "semantic": "uv",
+      "interpolation": "linear",
+      "values": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    "tangent": {
+      "domain": "corner",
+      "semantic": "custom",
+      "interpolation": "linear",
+      "values": [
+        [
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1
+        ]
+      ]
+    }
   }
 }

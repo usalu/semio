@@ -17,9 +17,14 @@ fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn dag_document_vcs_replays_node_operations() {
-    let mut store = create_dag_store("dag", empty_dag_document()).await.expect("store");
+    let mut store = create_dag_store("dag", empty_dag_document(), opened_dag_test_actor()).await.expect("store");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
+    assert_eq!(serde_json::to_value(store.local_actor_id()).unwrap(), fixture["openedActor"]);
+    assert_eq!(semio_framework_pack_json::to_json_string(store.local_actor_id()), serde_json::to_string(&fixture["openedActor"]).unwrap());
+    assert_eq!(store.envelope().vcs.edits.last().unwrap().actor.as_deref(), fixture["openedActor"].as_str());
+    println!("[DEBUG] Original DAG store and authored edit retain exact opened actor={}", store.local_actor_id().0);
     close_dag_test_store(store);
 }
 
@@ -321,7 +326,7 @@ fn op_text_round_trips_disconnect_nodes() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_a_store_with_an_applied_operation() {
-    let mut store = create_dag_store("dag", kitchen_sink_snapshot()).await.expect("store");
+    let mut store = create_dag_store("dag", kitchen_sink_snapshot(), opened_dag_test_actor()).await.expect("store");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], transaction: None }).await.expect("apply");
     crate::os_store::test_support::assert_document_text_round_trip(&store).await;
     crate::os_store::test_support::assert_document_pack_round_trip(&store).await;
@@ -331,7 +336,7 @@ async fn document_text_round_trips_a_store_with_an_applied_operation() {
 /// 🎫️ Command envelopes preserve the aggregate's direct leaf-owned operation codecs.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    let mut store = create_dag_store("dag", kitchen_sink_snapshot()).await.expect("store");
+    let mut store = create_dag_store("dag", kitchen_sink_snapshot(), opened_dag_test_actor()).await.expect("store");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], transaction: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<DagMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");

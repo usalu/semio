@@ -1,25 +1,27 @@
 //! ➖ Puzzle2d mutation — `RemoveNodeHandle`: detaches a rim port from a node (captures cascade —
 //! any edge whose `source`/`target` referenced this handle is severed too).
 
+use semio_framework_value::paged::PagedUtf8;
+
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// ➖ `remove-node-handle` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "remove-node-handle")]
 pub struct RemoveNodeHandle {
-    pub node_id: String,
-    pub handle_id: String,
+    pub node_id: PagedUtf8<{ usize::MAX }>,
+    pub handle_id: PagedUtf8<{ usize::MAX }>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_node_handle(node_id: String, handle_id: String) -> Puzzle2dMutation {
+pub fn remove_node_handle(node_id: PagedUtf8<{ usize::MAX }>, handle_id: PagedUtf8<{ usize::MAX }>) -> Puzzle2dMutation {
     Puzzle2dMutation::RemoveNodeHandle(RemoveNodeHandle { node_id, handle_id })
 }
 
@@ -39,7 +41,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for RemoveNodeHa
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove handle \"{}\" from node \"{}\"", self.handle_id, self.node_id), &format!("Griff \"{}\" aus Knoten \"{}\" entfernen", self.handle_id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.node_id.clone(), self.handle_id.clone()]
+        vec![self.node_id.to_string_owner(), self.handle_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

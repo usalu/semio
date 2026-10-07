@@ -14,7 +14,7 @@ use crate::app::{
     NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, PluginCloseStep, UiAssemblyResult, ViewEmit, ViewModel, NATURAL_FILE_PORT, REVERT_TO_COMMAND_ACTION_ID,
 };
 use protocol::MutationDiff;
-use semio_framework::{action_bus, ActionKind, Dialect, Fault, FaultOrigin, IconName, StandardId, SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
+use {semio_framework::action_bus,semio_framework::ActionKind,semio_framework_artifact_reference::Dialect,semio_framework::Fault,semio_framework::FaultOrigin,semio_framework::IconName,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework::ToolExecutionContract,semio_framework::ToolFactoryKey,semio_framework::ToolJobFactory,semio_framework::ToolOperationSpec};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -649,7 +649,7 @@ async fn editor_and_viewer_share_one_dialect() {
 
 #[semio_framework_async_macros::async_test]
 async fn new_viewer_constructs_a_registry_less_wrapper() {
-    let mut app = new_viewer::<SurfaceViewerFixture>().await;
+    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     assert_eq!(app.snapshot().unwrap().count, 0);
     close_registered_fixture_app(&mut app);
 }
@@ -666,7 +666,7 @@ async fn new_viewer_constructs_a_registry_less_wrapper() {
 /// turn. Asserting the count before settling would assert that a migrated editor does NOT mutate.
 #[semio_framework_async_macros::async_test]
 async fn editor_fixture_still_mutates_normally() {
-    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest()).await;
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).await.expect("increment");
     let receipt = crate::app::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("the admitted operation settles");
     assert!(receipt.lanes.contains(&crate::app::TypedOperationResultLane::Artifact), "the increment settles on the Artifact publication lane it declares, got {:?}", receipt.lanes);
@@ -692,7 +692,7 @@ async fn registered_editor_consumes_intrinsic_natural_bytes_through_the_real_med
         },
         data,
     };
-    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest()).await;
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     app.consume_media(crate::app::NATURAL_FILE_PORT, artifact).await.expect("registered editor consumes natural bytes");
     assert_eq!(app.snapshot().expect("imported surface snapshot").count, expected);
     let history_rows = app.history_snapshot().await.expect("natural-file import history").upserts.into_iter().filter(|entry| entry.edit_id.is_some()).count();
@@ -910,7 +910,7 @@ fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
 #[semio_framework_async_macros::async_test]
 async fn surface_editor_controller_is_the_derived_id() {
     assert_eq!(SURFACE_CONTROLLER_ID, semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor));
-    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest()).await;
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     assert_eq!(app.app_id().await, SURFACE_CONTROLLER_ID);
     close_registered_fixture_app(&mut app);
 }
@@ -920,7 +920,7 @@ async fn surface_editor_controller_is_the_derived_id() {
 /// before any factory is reached, and the document is untouched.
 #[semio_framework_async_macros::async_test]
 async fn editor_fixture_without_a_manifest_declaration_fails_closed() {
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let error = app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).await.expect_err("registry-less editor must fail closed");
     assert_eq!(error.code.0, "interactive-job.unknown-key");
     assert!(error.message.contains(SURFACE_TOOL_ID), "the refusal names the editor's own verb, not the generic placeholder: {}", error.message);
@@ -941,7 +941,7 @@ async fn editor_fixture_without_a_manifest_declaration_fails_closed() {
 #[semio_framework_async_macros::async_test]
 async fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
     use semio_framework::manifest::{ActionAddress, ActionInvocation};
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
     let invocation = ActionInvocation {
         address: ActionAddress { plugin_id: "test".into(), app_id: real_id.clone(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance".into(), action_id: "increment".into() },
@@ -958,7 +958,7 @@ async fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
 /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
 #[semio_framework_async_macros::async_test]
 async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
     assert_eq!(app.store.envelope().id, real_id);
     assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
@@ -971,7 +971,7 @@ async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
 /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
 #[semio_framework_async_macros::async_test]
 async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
-    let mut app = new_viewer::<SurfaceViewerFixture>().await;
+    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
     assert_eq!(app.store.envelope().id, real_id);
     assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
@@ -1004,7 +1004,7 @@ async fn the_codec_table_mirrors_and_passes_through_a_populated_pair_without_abo
 /// `Fault { origin: FaultOrigin::Framework, code: FaultCode::new("viewer.read-only"), .. }`.
 #[semio_framework_async_macros::async_test]
 async fn viewer_rejects_every_contract_mutating_verb() {
-    let mut app = new_viewer::<SurfaceViewerFixture>().await;
+    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     for verb in ["undo", "redo", "commitCheckpoint", "createAlternative", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"] {
         let error = app.handle_action(verb, None, &meta("local")).await.err().unwrap_or_else(|| panic!("'{verb}' must be rejected on a viewer instance"));
         assert_eq!(error.origin, FaultOrigin::Framework, "'{verb}' rejection must carry FaultOrigin::Framework");

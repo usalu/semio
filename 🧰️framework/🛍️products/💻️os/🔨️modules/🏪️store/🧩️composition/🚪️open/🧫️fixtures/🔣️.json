@@ -171,7 +171,8 @@
       "artifactId": "member-1",
       "ownerChildId": null,
       "admitted": true,
-      "reason": null
+      "reason": null,
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "owned",
@@ -182,7 +183,8 @@
       "artifactId": "member-1",
       "ownerChildId": "member-1",
       "admitted": true,
-      "reason": null
+      "reason": null,
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "unicode",
@@ -193,7 +195,8 @@
       "artifactId": "Grüße-😀",
       "ownerChildId": "Grüße-😀",
       "admitted": true,
-      "reason": null
+      "reason": null,
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "unsealed",
@@ -204,7 +207,8 @@
       "artifactId": "member-1",
       "ownerChildId": null,
       "admitted": false,
-      "reason": "unsealed"
+      "reason": "unsealed",
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "empty",
@@ -215,7 +219,8 @@
       "artifactId": "member-1",
       "ownerChildId": null,
       "admitted": false,
-      "reason": "empty"
+      "reason": "empty",
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "deadline-exact",
@@ -226,7 +231,8 @@
       "artifactId": "member-1",
       "ownerChildId": null,
       "admitted": false,
-      "reason": "expired"
+      "reason": "expired",
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "deadline-zero",
@@ -237,7 +243,8 @@
       "artifactId": "member-1",
       "ownerChildId": null,
       "admitted": false,
-      "reason": "expired"
+      "reason": "expired",
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "empty-identity",
@@ -248,7 +255,8 @@
       "artifactId": "",
       "ownerChildId": null,
       "admitted": false,
-      "reason": "identity"
+      "reason": "identity",
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "control-identity",
@@ -259,7 +267,8 @@
       "artifactId": "member",
       "ownerChildId": null,
       "admitted": false,
-      "reason": "identity"
+      "reason": "identity",
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "empty-member-owner",
@@ -270,7 +279,8 @@
       "artifactId": "member-1",
       "ownerChildId": "",
       "admitted": false,
-      "reason": "owner"
+      "reason": "owner",
+      "openedActor": "actor:member-opening-fixture"
     },
     {
       "id": "distinct-member-key-and-target",
@@ -281,7 +291,45 @@
       "artifactId": "member-address",
       "ownerChildId": "member-key",
       "admitted": true,
-      "reason": null
+      "reason": null,
+      "openedActor": "actor:member-opening-fixture"
+    },
+    {
+      "id": "empty-opened-actor",
+      "sealed": true,
+      "bytes": 17,
+      "expiresAtUs": 1000,
+      "nowUs": 1,
+      "artifactId": "member-1",
+      "ownerChildId": null,
+      "openedActor": "",
+      "admitted": false,
+      "reason": "identity"
+    },
+    {
+      "id": "control-opened-actor",
+      "sealed": true,
+      "bytes": 17,
+      "expiresAtUs": 1000,
+      "nowUs": 1,
+      "artifactId": "member-1",
+      "ownerChildId": null,
+      "openedActor": "actor:opening",
+      "admitted": false,
+      "reason": "identity"
+    },
+    {
+      "id": "oversized-opened-actor",
+      "sealed": true,
+      "bytes": 17,
+      "expiresAtUs": 1000,
+      "nowUs": 1,
+      "artifactId": "member-1",
+      "ownerChildId": null,
+      "openedActor": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "admitted": false,
+      "reason": "identity"
     }
-  ]
+  ],
+  "openedActor": "actor:member-opening-fixture"
 }

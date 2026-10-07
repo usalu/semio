@@ -11,7 +11,7 @@ struct Identity {
 #[serde(rename_all = "camelCase")]
 struct Target {
     artifact_id: String,
-    dialect: protocol::io_schema::ArtifactDialect,
+    dialect: semio_framework_artifact_reference::ArtifactDialect,
 }
 
 impl Identity {
@@ -20,7 +20,7 @@ impl Identity {
     }
 
     fn into_child<T>(self) -> store::ArtifactChild<T> {
-        store::ArtifactChild::new(self.child_id, protocol::io_schema::ArtifactRef { artifact_id: self.target.artifact_id, dialect: self.target.dialect })
+        store::ArtifactChild::new(self.child_id, semio_framework_artifact_reference::ArtifactRef { artifact_id: self.target.artifact_id, dialect: self.target.dialect })
     }
 }
 

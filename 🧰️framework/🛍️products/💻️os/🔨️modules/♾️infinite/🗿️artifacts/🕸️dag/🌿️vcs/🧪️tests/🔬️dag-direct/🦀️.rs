@@ -167,7 +167,7 @@ fn direct_delete_inverse_declares_descending_edges_before_node() {
 #[semio_framework_async_macros::async_test]
 async fn direct_store_undo_restores_incident_edge_order() {
     let before = base();
-    let mut store = create_dag_store("dag", before.clone()).await.expect("store");
+    let mut store = create_dag_store("dag", before.clone(), opened_dag_test_actor()).await.expect("store");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], transaction: None }).await.expect("delete");
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("restored projection"), before);

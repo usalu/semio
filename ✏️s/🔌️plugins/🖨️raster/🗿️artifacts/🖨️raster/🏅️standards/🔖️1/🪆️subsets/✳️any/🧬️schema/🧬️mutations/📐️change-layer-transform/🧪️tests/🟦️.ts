@@ -1,13 +1,18 @@
 /** 📐️ Complete layer-transform mutation contracts with independent JSON patch application. */
 import {expect,test} from "bun:test";
+
 import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+
 import patch from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json";
 import documentSchema from "../../../🔣️.json";
 import fixture from "./🔣️.json";
-import {parseChangeLayerTransform} from "../🟦️.ts";
-import {parseRasterLayerPatch} from "../../../🔺️diff/🟦️.ts";
+
+import {changeLayerTransformFromJson as parseChangeLayerTransform} from "./../../../../🚪️io/📝️text/🧬️mutations/🟦️.ts";
+
+import {rasterLayerPatchFromJson as parseRasterLayerPatch} from "./../../../../🚪️io/📝️text/🔺️diff/🟦️.ts";
 import {rasterTransformNumbers} from "../../../🟦️.ts";
+
 const validate=semioSchemaAjvV1({allErrors:true}).addSchema({$id:documentSchema.$id,$defs:{RasterTransform:documentSchema.$defs.RasterTransform}}).compile(schema);
 for(const row of fixture.cases)test("layer transform "+row.name,()=>{
   const payload={layerId:"paint",expected:fixture.identity,transform:row.transform};
@@ -34,7 +39,9 @@ test("layer patches distinguish complete transforms from partial translations",(
 });
 
 import {compose} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/📐️frames/🟦️.ts";
+
 import {Matrix3} from "three";
+
 test("layer control vectors match independent matrix composition",()=>{
   const controls={x:0,y:0,scaleX:1,scaleY:1,rotation:0,shearX:0};
   for(const row of fixture.controls){

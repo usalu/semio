@@ -566,5 +566,69 @@
         "blocksFinalize": false
       }
     }
-  ]
+  ],
+  "boundedHistoryRead": {
+    "maximumWorkPerStep": 1,
+    "initial": {
+      "n": 0
+    },
+    "edits": [
+      [
+        {
+          "operation": "setN",
+          "n": 1
+        },
+        {
+          "operation": "addN",
+          "delta": 2
+        },
+        {
+          "operation": "addN",
+          "delta": 3
+        },
+        {
+          "operation": "addN",
+          "delta": 4
+        }
+      ],
+      [
+        {
+          "operation": "setN",
+          "n": 99
+        }
+      ]
+    ],
+    "target": {
+      "edit": 0,
+      "op": 2
+    },
+    "accepted": [
+      {
+        "edit": 0,
+        "op": 0,
+        "replacement": {
+          "operation": "setN",
+          "n": 10
+        }
+      }
+    ],
+    "replacement": {
+      "operation": "addN",
+      "delta": 20
+    },
+    "expected": {
+      "before": 12,
+      "preview": 32,
+      "head": 99,
+      "cancelPreservesHead": true,
+      "staleRefuses": true,
+      "cancelRetirementCompletes": true
+    },
+    "cancelAfterSteps": [
+      1,
+      4,
+      8,
+      20
+    ]
+  }
 }

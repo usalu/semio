@@ -9,7 +9,7 @@ use super::*;
 use crate::standards::v1::subsets::cad::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
@@ -297,8 +297,8 @@ use super::*;
 use crate::standards::v1::subsets::cad::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::cad::io::text::snapshot::*;
 /// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioCadSnapshot`] — the

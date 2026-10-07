@@ -1191,7 +1191,7 @@ async fn channel_merge_fixtures_match_shared_cross_language_json_vectors() {
 
 #[semio_framework_async_macros::async_test]
 async fn media_export_wire_matches_the_language_neutral_fixture_above_number_safe_range() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🎬️media-export-wire/🔣️.json")).expect("media export wire fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎬️media-export-wire/🔣️.json")).expect("media export wire fixture parses");
     assert_eq!(fixture["channelVersion"].as_u64().unwrap(), CHANNEL_VERSION as u64);
     let handle = MediaExportHandleWire {
         app_instance_id: 42,
@@ -1236,7 +1236,7 @@ async fn media_export_wire_matches_the_language_neutral_fixture_above_number_saf
 /// 🪪️ The scalar owner query roundtrips the shared wire vectors without a document archive.
 #[semio_framework_async_macros::async_test]
 async fn document_identity_wire_matches_the_language_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🪪️document-identity-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-identity-wire/🔣️.json")).unwrap();
     assert_eq!(fixture["channelVersion"].as_u64().unwrap(), CHANNEL_VERSION as u64);
     assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17 })).is_err());
     assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17, "parentDocumentId": null, "claimedControllerId": "foreign" })).is_err());

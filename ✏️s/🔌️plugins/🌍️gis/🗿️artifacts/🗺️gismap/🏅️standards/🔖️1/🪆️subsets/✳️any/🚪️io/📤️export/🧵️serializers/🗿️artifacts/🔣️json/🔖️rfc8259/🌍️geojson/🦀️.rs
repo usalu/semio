@@ -40,7 +40,7 @@ fn feature(map_feature: &MapFeature, geometry: impl Fn(&serde_json::Map<String, 
         _ => return Err(error(format!("feature `{}` has a non-object payload", map_feature.id))),
     };
     let properties = payload.iter().filter(|(key, _)| !GEOMETRY_MEMBERS.contains(&key.as_str())).map(|(key, value)| (key.clone(), value.clone())).collect();
-    Ok(GeoJsonFeature { id: Some(GeoJsonId::Text(map_feature.id.clone())), geometry: geometry(&payload)?, properties: Some(properties) })
+    Ok(GeoJsonFeature { id: Some(GeoJsonId::Text(map_feature.id.clone())), geometry: geometry(&payload)?, properties: Some(properties.into_iter().map(|(name,value)|(name, semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::JsonValue::from(value))).collect()) })
 }
 
 /// 🗺️ The map's features in the GeoJSON model, positions → routes → regions.

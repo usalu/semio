@@ -1,4 +1,4 @@
-//! 🔺️ Exact PNG byte-authority diff.
+//! 🔺️ Owned PNG native image diff.
 
 use crate::PngSnapshot;
 use framework_schema::ArtifactSchema;
@@ -10,37 +10,38 @@ use protocol::{DiffAlgebra, MutationApplyResult, MutationDiff};
 pub struct PngDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub bytes: Option<Vec<u8>>,
+    #[dsl(block)]
+    pub image: Option<crate::schema::snapshot::PngImage>,
 }
 
 impl MutationDiff<PngSnapshot> for PngDiff {
     fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
-        let next = PngSnapshot { schema: base.schema.clone(), bytes: self.bytes.clone().unwrap_or_else(|| base.bytes.clone()) };
-        crate::standards::v1_2::subsets::any::io::png_layout(&next).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-bytes", message).at(["bytes"]))?;
+        let next = PngSnapshot { schema: base.schema.clone(), image: self.image.clone().unwrap_or_else(|| base.image.clone()) };
+        next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["image"]))?;
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.bytes.is_some() {
-            self.bytes = other.bytes;
+        if other.image.is_some() {
+            self.image = other.image;
         }
     }
 }
 
 impl DiffAlgebra<PngSnapshot> for PngDiff {
     fn inverse(&self, base: &PngSnapshot) -> Self {
-        match self.bytes {
-            Some(_) => Self { bytes: Some(base.bytes.clone()) },
+        match &self.image {
+            Some(_) => Self { image: Some(base.image.clone()) },
             None => Self::default(),
         }
     }
 
     fn between(base: &PngSnapshot, other: &PngSnapshot) -> Self {
-        Self { bytes: (base.bytes != other.bytes).then(|| other.bytes.clone()) }
+        Self { image: (base.image != other.image).then(|| other.image.clone()) }
     }
 
     fn is_empty(&self) -> bool {
-        self.bytes.is_none()
+        self.image.is_none()
     }
 }
 
@@ -55,5 +56,5 @@ pub(crate) fn demo_snap_a() -> PngSnapshot {
 
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<PngDiff> {
-    vec![PngDiff::default(), PngDiff { bytes: Some(crate::standards::v1_2::subsets::any::io::empty_png_bytes()) }]
+    vec![PngDiff::default(), PngDiff { image: Some(crate::schema::snapshot::PngImage::default()) }]
 }

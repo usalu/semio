@@ -3,7 +3,7 @@
 
 use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
-use semio_framework_plugin::StandardId;
+use {semio_framework_artifact_reference::StandardId};
 
 /// 🪪️ `extensions: ["presentation"]` is the real, carried-over value (`ArtifactDsl::EXTENSION`, and the
 /// old `definition()`'s `s.presentation.codec.document` capability's `extension` claim — both kept, per

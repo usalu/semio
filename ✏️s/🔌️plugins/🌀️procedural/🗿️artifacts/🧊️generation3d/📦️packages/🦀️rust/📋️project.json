@@ -50,6 +50,15 @@
       },
       "metadata": {"semio": {"workspaceCommand": ["verify", "generation3d-widget-inputs"]}}
     },
+    "verify-document-restoration-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify document-restoration-oracle",
+        "forwardAllArgs": true
+      }
+    },
     "canonical-architecture": {
       "executor": "nx:run-commands",
       "cache": false,

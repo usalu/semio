@@ -1,0 +1,11 @@
+# TIFF Owned Sample Closure
+
+Read-only inspection found that the current TIFF document model retains compressed/native `storage.chunks`; the relocated pure paint helper still interprets tile byte offsets. This remains a real ownership violation. No completed typed TIFF claim is made. The root agent owns this follow-up; the runtime agent has stopped editing TIFF after repairing earlier native test mounts.
+
+The final model must admit native image data once into exact owned sample words, with channel precision and unsigned/signed/IEEE interpretation defined by the typed directory metadata. It must preserve 16-bit and wider precision, indexed palettes, ordered pages and unrelated typed tags. Compression, endian interpretation, packed bit access, native offsets/counts and physical field code mappings belong to native snapshot I/O. The semantic model must contain neither compressed image chunks nor a second RGBA cache.
+
+Use explicit unsigned high/low 32-bit words where a language-neutral exact 64-bit sample is needed. Ordered sample blocks own literal decoded sample identities; pure region paint, revision and inverse diff operate on these values. Native output lowers them under its own storage/compression policy. Unknown ancillary tag values remain owned typed values, with undefined opaque data permitted; known ASCII metadata needs owned text rather than retained native text bytes.
+
+Required schema-first companions are the Rust and TypeScript models plus JSON Schema, GraphQL and protobuf contracts. Hand-author fixture updates, neutral exact sample/paint/inverse vectors and native controlled cancellation cases. Independently validate image samples through the existing `image` development dependency and structural/value admission through Ajv/serde_json. Registered native and TypeScript/SQLite targets must actually execute, including existing history/editor/oracle cases. Do not settle for the prior compile-only result or remove failing coverage.
+
+Current impact inventory: 48 TIFF files mention old chunks/offset types across code, contract and fixture owners; 32 Rust/TypeScript leaves reference the old chunk storage. Main-agent PNG/BMP exhaustive oracle repairs are temporarily ahead of implementation in the queue.

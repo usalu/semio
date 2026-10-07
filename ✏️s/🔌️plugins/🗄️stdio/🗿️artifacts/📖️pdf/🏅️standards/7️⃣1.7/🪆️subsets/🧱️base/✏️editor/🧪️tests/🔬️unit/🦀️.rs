@@ -16,10 +16,10 @@ fn natural_file_route_profile_checks_refuse_decrypted_security_state() {
     let decoded = io::decode_pdf_with_password(&encrypted, password).unwrap();
     assert!(decoded.encryption.is_some());
     let checkers: [(&str, fn(&PdfSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic>); 4] = [
-        ("a", a::schema::check_pdf_a_conformance),
-        ("x", x::schema::check_x_conformance),
-        ("e", e::schema::check_e_conformance),
-        ("vt", vt::schema::check_vt_conformance),
+        ("a", a::io::check_pdf_a_conformance),
+        ("x", x::io::check_x_conformance),
+        ("e", e::io::check_e_conformance),
+        ("vt", vt::io::check_vt_conformance),
     ];
     for profile in fixture["profiles"].as_array().unwrap() {
         let id = profile["id"].as_str().unwrap();
@@ -77,7 +77,7 @@ async fn natural_file_route_uses_registered_media_and_isolates_reopened_history(
         descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(NATURAL_FILE_PORT.into()), kind_id: Some("s.stdio.pdf@1.7".into()), media_type: None, wire: MediaWireFormat::Binary { format_kind: "s.stdio.pdf@1.7".into() }, blob_hash: None },
         data,
     };
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.consume_media(NATURAL_FILE_PORT, artifact(input.to_vec())).await.expect("registered PDF natural import");
     artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.unwrap();
     let opened = app.snapshot().unwrap().clone();
@@ -99,7 +99,7 @@ async fn natural_file_route_uses_registered_media_and_isolates_reopened_history(
     assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
     let projected = semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7(&saved.data).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&projected.to_string()).unwrap()["pages"][index]["rotate"], fixture["expected"]["rotation"]);
-    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }).await;
+    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
     artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.unwrap();
@@ -161,7 +161,7 @@ async fn registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes() {
 
     let mut original = PdfSnapshot::default();
     original.pages.push(PdfPage { content: vec![PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text("before") }, PdfOp::EndText], ..Default::default() });
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let loaded = app.snapshot().unwrap().clone();
@@ -197,8 +197,8 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
     use crate::schema::snapshot::PdfOp;
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
-    let mut original = crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }).await;
+    let mut original = crate::standards::v1_7::subsets::base::io::text::snapshot::demo_pdf17_snapshot();
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let loaded = app.snapshot().unwrap().clone();

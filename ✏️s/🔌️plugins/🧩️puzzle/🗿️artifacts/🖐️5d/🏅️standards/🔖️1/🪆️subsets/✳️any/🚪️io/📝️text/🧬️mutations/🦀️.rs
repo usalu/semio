@@ -1,6 +1,7 @@
 //! ⚡️ Puzzle5d artifact — OpText/OpBinary codecs + grammar for `Puzzle5dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation, inverse_puzzle5d_mutation, puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation,inverse_puzzle5d_mutation,puzzle5d_document_delta_operations,Puzzle5dMutation,Puzzle5dPlaySnapshot};
+
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -29,14 +30,7 @@ impl protocol::OpText for Puzzle5dMutation {
     }
 }
 
-impl protocol::OpBinary for Puzzle5dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 #[allow(unused_imports)]
@@ -86,7 +80,8 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume:
 use crate::standards::v1::subsets::any::schema::mutations::scale_part_3d::{scale_part_3d, ScalePart3d};
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection_3d::{scale_selection_3d, ScaleSelection3d};
 use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::{scale_target_volume, ScaleTargetVolume};
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{puzzle3d_selection_items as puzzle5d_selection_items, puzzle3d_selection_number as puzzle5d_selection_number, puzzle3d_selection_triple as puzzle5d_selection_triple, puzzle3d_targets_invariant as puzzle5d_targets_invariant, quat_from_axis_angle, quat_mul};
+use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{puzzle3d_selection_items as puzzle5d_selection_items,puzzle3d_selection_number as puzzle5d_selection_number,puzzle3d_selection_triple as puzzle5d_selection_triple,puzzle3d_targets_invariant as puzzle5d_targets_invariant,quat_from_axis_angle,quat_mul};
+
 
 impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle5d-play";

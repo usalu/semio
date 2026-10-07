@@ -1,0 +1,5 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+  "before": "value_field!(DurableOwnedGroupAnchorV1);\nvalue_field!(DurableOwnedGroupMemberV1);",
+  "after": "value_field!(DurableOwnedGroupAnchorV1);\nvalue_field!(DurableOwnedGroupMemberV1);\n\nimpl semio_framework_dsl_record::BorrowedDslField for DurableOwnedGroupAnchorV1{\n const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;\n}\nimpl semio_framework_dsl_record::BorrowedDslField for DurableOwnedGroupMemberV1{\n const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;\n}"
+}

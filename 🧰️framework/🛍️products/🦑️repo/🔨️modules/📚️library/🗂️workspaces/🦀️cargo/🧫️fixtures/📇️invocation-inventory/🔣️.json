@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "members": 64,
+  "maxParsesPerManifest": 1,
+  "rename": {
+    "index": 0,
+    "name": "member-renamed"
+  },
+  "removeIndex": 63,
+  "selectedIndices": [
+    0,
+    63,
+    0
+  ],
+  "maxRepositoryParses": 3,
+  "publicationOwners": 3,
+  "maxPublicationParses": 4
+}

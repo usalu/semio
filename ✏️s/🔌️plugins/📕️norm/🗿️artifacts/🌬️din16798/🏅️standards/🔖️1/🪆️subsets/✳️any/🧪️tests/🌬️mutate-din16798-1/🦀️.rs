@@ -14,7 +14,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::mutations::{apply_din16798_mutation, inverse_din16798_mutation, Din16798Mutation};
+    use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::mutations::{apply_din16798_mutation,inverse_din16798_mutation,Din16798Mutation};
+
     use semio_s_artifact_norm_din16798::standards::v1::subsets::any::io::text::mutations::{decode_din16798_mutation_json};
     use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::snapshot::{Din16798Snapshot};
     use semio_s_artifact_norm_din16798::standards::v1::subsets::any::io::binary::snapshot::{decode_din16798_pack};

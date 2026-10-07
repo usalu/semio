@@ -13,7 +13,8 @@
 //! 🛠️ CHS 88.9x4.0 to 88.9x5.0: A rises to 13.18 cm² and I_y to 116.4 cm⁴, the outer diameter unchanged, so the id still reads true.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏️replace-section/🛠️thickens/📸️snapshot/⬅️before/🔣️.json");

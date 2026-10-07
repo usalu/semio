@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v2x3::subsets::sav::schema::CODE_NO_ANALYSIS_MODEL;
+    use crate::standards::v2x3::subsets::sav::io::CODE_NO_ANALYSIS_MODEL;
     use crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as Ifc2x3SavBuilder;
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;

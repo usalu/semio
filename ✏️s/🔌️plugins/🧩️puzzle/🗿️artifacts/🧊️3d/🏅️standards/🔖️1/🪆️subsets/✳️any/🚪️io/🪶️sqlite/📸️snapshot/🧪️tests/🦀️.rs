@@ -188,7 +188,7 @@ fn sqlite_snapshot_puzzle3d_independently_edited_malformed_graphs_are_rejected()
 #[test]
 fn sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domain_tables() {
     use store::sqlite_snapshot::*;
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.puzzle.puzzle3d".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.puzzle.puzzle3d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
         let value = specimen(word);
         for codec in [<Puzzle3dSnapshot as ArtifactPack>::sqlite_snapshot_codec().unwrap(), <Puzzle3dPlaySnapshot as ArtifactPack>::sqlite_snapshot_codec().unwrap()] {
@@ -263,18 +263,38 @@ fn exact(a:&Puzzle3dSnapshot,b:&Puzzle3dSnapshot){use semio_framework_value::{Ds
 fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle3d_populated_actual_app_public_both_forms(){
-use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route}};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
+use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
 register();let dialect=ArtifactDialect{artifact_kind:"s.puzzle.puzzle3d".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
 for word in words(){let expected=PublicOwned::new(specimen(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let actual=PublicOwned::new(io_import_sqlite_snapshot::<Puzzle3dSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);exact(actual.get(),expected.get());assert_eq!((actual.get()).encode_pack(),(expected.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(expected.get()).print_dsl());}}
 eprintln!("[DEBUG] puzzle3d actual app public both forms preserve complete owner and words");
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle3d_populated_public_independent_edit_retirement(){
-use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};use std::{io::Write,process::{Command,Stdio}};
+use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};use std::{io::Write,process::{Command,Stdio}};
 register();let dialect=ArtifactDialect{artifact_kind:"s.puzzle.puzzle3d".into(),standard:"1".into(),subset:"*".into()};
 for word in words(){let expected=PublicOwned::new(specimen(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
 let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==24n)throw Error('table census');const c=JSON.parse(process.argv[2]);for(const[name,count]of Object.entries(c.nativeTableRowCounts))if(d.query('SELECT COUNT(*) AS n FROM '+name).get().n!==BigInt(count))throw Error(name);const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.puzzle.puzzle3d'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE puzzle3_document SET domain=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
 let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(serde_json::from_str::<serde_json::Value>(include_str!("../🧫️fixtures/🔣️.json")).unwrap()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=PublicOwned::new(io_import_sqlite_snapshot::<Puzzle3dSnapshot>(&dialect,&out.stdout,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);let mut literal=specimen(word);literal.domain="independent 日本\0".into();let literal=PublicOwned::new(literal);exact(actual.get(),literal.get());assert_eq!((actual.get()).encode_pack(),(literal.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(literal.get()).print_dsl());}}
 eprintln!("[DEBUG] puzzle3d independent public SQL edit complete owner and retirement");
 }
+}
+
+#[test]
+fn sqlite_snapshot_puzzle3d_borrowed_scale_matches_neutral_list_shape() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    assert_eq!(corpus["scaleDsl"]["shape"], "list");
+    assert_eq!(corpus["scaleDsl"]["item"], "float");
+    let semio_framework_dsl_record::BorrowedShape::List(item) = <Puzzle3dScale as semio_framework_dsl_record::BorrowedDslField>::SHAPE else { panic!("Scale metadata lost its self-delimiting list") };
+    assert!(matches!(item(), semio_framework_dsl_record::BorrowedShape::Float));
+    for row in corpus["scaleDsl"]["invalidSamples"].as_array().unwrap() {
+        let sample: Vec<f64> = serde_json::from_value(row.clone()).unwrap();
+        let value = <Vec<f64> as semio_framework_dsl_record::DslField>::to_value(&sample);
+        assert!(<Puzzle3dScale as semio_framework_dsl_record::DslField>::from_value(&value).is_err());
+    }
+    for row in corpus["scaleDsl"]["samples"].as_array().unwrap() {
+        let sample: Vec<f64> = serde_json::from_value(row.clone()).unwrap();
+        let scale = if sample.len() == 1 { Puzzle3dScale::Uniform(sample[0]) } else { Puzzle3dScale::Vec3([sample[0],sample[1],sample[2]]) };
+        let value = <Puzzle3dScale as semio_framework_dsl_record::DslField>::to_value(&scale);
+        assert_eq!(value, <Vec<f64> as semio_framework_dsl_record::DslField>::to_value(&sample));
+    }
 }

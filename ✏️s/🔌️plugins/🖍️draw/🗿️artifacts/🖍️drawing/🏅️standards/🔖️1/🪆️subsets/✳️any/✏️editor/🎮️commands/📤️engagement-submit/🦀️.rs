@@ -25,5 +25,5 @@ pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, DrawingSnapsho
     if value.is_empty() || session.interaction.ids.len() != 1 {
         return Ok(Emit::default());
     }
-    Ok(Emit::mutations(vec![crate::mutations::rename_layer(session.interaction.ids[0].clone(), value.into())]))
+    Ok(Emit::mutations(vec![crate::mutations::rename_layer(session.interaction.ids[0].clone().into(), value.into())]))
 }

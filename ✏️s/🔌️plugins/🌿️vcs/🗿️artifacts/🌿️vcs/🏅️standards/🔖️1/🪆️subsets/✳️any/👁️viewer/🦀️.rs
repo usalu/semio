@@ -22,7 +22,7 @@ use semio_framework_plugin::UiAssemblyResult;
 // 🚧️ SDK GAP: `InteractionView` is only reachable through `app`, not yet in the crate-root
 // re-export list (same gap the sibling editor surface's own note documents).
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactViewer, Dialect, ViewEmit, Viewer};
+use {semio_framework_plugin::ArtifactViewer,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command

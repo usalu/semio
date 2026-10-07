@@ -1,7 +1,8 @@
 //! ↩️ Inverse for `ClearWidgetLayout` — restores the captured BASE layout entry, or a no-op
 //! (`Vec::new()`) when the widget already had none (clearing an absent entry is itself a no-op).
 
-use crate::standards::v1::subsets::any::schema::mutations::{move_widget, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{move_widget,Generation2dMutation};
+
 use crate::Generation2dSnapshot;
 
 pub fn inverse(payload: &super::ClearWidgetLayout, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {

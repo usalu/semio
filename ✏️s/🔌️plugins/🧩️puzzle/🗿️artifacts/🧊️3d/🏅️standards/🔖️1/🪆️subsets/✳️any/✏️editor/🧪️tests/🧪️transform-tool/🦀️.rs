@@ -3,7 +3,9 @@
 //! zero trace, and every host payload states the RELATIVE motion from its own start pose.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation, quat_from_axis_angle, quat_mul};
+use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation,quat_from_axis_angle,quat_mul};
+
 use crate::{Puzzle3dObject, Puzzle3dTargetVolume, Puzzle3dVortex};
 
 /// 🧱️ Two objects facing each other along x — `a` locked-free with vortex `a:v` at +x, `b` with vortex `b:v` at -x —
@@ -24,7 +26,7 @@ fn clock(physical_ms: u64) -> protocol::HybridLogicalTimestamp {
 }
 
 fn commit(verb: &str, base: &Puzzle3dSnapshot, records: Vec<Puzzle3dSelectionRecord>) -> Option<(protocol::TransactionRef, Vec<Puzzle3dMutation>)> {
-    puzzle3d_transform_tool_commit(verb, "seed", clock(7), TransformToolRequest { base: Arc::new(base.clone()), records })
+    puzzle3d_transform_tool_commit(verb, "seed", TransformToolRequest { base: Arc::new(base.clone()), records })
 }
 
 #[test]
@@ -34,7 +36,7 @@ fn a_gumball_delta_is_one_transaction_of_its_parametric_leaf() {
     let (transaction, mutations) = commit("translateSelection", &base, vec![record.clone()]).expect("a moving record commits");
     assert_eq!(mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["a".into(), "box".into()], [2.0, 0.0, -1.0])], "one leaf over the deduplicated targets");
     assert_eq!(transaction.tool, "s.puzzle.puzzle3d@1/*#editor#translateSelection");
-    assert_eq!(commit("translateSelection", &base, vec![record]).map(|(again, _)| again), Some(transaction), "the same admission, clock and verb mint the same ref");
+    assert_ne!(commit("translateSelection", &base, vec![record]).map(|(again, _)| again), Some(transaction), "each released gesture mints its own transaction even within one clock millisecond");
 }
 
 #[test]
@@ -128,4 +130,24 @@ fn a_paged_relocate_scan_finds_exactly_what_the_one_call_scan_finds() {
     }
     let lonely = Puzzle3dRelocateScan::begin(&base, "pin", [0.0; 3], 0.75).expect("pin is in the scene");
     assert_eq!(lonely.progress(&base), (base.objects.len(), base.objects.len()), "an object without a vortex attracts nothing, so its scan starts done");
+}
+
+#[test]
+fn the_transform_chart_obeys_the_shared_phase_fixture() {
+    let fixture = semio_framework_pack_json::parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧫️fixtures/🛠️transform-gesture/🔣️.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    for case in fixture.get("cases").unwrap().as_array().unwrap() {
+        let values = case.get("offset").unwrap().as_array().unwrap();
+        let offset = [values[0].as_f64().unwrap(), values[1].as_f64().unwrap(), values[2].as_f64().unwrap()];
+        let phase = match case.get("phase").unwrap().as_str().unwrap() {
+            "once" => GesturePhase::Once,
+            "stream" => GesturePhase::Stream,
+            "commit" => GesturePhase::Commit,
+            "abort" => GesturePhase::Abort(semio_framework_tool_machine::ToolAbortReason::Frozen),
+            _ => unreachable!(),
+        };
+        let request = TransformToolRequest { base: Arc::new(scene()), records: vec![Puzzle3dSelectionRecord::new(["a".to_string()], Puzzle3dSelectionMotion::Drag { offset })] };
+        let drive = semio_framework_tool_machine::drive_chart_gesture::<transform_tool::TransformTool>(None, "translateSelection", phase, Some(request), "seed", "base").expect("one dispatch");
+        assert_eq!(drive.committed.as_ref().map_or(0, |(_, leaves)| leaves.len()), case.get("committed").unwrap().as_u64().unwrap() as usize);
+        assert!(drive.next.is_none(), "the release-only chart holds no transaction");
+    }
 }

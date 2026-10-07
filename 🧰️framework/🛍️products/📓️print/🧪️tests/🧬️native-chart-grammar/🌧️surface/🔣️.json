@@ -1,34 +1,4 @@
 {
-  "schema": {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "required": ["canvas", "rainfall", "traces", "toleranceMm", "windows"],
-    "additionalProperties": false,
-    "$defs": {
-      "pair": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
-    },
-    "properties": {
-      "canvas": { "$ref": "#/$defs/pair" },
-      "rainfall": { "type": "array", "items": { "$ref": "#/$defs/pair" }, "minItems": 3 },
-      "traces": { "type": "integer", "minimum": 1 },
-      "toleranceMm": { "type": "number", "exclusiveMinimum": 0 },
-      "windows": {
-        "type": "array",
-        "minItems": 6,
-        "items": {
-          "type": "object",
-          "required": ["id"],
-          "additionalProperties": false,
-          "properties": {
-            "id": { "type": "string", "minLength": 1 },
-            "domain": { "$ref": "#/$defs/pair" },
-            "range": { "$ref": "#/$defs/pair" },
-            "omitKeys": { "type": "boolean" }
-          }
-        }
-      }
-    }
-  },
   "vectors": {
     "canvas": [80, 40],
     "rainfall": [[0, 2], [2, 8], [4, 4]],

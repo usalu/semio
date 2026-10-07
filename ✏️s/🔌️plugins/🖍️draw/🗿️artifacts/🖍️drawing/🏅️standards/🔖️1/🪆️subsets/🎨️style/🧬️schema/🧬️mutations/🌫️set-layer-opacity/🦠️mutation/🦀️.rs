@@ -5,19 +5,19 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🌫️ `set-layer-opacity` payload.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "set-layer-opacity")]
 pub struct SetLayerOpacity {
-    pub layer_id: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub opacity: f64,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_opacity(layer_id: String, opacity: f64) -> DrawingMutation {
+pub fn set_layer_opacity(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, opacity: f64) -> DrawingMutation {
     DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id, opacity })
 }
 
@@ -37,7 +37,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerOpacit
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" opacity to {}", self.layer_id, self.opacity), &format!("Deckkraft von Ebene \"{}\" auf {} setzen", self.layer_id, self.opacity))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

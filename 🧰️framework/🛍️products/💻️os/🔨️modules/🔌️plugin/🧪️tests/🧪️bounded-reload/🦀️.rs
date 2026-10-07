@@ -100,7 +100,7 @@ fn close_reload_counted_store(store: &mut store::ArtifactStore<TestSnapshot, Rel
 async fn a_long_history_reloads_one_operation_per_initializer_step() {
     use crate::test_app_mutation_fixture::SetCount;
     let genesis = store::create_document_envelope::<TestSnapshot, ReloadCountedOp>(RELOAD_DOCUMENT_SCHEMA, "long-reload", TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
-    let mut source = Box::pin(store::ArtifactStore::new(genesis)).await.expect("source store");
+    let mut source = Box::pin(store::ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
     source.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, ReloadCountedOp>());
     for value in 1..=240 {
         Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![ReloadCountedOp(TestMutation::SetCount(SetCount { value }))], transaction: None })).await.expect("source edit");
@@ -110,10 +110,10 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     Box::pin(source.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs })).await.expect("a supersession");
     let files = Box::pin(store::print_document_pack(source.envelope())).await.expect("source pair prints");
     let envelope = Box::pin(store::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr)).await.expect("the pair parses").into_envelope();
-    let mut whole = Box::pin(store::ArtifactStore::new(Box::pin(store::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr)).await.expect("the pair parses again").into_envelope())).await.expect("a store loaded in one piece");
+    let mut whole = Box::pin(store::ArtifactStore::new(Box::pin(store::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr)).await.expect("the pair parses again").into_envelope(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("a store loaded in one piece");
     whole.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, ReloadCountedOp>());
     let (operation, generation) = (semio_framework_job::OperationId(97), semio_framework_job::Generation(0));
-    let mut job = bounded_document_store_initialization_job(envelope, RELOAD_DOCUMENT_SCHEMA, operation, generation);
+    let mut job = bounded_document_store_initialization_job(envelope, RELOAD_DOCUMENT_SCHEMA, operation, generation, source.local_actor_id().clone());
     let mut sequence = 0u64;
     let mut steps = 0usize;
     let mut folded = 0;

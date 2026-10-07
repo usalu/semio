@@ -1,0 +1,13 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "pairs": [
+      {
+        "before": "use crate::{brep::schema::snapshot::SemioBrepSnapshot,mesh::schema::snapshot::SemioMeshSnapshot,value::schema::snapshot::SemioValueSnapshot};",
+        "after": "use crate::standards::v1::subsets::{brep::schema::snapshot::SemioBrepSnapshot,mesh::schema::snapshot::SemioMeshSnapshot,value::schema::snapshot::SemioValueSnapshot};",
+        "count": 1
+      }
+    ],
+    "authority": "Current exact canonical object sibling imports; same three types under validated existing standards v1 subset modules"
+  }
+]

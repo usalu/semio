@@ -3,9 +3,12 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
+const OP_BINARY_FORMAT: u8 = 1;
+
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
+use crate::standards::v1::subsets::animation::io::text::mutations::TEXT_KEYWORDS;
 use crate::standards::v1::subsets::animation::schema::mutations::*;
 use crate::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};

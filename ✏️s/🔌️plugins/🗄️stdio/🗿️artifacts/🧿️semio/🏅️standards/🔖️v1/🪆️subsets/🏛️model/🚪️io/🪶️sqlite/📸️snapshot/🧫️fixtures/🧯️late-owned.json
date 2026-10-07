@@ -1,0 +1,35 @@
+{
+  "sourceCase": "full",
+  "schemaText": {
+    "character": "x",
+    "count": 131073
+  },
+  "schemaUtf8Bytes": 131073,
+  "rows": 99,
+  "valueBytes": 137552,
+  "schemaBytes": 3230,
+  "tableWidths": {
+    "semio_model_document": 2,
+    "semio_model_element": 4,
+    "semio_model_entity": 5,
+    "semio_model_geometry_reference": 3,
+    "semio_model_placement": 31,
+    "semio_model_property": 10,
+    "semio_model_property_set": 4,
+    "semio_model_relation": 8,
+    "semio_model_spatial": 4
+  },
+  "maxTables": 9,
+  "maxColumns": 31,
+  "cancellation": {
+    "phase": "ReconstructSnapshot",
+    "completed": 65536,
+    "total": 131073
+  },
+  "ownership": {
+    "success": "all concrete requests admitted",
+    "exact": "same concrete allowance",
+    "shortfall": 1,
+    "refusalCleanup": "all requested backing released including diagnostic and retirement scratch"
+  }
+}

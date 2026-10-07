@@ -6,9 +6,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::table::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::value::io::text::diff::{dec_semio_value};
-use crate::value::io::text::diff::{enc_semio_value};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
+use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
@@ -175,10 +175,10 @@ pub use snapshot_codec::*;
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::table::schema::snapshot::*;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
-use crate::value::io::text::diff::{dec_semio_value};
-use crate::value::io::text::diff::{enc_semio_value};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
+use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};

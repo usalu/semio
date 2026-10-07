@@ -1,0 +1,5 @@
+{
+  "command": "SEMIO_TEST_LEVEL=quick bun run nx run @semio-tech/stdio-pdf-rs:verify-snapshot-sqlite-source --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-source-strict.log' 2>&1",
+  "at": "2026-10-06T11:45:10.350488+00:00",
+  "scope": "Existing registered strict owner verifier60k grant after actual owningSource54/54; no command changes"
+}

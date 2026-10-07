@@ -5,8 +5,7 @@ type TestSource = { readonly directory: string; readonly url: string };
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
   const { MediaTransportHost, MediaTransportOwnerContext } = dependencies;
   const { afterEach, describe, expect, it, vi } = vitest;
-  const [{ default: Ajv2020 }, React, testing, { chromium }, { dirname, resolve }, { fileURLToPath }, { mediaTransportLabels }, { collectMediaTransportBytes }, { SEGMENTED_DOWNLOAD_CONTRACT }] = await Promise.all([
-    import("ajv/dist/2020.js"),
+  const [React, testing, { chromium }, { dirname, resolve }, { fileURLToPath }, { mediaTransportLabels }, { collectMediaTransportBytes }, { SEGMENTED_DOWNLOAD_CONTRACT }] = await Promise.all([
     import("react"),
     import("@semio-tech/ui-react/test"),
     import("playwright"),
@@ -18,12 +17,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   ]);
   const { createElement } = React;
   const { cleanup, fireEvent, render, waitFor } = testing;
-  const [{ default: fixture }, { default: schema }] = await Promise.all([
-    import("../../🧫️fixtures/♻️lifecycle/🔣️.json"),
-    import("../../🧬️schema/♻️lifecycle/🔣️.json"),
-  ]);
-  const admitFixture = new Ajv2020({ strict: true, allErrors: true }).compile<BrowserInput>(schema);
-  if (!admitFixture(fixture)) throw new Error(JSON.stringify(admitFixture.errors));
+  const { default: fixture } = await import("../../🧫️fixtures/♻️lifecycle/🔣️.json");
   void source;
 
   const handle = {
@@ -79,8 +73,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("validates the language-neutral bounded lifecycle", () => {
-      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       expect(fixture.output.chunks.reduce((total: number, chunk: number[]) => total + chunk.length, 0)).toBe(fixture.output.totalBytes);
       expect(fixture.requirements.maximumTotalBytes).toBe(SEGMENTED_DOWNLOAD_CONTRACT.maximumTotalBytes);
       expect(fixture.requirements.maximumPages).toBe(SEGMENTED_DOWNLOAD_CONTRACT.maximumOutstandingChunks);

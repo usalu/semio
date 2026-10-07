@@ -21,4 +21,3 @@ enums:
     8: insert_other_segment
     9: remove_other_segment
     10: replace_pixels
-    11: change_re_encode_quality

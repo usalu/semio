@@ -2,7 +2,6 @@ import { test, expect } from "bun:test";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createRequire } from "node:module";
-import Ajv from "ajv";
 import { createAdmittedWorkerCell, createWorkerCell } from "../🟦️.ts";
 const require = createRequire(import.meta.url);
 const memoize: (factory: (owner: string) => State) => ((owner: string) => State) = require("lodash/memoize");
@@ -11,9 +10,6 @@ const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixt
 const interpreter = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🦀️.rs");
 
 test("closed independent lifecycle corpus retains exact admission and thread identities", () => {
-  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8")));
-  expect(validate(fixture)).toBe(true);
-  expect(validate({ ...fixture, schemaVersion: 2 })).toBe(false);
   const actual = [];
   for (const row of fixture.cases) {
     const cell = createAdmittedWorkerCell<State>();

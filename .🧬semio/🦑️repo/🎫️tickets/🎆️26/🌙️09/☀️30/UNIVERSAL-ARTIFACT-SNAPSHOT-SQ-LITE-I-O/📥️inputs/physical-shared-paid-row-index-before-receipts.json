@@ -1,0 +1,20 @@
+{
+  "native": {
+    "session": 99415,
+    "exitCode": 1,
+    "compilerContexts": 12,
+    "nextest": false,
+    "missingRowIndex": true
+  },
+  "operation": {
+    "session": 79435,
+    "exitCode": 0,
+    "pass": 57,
+    "fail": 0,
+    "expects": 899,
+    "files": 4,
+    "seconds": 0.492,
+    "neutralDebug": "rows=4 groups=2 foreign=0"
+  },
+  "helperMounted": false
+}

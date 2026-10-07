@@ -25,7 +25,7 @@ use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub(crate) struct PptxDiffRecord {
-    value: semio_framework_value::DslValue,
+    pub(crate) value: semio_framework_value::DslValue,
 }
 
 impl protocol::DiffText for PptxDiff {

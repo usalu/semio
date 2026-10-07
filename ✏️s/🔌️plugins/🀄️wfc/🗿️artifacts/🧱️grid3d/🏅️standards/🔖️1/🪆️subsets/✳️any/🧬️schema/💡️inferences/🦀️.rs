@@ -117,12 +117,6 @@ pub(crate) fn payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -
     (0..payload.page_count()).flat_map(|index| payload.page(index).map(<[u8]>::to_vec).unwrap_or_default()).collect()
 }
 
-fn close_owned<T: semio_framework_job::InteractiveJob>(mut job: T) {
-    job.begin_close();
-    while !job.terminal_is_empty() {
-        job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
 
 
 
@@ -142,11 +136,7 @@ fn close_owned<T: semio_framework_job::InteractiveJob>(mut job: T) {
 
 
 
-/// 🏁️ The solve as any caller (editor preview window included) reaches it: a plain function of the
-/// persisted problem, never a cached side effect.
-pub fn solve(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
-    solve_with_job(snapshot)
-}
+
 //#endregion 🔖️Compile
 
 //#region 🔖️Solve

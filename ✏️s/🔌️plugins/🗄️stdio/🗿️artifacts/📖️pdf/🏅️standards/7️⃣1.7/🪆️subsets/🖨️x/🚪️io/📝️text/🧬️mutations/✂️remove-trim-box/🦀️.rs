@@ -1,6 +1,6 @@
 //! 🧽️ Direct text codec for `remove-trim-box`.
 
-use super::RemoveTrimBox;
+use crate::standards::v1_7::subsets::x::schema::mutations::RemoveTrimBox;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-trim-box";

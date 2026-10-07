@@ -54,25 +54,6 @@
     ],
     []
   ],
-  "bufferSchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-      "kind",
-      "values"
-    ],
-    "properties": {
-      "kind": {
-        "const": "inline"
-      },
-      "values": {
-        "type": "array",
-        "items": {
-          "type": "number"
-        }
-      }
-    }
-  },
   "binary64Words": [
     "0000000000000000",
     "8000000000000000",
@@ -561,36 +542,5 @@
         21
       ]
     ]
-  },
-  "semanticCellsSchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-      "tableWidths"
-    ],
-    "properties": {
-      "tableWidths": {
-        "type": "array",
-        "minItems": 35,
-        "maxItems": 35,
-        "items": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "items": [
-            {
-              "type": "string",
-              "pattern": "^remodel_[a-z_]+$"
-            },
-            {
-              "type": "integer",
-              "minimum": 2,
-              "maximum": 25
-            }
-          ],
-          "additionalItems": false
-        }
-      }
-    }
   }
 }

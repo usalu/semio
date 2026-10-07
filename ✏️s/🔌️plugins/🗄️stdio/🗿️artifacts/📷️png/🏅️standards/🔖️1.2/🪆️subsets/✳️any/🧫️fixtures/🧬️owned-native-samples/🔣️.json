@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "grayscale16-precision-and-ancillary",
+      "snapshot": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "relativeColorimetric",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [115, 116, 69, 103],
+              "data": [3, 2, 1],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      },
+      "paint": {
+        "x": 1,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "profile": "grayscale",
+        "first": 511,
+        "second": 0,
+        "third": 0,
+        "fourth": 0
+      },
+      "expectedSamples": [
+        257,
+        511
+      ],
+      "oracleRasterHex": "01018001"
+    },
+    {
+      "name": "indexed-duplicate-colors-preserve-indices",
+      "snapshot": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 3,
+          "height": 1,
+          "bitDepth": 2,
+          "colorType": "palette",
+          "interlace": true,
+          "samples": [
+            0,
+            1,
+            0
+          ],
+          "palette": [
+            {
+              "r": 20,
+              "g": 40,
+              "b": 60
+            },
+            {
+              "r": 20,
+              "g": 40,
+              "b": 60
+            }
+          ],
+          "transparency": {
+            "colorType": "indexed",
+            "alpha": [
+              255,
+              128
+            ]
+          },
+          "gamma": null,
+          "chromaticities": null,
+          "srgb": null,
+          "physicalDims": null,
+          "timestamp": null,
+          "background": {
+            "colorType": "indexed",
+            "index": 1
+          },
+          "textChunks": [],
+          "ancillaryChunks": []
+        }
+      },
+      "paint": {
+        "x": 2,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "profile": "indexed",
+        "first": 1,
+        "second": 0,
+        "third": 0,
+        "fourth": 0
+      },
+      "expectedSamples": [
+        0,
+        1,
+        1
+      ],
+      "oracleRasterHex": "10"
+    },
+    {
+      "name": "rgb16-component-precision",
+      "snapshot": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "rgb",
+          "interlace": false,
+          "samples": [
+            1,
+            256,
+            65535,
+            32769,
+            512,
+            257
+          ],
+          "palette": null,
+          "transparency": null,
+          "gamma": null,
+          "chromaticities": null,
+          "srgb": null,
+          "physicalDims": null,
+          "timestamp": null,
+          "background": null,
+          "textChunks": [],
+          "ancillaryChunks": []
+        }
+      },
+      "paint": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "profile": "rgb",
+        "first": 2,
+        "second": 257,
+        "third": 65534,
+        "fourth": 0
+      },
+      "expectedSamples": [
+        2,
+        257,
+        65534,
+        32769,
+        512,
+        257
+      ],
+      "oracleRasterHex": "00010100ffff800102000101"
+    }
+  ]
+}

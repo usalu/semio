@@ -1,5 +1,5 @@
 //! 🪆️ Semio subset restrictions on the shared persisted child reference.
-use store::os_io::ArtifactRef;
+use {semio_framework_artifact_reference::ArtifactRef};
 
 /// 🪪️ Validates the declared Semio subset while retaining independent local and target identities.
 pub fn validate_semio_child_identity(_child_id: &str, target: &ArtifactRef, subset: &str) -> Result<(), String> {

@@ -1,4 +1,8 @@
 //! 💾️ Direct compact JPEG snapshot-patch binary codec.
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::*;
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot;
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
+use crate::standards::v_jfif_1_01::subsets::document::io::binary::diff::*;
 
 use crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::Entry;
@@ -11,5 +15,5 @@ pub fn encode(value: &JpgMutation) -> Option<Result<Vec<u8>, protocol::ProtocolE
     Some(patch.encode_op())
 }
 pub fn decode(bytes: &[u8]) -> Result<JpgMutation, protocol::ProtocolError> {
-    editing::SnapshotPatch::decode_op(bytes).map(|patch| JpgMutation::PatchSnapshot(PatchSnapshot { patch }))
+    semio_s_artifact_stdio_contract::editing::SnapshotPatch::decode_op(bytes).map(|patch| JpgMutation::PatchSnapshot(PatchSnapshot { patch }))
 }

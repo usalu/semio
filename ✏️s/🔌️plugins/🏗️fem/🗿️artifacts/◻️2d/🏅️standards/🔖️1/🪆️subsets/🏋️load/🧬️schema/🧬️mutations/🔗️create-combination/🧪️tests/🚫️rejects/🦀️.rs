@@ -13,7 +13,8 @@
 //! 🚫️ Terms are checked in order, so the first term resolves and the diagnostic addresses `seismic`. A combination that names ITSELF is refused for the same reason — its own record is not in the base yet.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️create-combination/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");

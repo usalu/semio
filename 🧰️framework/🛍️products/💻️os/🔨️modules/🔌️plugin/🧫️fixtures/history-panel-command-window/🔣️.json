@@ -1,4 +1,6 @@
 {
+  "rootLayout": { "kind": "scroll", "axes": "vertical", "padding": { "all": "none" }, "sizing": "fill" },
+  "rootCss": { "overflowX": "hidden", "overflowY": "auto", "width": "100%" },
   "defaultWindowRows": 48,
   "commandRowCount": 200,
   "requestOffset": 120,

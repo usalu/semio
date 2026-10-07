@@ -1,6 +1,6 @@
 //! 🪧️ Direct text codec for `set-display-doc-title`.
 
-use super::SetDisplayDocTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetDisplayDocTitle;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-display-doc-title";

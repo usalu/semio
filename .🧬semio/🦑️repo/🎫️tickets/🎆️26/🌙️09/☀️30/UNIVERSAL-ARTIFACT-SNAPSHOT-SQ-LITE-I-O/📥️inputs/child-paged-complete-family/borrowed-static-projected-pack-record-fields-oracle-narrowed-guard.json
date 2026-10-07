@@ -1,0 +1,5 @@
+{
+  "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/📦️operation-pages/🦀️.rs",
+  "from": " let row=RecordValue{fields:std::collections::BTreeMap::from([(4,FieldValue::Text(source.reference.clone()))])};let statement=RecordValue{fields:std::collections::BTreeMap::from([(10,FieldValue::Text(source.text.clone()))])};let record=RecordValue{fields:std::collections::BTreeMap::from([(9,FieldValue::Statements(vec![(\"say\".into(),statement)])),(3,FieldValue::List(vec![FieldValue::Record(row)])),(1,FieldValue::Map(vec![(\"z\".into(),FieldValue::UInt(17)),(\"a\".into(),FieldValue::UInt(23))]))])};",
+  "to": " let mut row=RecordValue::default();row.fields.insert(4,FieldValue::Text(source.reference.clone()));let mut statement=RecordValue::default();statement.fields.insert(10,FieldValue::Text(source.text.clone()));let mut record=RecordValue::default();record.fields.insert(9,FieldValue::Statements(vec![(\"say\".into(),statement)]));record.fields.insert(3,FieldValue::List(vec![FieldValue::Record(row)]));record.fields.insert(1,FieldValue::Map(vec![(\"z\".into(),FieldValue::UInt(17)),(\"a\".into(),FieldValue::UInt(23))]));"
+}

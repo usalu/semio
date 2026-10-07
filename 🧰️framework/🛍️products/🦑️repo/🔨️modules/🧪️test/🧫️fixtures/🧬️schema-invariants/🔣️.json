@@ -1186,27 +1186,6 @@
   "validationCases": [
     {
       "id": "object-accepts-a-complete-instance",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "title",
-          "words"
-        ],
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 1
-          },
-          "words": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
       "instance": {
         "title": "a",
         "words": [
@@ -1214,345 +1193,387 @@
           "y"
         ]
       },
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "words"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "words": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "id": "object-refuses-a-missing-required-property",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "required": [
-          "title"
-        ],
-        "properties": {
-          "title": {
-            "type": "string"
+      "instance": {},
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            }
           }
         }
-      },
-      "instance": {},
-      "valid": false
+      }
     },
     {
       "id": "object-refuses-an-undeclared-property",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "title": {
-            "type": "string"
-          }
-        }
-      },
       "instance": {
         "title": "a",
         "extra": 1
       },
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": {
+              "type": "string"
+            }
+          }
+        }
+      }
     },
     {
       "id": "integer-is-not-a-fractional-number",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "integer"
-      },
       "instance": 1.5,
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "integer"
+        }
+      }
     },
     {
       "id": "integer-accepts-a-whole-number",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "integer",
-        "minimum": 0
-      },
       "instance": 3,
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     },
     {
       "id": "minimum-is-inclusive",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "number",
-        "minimum": 0
-      },
       "instance": 0,
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number",
+          "minimum": 0
+        }
+      }
     },
     {
       "id": "exclusive-minimum-is-not",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "number",
-        "exclusiveMinimum": 0
-      },
       "instance": 0,
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
     },
     {
       "id": "pattern-refuses-a-non-matching-string",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "string",
-        "pattern": "^[a-z]+$"
-      },
       "instance": "Abc",
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "string",
+          "pattern": "^[a-z]+$"
+        }
+      }
     },
     {
       "id": "enum-accepts-a-listed-value",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "enum": [
-          "applied",
-          "rejected"
-        ]
-      },
       "instance": "applied",
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "enum": [
+            "applied",
+            "rejected"
+          ]
+        }
+      }
     },
     {
       "id": "enum-refuses-an-unlisted-value",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "enum": [
-          "applied",
-          "rejected"
-        ]
-      },
       "instance": "no-op",
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "enum": [
+            "applied",
+            "rejected"
+          ]
+        }
+      }
     },
     {
       "id": "const-compares-structurally",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "const": {
-          "state": "offered"
-        }
-      },
       "instance": {
         "state": "offered"
       },
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "const": {
+            "state": "offered"
+          }
+        }
+      }
     },
     {
       "id": "one-of-refuses-two-matching-branches",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "oneOf": [
-          {
-            "type": "number"
-          },
-          {
-            "type": "integer"
-          }
-        ]
-      },
       "instance": 1,
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "any-of-accepts-one-matching-branch",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "anyOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "integer"
-          }
-        ]
-      },
       "instance": 4,
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "all-of-requires-every-branch",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "allOf": [
-          {
-            "type": "object",
-            "required": [
-              "a"
-            ]
-          },
-          {
-            "type": "object",
-            "required": [
-              "b"
-            ]
-          }
-        ]
-      },
       "instance": {
         "a": 1
       },
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "allOf": [
+            {
+              "type": "object",
+              "required": [
+                "a"
+              ]
+            },
+            {
+              "type": "object",
+              "required": [
+                "b"
+              ]
+            }
+          ]
+        }
+      }
     },
     {
       "id": "not-refuses-a-forbidden-shape",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "not": {
-          "type": "string"
-        }
-      },
       "instance": "x",
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "not": {
+            "type": "string"
+          }
+        }
+      }
     },
     {
       "id": "tuple-items-are-positional",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "array",
-        "items": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "integer"
-          }
-        ],
-        "additionalItems": false
-      },
       "instance": [
         "a",
         1
       ],
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
     },
     {
       "id": "tuple-refuses-an-extra-position",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "array",
-        "items": [
-          {
-            "type": "string"
-          }
-        ],
-        "additionalItems": false
-      },
       "instance": [
         "a",
         "b"
       ],
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
     },
     {
       "id": "unique-items-refuses-a-repeat",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "array",
-        "uniqueItems": true
-      },
       "instance": [
         1,
         1
       ],
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
     },
     {
       "id": "min-items-refuses-an-empty-array",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "array",
-        "minItems": 1
-      },
       "instance": [],
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "minItems": 1
+        }
+      }
     },
     {
       "id": "additional-properties-schema-applies-to-the-rest",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": {
-          "type": "integer"
-        }
-      },
       "instance": {
         "id": "a",
         "count": "two"
       },
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      }
     },
     {
       "id": "pattern-properties-match-by-key",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "patternProperties": {
-          "^x-": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "instance": {
         "x-owner": "a"
       },
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "patternProperties": {
+            "^x-": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
     },
     {
       "id": "local-ref-resolves-inside-the-document",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$defs": {
-          "Title": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "type": "object",
-        "required": [
-          "title"
-        ],
-        "properties": {
-          "title": {
-            "$ref": "#/$defs/Title"
-          }
-        }
-      },
       "instance": {
         "title": ""
       },
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$defs": {
+            "Title": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "type": "object",
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "$ref": "#/$defs/Title"
+            }
+          }
+        }
+      }
     },
     {
       "id": "recursive-ref-terminates",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$defs": {
-          "Node": {
-            "type": "object",
-            "required": [
-              "name"
-            ],
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "children": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/Node"
-                }
-              }
-            }
-          }
-        },
-        "$ref": "#/$defs/Node"
-      },
       "instance": {
         "name": "a",
         "children": [
@@ -1562,33 +1583,35 @@
           }
         ]
       },
-      "valid": true
-    },
-    {
-      "id": "recursive-ref-reports-a-deep-violation",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$defs": {
-          "Node": {
-            "type": "object",
-            "required": [
-              "name"
-            ],
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "children": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/Node"
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$defs": {
+            "Node": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Node"
+                  }
                 }
               }
             }
-          }
-        },
-        "$ref": "#/$defs/Node"
-      },
+          },
+          "$ref": "#/$defs/Node"
+        }
+      }
+    },
+    {
+      "id": "recursive-ref-reports-a-deep-violation",
       "instance": {
         "name": "a",
         "children": [
@@ -1597,48 +1620,81 @@
           }
         ]
       },
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$defs": {
+            "Node": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Node"
+                  }
+                }
+              }
+            }
+          },
+          "$ref": "#/$defs/Node"
+        }
+      }
     },
     {
       "id": "null-is-its-own-type",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": [
-          "string",
-          "null"
-        ]
-      },
       "instance": null,
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     },
     {
       "id": "boolean-is-not-a-number",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "number"
-      },
       "instance": true,
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number"
+        }
+      }
     },
     {
       "id": "min-length-counts-code-points",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "string",
-        "minLength": 2
-      },
       "instance": "🧬️",
-      "valid": true
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "string",
+          "minLength": 2
+        }
+      }
     },
     {
       "id": "multiple-of-refuses-a-remainder",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "number",
-        "multipleOf": 0.5
-      },
       "instance": 0.75,
-      "valid": false
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number",
+          "multipleOf": 0.5
+        }
+      }
     }
   ],
   "pipelineCases": [

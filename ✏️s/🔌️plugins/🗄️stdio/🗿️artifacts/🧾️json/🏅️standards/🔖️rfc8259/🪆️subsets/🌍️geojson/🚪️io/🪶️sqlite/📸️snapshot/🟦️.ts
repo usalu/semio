@@ -2,7 +2,7 @@ import {artifactSqliteValueControl} from "../../../../../../../../../../../../�
 /** 🌍️ Borrowed RFC7946 semantic admission preserves the shared JSON syntax snapshot. */
 import { jsonNumberMeaning } from "../../../../🧱️base/🧬️schema/📸️snapshot/🔢️number/🟦️.ts";
 import type { JsonSnapshot, JsonValue } from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { artifactSqliteCheckpoint, artifactSqliteInteger, artifactSqliteText, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 export interface GeoJsonSqliteDiagnostic { readonly code: string; readonly severity: "error" | "warning"; readonly message: string }

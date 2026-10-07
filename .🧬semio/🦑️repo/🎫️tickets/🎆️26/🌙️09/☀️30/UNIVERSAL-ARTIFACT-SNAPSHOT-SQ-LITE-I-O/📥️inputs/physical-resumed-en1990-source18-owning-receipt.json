@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-06T11:53:23.079144+00:00",
+  "scope": "Actual registered owning EN1990 Source18/18; containing3owner run remains active atEN1996",
+  "summary": [
+    "@semio-tech/norm-en1990-rs:  18 pass",
+    "@semio-tech/norm-en1990-rs:  0 fail",
+    "@semio-tech/norm-en1990-rs:  143 expect() calls",
+    "@semio-tech/norm-en1990-rs: Ran 18 tests across 1 file. [281.00ms]"
+  ],
+  "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-norm-source.log",
+  "nativeInference": false
+}

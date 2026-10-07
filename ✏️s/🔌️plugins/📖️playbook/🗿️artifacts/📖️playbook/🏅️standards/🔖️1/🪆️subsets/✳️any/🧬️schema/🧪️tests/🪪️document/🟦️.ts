@@ -1,4 +1,5 @@
 /** 🧪️ Playbook document facets use shared child identities and exact native fields. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -31,7 +32,7 @@ export function testPlaybookDocumentContractOracle(): void {
   const { title: _, ...missingTitle } = vectors.document;
   assertDocumentContractOracle({
     name: "Playbook",
-    dependencies: [ioSchema, childSchema],
+    dependencies: [ioSchema, childSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: artifact.parsePlaybookArtifact },
     snapshot: { schema: snapshotSchema, parse: snapshot.parsePlaybookSnapshot },
     diff: { schema: diffSchema, parse: diff.parsePlaybookDiff },

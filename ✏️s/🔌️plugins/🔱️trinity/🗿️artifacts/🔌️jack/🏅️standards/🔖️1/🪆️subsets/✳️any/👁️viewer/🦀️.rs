@@ -11,7 +11,7 @@ use crate::{empty_trinity_graph_snapshot, JackSnapshot, TRINITY_GRAPH_SCHEMA, TR
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
@@ -75,7 +75,7 @@ impl ArtifactViewer for TrinityJackViewer {
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::jack_document_store_owners())
+        Some(crate::standards::v1::subsets::any::schema::operations::jack_document_store_owners())
     }
 
     fn initial_snapshot() -> JackSnapshot {

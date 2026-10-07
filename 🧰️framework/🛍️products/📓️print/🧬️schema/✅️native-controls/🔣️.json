@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/print/native-controls/schema.json",
+  "$defs": {
+    "VectorOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "arrow": {
+          "type": "number"
+        },
+        "cell": {
+          "type": "number"
+        },
+        "columns": {
+          "type": "integer"
+        },
+        "dt": {
+          "type": "number"
+        },
+        "field": {
+          "type": "string"
+        },
+        "lineWidth": {
+          "type": "string"
+        },
+        "opacity": {
+          "type": "number"
+        },
+        "palette": {
+          "type": "string"
+        },
+        "paletteSteps": {
+          "type": "integer"
+        },
+        "render": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "integer"
+        },
+        "seeds": {
+          "type": "integer"
+        },
+        "steps": {
+          "type": "integer"
+        },
+        "stroke": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        }
+      }
+    },
+    "GeoFlowOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "basemap": {
+          "type": "boolean"
+        },
+        "curvature": {
+          "type": "number"
+        },
+        "fit": {
+          "type": "string"
+        },
+        "flow": {
+          "type": "string",
+          "enum": [
+            "band",
+            "arrow",
+            "desire",
+            "migration"
+          ]
+        },
+        "geometry": {
+          "type": "string"
+        },
+        "height": {
+          "type": "number"
+        },
+        "lineWidth": {
+          "type": "string"
+        },
+        "opacity": {
+          "type": "number"
+        },
+        "origins": {
+          "type": "boolean"
+        },
+        "palette": {
+          "type": "string"
+        },
+        "paletteSteps": {
+          "type": "integer"
+        },
+        "parallels": {
+          "type": "string"
+        },
+        "projection": {
+          "type": "string"
+        },
+        "rotate": {
+          "type": "string"
+        },
+        "routes": {
+          "type": "string"
+        },
+        "routeWidth": {
+          "type": "number"
+        },
+        "stroke": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        }
+      }
+    },
+    "HierarchyRow": {
+      "type": "object",
+      "required": [
+        "id",
+        "parent",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ use crate::{Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
@@ -78,7 +78,7 @@ impl ArtifactViewer for Generation2dViewer {
     /// retained `OrderedMap` roots that only this catalogue retires explicitly, and the framework's generic bounded
     /// owners dropped them plainly (`ordered-map root must be explicitly retired before drop`, S15 viewer matrix).
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_owners())
+        Some(crate::host::owned::generation2d_document_store_owners())
     }
 
     fn initial_snapshot() -> Generation2dSnapshot {

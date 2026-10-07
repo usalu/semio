@@ -183,16 +183,16 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     let builder = builder.subset_validators(pdf_1_4_subset_validators());
     let builder = builder.languages(pilot_languages_1_7());
     let builder = builder.languages(pilot_languages_1_4());
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("*") });
-    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.4"), subset: semio_framework_plugin::SubsetId("*") });
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("a") });
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("x") });
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("e") });
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("ua") });
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("vt") });
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("h") });
-    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.4"), subset: semio_framework_plugin::SubsetId("a") });
-    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.4"), subset: semio_framework_plugin::SubsetId("x") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.7"), subset: semio_framework_artifact_reference::SubsetId("*") });
+    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.4"), subset: semio_framework_artifact_reference::SubsetId("*") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.7"), subset: semio_framework_artifact_reference::SubsetId("a") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.7"), subset: semio_framework_artifact_reference::SubsetId("x") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.7"), subset: semio_framework_artifact_reference::SubsetId("e") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.7"), subset: semio_framework_artifact_reference::SubsetId("ua") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.7"), subset: semio_framework_artifact_reference::SubsetId("vt") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.7"), subset: semio_framework_artifact_reference::SubsetId("h") });
+    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.4"), subset: semio_framework_artifact_reference::SubsetId("a") });
+    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_artifact_reference::StandardId("1.4"), subset: semio_framework_artifact_reference::SubsetId("x") });
     builder.try_build()
 }
 
@@ -375,7 +375,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use crate::standards::v1_4::subsets::base::io::io_registry as v1_4;
     use crate::standards::v1_7::subsets::base::io::io_registry as v1_7;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -1511,22 +1511,12 @@ fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
     assert!(<PdfSnapshot as ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&wrong, body)).is_err());
 }
 
-pub use crate::standards::v1_4::subsets::a::io::{PdfABuilderConstruction, PdfAAnalyzerAnalysis, PdfABuilderFacets, PdfABuilder, PdfAAnalyzer, PdfAComposer};
 
-pub use crate::standards::v1_4::subsets::base::io::{PdfBuilderConstruction, PdfParts, PdfAnalyzerAnalysis, PdfBuilderFacets, PdfBuilder, PdfAnalyzer, PdfComposer};
 
-pub use crate::standards::v1_4::subsets::x::io::{PdfXBuilderConstruction, PdfXAnalyzerAnalysis, PdfXBuilderFacets, PdfXBuilder, PdfXAnalyzer, PdfXComposer};
 
-pub use crate::standards::v1_7::subsets::a::io::{PdfABuilderConstruction, PdfAAnalyzerAnalysis, PdfABuilderFacets, PdfABuilder, PdfAAnalyzer, PdfAComposer};
 
-pub use crate::standards::v1_7::subsets::ua::io::{PdfUaBuilderConstruction, PdfUaAnalyzerAnalysis, PdfUaBuilderFacets, PdfUaBuilder, PdfUaAnalyzer, PdfUaComposer};
 
-pub use crate::standards::v1_7::subsets::vt::io::{PdfVtBuilderConstruction, PdfVtAnalyzerAnalysis, PdfVtBuilderFacets, PdfVtBuilder, PdfVtAnalyzer, PdfVtComposer};
 
-pub use crate::standards::v1_7::subsets::base::io::{PdfBuilderConstruction, PdfParts, PdfAnalyzerAnalysis, PdfBuilderFacets, PdfBuilder, PdfAnalyzer, PdfComposer};
 
-pub use crate::standards::v1_7::subsets::x::io::{PdfXBuilderConstruction, PdfXAnalyzerAnalysis, PdfXBuilderFacets, PdfXBuilder, PdfXAnalyzer, PdfXComposer};
 
-pub use crate::standards::v1_7::subsets::h::io::{PdfHBuilderConstruction, PdfHAnalyzerAnalysis, PdfHBuilderFacets, PdfHBuilder, PdfHAnalyzer, PdfHComposer};
 
-pub use crate::standards::v1_7::subsets::e::io::{PdfEBuilderConstruction, PdfEAnalyzerAnalysis, PdfEBuilderFacets, PdfEBuilder, PdfEAnalyzer, PdfEComposer};

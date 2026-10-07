@@ -1,12 +1,33 @@
-import { ExactCargoLawError, exactExecutableFingerprint, type ExactCargoLawPort } from "../🟦️.ts";
+import { ExactCargoLawError, exactExecutableFingerprint, generatedOutputHasLiveLease, type ExactCargoLawPort } from "../🟦️.ts";
 import { test, expect } from "bun:test";
-import { readFileSync, mkdtempSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, readdirSync, renameSync, writeFileSync, mkdirSync, utimesSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import glob from "fast-glob";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 
 import { runExactCargoLaws } from "../🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+
+test("generated cleanup preserves fresh live managed owners and admits terminal, dead or stale output", () => {
+  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📨️managed-output.json", import.meta.url), "utf8"));
+  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "managed-output-protection-"));
+  const oracle = spawnSync("node", ["-e", "process.kill(Number(process.argv[1]),0)", String(process.pid)]);
+  expect(oracle.status).toBe(0);
+  for (const row of law.cases) {
+    const directory = join(root, row.name), job = join(directory, "managed-verification", "job");
+    mkdirSync(job, { recursive: true });
+    writeFileSync(join(job, "state.json"), JSON.stringify({ name: "job", status: row.status, pid: row.alive ? process.pid : 2147483647 }));
+    writeFileSync(join(job, "output.log"), "[DEBUG] active verification output\n");
+    const time = new Date(Date.now() - row.ageMs);
+    utimesSync(join(job, "state.json"), time, time);
+    utimesSync(join(job, "output.log"), time, time);
+    expect(glob.sync("managed-verification/*/state.json", { cwd: directory, onlyFiles: true, followSymbolicLinks: false })).toEqual(["managed-verification/job/state.json"]);
+    expect(generatedOutputHasLiveLease(directory), row.name).toBe(row.preserve);
+  }
+  console.log("[DEBUG] managed generated-output protection matches neutral live/dead/terminal/stale cases and independent Node process and fast-glob ownership views");
+});
 
 test("exact executable fingerprint retains identity, exposes progress and refuses cancellation or path replacement", async () => {
   const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "executable-fingerprint-"));

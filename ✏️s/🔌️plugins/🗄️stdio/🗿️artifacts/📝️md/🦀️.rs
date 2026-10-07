@@ -11,7 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::MdDiff;
 pub use schema::mutations::MdMutation;
@@ -114,7 +114,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor()])
         .composers(standards::v_commonmark::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.md", standard: semio_framework_plugin::StandardId("commonmark"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.md", standard: semio_framework_artifact_reference::StandardId("commonmark"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
 }
 
@@ -132,28 +132,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.md",
                     extension: Some("md"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_commonmark::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_commonmark::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_commonmark::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_commonmark::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.md"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.md.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_commonmark::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_commonmark::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_commonmark::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_commonmark::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.md.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.md.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v_commonmark::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_commonmark::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.md.diff"),
@@ -164,8 +164,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_commonmark::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_commonmark::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.md.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -174,8 +174,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_commonmark::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_commonmark::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.md.spr"),
                 },
             ]
@@ -187,7 +187,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_commonmark::subsets::any::io::io_registry as v_commonmark;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

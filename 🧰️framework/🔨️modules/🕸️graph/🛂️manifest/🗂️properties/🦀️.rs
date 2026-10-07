@@ -46,6 +46,7 @@ impl ToValue for PropertyBag {
  fn to_value(&self)->DslValue{DslValue::Object(self.iter().map(|(key,value)|(key.clone(),value.to_value())).collect())}
  fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut output=DslValue::object_encoding_controlled(self.len(),control)?;for(key,value)in self{let value=value.to_value_controlled(control)?;DslValue::push_encoding_controlled(output.get_mut(),key,value,control)?;control.step()?;}control.checkpoint()?;Ok(DslValue::Object(output.take()))}))}
 }
+impl semio_framework_dsl_record::BorrowedDslField for PropertyBag{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Map(||semio_framework_dsl_record::BorrowedShape::Value);}
 impl semio_framework_dsl_record::DslField for PropertyBag {
  fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Map(Box::new(semio_framework_dsl_record::Shape::Value))}
  fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{semio_framework_dsl_record::producer::boxed(semio_framework_dsl_record::Shape::Value,control).map(semio_framework_dsl_record::Shape::Map)}

@@ -1,0 +1,31 @@
+{
+  "beforeIdentity": "dag.host_snapshot",
+  "afterIdentity": "dag.hostDocument",
+  "heldOwner": "🧰️framework/🔨️modules/🕸️graph/🕸️dag/🦀️.rs",
+  "heldFixture": "🧰️framework/🔨️modules/🕸️graph/🕸️dag/🖼️assets/🎬️demo/🗣️.dsl.semio",
+  "heldTest": "🧰️framework/🔨️modules/🖱️ui/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+  "primaryPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/📸️snapshot/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🖼️assets/🎬️demo/🗣️.dsl.semio",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧫️fixtures/🪪️demo-ownership/🔣️.json"
+  ],
+  "fieldShape": [
+    {
+      "name": "schema",
+      "type": "String"
+    },
+    {
+      "name": "camera",
+      "type": "DagCamera"
+    },
+    {
+      "name": "nodes",
+      "type": "Vec<DagNodeSpec>"
+    },
+    {
+      "name": "edges",
+      "type": "Vec<DagHostSnapshotEdge>"
+    }
+  ]
+}

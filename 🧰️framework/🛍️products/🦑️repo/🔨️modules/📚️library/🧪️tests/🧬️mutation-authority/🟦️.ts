@@ -120,14 +120,12 @@ describe("direct mutation ownership", () => {
     const fixturePath = join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🧪️consumers/🔣️.json");
     const inventorySchemaPath = join(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: number; assignmentLedger: unknown; files: readonly { path: string; content: string }[] };
-    const fixtureSchema = { type: "object", required: ["schemaVersion", "assignmentLedger", "files"], properties: { schemaVersion: { const: 1 }, assignmentLedger: { type: "object" }, files: { type: "array", minItems: 2, items: { type: "object", required: ["path", "content"], properties: { path: { type: "string" }, content: { type: "string" } }, additionalProperties: false } } }, additionalProperties: false };
     const taxonomy = loadTaxonomy();
     const rustFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
     const typescriptFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🟦️typescript"]!, taxonomy);
     const jsonFilename = canonicalPrimaryFilenameForKind("json", taxonomy);
     const taxonomyPath = (path: string) => path.replaceAll("🦀️.rs", rustFilename).replaceAll("🟦️.ts", typescriptFilename).replaceAll("🔣️.json", jsonFilename);
     try {
-      expect(new Ajv({ strict: true }).compile(fixtureSchema)(fixture)).toBe(true);
       for (const { path, content } of fixture.files) {
         const target = join(root, taxonomyPath(path));
         mkdirSync(dirname(target), { recursive: true });

@@ -3028,7 +3028,7 @@ function validateSchemaScopeVocabulary(taxonomy: Taxonomy): string[] {
 /**
  * 🧫️ Whether a repository-relative path lies inside a test or fixture COLLECTION.
  *
- * Only the self patterns (`**​/🧪️*`) name a collection root; every ancestor of the path is tested against
+ * Only the authored fixture and test self patterns name a collection root; every ancestor of the path is tested against
  * them, so the `/**` siblings would only restate the walk. The one carve-out is `🔨️modules/<m>`: a module
  * member is a module whatever emoji its name starts with, and without it the repository test platform
  * (`🔨️modules/🧪️test`, which owns the test-protocol contract every host reads) would be classified as a
@@ -3237,10 +3237,24 @@ function schemaFormatDeclaresExport(formatId: string, source: string, exportId: 
   return new RegExp(`\\bparse${name}\\b`, "u").test(source) || new RegExp(`\\bexport\\b(?:\\s+type)?\\s*\\{[^}]*\\b${name}\\b[^}]*\\}`, "u").test(source);
 }
 
+/** 🧪️ Distinguishes embedded schema authority from schema-shaped input specimens. */
+function schemaEmbeddedExampleAuthority(subject: unknown): boolean {
+  if (!subject || typeof subject !== "object") return false;
+  if (Array.isArray(subject)) return subject.some(schemaEmbeddedExampleAuthority);
+  return Object.entries(subject as Record<string, unknown>).some(([key, value]) => {
+    if (/^(?:input|inputs|value|values|payload|request|document|documents|files|expect)$/u.test(key) || /^expected(?:$|[A-Z])/u.test(key)) return false;
+    if (/(?:^|[A-Z])schema$/iu.test(key) && value && typeof value === "object" && !Array.isArray(value)) {
+      const schema = value as Record<string, unknown>;
+      if (["$schema", "$ref", "type", "properties", "items", "allOf", "anyOf", "oneOf", "enum", "const"].some((keyword) => Object.hasOwn(schema, keyword))) return true;
+    }
+    return schemaEmbeddedExampleAuthority(value);
+  });
+}
+
 /** 🧫️ Recognizes test corpus contracts from their examples and expectations independently of titles. */
 function schemaTestCorpusDefinition(exportId: string, subject: unknown, document: Record<string, unknown>): boolean {
   const producedRecord = /(?:Report|Result|Progress|Outcome|Diagnostic|Coverage)(?:V\d+)?$/u.test(exportId);
-  const namedCorpus = /(?:Fixture|Corpus|Cases)/u.test(exportId);
+  const namedCorpus = /(?:Fixture|Corpus|Cases|(?:^|[A-Z])Vectors?(?:File)?$)/iu.test(exportId);
   const visited = [new Set<unknown>(), new Set<unknown>()];
   const inspect = (value: unknown, testCases = false): boolean => {
     const seen = visited[Number(testCases)]!;
@@ -3257,6 +3271,29 @@ function schemaTestCorpusDefinition(exportId: string, subject: unknown, document
     const marker = properties.schema && typeof properties.schema === "object" ? (properties.schema as Record<string, unknown>).const : undefined;
     if (typeof marker === "string" && /(?:fixture|corpus|test[-.]cases)/iu.test(marker)) return true;
     const fixedProperties = Object.entries(properties).filter(([, child]) => child && typeof child === "object" && Object.hasOwn(child, "const"));
+    const fixed = new Map(fixedProperties), fields = (child: unknown): Record<string, unknown> => child && typeof child === "object" ? ((child as Record<string, unknown>).properties as Record<string, unknown> | undefined) ?? {} : {};
+    const items = (key: string): Record<string, unknown> => { const child = properties[key]; return child && typeof child === "object" ? ((child as Record<string, unknown>).items as Record<string, unknown> | undefined) ?? {} : {}; };
+    const owns = (record: Record<string, unknown>, keys: readonly string[]): boolean => keys.every(key => Object.hasOwn(record, key));
+    if (node.additionalProperties === false) {
+      if (["package", "module", "manifest", "library", "mount", "dependencies", "publicEntries", "forbiddenProviders"].every(key => fixed.has(key))) return true;
+      const owners = properties.owners as Record<string, unknown> | undefined;
+      if (owns(properties, ["owners", "routers", "artifactDefinitions", "inputs", "registration"]) && owners && typeof owners.minItems === "number" && owners.minItems > 0 && owners.minItems === owners.maxItems) return true;
+      const revisions = properties.rows as Record<string, unknown> | undefined;
+      if (revisions && typeof revisions.minItems === "number" && revisions.minItems > 0 && revisions.minItems === revisions.maxItems && owns(fields(items("rows")), ["path", "originalSha256", "currentSha256"])) return true;
+      const contexts = fields(items("contexts")), phases = contexts.phases as Record<string, unknown> | undefined;
+      if (Object.hasOwn(properties, "imports") && owns(contexts, ["id", "source", "phases"]) && phases && owns(fields(phases.items), ["file", "projects", "packages", "locked", "targets"])) return true;
+      if (owns(properties, ["counts", "rows", "refused", "encodings"]) && ["owner", "table", "columns", "identity"].every(key => fixed.has(key))) return true;
+      if (["renderId", "kind", "group", "handle", "label", "revision", "expectedBytes"].every(key => fixed.has(key))) return true;
+      const emptySegments = fields(properties.emptySegments), capacityRefusal = emptySegments.accepted as Record<string, unknown> | undefined;
+      if (owns(properties, ["byteGrants", "capacityGrant", "cancelAt", "cases", "emptySegments"]) && owns(fields(items("cases")), ["code", "message", "target"]) && Object.hasOwn(emptySegments, "count") && capacityRefusal?.const === false) return true;
+      const unchanged = properties.sourceUnchanged as Record<string, unknown> | undefined, changed = properties.changedSourceAccepted as Record<string, unknown> | undefined;
+      if (owns(properties, ["cancelAt", "sourceUnchanged", "changedSourceAccepted"]) && unchanged?.const === true && changed?.const === false) return true;
+      if (owns(properties, ["bodyBytes", "text", "repeat", "originalUnchanged", "terminalEmpty"]) && fixed.has("bodyBytes") && ["originalUnchanged", "terminalEmpty"].every(key => (properties[key] as Record<string, unknown> | undefined)?.const === true)) return true;
+      if (owns(properties, ["prefix", "prefixRepeat", "cancelAt", "comparisons", "objectEntries"]) && ["bodyBytes", "payloadChunkBytes", "treeDepth", "maximumCursorBytes"].every(key => fixed.has(key)) && owns(fields(items("comparisons")), ["left", "right", "ordering"])) return true;
+      if (owns(properties, ["initial", "first", "latest", "remote", "unsubmitted", "commandsAfterEnterAndBlur", "commandsAfterNextBlur", "draftAfterFirstEcho", "conflictAfterFirstEcho", "dirtyAfterFinalEcho"])) return true;
+      const refusals = fields(properties.refusals);
+      if (owns(properties, ["fields", "copy", "frontier", "maximumBytes", "tinyMaximumBytes", "recursiveDepth", "refusals"]) && owns(fields(properties.copy), ["repeatCount", "cancelAt"]) && owns(fields(properties.frontier), ["fieldCount", "cancelAt"]) && ["ownership", "cancellation"].every(key => refusals[key] && typeof refusals[key] === "object" && Object.hasOwn(refusals[key]!, "const"))) return true;
+    }
     const fixedTrials = fixedProperties.some(([key, child]) => /(?:Grants|Frontiers|Cuts|budgetCases|zeroGrants)$/u.test(key) && Array.isArray((child as Record<string, unknown>).const));
     if (fixedTrials && fixedProperties.some(([key]) => /(?:Survives|Allocations|Readable|Mutates|Unchanged|RequiresTerminal|AfterClose|BeforeFinalReader)/u.test(key))) return true;
     if (Object.entries(properties).some(([key, child]) => {
@@ -3315,6 +3352,8 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
   }
   const defs = parsed[resolution.exportsKeyword];
   const defRows = defs && typeof defs === "object" && !Array.isArray(defs) ? (defs as Record<string, unknown>) : {};
+  const localDefinitions = parsed.definitions && typeof parsed.definitions === "object" && !Array.isArray(parsed.definitions) ? parsed.definitions as Record<string, unknown> : {};
+  for (const [key, value] of Object.entries(localDefinitions)) if (schemaTestCorpusDefinition(key, value, parsed)) diagnostics.push({ code: "schema-fixture-defines-schema", path, detail: `${key} defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.` });
   const defKeys = Object.keys(defRows);
   for (const key of defKeys) {
     if (schemaTestCorpusDefinition(key, defRows[key], parsed)) diagnostics.push({ code: "schema-fixture-defines-schema", path, detail: `${key} defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.` });
@@ -3470,7 +3509,8 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
       if (!path.endsWith(".json") || inertSchemaData(path)) continue;
       try {
         const document = JSON.parse(readFileSync(join(root, path), "utf8")) as { $schema?: unknown } | null;
-        if (!document || typeof document.$schema !== "string" || !/^https?:\/\/json-schema\.org\//u.test(document.$schema)) continue;
+        const rootContract = document && typeof document.$schema === "string" && /^https?:\/\/json-schema\.org\//u.test(document.$schema);
+        if (!rootContract && !schemaEmbeddedExampleAuthority(document)) continue;
       } catch {
         continue;
       }

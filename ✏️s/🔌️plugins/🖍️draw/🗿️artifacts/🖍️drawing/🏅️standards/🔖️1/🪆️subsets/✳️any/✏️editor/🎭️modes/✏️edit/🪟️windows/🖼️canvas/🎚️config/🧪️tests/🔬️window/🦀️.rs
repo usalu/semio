@@ -51,7 +51,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
             };
             let left = view.for_window_instance("drawing-left").unwrap();
             let right = view.for_window_instance("drawing-right").unwrap();
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest).await);
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
             app.bind_instance_id(91).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -89,7 +89,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 for context in [&left, &right] {
                     if app.window_config_generation(context).await.map_err(|error| format!("{error:?}"))?.is_none() { return Err("Drawing Canvas config was lost during reload".into()); }
                 }
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 reopened.bind_instance_id(92).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_left = scene(&mut reopened, &left).await?;

@@ -1,5 +1,5 @@
 //! 🏠️ Ownership stamp stored on each independently persisted child envelope.
-use crate::os_io::ArtifactRef;
+use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🪪️ Exact owning parent, declared slot and durable child identity.

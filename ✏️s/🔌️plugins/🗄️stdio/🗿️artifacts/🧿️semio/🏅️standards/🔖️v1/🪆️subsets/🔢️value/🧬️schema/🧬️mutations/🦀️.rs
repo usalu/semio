@@ -29,7 +29,7 @@ use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioVa
 
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
-use protocol::{Mutation, OpText};
+use protocol::{Mutation};
 
 //#region 🔖️SemioValuePath
 /// 🧭️ One step of a [`SemioValuePath`] — a map key or a list position. Struct (named-field)
@@ -409,3 +409,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/🔄️retypes/🦀️.rs"]
 mod set_snapshot_retypes_a_map_member_and_repoints_a_graph_node;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpText};

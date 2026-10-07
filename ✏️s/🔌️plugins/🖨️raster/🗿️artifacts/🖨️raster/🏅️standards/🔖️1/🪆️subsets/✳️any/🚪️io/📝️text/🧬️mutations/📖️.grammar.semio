@@ -56,8 +56,8 @@ transform-block = "transform" "{" "x=" number SP "y=" number SP "a=" number SP "
 mask-block = "mask" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? SP "image-key=" id? SP transform-block "}"
 param = IDENT "=" TEXT
 
-# `asset` is a whole `RasterImageAsset` value (mime/data), printed via its own dsl record shape.
-asset = "{" "mime=" text "data=" TEXT "}"
+# `asset` carries the decoded image state as a nested record.
+asset = "{" "schema=" text "width=" uint "height=" uint "colorspace=" text "bit-depth=" uint "frames=" array ["icc=" array] "metadata=" array "}"
 
 id = TEXT
 text = TEXT

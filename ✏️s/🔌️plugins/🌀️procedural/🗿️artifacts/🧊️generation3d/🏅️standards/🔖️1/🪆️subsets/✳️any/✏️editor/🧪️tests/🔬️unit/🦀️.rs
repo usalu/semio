@@ -18,7 +18,7 @@ async fn document_io_outer_export_yields_before_physical_publication() {
     let operation = semio_framework_plugin::app::AppOperationContext { app_instance_id: 1, parent_document_id: "outer-document-io".into(), operation_id: 1, generation: 1, canonical_base_revision: [1; 32], authoring_seed: "outer-document-io".into() };
     let instance_owner = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
     let mut work = Generation3dDocumentIoWork::new("exportDocument", instance_owner.clone());
-    let result = work.step(&ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0)).expect("outer export first step");
+    let result = work.step(&ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0)).expect("outer export first step");
     let yielded = matches!(result, ArtifactCommandWorkStep::Progress { .. });
     drop(result);
     work.begin_close();
@@ -47,7 +47,7 @@ async fn document_io_outer_text_resumes_parity_cancel_and_stale_source_without_p
     let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::default();
     let operation=semio_framework_plugin::app::AppOperationContext{app_instance_id:1,parent_document_id:"outer-document-parity".into(),operation_id:1,generation:1,canonical_base_revision:[1;32],authoring_seed:"outer-document-parity".into()};
     let owner=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
-    let inputs=ArtifactCommandInputs{command:&command,snapshot:&snapshot,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
+    let inputs=ArtifactCommandInputs{ snapshot_owner: None,command:&command,snapshot:&snapshot,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
     let expected=crate::standards::v1::subsets::any::io::document_io::export_document(&snapshot).unwrap();
     assert!(expected.data.len()>fixture["documentContinuation"]["capacity"]["wireBytes"].as_u64().unwrap()as usize,"an admitted document must exceed the single reply wire limit");
     let close=|work:&mut Generation3dDocumentIoWork|{work.begin_close();assert!(matches!(work.close_step(0,0),semio_framework_job::InteractiveJobCloseStep::Blocked));for _ in 0..1000000{if matches!(work.close_step(1,3),semio_framework_job::InteractiveJobCloseStep::Complete){assert!(work.terminal_is_empty());return}}panic!("document candidate retirement did not finish")};
@@ -366,7 +366,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
         "schema": GENERATION_3D_SCHEMA,
         "id": "generation3d-production-mounted-law",
         "vcs": {
-            "initialSnapshot": production_hex(&crate::standards::v1::subsets::any::io::binary::snapshot::encode_mounted(&snapshot)),
+            "initialPack": production_hex(&crate::standards::v1::subsets::any::io::binary::snapshot::encode_mounted(&snapshot)),
             "edits": [{
                 "id": "generation3d-production-all14-edit",
                 "actor": "generation3d-production-law",
@@ -529,3 +529,65 @@ fn mesh_component_action_rejects_malformed_explicit_parameters() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("procedural", super::Generation3dPlayApp, || semio_framework_plugin::App { definition: super::create_generation3d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+
+#[test]
+fn document_io_import_state_values_agree_with_serde_json(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let source=serde_json::to_string(&fixture["documentContinuation"]["importContinuation"]["restoration"]["value"]).unwrap();
+    let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();
+    for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
+        let mut parser=semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject);let mut accepted=|_|true;
+        let mut control=semio_framework_value::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);
+        let value=loop{if let Some(value)=parser.step(&source,budget.as_u64().unwrap()as usize,&mut control).unwrap(){break value}};
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&value)).unwrap(),oracle);
+        let mut release=semio_framework_value::retirement::owned_retirement((parser,value));while !release.terminal_is_empty(){release.close_step(1,3).unwrap();}
+    }
+    eprintln!("[DEBUG] original JSON parser budgets1/8/256 agrees with serde_json nested imported generation value");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn document_io_import_continuation_restores_original_generation_selection_and_preview(){
+    let _serial=crate::test_serial::lock();
+    use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
+    use crate::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation;
+    use semio_framework_artifact_playbook_playbook::FormGeneration;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"]["importContinuation"];let state=&law["restoration"];
+    assert_eq!(law["snapshotParity"],"all-semantic-fields");assert_eq!(law["rawSourceCopies"],0);assert_eq!(state["cameraLane"],"config");assert_eq!(state["publication"],"after-checked-mutations");
+    let mut snapshot=Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::initial_snapshot());
+    let prior_id=state["priorGenerationId"].as_str().unwrap().to_string();let prior=snapshot.generation.cold_builder_mut().unwrap();prior.generations.push(FormGeneration{id:prior_id.clone(),name:"Prior generation".into(),values:Default::default()});prior.selected_generation_id=Some(prior_id.clone());prior.preview_text=Some("Prior preview".into());
+    let mut incoming=Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::initial_snapshot());
+    for index in 0..fixture["documentContinuation"]["importAdditionalGroups"].as_u64().unwrap(){incoming.host_snapshot.widgets.push(Widget::InputNote{id:format!("incoming-group-{index}"),text:format!("Group {index}")});}
+    incoming.host_snapshot.widgets.push(Widget::InputNote{id:"incoming-retained-text".into(),text:fixture["documentContinuation"]["envelope"]["text"].as_str().unwrap().repeat(fixture["documentContinuation"]["envelope"]["textRepeats"].as_u64().unwrap()as usize)});
+    incoming.host_snapshot.camera=semio_framework_artifact_flow_flow::CameraJson{x:state["camera"]["x"].as_f64().unwrap(),y:state["camera"]["y"].as_f64().unwrap(),zoom:state["camera"]["zoom"].as_f64().unwrap()};
+    let value_source=serde_json::to_string(&state["value"]).unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);let value=semio_framework_pack_json::from_json_str_controlled::<semio_framework_value::DslValue>(&value_source,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();
+    let generation=incoming.generation.cold_builder_mut().unwrap();generation.generations.push(FormGeneration{id:state["generationId"].as_str().unwrap().into(),name:state["generationName"].as_str().unwrap().into(),values:[(state["questionId"].as_str().unwrap().into(),value)].into()});generation.selected_generation_id=Some(state["selectedGenerationId"].as_str().unwrap().into());generation.preview_text=Some(state["previewText"].as_str().unwrap().into());
+    let mut config=Generation3dConfig::default();config.selected_generation_id=Some(prior_id);
+    let export=crate::standards::v1::subsets::any::io::document_io::export_document(&incoming).unwrap();
+    let command=Generation3dCommand::ImportDocument(import_document::ImportDocument{name:export.filename,payload:export.data,widget_id:None,channel:None,texture_id:None});
+    let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::default();
+    let operation=semio_framework_plugin::app::AppOperationContext{app_instance_id:1,parent_document_id:"original-import-state".into(),operation_id:1,generation:1,canonical_base_revision:[1;32],authoring_seed:"original-import-state".into()};
+    let owner=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
+    let inputs=ArtifactCommandInputs{ snapshot_owner: None,command:&command,snapshot:&*snapshot,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
+    let close=|work:&mut Generation3dDocumentIoWork|{work.begin_close();assert!(matches!(work.close_step(0,0),semio_framework_job::InteractiveJobCloseStep::Blocked));for _ in 0..1000000{if matches!(work.close_step(1,3),semio_framework_job::InteractiveJobCloseStep::Complete){assert!(work.terminal_is_empty());return}}panic!("original import continuation must retire")};
+    let discard=|mut emit:Emit<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation,crate::editor::generation3d::config::Generation3dConfigMutation>|{for mutation in std::mem::take(&mut emit.artifact_mutations){mutation.retire_cold();}};
+    let mut checks=Vec::new();
+    for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
+        let mut work=Generation3dDocumentIoWork::new("importDocument",owner.clone());let mut turns=0usize;let mut first_progress=false;
+        let mut emit=loop{turns+=1;assert!(turns<1000000);let mut spent=0;let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(budget.as_u64().unwrap(),u64::MAX),semio_framework_job::root_cancel_token(),||Some(0),&mut spent);match work.step(&inputs,&mut cx).unwrap(){ArtifactCommandWorkStep::Progress{..}=>{if turns==1{first_progress=true}},ArtifactCommandWorkStep::Complete(emit)=>break emit,_=>panic!("unexpected original import completion")}};
+        let rows=GENERATION3D_RETAINED_CAPACITY.rows(emit.artifact_mutations.len());let admission=rows<=law["maximumStagedRows"].as_u64().unwrap()as usize;
+        let mut folded=Generation3dSnapshotRead::new((*snapshot).clone());let mut folded_config=config.clone();let mut valid=true;
+        for mutation in std::mem::take(&mut emit.artifact_mutations){valid&=apply_generation3d_mutation(&mut folded,&mutation).is_ok();mutation.retire_cold();}
+        for mutation in std::mem::take(&mut emit.config_mutations){let(delta,messages)=protocol::Mutation::diff(&mutation,&folded_config).into_parts();valid&=!messages.iter().any(|message|matches!(message.level,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal));match protocol::MutationDiff::apply(&delta,&folded_config){Ok(next)=>folded_config=next,Err(_)=>valid=false}}
+        let graph=folded.host_snapshot.schema==incoming.host_snapshot.schema&&folded.host_snapshot.widgets==incoming.host_snapshot.widgets&&folded.host_snapshot.synapses==incoming.host_snapshot.synapses&&folded.host_snapshot.layout==incoming.host_snapshot.layout;
+        let generations=folded.generation==incoming.generation;let camera=folded_config.camera==incoming.host_snapshot.camera;let selection=folded_config.selected_generation_id==incoming.generation.selected_generation_id;
+        let Generation3dCommand::ImportDocument(payload)=&command else{unreachable!()};let parsed_units=turns.saturating_mul(budget.as_u64().unwrap()as usize)>=payload.payload.chars().count();checks.push((budget.as_u64().unwrap(),turns,first_progress,parsed_units,admission,valid,graph,generations,camera,selection,emit.effects.is_empty()));close(&mut work);
+    }
+    let mut no_canceled_publication=true;
+    for stop in state["cancelAfterHops"].as_array().unwrap(){let mut work=Generation3dDocumentIoWork::new("importDocument",owner.clone());let token=semio_framework_job::root_cancel_token();for _ in 0..stop.as_u64().unwrap(){let mut spent=0;let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX),token.clone(),||Some(0),&mut spent);match work.step(&inputs,&mut cx){Ok(ArtifactCommandWorkStep::Progress{..})=>{},Ok(ArtifactCommandWorkStep::Complete(emit))=>{no_canceled_publication=false;discard(emit);break},_=>{no_canceled_publication=false;break}}}token.cancel_now();let mut spent=0;let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(8,u64::MAX),token,||Some(0),&mut spent);match work.step(&inputs,&mut cx){Err(_)=>{},Ok(ArtifactCommandWorkStep::Complete(emit))=>{no_canceled_publication=false;discard(emit)},_=>no_canceled_publication=false}close(&mut work);}
+    let other=Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::initial_snapshot());let Generation3dCommand::ImportDocument(payload)=&command else{unreachable!()};let changed_command=Generation3dCommand::ImportDocument(import_document::ImportDocument{name:payload.name.clone(),payload:format!("{}\n",payload.payload),widget_id:None,channel:None,texture_id:None});let mut stale_refused=true;
+    for root in state["staleRoots"].as_array().unwrap(){let mut work=Generation3dDocumentIoWork::new("importDocument",owner.clone());let mut spent=0;let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX),semio_framework_job::root_cancel_token(),||Some(0),&mut spent);match work.step(&inputs,&mut cx).unwrap(){ArtifactCommandWorkStep::Progress{..}=>{},ArtifactCommandWorkStep::Complete(emit)=>{stale_refused=false;discard(emit)},_=>stale_refused=false}let stale=if root=="command"{ArtifactCommandInputs{command:&changed_command,..inputs}}else{ArtifactCommandInputs{snapshot:&*other,..inputs}};let mut spent=0;let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(8,u64::MAX),semio_framework_job::root_cancel_token(),||Some(0),&mut spent);match work.step(&stale,&mut cx){Err(_)=>{},Ok(ArtifactCommandWorkStep::Complete(emit))=>{stale_refused=false;discard(emit)},_=>stale_refused=false}close(&mut work);}
+    let mut owner_closed=false;for _ in 0..1000000{if owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|Ok(matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(owner,8,8),Ok(semio_framework_plugin::PluginCloseStep::Complete)))).unwrap(){owner_closed=true;break}}
+    for(budget,turns,progress,parsed_units,admission,valid,graph,generations,camera,selection,effects)in checks{eprintln!("[DEBUG] original TXT import budget={budget} turns={turns} firstProgress={progress} sourceScalarTurns={parsed_units} checkedRows={admission} validMutations={valid} graph={graph} generationsSelectionPreview={generations} camera={camera} configSelection={selection} noEffects={effects}");assert!(progress&&turns>1&&parsed_units,"whole TXT parse/conversion/diff must yield under scalar grants on the original route");assert!(admission&&valid&&graph&&generations&&camera&&selection&&effects,"folded original mutations/config must restore every authored imported semantic field");}
+    assert!(owner_closed);assert!(no_canceled_publication,"canceled import cannot publish any original mutation candidate");assert!(stale_refused,"changed command or snapshot root cannot publish");
+    eprintln!("[DEBUG] original TXT import restores nested generation/selection/preview; checked mutation/config publication; cancellation/stale refusal and bounded retirement");
+}

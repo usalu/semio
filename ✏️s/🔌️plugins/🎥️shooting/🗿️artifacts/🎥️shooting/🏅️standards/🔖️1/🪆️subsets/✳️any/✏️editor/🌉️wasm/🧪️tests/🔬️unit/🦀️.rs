@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_store_type_alias_constructs_from_an_empty_envelope() {
-    let mut store = ShootingStore::new(store::create_document_envelope(crate::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::empty_shooting_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = ShootingStore::new(store::create_document_envelope(crate::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::empty_shooting_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ShootingSnapshot, ShootingMutation>());
     assert!(store.snapshot().expect("snapshot").assets.is_empty());
     while !store.close_owned_terminal_is_empty() {

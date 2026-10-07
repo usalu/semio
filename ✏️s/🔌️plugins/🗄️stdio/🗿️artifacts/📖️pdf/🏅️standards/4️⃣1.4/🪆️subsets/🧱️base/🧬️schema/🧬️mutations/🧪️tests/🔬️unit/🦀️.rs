@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1_4::subsets::base::io::binary::mutations as binary;
 
 #[test]
 fn direct_descriptor_and_catalog_bijection() {
@@ -98,7 +99,7 @@ fn own14_replacement_and_patch_preserve_literal_binary64_words_and_frozen_identi
     let patch=PatchSnapshot{patch:semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set{path:"/pages/0/text".into(),value:semio_framework_value::DslValue::String("edited Ω\0".into())}};
     let next=semio_s_artifact_stdio_contract::editing::apply_snapshot_patch(&source,&patch.patch).unwrap();assert_eq!(next.pages[0].text,"edited Ω\0");for(a,b)in next.pages.iter().zip(&source.pages){assert_eq!(a.width.to_bits(),b.width.to_bits());assert_eq!(a.height.to_bits(),b.height.to_bits());}
     let refused=PatchSnapshot{patch:semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set{path:"/schema".into(),value:semio_framework_value::DslValue::String("foreign\0schema".into())}};assert!(refused.inverse(&source).is_err());
-    assert_eq!(super::set_snapshot::binary::TAG,5);assert_eq!(super::patch_snapshot::binary::TAG,6);
+    assert_eq!(binary::set_snapshot::TAG,5);assert_eq!(binary::patch_snapshot::TAG,6);
     eprintln!("[DEBUG] own14 full raw-word Set/patch domain inverse identity and exact literal frame");
 }
 

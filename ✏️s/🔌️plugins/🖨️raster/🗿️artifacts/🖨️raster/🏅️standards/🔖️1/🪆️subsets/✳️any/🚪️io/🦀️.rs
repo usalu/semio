@@ -31,10 +31,10 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// vector-rasterizer gap, reported in `stdio_gaps`); it stays on `semio_framework_os`'s real
 /// usvg/resvg renderer, whose OUTPUT is then canonicalized through the real png↔semio/image codec.
 use crate::{RasterImageAsset, RasterLayerNode, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
-use semio_framework::{io::io_compose_via, io_dispatch,  Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use {semio_framework::io::io_compose_via,semio_framework::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework::ErasedComposeSource,semio_framework::IoDirection,semio_framework::IoKey,semio_framework::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::PngSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{compose_affine, flatten_segments, semio_transform_affine, transformed_segments};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{compose_affine, flatten_segments, semio_transform_affine, transformed_segments};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
@@ -223,10 +223,6 @@ pub fn raster_image_pack_asset(image: &SemioImageSnapshot) -> RasterImageAsset {
     RasterImageAsset { mime: RASTER_IMAGE_PACK_MIME.into(), data: <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image) }
 }
 
-/// 🖼️ A one-frame straight-alpha RGBA8 image of `width × height` over `rgba8`.
-pub fn semio_image_from_rgba8(width: u32, height: u32, rgba8: Vec<u8>) -> SemioImageSnapshot {
-    SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() }
-}
 
 pub fn raster_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<RasterImageAsset, String> {
     Ok(RasterImageAsset { mime: "image/png".into(), data: png_bytes_from_semio_image(image)? })
@@ -369,8 +365,8 @@ pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &
         return Err(format!("{id_prefix}: decoded image is {}x{} — an empty raster cannot become a pixel layer", image.width, image.height));
     }
     let data = png_bytes_from_semio_image(image)?;
-    let asset_key = crate::standards::v1::subsets::any::io::text::snapshot::create_raster_id(&format!("{id_prefix}-asset"));
-    let mut layer = crate::standards::v1::subsets::any::io::text::snapshot::create_pixel_layer(title, image.width, image.height);
+    let asset_key = crate::create_raster_id(&format!("{id_prefix}-asset"));
+    let mut layer = crate::standards::v1::subsets::any::schema::create_pixel_layer(title, image.width, image.height);
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
     }
@@ -378,7 +374,7 @@ pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &
     let handle = crate::mint_raster_asset_child(&asset_key, &asset);
     let mut assets = crate::RasterOwnedMap::new();
     assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
-    Ok(RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::standards::v1::subsets::any::io::text::snapshot::create_raster_id(id_prefix), title: Some(title.into()), layers: vec![layer], assets })
+    Ok(RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::create_raster_id(id_prefix), title: Some(title.into()), layers: vec![layer], assets })
 }
 //#endregion 🔖️Composite
 
@@ -465,8 +461,8 @@ pub fn raster_document_from_dwg_drawing(world: &SemioDrawingSnapshot) -> Result<
     let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
     let image = semio_image_from_png_bytes(&raw_bytes)?;
     let (data, width, height) = (png_bytes_from_semio_image(&image)?, image.width, image.height);
-    let asset_key = crate::standards::v1::subsets::any::io::text::snapshot::create_raster_id("dwg-asset");
-    let mut layer = crate::standards::v1::subsets::any::io::text::snapshot::create_pixel_layer("DWG Import", width, height);
+    let asset_key = crate::create_raster_id("dwg-asset");
+    let mut layer = crate::standards::v1::subsets::any::schema::create_pixel_layer("DWG Import", width, height);
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
     }
@@ -474,7 +470,7 @@ pub fn raster_document_from_dwg_drawing(world: &SemioDrawingSnapshot) -> Result<
     let handle = crate::mint_raster_asset_child(&asset_key, &asset);
     let mut assets = crate::RasterOwnedMap::new();
     assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
-    let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::standards::v1::subsets::any::io::text::snapshot::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
+    let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
     Ok(document)
 }
 
@@ -486,20 +482,15 @@ pub fn raster_document_from_dwg_drawing(world: &SemioDrawingSnapshot) -> Result<
 /// `vector:out` source. Real decode through `s.stdio.semio/v1/image` (`semio_image_from_png_bytes`)
 /// recovers the real width/height instead of leaving them unset, and re-encodes through the real
 /// serializer instead of storing the caller's bytes verbatim.
-pub fn raster_image_layer_and_asset(png_base64: &str) -> (String, RasterImageAsset, RasterLayerNode) {
-    let asset_key = crate::standards::v1::subsets::any::io::text::snapshot::create_raster_id("image-in-asset");
-    let raw_bytes = base64_codec::base64_standard_decode(png_base64.as_bytes()).unwrap_or_default();
-    let (data, width, height) = match semio_image_from_png_bytes(&raw_bytes).and_then(|image| Ok((png_bytes_from_semio_image(&image)?, image.width, image.height))) {
-        Ok((bytes, width, height)) => (bytes, Some(width), Some(height)),
-        Err(_) => (raw_bytes, None, None),
-    };
-    let mut layer = crate::standards::v1::subsets::any::io::text::snapshot::create_pixel_layer("Imported Image", width.unwrap_or(0), height.unwrap_or(0));
-    if let RasterLayerNode::Pixel { image_key, width: layer_width, height: layer_height, .. } = &mut layer {
+pub fn raster_image_layer_and_asset(png_base64: &str) -> Result<(String, SemioImageSnapshot, RasterLayerNode), String> {
+    let bytes = base64_codec::base64_standard_decode(png_base64.as_bytes()).map_err(|error| error.to_string())?;
+    let image = semio_image_from_png_bytes(&bytes)?;
+    let asset_key = crate::create_raster_id("image-in-asset");
+    let mut layer = crate::standards::v1::subsets::any::schema::create_pixel_layer("Imported Image", image.width, image.height);
+    if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
-        *layer_width = width;
-        *layer_height = height;
     }
-    (asset_key, RasterImageAsset { mime: "image/png".into(), data }, layer)
+    Ok((asset_key, image, layer))
 }
 //#endregion 🔖️MediaImport
 
@@ -512,7 +503,7 @@ mod tests;
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::RasterAnalyzer;
     use crate::RasterSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.raster.raster", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_BMP: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
@@ -634,7 +625,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::standards::v1::subsets::any::io::RasterBuilder as RasterAnyBuilder;
     use crate::standards::v1::subsets::any::io::RasterComposer as RasterAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoConfidence,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -818,7 +809,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::RasterSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RasterParts {

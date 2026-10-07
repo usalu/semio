@@ -1,6 +1,6 @@
 //! 📏️ Literal Forms borrowed entity counts precede projection or typed ownership.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use super::super::FormsSnapshot;
+use crate::FormsSnapshot;
 use crate::FormExpr;
 use semio_framework_value::DslValue;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
@@ -40,7 +40,7 @@ impl Forecast<'_,'_>{
  fn condition(&mut self,root:&FormExpr)->Result<(),ValueError>{
   let mut pending=Vec::new();self.frontier(&mut pending,1)?;pending.push(root);
   while let Some(value)=pending.pop(){self.add(2,16)?;self.count(|c|&mut c.conditions,1)?;
-   match value{FormExpr::Const{value}=>{self.text("const")?;self.add(0,8)?;self.value(value)?;}FormExpr::Var{name}=>{self.text("var")?;self.text(name)?;}FormExpr::Eq{left,right}=>{self.text("eq")?;self.add(0,16)?;self.frontier(&mut pending,2)?;pending.push(right);pending.push(left);}FormExpr::Truthy{expr}=>{self.text("truthy")?;self.add(0,8)?;self.frontier(&mut pending,1)?;pending.push(expr);}FormExpr::And{items}|FormExpr::Or{items}=>{self.text(if matches!(value,FormExpr::And{..}){"and"}else{"or"})?;self.repeated(items.len(),32)?;self.count(|c|&mut c.condition_items,items.len())?;self.control.check_rows(self.counts.rows.checked_add(items.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms condition row count overflow"))?).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms condition row count overflow"))?)?;self.frontier(&mut pending,items.len())?;for value in items.iter().rev(){pending.push(value);self.step()?;}}}
+   match value{FormExpr::Const{value}=>{self.text("const")?;self.add(0,8)?;self.value(&value)?;}FormExpr::Var{name}=>{self.text("var")?;self.text(name)?;}FormExpr::Eq{left,right}=>{self.text("eq")?;self.add(0,16)?;self.frontier(&mut pending,2)?;pending.push(right);pending.push(left);}FormExpr::Truthy{expr}=>{self.text("truthy")?;self.add(0,8)?;self.frontier(&mut pending,1)?;pending.push(expr);}FormExpr::And{items}|FormExpr::Or{items}=>{self.text(if matches!(value,FormExpr::And{..}){"and"}else{"or"})?;self.repeated(items.len(),32)?;self.count(|c|&mut c.condition_items,items.len())?;self.control.check_rows(self.counts.rows.checked_add(items.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms condition row count overflow"))?).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms condition row count overflow"))?)?;self.frontier(&mut pending,items.len())?;for value in items.iter().rev(){pending.push(value);self.step()?;}}}
   }Ok(())
  }
 }
@@ -59,7 +59,7 @@ pub fn forecast(snapshot:&FormsSnapshot,control:&mut SqliteSnapshotControl<'_>,p
    for _ in[q.min,q.max,q.step].into_iter().flatten(){f.add(0,22)?;}
    for option in q.options.iter().flatten(){if option.value.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms option identity differs"))}f.add(1,24)?;f.count(|c|&mut c.options,1)?;f.text(&option.value)?;f.text(&option.label)?;}
    for field in q.fields.iter().flatten(){if field.key.is_empty()||field.value.is_some_and(|n|!n.is_finite()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms vector invariant differs"))}f.add(1,24+usize::from(field.value.is_some())*22)?;f.count(|c|&mut c.fields,1)?;f.text(&field.key)?;f.optional(&field.label)?;}
-   if let Some(value)=&q.default{f.value(value)?;}if let Some(value)=&q.params{if !matches!(value,DslValue::Object(_)){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms params must own an object"))}f.value(value)?;}if let Some(value)=&q.condition{f.condition(value)?;}
+   if let Some(value)=&q.default{f.value(&value)?;}if let Some(value)=&q.params{if !matches!(value,DslValue::Object(_)){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms params must own an object"))}f.value(&value)?;}if let Some(value)=&q.condition{f.condition(value)?;}
   }
  }
  for response in&snapshot.responses{if response.id.is_empty()||response.definition_version.is_empty()||response.submitted_at>9_007_199_254_740_991{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms response invariant differs"))}f.add(1,40)?;f.count(|c|&mut c.responses,1)?;f.text(&response.id)?;f.text(&response.definition_version)?;

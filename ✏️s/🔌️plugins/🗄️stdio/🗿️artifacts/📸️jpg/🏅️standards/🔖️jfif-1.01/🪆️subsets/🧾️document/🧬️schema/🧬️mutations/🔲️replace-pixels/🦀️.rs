@@ -45,6 +45,3 @@ pub fn contribute(base: &JpgSnapshot, pixels: Vec<u8>) -> JpgDiff {
 //#endregion Semantics
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
-mod tests_direct_behavior;

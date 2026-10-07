@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "id": "source",
+      "layout": "source",
+      "member": "exact",
+      "excluded": false,
+      "declared": true
+    },
+    {
+      "id": "canonical",
+      "layout": "destination",
+      "member": "exact",
+      "excluded": false,
+      "declared": true
+    },
+    {
+      "id": "missing",
+      "layout": "source",
+      "member": "absent",
+      "excluded": false,
+      "declared": false
+    },
+    {
+      "id": "excluded",
+      "layout": "source",
+      "member": "exact",
+      "excluded": true,
+      "declared": false
+    },
+    {
+      "id": "prefix-imposter",
+      "layout": "source",
+      "member": "prefix",
+      "excluded": false,
+      "declared": false
+    }
+  ]
+}

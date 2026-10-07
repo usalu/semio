@@ -6,52 +6,10 @@ start snapshot
 framing record
 use semio.pack
 
-record snapshot {
-  schema utf8
-  byteOrder Ref(TiffByteOrder)
-  ifds array Ref(TiffIfd)
-}
-enum TiffByteOrder {
-  littleEndian=0
-  bigEndian=1
-}
-record TiffIfd {
-  entries array Ref(TiffTag)
-  storage Ref(TiffStorage)
-}
-record TiffTag {
-  tag u16
-  values Ref(TiffValues)
-}
-record TiffValues {
-  kind Ref(TiffFieldType)
-  value Ref(SemioValue)
-}
-enum TiffFieldType {
-  byte=1
-  ascii=2
-  short=3
-  long=4
-  rational=5
-  sByte=6
-  undefined=7
-  sShort=8
-  sLong=9
-  sRational=10
-  float=11
-  double=12
-}
-record TiffStorage {
-  kind Ref(TiffStorageKind)
-  offsetsKind Ref(TiffFieldType)
-  byteCountsKind Ref(TiffFieldType)
-  chunks array Ref(TiffChunk)
-}
-enum TiffStorageKind {
-  none=0
-  strips=1
-  tiles=2
-}
-record TiffChunk {
-  octets array u8
-}
+record snapshot { schema utf8 ifds array Ref(TiffIfd) }
+record TiffIfd { entries array Ref(TiffTag) blocks array Ref(TiffSampleBlock) }
+record TiffTag { tag u16 values Ref(TiffValues) }
+record TiffValues { kind Ref(TiffFieldType) value Ref(SemioValue) }
+enum TiffFieldType { byte=1 ascii=2 short=3 long=4 rational=5 sByte=6 undefined=7 sShort=8 sLong=9 sRational=10 float=11 double=12 }
+record TiffSampleBlock { x u32 y u32 width u32 height u32 channels u16 samples array Ref(TiffWord64) }
+record TiffWord64 { lo u32 hi u32 }

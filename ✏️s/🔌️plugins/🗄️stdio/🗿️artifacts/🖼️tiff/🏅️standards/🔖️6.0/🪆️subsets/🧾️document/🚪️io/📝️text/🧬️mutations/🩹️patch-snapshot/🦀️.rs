@@ -1,4 +1,8 @@
 //! 📝️ Direct compact TIFF snapshot-patch text codec.
+use crate::standards::v6_0::subsets::document::schema::mutations::*;
+use crate::standards::v6_0::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot;
+use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+use crate::standards::v6_0::subsets::document::io::text::diff::*;
 
 use crate::standards::v6_0::subsets::document::io::text::mutations::*;
 use crate::standards::v6_0::subsets::document::io::text::mutations::Entry;
@@ -23,6 +27,6 @@ pub fn parse(line: &str) -> Result<TiffMutation, semio_framework_diagnostic::Tex
     let encoded = arguments.strip_prefix("patch=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"missing patch",semio_framework_diagnostic::TextSpan::at(1,1)))?;
     let bytes = hex_decode(encoded).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))?;
     let source = std::str::from_utf8(&bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
-    let patch = editing::SnapshotPatch::parse_op(source)?;
+    let patch = semio_s_artifact_stdio_contract::editing::SnapshotPatch::parse_op(source)?;
     Ok(TiffMutation::PatchSnapshot(PatchSnapshot { patch }))
 }

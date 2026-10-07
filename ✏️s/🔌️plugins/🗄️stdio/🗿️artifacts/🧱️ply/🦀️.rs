@@ -1,7 +1,8 @@
-//! 🎪 `stdio.ply` artifact — stdio reference format.
-
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
+//! 🎪 `stdio.ply` artifact — stdio reference format.
+use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
+
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -80,7 +81,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([schema::inferences::ply_artifact_inference_descriptor()])
         .composers(engine::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ply", standard: semio_framework_plugin::StandardId("1.0"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ply", standard: semio_framework_artifact_reference::StandardId("1.0"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
 }
 
@@ -98,28 +99,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.ply",
                     extension: Some("ply"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.ply"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.ply.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.ply.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.ply.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.ply.diff"),
@@ -130,8 +131,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.ply.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -140,8 +141,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.ply.spr"),
                 },
             ]
@@ -173,7 +174,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1_0::engine::io_registry as v1_0;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

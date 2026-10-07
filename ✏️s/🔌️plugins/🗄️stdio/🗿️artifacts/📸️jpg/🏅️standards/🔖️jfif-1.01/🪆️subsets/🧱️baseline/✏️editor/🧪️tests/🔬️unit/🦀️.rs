@@ -65,7 +65,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source.to_vec(),
     };
     let initial = <JpgBaselineEditor as ArtifactEditor>::initial_snapshot();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
@@ -85,7 +85,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let expected = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation(&oracle).expect("project independent baseline JPEG output");
     assert_eq!(observed.get("width"), expected.get("width"));
     assert_eq!(observed.get("height"), expected.get("height"));
-    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }).await;
+    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
     artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.expect("fresh owner import publishes");

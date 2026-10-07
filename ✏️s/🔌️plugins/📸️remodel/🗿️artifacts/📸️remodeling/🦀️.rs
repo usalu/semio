@@ -119,7 +119,7 @@ where
         + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::remodeling::RemodelingViewer>>>,
 {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.remodel.remodeling").expect("canonical remodeling kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
@@ -140,7 +140,7 @@ pub const REMODELING_DOCUMENT_SCHEMA: &str = "remodeling.scene";
 /// `composer.native` capability row above, and the `🚪️io`/`🧬️schema` `DIALECT` constants). It is NOT
 /// `artifact_kind()`'s OS-level `"3d.remodeling"` kind id (a different, unrelated namespace).
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const REMODELING_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.remodel.remodeling", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const REMODELING_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.remodel.remodeling", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 
 //#region 🧩️Composition
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "remodeling→C:mesh R:image").
@@ -209,8 +209,8 @@ const REMODELING_BOUNDED_MESH_TRIANGLES: usize = 512;
 
 //#region 🔖️AssetHandles
 fn mint_asset_child_handle(asset_id: &str, child_id: String) -> RemodelingAssetChild {
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -408,8 +408,8 @@ pub fn remodeling_content_is_complete(store: &RemodelingDurableArtifactStore, co
 
 //#region 🔖️MeshHandle
 fn mesh_child_handle(child_id: String, artifact_id: String) -> RemodelingMeshChild {
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    let target = store::os_io::ArtifactRef { artifact_id, dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id, dialect };
     store::ArtifactChild::new(child_id, target)
 }
 

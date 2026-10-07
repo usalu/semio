@@ -51,3 +51,11 @@ export const rasterRasterMutationsTextGuardConstant = <T extends string | number
 export function parseRasterMutationsText(value: unknown, at = "$"): RasterMutationsText {
   return rasterRasterMutationsTextGuardObject(value, `${at}`);
 }
+
+import { parseChangeLayerTransform, type ChangeLayerTransform } from "./../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🟦️.ts";
+import { rasterTransformFromJson, rasterRasterSnapshotTextGuardObject } from "./../📸️snapshot/🟦️.ts";
+/** 📐️ Decodes both physical transform records before semantic validation. */
+export function changeLayerTransformFromJson(value: unknown): ChangeLayerTransform {
+  const row = rasterRasterSnapshotTextGuardObject(value, "$");
+  return parseChangeLayerTransform({...row, expected: rasterTransformFromJson(row.expected, "$.expected"), transform: rasterTransformFromJson(row.transform, "$.transform")});
+}

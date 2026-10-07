@@ -11,7 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
 pub use standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
@@ -106,14 +106,14 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .inferences([standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
         .composers(standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.mp3", standard: semio_framework_plugin::StandardId("mpeg1-layer3"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.mp3", standard: semio_framework_artifact_reference::StandardId("mpeg1-layer3"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::mpeg1_layer3::subsets::any::io::io_registry as std_composer;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -183,8 +183,6 @@ pub mod standards {
                     }
                 }
             
-#[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-pub mod io;
 }
         }
     }

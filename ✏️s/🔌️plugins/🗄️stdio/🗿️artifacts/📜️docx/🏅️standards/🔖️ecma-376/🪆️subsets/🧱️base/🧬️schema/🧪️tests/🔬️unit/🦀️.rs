@@ -1,9 +1,11 @@
 use super::*;
 use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_docx, document_to_xml, encode_docx};
+use crate::standards::v_ecma_376::subsets::base::schema::construction::{build_minimal_docx,document_to_xml};
+use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{encode_docx};
 use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_docx, sniff_docx_bytes};
-use crate::standards::v_ecma_376::subsets::base::io::DocxError;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlNode};
+use crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_to_text};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
 async fn sample_document() -> DocxDocument {
@@ -262,7 +264,7 @@ mod conformance_laws {
 fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
     use crate::schema::diff::DocxBlockPath;
     use crate::schema::mutations::{apply_docx_mutation, remove_style, set_run_text, DocxMutation};
-    use crate::standards::v_ecma_376::subsets::base::io::{MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STYLES_CONTENT_TYPE};
+    use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
     use std::io::Read;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📦️save-part-identity/🔣️.json")).unwrap();
@@ -334,8 +336,8 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
 
 fn canonical_authority_fixture() -> (DocxSnapshot, serde_json::Value) {
     use crate::schema::snapshot::DocxXmlPart;
-    use crate::standards::v_ecma_376::subsets::base::io::{MAIN_DOCUMENT_CONTENT_TYPE, REL_TYPE_STYLES, STYLES_CONTENT_TYPE};
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️canonical-xml-authority/🔣️.json")).unwrap();
     let main = &fixture["parts"][0];
@@ -389,7 +391,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
     use quick_xml::XmlVersion;
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text;
     use std::io::Read;
     let (mut snapshot, fixture) = canonical_authority_fixture();
     let original = snapshot.clone();

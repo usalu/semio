@@ -311,7 +311,7 @@ pub(crate) const DIM_HEAT_TRANSFER: Dimension = Dimension { m: 0, kg: 1, s: -3, 
 /// Symbols are matched verbatim against the ident glued onto a numeric literal
 /// (`210GPa` -> number `210`, suffix `GPa`) — see `crate::os_dsl::schema::parse_scalar`'s `Quantity`/`Angle`
 /// arms. Grows as adopter DSLs need new units; never remove a symbol once a fixture uses it.
-const UNITS: &[UnitSpec] = &[
+static UNITS: [UnitSpec; 41] = [
     UnitSpec { symbol: "m", dimension: DIM_LENGTH, factor: 1.0 },
     UnitSpec { symbol: "mm", dimension: DIM_LENGTH, factor: 0.001 },
     UnitSpec { symbol: "cm", dimension: DIM_LENGTH, factor: 0.01 },
@@ -356,8 +356,19 @@ const UNITS: &[UnitSpec] = &[
 ];
 
 /// 🔍️ Looks up a unit by its exact printed symbol (e.g. `"GPa"`).
-pub fn unit_by_symbol(symbol: &str) -> Option<&'static UnitSpec> {
-    UNITS.iter().find(|u| u.symbol == symbol)
+pub const fn unit_by_symbol(symbol: &str) -> Option<&'static UnitSpec> {
+    let wanted=symbol.as_bytes();
+    let mut index=0;
+    while index<UNITS.len(){
+        let candidate=UNITS[index].symbol.as_bytes();
+        if candidate.len()==wanted.len(){
+            let mut byte=0;
+            while byte<wanted.len()&&candidate[byte]==wanted[byte]{byte+=1;}
+            if byte==wanted.len(){return Some(&UNITS[index]);}
+        }
+        index+=1;
+    }
+    None
 }
 
 /// 🔁️ Converts `value` (expressed in `from`) into the equivalent value expressed in `to`.

@@ -19,6 +19,6 @@ mod tests {
         }
         let mutated = PdfUaBuilderConstruction::from_snapshot(snapshot);
         let err = mutated.build().expect_err("a Catalog missing /StructTreeRoot must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::ua::schema::CODE_STRUCT_TREE_ROOT));
+        assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::ua::io::CODE_STRUCT_TREE_ROOT));
     }
 }

@@ -1,0 +1,14 @@
+{
+  "status": "Prepared, not launched; serial after actual PDF terminal; provider held pending genuine original Before",
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-vdi-native-before-after-compiler-artifacts' bun run nx run @semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-vdi-original-native-before-after-compiler-repair.log' 2>&1",
+  "at": "2026-10-06T12:34:43.157Z",
+  "scope": "Original20After plus unchanged new1Before; provider remains held; original quick owner route and controls",
+  "statusHistory": [
+    {
+      "at": "2026-10-06T13:49:49.139Z",
+      "previous": "Prepared only, not launched; serial after current Norm8 and authorized PDF owner",
+      "status": "Prepared, not launched; serial after actual PDF terminal; provider held pending genuine original Before"
+    }
+  ],
+  "latestStatusAt": "2026-10-06T13:49:49.139Z"
+}

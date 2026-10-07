@@ -5,9 +5,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-use semio_framework_os_kernel::{
-    sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase},
-};
+
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
@@ -228,7 +226,7 @@ fn path(target: &str, control: &mut NativeEncodeControl<'_>) -> Result<String, V
         Ok(output)
     })
 }
-fn check(snapshot: &PptxSnapshot, subset: &str, control: &mut NativeEncodeControl<'_>) -> Result<Vec<Diagnostic>, ValueError> {
+pub(crate) fn check(snapshot: &PptxSnapshot, subset: &str, control: &mut NativeEncodeControl<'_>) -> Result<Vec<Diagnostic>, ValueError> {
     let strict = subset == "strict";
     let mut output = Vec::new();
     let mut main = None;
@@ -299,15 +297,4 @@ fn check(snapshot: &PptxSnapshot, subset: &str, control: &mut NativeEncodeContro
         }
     }
     Ok(output)
-}
-pub(super) fn validate(snapshot: &PptxSnapshot, subset: &str, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
-    let limits = control.limits();
-    let mut callback = |event: semio_framework_value::native_encoding::NativeEncodeProgress| control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, event.completed, event.total).is_ok();
-    let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut callback);
-    let diagnostics = check(snapshot, subset, &mut native).map_err(store::io_schema::IoError::from_value_error)?;
-    if diagnostics.iter().any(|item| matches!(item.severity, Severity::Error | Severity::Fatal)) {
-        Err(store::io_schema::IoError { cause: ValueError::new(ValueRefusalKind::InvalidValue, "PPTX owned snapshot violates its exact profile"), diagnostics })
-    } else {
-        Ok(store::io_schema::IoOutcome { value: (), diagnostics })
-    }
 }

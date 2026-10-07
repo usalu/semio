@@ -1,20 +1,20 @@
 //! 📝️ Generic text framing and direct-owner registry for the visible PDF/H mutation aggregate.
 
-use super::PdfHMutation;
+use crate::standards::v1_7::subsets::h::schema::mutations::PdfHMutation;
 use protocol::OpText;
 
 //#region 🧾️DerivedRegistry
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("SetInfoTitle", super::set_info_title::text::TEXT_OPCODE),
-    ("SetInfoAuthor", super::set_info_author::text::TEXT_OPCODE),
-    ("InsertJavascriptAction", super::insert_javascript_action::text::TEXT_OPCODE),
-    ("RemoveJavascriptAction", super::remove_javascript_action::text::TEXT_OPCODE),
-    ("InsertLaunchAction", super::insert_launch_action::text::TEXT_OPCODE),
-    ("RemoveLaunchAction", super::remove_launch_action::text::TEXT_OPCODE),
-    ("InsertSignatureField", super::insert_signature_field::text::TEXT_OPCODE),
-    ("RemoveSignatureField", super::remove_signature_field::text::TEXT_OPCODE),
-    ("EmbedFontFile", super::embed_font_file::text::TEXT_OPCODE),
-    ("RemoveFontFile", super::remove_font_file::text::TEXT_OPCODE),
+    ("SetInfoTitle", self::set_info_title::TEXT_OPCODE),
+    ("SetInfoAuthor", self::set_info_author::TEXT_OPCODE),
+    ("InsertJavascriptAction", self::insert_javascript_action::TEXT_OPCODE),
+    ("RemoveJavascriptAction", self::remove_javascript_action::TEXT_OPCODE),
+    ("InsertLaunchAction", self::insert_launch_action::TEXT_OPCODE),
+    ("RemoveLaunchAction", self::remove_launch_action::TEXT_OPCODE),
+    ("InsertSignatureField", self::insert_signature_field::TEXT_OPCODE),
+    ("RemoveSignatureField", self::remove_signature_field::TEXT_OPCODE),
+    ("EmbedFontFile", self::embed_font_file::TEXT_OPCODE),
+    ("RemoveFontFile", self::remove_font_file::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

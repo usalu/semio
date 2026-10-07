@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "prefixItems": [
+    {
+      "const": {
+        "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts",
+        "from": "../../📏️ownership/🟦️.ts",
+        "to": "../../🧪️tests/📏️ownership/🟦️.ts",
+        "symbol": "proveSchemaValidatorOwnershipV1"
+      }
+    },
+    {
+      "const": {
+        "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+        "from": "../../🏷️entity-kinds/📏️ownership/🟦️.ts",
+        "to": "../../🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts",
+        "symbol": "proveEntityCatalogOwnership"
+      }
+    }
+  ],
+  "items": false
+}

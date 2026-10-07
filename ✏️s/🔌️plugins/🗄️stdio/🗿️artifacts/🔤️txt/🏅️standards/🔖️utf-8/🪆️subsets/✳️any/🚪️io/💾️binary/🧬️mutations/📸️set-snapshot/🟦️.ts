@@ -1,6 +1,6 @@
 import {failTxtProtobufDecode} from "../🔣️protobuf/🟦️.ts";
 import {type TxtSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {TxtProtobufReader,txtProtobufKey,txtProtobufString} from "../🔣️protobuf/🟦️.ts";
+import {TxtProtobufReader, txtProtobufKey, txtProtobufString} from "../🔣️protobuf/🟦️.ts";
 import {SetSnapshotPayload} from "../../../../🧬️schema/🧬️mutations/📸️set-snapshot/🟦️.ts";
 
 export const decodeSetSnapshotProtobuf = (bytes: Uint8Array): SetSnapshotPayload => {

@@ -1,2 +1,10 @@
 semio stdio.png.dsl v1
-schema=stdio.png bytes="iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAXNSR0IArs4c6QAAAAlQTFRF/wAAAP8AAAD/LUrNigAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+gGDwweADy7EAIAAAAGYktHRAD/AP8A/6C9p5MAAAAQdEVYdFRpdGxlAHNlbWlvIGRlbW8Hy2chAAAAA3BySVYJCQkrpPG7AAAAJElEQVR4AWP8z8Dwn1EVSAAxCyODKQNQgIERiFn+AzkgBkgAAJx9BrzlIQqdAAAAAElFTkSuQmCC"
+schema=stdio.png
+image {
+  width=4 height=2 bit-depth=8 color-type=rgba interlace=false samples=[ 255 0 0 255 0 255 0 255 0 0 255 255 255 255 0 255 0 255 255 255 255 0 255 255 255 255 255 255 128 128 128 255 ]
+  transparency {
+  }
+  background {
+  }
+  text-chunks=[ ] ancillary-chunks=[ ]
+}

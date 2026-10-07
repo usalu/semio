@@ -8,6 +8,8 @@ impl<'c, 'p> Bound<'c, 'p> {
     pub fn allocate_frontier<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{self.bound.allocate_frontier(count)}
     pub fn push_frontier<T>(&mut self,frontier:&mut Vec<T>,value:T)->Result<(),ValueError>{self.bound.push_frontier(frontier,value)}
     pub fn new(schema: &str, control: &'c mut SqliteSnapshotControl<'p>) -> Result<Self, ValueError> { let mut bound = NativeEncodingBound::new(control)?; bound.add(1024)?; bound.repeated(schema.len(), 16)?; Ok(Self { bound, rows: 1 }) }
+    /// 📁️ Forecasts native file bytes after the owner separately admitted complete SQL cells.
+    pub fn file_only(schema:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{let mut bound=NativeEncodingBound::file_only(control)?;bound.add(1024)?;bound.repeated(schema.len(),16)?;Ok(Self{bound,rows:1})}
     pub fn entities(&mut self, count: usize) -> Result<(), ValueError> { self.rows = self.rows.checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio native entity count overflow"))?; self.bound.check_rows(self.rows)?; self.bound.repeated(count, 128) }
     pub fn text(&mut self, value: &str) -> Result<(), ValueError> { self.bound.repeated(value.len(), 16) }
     pub fn optional_text(&mut self, value: Option<&str>) -> Result<(), ValueError> { if let Some(value) = value { self.text(value)?; } Ok(()) }

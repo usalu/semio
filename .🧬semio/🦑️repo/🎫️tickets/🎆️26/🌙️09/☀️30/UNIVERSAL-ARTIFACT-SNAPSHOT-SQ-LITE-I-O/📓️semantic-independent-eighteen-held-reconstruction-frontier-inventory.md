@@ -1,0 +1,27 @@
+# Remaining Eighteen Held Reconstruction Frontiers
+
+Read-only inventory of the exact 78 roster after images excludes repaired Model. The region-plan input records all 18 exact reconstruction bodies, signatures, paths and held after digests. No production edits or runtime claims.
+
+## Definite Unpaid Frontiers
+
+Text, Audio, Video, Flow, Animation, Kit and CAD reconstruction still construct BTreeMaps/BTreeSets and growing native Vecs directly; grouped ordinal helpers use ordinary stable sort_by_key. Object constructs its reference map from FloatRow vectors. BRep reconstructs ordinary growing topology/entity and nested-list vectors through Reconstruction text/blob admission, which does not pay these vector/map allocations. Value still creates names/unique_names maps/sets and a vec! roots list before its guarded shared value forest. Document retains style/image/parent/name BTreeMaps/Sets and ordinary native_styles/native_images Vecs. Presentation retains shape-owner maps/root Vecs and several Owned::new(Vec::new()) growing result lists: Owned adds cleanup but does not pay capacity. These are definite gaps relative to an all-allocation-admitted reconstruction claim; not proof that semantic parity fails.
+
+Mesh and Image use paid reserve/group sorting for much of their row/vector scratch, but their reconstructed semantic vectors are ordinary owners. Mesh Primitive field construction can copy ID then fail copying optional material; Texture can copy ID/mime then fail blob. Image metadata can copy key then fail value. On a later schema refusal, complete lists still unwind via ordinary Drop rather than guarded semantic retirement. Table pays structural vectors and guards value forests/row cells, but ordinary columns contain copied ID/name fields before later failures and are outside a semantic Snapshot guard. Graph guards completed node/edge/property collections, yet edge locals ID/source/target/kind/label are ordinary owned fields before later optional/reference/property refusal; a completed collection guard cannot protect those uninserted locals.
+
+## Final Schema Settlement
+
+Text, Audio, Video, Flow, Mesh and Image visibly issue the final checkpoint before `Ok(Self{schema:reconstruct_text(...)?, ...})`; the last fallible copy occurs with ordinary completed owners. Table similarly checkpoints before schema copy, although rows are guarded; columns remain ordinary. Document guards blocks but builds ordinary style/image lists before `Owned::new(Self{schema:r.text(...)?, ...})`; argument evaluation fails before Snapshot guard creation. Presentation's completed collections are guarded, but partial Picture/Placeholder/Slide fields can still fail before insertion. BRep has the same ordinary completed topology/nested-list ownership concern.
+
+Base itself retains its completed child in Owned before root schema copy and wraps the final Snapshot before final checkpoint, so no analogous root-child unguarded gap was found. It forwards the same control to child reconstruction; a child unpaid frontier remains an aggregate Base gap. Base's copied semantic admission does not itself pay child maps/native Vecs. Value/Graph/Table shared value forest guards are useful and should remain; they do not automatically settle unrelated entity locals or map scratch.
+
+Drawing delegates to reconstruction::reconstruct, so the SQL body alone cannot establish that module's allocation/partial-owner authority. This inventory explicitly leaves delegated module review open instead of inferring a blocker from its name. Exact delegation is retained in the region-plan.
+
+## Narrow Repair Shape
+
+For each recorded signature, replace only the current reconstruction/helper regions: borrowed rows plus transfer::reserve scalar indices/used flags; cancellable transfer::heap_sort and compare_text; exact owner/ordinal ranges; paid typed result capacities; early actual partial typed Owned guards; empty guarded Snapshot before child assembly; schema assigned last while live; final checkpoint before take. Preserve original FK, duplicate, ordinal, variant and cycle refusals. Do not guard FloatRow vectors unless actual RetireOwned eligibility exists; prefer borrowed views and scalar positions. Retain existing indexed/reconstruction modules and shared forest ownership instead of adapters.
+
+Physical limitation remains separate: ordinary scalar scratch Vec Drop and native::Owned traversal do not prove allocation-sized release bounded to 4096 bytes or parent transfer. Paid capacity, semantic admission, cancellation and aggregate cleanup require their own owning runtime laws. This report identifies source proof gaps, not Native compiler errors or runtime failures.
+
+## Drawing Delegated Readback
+
+Resolved actual module `drawing/io/sqlite/snapshot/💰️reconstruction/🦀️.rs`: paid indexed rows and reserve-backed node slots/tasks, guarded built nodes/group children/layers, and guarded final snapshot before checkpoint. Partial layer id remains ordinary while name/visibility/root lookup can refuse; style name is copied before fallible RGBA/optional fields. Native styles use DecodedValue with ordinary Vec drop. Root schema is ordinary while canvas real/RGBA validation can still refuse before Snapshot creation. These are concrete partial-owner gaps; preserve its indexed/task machinery rather than replacing it with maps. This readback is the actual delegated file, not a claim that it is newly modified by the 78 held providers.

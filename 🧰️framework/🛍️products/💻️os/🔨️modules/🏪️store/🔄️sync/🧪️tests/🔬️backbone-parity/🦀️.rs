@@ -32,7 +32,7 @@ async fn parity_envelope(document_id: &str, mutation_id: &str, n: i32) -> Mutati
         id: mutation_id.into(),
         actor: None,
         forwards: vec![DemoMutation::SetN { n }],
-        inverse: vec![DemoMutation::SetN { n: 0 }],
+        inverse: vec![DemoMutation::SetN { n: 0 }].into(),
         mutation_meta: Vec::new(), verb: None,
         sequence_number: 1,
         started_at: "0".into(),

@@ -6,16 +6,15 @@ import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️pr
 import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
-import { discoverCargoWorkspaces, publishCargoWorkspaceMembership, cargoRepositoryPackages } from "./🟦️.ts";
+import { publishCargoWorkspaceMemberships, cargoRepositoryPackages } from "./🟦️.ts";
 import {PreparationScript} from "./🛠️preparation/📜️script.ts";
 
 /** 📣️ Checks or publishes current native owner membership through its authored regular-manifest recipe. */
 class MembersScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length !== 1 || !["--check", "--write"].includes(args[0]!)) throw new Error("members --check|--write");
-    for (const owner of discoverCargoWorkspaces(this.root)) {
-      const written = publishCargoWorkspaceMembership(this.root, owner, args[0] === "--write" ? "write" : "check");
-      console.log(`[cargo-members] ${owner.manifest} ${written ? "published" : "current"}`);
+    for (const { owner, changed } of publishCargoWorkspaceMemberships(this.root, args[0] === "--write" ? "write" : "check")) {
+      console.log(`[cargo-members] ${owner.manifest} ${changed ? "published" : "current"}`);
     }
   }
 }
@@ -46,7 +45,7 @@ class NativeInputScript extends Script {
 class ContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("contract-check accepts no overrides");
-    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts"), join(import.meta.dir,"🧪️tests/🪆️nested-owners/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000);
+    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts"), join(import.meta.dir,"🧪️tests/🪆️nested-owners/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000, { env: repoTestArtifactEnvironment(this.root, "cargo-workspace-contract") });
   }
 }
 /** 🕰️ Verifies queued preparation with an independent owner holding the native lease. */

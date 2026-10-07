@@ -8,7 +8,7 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::mesh::io::SemioMeshAnalyzer;
     #[cfg(feature = "conversion-mesh")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
-    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
+    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
     //#region 🔖️IoBridgeImports
     // 🌉️ W4 (mesh↔{gltf,stl,obj,ply,las}) io leaves — real trait impls registered below.
     #[cfg(feature = "conversion-mesh")]
@@ -147,7 +147,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("mesh") }, store::ArtifactCodec::bare::<SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("mesh") }, store::ArtifactCodec::bare::<SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         #[cfg(feature = "conversion-mesh")]
@@ -161,7 +161,7 @@ pub mod derived_composition {
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
             .schemas([crate::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("mesh") })
+            .document_codec_bare::<SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("mesh") })
             .subset_validators(std::slice::from_ref(validator_entry()))
             .inferences([crate::standards::v1::subsets::mesh::schema::inferences::semio_mesh_artifact_inference_descriptor()]);
         #[cfg(feature = "conversion-mesh")]
@@ -242,12 +242,12 @@ pub fn encode_mesh(mesh: &crate::standards::v1::subsets::mesh::schema::snapshot:
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::{dwg::v_ac1024::any::SemioMeshToDwg, gltf::v2_0::any::SemioMeshToGltf, las::v1_0::any::SemioMeshToLas, obj::v3_0::any::SemioMeshToObj, ply::v1_0::any::SemioMeshToPly, png::v1_2::any::SemioMeshToPng, stl::v_ascii::any::SemioMeshToStl};
     use semio_framework_plugin::{ ArtifactSerializer};
     match format {
-        SemioMeshFormat::Stl => Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
-        SemioMeshFormat::Obj => Ok(semio_s_artifact_stdio_obj::engine::encode_obj(&::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
-        SemioMeshFormat::Ply => semio_s_artifact_stdio_ply::engine::encode_ply(&::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|e| e.to_string())?),
-        SemioMeshFormat::Gltf => Ok(semio_s_artifact_stdio_gltf::engine::serialize_gltf_document(&::semio_framework_async::poll::resolve_ready(SemioMeshToGltf::serialize(mesh)).map_err(|e| e.to_string())?)),
-        SemioMeshFormat::Las => semio_s_artifact_stdio_las::engine::encode_las(&::semio_framework_async::poll::resolve_ready(SemioMeshToLas::serialize(mesh)).map_err(|e| e.to_string())?),
-        SemioMeshFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&::semio_framework_async::poll::resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|e| e.to_string())?.drawing.to_native()?),
+        SemioMeshFormat::Stl => Ok(semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::encode_stl_ascii(&::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioMeshFormat::Obj => Ok(semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::encode_obj(&::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioMeshFormat::Ply => semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::io::encode_ply(&::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Gltf => Ok(semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::serialize_gltf_document(&::semio_framework_async::poll::resolve_ready(SemioMeshToGltf::serialize(mesh)).map_err(|e| e.to_string())?)),
+        SemioMeshFormat::Las => semio_s_artifact_stdio_las::standards::v1_0::subsets::any::io::encode_las(&::semio_framework_async::poll::resolve_ready(SemioMeshToLas::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Dwg => semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::dwg_to_bytes(&::semio_framework_async::poll::resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|e| e.to_string())?.drawing.to_native()?),
         SemioMeshFormat::Png => semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioMeshToPng::serialize(mesh)).map_err(|e| e.to_string())?),
     }
 }
@@ -328,7 +328,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct SemioMeshParts {

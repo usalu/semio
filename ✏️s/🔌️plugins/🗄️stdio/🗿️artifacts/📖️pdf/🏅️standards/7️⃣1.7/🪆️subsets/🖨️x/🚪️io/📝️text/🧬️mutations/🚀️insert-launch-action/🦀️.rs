@@ -1,6 +1,6 @@
 //! 🚀️ Direct text codec for `insert-launch-action`.
 
-use super::InsertLaunchAction;
+use crate::standards::v1_7::subsets::x::schema::mutations::InsertLaunchAction;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "insert-launch-action";

@@ -225,8 +225,8 @@ pub fn scene(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &
         domain_granularity_id: (!writes).then(|| INTERACTION_GRANULARITY_CELL.into()),
         ..world3d_scene(
             world3d_camera_json(position, target, 45.0),
-            scene_internals::grid_meshes_json(document),
-            scene_internals::grid_instances_json(document),
+            crate::standards::v1::subsets::any::io::text::inferences::scene_projection::grid_meshes_json(document),
+            crate::standards::v1::subsets::any::io::text::inferences::scene_projection::grid_instances_json(document),
             semio_framework_plugin::world3d_selection_json_with_granularity(
                 if writes { ACTION_WORLD_SELECT } else { "interactionSelect" },
                 selected,

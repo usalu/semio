@@ -73,8 +73,8 @@ There are other agents working on other logical parts, even if they work on the 
 
 ---
 
-Use the main chat with Grok 4.7 Extra High for main plan coordination, use multiple Grok 4.7 High agents for task execution, use multiple Composer 2.5 agents for read-only exploration and audits.
-Always use a work fleet of maximum possible parallel agents.
+Use the main chat with Grok 4.7 Extra High for main plan coordination, use multiple Grok 4.7 High agents for task execution, use multiple Composer 2.5 agents for read-only exploration and audits. Dont use the fast modes of models.
+Use a work fleet of parallel agents.
 There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---

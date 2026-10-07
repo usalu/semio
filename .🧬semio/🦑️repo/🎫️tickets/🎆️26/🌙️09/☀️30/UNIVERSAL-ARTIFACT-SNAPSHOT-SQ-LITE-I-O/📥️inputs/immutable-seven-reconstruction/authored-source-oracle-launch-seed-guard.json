@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/.vscode/🧩️launch.seed.jsonc",
+  "before": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n",
+  "after": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n    {\n        \"name\": \"🧬️Authored Operation Canonical Source Oracle\",\n        \"type\": \"node-terminal\",\n        \"request\": \"launch\",\n        \"command\": \"bun nx exec --projects=@semio-tech/framework-plugin --excludeTaskDependencies --nxIgnoreCycles -- bun \\\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts\\\" authored-operation-source-oracle\",\n        \"cwd\": \"${workspaceFolder}\",\n        \"presentation\": {\n            \"group\": \"4_gate\",\n            \"order\": 900.8\n        }\n    },\n"
+}

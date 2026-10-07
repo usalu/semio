@@ -1500,7 +1500,7 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], pointer_id: Option<u
                     continue;
                 }
                 let descriptor = intent.descriptor();
-                if let Err(fault) = publish_retained_action(input, window_id, &descriptor) {
+                if let Err(fault) = publish_retained_action(input, window_id, &descriptor, intent) {
                     input.record_action_fault(fault);
                     return;
                 }
@@ -1526,7 +1526,55 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], pointer_id: Option<u
     drive_scene_interaction_step(input);
 }
 
-fn publish_retained_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, window_id: &str, action: &ActionDescriptor) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+struct RetainedInputSubmission {
+    token: std::num::NonZeroU64,
+    window: String,
+    draft: ui_wgpu::wgpu::engine::RetainedInputDraft,
+}
+
+struct RetainedInputReceipts {
+    sequence: u64,
+    slots: [Option<RetainedInputSubmission>; ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY],
+}
+
+impl Default for RetainedInputReceipts {
+    fn default() -> Self { Self { sequence: 0, slots: std::array::from_fn(|_| None) } }
+}
+
+static RETAINED_INPUT_RECEIPTS: WorkerCell<RetainedInputReceipts> = WorkerCell::new(Default::default);
+
+struct RetainedInputReceiptReservation(Option<ui_wgpu::wgpu::ActionQueueReceipt>);
+
+impl Drop for RetainedInputReceiptReservation {
+    fn drop(&mut self) { if let Some(receipt) = self.0.take() { settle_retained_input_receipt(receipt, false); } }
+}
+
+fn reserve_retained_input_receipt(window: &str, intent: &ui_wgpu::wgpu::UiIntentCommand) -> Result<RetainedInputReceiptReservation, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(draft) = UI_ENGINE.with(|cell| cell.borrow().retained_input_draft(window, intent)) else { return Ok(RetainedInputReceiptReservation(None)) };
+    RETAINED_INPUT_RECEIPTS.with(|cell| {
+        let mut receipts = cell.borrow_mut();
+        let slot = receipts.slots.iter().position(Option::is_none).ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
+        let sequence = receipts.sequence.checked_add(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
+        let token = sequence.checked_mul(ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY as u64).and_then(|prefix| prefix.checked_add(slot as u64)).and_then(std::num::NonZeroU64::new).ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
+        receipts.sequence = sequence;
+        receipts.slots[slot] = Some(RetainedInputSubmission { token, window: window.to_string(), draft });
+        Ok(RetainedInputReceiptReservation(Some(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::RetainedInput, token, member: 0, abort_correlation_on_error: false })))
+    })
+}
+
+/// 🛟️ Consumes one exact native input receipt without disturbing newer drafts or retained node replacements.
+pub(crate) fn settle_retained_input_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, discard: bool) {
+    if receipt.source != ui_wgpu::wgpu::ActionQueueReceiptSource::RetainedInput { return; }
+    let submission = RETAINED_INPUT_RECEIPTS.with(|cell| {
+        let mut receipts = cell.borrow_mut();
+        let slot = receipts.slots.get_mut((receipt.token.get() % ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY as u64) as usize)?;
+        if slot.as_ref()?.token != receipt.token { return None; }
+        slot.take()
+    });
+    if discard { if let Some(submission) = submission { UI_ENGINE.with(|cell| { cell.borrow_mut().discard_retained_input_draft(&submission.window, &submission.draft); }); } }
+}
+
+fn publish_retained_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, window_id: &str, action: &ActionDescriptor, intent: &ui_wgpu::wgpu::UiIntentCommand) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let mut reservation = input.reserve_action(&action.controller_id, &action.action, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -1539,7 +1587,11 @@ fn publish_retained_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescripto
     }
     builder.string(Some("windowId"), window_id)?;
     builder.end_container()?;
-    reservation.publish()
+    let mut receipt = reserve_retained_input_receipt(window_id, intent)?;
+    if let Some(receipt) = receipt.0 { builder.set_receipt(receipt)?; }
+    reservation.publish()?;
+    receipt.0 = None;
+    Ok(())
 }
 
 /** 🫳️ Resolves `target`'s own `drop_action` (the only node kind `ui_wgpu`'s own

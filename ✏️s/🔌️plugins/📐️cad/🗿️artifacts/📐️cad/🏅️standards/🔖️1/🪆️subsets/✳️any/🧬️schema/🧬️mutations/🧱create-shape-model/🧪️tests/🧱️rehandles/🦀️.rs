@@ -34,6 +34,8 @@ fn applied() -> CadSnapshot {
 /// ▶️ `create-shape-model` writes the fixed `shape_model` slot even when it is already occupied; the other three slots never move.
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_shape_handle_in_place() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let after = applied();
     let handle = after.shape_model.as_ref().expect("create-shape-model leaves the slot occupied");
     assert_eq!(handle.child_id, "cad-shape-2", "create-shape-model must install the payload's child id");

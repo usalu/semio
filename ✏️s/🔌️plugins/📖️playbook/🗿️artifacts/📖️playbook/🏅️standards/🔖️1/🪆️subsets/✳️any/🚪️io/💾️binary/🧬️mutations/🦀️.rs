@@ -33,3 +33,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<PlaybookMutation, protocol::ProtocolErr
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod native_codec {
+use super::*;
+pub use crate::mutations::{apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, ChangeTitle, PlaybookMutation};
+
+impl protocol::OpBinary for PlaybookMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::v4::subsets::any::schema::mutations::*;
-use crate::schema::diff::{self, dec_entity_list_bin, enc_entity_list_bin, IfcDiff};
+use crate::schema::diff::{self, IfcDiff};
 use crate::standards::v4::subsets::any::io::text::diff::{dec_entity};
 use crate::standards::v4::subsets::any::io::text::diff::{enc_entity};
 use crate::standards::v4::subsets::any::io::text::diff::{dec_ifc_value};

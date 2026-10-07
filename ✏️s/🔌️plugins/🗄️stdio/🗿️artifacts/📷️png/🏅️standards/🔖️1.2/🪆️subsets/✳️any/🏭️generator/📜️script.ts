@@ -48,7 +48,7 @@ type Recipe = Readonly<{ id: string; directory: string; mutation?: string; notes
 
 /** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one reference pair per chunk-level edit.
  *  Only a recipe naming a `mutation` witnesses a live `png-1-2-any` kind (`change-gamma`); the rest are reference
- *  documents for the byte-authoritative vocabulary's inputs. */
+ *  documents for the native admission boundary and owned image vocabulary. */
 const RECIPES: readonly Recipe[] = [
   { id: "change-header-applied", directory: "📐️change-header-applied", notes: "Whole-value IHDR replace: width/height change (4x2 -> 6x2), colour type/bit depth/interlace held fixed." },
   { id: "replace-palette-applied", directory: "🎨️replace-palette-applied", notes: "Whole-value PLTE replace over an Indexed base; index bytes (pixels) untouched." },

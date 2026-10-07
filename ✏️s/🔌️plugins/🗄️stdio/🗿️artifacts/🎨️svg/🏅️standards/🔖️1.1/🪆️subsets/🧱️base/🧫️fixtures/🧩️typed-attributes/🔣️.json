@@ -1,0 +1,197 @@
+{
+  "cases": [
+    {
+      "name": "viewBox",
+      "native": "-1e1,2,3.5,4",
+      "owned": {
+        "kind": "viewBox",
+        "value": {
+          "minX": -10,
+          "minY": 2,
+          "width": 3.5,
+          "height": 4
+        }
+      }
+    },
+    {
+      "name": "width",
+      "native": "12.5cm",
+      "owned": {
+        "kind": "length",
+        "value": {
+          "magnitude": 12.5,
+          "unit": "cm"
+        }
+      }
+    },
+    {
+      "name": "transform",
+      "native": "translate(10-20) rotate(30,1,2) scale(2) skewX(5)",
+      "owned": {
+        "kind": "transform",
+        "value": [
+          {
+            "op": "translate",
+            "x": 10,
+            "y": -20
+          },
+          {
+            "op": "rotate",
+            "angle": 30,
+            "center": [
+              1,
+              2
+            ]
+          },
+          {
+            "op": "scale",
+            "x": 2
+          },
+          {
+            "op": "skewX",
+            "angle": 5
+          }
+        ]
+      }
+    },
+    {
+      "name": "points",
+      "native": "0,1 2.5,-3",
+      "owned": {
+        "kind": "points",
+        "value": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 2.5,
+            "y": -3
+          }
+        ]
+      }
+    },
+    {
+      "name": "d",
+      "native": "M0 0 10 20 l-2.5,3 h4 v5 Q6 7 8 9 T10 11 Z",
+      "owned": {
+        "kind": "pathData",
+        "value": [
+          {
+            "cmd": "moveTo",
+            "x": 0,
+            "y": 0,
+            "relative": false
+          },
+          {
+            "cmd": "lineTo",
+            "x": 10,
+            "y": 20,
+            "relative": false
+          },
+          {
+            "cmd": "lineTo",
+            "x": -2.5,
+            "y": 3,
+            "relative": true
+          },
+          {
+            "cmd": "horizontalLineTo",
+            "x": 4,
+            "relative": true
+          },
+          {
+            "cmd": "verticalLineTo",
+            "y": 5,
+            "relative": true
+          },
+          {
+            "cmd": "quadraticCurveTo",
+            "x1": 6,
+            "y1": 7,
+            "x": 8,
+            "y": 9,
+            "relative": false
+          },
+          {
+            "cmd": "smoothQuadraticCurveTo",
+            "x": 10,
+            "y": 11,
+            "relative": false
+          },
+          {
+            "cmd": "closePath"
+          }
+        ]
+      }
+    },
+    {
+      "name": "clip-path",
+      "native": "url('#shape')",
+      "owned": {
+        "kind": "localReference",
+        "value": "shape"
+      }
+    },
+    {
+      "name": "data-owner",
+      "native": "kept native literal",
+      "owned": {
+        "kind": "text",
+        "value": "kept native literal"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "viewBox",
+      "native": "0 0 2"
+    },
+    {
+      "name": "transform",
+      "native": "translate(1 2 3)"
+    },
+    {
+      "name": "points",
+      "native": "0 1 2"
+    },
+    {
+      "name": "d",
+      "native": "M1"
+    },
+    {
+      "name": "width",
+      "native": "x"
+    }
+  ],
+  "invalidOwned": [
+    {
+      "name": "viewBox",
+      "value": {
+        "kind": "text",
+        "value": "0 0 10 20"
+      }
+    },
+    {
+      "name": "transform",
+      "value": {
+        "kind": "text",
+        "value": "translate(10)"
+      }
+    },
+    {
+      "name": "width",
+      "value": {
+        "kind": "number",
+        "value": 10
+      }
+    },
+    {
+      "name": "data-owner",
+      "value": {
+        "kind": "localReference",
+        "value": "shape"
+      }
+    }
+  ]
+}

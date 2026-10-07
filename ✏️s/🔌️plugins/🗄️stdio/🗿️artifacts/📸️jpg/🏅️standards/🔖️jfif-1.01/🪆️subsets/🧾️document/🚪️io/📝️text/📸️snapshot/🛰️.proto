@@ -5,7 +5,6 @@ message Snapshot {
  uint32 width = 2;
  uint32 height = 3;
  bytes pixels = 4;
- optional uint32 re_encode_quality = 5;
  repeated uint32 jfif_version = 6;
  DensityUnits jfif_density_units = 7;
  uint32 jfif_x_density = 8;

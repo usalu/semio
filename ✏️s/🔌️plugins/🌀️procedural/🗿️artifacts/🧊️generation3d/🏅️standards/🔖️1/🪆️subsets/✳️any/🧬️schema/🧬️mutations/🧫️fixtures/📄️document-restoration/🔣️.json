@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "contract": "original-generation3d-document-restoration-mutation-algebra",
+  "maximumDecodeBytes": 1000000,
+  "before": {
+    "generations": [
+      {
+        "id": "prior-generation",
+        "name": "Prior generation",
+        "values": {}
+      },
+      {
+        "id": "incoming-generation-é-🧊",
+        "name": "Incoming generation",
+        "values": {}
+      }
+    ],
+    "selectedGenerationId": "prior-generation",
+    "previewText": "Prior preview"
+  },
+  "sparseFields": [
+    "generation"
+  ],
+  "hostPreservation": "exact",
+  "inverse": "exact-before",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "cases": [
+    {
+      "id": "select-imported",
+      "mutation": {
+        "mutation": "selectGeneration",
+        "generationId": "incoming-generation-é-🧊"
+      },
+      "status": "applied",
+      "selectedGenerationId": "incoming-generation-é-🧊",
+      "previewText": "Prior preview"
+    },
+    {
+      "id": "clear-selection",
+      "mutation": {
+        "mutation": "selectGeneration",
+        "generationId": null
+      },
+      "status": "applied",
+      "selectedGenerationId": null,
+      "previewText": "Prior preview"
+    },
+    {
+      "id": "same-selection",
+      "mutation": {
+        "mutation": "selectGeneration",
+        "generationId": "prior-generation"
+      },
+      "status": "no-op",
+      "selectedGenerationId": "prior-generation",
+      "previewText": "Prior preview"
+    },
+    {
+      "id": "missing-generation",
+      "mutation": {
+        "mutation": "selectGeneration",
+        "generationId": "absent-generation"
+      },
+      "status": "rejected",
+      "faultCode": "mutation.target-missing",
+      "selectedGenerationId": "prior-generation",
+      "previewText": "Prior preview"
+    },
+    {
+      "id": "restore-preview",
+      "mutation": {
+        "mutation": "changeGenerationPreview",
+        "text": "Imported preview 😀\n\\ \""
+      },
+      "status": "applied",
+      "selectedGenerationId": "prior-generation",
+      "previewText": "Imported preview 😀\n\\ \""
+    },
+    {
+      "id": "clear-preview",
+      "mutation": {
+        "mutation": "changeGenerationPreview",
+        "text": null
+      },
+      "status": "applied",
+      "selectedGenerationId": "prior-generation",
+      "previewText": null
+    },
+    {
+      "id": "same-preview",
+      "mutation": {
+        "mutation": "changeGenerationPreview",
+        "text": "Prior preview"
+      },
+      "status": "no-op",
+      "selectedGenerationId": "prior-generation",
+      "previewText": "Prior preview"
+    }
+  ]
+}

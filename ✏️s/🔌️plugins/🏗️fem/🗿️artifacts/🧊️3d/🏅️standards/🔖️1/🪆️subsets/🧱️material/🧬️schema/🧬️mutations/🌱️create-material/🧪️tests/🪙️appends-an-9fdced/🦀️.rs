@@ -8,7 +8,8 @@
 //! A second alloy joins the catalogue with its own shear modulus `g` — the field the fem2d material does not carry.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️create-material/🪙️appends-an-9fdced/📸️snapshot/⬅️before/🔣️.json");

@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schema",
-    "bytes"
+    "image"
   ],
   "properties": {
     "schema": {
@@ -14,13 +14,8 @@
       "const": "stdio.png",
       "x-semio-state": "artifact"
     },
-    "bytes": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 255
-      },
+    "image": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/definitions/image",
       "x-semio-state": "artifact"
     }
   }

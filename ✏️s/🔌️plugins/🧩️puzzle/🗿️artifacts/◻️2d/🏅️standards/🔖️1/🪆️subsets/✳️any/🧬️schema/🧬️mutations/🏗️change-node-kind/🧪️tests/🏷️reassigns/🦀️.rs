@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️change-node-kind/🏷️reassigns/📸️snapshot/⬅️before/🔣️.json");
@@ -36,7 +37,7 @@ fn applies_to_committed_after() {
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("change-node-kind applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-node-kind/reassigns-node-a-kind: applied state differs from committed after-snapshot");
     let node = snapshot.nodes.iter().find(|node| node.id == "node-a").expect("node-a survives its kind change");
-    assert_eq!(node.node_kind.as_deref(), Some("node-kind-c"), "change-node-kind/reassigns-node-a-kind: node-a still points at its old catalog row");
+    assert_eq!(node.node_kind.as_ref().map(|text| text.eq_str("node-kind-c")), Some(true), "change-node-kind/reassigns-node-a-kind: node-a still points at its old catalog row");
     assert_eq!(node.handles, before().nodes[0].handles, "change-node-kind/reassigns-node-a-kind: a kind change must not rebuild the handle list");
 }
 

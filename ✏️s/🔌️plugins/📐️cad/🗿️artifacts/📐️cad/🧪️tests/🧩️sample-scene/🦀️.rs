@@ -4,7 +4,7 @@ use super::*;
 /// `🔖️Composition`'s "a child handle is two strings" rule; never the resolved model content
 /// (that lives in the child's own document, out of `CadSnapshot`'s reach).
 pub fn sample_model_child(child_id: &str) -> CadModelChild {
-    store::ArtifactChild::new(child_id.into(), store::os_io::ArtifactRef { artifact_id: child_id.to_string(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } })
+    store::ArtifactChild::new(child_id.into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.to_string(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } })
 }
 
 pub fn sample_reference() -> CadReference {
@@ -21,8 +21,8 @@ pub fn sample_scene() -> CadSnapshot {
 }
 
 /// 🧱️ A minimal ephemeral working object — the shape every object-mutation law starts from.
-pub fn sample_object(id: &str, origin: [f64; 3]) -> crate::standards::v1::subsets::any::io::geometry_import::CadObject {
-    crate::standards::v1::subsets::any::io::geometry_import::CadObject {
+pub fn sample_object(id: &str, origin: [f64; 3]) -> crate::standards::v1::subsets::any::schema::geometry::CadObject {
+    crate::standards::v1::subsets::any::schema::geometry::CadObject {
         id: id.into(),
         label: format!("Object {id}"),
         typology: "spatial.shape.primitive.box".into(),
@@ -34,6 +34,6 @@ pub fn sample_object(id: &str, origin: [f64; 3]) -> crate::standards::v1::subset
         mesh_url: None,
         extent: Some([1.0, 1.0, 1.0]),
         solid_handle: Some(format!("solid-{id}")),
-        primitives: vec![crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot { slot: "solid".into(), primitive_id: format!("solid-{id}"), kind: "solid".into() }],
+        primitives: vec![crate::standards::v1::subsets::any::schema::geometry::CadPrimitiveSlot { slot: "solid".into(), primitive_id: format!("solid-{id}"), kind: "solid".into() }],
     }
 }

@@ -7,7 +7,8 @@
 
 use crate::editor::html::modes::edit;
 use crate::editor::html::modes::edit::windows::main;
-use crate::standards::v5::subsets::any::schema::mutations::{insert_node, remove_node, set_attribute, set_comment, set_doctype, set_element_name, set_raw_text, set_snapshot::SetSnapshot, set_text, HtmlMutation};
+use crate::standards::v5::subsets::any::schema::mutations::{insert_node,remove_node,set_attribute,set_comment,set_doctype,set_element_name,set_raw_text,set_snapshot::SetSnapshot,set_text,HtmlMutation};
+
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot};
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -22,7 +23,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;

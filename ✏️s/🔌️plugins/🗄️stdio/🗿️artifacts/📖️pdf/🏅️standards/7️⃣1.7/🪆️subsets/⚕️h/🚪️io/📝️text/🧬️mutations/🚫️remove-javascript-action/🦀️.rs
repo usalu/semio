@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-javascript-action";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::RemoveJavascriptAction;
+use crate::standards::v1_7::subsets::h::schema::mutations::RemoveJavascriptAction;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveJavascriptAction) -> Result<String, String> {

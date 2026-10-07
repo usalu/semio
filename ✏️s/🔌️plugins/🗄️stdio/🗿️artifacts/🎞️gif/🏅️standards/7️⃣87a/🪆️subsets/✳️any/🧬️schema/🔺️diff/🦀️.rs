@@ -12,7 +12,7 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::os_spr::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔖️IndexTransport
@@ -585,10 +585,7 @@ pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
 // 🚫️aa�️a️aaregion 🔖️DiffValueCodecs
 
 //#region 🔖️RealBinaryPrimitives
-/// 🧪️aaaaaaa aaa aasync: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_pack_err(e: &dsl::PackRefusal) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "gif87a diff binary", offset: 0, detail: e.to_string() }
-}
+
 //#endregion 🔖️RealBinaryPrimitives
 
 //#region 🔖️RealBinaryDiffFrame
@@ -603,3 +600,6 @@ fn diff_pack_err(e: &dsl::PackRefusal) -> protocol::ProtocolError {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion Tests
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

@@ -1,0 +1,14 @@
+{
+  "session": 15649,
+  "exitCode": 0,
+  "authority": "fresh unchanged original whole PDF owner",
+  "compile": "2m50s",
+  "run": 761,
+  "passed": 761,
+  "failed": 0,
+  "skipped": 0,
+  "durationSeconds": 176.87,
+  "nextestId": "42412a09-c0b5-41a9-954c-559317d566db",
+  "controls": "original quick --lib/component-app-assembly/no-fail-fast/status-level all/final-status-level all, original300000ms runtime limit",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-current-454-readback.log"
+}

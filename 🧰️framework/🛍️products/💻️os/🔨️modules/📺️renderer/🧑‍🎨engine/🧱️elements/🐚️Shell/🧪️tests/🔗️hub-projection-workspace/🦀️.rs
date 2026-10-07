@@ -401,7 +401,7 @@ fn a_space_artifact_creation_replay_names_exactly_one_offered_kind() {
         drive(semio_framework::manifest::encode_artifact_kind_choice(&semio_framework::manifest::ArtifactKindChoice {
             kind_id: kind.kind_id.clone(),
             schema: kind.schema.clone(),
-            dialect: semio_framework::ArtifactDialect { artifact_kind: kind.dialect.artifact_kind.clone(), standard: kind.dialect.standard.clone(), subset: kind.dialect.subset.clone() },
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.dialect.artifact_kind.clone(), standard: kind.dialect.standard.clone(), subset: kind.dialect.subset.clone() },
             label: LocalizedLabel::native(&kind.label.en, &kind.label.de),
         }))
     };

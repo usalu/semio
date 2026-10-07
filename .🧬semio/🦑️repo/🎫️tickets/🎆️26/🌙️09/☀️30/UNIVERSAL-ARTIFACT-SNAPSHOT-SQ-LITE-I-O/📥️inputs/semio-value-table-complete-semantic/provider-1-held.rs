@@ -1,7 +1,7 @@
 //! 🔢️ Typed Semio value primitives, structural ownership and referential graph nodes.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot, sqlite_snapshot::{artifact::{Cell, RowWriter, reconstruct_text, reconstruct_blob}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase}};
 use std::collections::{BTreeMap, BTreeSet};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
@@ -31,7 +31,7 @@ fn value_reference(nodes:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Resul
  let mut lo=0;let mut hi=nodes.len();while lo<hi{let mid=lo+(hi-lo)/2;match out.compare_text(nodes[mid].0,id)?{std::cmp::Ordering::Less=>lo=mid+1,std::cmp::Ordering::Greater=>hi=mid,std::cmp::Ordering::Equal=>return Ok(nodes[mid].1)}}Err(ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio value reference"))
 }
 /// 🌳️ Visits the complete owned graph through the caller's borrowed or owned writer.
-fn visit_rows(snapshot:&SemioValueSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioValueSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.check_rows(snapshot.nodes.len().checked_add(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio value row overflow"))?)?;
  let mut nodes=out.allocate_frontier(snapshot.nodes.len())?;for(ordinal,node)in snapshot.nodes.iter().enumerate(){out.checkpoint()?;nodes.push((node.id.value.as_str(),number(ordinal+1)?));}
  out.sort_frontier(&mut nodes,|a,b,c|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,SqliteSnapshotPhase::ProjectSnapshot,c))?;
@@ -169,7 +169,7 @@ pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Re
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

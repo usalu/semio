@@ -66,8 +66,8 @@ fn painted_scenes_crops_retain_uncropped_curve_paint_and_stroke() {
  let mut count=0;
  for segments in paths{for cap in [StrokeCap::Butt,StrokeCap::Round,StrokeCap::Square]{for join in [StrokeJoin::Miter,StrokeJoin::Round,StrokeJoin::Bevel]{
   let transform=if count%2==1{[1.0,0.2,0.4,0.8,5.0,4.0]}else{[-0.8,0.2,0.3,0.7,18.0,3.0]};
-  let fill=Some(FillStyle::LinearGradient{x1:0.0,y1:0.0,x2:20.0,y2:12.0,stops:vec![GradientStop{offset:0.0,color:[1.0,0.0,0.0,1.0]},GradientStop{offset:1.0,color:[0.0,0.0,1.0,1.0]}]});
-  let stroke=Some(StrokeStyle{color:[0.2,0.6,0.1,1.0],width:0.75,cap,join,dash:Some(vec![0.8,0.5])});
+  let fill=Some(FillStyle::LinearGradient{x1:0.0,y1:0.0,x2:20.0,y2:12.0,stops:vec![GradientStop{offset:0.0,color:[1.0,0.0,0.0,1.0]},GradientStop{offset:1.0,color:[0.0,0.0,1.0,1.0]}].into()});
+  let stroke=Some(StrokeStyle{color:[0.2,0.6,0.1,1.0],width:0.75,cap,join,dash:Some(vec![0.8,0.5].into())});
   let mut full=PathRasterJob::new(PathRasterInput{width:32,height:24,origin:[-0.25,0.5],segments:segments.clone(),transform,tolerance:0.001,fill_rule:FillRule::Evenodd,fill:fill.clone(),stroke:stroke.clone()}).unwrap();while !full.advance(4096).unwrap().done{}
   let node=RasterSceneNode{id:"path".into(),groups:Vec::new(),transform,opacity:1.0,blend_mode:"normal".into(),visible:true,content:RasterSceneContent::Path{segments:segments.clone(),fill_rule:FillRule::Evenodd,fill,stroke}};
   let mut scene=RasterSceneJob::new(RasterSceneInput{width:32,height:24,origin:[-0.25,0.5],tolerance:0.001,max_pixels:768,max_source_bytes:268439552,max_bytes:67108864,max_chunks:65536,assets:Vec::new(),nodes:vec![node]}).unwrap();while !scene.advance(4096).unwrap().done{}

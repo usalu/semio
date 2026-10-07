@@ -1,6 +1,5 @@
 syntax = "proto3";
 package semio.s_stdio_bmp.diff;
+import "s_stdio_bmp/snapshot.proto";
 
-message BmpDiff {
-  optional bytes bytes = 1;
-}
+message BmpDiff { semio.s_stdio_bmp.snapshot.BmpImage image = 1; }

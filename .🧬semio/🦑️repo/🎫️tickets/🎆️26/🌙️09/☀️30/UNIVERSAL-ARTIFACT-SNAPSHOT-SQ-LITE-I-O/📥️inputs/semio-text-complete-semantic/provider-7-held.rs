@@ -67,40 +67,39 @@ pub(crate) fn text_list<T:semio_framework_value::retirement::RetireOwned>(value:
 }
 pub(crate) fn float32(value:&str,control:&mut NativeDecodeControl<'_>)->Result<f32,ValueError>{control.scoped_stage(|control|{control.begin_stage(value.len())?;for _ in value.bytes(){control.step()?;}if let Some(word)=value.strip_prefix("nan32_"){if word.len()!=8||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))}let bits=u32::from_str_radix(word,16).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))?;if bits&0x7f800000!=0x7f800000||bits&0x7fffff==0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio native binary32 word has non-NaN class"))}return Ok(f32::from_bits(bits))}value.parse::<f32>().map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 number"))})}
 
-pub(crate) fn decode_snapshot(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{decode(payload,crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,control,binary_snapshot,text_snapshot)}
-fn subset_limits(mut limits:SqliteDatabaseLimits)->Result<SqliteDatabaseLimits,ValueError>{limits.max_rows=limits.max_rows.checked_sub(1).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio envelope document exceeds caller row limit"))?;Ok(limits)}
+pub(crate) fn decode_snapshot(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{super::semantic::layout(control.limits())?;decode(payload,crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,control,binary_snapshot,text_snapshot)}
 fn binary_snapshot(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{
  use crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;
- let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio envelope native format"))}let ordinal=reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let limits=subset_limits(limits)?;let schema=text(&mut reader,control)?;let payload=reader.read_bytes(reader.remaining()).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;
+ let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio envelope native format"))}let ordinal=reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let schema=control.borrow_text(bytes(&mut reader)?)?;let limits=super::semantic::subset_limits(limits,schema.len(),super::semantic::tag(ordinal)?)?;let payload=reader.read_bytes(reader.remaining()).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;
  let id=match ordinal{0=>"stdio.semio.brep",1=>"stdio.semio.mesh",2=>"stdio.semio.model",3=>"stdio.semio.value",4=>"s.stdio.semio.document",5=>"stdio.semio.cad",6=>"stdio.semio.drawing",7=>"s.stdio.semio.image",8=>"stdio.semio.video",9=>"stdio.semio.audio",10=>"s.stdio.semio.animation",11=>"s.stdio.semio.presentation",12=>"stdio.semio.flow",13=>"s.stdio.semio.text",14=>"s.stdio.semio.table",15=>"s.stdio.semio.graph",16=>"stdio.semio.object",17=>"stdio.semio.kit",_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio native envelope subset ordinal"))};
  let body=store::semio_format::unwrap_binary_controlled(payload,id,store::semio_format::Component::Pack,1,control).map_err(store::semio_format::SemioError::into_value_error)?;
- let subset=match ordinal{
- 0=>S::Brep(owners::brep::io::binary::snapshot::native_decoding(body,control,limits)?),
- 1=>S::Mesh(owners::mesh::io::binary::snapshot::native_decoding(body,control,limits)?),
- 2=>S::Model(owners::model::io::binary::snapshot::native_decoding(body,control,limits)?),
+ let subset=Owned::new(match ordinal{
+ 0=>S::Brep(owners::brep::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 1=>S::Mesh(owners::mesh::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 2=>S::Model(owners::model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  3=>{let body=control.borrow_text(body)?;S::Value(owners::value::io::sqlite::snapshot::native_decoding::document(body,control,limits)?)},
- 4=>S::Document(owners::document::io::binary::snapshot::native_decoding(body,control,limits)?),
- 5=>S::Cad(owners::cad::io::binary::snapshot::native_decoding(body,control,limits)?),
- 6=>S::Drawing(owners::drawing::io::binary::snapshot::native_decoding(body,control,limits)?),
- 7=>S::Image(owners::image::io::binary::snapshot::native_decoding(body,control,limits)?),
- 8=>S::Video(owners::video::io::binary::snapshot::native_decoding(body,control,limits)?),
- 9=>S::Audio(owners::audio::io::binary::snapshot::native_decoding(body,control,limits)?),
- 10=>S::Animation(owners::animation::io::binary::snapshot::native_decoding(body,control,limits)?),
- 11=>S::Presentation(owners::presentation::io::binary::snapshot::native_decoding(body,control,limits)?),
- 12=>S::Flow(owners::flow::io::binary::snapshot::native_decoding(body,control,limits)?),
- 13=>S::Text(owners::text::io::binary::snapshot::native_decoding(body,control,limits)?),
- 14=>S::Table(owners::table::io::binary::snapshot::native_decoding(body,control,limits)?),
- 15=>S::Graph(owners::graph::io::binary::snapshot::native_decoding(body,control,limits)?),
- 16=>S::Object(owners::object::io::binary::snapshot::native_decoding(body,control,limits)?),
- 17=>S::Kit(owners::kit::io::binary::snapshot::native_decoding(body,control,limits)?),
+ 4=>S::Document(owners::document::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 5=>S::Cad(owners::cad::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 6=>S::Drawing(owners::drawing::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 7=>S::Image(owners::image::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 8=>S::Video(owners::video::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 9=>S::Audio(owners::audio::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 10=>S::Animation(owners::animation::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 11=>S::Presentation(owners::presentation::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 12=>S::Flow(owners::flow::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 13=>S::Text(owners::text::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 14=>S::Table(owners::table::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 15=>S::Graph(owners::graph::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 16=>S::Object(owners::object::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 17=>S::Kit(owners::kit::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio native envelope subset ordinal"))
- };Ok(crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot{schema,subset})
+ });let value=Owned::new(crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot{schema:control.copy_text(schema)?,subset:subset.take()});control.checkpoint()?;Ok(value.take())
 }
 fn text_snapshot(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{
  use crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;
  control.scoped_stage(|control|{control.begin_stage(body.len())?;for _ in body.bytes(){control.step()?}Ok::<_,ValueError>(())})?;
- let mut fields=body.splitn(3,'\n');let tag=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope subset"))?.trim().strip_prefix("subset=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires subset header"))?;let schema=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope schema"))?.trim().strip_prefix("schema=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires schema header"))?;let body=fields.next().unwrap_or("");let limits=subset_limits(limits)?;let schema=hex_text(schema,control)?;
- let subset=match tag{
+ let mut fields=body.splitn(3,'\n');let tag=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope subset"))?.trim().strip_prefix("subset=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires subset header"))?;let schema=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope schema"))?.trim().strip_prefix("schema=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires schema header"))?;let body=fields.next().unwrap_or("");let limits=super::semantic::subset_limits(limits,hex_text_extent(schema,control)?,tag)?;
+ let subset=Owned::new(match tag{
  "brep"=>S::Brep(owners::brep::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "mesh"=>S::Mesh(owners::mesh::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "model"=>S::Model(owners::model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
@@ -120,7 +119,7 @@ fn text_snapshot(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDat
  "object"=>S::Object(owners::object::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "kit"=>S::Kit(owners::kit::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio native envelope subset tag"))
- };Ok(crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot{schema,subset})
+ });let value=Owned::new(crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot{schema:hex_text(schema,control)?,subset:subset.take()});control.checkpoint()?;Ok(value.take())
 }
 
 /// 🧷️ Measures exact decoded UTF-8 from borrowed hexadecimal source with fixed scalar storage.

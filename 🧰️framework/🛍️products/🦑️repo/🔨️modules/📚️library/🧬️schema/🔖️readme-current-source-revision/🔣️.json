@@ -2,22 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "One Approved Current README Source Revision",
   "definitions": {
-    "fixtureInputs": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "path",
-        "sha256"
-      ],
-      "properties": {
-        "path": {
-          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/📋️manifest/🔣️.json"
-        },
-        "sha256": {
-          "const": "081ff80b401f1b6d3c5c94a70a0c3875e0987b03289145dd0ae60fb6c983f1ab"
-        }
-      }
-    },
     "execution": {
       "type": "object",
       "additionalProperties": false,

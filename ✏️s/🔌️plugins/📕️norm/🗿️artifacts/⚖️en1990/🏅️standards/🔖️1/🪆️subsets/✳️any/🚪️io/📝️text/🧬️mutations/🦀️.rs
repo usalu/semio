@@ -191,14 +191,7 @@ impl protocol::OpText for En1990Mutation {
 //#endregion 🔖️OpTextCodec
 
 //#region 🔖️OpBinaryCodec
-impl protocol::OpBinary for En1990Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::encode::<crate::En1990Snapshot, _>(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::decode::<crate::En1990Snapshot, _>(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️OpBinaryCodec
 
 //#region 🔖️DemoCases

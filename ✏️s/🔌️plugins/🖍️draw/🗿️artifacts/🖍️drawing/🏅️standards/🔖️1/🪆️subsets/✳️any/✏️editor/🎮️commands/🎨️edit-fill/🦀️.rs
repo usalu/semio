@@ -17,5 +17,5 @@ pub fn handle(payload: &EditFill, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg:
     let layer = crate::schema::find_drawing_layer(doc.snapshot,&payload.layer_id).ok_or_else(|| Fault::from("Select a layer to edit"))?;
     let source = crate::schema::layer_base(layer).attributes.fill.as_ref();
     let fill = edit_fill(source,&payload.edit).map_err(Fault::from)?;
-    Ok(Emit::mutations(vec![crate::mutations::replace_layer_fill(payload.layer_id.clone(),fill)]))
+    Ok(Emit::mutations(vec![crate::mutations::replace_layer_fill(payload.layer_id.clone().into(),fill)]))
 }

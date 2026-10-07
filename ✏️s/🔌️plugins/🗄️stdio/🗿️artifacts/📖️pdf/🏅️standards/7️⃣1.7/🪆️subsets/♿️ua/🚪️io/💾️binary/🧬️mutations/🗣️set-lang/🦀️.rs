@@ -1,6 +1,6 @@
 //! 🗣️ Direct binary codec for `set-lang`.
 
-use super::SetLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetLang;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 4;

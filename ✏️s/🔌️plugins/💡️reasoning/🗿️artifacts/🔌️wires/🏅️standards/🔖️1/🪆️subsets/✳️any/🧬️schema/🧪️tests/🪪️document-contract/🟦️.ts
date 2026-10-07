@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json" with { type: "json" };
 /** 🧪️ Canonical Wires document contracts agree with independent schema validation. */
 import assert from "node:assert/strict";
@@ -16,7 +17,7 @@ import { decodeWiresJsonSnapshot } from "../../../🚪️io/📝️text/📸️s
 
 /** 🪪️ Parent document admission agrees with its closed schemas and child ownership. */
 export function testWiresDocumentContractOracle(): void {
-  const ajv = new Ajv({ strict: false, allErrors: true });
+  const ajv = new Ajv({ strict: false, allErrors: true }).addSchema(artifactReferenceSchema);
   ajv.addSchema(valueSchema).addSchema(ioSchema).addSchema(childSchema).addSchema(artifactSchema);
   
   

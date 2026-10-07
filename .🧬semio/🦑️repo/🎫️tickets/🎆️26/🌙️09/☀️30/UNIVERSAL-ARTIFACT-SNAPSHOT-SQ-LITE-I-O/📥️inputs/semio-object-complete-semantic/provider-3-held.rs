@@ -1,7 +1,8 @@
 //! 📦️ Controlled spatial placement and literal persisted child identities.
 use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot,STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};
-use crate::standards::v1::subsets::base::schema::{snapshot::native_decoding as native,child::validate_semio_child_identity,geometry::{SemioPoint3,SemioQuaternion}};
+use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use crate::standards::v1::subsets::base::schema::{child::validate_semio_child_identity,geometry::{SemioPoint3,SemioQuaternion}};
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};

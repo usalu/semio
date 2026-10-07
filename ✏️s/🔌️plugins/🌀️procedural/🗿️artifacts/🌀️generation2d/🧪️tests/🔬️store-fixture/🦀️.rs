@@ -9,7 +9,7 @@
 //! does both. 2d twin of `🧊️generation3d/🧪️tests/🔬️store-fixture/🦀️.rs`
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
-use crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_owners;
+use crate::host::owned::generation2d_document_store_owners;
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use semio_framework_plugin::ArtifactOwnedDisposer;
@@ -18,7 +18,7 @@ pub type Generation2dFixtureStore = store::ArtifactStore<Generation2dSnapshot, G
 
 /// 🏗️ A document store over `snapshot` carrying the artifact's own owner catalog.
 pub async fn document_store(snapshot: Generation2dSnapshot) -> Generation2dFixtureStore {
-    let mut store = Generation2dFixtureStore::new(store::create_document_envelope(crate::GENERATION_2D_SCHEMA, "generation2d", snapshot, None)).await.expect("valid artifact store fixture");
+    let mut store = Generation2dFixtureStore::new(store::create_document_envelope(crate::GENERATION_2D_SCHEMA, "generation2d", snapshot, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(generation2d_document_store_owners());
     store
 }

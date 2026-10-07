@@ -11,6 +11,6 @@ mod tests {
     async fn set_info_clears_title_author_advisory() {
         let snapshot = PdfHBuilderConstruction::new().set_info(PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..PdfInfo::default() }).build().unwrap();
         let diagnostics = check_h_conformance(&snapshot);
-        assert!(diagnostics.iter().all(|d| d.code.0 != crate::standards::v1_7::subsets::h::schema::CODE_INFO_TITLE_OR_AUTHOR), "got {diagnostics:?}");
+        assert!(diagnostics.iter().all(|d| d.code.0 != crate::standards::v1_7::subsets::h::io::CODE_INFO_TITLE_OR_AUTHOR), "got {diagnostics:?}");
     }
 }

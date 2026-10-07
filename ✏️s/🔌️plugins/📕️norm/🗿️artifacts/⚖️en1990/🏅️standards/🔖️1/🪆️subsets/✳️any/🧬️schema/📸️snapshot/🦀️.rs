@@ -64,7 +64,7 @@ pub struct En1990Snapshot {
 }
 
 
-crate::impl_norm_artifact_record!(En1990Snapshot, extension = "en1990", envelope_id = "norm.en1990", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+
 
 impl Default for En1990Snapshot {
     fn default() -> Self {

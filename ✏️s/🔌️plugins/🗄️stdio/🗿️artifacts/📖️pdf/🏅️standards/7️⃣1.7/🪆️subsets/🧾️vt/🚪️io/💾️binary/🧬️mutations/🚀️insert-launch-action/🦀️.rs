@@ -1,6 +1,6 @@
 //! 🚀️ Direct binary codec for `insert-launch-action`.
 
-use super::InsertLaunchAction;
+use crate::standards::v1_7::subsets::vt::schema::mutations::InsertLaunchAction;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 10;

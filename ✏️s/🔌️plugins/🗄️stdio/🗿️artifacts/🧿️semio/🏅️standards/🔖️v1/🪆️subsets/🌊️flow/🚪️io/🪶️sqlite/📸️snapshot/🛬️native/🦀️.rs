@@ -4,8 +4,19 @@ use crate::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot,Fl
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioFlowSnapshot,ValueError>{native::decode(payload,STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,control,binary,document)}
+pub(crate) fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioFlowSnapshot,ValueError>{
+ let limits=control.limits();crate::standards::v1::subsets::flow::io::sqlite::snapshot::admit_layout(limits)?;
+ let size=match payload{store::os_io::IoPayload::Binary(value)=>value.len(),store::os_io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Flow native input exceeds file limit"))}
+ control.allocation_stage(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+  let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_control=NativeDecodeControl::new(remaining,&mut callback);
+  let result=(||->Result<SemioFlowSnapshot,ValueError>{let result=match payload{
+   store::os_io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,&mut native_control,limits)?},
+   store::os_io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
+  };let result=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();(result,native_control.owned_bytes())
+ })?
+}
 pub(crate) fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioFlowSnapshot,ValueError>{
+ crate::standards::v1::subsets::flow::io::sqlite::snapshot::admit_binary(body,control,limits)?;
  let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio flow native format"))}
  let schema=native::text(&mut reader,control)?;let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut nodes=control.allocate_vec::<FlowNode>(count)?;
  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{
@@ -17,6 +28,7 @@ pub(crate) fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqli
 }
 fn port(value:&str,control:&mut NativeDecodeControl<'_>)->Result<PortRef,ValueError>{let[node,port]=native::record(value,control)?;Ok(PortRef{node:native::hex_text(node,control)?,port:native::hex_text(port,control)?})}
 pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioFlowSnapshot,ValueError>{
+ crate::standards::v1::subsets::flow::io::sqlite::snapshot::admit_document(body,control,limits)?;
  let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","nodes","edges"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio flow native schema missing"))?,control)?;let mut items=native::Items::new(fields[1].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut nodes=control.allocate_vec::<FlowNode>(count)?;
  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=items.next(control)?{
   let[id,kind,label,param_fields,position]=native::record(value,control)?;let id=native::hex_text(id,control)?;let kind=native::hex_text(kind,control)?;let label=native::hex_text(label,control)?;let mut param_items=native::Items::new(param_fields)?;let count=param_items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut params=control.allocate_vec::<FlowParam>(count)?;

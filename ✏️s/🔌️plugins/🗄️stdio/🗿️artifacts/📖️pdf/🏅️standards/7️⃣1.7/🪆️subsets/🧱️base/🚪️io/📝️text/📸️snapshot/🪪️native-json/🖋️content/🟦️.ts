@@ -4,8 +4,8 @@ import { record, array, text, boolean, integer, integers, real, reals, pdfDictio
 
 /** 📐️ Admit a finite native six-component matrix as six exact owned IEEE words. */
 export function pdfMatrixFromNativeJson(input: unknown): [Binary64,Binary64,Binary64,Binary64,Binary64,Binary64] { const values=reals(input);if(values.length!==6)throw new Error("PDF matrix requires six components");return [values[0]!,values[1]!,values[2]!,values[3]!,values[4]!,values[5]!]; }
-/** 🅰️ Admit native text or exact intrinsic glyph-code octets. */
-export function pdfTextFromNativeJson(input: unknown): PdfTextString { const row=record(input);const kind=text(row.kind);switch(kind){case "text":return {kind,text:text(row.text)};case "codes":return {kind,bytes:integers(row.bytes)};default:throw new Error("Unknown PDF text operand");} }
+/** 🅰️ Admit native text or logical unsigned character codes. */
+export function pdfTextFromNativeJson(input: unknown): PdfTextString { const row=record(input);const kind=text(row.kind);switch(kind){case "text":return {kind,text:text(row.text)};case "codes":return {kind,codes:integers(row.codes).map(code=>{if(code<0||code>0xffffffff)throw new Error("PDF logical code exceeds u32");return code;})};default:throw new Error("Unknown PDF text operand");} }
 /** 🔠️ Admit every typed native text-array item including owned adjustment words. */
 export function pdfTextItemFromNativeJson(input: unknown): PdfTextArrayItem { const row=record(input);if(row.kind==="adjust")return {kind:"adjust",amount:real(row.amount)};return pdfTextFromNativeJson(input); }
 /** 🏷️ Admit named or inline property-list ownership explicitly. */

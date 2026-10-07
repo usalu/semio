@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "named-author-reopened",
+      "actor": "host-author",
+      "reopenActor": "host-author",
+      "expectedActors": [
+        "host-author",
+        "host-author"
+      ]
+    },
+    {
+      "id": "another-opened-author",
+      "actor": "host-author",
+      "reopenActor": "host-peer",
+      "expectedActors": [
+        "host-author",
+        "host-peer"
+      ]
+    }
+  ]
+}

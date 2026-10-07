@@ -55,7 +55,7 @@ pub(crate) mod context {
     }
     
     pub async fn app() -> Generation3dViewerFixture {
-        let mut app = new_app_with_registry::<ViewerApp<Generation3dViewer>>(generation3d_viewer_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<ViewerApp<Generation3dViewer>>(generation3d_viewer_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(1).await;
         Generation3dViewerFixture(app)
     }

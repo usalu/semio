@@ -1,0 +1,1400 @@
+{
+  "qualification": "Read-only source evidence; not runtime or complete resolved binding fixture",
+  "concreteRows": [
+    {
+      "owner": "WriterSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "WRITER_DIALECT",
+          "body": " artifact_kind: \"s.writer.writer\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "EquationSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EQUATION_DIALECT",
+          "body": " artifact_kind: \"s.mathematical.equation\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "WFC_2D_DIALECT",
+          "body": " artifact_kind: WFC_2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/wfc-2d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "WFC_GRID2D_DIALECT",
+          "body": " artifact_kind: WFC_GRID2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "WFC_BITMAP_DIALECT",
+          "body": " artifact_kind: WFC_BITMAP_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "WFC3D_DIALECT",
+          "body": " artifact_kind: WFC3D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/wfc-3d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "WFC_GRID3D_DIALECT",
+          "body": " artifact_kind: WFC_GRID3D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "GENERATION2D_DIALECT",
+          "body": " artifact_kind: \"s.procedural.generation2d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 156,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::generation2d::Generation2dPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "GENERATION3D_DIALECT",
+          "body": " artifact_kind: \"s.procedural.generation3d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 152,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::generation3d::Generation3dPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "FlowSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "FLOW_DIALECT",
+          "body": " artifact_kind: \"s.flow.flow\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 405,
+          "text": ".document_codec::<EditorApp<editor::flow::FlowPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/flow-flow-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "GISTERRAIN_DIALECT",
+          "body": " artifact_kind: \"s.gis.gisterrain\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 192,
+          "text": ".document_codec_bare::<GisTerrainSnapshot, GisTerrainMutation>(GIS_3D_TERRAIN_SCHEMA, GISTERRAIN_DIALECT)"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "GISMAP_DIALECT",
+          "body": " artifact_kind: \"s.gis.gismap\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 338,
+          "text": ".document_codec_bare::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, GISMAP_DIALECT)"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/gis-gismap-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "VcsSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "VCS_DIALECT",
+          "body": " artifact_kind: \"s.vcs.vcs\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "ANIMATE_DIALECT",
+          "body": " artifact_kind: \"s.animate.presentation\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/animate-presentation-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "SHOOTING_DIALECT",
+          "body": " artifact_kind: \"s.shooting.shooting\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 174,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::shooting::ShootingPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "PLAYGROUND_DIALECT",
+          "body": " artifact_kind: \"s.demonstrator.playground\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 85,
+          "text": ".document_codec_bare::<standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot, standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(PLAYGROUND_DOCUMENT_SCHEMA, PLAYGROUND_DIALECT)"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "SEQUENCE_DIALECT",
+          "body": " artifact_kind: \"s.sequence.sequence\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "FEM2D_DIALECT",
+          "body": " artifact_kind: \"s.fem.fem2d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/fem-2d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "FEM3D_DIALECT",
+          "body": " artifact_kind: \"s.fem.fem3d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/fem-3d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "ARCHITECT_DIALECT",
+          "body": " artifact_kind: \"s.architect.program\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 648,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::architect::ArchitectPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/architect-program-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "PROCESS3D_DIALECT",
+          "body": " artifact_kind: \"s.process.process3d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 1089,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::process3d::Process3dPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/process-process3d-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "LOWPOLY_DIALECT",
+          "body": " artifact_kind: \"s.lowpoly.lowpoly\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 409,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::lowpoly::LowpolyPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "WiresSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "WIRES_DIALECT",
+          "body": " artifact_kind: \"s.reasoning.wires\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "FormsSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "FORMS_DIALECT",
+          "body": " artifact_kind: \"s.forms.forms\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/forms-forms-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "LAYOUT_DIALECT",
+          "body": " artifact_kind: \"s.layout.layout\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 661,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::layout::LayoutPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/layout-layout-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "CadSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "CAD_DIALECT",
+          "body": " artifact_kind: \"s.cad.cad\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 596,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::cad::CadPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/cad-cad-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1990Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1990_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1990\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 200,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1990::En1990PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "DIN18599_DIALECT",
+          "body": " artifact_kind: \"s.norm.din18599\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 533,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din18599::Din18599PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-din18599-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1997Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1997_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1997\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 255,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1997::En1997PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "DIN16798_DIALECT",
+          "body": " artifact_kind: \"s.norm.din16798\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 190,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din16798::Din16798PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1991Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1991_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1991\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 225,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1991::En1991PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1991-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1992Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1992_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1992\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 451,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1992::En1992PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1992-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "VDI3805_DIALECT",
+          "body": " artifact_kind: \"s.norm.vdi3805\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 2068,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::vdi3805::Vdi3805PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "ISO16757_DIALECT",
+          "body": " artifact_kind: \"s.norm.iso16757\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 1237,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::iso16757::Iso16757PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1993Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1993_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1993\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 404,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1993::En1993PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1993-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1994Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1994_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1994\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 487,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1994::En1994PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1994-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "DIN4108_DIALECT",
+          "body": " artifact_kind: \"s.norm.din4108\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 190,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din4108::Din4108PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-din4108-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1996Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1996_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1996\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 329,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1996::En1996PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1996-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1995Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1995_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1995\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 258,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1995::En1995PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1995-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1999Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1999_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1999\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 75,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1999::En1999PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1999-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "En1998Snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "EN1998_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1998\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 71,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1998::En1998PlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/norm-en1998-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "PLAYBOOK_DIALECT",
+          "body": " artifact_kind: \"s.playbook.playbook\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "PROCEDURE_DIALECT",
+          "body": " artifact_kind: \"s.imperative.procedure\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 374,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::procedure::ImperativePlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "REMODELING_DIALECT",
+          "body": " artifact_kind: \"s.remodel.remodeling\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "MODEL_DIALECT",
+          "body": " artifact_kind: ENERGY_MODEL_ARTIFACT_SCHEMA_ID, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 696,
+          "text": ".document_codec_bare::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.energy.model\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/energy-model-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "TRINITY_REWRITING_DIALECT",
+          "body": " artifact_kind: \"s.trinity.rewriting\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "JackSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "TRINITY_JACK_DIALECT",
+          "body": " artifact_kind: \"s.trinity.jack\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/trinity-jack-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "DagSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "DAG_DIALECT",
+          "body": " artifact_kind: \"s.dag.dag\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/dag-dag-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "DRAWING_DIALECT",
+          "body": " artifact_kind: \"s.draw.drawing\", standard: semio_framework::StandardId(\"1\"), subset: semio_framework::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/draw-drawing-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "RASTER_DIALECT",
+          "body": " artifact_kind: \"s.raster.raster\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 911,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::raster::RasterPlayApp>>()"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "NoteSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "NOTE_DIALECT",
+          "body": " artifact_kind: \"s.note.note\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/note-note-rs:verify-sqlite-snapshot-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "PUZZLE2D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle2d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "PUZZLE5D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle5d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "PUZZLE3D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle3d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "BLOCK2D_DIALECT",
+          "body": " artifact_kind: \"s.block.block2d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/block-2d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "BLOCK5D_DIALECT",
+          "body": " artifact_kind: \"s.block.block5d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/block-5d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "BLOCK3D_DIALECT",
+          "body": " artifact_kind: \"s.block.block3d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/block-3d-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "HOME_DIALECT",
+          "body": " artifact_kind: \"s.space.home\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 106,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::home::HomeApp>>()"
+        },
+        {
+          "line": 118,
+          "text": ".document_codec_bare::<SHomeSnapshot,SHomeMutation>(S_HOME_DOCUMENT_SCHEMA,HOME_DIALECT)"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/space-home-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "SPACE_INDEX_DIALECT",
+          "body": " artifact_kind: \"s.space.space\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [
+        {
+          "line": 86,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()"
+        },
+        {
+          "line": 94,
+          "text": ".document_codec_bare::<SSpaceSnapshot,SSpaceMutation>(S_SPACE_INDEX_DOCUMENT_SCHEMA,SPACE_INDEX_DIALECT)"
+        }
+      ],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/space-space-rs:test-snapshot-sqlite-native",
+      "classification": "Runtime declaration evidence present"
+    },
+    {
+      "owner": "CurationSnapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+      "coordinates": [
+        {
+          "name": "SOURCING_DIALECT",
+          "body": " artifact_kind: \"s.sourcing.curation\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "declarationCodecEvidence": [],
+      "stdioAuthoredBindings": [],
+      "owningNativeSelector": "@semio-tech/sourcing-curation-rs:test-snapshot-sqlite-native",
+      "classification": "Resolve exact declaration subtree before classification; absence of same-file codec text is not absence of provider"
+    }
+  ],
+  "primaryCallsites": [
+    {
+      "source": "🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs",
+      "line": 40,
+      "call": ".declare_artifact(semio_s_artifact_trinity_jack::artifact::<TrinityApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs",
+      "line": 41,
+      "call": ".declare_artifact(semio_s_artifact_trinity_rewriting::artifact::<TrinityApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📸️remodel/🦀️.rs",
+      "line": 32,
+      "call": ".declare_artifact(crate::artifacts::remodeling::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🖨️raster/🦀️.rs",
+      "line": 38,
+      "call": ".artifact(crate::artifacts::raster::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌊️flow/🦀️.rs",
+      "line": 32,
+      "call": ".artifact(crate::artifacts::flow::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏭️process/🦀️.rs",
+      "line": 30,
+      "call": ".artifact(crate::artifacts::process3d::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 79,
+      "call": ".artifact(din4108)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 80,
+      "call": ".artifact(din16798)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 81,
+      "call": ".artifact(din18599)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 82,
+      "call": ".artifact(en1990)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 83,
+      "call": ".artifact(en1991)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 84,
+      "call": ".artifact(en1992)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 85,
+      "call": ".artifact(en1993)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 86,
+      "call": ".artifact(en1994)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 87,
+      "call": ".artifact(en1995)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 88,
+      "call": ".artifact(en1996)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 89,
+      "call": ".artifact(en1997)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 90,
+      "call": ".artifact(en1998)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 91,
+      "call": ".artifact(en1999)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 92,
+      "call": ".artifact(iso16757)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 93,
+      "call": ".artifact(vdi3805)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📐️cad/🦀️.rs",
+      "line": 30,
+      "call": ".artifact(crate::artifacts::cad::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧱️block/🦀️.rs",
+      "line": 32,
+      "call": ".declare_artifact(semio_s_artifact_block_2d::artifact::<BlockApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧱️block/🦀️.rs",
+      "line": 33,
+      "call": ".declare_artifact(semio_s_artifact_block_3d::artifact::<BlockApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧱️block/🦀️.rs",
+      "line": 34,
+      "call": ".declare_artifact(semio_s_artifact_block_5d::artifact::<BlockApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🕸️dag/🦀️.rs",
+      "line": 35,
+      "call": ".declare_artifact(crate::artifacts::dag::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/💡️reasoning/🦀️.rs",
+      "line": 28,
+      "call": ".declare_artifact(crate::artifacts::wires::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🎬️sequence/🦀️.rs",
+      "line": 34,
+      "call": ".declare_artifact(crate::artifacts::sequence::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/✒️writer/🦀️.rs",
+      "line": 28,
+      "call": ".declare_artifact(crate::artifacts::writer::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🎞️animate/🦀️.rs",
+      "line": 26,
+      "call": ".declare_artifact(crate::artifacts::presentation::artifact::<AnimateApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪐️space/🦀️.rs",
+      "line": 234,
+      "call": ".artifact(::semio_framework_async::poll::resolve_ready(semio_s_artifact_space_home::declaration()).map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪐️space/🦀️.rs",
+      "line": 239,
+      "call": ".artifact(semio_s_artifact_space_space::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌀️procedural/🦀️.rs",
+      "line": 98,
+      "call": ".artifact(semio_s_artifact_procedural_generation2d::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌀️procedural/🦀️.rs",
+      "line": 99,
+      "call": ".artifact(semio_s_artifact_procedural_generation3d::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌿️vcs/🦀️.rs",
+      "line": 37,
+      "call": ".declare_artifact(crate::artifacts::vcs::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+      "line": 46,
+      "call": ".artifact(semio_s_artifact_gis_gismap::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+      "line": 47,
+      "call": ".artifact(semio_s_artifact_gis_gisterrain::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 58,
+      "call": ".declare_artifact(semio_s_artifact_wfc_bitmap::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 59,
+      "call": ".declare_artifact(semio_s_artifact_wfc_grid2d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 60,
+      "call": ".declare_artifact(semio_s_artifact_wfc_2d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 61,
+      "call": ".declare_artifact(semio_s_artifact_wfc_grid3d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 62,
+      "call": ".declare_artifact(semio_s_artifact_wfc_3d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📜️imperative/🦀️.rs",
+      "line": 36,
+      "call": ".artifact(crate::artifacts::procedure::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪵️sourcing/🦀️.rs",
+      "line": 39,
+      "call": ".declare_artifact(crate::artifacts::curation::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🗒️note/🦀️.rs",
+      "line": 41,
+      "call": ".declare_artifact(crate::artifacts::note::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📋️forms/🦀️.rs",
+      "line": 39,
+      "call": ".declare_artifact(crate::artifacts::forms::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏛️architect/🦀️.rs",
+      "line": 30,
+      "call": ".artifact(crate::artifacts::program::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🎥️shooting/🦀️.rs",
+      "line": 29,
+      "call": ".artifact(crate::artifacts::shooting::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/➗️mathematical/🦀️.rs",
+      "line": 44,
+      "call": ".declare_artifact(crate::artifacts::equation::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📏️layout/🦀️.rs",
+      "line": 39,
+      "call": ".artifact(crate::artifacts::layout::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs",
+      "line": 70,
+      "call": ".declare_artifact(semio_s_artifact_puzzle_2d::artifact::<PuzzleApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs",
+      "line": 71,
+      "call": ".declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PuzzleApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs",
+      "line": 72,
+      "call": ".declare_artifact(semio_s_artifact_puzzle_5d::artifact::<PuzzleApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs",
+      "line": 44,
+      "call": ".declare_artifact(semio_s_artifact_fem_2d::artifact::<FemApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs",
+      "line": 45,
+      "call": ".declare_artifact(semio_s_artifact_fem_3d::artifact::<FemApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🖍️draw/🦀️.rs",
+      "line": 41,
+      "call": ".declare_artifact(crate::artifacts::drawing::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📖️playbook/🦀️.rs",
+      "line": 35,
+      "call": ".declare_artifact(crate::artifacts::playbook::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/💠️lowpoly/🦀️.rs",
+      "line": 32,
+      "call": ".artifact(crate::artifacts::lowpoly::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🔋️energy/🦀️.rs",
+      "line": 44,
+      "call": ".artifact(crate::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🦀️.rs",
+      "line": 62,
+      "call": ".artifact(crate::artifacts::playground::declaration().map_err(PluginAssemblyError::definition)?)"
+    }
+  ],
+  "frameworkRows": [
+    {
+      "owner": "Workflow",
+      "type": "WorkflowSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+      "schema": "os.workflow",
+      "target": "@semio-tech/framework-workflow-workflow-rs",
+      "publication": "Public imperative register_native_document_codec demonstrated in owning law; ordinary host/store publication policy unresolved",
+      "receipt": "No current named receipt located in bounded current cache/log search",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Run",
+      "type": "RunArtifact",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🦀️.rs",
+      "schema": "os.run",
+      "target": "@semio-tech/framework-workflow-run-rs",
+      "publication": "Public imperative register_native_document_codec demonstrated in owning law; real bootstrap Store initialization exists",
+      "receipt": "No current named receipt located in bounded current cache/log search",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Infinite DAG",
+      "type": "DagSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs",
+      "schema": "dag.host_snapshot",
+      "publication": "create_dag_store real concrete owner; explicit factory registration laws, convenience initializer absence is not failure",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "FlowHost",
+      "type": "FlowHostSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs",
+      "schema": "flow.host_snapshot",
+      "publication": "Real FlowStore concrete alias/host; explicit factory registration laws",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Space",
+      "type": "SpaceSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "publication": "native_snapshot_registration + ordinary Store/hydration",
+      "receipt": "Retained named14/14 run6a99a96d-9b8c-4aac-9112-ec858612c888; exact locator in prior report",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Collection",
+      "type": "CollectionSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs",
+      "publication": "native_snapshot_registration + ordinary Store/hydration",
+      "receipt": "Retained named13/13 run8af990af; one LEAKY qualifier retained",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "SpaceHistory",
+      "type": "SpaceHistorySnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "publication": "Explicit register_sqlite_snapshot normative owning contract; no constructor side-effect requirement",
+      "qualification": "Current source map; no executions here"
+    }
+  ],
+  "separateChart": {
+    "owner": "ChartSnapshot",
+    "artifactRoot": "🧰️framework/🛍️products/📓️print/🦀️.rs",
+    "declaration": "chart_artifact_declaration",
+    "plugin": "print_plugin",
+    "kind": "s.print.chart",
+    "standard": "v1",
+    "subset": "any",
+    "schema": "print.chart"
+  },
+  "requiredRuntimeRowFields": [
+    "composition",
+    "assemblyKind(Runtime|Definition)",
+    "artifactKind",
+    "standard",
+    "subset",
+    "schema",
+    "ownerTypeId",
+    "sqliteSchema",
+    "installedIdentical",
+    "exactForward",
+    "exactReverse"
+  ],
+  "runtimeAuthority": "Collect from each actual composition Plugin runtime declarations, not global installed codecs; Definition rows separate metadata roster"
+}

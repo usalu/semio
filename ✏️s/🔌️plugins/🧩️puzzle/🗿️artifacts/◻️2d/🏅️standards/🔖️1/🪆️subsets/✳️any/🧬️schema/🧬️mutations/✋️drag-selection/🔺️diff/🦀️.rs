@@ -7,7 +7,7 @@ use crate::{Puzzle2dNode, Puzzle2dSnapshot, Puzzle2dTargetRegion};
 //#region 🔖️Diff
 pub fn diff(payload: &super::DragSelection, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if !(payload.dx.is_finite() && payload.dy.is_finite()) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "a drag offset must be finite", payload.targets.clone());
+        return protocol::MutationOutcome::fatal("mutation.invariant", "a drag offset must be finite", payload.targets.iter().map(|id| id.to_string_owner()).collect::<Vec<_>>());
     }
     let (dx, dy) = (payload.dx, payload.dy);
     let region: &dyn Fn(&Puzzle2dTargetRegion) -> Puzzle2dTargetRegion = &|entry| Puzzle2dTargetRegion { x: entry.x + dx, y: entry.y + dy, ..entry.clone() };

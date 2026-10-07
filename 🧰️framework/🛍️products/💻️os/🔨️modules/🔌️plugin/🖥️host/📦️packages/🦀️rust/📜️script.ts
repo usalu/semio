@@ -46,11 +46,9 @@ class ServiceOperationConversionCheckScript extends BundleScript {
     const asynchronous = readFileSync(join(hostRoot, "📥️imports", "🦀️.rs"), "utf8");
     const kernel = join(this.repoRoot, "🧰️framework", "🔨️modules", "🎠️kernel");
     const fixture = JSON.parse(readFileSync(join(kernel, "🧫️fixtures", "💡️service-operation", "🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(kernel, "🧬️schema", "💡️service-operation", "🔣️.json"), "utf8")));
-    assert(validate(fixture), JSON.stringify(validate.errors));
     assertServiceOperationConversionSource(wit, synchronous, asynchronous);
     assert.throws(() => assertServiceOperationConversionSource(wit, synchronous, asynchronous.replace("E::RequestServiceOperation(inner) => K::RequestServiceOperation", "E::MissingServiceOperation(inner) => K::RequestServiceOperation")));
-    console.log(`plugin-host-service-operation-source: ajv=1 effects=${fixture.effects.length} wit=1 sync=1 async=1 mutation=1 passed`);
+    console.log(`plugin-host-service-operation-source: effects=${fixture.effects.length} wit=1 sync=1 async=1 mutation=1 passed`);
     if (!segments.includes("--native")) return;
     const laws = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,

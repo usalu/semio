@@ -4,7 +4,7 @@
 use crate::standards::riff_pcm::subsets::any::schema::diff::{diff_set_data, diff_set_fmt, diff_set_other_chunks, diff_set_snapshot, WavDiff};
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{validate_wav_serialization, RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::Mutation;
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -119,3 +119,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/🔊️resamples/🦀️.rs"]
 mod set_snapshot_resamples_to_16_khz_and_doubles_the_pcm16_amplitude;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

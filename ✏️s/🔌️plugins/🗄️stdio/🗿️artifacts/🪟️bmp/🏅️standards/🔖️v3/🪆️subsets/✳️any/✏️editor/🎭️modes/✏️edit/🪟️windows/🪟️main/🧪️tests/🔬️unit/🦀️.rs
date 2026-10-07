@@ -14,14 +14,14 @@ async fn render_projects_canonical_bmp_pixels_to_browser_png() {
     let preview = crate::standards::v_v3::subsets::any::io::bmp_png_preview(&document).expect("PNG");
     assert_eq!(view.base64, semio_s_artifact_stdio_contract::base64_standard(&preview.bytes));
     let decoded = semio_framework_pixels::decode_png(&preview.bytes).expect("PNG");
-    assert_eq!(decoded.pixels, crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&document).expect("RGBA"));
+    assert_eq!(decoded.pixels, crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&document).expect("RGBA"));
     render(&document, Locale::En).expect("image window");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn invalid_projection_keeps_the_artifact_mounted_with_a_localized_state() {
     let mut document = BmpSnapshot::default();
-    document.bytes.clear();
+    document.image.pixels = crate::schema::snapshot::BmpPixels::Direct { samples: Vec::new() };
     assert!(image_view(&document).is_err());
     let node = render(&document, Locale::De).expect("invalid display capability does not reject the artifact window");
     assert_eq!(node.key.as_str(), ImageWindowKit::KIND_ID);

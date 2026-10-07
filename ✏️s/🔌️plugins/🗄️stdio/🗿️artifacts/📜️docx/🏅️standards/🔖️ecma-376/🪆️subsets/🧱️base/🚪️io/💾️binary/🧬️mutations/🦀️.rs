@@ -8,7 +8,8 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::schema::diff::{dec_block, dec_bool, dec_str, dec_style, dec_xml_node, dec_xml_node_bin, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, enc_xml_node_bin, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets};
+use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_block, dec_bool, dec_str, dec_style, dec_xml_node, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets};
+use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_xml_node_bin, enc_xml_node_bin};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{parse_usize};
 use crate::schema::diff::{diff_set_snapshot, DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
 #[cfg(test)]
@@ -20,7 +21,8 @@ use crate::DocxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path as xml_diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text};
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 use xml_address::{
@@ -33,7 +35,7 @@ use xml_address::{
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
-use crate::schema::diff::{dec_block_bin, dec_style_bin, enc_block_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
+use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_block_bin, dec_style_bin, enc_block_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
@@ -202,10 +204,10 @@ impl OpBinary for DocxMutation {
                     write_str_lp(&mut out, based_on);
                 }
             }
-            DocxMutation::SetPart(set_part::SetPart { path, content_type, bytes }) => {
+            DocxMutation::SetPart(set_part::SetPart { path, content_type, payload }) => {
                 write_str_lp(&mut out, path);
                 write_str_lp(&mut out, content_type);
-                write_bytes_lp(&mut out, bytes);
+                write_bytes_lp(&mut out, &store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(payload)));
             }
             DocxMutation::RemovePart(remove_part::RemovePart { path }) => write_str_lp(&mut out, path),
         }
@@ -310,8 +312,10 @@ impl OpBinary for DocxMutation {
             TAG_SET_PART => {
                 let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", reader.position(), e))?;
-                let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op bytes", reader.position(), e))?;
-                Ok(DocxMutation::SetPart(set_part::SetPart { path, content_type, bytes }))
+                let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op payload", reader.position(), e))?;
+                let value = store::pack_rt::decode_wire_value(&bytes).map_err(|e| malformed("op payload", reader.position(), e.to_string()))?;
+                let payload = semio_framework_value::FromValue::from_value(value).map_err(|e| malformed("op payload", reader.position(), e.to_string()))?;
+                Ok(DocxMutation::SetPart(set_part::SetPart { path, content_type, payload }))
             }
             TAG_REMOVE_PART => {
                 let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;

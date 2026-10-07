@@ -10,8 +10,6 @@ use crate::standards::v1_0::subsets::base::schema::snapshot::*;
 use crate::STDIO_XML_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 /// 🧩️ Typed XML components for enclosing owned native documents.
-use native_encoding::{XmlNativeEmission,emit_xml_native_document,emit_xml_native_node,emit_xml_native_snapshot_fields};
-use native_decoding::{XmlNativeInput,read_xml_native_document,read_xml_native_node,read_xml_native_snapshot_fields};
 
 /// 🧪️ P2-FG1: `stdio.xml` is TEXT-NATIVE (per the W0 census row) — there is no "binary XML"; the
 /// pack container is the SEMIO envelope wrapping the artifact's own REAL wire text
@@ -30,7 +28,7 @@ impl store::ArtifactPack for XmlSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
-        crate::schema::mutation_support::encode_snapshot_binary(self, &mut raw);
+        crate::standards::v1_0::subsets::base::io::binary::snapshot::encode_snapshot_binary(self, &mut raw);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -45,7 +43,7 @@ impl store::ArtifactPack for XmlSnapshot {
         if version != 1 {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("unsupported xml snapshot state version {version}"))));
         }
-        crate::schema::mutation_support::decode_snapshot_binary(&mut reader).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
+        crate::standards::v1_0::subsets::base::io::binary::snapshot::decode_snapshot_binary(&mut reader).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 }

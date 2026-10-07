@@ -1,0 +1,13 @@
+# Product Rust Workspace Closure Thirty Six
+
+Immutable Product plan12 contains 3831 checks: 3827 retained actual failed-floor endpoints and four admitted Rust/data additions. Fresh metadata9 actually exited zero; ordinary and locked phases each captured complete 5532682-byte stdout with SHA256 639468e5d375442f7420f6c03bc7c4335fc70574870285630ec6ed1d6aefb990. Exact lock bodies are unchanged. Independent provider12 is Ready. Candidate dispatcher13 remains unexecuted pending its exact independent release.
+
+The original request remains nx run @semio-tech/framework-renderer-wgpu:test-native --skip-nx-cache --excludeTaskDependencies, complete selected package/default/all-target/long scope with empty rest and extra arguments. Its package is semio-framework-os-renderer-wgpu. No smaller request or direct Cargo route is substituted.
+
+Actual dispatcher12 reached Cargo and failed before tests: Base64 package glue positively names ../../🦀️.rs, absent from its admitted snapshot. Its terminal also records one Cargo.toml post gap: 93 workspace.exclude removals; all other parsed fields and Cargo.lock are conserved. The captured failed physical floor remains unchanged.
+
+Source36 binds complete workspace before/after bodies and inverse, held owning invocation/normalizer, Base64 glue and held Rust parser, four strictly unguarded current Rust/data bodies, and every captured old endpoint. Bun and Iarna agree on the workspace transformation. Held publishCargoWorkspaceMembership in check mode returns false because the captured body is already canonical and needs no write; normalization authorship is unclaimed. Rust declaration controls and actual bodies were independently checked with TreeSitter.
+
+Admitted clone40 copies the captured floor into a separate snapshot, qualifies Cargo.toml expected identity to its actual post body, retains the complete original workspace preimage, and adds four declared unguarded bodies. Actual laws, preparation and fresh metadata exit zero. No physical restoration, broad current Root identity, compiler or assertion success is inferred.
+
+Inputs are product-wgpu-native-rust-workspace-closure-inputs-36/📜️script.ts, product-wgpu-native-rust-workspace-clone-inputs-40/📜️script.ts, and candidate product-wgpu-native-frozen-rust-workspace-dispatch-inputs-13/📜️script.ts. Gates and outputs are under 🗑️generated/product-wgpu-native-whole/epoch-8. Full creation/inverse and GUI150/151/153 journals are under 🗑️generated/native-continuation. Independent reports are continuation-product-rust-workspace-source36-audit-2.md, continuation-product-rust-workspace-helper40-audit-2.md and continuation-product-rust-workspace-provider12-audit-2.md.

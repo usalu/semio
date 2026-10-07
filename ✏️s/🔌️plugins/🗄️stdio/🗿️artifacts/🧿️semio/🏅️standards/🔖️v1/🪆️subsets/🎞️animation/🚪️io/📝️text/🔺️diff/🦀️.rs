@@ -7,18 +7,18 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
+use crate::standards::v1::subsets::animation::io::text::snapshot::{encode_option, decode_option};
 use crate::standards::v1::subsets::animation::schema::diff::*;
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, enc_indexed_triple, IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, enc_indexed_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::animation::io::text::snapshot::enc_timeline;
-use crate::standards::v1::subsets::animation::io::text::snapshot::dec_timeline;
 
 
 /// 🎙️ Handcrafted `DiffCodec` grammar: one `timelines{[removed];[modified];[added]}` section

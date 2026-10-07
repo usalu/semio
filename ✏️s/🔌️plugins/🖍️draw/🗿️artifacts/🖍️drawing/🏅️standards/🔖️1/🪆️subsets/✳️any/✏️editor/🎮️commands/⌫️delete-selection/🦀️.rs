@@ -49,7 +49,7 @@ pub(crate) fn plan(document:&DrawingSnapshot,utility:&str,ids:&[String],point_id
                 let refs=targets.iter().map(|point|PathPointRef {index:point.index,point:point.point}).collect();
                 let segments=edit_path(&path.segments,&PathEdit::DeletePoints {points:refs}).map_err(Fault::from)?;
                 if segments.is_empty() {mutations.push(crate::mutations::delete_layer(base.id.clone()));deleted.insert(base.id.as_str());}
-                else if segments!=path.segments {mutations.push(crate::mutations::update_path_geometry(base.id.clone(),segments));}
+                else if segments!=path.segments {mutations.push(crate::mutations::update_path_geometry(base.id.clone(),segments.into()));}
             } else if !ancestor_selected {mutations.push(crate::mutations::delete_layer(base.id.clone()));}
         }
         if let DrawingLayerNode::Group(group)=layer {stack.push((group.children.as_slice(),0,editable,ancestor_selected || chosen));}

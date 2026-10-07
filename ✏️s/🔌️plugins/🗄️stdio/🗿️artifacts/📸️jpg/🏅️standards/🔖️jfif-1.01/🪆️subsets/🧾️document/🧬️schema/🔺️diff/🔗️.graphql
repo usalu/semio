@@ -26,13 +26,11 @@ type JpgSegmentModified { index: Int!, diff: JpgSegmentDiff! }
 type JpgSegmentAdded { index: Int!, item: JpgSegment! }
 type JpgOtherSegmentsDiff { removed: [Int!], modified: [JpgSegmentModified!], added: [JpgSegmentAdded!] }
 
-"🔺️ Sparse diff for stdio.jpg. Tri-state fields (reEncodeQuality/jfifThumbnail/restartInterval)
 use an explicit null to mean cleared, vs. the field being absent meaning unchanged."
 type JpgDiff {
   width: Int @state(class: ARTIFACT)
   height: Int @state(class: ARTIFACT)
   pixels: [Int!] @state(class: ARTIFACT)
-  reEncodeQuality: Int @state(class: ARTIFACT)
   jfifVersion: [Int!] @state(class: ARTIFACT)
   jfifDensityUnits: JfifDensityUnits @state(class: ARTIFACT)
   jfifXDensity: Int @state(class: ARTIFACT)

@@ -1,6 +1,7 @@
 //! ⚡️ Block3d artifact — OpText/OpBinary codecs + grammar for `Block3dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_block3d_mutation, inverse_block3d_mutation, Block3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_block3d_mutation,inverse_block3d_mutation,Block3dMutation};
+
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -29,14 +30,7 @@ impl protocol::OpText for Block3dMutation {
     }
 }
 
-impl protocol::OpBinary for Block3dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📜️ Describes the artifact mutation dialect.

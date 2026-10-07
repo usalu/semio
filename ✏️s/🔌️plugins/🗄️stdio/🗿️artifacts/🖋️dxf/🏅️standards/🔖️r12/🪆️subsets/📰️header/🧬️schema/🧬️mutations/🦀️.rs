@@ -17,9 +17,9 @@
 //! ...` (space-separated, same shape the derive's own handcrafted-wrapper convention uses),
 //! reusing `🔺️diff`'s `pub(crate)` grammar primitives rather than duplicating them a second time.
 
-use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
+use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `` impl below (see
     // `🔺️diff/🦀️.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
-    dec_block_bin, diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_snapshot, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
+    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_snapshot, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
 
 
 
@@ -53,8 +53,8 @@ use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive 
 
 use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
 use crate::DxfSnapshot;
-use protocol::OpBinary;
-use protocol::{Mutation, MutationDiff, OpText};
+
+use protocol::{Mutation, MutationDiff};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -421,3 +421,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/⭕️widens/🦀️.rs"]
 mod set_snapshot_widens_the_circle_entity_radius;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

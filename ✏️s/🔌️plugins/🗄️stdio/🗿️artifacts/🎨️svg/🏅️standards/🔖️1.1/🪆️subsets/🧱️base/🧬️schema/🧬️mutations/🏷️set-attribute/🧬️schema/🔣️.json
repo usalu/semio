@@ -49,26 +49,12 @@
     "value": {
       "anyOf": [
         {
-          "type": "string"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json#/$defs/SvgAttributeValue"
         },
         {
           "type": "null"
         }
-      ],
-      "x-semio-ui": {
-        "widget": "text",
-        "role": "value",
-        "label": {
-          "en": "Value",
-          "de": "Wert"
-        },
-        "description": {
-          "en": "Attribute value; cleared, the attribute is removed.",
-          "de": "Attributwert; geleert wird das Attribut entfernt."
-        },
-        "group": "value",
-        "order": 30
-      }
+      ]
     }
   },
   "$defs": {

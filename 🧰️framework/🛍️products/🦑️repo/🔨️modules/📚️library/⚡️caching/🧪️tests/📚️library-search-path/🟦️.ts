@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { stringify, parse } from "@iarna/toml";
@@ -9,8 +8,6 @@ test("pinned Cargo launches a large static graph and its procedural macro withou
   const workspace=getWorkspaceRoot(), artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;
   if(!artifact)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
   const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧫️fixtures/📚️library-search-path/🔣️.json"),"utf8"));
-  const schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧬️schema/📚️library-search-path/🔣️.json"),"utf8"));
-  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
   expect(fixture.libraries*fixture.libraryValue+fixture.macroValue).toBe(fixture.expected);
   const root=mkdtempSync(join(artifact,"cargo-library-path-")), build=join(root,fixture.buildDirectory), members:string[]=[], dependencies:Record<string,{path:string}>={};
   const write=(path:string,content:string):void => {mkdirSync(resolve(path,".."),{recursive:true});writeFileSync(path,content);};

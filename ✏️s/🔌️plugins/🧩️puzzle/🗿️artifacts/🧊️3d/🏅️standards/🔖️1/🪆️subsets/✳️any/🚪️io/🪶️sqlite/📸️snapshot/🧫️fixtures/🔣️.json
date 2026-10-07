@@ -71,5 +71,49 @@
     "UPDATE puzzle3_object_scale SET kind='other'",
     "DELETE FROM puzzle3_reference_source",
     "UPDATE puzzle3_vortex SET object_id=999"
-  ]
+  ],
+  "scaleDsl": {
+    "shape": "list",
+    "item": "float",
+    "samples": [
+      [
+        2
+      ],
+      [
+        2,
+        3,
+        4
+      ]
+    ],
+    "invalidSamples": [
+      [],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        3,
+        4,
+        5
+      ]
+    ]
+  },
+  "diffRecordOwners": [
+    "Puzzle3dDiff",
+    "Puzzle3dStringList",
+    "Puzzle3dObjectsDelta",
+    "Puzzle3dObjectPatchEntry",
+    "Puzzle3dObjectPatch",
+    "Puzzle3dAttractionsDelta",
+    "Puzzle3dAttractionPatchEntry",
+    "Puzzle3dAttractionPatch",
+    "Puzzle3dTargetVolumesDelta",
+    "Puzzle3dTargetVolumePatchEntry",
+    "Puzzle3dTargetVolumePatch",
+    "Puzzle3dReferencesDelta",
+    "Puzzle3dReferencePatchEntry",
+    "Puzzle3dReferencePatch"
+  ],
+  "diffEmpty": {}
 }

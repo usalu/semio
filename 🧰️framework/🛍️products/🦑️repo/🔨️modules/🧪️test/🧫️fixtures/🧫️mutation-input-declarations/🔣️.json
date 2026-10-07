@@ -46,209 +46,6 @@
   "cases": [
     {
       "id": "an interactive number declares its step or its snapping points",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "mutation": {
-            "const": "plant"
-          },
-          "bare": {
-            "type": "number",
-            "x-semio-ui": {
-              "label": {
-                "en": "Bare",
-                "de": "Blank"
-              }
-            }
-          },
-          "count": {
-            "type": "integer",
-            "minimum": 1,
-            "x-semio-ui": {
-              "widget": "stepper",
-              "label": {
-                "en": "Count",
-                "de": "Anzahl"
-              }
-            }
-          },
-          "ratio": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "x-semio-ui": {
-              "widget": "slider",
-              "step": 0.05,
-              "label": {
-                "en": "Ratio",
-                "de": "Verhältnis"
-              }
-            }
-          },
-          "turn": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Angle"
-          },
-          "gap": {
-            "type": "number",
-            "x-semio-ui": {
-              "widget": "stepper",
-              "snapSource": {
-                "config": "gridFactor"
-              },
-              "label": {
-                "en": "Gap",
-                "de": "Abstand"
-              }
-            }
-          },
-          "detent": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 10,
-            "x-semio-ui": {
-              "widget": "dial",
-              "snaps": [
-                0,
-                5,
-                10
-              ],
-              "label": {
-                "en": "Detent",
-                "de": "Raste"
-              }
-            }
-          },
-          "empty": {
-            "type": "number",
-            "x-semio-ui": {
-              "role": "value",
-              "snaps": [],
-              "label": {
-                "en": "Empty",
-                "de": "Leer"
-              }
-            }
-          },
-          "layer": {
-            "type": "integer",
-            "x-semio-ui": {
-              "ref": {
-                "kind": "layer"
-              },
-              "label": {
-                "en": "Layer",
-                "de": "Ebene"
-              }
-            }
-          },
-          "seed": {
-            "type": "integer",
-            "x-semio-ui": {
-              "widget": "hidden"
-            }
-          },
-          "weights": {
-            "type": "array",
-            "items": {
-              "type": "number"
-            },
-            "x-semio-ui": {
-              "step": 0.1,
-              "label": {
-                "en": "Weights",
-                "de": "Gewichte"
-              }
-            }
-          },
-          "samples": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            },
-            "x-semio-ui": {
-              "label": {
-                "en": "Samples",
-                "de": "Stichproben"
-              }
-            }
-          },
-          "size": {
-            "type": "array",
-            "minItems": 2,
-            "maxItems": 2,
-            "items": {
-              "type": "number"
-            },
-            "x-semio-ui": {
-              "label": {
-                "en": "Size",
-                "de": "Größe"
-              }
-            }
-          },
-          "frame": {
-            "type": "object",
-            "x-semio-ui": {
-              "label": {
-                "en": "Frame",
-                "de": "Rahmen"
-              }
-            },
-            "properties": {
-              "width": {
-                "type": "number",
-                "x-semio-ui": {
-                  "label": {
-                    "en": "Width",
-                    "de": "Breite"
-                  }
-                }
-              },
-              "depth": {
-                "anyOf": [
-                  {
-                    "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Word"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "x-semio-ui": {
-                  "step": 1,
-                  "label": {
-                    "en": "Depth",
-                    "de": "Tiefe"
-                  }
-                }
-              }
-            }
-          },
-          "level": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "x-semio-ui": {
-              "widget": "stepper",
-              "step": 0.5,
-              "label": {
-                "en": "Level",
-                "de": "Stufe"
-              }
-            }
-          },
-          "tint": {
-            "type": "number",
-            "x-semio-ui": {
-              "widget": "select",
-              "label": {
-                "en": "Tint",
-                "de": "Tönung"
-              }
-            }
-          }
-        }
-      },
       "declarations": [
         {
           "pointer": "/bare",
@@ -510,78 +307,215 @@
           "numericUndeclared",
           "/frame/width"
         ]
-      ]
-    },
-    {
-      "id": "a shown label resolves in every locale, from its own annotation or the glossary",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "position": {
-            "type": "string",
-            "x-semio-ui": {
-              "label": {
-                "en": "Position"
-              }
-            }
-          },
-          "radius": {
-            "type": "string",
-            "x-semio-ui": {
-              "label": {
-                "native": {
-                  "en": "Radius",
-                  "de": "Radius"
-                },
-                "reuse": {
-                  "en": "Radius",
-                  "de": "Halbmesser"
+      ],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "mutation": {
+              "const": "plant"
+            },
+            "bare": {
+              "type": "number",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Bare",
+                  "de": "Blank"
                 }
               }
-            }
-          },
-          "plantedKey": {
-            "type": "string"
-          },
-          "caption": {
-            "type": "string",
-            "x-semio-ui": {
-              "label": {
-                "en": "Caption"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Count",
+                  "de": "Anzahl"
+                }
               }
-            }
-          },
-          "text": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Caption"
-          },
-          "index": {
-            "type": "integer",
-            "x-semio-ui": {
-              "widget": "hidden"
-            }
-          },
-          "zone": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
+            },
+            "ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "x-semio-ui": {
+                "widget": "slider",
+                "step": 0.05,
+                "label": {
+                  "en": "Ratio",
+                  "de": "Verhältnis"
+                }
               }
-            }
-          },
-          "version": {
-            "type": "string",
-            "x-semio-ui": {
-              "label": {
-                "en": "Version",
-                "de": ""
+            },
+            "turn": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Angle"
+            },
+            "gap": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "label": {
+                  "en": "Gap",
+                  "de": "Abstand"
+                }
+              }
+            },
+            "detent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "x-semio-ui": {
+                "widget": "dial",
+                "snaps": [
+                  0,
+                  5,
+                  10
+                ],
+                "label": {
+                  "en": "Detent",
+                  "de": "Raste"
+                }
+              }
+            },
+            "empty": {
+              "type": "number",
+              "x-semio-ui": {
+                "role": "value",
+                "snaps": [],
+                "label": {
+                  "en": "Empty",
+                  "de": "Leer"
+                }
+              }
+            },
+            "layer": {
+              "type": "integer",
+              "x-semio-ui": {
+                "ref": {
+                  "kind": "layer"
+                },
+                "label": {
+                  "en": "Layer",
+                  "de": "Ebene"
+                }
+              }
+            },
+            "seed": {
+              "type": "integer",
+              "x-semio-ui": {
+                "widget": "hidden"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "x-semio-ui": {
+                "step": 0.1,
+                "label": {
+                  "en": "Weights",
+                  "de": "Gewichte"
+                }
+              }
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Samples",
+                  "de": "Stichproben"
+                }
+              }
+            },
+            "size": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Size",
+                  "de": "Größe"
+                }
+              }
+            },
+            "frame": {
+              "type": "object",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Frame",
+                  "de": "Rahmen"
+                }
+              },
+              "properties": {
+                "width": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Width",
+                      "de": "Breite"
+                    }
+                  }
+                },
+                "depth": {
+                  "anyOf": [
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Word"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "x-semio-ui": {
+                    "step": 1,
+                    "label": {
+                      "en": "Depth",
+                      "de": "Tiefe"
+                    }
+                  }
+                }
+              }
+            },
+            "level": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-semio-ui": {
+                "widget": "stepper",
+                "step": 0.5,
+                "label": {
+                  "en": "Level",
+                  "de": "Stufe"
+                }
+              }
+            },
+            "tint": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "select",
+                "label": {
+                  "en": "Tint",
+                  "de": "Tönung"
+                }
               }
             }
           }
         }
-      },
+      }
+    },
+    {
+      "id": "a shown label resolves in every locale, from its own annotation or the glossary",
       "declarations": [
         {
           "pointer": "/name",
@@ -720,49 +654,80 @@
           "labelAbsent",
           "/caption"
         ]
-      ]
-    },
-    {
-      "id": "a root union reads its discriminator as the selector and every variant's fields",
-      "schema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "kind": {
-                "const": "circle"
-              },
-              "radius": {
-                "type": "number",
-                "x-semio-ui": {
-                  "step": 0.5,
-                  "label": {
+      ],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "position": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Position"
+                }
+              }
+            },
+            "radius": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "native": {
                     "en": "Radius",
                     "de": "Radius"
+                  },
+                  "reuse": {
+                    "en": "Radius",
+                    "de": "Halbmesser"
                   }
                 }
               }
-            }
-          },
-          {
-            "type": "object",
-            "properties": {
-              "kind": {
-                "const": "square"
-              },
-              "side": {
-                "type": "number",
-                "x-semio-ui": {
-                  "label": {
-                    "en": "Side",
-                    "de": "Seite"
-                  }
+            },
+            "plantedKey": {
+              "type": "string"
+            },
+            "caption": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Caption"
+                }
+              }
+            },
+            "text": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Caption"
+            },
+            "index": {
+              "type": "integer",
+              "x-semio-ui": {
+                "widget": "hidden"
+              }
+            },
+            "zone": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            },
+            "version": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Version",
+                  "de": ""
                 }
               }
             }
           }
-        ]
-      },
+        }
+      }
+    },
+    {
+      "id": "a root union reads its discriminator as the selector and every variant's fields",
       "declarations": [
         {
           "pointer": "/kind",
@@ -809,38 +774,51 @@
           "numericUndeclared",
           "/side"
         ]
-      ]
+      ],
+      "input": {
+        "schema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "circle"
+                },
+                "radius": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "step": 0.5,
+                    "label": {
+                      "en": "Radius",
+                      "de": "Radius"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "square"
+                },
+                "side": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Side",
+                      "de": "Seite"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "id": "a widget lies inside the strict vocabulary",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "newFields": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "x-semio-ui": {
-              "widget": "dictionary",
-              "label": {
-                "en": "Fields",
-                "de": "Felder"
-              }
-            }
-          },
-          "notes": {
-            "type": "string",
-            "x-semio-ui": {
-              "widget": "multiline",
-              "label": {
-                "en": "Notes",
-                "de": "Notizen"
-              }
-            }
-          }
-        }
-      },
       "declarations": [
         {
           "pointer": "/newFields",
@@ -874,50 +852,40 @@
           "widgetUndeclared",
           "/newFields"
         ]
-      ]
-    },
-    {
-      "id": "a multiline input is handed the multi-line control once the reader has one",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "notes": {
-            "type": "string",
-            "x-semio-ui": {
-              "widget": "multiline",
-              "label": {
-                "en": "Notes",
-                "de": "Notizen"
-              }
-            }
-          },
-          "summary": {
-            "type": "string",
-            "x-semio-ui": {
-              "widget": "multiline",
-              "label": {
-                "en": "Summary",
-                "de": "Zusammenfassung"
-              }
-            }
-          },
-          "lines": {
-            "type": "array",
-            "items": {
-              "type": "string",
+      ],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "newFields": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
               "x-semio-ui": {
-                "widget": "multiline"
+                "widget": "dictionary",
+                "label": {
+                  "en": "Fields",
+                  "de": "Felder"
+                }
               }
             },
-            "x-semio-ui": {
-              "label": {
-                "en": "Lines",
-                "de": "Zeilen"
+            "notes": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "label": {
+                  "en": "Notes",
+                  "de": "Notizen"
+                }
               }
             }
           }
         }
-      },
+      }
+    },
+    {
+      "id": "a multiline input is handed the multi-line control once the reader has one",
       "controls": {
         "/notes": "multiline",
         "/summary": "text",
@@ -983,100 +951,52 @@
           "multilineUncontrolled",
           "/lines/-"
         ]
-      ]
-    },
-    {
-      "id": "an input that states every fact is declared",
-      "schema": {
-        "type": "object",
-        "required": [
-          "mode"
-        ],
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "x-semio-ui": {
-              "widget": "toggle",
-              "label": {
-                "en": "Enabled",
-                "de": "Aktiviert"
-              }
-            }
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "fast",
-              "exact"
-            ],
-            "x-semio-ui": {
-              "widget": "segmented",
-              "label": {
-                "en": "Mode",
-                "de": "Modus"
-              },
-              "options": {
-                "fast": {
-                  "en": "Fast",
-                  "de": "Schnell"
-                },
-                "exact": {
-                  "en": "Exact",
-                  "de": "Exakt"
+      ],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "notes": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "label": {
+                  "en": "Notes",
+                  "de": "Notizen"
                 }
               }
-            }
-          },
-          "color": {
-            "type": "array",
-            "minItems": 3,
-            "maxItems": 3,
-            "items": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 1
             },
-            "x-semio-ui": {
-              "widget": "color",
-              "label": {
-                "en": "Colour",
-                "de": "Farbe"
+            "summary": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "label": {
+                  "en": "Summary",
+                  "de": "Zusammenfassung"
+                }
               }
-            }
-          },
-          "targets": {
-            "type": "array",
-            "items": {
-              "type": "string"
             },
-            "x-semio-ui": {
-              "role": "target",
-              "ref": {
-                "kind": "piece"
+            "lines": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "multiline"
+                }
               },
-              "label": {
-                "en": "Pieces",
-                "de": "Teile"
-              }
-            }
-          },
-          "offset": {
-            "type": "number",
-            "x-semio-ui": {
-              "widget": "stepper",
-              "step": 0.25,
-              "snapSource": {
-                "step": true
-              },
-              "unit": "m",
-              "label": {
-                "en": "Offset",
-                "de": "Versatz"
+              "x-semio-ui": {
+                "label": {
+                  "en": "Lines",
+                  "de": "Zeilen"
+                }
               }
             }
           }
         }
-      },
+      }
+    },
+    {
+      "id": "an input that states every fact is declared",
       "declarations": [
         {
           "pointer": "/enabled",
@@ -1144,29 +1064,102 @@
           "snaps": true
         }
       ],
-      "findings": []
-    },
-    {
-      "id": "an editable leaf whose every input is hidden shows no input",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "mutation": {
-            "const": "replace"
-          },
-          "snapshot": {
-            "type": "object",
-            "properties": {
-              "width": {
-                "type": "number"
+      "findings": [],
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "label": {
+                  "en": "Enabled",
+                  "de": "Aktiviert"
+                }
               }
             },
-            "x-semio-ui": {
-              "widget": "hidden"
+            "mode": {
+              "type": "string",
+              "enum": [
+                "fast",
+                "exact"
+              ],
+              "x-semio-ui": {
+                "widget": "segmented",
+                "label": {
+                  "en": "Mode",
+                  "de": "Modus"
+                },
+                "options": {
+                  "fast": {
+                    "en": "Fast",
+                    "de": "Schnell"
+                  },
+                  "exact": {
+                    "en": "Exact",
+                    "de": "Exakt"
+                  }
+                }
+              }
+            },
+            "color": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "x-semio-ui": {
+                "widget": "color",
+                "label": {
+                  "en": "Colour",
+                  "de": "Farbe"
+                }
+              }
+            },
+            "targets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "role": "target",
+                "ref": {
+                  "kind": "piece"
+                },
+                "label": {
+                  "en": "Pieces",
+                  "de": "Teile"
+                }
+              }
+            },
+            "offset": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "step": 0.25,
+                "snapSource": {
+                  "step": true
+                },
+                "unit": "m",
+                "label": {
+                  "en": "Offset",
+                  "de": "Versatz"
+                }
+              }
             }
           }
         }
-      },
+      }
+    },
+    {
+      "id": "an editable leaf whose every input is hidden shows no input",
       "declarations": [
         {
           "pointer": "/snapshot",
@@ -1184,48 +1177,52 @@
           "inputless",
           ""
         ]
-      ]
+      ],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "mutation": {
+              "const": "replace"
+            },
+            "snapshot": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                }
+              },
+              "x-semio-ui": {
+                "widget": "hidden"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "id": "an editable leaf without any input shows no input",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "mutation": {
-            "const": "clear"
-          }
-        }
-      },
       "declarations": [],
       "findings": [
         [
           "inputless",
           ""
         ]
-      ]
+      ],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "mutation": {
+              "const": "clear"
+            }
+          }
+        }
+      }
     },
     {
       "id": "a withdraw-only leaf is not judged",
       "editable": false,
-      "schema": {
-        "type": "object",
-        "properties": {
-          "mutation": {
-            "const": "set-snapshot"
-          },
-          "snapshot": {
-            "type": "object",
-            "properties": {
-              "width": {
-                "type": "number"
-              },
-              "plantedKey": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
       "declarations": [
         {
           "pointer": "/snapshot",
@@ -1267,7 +1264,28 @@
           "snaps": null
         }
       ],
-      "findings": []
+      "findings": [],
+      "input": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "mutation": {
+              "const": "set-snapshot"
+            },
+            "snapshot": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "plantedKey": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

@@ -804,3 +804,28 @@ fn retained_declared_record_depth_matches_the_existing_physical_limit() {
     for case in fixture["depthCases"].as_array().unwrap(){let mut source=RecordValue{fields:[(0,FieldValue::Text("leaf".into()))].into_iter().collect()};for _ in 0..case["wraps"].as_u64().unwrap(){source=RecordValue{fields:[(0,FieldValue::Record(source))].into_iter().collect()};}let mut accepted=|_|true;let expected=print_controlled(&source,&spec(),JoinMode::Inline,1000000,&mut NativeEncodeControl::new(1000000,&mut accepted));assert_eq!(expected.is_ok(),case["accept"].as_bool().unwrap());let mut writer=RetainedRecordWriter::new(source,spec(),JoinMode::Inline,1000000);let mut control=NativeEncodeControl::new(1000000,&mut accepted);let mut turns=0;let result=loop{turns+=1;assert!(turns<1000000);match writer.step(1,&mut control){Ok(Some(text))=>break Ok(text),Ok(None)=>{},Err(error)=>break Err(error)}};let agrees=match(&expected,&result){(Ok(expected),Ok(actual))=>actual==expected,(Err(expected),Err(actual))=>actual.kind==expected.kind,_=>false};let mut close=owned_retirement(writer);while !close.terminal_is_empty(){if let semio_framework_value::SnapshotRetirementStep::Pending{released_bytes,..}=close.close_step(1,3).unwrap(){assert!(released_bytes<=3)}}assert!(agrees,"retained physical depth diverges expected={expected:?} actual={result:?}");}
     eprintln!("[DEBUG] retained and controlled physical record depth agree at64; owned source drains after refusal");
 }
+
+#[test]
+fn controlled_record_dynamic_unicode_matches_serde_json_restoration_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+    let law = &fixture["decoding"];
+    let maximum = fixture["maximumBytes"].as_u64().unwrap() as usize;
+    let mut accepted = |_| true;
+    let mut control = NativeDecodeControl::new(maximum, &mut accepted);
+    let record = parse_exact_controlled(law["restorationNative"].as_str().unwrap(), &value_spec(), &ParseOptions::default(), &mut control).unwrap();
+    let FieldValue::Value(value) = record.get(0).unwrap() else { panic!("original dynamic value field") };
+    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).unwrap();
+    let agrees = oracle == law["restorationSemantic"];
+    let mut retirement = semio_framework_value::retirement::owned_retirement(record);
+    while !retirement.terminal_is_empty() {
+        if let semio_framework_value::SnapshotRetirementStep::Pending { released_items, released_bytes } = retirement.close_step(1, fixture["retirementBytes"].as_u64().unwrap() as usize).unwrap() {
+            assert!(released_items <= 1);
+            assert!(released_bytes <= 3);
+        }
+    }
+    assert!(agrees, "original native Record parser semantics differ from serde_json restoration oracle");
+    eprintln!("[DEBUG] original controlled Record parser nested Unicode restoration values agree with serde_json; bounded owned retirement");
+}
+
+#[path = "../🪆️optional-field/🦀️.rs"]
+mod optional_field_tests;

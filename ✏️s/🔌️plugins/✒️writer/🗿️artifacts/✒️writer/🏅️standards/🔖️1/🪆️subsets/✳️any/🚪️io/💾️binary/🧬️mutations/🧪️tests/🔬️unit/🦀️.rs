@@ -112,7 +112,7 @@ async fn writer_edit_history_decoder_uses_begin_mutation_and_faults_malformed_in
         id: "edit-1".into(),
         actor: None,
         forwards: vec![WriterMutation::RenameWriter(schema::mutations::RenameWriter { new_id: "next".into() })],
-        inverse: Vec::new(),
+        inverse: Vec::new().into(),
         mutation_meta: Vec::new(), verb: None,
         sequence_number: 1,
         started_at: "1".into(),
@@ -128,9 +128,14 @@ async fn writer_edit_history_decoder_uses_begin_mutation_and_faults_malformed_in
     }
 }
 
+fn writer_initializer_actor() -> protocol::ActorId {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json" )).expect("neutral actor corpus");
+    protocol::ActorId(fixture["actors"]["opened"].as_str().expect("opened actor").into())
+}
+
 fn empty_writer_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> WriterStoreInitializationAuthority {
     let envelope = store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer-retained-load", schema::empty_writer_snapshot(), None);
-    WriterStoreInitializationAuthority::new(envelope, operation, generation)
+    WriterStoreInitializationAuthority::new(envelope, operation, generation, writer_initializer_actor())
 }
 
 fn drive_writer_initializer(authority: &mut WriterStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::StepOutcome {
@@ -170,13 +175,17 @@ fn close_writer_candidate(mut candidate: store::ArtifactStore<WriterSnapshot, Wr
 }
 
 #[test]
-fn writer_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally() {
+fn writer_history_edit_initializer_preserves_actor_and_publishes_exact_next_generation() {
     let operation = semio_framework_job::OperationId(401);
     let generation = semio_framework_job::Generation(9);
     let mut authority = empty_writer_initializer(operation, generation);
+    let genesis = authority.envelope.as_ref().expect("retained Writer envelope").vcs.genesis.share_snapshot();
     assert!(matches!(drive_writer_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Writer candidate");
     assert_eq!(candidate.generation_now(), 10);
+    assert!(std::sync::Arc::ptr_eq(&genesis, &candidate.snapshot_owner()));
+    drop(genesis);
+    assert_eq!(candidate.actor(), writer_initializer_actor().0);
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
     close_writer_candidate(candidate);
@@ -247,7 +256,7 @@ async fn writer_document_text_round_trips_through_the_store() {
     // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
@@ -265,7 +274,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
@@ -350,7 +359,7 @@ async fn a_document_folded_from_the_hub_tail_initializes_again() {
         assert_eq!(payload, envelope.diff.payload, "captured checkpoint includes the explicit current line field");
         assert_eq!(id, envelope.mutation_id, "current checkpoint address covers all bytes");
     }
-    let mut folded = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, document_id, schema::empty_writer_snapshot(), None)).await.expect("valid writer store fixture");
+    let mut folded = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, document_id, schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid writer store fixture");
     folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], transaction: None }).await.expect("a locally authored edit before the tail");
     for value in tail {
         folded.ingest_remote(hub_tail_envelope(value)).await.expect("every operation and transition of the hub tail folds");
@@ -366,7 +375,7 @@ async fn a_document_folded_from_the_hub_tail_initializes_again() {
     let parsed: store::ParsedDocumentText<WriterSnapshot, WriterMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse the folded document pack");
     let operation = semio_framework_job::OperationId(403);
     let generation = semio_framework_job::Generation(13);
-    let mut authority = WriterStoreInitializationAuthority::new(parsed.into_envelope(), operation, generation);
+    let mut authority = WriterStoreInitializationAuthority::new(parsed.into_envelope(), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let outcome = drive_writer_initializer(&mut authority, operation, generation);
     assert!(matches!(outcome, semio_framework_job::StepOutcome::Complete(_)), "the folded hub tail must initialize, not fault (duplicate mutation id)");
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Writer candidate");

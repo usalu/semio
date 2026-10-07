@@ -1,13 +1,57 @@
 //! 🧬️ Drawing artifact schema — every field of the artifact with its state class.
 
 use crate::{
-    default_drawing_trace_params, default_drawing_transform, ArtifactDsl, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingMutation, DrawingPathBody, DrawingPolygon,
-    DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
-};
+    default_drawing_trace_params, default_drawing_transform,  DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingMutation, DrawingPathBody, DrawingPolygon,
+    DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
+
+pub(crate) fn drawing_id_hex(material: &[u8]) -> String {
+    let mut hasher = DefaultHasher::new();
+    material.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
+}
+
+/// 🪪️ Derives a content-addressed document identity without a process-wide counter.
+pub fn create_drawing_id(prefix: &str, material: &[u8]) -> String {
+    format!("{prefix}-{}", drawing_id_hex(material))
+}
+
+/// 🖍️ Constructs an authored path layer from decoded domain segments.
+pub fn create_drawing_path_layer(name: &str, segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>) -> DrawingLayerNode {
+    DrawingLayerNode::Path(DrawingPathBody {
+        base: DrawingLayerBase {
+            id: create_drawing_id("path", name.as_bytes()).into(),
+            name: name.into(),
+            visible: true,
+            locked: false,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: default_drawing_transform(),
+            attributes: DrawingAttributes::default(),
+        },
+        segments,
+    })
+}
+
+/// 🏗️ Constructs a domain document with its initial path and artboard.
+pub fn default_drawing_document(id: &str, title: Option<&str>) -> DrawingSnapshot {
+    DrawingSnapshot {
+        schema: DRAWING_DOCUMENT_SCHEMA.into(),
+        id: id.into(),
+        title: title.map(Into::into),
+        layers: vec![create_drawing_path_layer("Layer 1", Default::default())].into(),
+        assets: Default::default(),
+        artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }),
+    }
+}
+
+/// 📄️ Constructs the empty named domain document.
+pub fn empty_drawing_snapshot() -> DrawingSnapshot {
+    default_drawing_document("empty", None)
+}
 //#region 🔖️Artifact
 /// 🧬️ drawing document artifact state.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
@@ -17,15 +61,15 @@ use std::hash::{Hash, Hasher};
 #[artifact_schema(id = "s.draw.drawing")]
 pub struct DrawingArtifact {
     #[state(artifact)]
-    pub schema: String,
+    pub schema: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[state(artifact)]
-    pub id: String,
+    pub id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[state(artifact)]
-    pub title: Option<String>,
+    pub title: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
     #[state(artifact)]
-    pub layers: Vec<DrawingLayerNode>,
+    pub layers: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
     #[state(artifact)]
-    pub assets: BTreeMap<String, DrawingImageAsset>,
+    pub assets: semio_framework_value::paged::PagedMap<DrawingImageAsset, {usize::MAX}>,
     #[state(artifact)]
     pub artboard: Option<DrawingArtboard>,
 }
@@ -34,7 +78,7 @@ pub struct DrawingArtifact {
 //#region 🔖️Conversions
 impl Default for DrawingArtifact {
     fn default() -> Self {
-        Self { schema: DRAWING_DOCUMENT_SCHEMA.into(), id: String::new(), title: None, layers: Vec::new(), assets: BTreeMap::new(), artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }) }
+        Self { schema: DRAWING_DOCUMENT_SCHEMA.into(), id: Default::default(), title: None, layers: Default::default(), assets: Default::default(), artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }) }
     }
 }
 
@@ -187,14 +231,13 @@ pub struct DrawingCanvasLayerRecord {
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
 /// document load and to bridge into the framework's still-JSON-only `App::example`/render-override
 /// surfaces, so `SEMIO_DRAW_EXAMPLE_TEXT` stays the single source of truth for the fixture.
-const SEMIO_DRAW_EXAMPLE_TEXT: &str = crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_DRAW_EXAMPLE_TEXT;
 
 
 
 
 
 pub fn default_layer_base(name: &str) -> DrawingLayerBase {
-    DrawingLayerBase { id: create_drawing_id("layer", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() }
+    DrawingLayerBase { id: create_drawing_id("layer", name.as_bytes()).into(), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() }
 }
 
 
@@ -203,7 +246,7 @@ pub fn create_drawing_group_layer(name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Group(DrawingGroupBody {
         isolation:false,
         base: DrawingLayerBase {
-            id: create_drawing_id("group", name.as_bytes()),
+            id: create_drawing_id("group", name.as_bytes()).into(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -212,14 +255,14 @@ pub fn create_drawing_group_layer(name: &str) -> DrawingLayerNode {
             transform: default_drawing_transform(),
             attributes: DrawingAttributes::default(),
         },
-        children: Vec::new(),
+        children: Default::default(),
     })
 }
 
-pub fn create_drawing_boolean_layer(name: &str, operation: &str, children: Vec<String>) -> DrawingLayerNode {
+pub fn create_drawing_boolean_layer(name: &str, operation: &str, children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> DrawingLayerNode {
     DrawingLayerNode::Boolean(DrawingBooleanBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("boolean", name.as_bytes()),
+            id: create_drawing_id("boolean", name.as_bytes()).into(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -236,7 +279,7 @@ pub fn create_drawing_boolean_layer(name: &str, operation: &str, children: Vec<S
 pub fn create_drawing_trace_layer(name: &str, source_key: &str) -> DrawingLayerNode {
     DrawingLayerNode::Trace(DrawingTraceBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("trace", name.as_bytes()),
+            id: create_drawing_id("trace", name.as_bytes()).into(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -253,7 +296,7 @@ pub fn create_drawing_trace_layer(name: &str, source_key: &str) -> DrawingLayerN
 pub fn create_drawing_shape_layer_rect(name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Shape(DrawingShapeBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("shape", name.as_bytes()),
+            id: create_drawing_id("shape", name.as_bytes()).into(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -274,7 +317,7 @@ pub fn create_drawing_shape_layer_rect(name: &str) -> DrawingLayerNode {
 pub fn create_drawing_text_layer(name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Text(DrawingTextBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("text", name.as_bytes()),
+            id: create_drawing_id("text", name.as_bytes()).into(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -293,7 +336,7 @@ pub fn create_drawing_text_layer(name: &str) -> DrawingLayerNode {
 pub fn create_drawing_image_layer(name: &str, image_key: &str) -> DrawingLayerNode {
     DrawingLayerNode::Image(DrawingImageBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("image", name.as_bytes()),
+            id: create_drawing_id("image", name.as_bytes()).into(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -312,7 +355,7 @@ pub fn create_drawing_image_layer(name: &str, image_key: &str) -> DrawingLayerNo
 
 
 
-pub fn layer_id(layer: &DrawingLayerNode) -> &str {
+pub fn layer_id(layer: &DrawingLayerNode) -> &semio_framework_value::paged::PagedUtf8<{usize::MAX}> {
     match layer {
         DrawingLayerNode::Shape(shape) => &shape.base.id,
         DrawingLayerNode::Path(path) => &path.base.id,
@@ -348,7 +391,7 @@ pub fn layer_kind_label(layer: &DrawingLayerNode) -> String {
     }
 }
 
-pub fn find_drawing_layer<'a>(doc: &'a DrawingSnapshot, layer_id: &str) -> Option<&'a DrawingLayerNode> {
+pub fn find_drawing_layer<'a>(doc: &'a DrawingSnapshot, layer_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<&'a DrawingLayerNode> {
     for layer in &doc.layers {
         if let Some(found) = find_drawing_layer_in_node(layer, layer_id) {
             return Some(found);
@@ -357,8 +400,8 @@ pub fn find_drawing_layer<'a>(doc: &'a DrawingSnapshot, layer_id: &str) -> Optio
     None
 }
 
-fn find_drawing_layer_in_node<'a>(node: &'a DrawingLayerNode, target_id: &str) -> Option<&'a DrawingLayerNode> {
-    if layer_id(node) == target_id {
+fn find_drawing_layer_in_node<'a>(node: &'a DrawingLayerNode, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<&'a DrawingLayerNode> {
+    if layer_id(node).eq_text(target_id) {
         return Some(node);
     }
     if let DrawingLayerNode::Group(group) = node {
@@ -569,7 +612,7 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                     id: text.base.id.clone(),
                     groups:Vec::new(),
                     transform: geometry::multiply(drawing_transform_to_matrix(&text.base.transform), [1.0, 0.0, 0.0, 1.0, text.x, text.y]),
-                    segments: Vec::new(),
+                    segments: Default::default(),
                     fill: text.base.attributes.fill.clone(),
                     stroke: text.base.attributes.stroke.clone(),
                     opacity: text.base.opacity,
@@ -585,7 +628,7 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                         id: image.base.id.clone(),
                         groups:Vec::new(),
                         transform: drawing_transform_to_matrix(&image.base.transform),
-                        segments: Vec::new(),
+                        segments: Default::default(),
                         fill: image.base.attributes.fill.clone(),
                         stroke: image.base.attributes.stroke.clone(),
                         opacity: image.base.opacity,
@@ -627,13 +670,13 @@ pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str) -> D
     fn identify(node: &mut DrawingLayerNode, suffix: &str, ids: &mut BTreeMap<String, String>) {
         let base = layer_base_mut(node);
         let old = base.id.clone();
-        base.id = create_drawing_id("layer", format!("{old}{suffix}").as_bytes());
+        base.id = create_drawing_id("layer", format!("{old}{suffix}").as_bytes()).into();
         ids.insert(old, base.id.clone());
         if let DrawingLayerNode::Group(group) = node { for child in &mut group.children { identify(child, suffix, ids); } }
     }
     fn references(node: &mut DrawingLayerNode, ids: &BTreeMap<String, String>) {
         match node {
-            DrawingLayerNode::Boolean(boolean) => { for child in &mut boolean.children { if let Some(id) = ids.get(child) { *child = id.clone(); } } }
+            DrawingLayerNode::Boolean(boolean) => { for child in &mut boolean.children { if let Some(id) = ids.get(child) { *child = id.clone().into(); } } }
             DrawingLayerNode::Group(group) => { for child in &mut group.children { references(child, ids); } }
             _ => {}
         }
@@ -658,16 +701,16 @@ pub fn layer_base_mut(layer: &mut DrawingLayerNode) -> &mut DrawingLayerBase {
     }
 }
 
-pub fn mutate_drawing_layer(doc: &DrawingSnapshot, target_id: &str, mutator: impl FnMut(&mut DrawingLayerNode)) -> DrawingSnapshot {
+pub fn mutate_drawing_layer(doc: &DrawingSnapshot, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), mutator: impl FnMut(&mut DrawingLayerNode)) -> DrawingSnapshot {
     let mut next = doc.clone();
     let mut mutator = mutator;
     update_layer_in_tree(&mut next.layers, target_id, &mut mutator);
     next
 }
 
-pub fn update_layer_in_tree(layers: &mut [DrawingLayerNode], target_id: &str, mutator: &mut impl FnMut(&mut DrawingLayerNode)) -> bool {
+pub fn update_layer_in_tree(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), mutator: &mut impl FnMut(&mut DrawingLayerNode)) -> bool {
     for layer in layers.iter_mut() {
-        if layer_id(layer) == target_id {
+        if layer_id(layer).eq_text(target_id) {
             mutator(layer);
             return true;
         }
@@ -680,8 +723,8 @@ pub fn update_layer_in_tree(layers: &mut [DrawingLayerNode], target_id: &str, mu
     false
 }
 
-pub fn remove_layer_from_tree(layers: &mut Vec<DrawingLayerNode>, target_id: &str) -> bool {
-    if let Some(index) = layers.iter().position(|layer| layer_id(layer) == target_id) {
+pub fn remove_layer_from_tree(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> bool {
+    if let Some(index) = layers.iter().position(|layer| layer_id(layer).eq_text(target_id)) {
         layers.remove(index);
         return true;
     }
@@ -695,8 +738,8 @@ pub fn remove_layer_from_tree(layers: &mut Vec<DrawingLayerNode>, target_id: &st
     false
 }
 
-pub fn extract_layer_node(layers: &mut Vec<DrawingLayerNode>, target_id: &str) -> Option<DrawingLayerNode> {
-    if let Some(index) = layers.iter().position(|layer| layer_id(layer) == target_id) {
+pub fn extract_layer_node(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerNode> {
+    if let Some(index) = layers.iter().position(|layer| layer_id(layer).eq_text(target_id)) {
         return Some(layers.remove(index));
     }
     for layer in layers.iter_mut() {
@@ -709,7 +752,7 @@ pub fn extract_layer_node(layers: &mut Vec<DrawingLayerNode>, target_id: &str) -
     None
 }
 
-pub fn insert_layer(layers: &mut Vec<DrawingLayerNode>, parent_id: Option<&str>, index: usize, node: DrawingLayerNode) {
+pub fn insert_layer(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&str>, index: usize, node: DrawingLayerNode) {
     if let Some(parent_id) = parent_id {
         if !insert_layer_in_parent(layers, parent_id, index, node.clone()) {
             layers.push(node);
@@ -720,7 +763,7 @@ pub fn insert_layer(layers: &mut Vec<DrawingLayerNode>, parent_id: Option<&str>,
     }
 }
 
-fn insert_layer_in_parent(layers: &mut [DrawingLayerNode], parent_id: &str, index: usize, node: DrawingLayerNode) -> bool {
+fn insert_layer_in_parent(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: &str, index: usize, node: DrawingLayerNode) -> bool {
     for layer in layers.iter_mut() {
         if let DrawingLayerNode::Group(group) = layer {
             if group.base.id == parent_id {
@@ -740,14 +783,14 @@ fn insert_layer_in_parent(layers: &mut [DrawingLayerNode], parent_id: &str, inde
 #[value(rename_all = "camelCase")]
 pub struct DrawingLayerLocation {
     #[value(skip_serializing_if = "Option::is_none")]
-    pub parent_id: Option<String>,
+    pub parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
     pub index: usize,
 }
 
-pub fn find_drawing_layer_location(doc: &DrawingSnapshot, target_id: &str) -> Option<DrawingLayerLocation> {
-    fn search(layers: &[DrawingLayerNode], parent_id: Option<String>, target_id: &str) -> Option<DrawingLayerLocation> {
+pub fn find_drawing_layer_location(doc: &DrawingSnapshot, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerLocation> {
+    fn search(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerLocation> {
         for (index, layer) in layers.iter().enumerate() {
-            if layer_id(layer) == target_id {
+            if layer_id(layer).eq_text(target_id) {
                 return Some(DrawingLayerLocation { parent_id, index });
             }
             if let DrawingLayerNode::Group(group) = layer {
@@ -782,19 +825,19 @@ pub fn create_layer_by_kind(kind: &str) -> DrawingLayerNode {
                 ellipse: None,
                 circle: None,
                 line: None,
-                polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [64.0, 0.0], [32.0, 48.0]] }),
+                polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [64.0, 0.0], [32.0, 48.0]].into() }),
             }),
             _ => create_drawing_shape_layer_rect("Shape"),
         };
     }
     match kind {
-        "path" => create_drawing_path_layer("Path", Vec::new()),
+        "path" => create_drawing_path_layer("Path", Vec::new().into()),
         "text" => create_drawing_text_layer("Text"),
         "image" => create_drawing_image_layer("Image", "image-source"),
         "group" => create_drawing_group_layer("Group"),
-        "boolean" => create_drawing_boolean_layer("Boolean", "union", Vec::new()),
+        "boolean" => create_drawing_boolean_layer("Boolean", "union", Vec::new().into()),
         "trace" => create_drawing_trace_layer("Trace", "trace-source"),
-        _ => create_drawing_path_layer("Path", Vec::new()),
+        _ => create_drawing_path_layer("Path", Vec::new().into()),
     }
 }
 

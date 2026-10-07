@@ -1,0 +1,22 @@
+{
+  "unit": "🧰️framework/🔨️modules/🖱️ui/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+  "canvas": "🧰️framework/🔨️modules/🖱️ui/🖼️canvas/🦀️.rs",
+  "expected": "🧰️framework/🔨️modules/🖱️ui/🖼️canvas/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json",
+  "currentCanvas": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs",
+  "currentExpected": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json",
+  "currentReplay": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+  "held": [
+    "🧰️framework/🔨️modules/🖱️ui/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🖼️canvas/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🖼️canvas/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json"
+  ],
+  "current": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js"
+  ],
+  "from": "        let coords = shape[1].as_array().expect(\"rect coords\");\n        let nums = coords.iter().map(|v| v.as_f64().expect(\"coord\")).collect::<Vec<_>>();",
+  "to": "        let coords = shape.as_array().expect(\"rect coords\");\n        assert_eq!(coords.len(), 5, \"flat rect tuple\");\n        let nums = coords[1..].iter().map(|v| v.as_f64().expect(\"coord\")).collect::<Vec<_>>();",
+  "writerPrefix": "out.push_str(r#\"[\"r\",\"#);"
+}

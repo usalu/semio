@@ -48,7 +48,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -610,7 +610,7 @@ struct RasterStorePreparation {
     prepared: Option<store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>>,
     /// 🧮 The clone-free stepwise apply (`RasterOneItemApply`), live from the first `advance` until
     /// the post snapshot is handed over, or closed through its own retirement on cancel/fault.
-    apply: Option<crate::standards::v1::subsets::any::io::binary::mutations::RasterOneItemApply>,
+    apply: Option<crate::host::owned::RasterOneItemApply>,
     /// 🧹️ A cancelled/faulted item's mutation may carry a populated owned map (a `create-layer` of an
     /// adjustment with params) that must never reach `Drop` — it retires through the mutation
     /// retirement factory instead.
@@ -676,7 +676,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
         // retained candidate authority builds the post snapshot one owned value at a time instead.
         let post = {
             let mutation = self.mutation.as_ref().ok_or_else(|| "Raster preparation lost its mutation owner".to_string())?;
-            let apply = self.apply.get_or_insert_with(crate::standards::v1::subsets::any::io::binary::mutations::RasterOneItemApply::new);
+            let apply = self.apply.get_or_insert_with(crate::host::owned::RasterOneItemApply::new);
             match apply.advance(base.get(), mutation, authority.operation(), authority.generation(), RASTER_ONE_ITEM_APPLY_FUEL).map_err(semio_framework_value::ValueError::into_message)? {
                 Some(post) => post,
                 None => return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)),
@@ -723,7 +723,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
             });
         }
         if let Some(mutation) = self.mutation.take() {
-            self.mutation_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::io::binary::mutations::RasterMutationRetirementFactory, mutation));
+            self.mutation_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::owned::RasterMutationRetirementFactory, mutation));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.mutation_retirement.as_mut() {
@@ -935,7 +935,7 @@ impl RasterImportJob {
             return Some(raster_job_fault(cx, "raster import lost its snapshot authority"));
         };
         let index = snapshot.layers.len();
-        let (asset_id, asset, layer) = crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(media_json);
+        let (asset_id, asset, layer) = match crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(media_json) { Ok(value) => value, Err(error) => return Some(raster_job_fault(cx, &error)) };
         self.mutations = vec![
             RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
             RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index, layer: Box::new(layer) }),
@@ -1176,19 +1176,20 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::raster_envelope_decode_owner_bundle())
+        Some(crate::host::owned::raster_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners())
+        Some(crate::host::owned::raster_document_store_owners())
     }
 
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::host::owned::raster_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1318,7 +1319,7 @@ impl ArtifactEditor for RasterPlayApp {
         let MediaPayload::Structured { json: png_base64, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "image:in only accepts a Structured (base64 PNG) payload".into()));
         };
-        let (asset_id, asset, layer) = crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(png_base64);
+        let (asset_id, asset, layer) = crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(png_base64).map_err(|error| MediaError::Payload(port.to_string(), error))?;
         Ok(Emit::mutations(vec![
             RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
             RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index: doc.snapshot.layers.len(), layer: Box::new(layer) }),

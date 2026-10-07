@@ -6,7 +6,7 @@ use protocol::Mutation;
 fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
-    document.layers.push(crate::standards::v1::subsets::any::io::text::snapshot::create_pixel_layer("Paint",3,2));
+    document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Paint",3,2));
     let id = crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_owned();
     let command = MaskFromSelection { layer_id: id, expected_image_key: None, selection: fixture["selection"].to_string() };
     for invalid in fixture["invalid"].as_array().unwrap() {
@@ -47,7 +47,7 @@ fn retire(document: RasterSnapshot) { crate::standards::v1::subsets::any::schema
 #[test]
 fn selection_mask_cancellation_releases_private_work_without_publication() {
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
-    document.layers.push(crate::standards::v1::subsets::any::io::text::snapshot::create_pixel_layer("Paint",256,256));
+    document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Paint",256,256));
     let id=crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_owned();
     let command=MaskFromSelection {layer_id:id,expected_image_key:None,selection:"[[0,65536,255]]".into()};
     let mut work=MaskFromSelectionWork {candidate:Some(prepare(&command,&document).unwrap()),..Default::default()};

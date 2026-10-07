@@ -34,3 +34,5 @@ async fn explicit_nonzero_page_payload_is_preserved() {
     let command = <Pdf17XEditor as ArtifactEditor>::command_from_action("set-page", Some(&args)).expect("typed payload");
     assert!(matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17XEditorCommand::SetPage { page: 3, item: 0, revision, text }) if revision == "0123456789abcdef" && text == "replacement"));
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio/Pdf17XEditor", Pdf17XEditor, || semio_framework_plugin::App { definition: create_pdf17_x_editor(), examples: Vec::new() }, "../..");

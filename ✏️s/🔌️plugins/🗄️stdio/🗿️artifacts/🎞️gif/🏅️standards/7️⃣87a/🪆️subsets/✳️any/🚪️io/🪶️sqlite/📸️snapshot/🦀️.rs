@@ -38,7 +38,9 @@ impl ArtifactSqliteSnapshot for GifSnapshot {
   bound.finish()
  }
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
   (||->Result<_,ValueError>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.gif"||dialect.standard!="87a"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,format!("GIF87a does not own semantic subset {}",dialect.to_coordinate())));}if database.table("gif87_document")?.single_row()?.text(1)?!=self.schema{return Err(invalid("GIF87a semantic document identity disagrees with its snapshot"));}Ok(store::io_schema::IoOutcome::clean(()))})().map_err(store::io_schema::IoError::from_value_error)
  }
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{

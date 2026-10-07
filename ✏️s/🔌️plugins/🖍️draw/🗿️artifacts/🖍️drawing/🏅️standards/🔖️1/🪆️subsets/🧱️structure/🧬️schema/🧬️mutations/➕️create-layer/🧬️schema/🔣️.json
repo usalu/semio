@@ -55,7 +55,6 @@
       }
     },
     "layer": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode",
       "x-semio-ui": {
         "role": "value",
         "label": {
@@ -68,7 +67,162 @@
         },
         "group": "record",
         "order": 30
-      }
+      },
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "shape",
+            "path",
+            "text",
+            "image",
+            "group",
+            "boolean",
+            "trace"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            },
+            "options": {
+              "shape": {
+                "en": "Shape",
+                "de": "Form"
+              },
+              "path": {
+                "en": "Path",
+                "de": "Pfad"
+              },
+              "text": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "image": {
+                "en": "Image",
+                "de": "Bild"
+              },
+              "group": {
+                "en": "Group",
+                "de": "Gruppe"
+              },
+              "boolean": {
+                "en": "Boolean combination",
+                "de": "Boolesche Kombination"
+              },
+              "trace": {
+                "en": "Trace",
+                "de": "Nachzeichnung"
+              }
+            },
+            "group": "kind",
+            "order": 10
+          }
+        },
+        "blendMode": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "darken",
+            "lighten",
+            "colorDodge",
+            "colorBurn",
+            "hardLight",
+            "softLight",
+            "difference",
+            "exclusion",
+            "hue",
+            "saturation",
+            "color",
+            "luminosity"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Blend mode",
+              "de": "Füllmethode"
+            },
+            "options": {
+              "normal": {
+                "en": "Normal",
+                "de": "Normal"
+              },
+              "multiply": {
+                "en": "Multiply",
+                "de": "Multiplizieren"
+              },
+              "screen": {
+                "en": "Screen",
+                "de": "Negativ multiplizieren"
+              },
+              "overlay": {
+                "en": "Overlay",
+                "de": "Ineinanderkopieren"
+              },
+              "darken": {
+                "en": "Darken",
+                "de": "Abdunkeln"
+              },
+              "lighten": {
+                "en": "Lighten",
+                "de": "Aufhellen"
+              },
+              "colorDodge": {
+                "en": "Color dodge",
+                "de": "Farbig abwedeln"
+              },
+              "colorBurn": {
+                "en": "Color burn",
+                "de": "Farbig nachbelichten"
+              },
+              "hardLight": {
+                "en": "Hard light",
+                "de": "Hartes Licht"
+              },
+              "softLight": {
+                "en": "Soft light",
+                "de": "Weiches Licht"
+              },
+              "difference": {
+                "en": "Difference",
+                "de": "Differenz"
+              },
+              "exclusion": {
+                "en": "Exclusion",
+                "de": "Ausschluss"
+              },
+              "hue": {
+                "en": "Hue",
+                "de": "Farbton"
+              },
+              "saturation": {
+                "en": "Saturation",
+                "de": "Sättigung"
+              },
+              "color": {
+                "en": "Color",
+                "de": "Farbe"
+              },
+              "luminosity": {
+                "en": "Luminosity",
+                "de": "Luminanz"
+              }
+            },
+            "group": "appearance",
+            "order": 30
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode"
+        }
+      ]
     }
   }
 }

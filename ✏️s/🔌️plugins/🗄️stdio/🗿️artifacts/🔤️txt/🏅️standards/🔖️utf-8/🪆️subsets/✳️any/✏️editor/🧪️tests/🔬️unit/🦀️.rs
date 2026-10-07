@@ -156,7 +156,7 @@ async fn the_editor_declares_the_example_pickers_verb() {
 async fn the_example_switch_joins_its_exact_retained_factory() {
     use semio_framework_plugin::PluginApp;
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_txt_editor());
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<TxtEditor>>::with_registry(EditorApp::<TxtEditor>::default(), registry).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<TxtEditor>>::with_registry(EditorApp::<TxtEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     while !app.close_terminal_is_empty() {
         if matches!(app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture close"), semio_framework_plugin::PluginCloseStep::Complete) {
             break;
@@ -194,7 +194,7 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<TxtEditor>
 /// switch's `Effect::LoadDocument`.
 async fn kit_fixture_holding(document: &TxtSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TxtEditor>, _>(async { semio_framework_plugin::App { definition: create_txt_editor(), examples: Vec::new() } }).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TxtEditor>, _>(async { semio_framework_plugin::App { definition: create_txt_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TXT_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app

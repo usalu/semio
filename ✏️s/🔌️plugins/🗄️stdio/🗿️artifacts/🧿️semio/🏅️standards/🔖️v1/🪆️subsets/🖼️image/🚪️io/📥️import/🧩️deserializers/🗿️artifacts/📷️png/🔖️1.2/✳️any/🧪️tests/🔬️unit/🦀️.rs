@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_png::{io::PngProjection, schema::snapshot::{PngChunkMarker, PngTextChunk, PngTextKind}};
+use semio_s_artifact_stdio_png::{standards::v1_2::subsets::any::io::PngProjection, schema::snapshot::{PngChunkMarker, PngTextChunk, PngTextKind}};
 
 fn sample_png() -> PngSnapshot {
     let projection = PngProjection {

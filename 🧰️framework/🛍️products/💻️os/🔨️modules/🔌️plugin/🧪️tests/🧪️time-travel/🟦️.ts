@@ -1,12 +1,10 @@
 /** ⏪️ TypeScript oracle of the plugin runtime's history-edit scenarios (`🧫️fixtures/🧫️time-travel/🔣️.json`), the twin of
- * `🧪️tests/🧪️time-travel/🦀️.rs`. Independent where it counts: Ajv (2020-12) validates the fixture against its schema, and
- * every scenario's verbs are replayed through the time-travel reducer's own TypeScript twin (`⏪️time-travel/🟦️.ts`,
+ * `🧪️tests/🧪️time-travel/🦀️.rs`. Independent where it counts: every scenario's verbs are replayed through the time-travel reducer's own TypeScript twin (`⏪️time-travel/🟦️.ts`,
  * itself checked against xstate and fast-check), with synthetic drafts and replay reports standing in for the store —
  * so the stage, accepted drafts, blocking and finalize refusal the Rust runtime reaches live are the reducer law's. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
 import { applyTimeTravel, timeTravelFinalizeRefusal, timeTravelSession, type TimeTravelEvent, type TimeTravelSession } from "../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
 import { replayReportBlocksFinalize, type InputReplacement, type ReplayReport } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 
@@ -33,6 +31,7 @@ function apply(session: TimeTravelSession, event: TimeTravelEvent, scenario: str
 
 /** ⏯️ Replays one fixture step through the reducer twin; a `replay` completes the running replay with a synthetic report. */
 function step(session: TimeTravelSession, value: Step, scenario: string): TimeTravelSession {
+  assert.equal(Object.keys(value).length, 1, "a step names exactly one verb");
   const [name, argument] = Object.entries(value)[0]!;
   const generation = session.generation;
   switch (name) {
@@ -69,15 +68,14 @@ function step(session: TimeTravelSession, value: Step, scenario: string): TimeTr
   }
 }
 
-/** ⚖️ Validates the fixture and replays every scenario through the reducer twin; answers the scenario count. */
+/** ⚖️ Checks domain refusals and replays every scenario through the reducer twin; answers the scenario count. */
 export function timeTravelScenarioOracle(repoRoot: string): number {
   const fixtureRoot = join(repoRoot, PLUGIN_ROOT, "🧫️fixtures/🧫️time-travel");
   const fixture: Fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema/🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
-  assert.equal(validate({ ...fixture, scenarios: [{ ...fixture.scenarios[0], steps: [{ begin: 0, accept: null }] }] }), false, "a step names exactly one verb");
-  assert.equal(validate({ ...fixture, refusals: { ...fixture.refusals, frozen: "timeTravel.busy" } }), false, "the frozen code is pinned");
+  assert.throws(() => step(timeTravelSession({ contentRevision: new Uint8Array(32) }), { begin: 0, accept: null }, "hostile"), /exactly one verb/);
+  const assertFrozen = (code: unknown) => assert.equal(code, "timeTravel.frozen", "the frozen refusal code is pinned");
+  assertFrozen(fixture.refusals.frozen);
+  assert.throws(() => assertFrozen("timeTravel.busy"), /frozen refusal code/);
   const base = { contentRevision: new Uint8Array(32) };
   for (const scenario of fixture.scenarios) {
     let session = timeTravelSession(base);

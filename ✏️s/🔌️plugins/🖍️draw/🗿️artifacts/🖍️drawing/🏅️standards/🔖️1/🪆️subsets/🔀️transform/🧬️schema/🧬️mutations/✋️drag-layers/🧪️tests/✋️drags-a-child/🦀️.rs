@@ -70,15 +70,15 @@ fn committed_json_is_canonical_and_codecs_round_trip() {
 #[test]
 fn outcome_laws() {
     let base = before();
-    assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "ghost".into()], 5.0, 0.0), &base), vec![("Warning".into(), "mutation.partial".into())]);
+    assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "ghost".into()].into(), 5.0, 0.0), &base), vec![("Warning".into(), "mutation.partial".into())]);
     let mut locked = base.clone();
     crate::schema::layer_base_mut(&mut locked.layers[1]).locked = true;
-    assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "shape-b".into()], 5.0, 0.0), &locked), vec![("Warning".into(), "mutation.partial".into())], "a child of a locked group is skipped");
-    assert_eq!(codes(&drag_layers(vec!["shape-b".into()], 5.0, 0.0), &locked), vec![("Error".into(), "mutation.target-missing".into())]);
-    assert_eq!(codes(&drag_layers(vec!["ghost".into()], 5.0, 0.0), &base), vec![("Error".into(), "mutation.target-missing".into())]);
-    assert_eq!(codes(&drag_layers(vec!["shape-a".into()], 0.0, 0.0), &base), vec![("Warning".into(), "mutation.no-op".into())]);
-    assert_eq!(codes(&drag_layers(Vec::new(), 5.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
-    assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "shape-a".into()], 5.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
+    assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "shape-b".into()].into(), 5.0, 0.0), &locked), vec![("Warning".into(), "mutation.partial".into())], "a child of a locked group is skipped");
+    assert_eq!(codes(&drag_layers(vec!["shape-b".into()].into(), 5.0, 0.0), &locked), vec![("Error".into(), "mutation.target-missing".into())]);
+    assert_eq!(codes(&drag_layers(vec!["ghost".into()].into(), 5.0, 0.0), &base), vec![("Error".into(), "mutation.target-missing".into())]);
+    assert_eq!(codes(&drag_layers(vec!["shape-a".into()].into(), 0.0, 0.0), &base), vec![("Warning".into(), "mutation.no-op".into())]);
+    assert_eq!(codes(&drag_layers(Vec::new().into(), 5.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
+    assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "shape-a".into()].into(), 5.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
 }
 
 /// 🗂️ A child whose addressed group moves rides along exactly once.
@@ -86,7 +86,7 @@ fn outcome_laws() {
 fn a_child_of_a_dragged_group_moves_once() {
     let base = before();
     let mut snapshot = base.clone();
-    apply_drawing_mutation(&mut snapshot, &drag_layers(vec!["group-a".into(), "shape-b".into()], 20.0, -10.0)).unwrap();
+    apply_drawing_mutation(&mut snapshot, &drag_layers(vec!["group-a".into(), "shape-b".into()].into(), 20.0, -10.0)).unwrap();
     let (crate::DrawingLayerNode::Group(moved), crate::DrawingLayerNode::Group(original)) = (&snapshot.layers[1], &base.layers[1]) else { panic!("group") };
     assert_eq!((moved.base.transform.x, moved.base.transform.y), (120.0, 40.0));
     assert_eq!(moved.children, original.children, "the child keeps its local transform and moves with its group");

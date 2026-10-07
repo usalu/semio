@@ -3,7 +3,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue,SemioValueEntry,SemioValueNode,SemioValueSnapshot};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
-pub(crate) fn encode(snapshot:&SemioValueSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{native_encoding::encode(encoding,"semio stdio.semio.value.dsl v1\n","stdio.semio.value.pack v1",control,|writer,_|fields(snapshot,writer))}
+pub(crate) fn encode(snapshot:&SemioValueSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.value.dsl v1\n","stdio.semio.value.pack v1",control,|control|crate::standards::v1::subsets::value::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,_|fields(snapshot,writer))}
 pub(crate) fn value(value:&SemioValue,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding,depth:usize)->Result<(),ValueError>{
  if depth>=64{return Err(ValueError::new(ValueRefusalKind::DepthLimit,"Semio native value output exceeds depth 64"))}writer.entities(1)?;
  let (binary,text)=match value{SemioValue::Null=>(0,b'Z'),SemioValue::Bool{..}=>(1,b'B'),SemioValue::Int{..}=>(2,b'I'),SemioValue::Float{..}=>(3,b'F'),SemioValue::Str{..}=>(4,b'S'),SemioValue::Bytes{..}=>(5,b'Y'),SemioValue::List{..}=>(6,b'L'),SemioValue::Map{..}=>(7,b'M'),SemioValue::Ref{..}=>(8,b'R')};

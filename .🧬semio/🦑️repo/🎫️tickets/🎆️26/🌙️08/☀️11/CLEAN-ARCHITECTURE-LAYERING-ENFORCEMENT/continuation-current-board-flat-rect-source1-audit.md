@@ -1,0 +1,7 @@
+# Current Canonical Infinite Board Rectangle Consumer
+
+The exact registered source row completed at actual exit 0. The pair is derived from the complete current canonical Infinite DAG unit-test body. No deleted General UI source is restored and no historical floor is used. The current canonical Canvas writer and Flow replayer use ["r",x0,y0,x1,y1]; current first draw-list fixture confirms ["r",0,0,640,400]. The current minimap consumer incorrectly reads the second element as a nested array.
+
+The fresh full before/after pair changes only `minimap_widget_panel_uses_square_corners` to read the flat tuple, assert five elements and consume four numeric coordinates. All original panel-coordinate/epsilon and fill-stroke-count assertions remain byte-exact. Independent TreeSitter Rust parsing reports no errors before or after; all 108 function identities remain and precisely one method changes. Seven language-neutral schema/own-vs-Ajv wire controls completed.
+
+Input: `current-board-flat-rect-inputs-1/📜️script.ts`. Full sealed source pair: `🗑️generated/current-native-origin/epoch-3/board/current-flat-rect-source.json`. Neither live source nor the sealed current3 snapshot has been modified. The independently released current3 whole route will characterize its captured current code; application of this fresh correction requires a new current source capture before its later owning whole validation.

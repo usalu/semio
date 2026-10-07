@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1_4::subsets::base::schema::snapshot::demo_pdf_snapshot;
+use crate::standards::v1_4::subsets::base::io::text::snapshot::demo_pdf_snapshot;
 
 /// 🧫️ The real committed document every 1.4 test case runs on — 65 pages, a classic
 /// cross-reference table, page 1 typeset at A4.

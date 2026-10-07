@@ -1,7 +1,7 @@
 //! 🪶️ Held real-component Count and selected refusal witnesses; attach through the owning host test module.
 use super::*;
 use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SnapshotEncoding};
-use semio_framework::io_schema::ArtifactDialect;
+use {semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_value::ValueRefusalKind;
 const CORPUS:&str=include_str!("../../../🧫️fixtures/🪶️workspace-lease/🔣️.json");
 fn corpus()->serde_json::Value{serde_json::from_str(CORPUS).expect("closed neutral component lease corpus")}
@@ -58,6 +58,8 @@ fn refusal_file(dialect:&ArtifactDialect)->Vec<u8>{
 }
 #[semio_framework_async_macros::async_test]
 async fn count_component_selected_compiled_refusal_owners_preserve_all_eight_causes_and_full_nul_diagnostics(){
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
  let component=std::fs::read(fixture_component()).unwrap();let runtime=OwnedRuntime::new();let compiled=runtime.compile(&package_ref("semio:neutral-host-fixture",&component),&component).await.unwrap();
  let fixture=corpus();let diagnostic:semio_framework::Diagnostic=semio_framework_pack_json::from_json_str(&fixture["diagnostic"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated];

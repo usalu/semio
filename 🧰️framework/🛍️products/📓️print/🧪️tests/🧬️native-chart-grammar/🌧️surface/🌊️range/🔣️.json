@@ -1,15 +1,4 @@
 {
-  "schema": {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object", "required": ["canvas", "signal", "profile", "toleranceMm", "windows"], "additionalProperties": false,
-    "$defs": {"pair": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}},
-    "properties": {
-      "canvas": {"$ref": "#/$defs/pair"}, "profile": {"type": "array", "items": {"$ref": "#/$defs/pair"}, "minItems": 3, "maxItems": 3},
-      "signal": {"type": "object", "required": ["expr", "domain", "segments", "start", "end"], "additionalProperties": false, "properties": {"expr": {"type": "string", "minLength": 1}, "domain": {"$ref": "#/$defs/pair"}, "segments": {"type": "integer", "minimum": 1}, "start": {"type": "number"}, "end": {"type": "number"}}},
-      "toleranceMm": {"type": "number", "exclusiveMinimum": 0},
-      "windows": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "object", "required": ["id"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "domain": {"$ref": "#/$defs/pair"}, "range": {"$ref": "#/$defs/pair"}}}}
-    }
-  },
   "vectors": {
     "canvas": [80, 40], "signal": {"expr": "\\SemioT/4-2", "domain": [0, 16], "segments": 400, "start": -2, "end": 2}, "profile": [[0, 8], [4, 3], [10, 1]], "toleranceMm": 0.03,
     "windows": [{"id": "omitted"}, {"id": "authored", "range": [-4, 4]}, {"id": "reversed", "range": [4, -4]}, {"id": "default-equal", "range": [-6, 2]}, {"id": "both", "domain": [0, 20], "range": [-4, 4]}]

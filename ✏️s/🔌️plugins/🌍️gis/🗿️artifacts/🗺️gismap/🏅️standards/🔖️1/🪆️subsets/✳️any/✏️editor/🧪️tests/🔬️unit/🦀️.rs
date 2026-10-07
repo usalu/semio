@@ -36,7 +36,7 @@ pub(crate) mod context {
 
     /// 🧬️ Builds the real registered fixture and binds the instance addressed by [`meta`].
     pub async fn app() -> Gis2dTestApp {
-        let mut app = new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(gis2d_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(gis2d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Gis2dTestApp(app)
     }
@@ -158,10 +158,10 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
 async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_once() {
     let snapshot = crate::schema::empty_gis_map_snapshot();
     let envelope = store::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None);
-    let mut store = store::ArtifactStore::new(envelope)
+    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
         .await
         .expect("GIS Map preparation-law Store opens");
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_owners());
+    store.install_document_store_owners_exact(crate::host::owned::gis_map_document_store_owners());
     let factory = gis_map_parent_one_item_preparation_factory();
     let mutation = GisMapMutation::CreatePosition(crate::mutations::create_position::CreatePosition {
         index: 0,
@@ -248,7 +248,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
         "schema": GIS_MAP_SCHEMA,
         "id": "gis-map-live-load",
         "vcs": {
-            "initialSnapshot": snapshot_hex,
+            "initialPack": snapshot_hex,
             "edits": [],
             "changes": [],
             "checkpoints": [],
@@ -259,7 +259,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
     }))
     .expect("schema-first GIS fixture envelope");
     let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None);
-    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {

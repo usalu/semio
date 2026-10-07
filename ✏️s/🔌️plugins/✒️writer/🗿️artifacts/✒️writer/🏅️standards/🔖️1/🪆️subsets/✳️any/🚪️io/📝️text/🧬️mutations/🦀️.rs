@@ -30,14 +30,7 @@ impl protocol::OpText for WriterMutation {
     }
 }
 
-impl protocol::OpBinary for WriterMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 //#region 🧪️Tests
@@ -52,7 +45,7 @@ mod semio_grammar_conformance;
 
 
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] =
-    &[("rename-writer", crate::standards::v1::subsets::any::schema::mutations::rename_writer::TEXT_OPCODE), ("change-uri", crate::standards::v1::subsets::any::schema::mutations::change_uri::TEXT_OPCODE), ("change-language", crate::standards::v1::subsets::any::schema::mutations::change_language::TEXT_OPCODE), ("edit-text", crate::standards::v1::subsets::any::schema::mutations::edit_text::TEXT_OPCODE), ("splice-text", crate::standards::v1::subsets::any::schema::mutations::splice_text::TEXT_OPCODE)];
+    &[("rename-writer", crate::standards::v1::subsets::any::io::text::mutations::rename_writer::TEXT_OPCODE), ("change-uri", crate::standards::v1::subsets::any::io::text::mutations::change_uri::TEXT_OPCODE), ("change-language", crate::standards::v1::subsets::any::io::text::mutations::change_language::TEXT_OPCODE), ("edit-text", crate::standards::v1::subsets::any::io::text::mutations::edit_text::TEXT_OPCODE), ("splice-text", crate::standards::v1::subsets::any::io::text::mutations::splice_text::TEXT_OPCODE)];
 
 #[path = "🌐change-language/🦀️.rs"]
 pub mod change_language;

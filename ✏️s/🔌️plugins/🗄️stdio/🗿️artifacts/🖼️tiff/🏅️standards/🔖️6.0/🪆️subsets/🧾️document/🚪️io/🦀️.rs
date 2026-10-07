@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v6_0::subsets::document::io::TiffAnalyzer;
     use crate::TiffSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -84,12 +84,49 @@ pub use derived_composition::*;
 // zero real callers) were deleted outright. `blank_tiff_snapshot`/`demo_tiff_snapshot` moved to
 // `../🧬️schema`.
 use crate::schema::snapshot::{
-    TiffBinary32, TiffBinary64, TiffByteOrder, TiffFieldType, TiffIfd, TiffSnapshot, TiffStorage, TiffStorageKind, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH,
-    TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS, TAG_TILE_BYTE_COUNTS, TAG_TILE_LENGTH, TAG_TILE_OFFSETS, TAG_TILE_WIDTH,
+    TiffBinary32, TiffWord64, TiffFieldType, TiffIfd, TiffSnapshot, TiffSampleBlock, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL,
 };
 use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
 
 //#region ByteOrder
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TiffByteOrder { #[default] LittleEndian, BigEndian }
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TiffCompression { #[default] None, PackBits, Lzw, Deflate, ModifiedHuffman, Group3, Group4 }
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TiffNativeLayout { #[default] SingleStrip, Strips { rows: u32 }, Tiles { width: u32, height: u32 } }
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct TiffNativeOptions { pub byte_order: TiffByteOrder, pub compression: TiffCompression, pub layout: TiffNativeLayout }
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum NativeStorageKind { #[default] None, Strips, Tiles }
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct NativeStorage { kind: NativeStorageKind, offsets_kind: TiffFieldType, byte_counts_kind: TiffFieldType, chunks: Vec<Vec<u8>> }
+impl Default for NativeStorage { fn default()->Self { Self {kind:NativeStorageKind::None,offsets_kind:TiffFieldType::Long,byte_counts_kind:TiffFieldType::Long,chunks:Vec::new()} } }
+#[derive(Clone, Debug, PartialEq)]
+struct NativeIfd { entries: Vec<TiffTag>, storage: NativeStorage }
+#[derive(Clone, Debug, PartialEq)]
+struct NativeSnapshot { schema:String, byte_order:TiffByteOrder, ifds:Vec<NativeIfd> }
+pub const TAG_COMPRESSION:u16=259;
+pub const TAG_STRIP_OFFSETS:u16=273;
+pub const TAG_ROWS_PER_STRIP:u16=278;
+pub const TAG_STRIP_BYTE_COUNTS:u16=279;
+pub const TAG_TILE_WIDTH:u16=322;
+pub const TAG_TILE_LENGTH:u16=323;
+pub const TAG_TILE_OFFSETS:u16=324;
+pub const TAG_TILE_BYTE_COUNTS:u16=325;
+pub(crate) trait NativeFieldType {
+ fn from_u16(code:u16)->Result<Self,String> where Self:Sized;
+ fn to_u16(self)->u16;
+ fn element_size(self)->usize;
+}
+impl NativeFieldType for TiffFieldType {
+ fn from_u16(code:u16)->Result<Self,String>{Ok(match code{1=>Self::Byte,2=>Self::Ascii,3=>Self::Short,4=>Self::Long,5=>Self::Rational,6=>Self::SByte,7=>Self::Undefined,8=>Self::SShort,9=>Self::SLong,10=>Self::SRational,11=>Self::Float,12=>Self::Double,_=>return Err("tiff: unknown native field type".into())})}
+ fn to_u16(self)->u16{match self{Self::Byte=>1,Self::Ascii=>2,Self::Short=>3,Self::Long=>4,Self::Rational=>5,Self::SByte=>6,Self::Undefined=>7,Self::SShort=>8,Self::SLong=>9,Self::SRational=>10,Self::Float=>11,Self::Double=>12}}
+ fn element_size(self)->usize{match self{Self::Byte|Self::Ascii|Self::SByte|Self::Undefined=>1,Self::Short|Self::SShort=>2,Self::Long|Self::SLong|Self::Float=>4,Self::Rational|Self::SRational|Self::Double=>8}}
+}
+fn native_value_count(values:&TiffValues)->Result<u32,String>{let count=match values{TiffValues::Ascii(texts)=>texts.iter().try_fold(0usize,|sum,text|sum.checked_add(text.len())?.checked_add(1)).ok_or("tiff: ASCII native count overflow")?,TiffValues::Byte(v)|TiffValues::Undefined(v)=>v.len(),TiffValues::Short(v)=>v.len(),TiffValues::Long(v)=>v.len(),TiffValues::Rational(v)=>v.len(),TiffValues::SByte(v)=>v.len(),TiffValues::SShort(v)=>v.len(),TiffValues::SLong(v)=>v.len(),TiffValues::SRational(v)=>v.len(),TiffValues::Float(v)=>v.len(),TiffValues::Double(v)=>v.len()};u32::try_from(count).map_err(|_|"tiff: native value count exceeds classic TIFF width".into())}
+fn read_ascii(bytes:&[u8])->Result<Vec<String>,String>{if bytes.is_empty(){return Ok(Vec::new())}if bytes.last()!=Some(&0)||!bytes.is_ascii(){return Err("tiff: native ASCII metadata is invalid or unterminated".into())}bytes[..bytes.len()-1].split(|byte|*byte==0).map(|text|String::from_utf8(text.to_vec()).map_err(|error|error.to_string())).collect()}
+
 #[derive(Clone, Copy)]
 enum Endian {
     Little,
@@ -213,7 +250,7 @@ fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType
     };
     Ok(match kind {
         TiffFieldType::Byte => TiffValues::Byte(src.to_vec()),
-        TiffFieldType::Ascii => TiffValues::Ascii(src.to_vec()),
+        TiffFieldType::Ascii => TiffValues::Ascii(read_ascii(src)?),
         TiffFieldType::Short => TiffValues::Short((0..count).map(|i| e.u16(&src[i * 2..i * 2 + 2])).collect()),
         TiffFieldType::Long => TiffValues::Long((0..count).map(|i| e.u32(&src[i * 4..i * 4 + 4])).collect()),
         TiffFieldType::Rational => TiffValues::Rational((0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]), e.u32(&src[i * 8 + 4..i * 8 + 8]))).collect()),
@@ -223,23 +260,23 @@ fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType
         TiffFieldType::SLong => TiffValues::SLong((0..count).map(|i| e.u32(&src[i * 4..i * 4 + 4]) as i32).collect()),
         TiffFieldType::SRational => TiffValues::SRational((0..count).map(|i| (e.u32(&src[i * 8..i * 8 + 4]) as i32, e.u32(&src[i * 8 + 4..i * 8 + 8]) as i32)).collect()),
         TiffFieldType::Float => TiffValues::Float((0..count).map(|i| TiffBinary32 { bits: e.u32(&src[i * 4..i * 4 + 4]) }).collect()),
-        TiffFieldType::Double => TiffValues::Double((0..count).map(|i| TiffBinary64 { bits: e.u64(&src[i * 8..i * 8 + 8]) }).collect()),
+        TiffFieldType::Double => TiffValues::Double((0..count).map(|i| TiffWord64::from_word(e.u64(&src[i * 8..i * 8 + 8]))).collect()),
     })
 }
 //#endregion IfdRead
 
 //#region TagLookup
-fn tag_values(ifd: &TiffIfd, tag: u16) -> Option<&TiffValues> {
+fn tag_values(ifd: &NativeIfd, tag: u16) -> Option<&TiffValues> {
     ifd.entries.iter().find(|t| t.tag == tag).map(|t| &t.values)
 }
-fn tag_u32_list(ifd: &TiffIfd, tag: u16) -> Vec<u32> {
+fn tag_u32_list(ifd: &NativeIfd, tag: u16) -> Vec<u32> {
     match tag_values(ifd, tag) {
         Some(TiffValues::Short(v)) => v.iter().map(|&x| x as u32).collect(),
         Some(TiffValues::Long(v)) => v.clone(),
         _ => Vec::new(),
     }
 }
-fn tag_u32(ifd: &TiffIfd, tag: u16) -> Option<u32> {
+fn tag_u32(ifd: &NativeIfd, tag: u16) -> Option<u32> {
     tag_u32_list(ifd, tag).first().copied()
 }
 //#endregion TagLookup
@@ -310,22 +347,23 @@ fn packbits_encode(data: &[u8]) -> Vec<u8> {
 }
 //#endregion PackBits
 
+
 //#region Decode
 /// 🚫 CompressionScopeNote: only uncompressed(1)/PackBits(32773) are decoded for real —
 /// LZW(5)/Deflate(8)/CCITT(2/3/4)/others deliberately fail rather than fabricate pixels.
 /// 🧵 Captures each authored strip or tile as an independent canonical chunk.
-fn read_storage(data: &[u8], ifd: &TiffIfd) -> Result<TiffStorage, String> {
+fn read_storage(data: &[u8], ifd: &NativeIfd) -> Result<NativeStorage, String> {
     let strips = tag_u32_list(ifd, TAG_STRIP_OFFSETS);
     let tiles = tag_u32_list(ifd, TAG_TILE_OFFSETS);
     if !strips.is_empty() && !tiles.is_empty() {
         return Err("tiff: one IFD cannot own both strips and tiles".into());
     }
     let (storage_kind, offset_tag, count_tag, offsets) = if !tiles.is_empty() {
-        (TiffStorageKind::Tiles, TAG_TILE_OFFSETS, TAG_TILE_BYTE_COUNTS, tiles)
+        (NativeStorageKind::Tiles, TAG_TILE_OFFSETS, TAG_TILE_BYTE_COUNTS, tiles)
     } else if !strips.is_empty() {
-        (TiffStorageKind::Strips, TAG_STRIP_OFFSETS, TAG_STRIP_BYTE_COUNTS, strips)
+        (NativeStorageKind::Strips, TAG_STRIP_OFFSETS, TAG_STRIP_BYTE_COUNTS, strips)
     } else {
-        return Ok(TiffStorage::default());
+        return Ok(NativeStorage::default());
     };
     let offset_entry = ifd.entries.iter().find(|entry| entry.tag == offset_tag).ok_or("tiff: missing storage offsets")?;
     let count_entry = ifd.entries.iter().find(|entry| entry.tag == count_tag).ok_or("tiff: missing storage byte counts")?;
@@ -344,7 +382,7 @@ fn read_storage(data: &[u8], ifd: &TiffIfd) -> Result<TiffStorage, String> {
         let length = usize::try_from(count).map_err(|_| "tiff: storage byte-count width")?;
         chunks.push(data.get(start..start.checked_add(length).ok_or("tiff: storage range overflow")?).ok_or("tiff: storage chunk truncated")?.to_vec());
     }
-    Ok(TiffStorage { kind: storage_kind, offsets_kind, byte_counts_kind, chunks })
+    Ok(NativeStorage { kind: storage_kind, offsets_kind, byte_counts_kind, chunks })
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -361,225 +399,8 @@ pub struct TiffPngPage {
     pub bytes: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct TiffRgba8Layout {
-    width: u32,
-    height: u32,
-    samples: usize,
-    compression: u32,
-    photometric: u32,
-    chunk_width: u32,
-    chunk_height: u32,
-    chunks_across: u32,
-    chunks_down: u32,
-}
 
-fn tiff_rgba8_layout(ifd: &TiffIfd) -> Result<TiffRgba8Layout, String> {
-    let width = tag_u32(ifd, TAG_IMAGE_WIDTH).ok_or("tiff: missing ImageWidth")?;
-    let height = tag_u32(ifd, TAG_IMAGE_LENGTH).ok_or("tiff: missing ImageLength")?;
-    if width == 0 || height == 0 {
-        return Err("tiff: zero dimension".into());
-    }
-    let samples_per_pixel = tag_u32(ifd, TAG_SAMPLES_PER_PIXEL).unwrap_or(1);
-    if !matches!(samples_per_pixel, 1 | 3 | 4) {
-        return Err(format!("tiff: unsupported SamplesPerPixel {samples_per_pixel}"));
-    }
-    let bits_per_sample = tag_u32_list(ifd, TAG_BITS_PER_SAMPLE);
-    if bits_per_sample.len() != usize::try_from(samples_per_pixel).map_err(|_| "tiff: sample count exceeds address space")? || bits_per_sample.iter().any(|value| *value != 8) {
-        return Err(format!("tiff: unsupported BitsPerSample {bits_per_sample:?} (only 8 is implemented)"));
-    }
-    let compression = tag_u32(ifd, TAG_COMPRESSION).unwrap_or(1);
-    if !matches!(compression, 1 | 32773) {
-        return Err(format!("tiff: unsupported compression {compression} (only uncompressed/PackBits are implemented)"));
-    }
-    if tag_u32(ifd, 317).unwrap_or(1) != 1 {
-        return Err("tiff: horizontal prediction is not implemented".into());
-    }
-    if tag_u32_list(ifd, 339).into_iter().any(|sample_format| sample_format != 1) {
-        return Err("tiff: only unsigned integer samples are implemented".into());
-    }
-    let photometric = tag_u32(ifd, TAG_PHOTOMETRIC).unwrap_or(1);
-    if samples_per_pixel == 1 && !matches!(photometric, 0 | 1) {
-        return Err(format!("tiff: unsupported grayscale photometric {photometric}"));
-    }
-    if samples_per_pixel != 1 && photometric != 2 {
-        return Err(format!("tiff: unsupported RGB photometric {photometric}"));
-    }
-    if tag_u32(ifd, 284).unwrap_or(1) != 1 {
-        return Err("tiff: planar display projection is not implemented".into());
-    }
-    if samples_per_pixel == 4 && tag_u32_list(ifd, 338) != [2] {
-        return Err("tiff: four-sample display projection requires one unassociated alpha ExtraSample".into());
-    }
-    if tag_u32(ifd, 274).unwrap_or(1) != 1 {
-        return Err("tiff: oriented display projection is not implemented".into());
-    }
-    if ifd.storage.chunks.is_empty() {
-        return Err("tiff: display projection requires authored image storage".into());
-    }
-    let (chunk_width, chunk_height, chunks_across, chunks_down) = match ifd.storage.kind {
-        TiffStorageKind::Strips => {
-            let rows = tag_u32(ifd, TAG_ROWS_PER_STRIP).unwrap_or(height);
-            if rows == 0 { return Err("tiff: RowsPerStrip must be positive".into()); }
-            (width, rows, 1, height.checked_add(rows - 1).ok_or("tiff: strip count overflow")? / rows)
-        }
-        TiffStorageKind::Tiles => {
-            let tile_width = tag_u32(ifd, TAG_TILE_WIDTH).ok_or("tiff: tiled image is missing TileWidth")?;
-            let tile_length = tag_u32(ifd, TAG_TILE_LENGTH).ok_or("tiff: tiled image is missing TileLength")?;
-            if tile_width == 0 || tile_length == 0 { return Err("tiff: tile dimensions must be positive".into()); }
-            let across = width.checked_add(tile_width - 1).ok_or("tiff: tile column count overflow")? / tile_width;
-            let down = height.checked_add(tile_length - 1).ok_or("tiff: tile row count overflow")? / tile_length;
-            (tile_width, tile_length, across, down)
-        }
-        TiffStorageKind::None => return Err("tiff: display projection requires authored image storage".into()),
-    };
-    let expected_chunks = chunks_across.checked_mul(chunks_down).ok_or("tiff: chunk count overflow")?;
-    if ifd.storage.chunks.len() != usize::try_from(expected_chunks).map_err(|_| "tiff: chunk count exceeds address space")? {
-        return Err(format!("tiff: chunk count {} does not match expected {expected_chunks}", ifd.storage.chunks.len()));
-    }
-    Ok(TiffRgba8Layout { width, height, samples: usize::try_from(samples_per_pixel).map_err(|_| "tiff: sample count exceeds address space")?, compression, photometric, chunk_width, chunk_height, chunks_across, chunks_down })
-}
-
-fn write_rgba(source: &[u8], samples: usize, photometric: u32, target: &mut [u8]) {
-    match samples {
-        1 => {
-            let gray = if photometric == 0 { 255 - source[0] } else { source[0] };
-            target.copy_from_slice(&[gray, gray, gray, 255]);
-        }
-        3 => target.copy_from_slice(&[source[0], source[1], source[2], 255]),
-        4 => target.copy_from_slice(&source[..4]),
-        _ => unreachable!("validated TIFF sample count"),
-    }
-}
-
-fn decoded_chunk<'a>(chunk: &'a [u8], compression: u32, expected: usize, decoded: &'a mut Vec<u8>) -> Result<&'a [u8], String> {
-    if compression == 32773 {
-        *decoded = packbits_decode(chunk, expected)?;
-        Ok(decoded)
-    } else if chunk.len() == expected {
-        Ok(chunk)
-    } else {
-        Err(format!("tiff: uncompressed chunk has {} bytes, expected {expected}", chunk.len()))
-    }
-}
-
-/// 🖼️ Projects one canonical strip- or tile-organized IFD into ephemeral RGBA8 display pixels.
-pub fn decode_tiff_page_rgba(snapshot: &TiffSnapshot, ifd_index: usize) -> Result<TiffRgbaPage, String> {
-    let ifd = snapshot.ifds.get(ifd_index).ok_or_else(|| format!("tiff: IFD {ifd_index} is outside the document"))?;
-    let layout = tiff_rgba8_layout(ifd)?;
-    let width_usize = usize::try_from(layout.width).map_err(|_| "tiff: image width exceeds address space")?;
-    let height_usize = usize::try_from(layout.height).map_err(|_| "tiff: image height exceeds address space")?;
-    let pixel_count = width_usize.checked_mul(height_usize).ok_or("tiff: pixel count overflow")?;
-    let mut rgba = vec![0u8; pixel_count.checked_mul(4).ok_or("tiff: RGBA byte count overflow")?];
-    let chunk_width = usize::try_from(layout.chunk_width).map_err(|_| "tiff: chunk width exceeds address space")?;
-    let chunk_height = usize::try_from(layout.chunk_height).map_err(|_| "tiff: chunk height exceeds address space")?;
-    let chunk_bytes = chunk_width.checked_mul(chunk_height).and_then(|pixels| pixels.checked_mul(layout.samples)).ok_or("tiff: chunk byte count overflow")?;
-    for (index, chunk) in ifd.storage.chunks.iter().enumerate() {
-        let chunk_row = u32::try_from(index).map_err(|_| "tiff: chunk ordinal width")? / layout.chunks_across;
-        let chunk_column = u32::try_from(index).map_err(|_| "tiff: chunk ordinal width")? % layout.chunks_across;
-        let origin_x = chunk_column.checked_mul(layout.chunk_width).ok_or("tiff: chunk x overflow")?;
-        let origin_y = chunk_row.checked_mul(layout.chunk_height).ok_or("tiff: chunk y overflow")?;
-        let visible_width = usize::try_from(layout.chunk_width.min(layout.width - origin_x)).map_err(|_| "tiff: visible chunk width")?;
-        let visible_height = usize::try_from(layout.chunk_height.min(layout.height - origin_y)).map_err(|_| "tiff: visible chunk height")?;
-        let expected = if ifd.storage.kind == TiffStorageKind::Tiles { chunk_bytes } else { visible_height.checked_mul(chunk_width).and_then(|pixels| pixels.checked_mul(layout.samples)).ok_or("tiff: strip byte count overflow")? };
-        let mut decoded = Vec::new();
-        let source = decoded_chunk(chunk, layout.compression, expected, &mut decoded)?;
-        for local_y in 0..visible_height {
-            for local_x in 0..visible_width {
-                let source_offset = local_y.checked_mul(chunk_width).and_then(|row| row.checked_add(local_x)).and_then(|pixel| pixel.checked_mul(layout.samples)).ok_or("tiff: source sample offset overflow")?;
-                let x = usize::try_from(origin_x).map_err(|_| "tiff: chunk x width")?.checked_add(local_x).ok_or("tiff: target x overflow")?;
-                let y = usize::try_from(origin_y).map_err(|_| "tiff: chunk y width")?.checked_add(local_y).ok_or("tiff: target y overflow")?;
-                let target = y.checked_mul(width_usize).and_then(|row| row.checked_add(x)).and_then(|pixel| pixel.checked_mul(4)).ok_or("tiff: target sample offset overflow")?;
-                write_rgba(&source[source_offset..source_offset + layout.samples], layout.samples, layout.photometric, &mut rgba[target..target + 4]);
-            }
-        }
-    }
-    Ok(TiffRgbaPage { width: layout.width, height: layout.height, pixels: rgba })
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct TiffRegion {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
-}
-
-pub const TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS: u32 = 65_536;
-
-pub fn tiff_revision(snapshot: &TiffSnapshot) -> String {
-    let mut hash = 0xcbf29ce484222325u64;
-    for byte in semio_framework_pack_json::to_json_string(snapshot).bytes() {
-        hash ^= u64::from(byte);
-        hash = hash.wrapping_mul(0x100000001b3);
-    }
-    format!("{hash:016x}")
-}
-
-fn stored_color(layout: TiffRgba8Layout, color: [u8; 4]) -> Result<Vec<u8>, String> {
-    match layout.samples {
-        1 if color[0] == color[1] && color[1] == color[2] && color[3] == 255 => Ok(vec![if layout.photometric == 0 { 255 - color[0] } else { color[0] }]),
-        1 => Err("tiff: grayscale paint requires equal RGB channels and opaque alpha".into()),
-        3 if color[3] == 255 => Ok(color[..3].to_vec()),
-        3 => Err("tiff: RGB paint requires opaque alpha".into()),
-        4 => Ok(color.to_vec()),
-        _ => Err("tiff: unsupported paint sample profile".into()),
-    }
-}
-
-/// 🛡️ Validates one exact raw-sample tiled paint without allocating a derived raster or snapshot.
-pub fn validate_tiff_region_paint(snapshot: &TiffSnapshot, ifd_index: usize, region: TiffRegion, color: [u8; 4]) -> Result<(), String> {
-    let ifd = snapshot.ifds.get(ifd_index).ok_or_else(|| format!("tiff: IFD {ifd_index} is outside the document"))?;
-    let layout = tiff_rgba8_layout(ifd)?;
-    if ifd.storage.kind != TiffStorageKind::Tiles { return Err("tiff: region paint requires tiled storage".into()); }
-    if layout.compression != 1 { return Err("tiff: region paint requires uncompressed tiles".into()); }
-    if region.width == 0 || region.height == 0 { return Err("tiff: paint region must be nonempty".into()); }
-    if region.height > TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS { return Err(format!("tiff: paint region height exceeds {TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS}")); }
-    let end_x = region.x.checked_add(region.width).ok_or("tiff: paint region x overflow")?;
-    let end_y = region.y.checked_add(region.height).ok_or("tiff: paint region y overflow")?;
-    if end_x > layout.width || end_y > layout.height { return Err(format!("tiff: paint region exceeds {}x{} page", layout.width, layout.height)); }
-    stored_color(layout, color)?;
-    Ok(())
-}
-
-/// 🖌️ Paints raw samples in one uncompressed tiled IFD while retaining every other canonical byte.
-pub fn paint_tiff_region_controlled(snapshot: &TiffSnapshot, revision: &str, ifd_index: usize, region: TiffRegion, color: [u8; 4], progress: &mut dyn FnMut(usize, usize) -> bool) -> Result<TiffSnapshot, String> {
-    let actual = tiff_revision(snapshot);
-    if revision != actual { return Err(format!("tiff: stale document revision {revision}; expected {actual}")); }
-    validate_tiff_region_paint(snapshot, ifd_index, region, color)?;
-    let ifd = &snapshot.ifds[ifd_index];
-    let layout = tiff_rgba8_layout(ifd)?;
-    let end_x = region.x.checked_add(region.width).ok_or("tiff: paint region x overflow")?;
-    let stored = stored_color(layout, color)?;
-    let total = usize::try_from(region.height).map_err(|_| "tiff: paint height exceeds address space")?;
-    let mut next = snapshot.clone();
-    let chunks = &mut next.ifds[ifd_index].storage.chunks;
-    let tile_width = usize::try_from(layout.chunk_width).map_err(|_| "tiff: tile width exceeds address space")?;
-    for local_y in 0..total {
-        if !progress(local_y, total) { return Err("tiff: tiled paint cancelled".into()); }
-        let y = region.y.checked_add(u32::try_from(local_y).map_err(|_| "tiff: paint row width")?).ok_or("tiff: paint row overflow")?;
-        for x in region.x..end_x {
-            let tile_row = y / layout.chunk_height;
-            let tile_column = x / layout.chunk_width;
-            let tile_index = usize::try_from(tile_row.checked_mul(layout.chunks_across).and_then(|row| row.checked_add(tile_column)).ok_or("tiff: tile ordinal overflow")?).map_err(|_| "tiff: tile ordinal width")?;
-            let local_x = usize::try_from(x % layout.chunk_width).map_err(|_| "tiff: tile local x width")?;
-            let local_tile_y = usize::try_from(y % layout.chunk_height).map_err(|_| "tiff: tile local y width")?;
-            let offset = local_tile_y.checked_mul(tile_width).and_then(|row| row.checked_add(local_x)).and_then(|pixel| pixel.checked_mul(layout.samples)).ok_or("tiff: tile sample offset overflow")?;
-            chunks[tile_index][offset..offset + layout.samples].copy_from_slice(&stored);
-        }
-    }
-    if !progress(total, total) { return Err("tiff: tiled paint cancelled".into()); }
-    Ok(next)
-}
-
-/// 🌐 Encodes one TIFF page as a browser-displayable PNG without changing document authority.
-pub fn encode_tiff_page_png(snapshot: &TiffSnapshot, ifd_index: usize) -> Result<TiffPngPage, String> {
-    let page = decode_tiff_page_rgba(snapshot, ifd_index)?;
-    let bytes = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: page.width, height: page.height, pixels: page.pixels }).map_err(|error| error.to_string())?;
-    Ok(TiffPngPage { width: page.width, height: page.height, bytes })
-}
-
-pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
+fn read_native_uncontrolled(data: &[u8]) -> Result<NativeSnapshot, String> {
     if data.len() < 8 {
         return Err("tiff: truncated header".into());
     }
@@ -606,14 +427,14 @@ pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
             entries.push(TiffTag { tag: entry.tag, values });
         }
         entries.sort_by_key(|t| t.tag); // TIFF6 §2: entries "must be sorted in ascending order by Tag".
-        ifds.push(TiffIfd { entries, storage: TiffStorage::default() });
+        ifds.push(NativeIfd { entries, storage: NativeStorage::default() });
     }
 
     for ifd in &mut ifds {
         ifd.storage = read_storage(data, ifd)?;
         ifd.entries.retain(|entry| !matches!(entry.tag, TAG_STRIP_OFFSETS | TAG_STRIP_BYTE_COUNTS | TAG_TILE_OFFSETS | TAG_TILE_BYTE_COUNTS));
     }
-    Ok(TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order, ifds })
+    Ok(NativeSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order, ifds })
 }
 //#endregion Decode
 
@@ -621,7 +442,8 @@ pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
 fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
     let mut out = Vec::new();
     match values {
-        TiffValues::Byte(v) | TiffValues::Ascii(v) | TiffValues::Undefined(v) => out.extend_from_slice(v),
+        TiffValues::Byte(v) | TiffValues::Undefined(v) => out.extend_from_slice(v),
+        TiffValues::Ascii(texts) => { for text in texts { out.extend_from_slice(text.as_bytes()); out.push(0); } },
         TiffValues::Short(v) => v.iter().for_each(|&x| write_u16(&mut out, x, bo)),
         TiffValues::Long(v) => v.iter().for_each(|&x| write_u32(&mut out, x, bo)),
         TiffValues::Rational(v) => v.iter().for_each(|&(n, d)| { write_u32(&mut out, n, bo); write_u32(&mut out, d, bo); }),
@@ -630,7 +452,7 @@ fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
         TiffValues::SLong(v) => v.iter().for_each(|&x| write_u32(&mut out, x as u32, bo)),
         TiffValues::SRational(v) => v.iter().for_each(|&(n, d)| { write_u32(&mut out, n as u32, bo); write_u32(&mut out, d as u32, bo); }),
         TiffValues::Float(v) => v.iter().for_each(|x| write_u32(&mut out, x.bits, bo)),
-        TiffValues::Double(v) => v.iter().for_each(|x| write_u64(&mut out, x.bits, bo)),
+        TiffValues::Double(v) => v.iter().for_each(|x| write_u64(&mut out, x.word(), bo)),
     }
     out
 }
@@ -639,9 +461,14 @@ fn dir_size(count: usize) -> Result<usize, String> {
     count.checked_mul(12).and_then(|size| size.checked_add(6)).ok_or_else(|| "tiff: directory size overflow".into())
 }
 
+fn values_owned_bytes(value:&TiffValues)->Result<usize,semio_framework_value::ValueError>{
+ use semio_framework_value::{ValueError,ValueRefusalKind};let overflow=||ValueError::new(ValueRefusalKind::OwnershipLimit,"TIFF owned metadata allocation overflow");
+ let bytes=match value{TiffValues::Byte(v)|TiffValues::Undefined(v)=>v.len(),TiffValues::Ascii(v)=>v.iter().try_fold(v.len().checked_mul(std::mem::size_of::<String>()).ok_or_else(overflow)?,|n,text|n.checked_add(text.len()).ok_or_else(overflow))?,TiffValues::SByte(v)=>v.len(),TiffValues::Short(v)=>v.len()*2,TiffValues::SShort(v)=>v.len()*2,TiffValues::Long(v)=>v.len()*4,TiffValues::SLong(v)=>v.len()*4,TiffValues::Float(v)=>v.len()*4,TiffValues::Double(v)=>v.len()*8,TiffValues::Rational(v)=>v.len()*8,TiffValues::SRational(v)=>v.len()*8};Ok(bytes)
+}
+
 fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> Result<usize, String> {
     entries.iter().try_fold(0usize, |total, tag| {
-        let length = value_bytes(&tag.values, bo).len();
+        let length = native_value_count(&tag.values)? as usize * tag.values.kind().element_size();
         total.checked_add(if length <= 4 { 0 } else { length + length % 2 }).ok_or_else(|| "tiff: value layout overflow".into())
     })
 }
@@ -654,8 +481,8 @@ fn storage_values(kind: TiffFieldType, values: &[u32], label: &str) -> Result<Ti
     }
 }
 
-fn storage_tags(ifd: &TiffIfd) -> Result<Vec<TiffTag>, String> {
-    if ifd.storage.kind == TiffStorageKind::None {
+fn storage_tags(ifd: &NativeIfd) -> Result<Vec<TiffTag>, String> {
+    if ifd.storage.kind == NativeStorageKind::None {
         if !ifd.storage.chunks.is_empty() {
             return Err("tiff: none storage cannot own chunks".into());
         }
@@ -665,9 +492,9 @@ fn storage_tags(ifd: &TiffIfd) -> Result<Vec<TiffTag>, String> {
         return Err("tiff: image storage requires at least one chunk".into());
     }
     let (offset_tag, count_tag) = match ifd.storage.kind {
-        TiffStorageKind::Strips => (TAG_STRIP_OFFSETS, TAG_STRIP_BYTE_COUNTS),
-        TiffStorageKind::Tiles => (TAG_TILE_OFFSETS, TAG_TILE_BYTE_COUNTS),
-        TiffStorageKind::None => unreachable!(),
+        NativeStorageKind::Strips => (TAG_STRIP_OFFSETS, TAG_STRIP_BYTE_COUNTS),
+        NativeStorageKind::Tiles => (TAG_TILE_OFFSETS, TAG_TILE_BYTE_COUNTS),
+        NativeStorageKind::None => unreachable!(),
     };
     let zeroes = vec![0; ifd.storage.chunks.len()];
     let counts = ifd.storage.chunks.iter().map(|chunk| u32::try_from(chunk.len()).map_err(|_| "tiff: storage chunk exceeds TIFF6 byte-count width".to_string())).collect::<Result<Vec<_>, _>>()?;
@@ -677,13 +504,13 @@ fn storage_tags(ifd: &TiffIfd) -> Result<Vec<TiffTag>, String> {
     ])
 }
 
-fn encode_tiff_preserving_storage(snapshot: &TiffSnapshot) -> Result<Vec<u8>, String> {
+fn encode_tiff_preserving_storage(snapshot: &NativeSnapshot,c:&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<u8>, String> {
     if snapshot.ifds.is_empty() {
         return Err("tiff: encode requires at least one IFD".into());
     }
-    let mut entries_per_ifd = Vec::with_capacity(snapshot.ifds.len());
+    let mut entries_per_ifd = c.allocate_vec::<Vec<TiffTag>>(snapshot.ifds.len()).map_err(|e|e.to_string())?;
     for ifd in &snapshot.ifds {
-        let mut entries: Vec<TiffTag> = ifd.entries.iter().filter(|tag| !matches!(tag.tag, TAG_STRIP_OFFSETS | TAG_STRIP_BYTE_COUNTS | TAG_TILE_OFFSETS | TAG_TILE_BYTE_COUNTS)).cloned().collect();
+        let mut entries=c.allocate_vec::<TiffTag>(ifd.entries.len()+2).map_err(|e|e.to_string())?;c.begin_stage(ifd.entries.len()).map_err(|e|e.to_string())?;for tag in &ifd.entries{c.charge(values_owned_bytes(&tag.values).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;entries.push(tag.clone());c.step().map_err(|e|e.to_string())?;}c.charge(2*std::mem::size_of::<TiffTag>()+ifd.storage.chunks.len()*16).map_err(|e|e.to_string())?;
         entries.extend(storage_tags(ifd)?);
         entries.sort_by_key(|tag| tag.tag);
         if entries.windows(2).any(|pair| pair[0].tag == pair[1].tag) {
@@ -694,17 +521,17 @@ fn encode_tiff_preserving_storage(snapshot: &TiffSnapshot) -> Result<Vec<u8>, St
     }
 
     let mut cursor = 8usize;
-    let mut directory_offsets = Vec::with_capacity(entries_per_ifd.len());
+    let mut directory_offsets=c.allocate_vec::<usize>(entries_per_ifd.len()).map_err(|e|e.to_string())?;
     for entries in &entries_per_ifd {
         directory_offsets.push(cursor);
         cursor = cursor.checked_add(dir_size(entries.len())?).and_then(|value| value.checked_add(out_of_line_size(entries, snapshot.byte_order).ok()?)).ok_or("tiff: directory layout overflow")?;
     }
     for (ifd_index, ifd) in snapshot.ifds.iter().enumerate() {
-        if ifd.storage.kind == TiffStorageKind::None {
+        if ifd.storage.kind == NativeStorageKind::None {
             continue;
         }
-        let offset_tag = match ifd.storage.kind { TiffStorageKind::Strips => TAG_STRIP_OFFSETS, TiffStorageKind::Tiles => TAG_TILE_OFFSETS, TiffStorageKind::None => unreachable!() };
-        let mut offsets = Vec::with_capacity(ifd.storage.chunks.len());
+        let offset_tag = match ifd.storage.kind { NativeStorageKind::Strips => TAG_STRIP_OFFSETS, NativeStorageKind::Tiles => TAG_TILE_OFFSETS, NativeStorageKind::None => unreachable!() };
+        let mut offsets=c.allocate_vec::<u32>(ifd.storage.chunks.len()).map_err(|e|e.to_string())?;
         for chunk in &ifd.storage.chunks {
             offsets.push(u32::try_from(cursor).map_err(|_| "tiff: storage offset exceeds TIFF6 width")?);
             cursor = cursor.checked_add(chunk.len()).ok_or("tiff: storage layout overflow")?;
@@ -714,11 +541,12 @@ fn encode_tiff_preserving_storage(snapshot: &TiffSnapshot) -> Result<Vec<u8>, St
     }
     u32::try_from(cursor).map_err(|_| "tiff: file exceeds TIFF6 offset width")?;
 
-    let mut out = Vec::with_capacity(cursor);
+    let mut out=c.allocate_vec::<u8>(cursor).map_err(|e|e.to_string())?;c.begin_stage(cursor).map_err(|e|e.to_string())?;
     out.extend_from_slice(match snapshot.byte_order { TiffByteOrder::LittleEndian => b"II", TiffByteOrder::BigEndian => b"MM" });
     write_u16(&mut out, 42, snapshot.byte_order);
-    write_u32(&mut out, 8, snapshot.byte_order);
+    write_u32(&mut out, if snapshot.ifds.is_empty(){0}else{8}, snapshot.byte_order);c.advance(8).map_err(|e|e.to_string())?;
     for (ifd_index, entries) in entries_per_ifd.iter().enumerate() {
+        let start=out.len();
         if out.len() != directory_offsets[ifd_index] {
             return Err("tiff: directory layout invariant".into());
         }
@@ -727,8 +555,8 @@ fn encode_tiff_preserving_storage(snapshot: &TiffSnapshot) -> Result<Vec<u8>, St
         for tag in entries {
             write_u16(&mut out, tag.tag, snapshot.byte_order);
             write_u16(&mut out, tag.values.kind().to_u16(), snapshot.byte_order);
-            write_u32(&mut out, tag.values.count(), snapshot.byte_order);
-            let bytes = value_bytes(&tag.values, snapshot.byte_order);
+            write_u32(&mut out, native_value_count(&tag.values)?, snapshot.byte_order);
+            c.charge(native_value_count(&tag.values)? as usize*tag.values.kind().element_size()).map_err(|e|e.to_string())?;let bytes = value_bytes(&tag.values, snapshot.byte_order);
             if bytes.len() <= 4 {
                 let mut inline = [0; 4];
                 inline[..bytes.len()].copy_from_slice(&bytes);
@@ -740,16 +568,17 @@ fn encode_tiff_preserving_storage(snapshot: &TiffSnapshot) -> Result<Vec<u8>, St
         }
         write_u32(&mut out, directory_offsets.get(ifd_index + 1).copied().map(u32::try_from).transpose().map_err(|_| "tiff: next IFD offset width")?.unwrap_or(0), snapshot.byte_order);
         for tag in entries {
-            let bytes = value_bytes(&tag.values, snapshot.byte_order);
+            c.charge(native_value_count(&tag.values)? as usize*tag.values.kind().element_size()).map_err(|e|e.to_string())?;let bytes = value_bytes(&tag.values, snapshot.byte_order);
             if bytes.len() > 4 {
                 out.extend_from_slice(&bytes);
                 if bytes.len() % 2 == 1 { out.push(0); }
             }
         }
+        c.advance(out.len()-start).map_err(|e|e.to_string())?;
     }
     for ifd in &snapshot.ifds {
         for chunk in &ifd.storage.chunks {
-            out.extend_from_slice(chunk);
+            for span in chunk.chunks(65536){out.extend_from_slice(span);c.advance(span.len()).map_err(|e|e.to_string())?;}
         }
     }
     if out.len() != cursor {
@@ -758,28 +587,45 @@ fn encode_tiff_preserving_storage(snapshot: &TiffSnapshot) -> Result<Vec<u8>, St
     Ok(out)
 }
 
-pub fn encode_tiff(snapshot: &TiffSnapshot) -> Result<Vec<u8>, String> {
-    encode_tiff_preserving_storage(snapshot)
+fn write_native(snapshot: &NativeSnapshot,c:&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<u8>, String> {
+    encode_tiff_preserving_storage(snapshot,c)
 }
 
-/// 📦 Explicitly converts uncompressed strip chunks to PackBits before preserving the new carrier.
-pub fn encode_tiff_packbits(snapshot: &TiffSnapshot) -> Result<Vec<u8>, String> {
-    let mut converted = snapshot.clone();
-    let ifd = converted.ifds.first_mut().ok_or("tiff: PackBits conversion requires IFD 0")?;
-    if ifd.storage.kind != TiffStorageKind::Strips {
-        return Err("tiff: PackBits conversion requires strip storage".into());
-    }
-    let compression = ifd.entries.iter_mut().find(|tag| tag.tag == TAG_COMPRESSION);
-    if let Some(tag) = compression {
-        tag.values = TiffValues::Short(vec![32773]);
-    } else {
-        ifd.entries.push(TiffTag { tag: TAG_COMPRESSION, values: TiffValues::Short(vec![32773]) });
-    }
-    ifd.storage.chunks = ifd.storage.chunks.iter().map(|chunk| packbits_encode(chunk)).collect();
-    encode_tiff_preserving_storage(&converted)
-}
-//#endregion Encode
 
+/// 📖️ Admits native TIFF once into exact owned sample identities.
+pub fn decode_tiff(data:&[u8])->Result<TiffSnapshot,String>{
+ controlled_decoding::decode_tiff_controlled(data,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).map_err(|error|error.message)
+}
+/// 📤️ Emits an owned TIFF page under explicit physical policy.
+pub fn encode_tiff_with(snapshot:&TiffSnapshot,options:TiffNativeOptions)->Result<Vec<u8>,String>{let mut progress=|_|true;let mut c=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut progress);let native=owned_samples::lower(snapshot,options,&mut c).map_err(|e|e.to_string())?;write_native(&native,&mut c)}
+pub fn encode_tiff(snapshot:&TiffSnapshot)->Result<Vec<u8>,String>{encode_tiff_with(snapshot,TiffNativeOptions::default())}
+pub fn encode_tiff_packbits(snapshot:&TiffSnapshot)->Result<Vec<u8>,String>{encode_tiff_with(snapshot,TiffNativeOptions{compression:TiffCompression::PackBits,..Default::default()})}
+/// 🖼️ Computes an ephemeral display projection from exact owned sample words.
+pub fn decode_tiff_page_rgba(snapshot:&TiffSnapshot,ifd_index:usize)->Result<TiffRgbaPage,String>{
+ snapshot.validate()?;let ifd=snapshot.ifds.get(ifd_index).ok_or("tiff: page index outside owned document")?;
+ let block=ifd.blocks.first().ok_or("tiff: page has no owned samples")?;let channels=block.channels as usize;let mut depths=ifd.integers(TAG_BITS_PER_SAMPLE);if depths.is_empty(){depths.push(1)}if depths.len()==1{depths.resize(channels,depths[0])}let mut formats=ifd.integers(339);if formats.is_empty(){formats.push(1)}if formats.len()==1{formats.resize(channels,formats[0])}
+ let photo=ifd.integer(TAG_PHOTOMETRIC).unwrap_or(1);let palette=ifd.integers(320);let mut pixels=Vec::with_capacity(block.width as usize*block.height as usize*4);
+ for sample in block.samples.chunks_exact(channels){
+  let display=|lane:usize|->u8{let word=sample[lane].word();let value=match formats[lane]{3=>if depths[lane]==16{let sign=if word&32768!=0{-1.0}else{1.0};let exponent=(word>>10)&31;let fraction=word&1023;sign*match exponent{0=>fraction as f64*2f64.powi(-24),31=>if fraction==0{f64::INFINITY}else{f64::NAN},_=> (1.0+fraction as f64/1024.0)*2f64.powi(exponent as i32-15)}}else if depths[lane]==32{f32::from_bits(word as u32)as f64}else{f64::from_bits(word)},2=>{let sign=1u64<<(depths[lane]-1);let maximum=(sign-1)as f64;let signed=if depths[lane]==64{word as i64}else{((word<<(64-depths[lane]))as i64)>>(64-depths[lane])};((signed as f64+sign as f64)/(maximum+sign as f64)).clamp(0.0,1.0)},_=>{let maximum=if depths[lane]==64{u64::MAX}else{(1u64<<depths[lane])-1};word as f64/maximum as f64}};if value.is_finite(){(value.clamp(0.0,1.0)*255.0).round()as u8}else{0}};
+  let rgba=match photo{
+   0|1 if channels==1=>{let gray=display(0);let gray=if photo==0{255-gray}else{gray};[gray,gray,gray,255]},
+   2 if channels==3||channels==4=>[display(0),display(1),display(2),if channels==4{display(3)}else{255}],
+   3 if channels==1=>{let count=palette.len()/3;let index=sample[0].word()as usize;if count*3!=palette.len()||index>=count{return Err("tiff: indexed color table extent".into())}[(palette[index]as u64*255/65535)as u8,(palette[count+index]as u64*255/65535)as u8,(palette[2*count+index]as u64*255/65535)as u8,255]},
+   _=>return Err("tiff: page photometric display requires its typed projector".into())
+  };pixels.extend_from_slice(&rgba);
+ }
+ Ok(TiffRgbaPage{width:block.width,height:block.height,pixels})
+}
+pub fn encode_tiff_page_png(snapshot:&TiffSnapshot,ifd_index:usize)->Result<TiffPngPage,String>{
+ use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::{PngSnapshot,PngImage,PngColorType};
+ let page=decode_tiff_page_rgba(snapshot,ifd_index)?;
+ let image=PngImage{width:page.width,height:page.height,bit_depth:8,color_type:PngColorType::Rgba,samples:page.pixels.into_iter().map(u16::from).collect(),..PngImage::default()};
+ let bytes=semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&PngSnapshot{schema:"stdio.png".into(),image})?;
+ Ok(TiffPngPage{width:page.width,height:page.height,bytes})
+}
+
+#[path="💾️binary/📸️snapshot/🧬️owned-samples/🦀️.rs"]
+mod owned_samples;
 //#region Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -869,7 +715,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::TiffSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.tiff` parts.
@@ -964,3 +810,6 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: TiffAnalyzer,
     composer: TiffComposer,
 );
+
+#[path="💾️binary/📸️snapshot/📠️fax/🦀️.rs"]
+mod fax;

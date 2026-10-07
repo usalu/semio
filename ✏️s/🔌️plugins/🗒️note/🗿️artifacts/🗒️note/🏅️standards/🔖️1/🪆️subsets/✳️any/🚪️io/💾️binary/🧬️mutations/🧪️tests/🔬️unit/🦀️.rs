@@ -15,7 +15,7 @@ async fn note_document_text_round_trips_store_with_applied_operation() {
     // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` installs
     // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.
-    let mut doc_store = crate::standards::v1::subsets::any::io::binary::snapshot::new_note_store(envelope).await.expect("valid artifact store fixture");
+    let mut doc_store = crate::host::owned::new_note_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_spacing(Some(48.0))], transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
@@ -34,7 +34,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` installs
     // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.
-    let mut doc_store = crate::standards::v1::subsets::any::io::binary::snapshot::new_note_store(envelope).await.expect("valid artifact store fixture");
+    let mut doc_store = crate::host::owned::new_note_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_spacing(Some(48.0))], transaction: None }).await.expect("apply");
     let edit: &Edit<NoteMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;

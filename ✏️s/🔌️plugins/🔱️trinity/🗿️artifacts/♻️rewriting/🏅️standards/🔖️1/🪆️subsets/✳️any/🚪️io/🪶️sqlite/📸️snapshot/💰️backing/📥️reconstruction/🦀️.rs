@@ -47,7 +47,7 @@ fn jack(id:i64,read:&mut Reader<'_,'_,'_>)->Result<JackSnapshot,ValueError>{
  let child=read.rows.body(19,id,read.control)?;
  let child_id=read.text(child,2)?;let artifact_id=read.text(child,3)?;let artifact_kind=read.text(child,4)?;let standard=read.text(child,5)?;let subset=read.text(child,6)?;
  if artifact_kind!="s.stdio.semio"||standard!="v1"||subset!="graph"{return Err(invalid("Jack child requires its exact Semio graph dialect"))}
- let content=JackContentChild::new(child_id,semio_framework_os_kernel::os_io::ArtifactRef{artifact_id,dialect:semio_framework_os_kernel::os_io::ArtifactDialect{artifact_kind,standard,subset}});
+ let content=JackContentChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}});
  let mut manifest=DecodedValue::new(Manifest::default(),retire);
  let rows=read.rows.children(20,id,true,read.control)?;manifest.get_mut().node_kinds=transfer::reserve(rows.len(),read.control)?;
  for row in rows{

@@ -94,6 +94,14 @@ class HistoryEditActionsTestScript extends BundleScript {
   }
 }
 
+/** 📈️ Verifies optional semantic-work wire preservation and neutral EN/DE status copy. */
+class HistoryProgressTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-history-progress accepts no arguments");
+    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "-E", "test(kernel::history_patch_tests::every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips) | test(kernel::history_reprojection_tests::)"]);
+  }
+}
+
 /** 🧬️ Runs the mutation-input corpus (`🧫️fixtures/🧫️mutation-inputs`) through the TypeScript reader with the npm `jsonschema` and strict Ajv oracles, the Python `jsonschema` oracle, then the Rust reader. */
 class MutationInputsTestScript extends BundleScript {
   async run(): Promise<void> {
@@ -250,6 +258,6 @@ class SourceProjectionScript extends BundleScript {
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

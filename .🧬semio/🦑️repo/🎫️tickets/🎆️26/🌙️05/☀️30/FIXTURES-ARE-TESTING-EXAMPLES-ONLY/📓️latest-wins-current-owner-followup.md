@@ -1,0 +1,29 @@
+# Latest-Wins Current Source Owner Followup
+
+The latest-wins helper remains red at the required no-await publication boundary. The prior task observed a red run before late constant-wrapper cleanup and another afterwards; neither establishes a pre-task production baseline. This followup changes only the TypeScript source oracle and ticket verifier. Production Rust was not edited.
+
+## Actual Ownership And Retargeted Obligations
+
+The source predicate now requires dispatch to call `admit_typed_operation_slot` after live-instance, complete-pipeline and verb-identity admission, before exact target-key cancellation binding, slot reservation and latest-wins enqueue. Admission checks queue allocation and the shared `ARTIFACT_LIVE_OUTPUT_SLOTS` bound, scans only that many slots, requires vacancy in all five authorities (operation, reservation, latest-wins, segmented download and closure), and allocates the operation id in the admitted residue class. A hostile move of admission after enqueue is rejected.
+
+Publication selection uses `next_advanceable_typed_operation`, scanning `0..ARTIFACT_LIVE_OUTPUT_SLOTS` from the publication cursor with modulo wrapping. It selects an exact occupied registry entry and skips AwaitingAck, then advances the cursor within the same bound. Result selection uses the same bounded scan and exact receiver ownership, excludes already-presented or absent pages, advances the result cursor, and calls the selected operation's one-delivery method.
+
+Current `MountedTypedCommandFullOperation` has no `has_runnable_work` method. That name currently belongs to `ActiveArtifactEnvelopeDecodeState`, so it is not an admissible owner for the mounted ACK law. The oracle explicitly selects the Mounted impl for `take_result_page` and `reject_cancelled_publication`, and the `PluginApp for VcsArtifactApp` impl for `has_runnable_typed_operations`. The latter retains pending operations with `!self.tool_operations.is_empty()` even after a page is presented. Native `a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work` and `a_status_only_host_call_finishes_every_typed_operation_it_admitted` remain required: their actual helpers assert no parked pending work and a nonvacuous terminal landing. Thus ACK status stays runnable without republishing the page or starving siblings.
+
+## Preserved No-Await Boundary
+
+Current production owner is `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`. `publish_mounted_typed_operation_unit` at line 32627 is async. At line 32632 it claims a `ToolPublicationScopePermit` holding app, optional document and exact operation publication claims. A permit uses CAS 0→1 and clears the occupied bit only in Drop. The publisher holds a mutable mounted completion/publication borrow, validates freshness, and performs one publication step under that permit. At lines 33047–33048 its task lane removes one task from the Emit owner and awaits `reactor::spawn_task` before leaving the claim scope. The caller also removes the mounted operation from its registry before awaiting publication and returns it afterwards.
+
+The synchronous one-step law protects freshness, cancellation authority, bounded ownership transfer and publication from an async suspension while these claims and borrows are live. That source law is concretely violated and remains enforced; the helper has not been made green by permitting async publication or dropping the no-await assertion. If a nested task-admission await suspends, the permit remains occupied and the mounted/task owners remain transferred until completion; future cancellation or drop would require an explicit retained handback design. This is a structural risk, not an observed runtime failure.
+
+The current `reactor::spawn_task` function at reactor/🦀️.rs:820 awaits `instance_task_quota`, `AsyncTask::into_parts`, and `host_for_instance` / `Host::new`. Inspected current bodies are ready wrappers (metadata lookup, field decomposition, registry clone, Poll-host construction); none contains a pending wait. The installed task future's later await runs under the reactor executor, after task installation, and does not prove the publisher suspended. No actual suspension/cancellation failure was observed. Production owners must decide the synchronous publication/task-admission implementation; this fixture canonicalization leaves their Rust untouched.
+
+## Executed Verification
+
+Actual isolated Nx route: ticket `📜️script.ts --expanded-owner-checks --owner-filter toolJobLatestWinsSelfTests`, running the authored helper. Result: RED at the preserved no-await check after 46 current positive source obligations, all 46 token-removal controls and the hostile admission-order control passed. The downstream raw/child/store/dispatch guards remain byte-for-byte preserved and are not claimed to have executed beyond this failing check.
+
+Actual renderer wgpu `📜️script.ts test-browser 🧪️tests/🧩️embedded-selection/🟦️.ts` via isolated Nx: GREEN 8/8 in 221 ms. Removed only the six-prefixItems whole-example schema and its Ajv admission. Replaced admission-only callback with a concrete input-preservation assertion. Six selection cases, descriptor parity and withdrawal assertions remain byte-for-byte unchanged. Plain example JSON remains inert test data.
+
+Ticket `📜️script.ts --latest-wins-followup-integrity` via isolated Nx: GREEN, two consumers, zero TypeScript parser errors; downstream latest-wins laws and existing embedded-selection behavioral assertions byte-for-byte retained.
+
+Logs: generated/latest-wins-current-owner-recheck.log, generated/embedded-selection-behavior-recheck.log, generated/latest-wins-followup-integrity.log. Complete preimages are preserved in `📥️latest-wins-and-embedded-selection-before.json`; final edits in `📥️final-plugin-consumer-edits.json`. No additional genuine schema owners were changed.

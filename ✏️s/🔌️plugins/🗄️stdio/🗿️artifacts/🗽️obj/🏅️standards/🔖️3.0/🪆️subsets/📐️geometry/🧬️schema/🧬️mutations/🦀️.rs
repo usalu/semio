@@ -32,14 +32,13 @@
 use crate::schema::diff::{
     diff_insert_face, diff_insert_normal, diff_insert_texcoord, diff_insert_vertex, diff_remove_face, diff_remove_group, diff_remove_normal, diff_remove_object, diff_remove_texcoord, diff_remove_vertex, diff_set_face, diff_set_group,
     diff_set_mtllib, diff_set_normal, diff_set_object, diff_set_smoothing_groups, diff_set_snapshot, diff_set_texcoord, diff_set_unknown_statements, diff_set_usemtl, diff_set_vertex, face_diff_between, normal_diff_between, texcoord_diff_between,
-    vertex_diff_between, ObjDiff,
-};
+    vertex_diff_between, ObjDiff};
 use crate::schema::snapshot::{ObjFace, ObjNormal, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 #[cfg(test)]
 use crate::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
 use crate::ObjSnapshot;
 use protocol::{Mutation, MutationDiff};
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -489,3 +488,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/🏗️lifts/🦀️.rs"]
 mod set_snapshot_lifts_the_third_vertex_and_gives_it_an_explicit_w;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

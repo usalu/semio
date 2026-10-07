@@ -1,7 +1,7 @@
 //! 👁️ Unmounted typed child read authority retains an existing owner capability.
 use std::sync::Arc;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::os_io::{ArtifactRef,ArtifactDialect};
+use {semio_framework_artifact_reference::ArtifactRef,semio_framework_artifact_reference::ArtifactDialect};
 pub trait ArtifactChildSnapshotOwner<S>:Send+Sync {
  fn slot(&self)->&str;
  fn child_id(&self)->&str;

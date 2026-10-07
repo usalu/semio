@@ -5,7 +5,7 @@
 
 use crate::editor::tiff_any::modes::edit;
 use crate::editor::tiff_any::modes::edit::windows::main;
-use crate::standards::v6_0::subsets::document::schema::mutations::{ChangeByteOrderMutation, InsertIfdMutation, RemoveIfdMutation, RemoveTagMutation, ReplaceTagMutation, TiffMutation};
+use crate::standards::v6_0::subsets::document::schema::mutations::{InsertIfdMutation, RemoveIfdMutation, RemoveTagMutation, ReplaceTagMutation, TiffMutation};
 use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffIfd, TiffSnapshot, TiffTag};
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -27,7 +27,7 @@ use semio_framework_plugin::ToolOperationSpec;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
@@ -189,9 +189,6 @@ fn tiffAnyEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &Tif
 /// edit publishes as a path-scoped patch (design §19.3: a whole-record leaf for one field masks history edits of its siblings).
 fn tiffAnyEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: &TiffSnapshot, base: &TiffSnapshot) -> Option<TiffMutation> {
     let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
-    if path == "/byteOrder" {
-        return Some(TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: next.byte_order }));
-    }
     let (ifd, entry, None) = tiffAnyEditor_entry_path(path)? else { return None };
     let ifd_index = tiffAnyEditor_index(ifd, base.ifds.len(), false).ok()?;
     let entry = tiffAnyEditor_index(entry, next.ifds[ifd_index].entries.len(), false).ok()?;
@@ -331,8 +328,8 @@ impl ArtifactEditor for TiffAnyEditor {
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation))
+    fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str { tiffAnyEditor_command_id(command) }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiffAnyEditor_command_from_action(action, args) }

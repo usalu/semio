@@ -43,55 +43,6 @@
     "volumeTolerance": 1e-05,
     "registeredProfileCount": 1
   },
-  "caseSchema": {
-    "type": "object",
-    "required": [
-      "profile",
-      "area",
-      "distances"
-    ],
-    "properties": {
-      "profile": {
-        "enum": [
-          "rectangle-wire",
-          "hexagon-wire",
-          "rectangle-face"
-        ]
-      },
-      "width": {
-        "type": "number",
-        "exclusiveMinimum": 0
-      },
-      "height": {
-        "type": "number",
-        "exclusiveMinimum": 0
-      },
-      "radius": {
-        "type": "number",
-        "exclusiveMinimum": 0
-      },
-      "sides": {
-        "type": "integer",
-        "minimum": 3
-      },
-      "area": {
-        "type": "number",
-        "exclusiveMinimum": 0
-      },
-      "distances": {
-        "type": "array",
-        "minItems": 3,
-        "items": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        }
-      }
-    },
-    "additionalProperties": false,
-    "x-semio-formats": [
-      "json"
-    ]
-  },
   "x-semio-formats": [
     "json"
   ]

@@ -1,5 +1,5 @@
 use super::*;
-use crate::dsl::{os_io::ArtifactDialect, ArtifactPack, SpaceMember};
+use {semio_framework_artifact_reference::ArtifactDialect,crate::dsl::ArtifactPack,crate::dsl::SpaceMember};
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -71,13 +71,13 @@ async fn every_composable_subset_dispatches_to_a_real_child_store() {
         let dialect = subset_dialect(subset);
         // An empty pack is rejected by the production member, so this asserts the DISPATCH
         // reached a real typed variant rather than falling through to "no member kind".
-        let error = match create_semio_member("probe", &dialect, &[]).await {
+        let error = match create_semio_member("probe", &dialect, &[], protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await {
             Ok(_) => panic!("empty genesis pack must be rejected"),
             Err(error) => error,
         };
         assert!(!error.to_string().contains("no member dialect"), "subset {subset} is not wired into the child-store dispatch");
     }
-    let unknown = match create_semio_member("probe", &subset_dialect("not-a-subset"), &[]).await {
+    let unknown = match create_semio_member("probe", &subset_dialect("not-a-subset"), &[], protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await {
         Ok(_) => panic!("unknown subset must be rejected"),
         Err(error) => error,
     };
@@ -93,11 +93,11 @@ async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
     let dialect = subset_dialect("mesh");
 
     let seed = SemioMeshSnapshot::default();
-    let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack()).await.expect("create child");
+    let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("create child");
     assert_eq!(child.document_id().await, "mesh-child-1");
 
-    let expected = dsl::os_io::ArtifactRef { artifact_id: "mesh-child-1".into(), dialect };
-    let mut reopened = open_semio_member(&expected, None, &child.envelope_pack_bytes().await.expect("envelope pack")).await.expect("reopen child");
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "mesh-child-1".into(), dialect };
+    let mut reopened = open_semio_member(&expected, None, &child.envelope_pack_bytes().await.expect("envelope pack"), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("reopen child");
     assert_eq!(reopened.document_pack_bytes().await.expect("head pack"), child.document_pack_bytes().await.expect("head pack"), "the reopened child diverged from the persisted one");
     let mut child = child;
     close_member(&mut reopened);
@@ -124,10 +124,9 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 
     let seed = SemioValueSnapshot::default();
-    let mut envelope = dsl::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, "value-close-law", seed.clone(), None);
+    let mut envelope = dsl::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, "value-close-law", seed, None);
     envelope.dialect = Some(subset_dialect("value"));
-    let digest = *semio_framework_hash::hash(&seed.encode_pack()).as_bytes();
-    let runtime = dsl::ArtifactStoreInitializationRuntime::new("value-close-law", STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, seed, digest);
+    let runtime = dsl::ArtifactStoreInitializationRuntime::new("value-close-law", STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::MemberStoreOwner<SemioValueMutation>>::member_store_owners());
 
     let first = store.snapshot_read().expect("first snapshot read lease");
@@ -199,10 +198,9 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
     let case: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/close-frontiers/🔣️.json")).expect("independent JSON close corpus");
     let document = case["document"].as_str().unwrap();
     let seed = SemioValueSnapshot::default();
-    let mut envelope = dsl::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, document, seed.clone(), None);
+    let mut envelope = dsl::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, document, seed, None);
     envelope.dialect = Some(subset_dialect("value"));
-    let digest = *semio_framework_hash::hash(&seed.encode_pack()).as_bytes();
-    let runtime = dsl::ArtifactStoreInitializationRuntime::new(document, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, seed, digest);
+    let runtime = dsl::ArtifactStoreInitializationRuntime::new(document, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::MemberStoreOwner<SemioValueMutation>>::member_store_owners());
     for value in case["values"].as_array().unwrap() {
         let snapshot = SemioValueSnapshot { root: SemioValue::Str { value: value.as_str().unwrap().into() }, ..SemioValueSnapshot::default() };

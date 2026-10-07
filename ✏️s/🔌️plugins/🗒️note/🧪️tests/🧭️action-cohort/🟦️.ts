@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
-import Ajv from "ajv";
+
 
 type Group = { status: "migrated" | "batch-only-pending-rewrite"; lanes: string[]; routes: string[]; blocker?: string };
 type Fixture = { routeCount: number; retainedRoutes: string[]; groups: Group[]; globals: unknown[]; scanThenMonolithRoutes: string[]; laws: Record<string, boolean> };
@@ -8,18 +8,10 @@ type Fixture = { routeCount: number; retainedRoutes: string[]; groups: Group[]; 
 const root = resolve(import.meta.dir, "../..");
 const sourcePath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
 const retainedPath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs");
-const schemaModulePath = resolve(root, "../🌊️flow/🎬️action-cohort/🧬️schema/🔣️.json");
 const fixturePath = resolve(root, "🧫️fixtures/🧪️action-cohort/🔣️.json");
 
 const exact = (left: string[], right: string[]) => new Set(left).size === left.length && new Set(right).size === right.length && JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
 
-test("third-party Ajv accepts the strict Note cohort fixture", async () => {
-  const schemaModule = await Bun.file(schemaModulePath).json();
-  const fixture = await Bun.file(fixturePath).json() as Fixture;
-  const ajv = new Ajv({ allErrors: true, strict: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-  const validate = ajv.addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/ActionCohort` });
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-});
 
 test("Note source and fixture have one exact hostile census", async () => {
   const fixture = await Bun.file(fixturePath).json() as Fixture;

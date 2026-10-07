@@ -46,8 +46,8 @@ export const EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX = ".exact-cargo-laws-acti
 export const EXACT_CARGO_ACTIVE_LEASE_MANIFEST = "lease.json";
 export const EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS = 120_000;
 
-/** 🛡️ Recognizes only a fresh lease owned by a live exact-Cargo runner process. */
-export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
+/** 🛡️ Recognizes fresh process-bound output for exact Cargo and managed verification owners. */
+export function generatedOutputHasLiveLease(root: string): boolean {
   const stack = [{ path: root, depth: 0 }];
   while (stack.length > 0) {
     const current = stack.pop()!;
@@ -59,6 +59,19 @@ export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
     }
     for (const name of names) {
       const path = join(current.path, name);
+      if (name === "state.json" && current.path.includes(`${sep}managed-verification${sep}`)) {
+        try {
+          const state = lstatSync(path);
+          if (!state.isFile() || state.isSymbolicLink() || state.size > 65_536) continue;
+          const manifest = JSON.parse(readFileSync(path, "utf8")) as { status?: unknown; pid?: unknown };
+          if (!["scheduled", "running"].includes(String(manifest.status)) || !Number.isSafeInteger(manifest.pid) || Number(manifest.pid) < 1) continue;
+          const output = manifest.status === "scheduled" ? state : lstatSync(join(current.path, "output.log"));
+          if (!output.isFile() || output.isSymbolicLink() || Date.now() - output.mtimeMs > EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS || output.mtimeMs - Date.now() > 5_000) continue;
+          try { process.kill(Number(manifest.pid), 0); return true; }
+          catch (error) { if ((error as NodeJS.ErrnoException).code === "EPERM") return true; }
+        } catch {}
+        continue;
+      }
       let state;
       try {
         state = lstatSync(path);
@@ -301,4 +314,3 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
     endLease();
   }
 }
-

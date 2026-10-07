@@ -6,7 +6,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_block2d_mutation, inverse_block2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_block2d_mutation,inverse_block2d_mutation};
+
 use crate::Block2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-compatibility-rule/🧪️revokes/📸️snapshot/⬅️before/🔣️.json");

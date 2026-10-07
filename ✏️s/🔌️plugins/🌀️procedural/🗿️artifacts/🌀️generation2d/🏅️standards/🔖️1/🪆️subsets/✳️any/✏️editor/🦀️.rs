@@ -43,7 +43,7 @@ use semio_framework_plugin::ArtifactToolCompletion;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::CommandDefinition;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DomainTopology;
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
@@ -1430,7 +1430,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_envelope_decode_owner_bundle())
+        Some(crate::host::owned::generation2d_envelope_decode_owner_bundle())
     }
 
     /// 🧠️ One retained `FlowEvalSession` per app instance — see [`Generation2dInstanceOperationOwner`].
@@ -1439,7 +1439,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_owners())
+        Some(crate::host::owned::generation2d_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1454,14 +1454,15 @@ impl ArtifactEditor for Generation2dPlayApp {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::host::owned::generation2d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::standards::v1::subsets::any::io::binary::mutations::generation2d_validate_atomic_publication_authority(operation, generation, live_generation)
+        crate::host::owned::generation2d_validate_atomic_publication_authority(operation, generation, live_generation)
             .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation2d atomic publication authority is absent or stale"))?;
-        crate::standards::v1::subsets::any::io::binary::mutations::generation2d_release_app_publication_authority(operation);
+        crate::host::owned::generation2d_release_app_publication_authority(operation);
         Ok(())
     }
 
@@ -1844,7 +1845,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, Generation2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
         match port {
             "drawing:out" => {
-                let eval_json = crate::standards::v1::subsets::any::schema::evaluate_generation_preview(&doc.snapshot.host_snapshot, &semio_framework_artifact_playbook_playbook::PlaybookValues::new());
+                let eval_json = crate::standards::v1::subsets::any::io::text::snapshot::evaluate_generation_preview(&doc.snapshot.host_snapshot, &semio_framework_artifact_playbook_playbook::PlaybookValues::new());
                 let layers_json = crate::standards::v1::subsets::any::io::text::snapshot::generation_output_layers(&doc.snapshot.host_snapshot, &eval_json);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }

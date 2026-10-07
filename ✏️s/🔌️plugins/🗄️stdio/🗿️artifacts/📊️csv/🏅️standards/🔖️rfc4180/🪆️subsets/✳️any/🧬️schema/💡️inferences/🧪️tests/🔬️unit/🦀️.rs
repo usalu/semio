@@ -45,7 +45,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         // Pack (snapshot binary facet).
-        let snap = snapshot::demo_csv_snapshot();
+        let snap = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::demo_csv_snapshot();
         let pack_bytes = <snapshot::CsvSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
         let pack_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_rfc4180::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
@@ -73,7 +73,7 @@ mod conformance_laws {
     /// ways (never allowed to silently drift again).
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        let demo = snapshot::demo_csv_snapshot();
+        let demo = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::demo_csv_snapshot();
         assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap(), demo);
         assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::examples::demo::PRIMARY_TEXT);
 

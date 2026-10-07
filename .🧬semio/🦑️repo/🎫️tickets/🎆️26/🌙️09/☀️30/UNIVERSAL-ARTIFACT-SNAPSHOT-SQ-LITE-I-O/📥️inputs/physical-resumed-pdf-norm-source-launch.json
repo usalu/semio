@@ -1,0 +1,10 @@
+{
+  "command": "SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-source-artifacts' bun run nx run-many --target=test-snapshot-sqlite-source --projects='@semio-tech/stdio-pdf-rs,@semio-tech/norm-en1990-rs,@semio-tech/norm-en1996-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-norm-source.log' 2>&1",
+  "projects": [
+    "@semio-tech/stdio-pdf-rs",
+    "@semio-tech/norm-en1990-rs",
+    "@semio-tech/norm-en1996-rs"
+  ],
+  "at": "2026-10-06T11:35:27.434424+00:00",
+  "scope": "Exact registered current PDF full13file owner Source and EN90/EN96 unentered owner Source; unchanged quick limits"
+}

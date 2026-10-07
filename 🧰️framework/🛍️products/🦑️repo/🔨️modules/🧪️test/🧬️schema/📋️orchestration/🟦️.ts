@@ -227,7 +227,7 @@ const MUTATION_INPUT_NUMBER_WIDGETS = new Set(["slider", "stepper", "dial"]);
 const MUTATION_INPUT_ITEM_FACETS = new Set(["unit", "step", "precision", "snaps", "snapSource", "displayUnit", "displayFactor"]);
 const MUTATION_INPUT_INFERENCE_CODES: ReadonlySet<string> = new Set(["numericUndeclared"]);
 const MUTATION_INPUT_LABEL_REFUSALS: ReadonlySet<string> = new Set(["labelMissing", "localeMissing"]);
-const MUTATION_INPUT_VOCABULARY = "🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧬️vendor-annotation-vocabulary/🔣️.json";
+const MUTATION_INPUT_VOCABULARY = "🧰️framework/🔨️modules/🧬️schema/🧬️vendor-annotation-vocabulary/🔣️.json";
 
 /**
  * 🎚️ Every leaf input of the mutation payload schema `root` with the source of each UI fact — the gate's own walk of the schema,
@@ -402,7 +402,7 @@ export function mutationInputMultilineArmed(): boolean {
 }
 
 /** 🗝️ The widgets of the strict vocabulary: the `widget` enum of the `x-semio-ui` meta-schema the vendor-annotation vocabulary
- * fixture registers, its `$ref` followed through `resolve`. Throws when the fixture states none — the gate never falls back to a list of its own. */
+ * domain vocabulary registers, its `$ref` followed through `resolve`. Throws when the vocabulary states none — the gate never falls back to a list of its own. */
 export function mutationInputWidgetVocabulary(repoRoot: string, resolve: (id: string) => Record<string, unknown> | undefined): ReadonlySet<string> {
   const keywords = readJsonObject(repoRoot, MUTATION_INPUT_VOCABULARY)?.keywords;
   let node: unknown = isRecord(keywords) ? keywords["x-semio-ui"] : undefined;

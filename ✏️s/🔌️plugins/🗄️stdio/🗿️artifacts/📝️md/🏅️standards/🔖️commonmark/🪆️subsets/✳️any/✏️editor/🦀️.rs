@@ -8,7 +8,8 @@
 use crate::editor::md::modes::edit;
 use crate::editor::md::modes::edit::windows::main;
 use crate::standards::v_commonmark::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
-use crate::standards::v_commonmark::subsets::any::schema::mutations::{insert_block, remove_block, replace_block, set_inlines, MdMutation, MdPathStep};
+use crate::standards::v_commonmark::subsets::any::schema::mutations::{insert_block,remove_block,replace_block,set_inlines,MdMutation,MdPathStep};
+
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdBlock;
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
@@ -24,7 +25,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;

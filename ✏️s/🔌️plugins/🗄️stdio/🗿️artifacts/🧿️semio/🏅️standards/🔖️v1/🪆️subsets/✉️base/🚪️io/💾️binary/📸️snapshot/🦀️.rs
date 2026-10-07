@@ -2,6 +2,8 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
+const PACK_BINARY_FORMAT: u8 = 1;
+
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
@@ -26,31 +28,7 @@ use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
 
-/// 🔢️ The binary sibling of [`subset_tag`] — a real, individually protocol-walkable `u8` ordinal
-/// (0-13, enum declaration order), used by the binary pack header instead of a length-prefixed name.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
-    match s {
-        SemioSubsetSnapshot::Brep(_) => 0,
-        SemioSubsetSnapshot::Mesh(_) => 1,
-        SemioSubsetSnapshot::Model(_) => 2,
-        SemioSubsetSnapshot::Value(_) => 3,
-        SemioSubsetSnapshot::Document(_) => 4,
-        SemioSubsetSnapshot::Cad(_) => 5,
-        SemioSubsetSnapshot::Drawing(_) => 6,
-        SemioSubsetSnapshot::Image(_) => 7,
-        SemioSubsetSnapshot::Video(_) => 8,
-        SemioSubsetSnapshot::Audio(_) => 9,
-        SemioSubsetSnapshot::Animation(_) => 10,
-        SemioSubsetSnapshot::Presentation(_) => 11,
-        SemioSubsetSnapshot::Flow(_) => 12,
-        SemioSubsetSnapshot::Text(_) => 13,
-        SemioSubsetSnapshot::Table(_) => 14,
-        SemioSubsetSnapshot::Graph(_) => 15,
-        SemioSubsetSnapshot::Object(_) => 16,
-        SemioSubsetSnapshot::Kit(_) => 17,
-    }
-}
+
 
 /// 🧪️ Real varint-length-prefixed binary envelope: `format u8` + `tag u8` (real
 /// [`subset_ordinal`]) + varint-length-prefixed `schema` UTF-8, then the WRAPPED subset's own

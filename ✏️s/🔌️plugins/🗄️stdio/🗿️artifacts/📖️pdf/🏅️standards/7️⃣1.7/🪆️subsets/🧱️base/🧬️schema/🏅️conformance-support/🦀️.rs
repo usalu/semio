@@ -77,7 +77,7 @@ pub fn dict_name<'a>(value: &'a PdfObject, key: &str) -> Option<&'a str> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn dict_text(value: &PdfObject, key: &str) -> Option<String> {
     match value.dict_get(key)? {
-        PdfObject::Str(bytes) => Some(String::from_utf8_lossy(bytes).into_owned()),
+        PdfObject::Text(text) => Some(text.clone()),
         _ => None,
     }
 }
@@ -162,7 +162,7 @@ pub fn dict(entries: Vec<(&str, PdfObject)>) -> PdfObject {
 /// 🔤️ A literal string object.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn literal(text: &str) -> PdfObject {
-    PdfObject::Str(text.as_bytes().to_vec())
+    PdfObject::Text(text.to_owned())
 }
 //#endregion 🔖️Catalog
 

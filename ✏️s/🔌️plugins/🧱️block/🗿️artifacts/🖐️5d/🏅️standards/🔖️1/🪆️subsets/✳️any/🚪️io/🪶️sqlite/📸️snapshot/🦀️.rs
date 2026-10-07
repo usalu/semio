@@ -524,7 +524,7 @@ impl ArtifactSqliteSnapshot for Block5dSnapshot {
         rows.finish(c)?;
         Ok(Self { schema, part_kind, part_2d, part_3d, representations, grip_kinds, grips, compatibility: rules, attributes, authors, camera2d, camera3d, meta })
     }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.block.block5d" || dialect.standard != "1" || dialect.subset != "*" {
             return Err(store::io_schema::IoError::from_value_error(invalid("Block5d declared dialect differs")));

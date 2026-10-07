@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "cases",
+    "expected"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "block2d-representation-ownership"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "const": {
+            "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+            "from": "standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_",
+            "to": "standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_",
+            "count": 2,
+            "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
+            "symbols": [
+              {
+                "type": "const_item",
+                "name": "COMPONENT_GRAMMAR_SEMIO"
+              },
+              {
+                "type": "const_item",
+                "name": "COMPONENT_GRAMMAR_PATH"
+              }
+            ]
+          }
+        },
+        {
+          "const": {
+            "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "from": "crate::standards::v1::subsets::any::schema::snapshot::text::",
+            "to": "crate::standards::v1::subsets::any::io::text::snapshot::",
+            "count": 2,
+            "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+            "symbols": [
+              {
+                "type": "function_item",
+                "name": "parse_dsl"
+              },
+              {
+                "type": "const_item",
+                "name": "BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT"
+              }
+            ]
+          }
+        }
+      ],
+      "additionalItems": false
+    },
+    "expected": {
+      "const": {
+        "retiredReferences": 0,
+        "conserveFunctions": true,
+        "conserveAssertions": true
+      }
+    }
+  }
+}

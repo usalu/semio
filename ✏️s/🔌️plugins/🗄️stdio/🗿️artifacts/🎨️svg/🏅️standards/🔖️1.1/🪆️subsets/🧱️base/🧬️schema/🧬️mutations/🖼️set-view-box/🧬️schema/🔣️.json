@@ -32,22 +32,12 @@
     "viewBox": {
       "anyOf": [
         {
-          "$ref": "#/$defs/ViewBox"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json#/$defs/ViewBox"
         },
         {
           "type": "null"
         }
-      ],
-      "x-semio-ui": {
-        "label": {
-          "en": "View box",
-          "de": "Ansichtsrahmen (viewBox)"
-        },
-        "description": {
-          "en": "User-space rectangle mapped onto the viewport.",
-          "de": "Rechteck im Benutzerraum, das auf den Viewport abgebildet wird."
-        }
-      }
+      ]
     }
   },
   "$defs": {

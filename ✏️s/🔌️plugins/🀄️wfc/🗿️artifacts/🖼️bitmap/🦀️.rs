@@ -18,7 +18,7 @@ extern crate semio_framework_os_kernel as vcs;
 pub use crate::schema::snapshot::WFC_BITMAP_DOCUMENT_SCHEMA;
 
 use crate::schema::snapshot::{BitmapColor, BitmapPinnedPixel};
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 //#region 🔖️Dialect
 /// 🪪️ The canonical surface-id coordinate for this artifact's ONE subset — `s.wfc.bitmap@1/*`.
@@ -178,7 +178,7 @@ impl<PA> ArtifactApps for PA where
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.bitmap").expect("canonical wfc bitmap kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 

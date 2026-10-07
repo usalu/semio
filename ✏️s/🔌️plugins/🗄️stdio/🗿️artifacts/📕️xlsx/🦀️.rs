@@ -90,9 +90,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(standards::v_ecma_376::subsets::base::io::io_registry::entries())
         .subset_validators(xlsx_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("strict") })
-        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("transitional") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("strict") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("transitional") })
         .try_build()
 }
 
@@ -125,28 +125,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.xlsx",
                     extension: Some("xlsx"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.diff"),
@@ -157,8 +157,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -167,8 +167,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.spr"),
                 },
             ]
@@ -200,7 +200,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -227,18 +227,6 @@ pub mod io_registry {
 pub mod standards {
     #[path = "."]
     pub mod v_ecma_376 {
-        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-        // `XlsxEngine` (zero construction sites) deleted outright; `register()`/
-        // `register_artifact_inferences()`/`register_pilot_languages()` were already orphaned
-        // (superseded by `xlsx::declaration()`) and deleted outright too; `build_minimal_xlsx`/
-        // `encode_xlsx` + the `*_to_xml` mapping moved to `subsets::any::io::export::
-        // serializers`; `decode_xlsx`/`sniff_xlsx_bytes` + the `*_from_xml` mapping moved to
-        // `subsets::any::io::import::deserializers`; `XlsxError` + shared OPC/XML constants +
-        // `column_letter`/`column_index` moved to `subsets::any::io`; `io_registry` moved to
-        // `subsets::any::io`; `empty_xlsx_snapshot`/`demo_xlsx_snapshot` + tests moved to
-        // `subsets::any::schema`. xlsx is NOT one of stdio's 10 protected imperative
-        // plugin-root `engine::register()` calls, so no `engine` shim remains — external
-        // callers only ever reached `XlsxSnapshot`/`STDIO_XLSX_DOCUMENT_SCHEMA` (unaffected).
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -248,6 +236,12 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
                     mod component;
                     pub use component::*;
+                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🗣️vocabulary/🦀️.rs"]
+                    pub mod vocabulary;
+                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🛡️refusal/🦀️.rs"]
+                    pub mod refusal;
+                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🏗️construction/🦀️.rs"]
+                    pub mod construction;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
@@ -256,6 +250,8 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod inferences {
+                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📘️workbook/🦀️.rs"]
+                        pub mod workbook;
                         #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;

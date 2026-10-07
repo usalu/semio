@@ -104,7 +104,7 @@ impl OpBinary for CsvMutation {
         let mut w = dsl::ByteWriter::new();
         match self {
             CsvMutation::PatchSnapshot(payload) => {
-                w.write_u8(patch_snapshot::binary::BINARY_TAG);
+                w.write_u8(super::patch_snapshot::BINARY_TAG);
                 w.write_bytes(&payload.patch.encode_op()?);
             }
             CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
@@ -138,7 +138,7 @@ impl OpBinary for CsvMutation {
         let mut r = dsl::ByteReader::new(bytes);
         let ordinal = r.read_u8().map_err(protocol::ProtocolError::from)?;
         let mutation = match ordinal {
-            patch_snapshot::binary::BINARY_TAG => return patch_snapshot::binary::decode(&bytes[1..]),
+            super::patch_snapshot::BINARY_TAG => return super::patch_snapshot::decode(&bytes[1..]),
             TAG_SET_SNAPSHOT => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(protocol::ProtocolError::from)? }),
             TAG_SET_HAS_HEADER => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(protocol::ProtocolError::from)? != 0 }),
             TAG_INSERT_RECORD => {

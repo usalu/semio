@@ -346,7 +346,7 @@ fn read_child<S>(row: &SqliteRow, ordered: bool, subset: &str, c: &mut SqliteSna
     }
     Ok(store::ArtifactChild::new(
         text(row, 2 + offset, c)?,
-        store::io_schema::ArtifactRef { artifact_id: text(row, 3 + offset, c)?, dialect: store::io_schema::ArtifactDialect { artifact_kind: text(row, 4 + offset, c)?, standard: text(row, 5 + offset, c)?, subset: text(row, 6 + offset, c)? } },
+        semio_framework_artifact_reference::ArtifactRef { artifact_id: text(row, 3 + offset, c)?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: text(row, 4 + offset, c)?, standard: text(row, 5 + offset, c)?, subset: text(row, 6 + offset, c)? } },
     ))
 }
 pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Process3dSnapshot, ValueError> {

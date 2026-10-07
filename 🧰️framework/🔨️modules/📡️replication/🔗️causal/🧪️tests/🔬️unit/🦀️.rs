@@ -425,7 +425,7 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
         id: "edit-1".into(),
         actor: Some("actor-fallback".into()),
         forwards: vec![CausalAddOp { delta: 1 }, CausalAddOp { delta: 2 }],
-        inverse: vec![CausalAddOp { delta: -1 }, CausalAddOp { delta: -2 }],
+        inverse: vec![CausalAddOp { delta: -1 }, CausalAddOp { delta: -2 }].into(),
         mutation_meta: vec![
             crate::mutation::MutationMeta {
                 mutation_id: Some(crate::ids::MutationId("op-a".into())),
@@ -488,7 +488,7 @@ fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_wi
         id: "edit-2".into(),
         actor: None,
         forwards: vec![CausalAddOp { delta: 5 }],
-        inverse: vec![],
+        inverse: Default::default(),
         mutation_meta: vec![], verb: None, line: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -512,7 +512,7 @@ fn mutation_envelope_from_edit_propagates_an_encode_failure() {
         id: "edit-3".into(),
         actor: None,
         forwards: vec![CausalAddOp { delta: 1 }],
-        inverse: vec![],
+        inverse: Default::default(),
         mutation_meta: vec![], verb: None, line: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),

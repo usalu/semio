@@ -7,7 +7,7 @@ mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::flow::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ P2 pilot (flow, the FIRST semio subset upgraded): real hex/bracket-encoded value
@@ -222,8 +222,8 @@ mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::flow::schema::snapshot::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use framework_schema::ArtifactSchema;
 
 

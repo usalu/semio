@@ -1,6 +1,6 @@
 //! 🏷️ Direct text codec for `set-info-title`.
 
-use super::SetInfoTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetInfoTitle;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-info-title";

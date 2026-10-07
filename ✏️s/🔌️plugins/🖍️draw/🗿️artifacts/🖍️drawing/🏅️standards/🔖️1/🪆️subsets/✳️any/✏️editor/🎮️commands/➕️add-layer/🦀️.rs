@@ -50,8 +50,8 @@ pub(crate) fn identify_created_layer(document: &DrawingSnapshot, layer: &mut cra
     loop {
         let mut candidate = material.clone();
         candidate.extend_from_slice(&(ordinal as u64).to_be_bytes());
-        let id = crate::schema::create_drawing_id("layer", &candidate);
-        if crate::schema::find_drawing_layer(document, &id).is_none() { crate::schema::layer_base_mut(layer).id = id; return; }
+        let id = crate::standards::v1::subsets::any::schema::create_drawing_id("layer", &candidate);
+        if crate::schema::find_drawing_layer(document, &id).is_none() { crate::schema::layer_base_mut(layer).id = id.into(); return; }
         ordinal += 1;
     }
 }

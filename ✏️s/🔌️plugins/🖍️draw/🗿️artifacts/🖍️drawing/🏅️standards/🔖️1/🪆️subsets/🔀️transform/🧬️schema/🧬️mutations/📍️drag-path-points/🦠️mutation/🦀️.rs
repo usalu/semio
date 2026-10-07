@@ -6,32 +6,32 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🎯️ One dragged path point: the path layer, the segment that owns the point and which of its points.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "path-point-target")]
 pub struct DrawingPathPointTarget {
-    pub layer_id: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub index: usize,
     pub point: PathPoint,
 }
 
 /// 📍️ `drag-path-points` payload — the dragged points and the world-space offset every one of them moves by.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "drag-path-points")]
 pub struct DragPathPoints {
-    pub targets: Vec<DrawingPathPointTarget>,
+    pub targets: semio_framework_value::list::PagedList<DrawingPathPointTarget, {usize::MAX}>,
     pub dx: f64,
     pub dy: f64,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_path_points(targets: Vec<DrawingPathPointTarget>, dx: f64, dy: f64) -> DrawingMutation {
+pub fn drag_path_points(targets: semio_framework_value::list::PagedList<DrawingPathPointTarget, {usize::MAX}>, dx: f64, dy: f64) -> DrawingMutation {
     DrawingMutation::DragPathPoints(DragPathPoints { targets, dx, dy })
 }
 
@@ -61,7 +61,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DragPathPoints
 }
 
 /// 🗂️ The addressed path layer ids in first-seen order, each once.
-pub fn drag_path_points_layers(targets: &[DrawingPathPointTarget]) -> Vec<String> {
+pub fn drag_path_points_layers(targets: &[DrawingPathPointTarget]) -> semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}> {
     let mut layers: Vec<String> = Vec::new();
     for target in targets {
         if !layers.contains(&target.layer_id) {

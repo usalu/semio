@@ -1,4 +1,5 @@
 /** 🧪️ Graphlib topology and Ajv shape independently verify recursive document closure. */
+import artifactReferenceSchema from "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
@@ -56,7 +57,7 @@ function validate(input: OwnedDocumentClosureInput, fuel: number): boolean {
 
 /** 🌳️ A chain may exceed the per-parent child bound while respecting the global registry bound. */
 export function testOwnedDocumentClosureOracle(): void {
-  const ajv = semioSchemaAjvV1({ strict: true }).addSchema(ioSchema).addSchema(ownerSchema);
+  const ajv = semioSchemaAjvV1({ strict: true }).addSchema(artifactReferenceSchema).addSchema(ioSchema).addSchema(ownerSchema);
   const ownerShape = ajv.getSchema(ownerSchema.$id)!;
   for (const row of vectors.continuationCases) {
     const unchanged = ajv.compile({ const: row.beforeMembers });

@@ -796,3 +796,113 @@ if(process.argv[2]==='process-mounted-fix'){
  writeFileSync(root,readFileSync(root,'utf8')+'\npub use crate::'+scope+'::io::binary::snapshot::{Process3dMountedPackSession, process3d_mounted_pack_session};\n');
  console.log(JSON.stringify({processMountedNames:names}));
 }
+if(process.argv[2]==='final-rust-routes'){
+ let metadata=0,aliases=0;
+ for(const file of files.filter(file=>file.includes('/🚪️io/'))){
+  let source=readFileSync(file,'utf8'),before=source;
+  const subset=file.slice(0,file.indexOf('/🚪️io/')),rep=file.includes('/💾️binary/')?'binary':'text';
+  source=source.replace(/((?:crate::)?[\w:]+)::schema::(snapshot|mutations|diff|inferences)((?:::[\w]+)*)::(COMPONENT_(?:PROTOCOL|GRAMMAR)_(?:SEMIO|PATH)|TEXT_OPCODE|BINARY_OPCODE)/g,(whole,scope,facet,member,name)=>{
+   const owner=join(subset,'🚪️io',rep==='binary'?'💾️binary':'📝️text',facet==='snapshot'?'📸️snapshot':facet==='mutations'?'🧬️mutations':facet==='diff'?'🔺️diff':'💡️inferences');
+   const mounted=member?files.find(candidate=>candidate.startsWith(owner+'/')&&readFileSync(candidate,'utf8').includes('const '+name)):join(owner,'🦀️.rs');
+   if(!mounted||!existsSync(mounted)||!readFileSync(mounted,'utf8').includes('const '+name))return whole;
+   metadata++;return scope+'::io::'+rep+'::'+facet+member+'::'+name;
+  });
+  if(source!==before)writeFileSync(file,source);
+ }
+ const process=files.find(file=>file.endsWith('/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs'))!;
+ let code=readFileSync(process,'utf8');code=code.replace(/^pub use crate::standards::v1::subsets::any::io::text::snapshot::\{PROCESS_3D[^\n]*\n/gm,'');writeFileSync(process,code);
+ const playground=files.find(file=>file.endsWith('/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs'))!;
+ code=readFileSync(playground,'utf8').replace('apply_playground_mutation_json, undo_playground_mutation_json, ','').replace(/^pub use crate::standards::v1::subsets::any::io::text::snapshot::[^\n]*\n/gm,'');writeFileSync(playground,code);
+ const leaf=join(dirname(playground),'✒️change-schema/🦀️.rs'),dest=leaf.replace('/🧬️schema/','/🚪️io/📝️text/');let source=readFileSync(leaf,'utf8');
+ const chosen=items(source).filter(item=>['bridge_decode_pair','bridge_render','apply_playground_mutation_json','undo_playground_mutation_json'].includes(item.name));
+ if(chosen.length){
+  for(const item of chosen.sort((a,b)=>b.start-a.start))source=source.slice(0,item.start)+source.slice(item.end);
+  source=source.replace(/^use semio_framework_pack_json::[^\n]*\n/m,'').replace('fn bridge_step(','pub(crate) fn bridge_step(');writeFileSync(leaf,source);
+  writeFileSync(dest,readFileSync(dest,'utf8')+'\nmod json_orchestration {\nuse crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};\nuse crate::standards::v1::subsets::any::schema::change_schema::bridge_step;\nuse semio_framework_pack_json::{array, from_dsl_value, from_json_str, object, to_string, Value};\n'+chosen.sort((a,b)=>a.start-b.start).map(item=>item.code).join('\n')+'\n}\npub use json_orchestration::{apply_playground_mutation_json,undo_playground_mutation_json};\n');
+ }
+ for(const file of files.filter(file=>file.includes('/🎪️playground/')&&file.includes('/🧪️tests/'))){let source=readFileSync(file,'utf8');source=source.replace('schema::mutations::{apply_playground_mutation_json, undo_playground_mutation_json}','io::text::mutations::change_schema::{apply_playground_mutation_json, undo_playground_mutation_json}');
+  if(file.includes('/✒️change-schema/'))source='use crate::standards::v1::subsets::any::io::text::mutations::change_schema::{apply_playground_mutation_json,undo_playground_mutation_json};\n'+source;
+  writeFileSync(file,source);
+ }
+ const facade=files.find(file=>file.includes('/🧊️gltf/')&&file.endsWith('/✏️renames-the-root-f1e002/🦀️.rs'))!;
+ code=readFileSync(facade,'utf8');if(!code.includes('io::binary::mutations::decode_gltf'))code='use crate::standards::v2_0::subsets::any::io::binary::mutations::decode_gltf_change_node_name_protobuf;\nuse crate::standards::v2_0::subsets::any::io::text::mutations::{decode_gltf_change_node_name_graphql,decode_gltf_change_node_name_proto};\n'+code;
+ const docs=code.match(/^(?:use[^\n]*\n)*((?:\/\/![^\n]*\n)+)/)?.[1];if(docs)code=docs+code.replace(docs,'');writeFileSync(facade,code);
+ console.log('[DEBUG] Physical metadata routes '+metadata+', public schema aliases removed 2, Playground JSON wrappers '+chosen.length);
+}
+if(process.argv[2]==='remaining-wire-routes'){
+ const root=files.find(file=>file.endsWith('/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs'))!,destination=root.replace('/🧬️schema/','/🚪️io/📝️text/');let source=readFileSync(root,'utf8'),chosen=items(source).filter(item=>['apply_remodeling_mutation_json','undo_remodeling_mutation_json'].includes(item.name));
+ for(const item of chosen.sort((a,b)=>b.start-a.start))source=source.slice(0,item.start)+source.slice(item.end);
+ source=source.replace('fn bridge_step(','pub(crate) fn bridge_step(');writeFileSync(root,source);
+ if(chosen.length)writeFileSync(destination,readFileSync(destination,'utf8')+'\nmod json_orchestration {\nuse super::{bridge_decode_pair,bridge_render};\nuse crate::standards::v1::subsets::any::schema::mutations::{bridge_step,RemodelingMutation};\n'+chosen.sort((a,b)=>a.start-b.start).map(item=>item.code).join('\n')+'\n}\npub use json_orchestration::{apply_remodeling_mutation_json,undo_remodeling_mutation_json};\n');
+ let changed=0;
+ for(const file of files){
+  if(!existsSync(file))continue;
+  let code=readFileSync(file,'utf8'),before=code;
+  if(file.includes('/📸️remodeling/'))code=code.replace('schema::mutations::{apply_remodeling_mutation_json, undo_remodeling_mutation_json}','io::text::mutations::{apply_remodeling_mutation_json, undo_remodeling_mutation_json}');
+  if(file.includes('/📰️xml/')||file.includes('/🎨️svg/')){
+   for(const name of ['encode_snapshot','decode_snapshot','encode_snapshot_binary','decode_snapshot_binary']){
+    const rep=name.endsWith('_binary')?'binary':'text',rootFacade='crate::standards::'+(file.includes('/📰️xml/')?'v1_0':'v1_1')+'::subsets::base';
+    code=code.replaceAll('crate::schema::mutation_support::'+name,rootFacade+'::io::'+rep+'::snapshot::'+name);
+   }
+  }
+  if(code!==before){writeFileSync(file,code);changed++;}
+ }
+ console.log('[DEBUG] Remodeling wire wrappers moved '+chosen.length+', XML SVG caller routes '+changed);
+}
+if(process.argv[2]==='syntax-closure'){
+ const selected=files.filter(file=>existsSync(file)&&(
+  file.includes('/🧊️generation3d/')||file.includes('/🖍️drawing/')||file.includes('/🖼️bitmap/')||
+  (file.includes('/🧊️gltf/')||file.includes('/📸️remodeling/')||file.includes('/🎪️playground/')||file.includes('/📰️xml/')||file.includes('/🎨️svg/')||file.includes('/📐️cad/'))&&
+  /\/(?:🚪️io|🧬️schema)\//.test(file)&&file.endsWith('/🦀️.rs')
+ ));
+ let count=0;for(const file of selected){try{execFileSync('rustfmt',['--emit','stdout','--config','skip_children=true','--edition','2021',file],{encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe']});count++;}catch(error){console.error('[DEBUG] Rust syntax failure '+relative(repo,file));console.error(String((error as any).stderr));throw error;}}
+ console.log('[DEBUG] Rust syntax closure '+count+' source owners');
+}
+if(process.argv[2]==='pdf-borrowed'){
+ const old=files.find(file=>file.includes('/📖️pdf/')&&file.endsWith('/🧬️schema/🧬️mutations/📦️codec/🫳️borrowed/🦀️.rs'))!,next=old.replace('/🧬️schema/🧬️mutations/📦️codec/','/🚪️io/💾️binary/🧬️mutations/');
+ let source=readFileSync(old,'utf8').replace('use super::super::{PdfMutation,insert_page,remove_page,move_page,resize_page,replace_page_text,set_snapshot,patch_snapshot};','use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;\nuse crate::standards::v1_4::subsets::base::io::binary::mutations::{insert_page,remove_page,move_page,resize_page,replace_page_text,set_snapshot,patch_snapshot};').replaceAll('protocol::io::binary::operation_bytes::','protocol::os_spr::operation_bytes::').replace(/(insert_page|remove_page|move_page|resize_page|replace_page_text|set_snapshot|patch_snapshot)::binary::TAG/g,'$1::TAG');
+ mkdirSync(dirname(next),{recursive:true});renameSync(old,next);writeFileSync(next,source);
+ const owner=join(dirname(dirname(next)),'🦀️.rs');source=readFileSync(owner,'utf8').replace('../../../🧬️schema/🧬️mutations/📦️codec/🫳️borrowed/🦀️.rs','🫳️borrowed/🦀️.rs');writeFileSync(owner,source);
+ let changed=0;for(const file of files.filter(file=>file.includes('/📖️pdf/')&&file.includes('/🚪️io/'))){if(!existsSync(file))continue;let code=readFileSync(file,'utf8'),before=code;const rep=file.includes('/💾️binary/')?'binary':'text';
+  code=code.replace(/(crate::standards::v1_[47]::subsets::base)::schema::mutations::(insert_page|remove_page|move_page|resize_page|replace_page_text|set_snapshot|patch_snapshot)::(TAG|TEXT_OPCODE|encode|decode)/g,'$1::io::'+rep+'::mutations::$2::$3');
+  code=code.replace(/use (crate::standards::v1_[47]::subsets::base)::schema::mutations::\{\s*(binary|text)::\{([^}]+)\},\s*PdfMutation,?\s*\};/g,'use $1::schema::mutations::PdfMutation;\nuse $1::io::$2::mutations::{$3};');
+  if(code!==before){writeFileSync(file,code);changed++;}
+ }
+ writeFileSync(join(ticket,'🗑️generated/runtime-pdf-borrowed.json'),JSON.stringify({old,next,owner},null,2));console.log('[DEBUG] PDF physical borrowed owner moved and codec routes '+changed);
+}
+if(process.argv[2]==='schema-import-audit'){
+ const rows:{file:string,imports:string[],physicalBodies:string[]}[]=[];let repaired=0;
+ for(const file of files.filter(file=>file.includes('/🧬️schema/')&&!file.includes('/🧪️tests/')&&!file.includes('/🗒️note/')&&!file.includes('/🔌️jack/')&&!file.includes('/🖼️bitmap/'))){
+  let source=readFileSync(file,'utf8'),all=items(source),production=all.filter(item=>item.kind!=='use'&&!/#[\s\S]*?cfg\(test\)/.test(item.code)).map(item=>mask(item.code)).join('\n'),changed=false;
+  const imports=all.filter(item=>item.kind==='use'&&item.code.includes('::io::')&&!item.code.includes('#[cfg(test)]'));
+  for(const item of imports.sort((a,b)=>b.start-a.start)){
+   const body=item.code.match(/use\s+([^;]+);/)?.[1];if(!body)continue;
+   const names=body.includes('::{')?body.slice(body.indexOf('::{')+3).replace(/[{}]/g,'').split(',').map(name=>name.trim().split(/\s+as\s+/).at(-1)!):[body.split('::').at(-1)!];
+   if(names.some(name=>name==='*'||new RegExp('\\b'+name+'\\b').test(production)))continue;
+   const remaining=mask(source.slice(0,item.start)+source.slice(item.end)),referenced=names.some(name=>new RegExp('\\b'+name+'\\b').test(remaining));
+   source=source.slice(0,item.start)+(referenced?'#[cfg(test)]\n'+item.code:'')+source.slice(item.end);changed=true;repaired++;
+  }
+  if(changed)writeFileSync(file,source);
+  all=items(source);const deps=all.filter(item=>item.kind==='use'&&item.code.includes('::io::')&&!item.code.includes('#[cfg(test)]')).map(item=>item.code),bodies=all.filter(item=>item.kind!=='use'&&!item.code.includes('#[cfg(test)]')&&/::io::/.test(mask(item.code))).map(item=>item.head);
+  if(deps.length||bodies.length)rows.push({file:relative(repo,file),imports:deps,physicalBodies:bodies});
+ }
+ writeFileSync(join(ticket,'runtime-schema-dependencies.md'),'# Runtime Schema IO Dependencies\n\nUnused physical imports were removed; imports used only by test code were guarded with cfg(test). The following lexical candidates still need semantic ownership review; nested test modules can appear as candidates.\n\n'+rows.map(row=>'## '+row.file+'\n\n'+[...row.imports,...row.physicalBodies].map(code=>'\u0060'+code.replaceAll('\n',' ')+'\u0060').join('\n\n')).join('\n\n')+'\n');
+ console.log('[DEBUG] Schema physical imports removed/guarded '+repaired+', lexical dependency owners '+rows.length);
+}
+if(process.argv[2]==='pdf-fixtures'){
+ const moved:{file:string,destination:string,scope:string,name:string}[]=[];
+ for(const file of files.filter(file=>file.includes('/📖️pdf/')&&file.endsWith('/🧬️schema/📸️snapshot/🦀️.rs'))){
+  let source=readFileSync(file,'utf8');const chosen=items(source).filter(item=>['blank_pdf_snapshot','demo_pdf_snapshot','demo_pdf17_snapshot'].includes(item.name));if(!chosen.length)continue;
+  const destination=file.replace('/🧬️schema/','/🚪️io/📝️text/'),scope=file.includes('/4️⃣1.4/')?'standards::v1_4::subsets::base':'standards::v1_7::subsets::base';
+  for(const item of chosen.sort((a,b)=>b.start-a.start))source=source.slice(0,item.start)+source.slice(item.end);
+  writeFileSync(file,source);writeFileSync(destination,readFileSync(destination,'utf8')+'\nmod source_fixtures {\nuse crate::'+scope+'::schema::snapshot::*;\n'+chosen.sort((a,b)=>a.start-b.start).map(item=>item.code).join('\n')+'\n}\npub use source_fixtures::*;\n');
+  for(const item of chosen)moved.push({file,destination,scope,name:item.name});
+ }
+ let changed=0;for(const file of files.filter(file=>file.includes('/📖️pdf/'))){if(!existsSync(file))continue;let source=readFileSync(file,'utf8'),before=source;for(const entry of moved){
+  source=source.replaceAll(entry.scope+'::schema::snapshot::'+entry.name,entry.scope+'::io::text::snapshot::'+entry.name);
+  source=source.replaceAll('crate::schema::snapshot::'+entry.name,'crate::'+entry.scope+'::io::text::snapshot::'+entry.name);
+  source=source.replace(new RegExp('(use (?:crate|semio_s_artifact_stdio_pdf)::'+entry.scope+'::schema::snapshot::)\\{([^}]+)\\};','g'),(whole,prefix,members)=>{const parts=members.split(',').map((part:string)=>part.trim()),kept=parts.filter((part:string)=>part!==entry.name);if(kept.length===parts.length)return whole;return(kept.length?prefix+'{'+kept.join(', ')+'};\n':'')+'use '+prefix.slice(4).split('::schema::snapshot::')[0]+'::io::text::snapshot::'+entry.name+';';});
+ }
+ if(source!==before){writeFileSync(file,source);changed++;}}
+ writeFileSync(join(ticket,'🗑️generated/runtime-pdf-fixtures.json'),JSON.stringify(moved,null,2));console.log('[DEBUG] PDF physical fixed-point fixture builders '+moved.length+', callers '+changed);
+}

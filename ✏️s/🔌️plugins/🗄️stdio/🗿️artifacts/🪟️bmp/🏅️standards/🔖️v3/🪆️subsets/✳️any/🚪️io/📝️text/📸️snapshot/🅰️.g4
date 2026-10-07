@@ -1,9 +1,20 @@
-// 🅰️ `stdio.bmp`'s wire text (after the `semio ...` preamble line is stripped) IS a
-// lowercase-hex dump of the real on-disk BMP bytes — see ../💾️binary/🥋️.ksy for
-// the field-by-field byte layout those bytes decode to (BITMAPFILEHEADER + BITMAPINFOHEADER
-// + optional masks/palette + pixel data). Names the real encoding rather than a placeholder.
-grammar Stdio_bmp_snapshot;
-
-document : hexByte* EOF ;
-hexByte  : HEXDIG HEXDIG ;
-HEXDIG   : [0-9a-f] ;
+grammar BmpSnapshot;
+document: 'stdio.bmp' 'schema' '=' text image EOF;
+image: 'image' '{' image_field* '}';
+image_field: integer_field | row_order_field | profile_field | masks_field | palette_field | bytes_field | pixels_block;
+integer_field: ('width' | 'height' | 'x-pixels-per-meter' | 'y-pixels-per-meter' | 'colors-used' | 'colors-important' | 'reserved-1' | 'reserved-2') '=' INT;
+row_order_field: 'row-order' '=' ('bottom-up' | 'top-down');
+profile_field: 'profile' '=' ('indexed-rgb1' | 'indexed-rgb4' | 'indexed-rgb8' | 'direct-rgb16' | 'direct-rgb24' | 'direct-rgb32' | 'direct-bitfields16' | 'direct-bitfields32');
+masks_field: 'masks' '=' INT ',' INT ',' INT ',' INT;
+palette_field: 'palette' '=' '[' palette_record* ']';
+palette_record: '{' 'b' '=' INT 'g' '=' INT 'r' '=' INT 'reserved' '=' INT '}';
+bytes_field: ('opaque-gap' | 'opaque-trailer') '=' '[' INT* ']';
+pixels_block: 'pixels' '{' pixels '}';
+pixels: 'indexed' 'indices' '=' '[' INT* ']' | 'direct' 'samples' '=' '[' sample_record* ']';
+sample_record: '{' 'red' '=' INT 'green' '=' INT 'blue' '=' INT 'alpha' '=' INT 'reserved' '=' INT '}';
+text: STRING | IDENT | INT | FLOAT;
+STRING: '"' ('\\' . | ~["\\])* '"';
+INT: '-'? [0-9]+;
+FLOAT: '-'? [0-9]+ '.' [0-9]+;
+IDENT: [a-zA-Z_] [a-zA-Z0-9_.-]*;
+WS: [ \t\r\n]+ -> skip;

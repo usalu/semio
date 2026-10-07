@@ -25,9 +25,11 @@ pub(super) fn dictionary(c:&mut Census<'_,'_>,values:&D)->Result<(),ValueError>{
 }
 pub(super) fn object(c:&mut Census<'_,'_>,value:&D)->Result<(),ValueError>{
  if c.depth>=64{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"PDF borrowed semantic containment depth exceeded"))}c.depth+=1;let result=(||{
- let tag=kind(value)?;let mut fields=[Null;11];let kind=match tag{
+ let tag=kind(value)?;let mut fields=[Null;12];let kind=match tag{
   "null"=>"null","bool"=>{fields[0]=Int;"boolean"},"int"=>{fields[1]=Int;"integer"},
   "real"=>{fields[2]=Int;fields[3]=Text(text(field(value,"coefficient")?)?);fields[4]=Int;"decimal"},
+  "text"=>{fields[6]=Text(text(field(value,"value")?)?);"text"},
+  "date"=>{super::metadata::date(c,field(value,"value")?)?;fields[11]=Int;"date"},
   "str"=>{fields[5]=c.blob(field(value,"value")?)?;"string"},
   "name"=>{fields[6]=Text(text(field(value,"value")?)?);"name"},
   "array"=>"array","dict"=>"dictionary","ref"=>{fields[7]=Int;fields[8]=Int;"reference"},

@@ -6,7 +6,7 @@ use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 #[path = "🏗️construction/🦀️.rs"]
-mod construction;
+pub mod construction;
 
 //#region Artifact
 /// 🧬️ Full `stdio.pptx` artifact state.
@@ -97,7 +97,7 @@ pub fn pptx_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 /// precedent) — the empty `Default` package saved as a materialized package and reopened as a different document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_pptx_snapshot() -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation::default())
+    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation::default())
 }
 
 /// 📄️ FG-wave: the demo `stdio.pptx` presentation — a genuinely non-trivial `PptxSnapshot`
@@ -110,9 +110,8 @@ pub fn blank_pptx_snapshot() -> PptxSnapshot {
 /// establishes.
 pub async fn demo_pptx_snapshot() -> PptxSnapshot {
     use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
-    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
-    let presentation = PptxPresentation {
+    use crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
+        let presentation = PptxPresentation {
         slides: vec![
             PptxSlide {
                 shapes: vec![
@@ -146,10 +145,7 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
                     // should paper over by accident. Keeping every attr non-empty here keeps the
                     // conformance law honest without exercising that known gap.
                     PptxShape::Other {
-                        node: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr></p:graphicFrame>"#)
-                            .expect("valid logical fallback XML")
-                            .root
-                            .expect("fallback XML root"),
+                        node: semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "p:graphicFrame".into(), attrs: Vec::new(), children: vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "p:nvGraphicFramePr".into(), attrs: Vec::new(), children: vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr { name: "id".into(), value: "9".into() }, semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr { name: "name".into(), value: "Table 1".into() }], children: Vec::new() }] }] },
                     },
                 ],
             },
@@ -157,10 +153,7 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
     };
     let mut snap = build_minimal_pptx(presentation);
     snap.opc.set_part("ppt/media/image1.png", "image/png", b"\x89PNG\r\n\x1a\n".to_vec());
-    // 🩹 Normalize the authored binary media plus logical XML through the same deterministic
-    // materialization/deserialization boundary used by native I/O.
-    let canonical_bytes = encode_pptx(&snap).expect("encode demo pptx for order canonicalization");
-    decode_pptx(&canonical_bytes).expect("decode demo pptx for order canonicalization")
+    snap
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -173,3 +166,8 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🏷️vocabulary/🦀️.rs"]
+pub mod vocabulary;
+#[path="⚠️refusal/🦀️.rs"]
+pub mod refusal;

@@ -8,18 +8,18 @@ use crate::DrawingSnapshot;
 /// 🧬️ `duplicate-layer` payload — source address only; the duplicate's id is deterministic
 /// (content-addressed from the source, see `engine::clone_drawing_layer_node`), so `diff`/`inverse`
 /// recompute it from BASE rather than carrying it.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "duplicate-layer")]
 pub struct DuplicateLayer {
-    pub layer_id: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_layer(layer_id: String) -> DrawingMutation {
+pub fn duplicate_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
     DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id })
 }
 
@@ -39,7 +39,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DuplicateLayer
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" duplizieren", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

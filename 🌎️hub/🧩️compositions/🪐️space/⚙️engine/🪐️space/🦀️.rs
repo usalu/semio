@@ -1283,9 +1283,9 @@ pub async fn create_space_app() -> App {
         // ticket's plugin-slice scope (tracked with the in-flight `BackboneDocument: ToValue`
         // framework work). The example payload only ever needed the bare `WorkflowSnapshot` anyway
         // (`parse_demo_space_document`'s own doc: "the fixture holds only the `WorkflowSnapshot`
-        // payload"), which already derives `ToValue` — read it straight off `.vcs.initial_snapshot`.
-        let snapshot = parse_demo_space_document().await.vcs.initial_snapshot;
-        let document_value = semio_framework_value::ToValue::to_value(&snapshot);
+        // payload"), which already derives `ToValue` — read the immutable genesis snapshot.
+        let document = parse_demo_space_document().await;
+        let document_value = semio_framework_value::ToValue::to_value(document.vcs.genesis.snapshot());
         let json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&document_value));
         // 📊️ `label` is sourced from `S_STUDIO_EXAMPLES` — no per-locale split is available at the
         // source, so it is genuine runtime data here, not compile-checked native copy.

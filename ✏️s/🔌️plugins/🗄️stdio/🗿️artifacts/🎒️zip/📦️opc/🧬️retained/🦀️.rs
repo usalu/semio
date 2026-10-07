@@ -169,7 +169,7 @@ impl RetainedOpcPackage {
             content_types: RetainedOpcContentTypes::try_from_content_types(package.content_types)?,
             relationships: RetainedOpcRelationshipOwners::try_from_fallible_entries(package.relationships.into_groups().map(|(owner, relationships)| {
                 let relationships = RetainedOpcRelationships::try_from_fallible_iter(relationships.into_iter().map(RetainedOpcRelationship::try_from_relationship))?;
-                Ok::<(String, RetainedOpcRelationships), ValueError>((owner, relationships))
+                Ok::<(PagedUtf8<{usize::MAX}>, RetainedOpcRelationships), ValueError>((PagedUtf8::try_from_str(&owner)?, relationships))
             }))?,
             comment: text(package.comment)?,
         })
@@ -188,7 +188,7 @@ impl RetainedOpcPackage {
             let content_types = self.content_types.materialize(control)?;
             let mut groups = control.allocate_vec(self.relationships.len())?;
             for (owner, retained_relationships) in self.relationships.iter() {
-                let owner = control.copy_text(owner)?;
+                let owner = owner.to_string_owner_controlled(control)?;
                 let mut values = control.allocate_vec(retained_relationships.len())?;
                 for relationship in retained_relationships.iter() {
                     values.push(relationship.materialize(control)?);

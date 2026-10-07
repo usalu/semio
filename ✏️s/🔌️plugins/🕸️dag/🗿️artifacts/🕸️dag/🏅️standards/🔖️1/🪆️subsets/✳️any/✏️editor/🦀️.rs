@@ -778,8 +778,9 @@ impl ArtifactEditor for DagPlayApp {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::DAG_DOCUMENT_SCHEMA, operation, generation))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::DAG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {

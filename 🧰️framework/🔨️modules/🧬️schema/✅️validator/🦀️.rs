@@ -272,12 +272,67 @@ impl OwnedJsonSchemaValidator {
         Ok(traversal.progress())
     }
 
+    /// 🧬️ Compiles semantic value contracts with indexed owned sibling documents.
+    pub fn compile_intrinsic_with_documents(schema: &DslValue, documents: &[DslValue]) -> Result<Self, SchemaError> {
+        Self::compile_intrinsic_with_documents_and_control(schema, documents, &ValidationControl::default()).map(|(validator, _)| validator)
+    }
+    /// 📊️ Compiles intrinsic documents with bounded admission and cooperative cancellation.
+    pub fn compile_intrinsic_with_documents_and_control(schema: &DslValue, documents: &[DslValue], control: &ValidationControl) -> Result<(Self, ValidationProgress), SchemaError> {
+        let mut traversal = Traversal::new(control);
+        let schema = intrinsic_json(schema, &mut traversal, 0)?;
+        let mut indexed = HashMap::new();
+        for document in documents {
+            let id = document.get("$id").and_then(DslValue::as_str).ok_or_else(||SchemaError::Validation("owned schema document requires an id".into()))?;
+            if indexed.contains_key(id) { return Err(SchemaError::Validation(format!("duplicate owned schema id {id}"))); }
+            indexed.insert(id.to_string(), intrinsic_json(document, &mut traversal, 0)?);
+        }
+        validate_schema_node(Scope { base:&schema, documents:&indexed, patterns:&HashMap::new() },&schema,"$",&mut traversal)?;
+        let progress = traversal.progress();
+        Ok((Self { schema, documents:indexed, patterns:std::mem::take(&mut traversal.patterns) }, progress))
+    }
+    /// 🧪️ Validates a semantic value without encoding or decoding a physical document.
+    pub fn validate_intrinsic(&self, value: &DslValue) -> Result<(),SchemaError> {
+        self.validate_intrinsic_with_control(value, &ValidationControl::default()).map(|_| ())
+    }
+    /// 🧮️ Reports bounded intrinsic admission and validation work without document transport.
+    pub fn validate_intrinsic_with_control(&self, value: &DslValue, control: &ValidationControl) -> Result<ValidationProgress,SchemaError> {
+        let mut traversal = Traversal::new(control);
+        let value = intrinsic_json(value, &mut traversal, 0)?;
+        validate_value(Scope { base:&self.schema, documents:&self.documents, patterns:&self.patterns }, &self.schema, &value, "$", &mut traversal)?;
+        Ok(traversal.progress())
+    }
+
     /// ✅ Validates an owned JSON value without an intermediate serialized instance.
     pub fn validate_value(&self, value: &Value) -> Result<(), SchemaError> {
         let control = ValidationControl::default();
         let mut traversal = Traversal::new(&control);
         validate_value(Scope { base: &self.schema, documents: &self.documents, patterns: &self.patterns }, &self.schema, value, "$", &mut traversal)
     }
+}
+
+fn intrinsic_json(value:&DslValue, traversal:&mut Traversal<'_>, depth:usize)->Result<Value,SchemaError>{
+    traversal.visit()?;
+    if depth > 128 { return Err(SchemaError::Validation("intrinsic value nesting exceeds 128 levels".into())); }
+    Ok(match value {
+        DslValue::Null=>Value::Null,
+        DslValue::Bool(value)=>Value::Bool(*value),
+        DslValue::String(value)=>Value::String(value.clone()),
+        DslValue::Number(value)=>Value::Number(match value {
+            semio_framework_value::Number::UInt(value)=>Number::UInt(*value),
+            semio_framework_value::Number::Int(value)=>Number::Int(*value),
+            semio_framework_value::Number::Float(value) if value.is_finite()=>Number::Float(*value),
+            _=>return Err(SchemaError::Validation("intrinsic contract requires finite numbers".into())),
+        }),
+        DslValue::Bytes(values)=>Value::Array(values.iter().map(|value|{traversal.visit()?;Ok(Value::Number(Number::UInt(u64::from(*value))))}).collect::<Result<_,SchemaError>>()?),
+        DslValue::Array(values)=>Value::Array(values.iter().map(|value|intrinsic_json(value,traversal,depth+1)).collect::<Result<_,_>>()?),
+        DslValue::Object(values)=>{
+            let mut keys=std::collections::HashSet::new();
+            Value::Object(values.iter().map(|(key,value)|{
+                if !keys.insert(key.as_str()){return Err(SchemaError::Validation(format!("duplicate intrinsic key {key}")));}
+                Ok((key.clone(),intrinsic_json(value,traversal,depth+1)?))
+            }).collect::<Result<_,_>>()?)
+        }
+    })
 }
 
 impl StructuralValidation for OwnedJsonSchemaValidator {

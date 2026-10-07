@@ -4,8 +4,8 @@
 
 use super::*;
 use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_text_layer, layer_base_mut};
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_drawing_document};
-use crate::standards::v1::subsets::any::io::text::snapshot::{create_drawing_path_layer};
+use crate::standards::v1::subsets::any::schema::{default_drawing_document};
+use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
 use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode};
 
 fn find(haystack: &[u8], needle: &[u8], from: usize) -> Option<usize> {
@@ -74,8 +74,8 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
         let base = layer_base_mut(&mut rect);
         base.opacity = 0.5;
         base.blend_mode = "multiply".into();
-        base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 100.0, y2: 0.0, stops: vec![GradientStop { offset: 0.2, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 0.5, color: [0.0, 1.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }] });
-        base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![4.0, 2.0]) });
+        base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 100.0, y2: 0.0, stops: vec![GradientStop { offset: 0.2, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 0.5, color: [0.0, 1.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }].into() });
+        base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![4.0, 2.0].into()) });
     }
     doc.layers.push(rect);
     let mut text = create_drawing_text_layer("Caption");
@@ -89,15 +89,15 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
     doc.layers.push(text);
     // 🖼️ A 2×2 RGBA PNG with one transparent pixel.
     let png = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: 2, height: 2, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 0, 0, 0, 0] }).expect("png encodes");
-    doc.assets.insert("pic".into(), DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&png), width: None, height: None });
+    doc.assets.insert("pic".into(), DrawingImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&png).into(), width: None, height: None });
     let mut image = create_drawing_image_layer("Picture", "pic");
     if let DrawingLayerNode::Image(body) = &mut image {
         body.width = 40.0;
         body.height = 30.0;
     }
     doc.layers.push(image);
-    let mut arc = create_drawing_path_layer("Arc", vec![PathSegment::Move { to: [10.0, 10.0] }, PathSegment::Arc { rx: 20.0, ry: 20.0, rotation: 0.0, large_arc: false, sweep: true, to: [50.0, 10.0] }, PathSegment::Quad { ctrl: [30.0, 60.0], to: [10.0, 10.0] }, PathSegment::Close]);
-    layer_base_mut(&mut arc).attributes.fill = Some(FillStyle::RadialGradient { cx: 30.0, cy: 20.0, r: 25.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 1.0] }] });
+    let mut arc = create_drawing_path_layer("Arc", vec![PathSegment::Move { to: [10.0, 10.0] }, PathSegment::Arc { rx: 20.0, ry: 20.0, rotation: 0.0, large_arc: false, sweep: true, to: [50.0, 10.0] }, PathSegment::Quad { ctrl: [30.0, 60.0], to: [10.0, 10.0] }, PathSegment::Close].into());
+    layer_base_mut(&mut arc).attributes.fill = Some(FillStyle::RadialGradient { cx: 30.0, cy: 20.0, r: 25.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 1.0] }].into() });
     doc.layers.push(arc);
 
     let pdf = drawing_document_to_pdf(&doc).expect("exports");
@@ -161,7 +161,7 @@ fn text_export_preserves_lines_origin_and_paint_modes() {
     body.content = "First\r\n\r\nThird".into();
     body.size = 10.0;
     body.base.attributes.stroke = Some(StrokeStyle { color: [1.0, 0.0, 0.0, 1.0], width: 2.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None });
-    let mut doc = DrawingSnapshot { layers: vec![text], ..Default::default() };
+    let mut doc = DrawingSnapshot { layers: vec![text].into(), ..Default::default() };
     let content = inflate_content(&drawing_document_to_pdf(&doc).unwrap());
     assert!(content.contains("1 0 0 1 7 11 cm"));
     assert!(content.contains("2 Tr 1 0 0 -1 0 10 Tm (First) Tj ET"));

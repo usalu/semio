@@ -5,7 +5,7 @@
 
 use crate::editor::jpg_any::modes::edit;
 use crate::editor::jpg_any::modes::edit::windows::main;
-use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::{ChangeReEncodeQualityMutation, ChangeRestartIntervalMutation, JpgMutation, ReplaceHuffmanTableMutation, ReplacePixelsMutation, ReplaceQuantTableMutation};
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::{ChangeRestartIntervalMutation, JpgMutation, ReplaceHuffmanTableMutation, ReplacePixelsMutation, ReplaceQuantTableMutation};
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot;
 use crate::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -20,7 +20,7 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -141,14 +141,13 @@ fn jpgAnyEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &JpgS
     let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| jpgAnyEditor_edit_fault(error.code, error.to_string()))?;
     editing::apply_snapshot_patch_for_dialect(snapshot, &patch, JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA).map_err(|error| jpgAnyEditor_edit_fault(error.code, error.to_string()))
 }
-/// 🎯️ The domain leaf exactly as granular as a set of one whole field or table — re-encode quality, restart interval, the pixel
+/// 🎯️ The domain leaf exactly as granular as a set of one whole field or table — restart interval, the pixel
 /// raster, one quantization or Huffman table — else `None`, and the edit publishes as a path-scoped patch (design §19.3: the JFIF
 /// header leaf carries every header field, so a set of one of them is a patch).
 fn jpgAnyEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: &JpgSnapshot) -> Option<JpgMutation> {
     let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
     let table = |prefix: &str, len: usize| path.strip_prefix(prefix).filter(|rest| !rest.contains('/')).and_then(|_| jpgAnyEditor_index(path, prefix, len));
     match path.as_str() {
-        "/reEncodeQuality" => Some(JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: next.re_encode_quality })),
         "/restartInterval" => Some(JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: next.restart_interval })),
         "/pixels" => Some(JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: next.pixels.clone() })),
         _ => match (table("/quantTables/", next.quant_tables.len()), table("/huffmanTables/", next.huffman_tables.len())) {
@@ -233,7 +232,7 @@ impl ArtifactEditor for JpgAnyEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
+        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
@@ -305,8 +304,9 @@ impl ArtifactEditor for JpgAnyEditor {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
         jpgAnyEditor_command_id(command)
@@ -316,7 +316,7 @@ impl ArtifactEditor for JpgAnyEditor {
     }
 
     fn initial_snapshot() -> Self::Snapshot {
-        crate::standards::v_jfif_1_01::subsets::document::schema::blank_jpg_snapshot()
+        crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot()
     }
 
     fn handle(

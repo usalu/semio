@@ -17,7 +17,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v89a::subsets::any::schema::diff::GifDiff;
-use crate::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
+use crate::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation,GifMutation};
+
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️slows/📸️snapshot/⬅️before/🔣️.json");

@@ -34,6 +34,8 @@ fn applied() -> CadSnapshot {
 /// ▶️ `create-drawing` appends one `s.stdio.semio.drawing` handle to the forward composition slot.
 #[semio_framework_async_macros::async_test]
 async fn appends_a_second_drawing_handle() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let after = applied();
     assert_eq!(after.drawings.iter().map(|handle| handle.child_id.as_str()).collect::<Vec<_>>(), vec!["cad-drawing-1", "cad-drawing-2"], "create-drawing appends the new handle after the existing ones");
     assert_eq!(after.drawings[1].target.to_uri(), "cad-drawing-2!s.stdio.semio@v1/drawing", "create-drawing must parse the payload target URI into a real drawing-subset ArtifactRef");

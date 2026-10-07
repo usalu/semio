@@ -4,12 +4,12 @@ use super::super::super::*;
 /// 📦️ Direct actual persisted fields provide ordinary and paid native endpoints.
 impl crate::os_store::ArtifactPack for DagSnapshot {
  /// 📣️ Publishes this actual owner through ordinary Store construction and hydration.
- fn native_snapshot_registration() -> Option<(semio_framework_os_kernel::io::Dialect, crate::os_store::ArtifactCodec)> {
-     Some((semio_framework_os_kernel::io::Dialect { artifact_kind: "dag.host_snapshot", standard: semio_framework_os_kernel::io::StandardId("1"), subset: semio_framework_os_kernel::io::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA)))
+ fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, crate::os_store::ArtifactCodec)> {
+     Some((semio_framework_artifact_reference::Dialect { artifact_kind: "dag.host_snapshot", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA)))
  }
     /// 📣️ Publishes this artifact-owned native codec at its declared lifecycle boundary.
     fn publish_native_snapshot() -> Result<(),semio_framework_os_kernel::io::ArtifactAssemblyRegistryError> {
-        semio_framework_os_kernel::io::register_native_snapshot_codec(semio_framework_os_kernel::io::Dialect { artifact_kind: "dag.host_snapshot", standard: semio_framework_os_kernel::io::StandardId("1"), subset: semio_framework_os_kernel::io::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA))
+        semio_framework_os_kernel::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "dag.host_snapshot", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, crate::os_store::ArtifactCodec::bare::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA))
     }
  fn sqlite_snapshot_codec()->Option<crate::os_store::ArtifactSqliteSnapshotCodec>{Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec())}
  fn encode_pack_with(&self,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{

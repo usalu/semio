@@ -266,6 +266,7 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase {
     Snapshot,
+    CaptureGenesis,
     History,
     Select,
     Selected,
@@ -288,6 +289,9 @@ where
 {
     snapshot_open: ManuallyDrop<Option<P::SnapshotOpen>>,
     snapshot: ManuallyDrop<Option<P>>,
+    genesis_request: ManuallyDrop<Option<MemberOpenRequest>>,
+    genesis_pack: ManuallyDrop<Option<Vec<u8>>>,
+    genesis_hasher: semio_framework_hash::Hasher,
     history: ManuallyDrop<Option<MemberHistoryVerification>>,
     selection: ManuallyDrop<Option<MemberFactorySelection<F>>>,
     /// The selected history input awaiting its dictionary owner: kept across steps when the step budget
@@ -321,6 +325,8 @@ where
     fn ownership_is_empty(&self) -> bool {
         self.snapshot_open.is_none()
             && self.snapshot.is_none()
+            && self.genesis_request.is_none()
+            && self.genesis_pack.is_none()
             && self.history.is_none()
             && self.selection.is_none()
             && self.selected.is_none()
@@ -350,6 +356,9 @@ where
         Ok(Self {
             snapshot_open: ManuallyDrop::new(Some(snapshot_open)),
             snapshot: ManuallyDrop::new(None),
+            genesis_request: ManuallyDrop::new(None),
+            genesis_pack: ManuallyDrop::new(None),
+            genesis_hasher: semio_framework_hash::Hasher::new(),
             history: ManuallyDrop::new(None),
             selection: ManuallyDrop::new(None),
             selected: ManuallyDrop::new(None),
@@ -459,19 +468,43 @@ where
                     Some((snapshot, request)) => {
                         self.snapshot_open.take();
                         *self.snapshot = Some(snapshot);
-                        match MemberHistoryVerification::new(request, RetainedSprLimits::default()) {
-                            Ok(history) => *self.history = Some(history),
-                            Err(rejected) => {
-                                *self.active = Some(Box::new(rejected.request));
-                                return self.reject(rejected.diagnostic);
-                            }
-                        }
-                        self.phase = Phase::History;
+                        *self.genesis_request = Some(request);
+                        self.phase = Phase::CaptureGenesis;
                         MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::History, completed: 0, total: 1 })
                     }
                     None => MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: 0, total: 1 }),
                 },
             },
+            Phase::CaptureGenesis => {
+                let request = self.genesis_request.as_mut().expect("genesis copy retains the admitted request");
+                let frame = match request.step_input(cx) {
+                    crate::os_store::MemberOpenInputStep::Framed(frame) => frame,
+                    crate::os_store::MemberOpenInputStep::Pending(progress) => return MemberOpenStep::Pending(progress),
+                    crate::os_store::MemberOpenInputStep::Rejected(diagnostic) => return self.reject(diagnostic),
+                };
+                let total = frame.snapshot_range().1;
+                if self.genesis_pack.is_none() {
+                    let mut pack = Vec::new();
+                    if pack.try_reserve_exact(total).is_err() { return self.reject(MemberOpenDiagnostic::Capacity); }
+                    *self.genesis_pack = Some(pack);
+                }
+                let offset = self.genesis_pack.as_ref().expect("genesis copy retains bytes").len();
+                if offset < total {
+                    let maximum = (total-offset).min(self.history_page.len());
+                    let copied = match request.copy_snapshot_chunk(offset, &mut self.history_page[..maximum], cx) { Ok(copied) => copied, Err(error) => return self.reject(error) };
+                    self.genesis_hasher.update(&self.history_page[..copied]);
+                    self.genesis_pack.as_mut().expect("genesis copy retains bytes").extend_from_slice(&self.history_page[..copied]);
+                    return MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: (offset+copied) as u64, total: total as u64 });
+                }
+                let request = self.genesis_request.take().expect("genesis copy retains request authority");
+                match MemberHistoryVerification::new(request, RetainedSprLimits::default()) {
+                    Ok(history) => *self.history = Some(history),
+                    Err(rejected) => { *self.active = Some(Box::new(rejected.request)); return self.reject(rejected.diagnostic); },
+                }
+                self.phase = Phase::History;
+                cx.consume_fuel(1);
+                MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::History, completed: 0, total: 1 })
+            }
             Phase::History => match self.history.as_mut().unwrap().step(cx) {
                 MemberHistoryInputStep::Pending(progress) => MemberOpenStep::Pending(progress),
                 MemberHistoryInputStep::Rejected(diagnostic) => self.reject(diagnostic),
@@ -613,7 +646,7 @@ where
                 if cx.should_yield() {
                     return MemberOpenStep::Pending(self.replay_progress());
                 }
-                let (expected, owner, schema) = match self.witness.as_mut().unwrap().clone_initial_identity(cx) {
+                let (expected, owner, schema, actor) = match self.witness.as_mut().unwrap().clone_initial_identity(cx) {
                     Ok(identity) => identity,
                     Err(diagnostic) => return self.reject(diagnostic),
                 };
@@ -622,8 +655,10 @@ where
                     None => return self.reject(MemberOpenDiagnostic::Stale),
                 };
                 let history = self.decoded_history.take().expect("decoded history remains retained");
-                *self.hydration = Some(crate::os_store::RetainedPersistedDocumentHydration::from_initial(
+                *self.hydration = Some(crate::os_store::RetainedPersistedDocumentHydration::from_decoded_pack(
                     snapshot,
+                    self.genesis_pack.take().expect("admitted genesis Pack remains retained"),
+                    *self.genesis_hasher.finalize().as_bytes(),
                     history,
                     expected,
                     owner,
@@ -633,6 +668,7 @@ where
                     self.generation,
                     self.expires_at_us,
                     crate::os_store::PersistedDocumentHydrationTarget::Store { generation: 0 },
+                    actor,
                 ));
                 self.phase = Phase::Hydrate;
                 cx.consume_fuel(1);
@@ -728,6 +764,8 @@ where
                 step => Ok(step),
             };
         }
+        if let Some(request) = self.genesis_request.take() { *self.active = Some(Box::new(request)); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(pack) = self.genesis_pack.take() { *self.active = Some(semio_framework_value::retirement::owned_retirement(pack)); return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
         if let Some(hydration) = self.hydration.as_mut() {
             return match hydration.close_step(items.min(1), bytes)? {
                 SnapshotRetirementStep::Complete if hydration.terminal_is_empty() => {

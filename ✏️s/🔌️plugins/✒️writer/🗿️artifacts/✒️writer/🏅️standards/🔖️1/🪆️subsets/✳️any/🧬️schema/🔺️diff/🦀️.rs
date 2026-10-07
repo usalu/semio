@@ -38,8 +38,8 @@ use crate::document_child_handle_with_text;
 use crate::WriterSnapshot;
 use protocol::MutationDiff;
 use super::*;
-use protocol::DiffText;
-use protocol::DiffBinary;
+
+
 
 impl WriterDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
@@ -141,3 +141,6 @@ pub fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

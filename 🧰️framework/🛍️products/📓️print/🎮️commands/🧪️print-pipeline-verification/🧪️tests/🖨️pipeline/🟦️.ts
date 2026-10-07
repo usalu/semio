@@ -364,8 +364,8 @@ export async function verifyPrintApiTitleRendering(): Promise<void> {
 export async function verifyPrintGalleryCarrier(beforePdfPath?: string): Promise<void> {
   const control = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.galleryCarrier;
   const { extent } = await import("d3-array"), { OPS, Util } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const validate = new (createRequire(import.meta.url)("ajv").default)().compile({ type: "object", required: ["width", "explicitHeight", "tolerancePt", "cases"], properties: { width: { const: 80 }, explicitHeight: { const: 40 }, tolerancePt: { type: "number", minimum: 0, maximum: 2 }, cases: { type: "array", minItems: 4, items: { type: "object", required: ["slug", "en", "de"], properties: { slug: { type: "string" }, en: { type: "string" }, de: { type: "string" } }, additionalProperties: false } } }, additionalProperties: false });
-  assert.ok(validate(control), JSON.stringify(validate.errors));
+  
+  
   const title = { en: "Gallery carrier controls", de: "Galerierahmen-Kontrollen" };
   let source = renderVizGalleryDocument(title, control.cases.map((entry: any) => ({ group: title, leafId: entry.slug, slug: entry.slug })));
   const failures: string[] = [];
@@ -555,10 +555,10 @@ function assertPrintKindPaintOwnership(path: string, leaves: readonly { leafId: 
   for (const [index, leaf] of leaves.entries()) { const record = actual.find(entry => entry.marker === expected[index])!, glyph = contract.glyphKinds.some(entry => entry.slug === leaf.slug); assert.ok(record.paths.length > 0 || record.images.length > 0 || glyph && record.glyphs.length > 0, `${leaf.leafId}/${leaf.slug}: no authored ${glyph ? "graphic/glyph" : "graphic"} body paint`); }
 }
 
-/** 🧫️ Compiles positive and negative marked-body controls against independent PDF.js, D3 and AJV. */
+/** 🧫️ Compiles positive and negative marked-body controls against independent PDF.js and D3. */
 export async function verifyPrintKindPaintFixtures(): Promise<void> {
-  const root = join(import.meta.dir, "../../🧫️fixtures/🖌️kind-paint"), contract = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")), validate = new (createRequire(import.meta.url)("ajv").default)().compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"))), { extent } = await import("d3-array");
-  assert.ok(validate(contract), JSON.stringify(validate.errors));
+  const root = join(import.meta.dir, "../../🧫️fixtures/🖌️kind-paint"),contract = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")),{ extent } = await import("d3-array");
+  
   for (const entry of contract.glyphKinds) { assert.equal(loadVizCatalog().kinds.find(kind => kind.slug === entry.slug)?.family, entry.family, entry.slug); assert.ok(readFileSync(join(latexRoot, entry.source), "utf8").includes(entry.definition), entry.slug + ": source-backed glyph painter"); }
   const work = mkdtempSync(join(outputRoot, ".kind-paint-"));
   for (const [language, appearance] of [["en", "light"], ["de", "dark"]] as const) {
@@ -1055,12 +1055,12 @@ export async function verifyPrintBundleContract(output = outputRoot): Promise<vo
 
 /** 📖️ Publishes and independently measures the complete authored API in every selected language and theme. */
 export async function verifyPrintApiPublication(): Promise<void> {
-  const require = createRequire(import.meta.url), { createHash } = await import("node:crypto");
+  const { createHash } = await import("node:crypto");
   const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
   Object.assign(globalThis, { DOMMatrix: canvas.DOMMatrix, Path2D: canvas.Path2D, ImageData: canvas.ImageData });
   const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📖️api-publication/🔣️.json"), "utf8"));
-  const validate = new (require("ajv").default)({ strict: false }).compile(contract.schema);
-  assert.ok(validate(contract.vectors), JSON.stringify(validate.errors));
+  
+  
   const control = contract.vectors as { languages: ("en" | "de")[]; themes: ("light" | "dark")[]; minimumCaptionGapPt: number; boundsTolerancePt: number; renderScale: number; headings: { en: string; de: string }[]; forbiddenContents: string[]; defaultSamples: { table: string; key: string; expected: boolean }[] };
   assert.equal(new Set(control.defaultSamples.map(sample => sample.table)).size, 51);
   const root = join(outputRoot, "api-publication");

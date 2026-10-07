@@ -1,4 +1,32 @@
 use crate::{OwnedJsonSchemaValidator, SchemaError, ValidationControl};
+use semio_framework_value::DslValue;
+
+#[test]
+fn intrinsic_values_preserve_the_independent_validation_corpus() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    for case in corpus["cases"].as_array().unwrap() {
+        let validator = OwnedJsonSchemaValidator::compile_intrinsic_with_documents(&DslValue::from(&case["schema"]), &[]).unwrap();
+        assert_eq!(validator.validate_intrinsic(&DslValue::from(&case["value"])).is_ok(), case["valid"].as_bool().unwrap(), "{}", case["id"]);
+    }
+    println!("[DEBUG] intrinsic validation oracle=Ajv corpus={}", corpus["cases"].as_array().unwrap().len());
+}
+
+#[test]
+fn intrinsic_validation_controls_admission_before_copying_values() {
+    let schema = DslValue::from(serde_json::json!({"type":"object","properties":{"n":{"type":"integer"}}}));
+    let (validator, progress) = OwnedJsonSchemaValidator::compile_intrinsic_with_documents_and_control(&schema, &[], &ValidationControl::default()).unwrap();
+    assert!(progress.visited_nodes > 0);
+    let value = DslValue::from(serde_json::json!({"n":2}));
+    assert!(validator.validate_intrinsic_with_control(&value, &ValidationControl::default()).unwrap().visited_nodes > 0);
+    assert_eq!(validator.validate_intrinsic_with_control(&value, &ValidationControl::new(1)), Err(SchemaError::LimitExceeded(1)));
+    let cancelled = ValidationControl::default(); cancelled.cancel();
+    assert_eq!(validator.validate_intrinsic_with_control(&value, &cancelled), Err(SchemaError::Cancelled));
+    assert!(matches!(OwnedJsonSchemaValidator::compile_intrinsic_with_documents_and_control(&schema, &[], &cancelled), Err(SchemaError::Cancelled)));
+    let finite = OwnedJsonSchemaValidator::compile_intrinsic_with_documents(&DslValue::from(serde_json::json!({"type":"number"})), &[]).unwrap();
+    assert!(finite.validate_intrinsic(&DslValue::float(f64::NAN)).is_err());
+    assert!(finite.validate_intrinsic(&DslValue::float(f64::INFINITY)).is_err());
+    println!("[DEBUG] intrinsic validator admission, progress and cancellation preserved");
+}
 
 #[test]
 fn unchanged_subset_corpus_matches_the_independent_oracle() {

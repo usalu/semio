@@ -169,11 +169,11 @@ fn owned_store(label: &str, operation_value: u64) -> store::ArtifactStore<Proces
 fn owned_store_measured(label: &str, operation_value: u64, budget: &mut ReplacementPhaseBudget) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
     let operation = semio_framework_job::OperationId(operation_value);
     let generation = semio_framework_job::Generation(51);
-    process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
+    process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::host::owned::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
     let mut snapshot = crate::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
     let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, label, snapshot, None);
-    let mut authority = Process3dStoreInitializationAuthority::new(envelope, operation, generation);
+    let mut authority = Process3dStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     let mut complete = false;

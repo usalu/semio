@@ -39,7 +39,7 @@ import type { PlaygroundSelection as PlaygroundVariant } from "./🎮️playgrou
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
-import { cargoRepositoryPackages, cargoRepositoryPackage, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
 import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
 export const HUB_DATA_DIR_NAME = "🌐hub";
@@ -1417,13 +1417,13 @@ export function repositoryCargoTestPolicyV1(manifestPath:string,cwd:string,env:R
 
 /** 🦀️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
 export async function runRepositoryCargoTests(packages:string[],cwd:string,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
-  const repository=getWorkspaceRoot(), rows=packages.map(name=>cargoRepositoryPackage(repository,name));
+  const repository=getWorkspaceRoot(), rows=cargoRepositoryPackageSelections(repository,packages);
   const manifests=rows.length?[...new Set(rows.map(row=>row.manifest))]:[relative(repository,join(cwd,"Cargo.toml"))];
   const scopes=new Map<string,string[]>();
   for(const manifest of manifests){const scope=cargoWorkspaceForManifest(repository,manifest).directory;scopes.set(scope,[...(scopes.get(scope)??[]),manifest]);}
   for(const manifests of scopes.values()){
     const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
-    prepareCargoWorkspaceInvocation(repository,["test","--manifest-path",manifest],cwd);
+    prepareCargoWorkspaceInvocation(repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,env);
     const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
     await runCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets});
   }
@@ -1527,7 +1527,8 @@ export async function runRepositoryExactCargoLaws(options: Omit<ExactCargoLawOpt
   const root = getWorkspaceRoot(), environment = options.env ?? process.env;
   const artifactDirectory = options.artifactDir ?? environment.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactDirectory || !isAbsolute(artifactDirectory) || !isGeneratedPath(artifactDirectory)) throw new Error("Repository exact Cargo laws require generated artifact storage");
-  const manifestPaths = Object.fromEntries(options.groups.map(group => [group.package, options.manifestPath ?? join(root, cargoRepositoryPackage(root, group.package).manifest)]));
+  const selected = options.manifestPath ? [] : cargoRepositoryPackageSelections(root, options.groups.map(group => group.package));
+  const manifestPaths = Object.fromEntries(options.groups.map((group, index) => [group.package, options.manifestPath ?? join(root, selected[index]!.manifest)]));
   const preparedPort: ExactCargoLawPort = port ?? {
     fingerprint: exactExecutableFingerprint,
     probe: async (command, args, capture) => {
@@ -1802,7 +1803,7 @@ export function enforceCoverageThreshold(summary: CoverageSummary, thresholdPct:
  */
 export function runCargoLint(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
   const resolvedPackages = resolveCargoPackageNames(packages, cwd);
-  const repository = getWorkspaceRoot(), rows = resolvedPackages.map(name => cargoRepositoryPackage(repository, name));
+  const repository = getWorkspaceRoot(), rows = cargoRepositoryPackageSelections(repository, resolvedPackages);
   const scopes = [...new Set(rows.map(row => row.workspace))];
   if (scopes.length > 1) { for (const scope of scopes) runCargoLint(rows.filter(row => row.workspace === scope).map(row => row.name), cwd, extraArgs, env); return; }
   const packageArgs = [...(rows.length ? ["--manifest-path", join(repository, rows[0]!.manifest)] : []), ...resolvedPackages.flatMap((pkg) => ["-p", pkg])];

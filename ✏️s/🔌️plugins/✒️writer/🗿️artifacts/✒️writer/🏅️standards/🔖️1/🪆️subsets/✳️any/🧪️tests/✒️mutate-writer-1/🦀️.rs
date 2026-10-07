@@ -61,7 +61,8 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::io::text::snapshot::{parse_writer_dsl, print_writer_dsl};
-    use semio_s_artifact_writer_writer::standards::v1::subsets::any::schema::mutations::{apply_writer_mutation_outcome, inverse_writer_mutation_steps, WriterMutation};
+    use semio_s_artifact_writer_writer::standards::v1::subsets::any::schema::mutations::{apply_writer_mutation_outcome,inverse_writer_mutation_steps,WriterMutation};
+
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::io::text::snapshot::{encode_writer_snapshot_json};
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::io::text::snapshot::{decode_writer_snapshot_json};
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::io::text::mutations::{decode_writer_mutation_json};

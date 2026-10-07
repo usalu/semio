@@ -5,7 +5,7 @@ use crate::schema::mutations::{PngMutation, SetSnapshot};
 use crate::PngSnapshot;
 use protocol::DiffAlgebra;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ChangeGammaMutation {
@@ -18,7 +18,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "gamma", kind: "change-gamma", record: "ChangeGamma" };
 
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        match crate::standards::v1_2::subsets::any::io::set_gamma_chunk_controlled(base, &self.revision, self.gama, &mut |_, _| true) {
+        match crate::schema::operations::set_gamma_chunk_controlled(base, &self.revision, self.gama, &mut |_, _| true) {
             Ok(next) => protocol::MutationOutcome::new(PngDiff::between(base, &next)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["gAMA"]),
         }
@@ -40,5 +40,5 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
     let base = PngSnapshot::default();
-    PngMutation::ChangeGamma(ChangeGammaMutation { revision: crate::standards::v1_2::subsets::any::io::png_revision(&base), gama: Some(45_455) })
+    PngMutation::ChangeGamma(ChangeGammaMutation { revision: crate::schema::operations::png_revision(&base), gama: Some(45_455) })
 }

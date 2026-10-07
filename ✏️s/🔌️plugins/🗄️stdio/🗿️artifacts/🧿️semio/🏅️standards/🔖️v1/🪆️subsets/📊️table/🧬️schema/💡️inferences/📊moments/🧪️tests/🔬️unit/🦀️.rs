@@ -93,3 +93,16 @@ async fn changing_an_unrelated_column_does_not_miss() {
     assert_eq!(after.misses, before.misses, "the label column has no bearing on score/count dep chains");
 }
 //#endregion 🧪️IncrementalityLaw
+
+#[test]
+fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
+    use store::InferredField;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let values:Vec<f64>=serde_json::from_value(fixture["values"].clone()).unwrap(); let snapshot=SemioTableSnapshot{columns:vec![SemioTableColumn{name:"score".into(),kind:SemioTableCellKind::Float}],rows:values.iter().map(|value|SemioTableRow{cells:vec![SemioValue::Float{lexeme:value.to_string()}]}).collect(),..Default::default()};
+    let dependency=ColumnMoments::dep_input(&snapshot,&"score".into(),&[]);
+    let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
+    let oracle=serde_json::to_value(&values).unwrap();
+    assert_eq!(actual,oracle);
+    assert_eq!(actual,fixture["expected"]);
+    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
+}

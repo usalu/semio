@@ -13,7 +13,8 @@
 //! 🔧️ Upgrading the roof beam from IPE 240 to IPE 270 is a whole-entity patch in place — the element keeps its id and its position in the collection.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-element/🔧️regrades/📸️snapshot/⬅️before/🔣️.json");

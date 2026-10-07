@@ -1,9 +1,16 @@
 {
-  "schema":"semio.pdf.owned-native-output/v1",
-  "text":"owned PDF 世界\u0000",
-  "repeatCount":16384,
-  "maximumBytes":67108864,
-  "cancelAt":65536,
-  "documentId":{"left":[0,1,255],"right":[]},
-  "fieldCount":31
+  "schema": "semio.pdf.owned-native-output/v1",
+  "text": "owned PDF 世界\u0000",
+  "repeatCount": 16384,
+  "maximumBytes": 67108864,
+  "cancelAt": 65536,
+  "documentId": {
+    "left": [
+      0,
+      1,
+      255
+    ],
+    "right": []
+  },
+  "fieldCount": 31
 }

@@ -24,7 +24,7 @@ fn retire(snapshot: DocxSnapshot) {
     snapshot.retire_sqlite_snapshot();
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::backing::super) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<DocxSnapshot, ValueError> {
+pub(crate) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<DocxSnapshot, ValueError> {
     control.check_database(database, PHASE)?;
     validate_sqlite_database_schema_controlled(database, DocxSnapshot::SQLITE_SCHEMA, PHASE, control)?;
     let root = database.table("docx_document")?.single_row()?;

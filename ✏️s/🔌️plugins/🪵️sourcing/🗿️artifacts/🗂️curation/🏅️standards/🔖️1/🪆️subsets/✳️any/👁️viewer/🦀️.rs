@@ -7,7 +7,7 @@
 use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA, SOURCING_DIALECT};
 use crate::viewer::sourcing::modes::view;
 use crate::viewer::sourcing::modes::view::windows::pool;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use {semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
 // 🚧️ SDK GAP: same note as the editor's own import block — `InteractionView` is only reachable
 // through `app`, not yet in the crate-root re-export list (w0-f Gap 1 only closed the surface
 // traits/builders/adapters, not this pre-existing type).

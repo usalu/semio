@@ -94,10 +94,8 @@ function storySummarizePuzzle3dConnectionParams(fixture: StoryWorld3dFixture) {
 //#endregion StoryTypes
 
 //#region ReferenceAssetOverrides
-/** 🖼️ Fixture `references[].source.url` values point at the `/infinite-fixture/*` dev-only static route, which isn't registered for the `puzzle/3d` Storybook scope — remap the two known fixture URLs to real Vite-imported asset URLs so the reference planes actually load instead of 404ing (silently, per `WorldReferenceLayer`'s catch — see `framework/os/kernel/infinite/world/r3f/index.tsx`). */
+/** 🖼️ Resolves current infinite asset URLs to the owned Vite imports. */
 const STORY_REFERENCE_URL_OVERRIDES: Record<string, string> = {
-  "/infinite-fixture/abbau-aufbau-masterarbeit-grundriss.jpg": abbauAufbauReferenceUrl,
-  "/infinite-fixture/rathaus-ahlen-grundriss.png": rathausAhlenReferenceUrl,
   "/infinite-assets/🖼️abbau-aufbau-masterarbeit-grundriss.jpg": abbauAufbauReferenceUrl,
   "/infinite-assets/🖼️rathaus-ahlen-grundriss.png": rathausAhlenReferenceUrl,
   "/infinite-assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg": abbauAufbauReferenceUrl,

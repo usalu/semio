@@ -2,14 +2,14 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
-use crate::flow::schema::snapshot::{SemioFlowSnapshot,FlowNode,FlowEdge,FlowParam,PortRef};
+use crate::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot,FlowNode,FlowEdge,FlowParam,PortRef};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use std::collections::{BTreeMap,BTreeSet};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits the exact Flow entities through the caller's owned or borrowed row writer.
-fn visit_rows(snapshot:&SemioFlowSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioFlowSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let phase=out.phase();let mut nodes=out.allocate_frontier(snapshot.nodes.len())?;
  for(ordinal,node)in snapshot.nodes.iter().enumerate(){out.checkpoint()?;nodes.push((node.id.as_str(),number(ordinal+1)?));}
  out.sort_frontier(&mut nodes,|a,b,c|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,phase,c))?;
@@ -43,6 +43,7 @@ pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::Native
 fn number(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string()))}
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio flow row identity or columns"))}else{Ok(())}}
 impl ArtifactSqliteSnapshot for SemioFlowSnapshot{
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::flow::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}
 fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::flow::io::sqlite::snapshot::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
@@ -91,7 +92,7 @@ semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHE
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

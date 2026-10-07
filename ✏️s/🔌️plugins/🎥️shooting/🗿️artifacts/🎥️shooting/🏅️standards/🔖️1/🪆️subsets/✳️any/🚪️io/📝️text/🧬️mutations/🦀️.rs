@@ -32,17 +32,10 @@ impl protocol::OpText for ShootingMutation {
 //#region 🔖️OpBinary
 //#region 🏷️WireTags
 /// 🏷️ `ShootingMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
-const WIRE_PROTOCOL: &str = include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio");
+
 //#endregion 🏷️WireTags
 
-impl protocol::OpBinary for ShootingMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
-    }
-}
+
 //#endregion 🔖️OpBinary
 
 #[allow(unused_imports)]

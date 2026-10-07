@@ -366,6 +366,7 @@ class ScriptBoundaryScript extends BundleScript {
 class ArtifactReferenceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("test-artifact-reference accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🧬️schema/🗿️artifact-reference/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:artifact-reference-value", cmdBudgetMs(process.env));
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:artifact-reference", cmdBudgetMs(process.env));
   }
 }

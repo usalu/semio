@@ -124,7 +124,7 @@ pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 /// confused with the unrelated, pre-existing `const DIALECT` inside
 /// `derived_analysis::RewritingAnalyzerAnalysis` in this subset's `🧬️schema/🦀️component.rs` — a
 /// different trait (`ArtifactAnalysis`), a different string (`"s.rewriting"`), out of scope here.
-pub const TRINITY_REWRITING_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.trinity.rewriting", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const TRINITY_REWRITING_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.trinity.rewriting", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 //#endregion 🔖️Types
 
 // 📜️ `RewritingSnapshot`/`RewriteRuleMutation` derive their `store::ArtifactDsl`/`protocol::OpText`
@@ -265,7 +265,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.rewriting").expect("canonical rewriting kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 //#endregion 🔖️Register

@@ -1,0 +1,4 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" ledger
+
+[DEBUG] isolated Nx verification test-owner-command
+[DEBUG] Plugin closure ledger integrity 39 9 1

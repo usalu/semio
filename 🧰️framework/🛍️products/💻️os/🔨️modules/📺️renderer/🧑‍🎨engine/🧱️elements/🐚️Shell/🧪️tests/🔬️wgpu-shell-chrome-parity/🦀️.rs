@@ -9,7 +9,7 @@
 //! `world3dComputeStatusV1` twin). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
 use super::*;
-use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ExampleDefinition, ModeDefinition, Modes, WindowKindDefinition, WindowKinds};
+use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ExampleDefinition,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 use ui_wgpu::wgpu::WindowLayout;
 
 const EXAMPLE_PICKER_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json");

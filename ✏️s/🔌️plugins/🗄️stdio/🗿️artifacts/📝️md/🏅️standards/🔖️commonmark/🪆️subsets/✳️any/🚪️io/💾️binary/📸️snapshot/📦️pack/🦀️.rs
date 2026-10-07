@@ -99,7 +99,7 @@ pub(crate) struct OwnedItems(Vec<Vec<MdBlock>>);
 impl Drop for OwnedItems{fn drop(&mut self){for blocks in std::mem::take(&mut self.0){retire_parts(blocks,Vec::new())}}}
 fn paid_children<T:RetireNode>(values:&mut[Option<T>],parent:Option<usize>,keys:Vec<u64>,control:&mut NativeDecodeControl<'_>)->Result<Vec<T>,ValueError>{control.scoped_stage(|control|{control.begin_stage(keys.len())?;let mut output=OwnedNodes(control.allocate_vec(keys.len())?);for key in keys{let key=usize::try_from(key).map_err(|_|invalid("CommonMark child index exceeds native domain"))?;if parent.is_some_and(|parent|key<=parent){return Err(invalid("CommonMark forward child topology differs"))}let value=values.get_mut(key).and_then(Option::take).ok_or_else(||invalid("CommonMark child is unknown or has multiple owners"))?;output.0.push(value);control.step()?;}Ok(std::mem::take(&mut output.0))})}
 fn reconstruct_controlled(value:Snapshot,control:&mut NativeDecodeControl<'_>)->Result<MdSnapshot,ValueError>{
- #[cfg(test)]let _stage=crate::standards::v_commonmark::subsets::any::schema::snapshot::sqlite_tests::MdReconstructTestScope::enter();
+ #[cfg(test)]let _stage=crate::standards::v_commonmark::subsets::any::io::sqlite::snapshot::tests::MdReconstructTestScope::enter();
  let Snapshot{schema,roots,blocks,inlines}=value;let mut inlines=inline::reconstruct_controlled(inlines,control)?;let mut blocks=block::reconstruct_controlled(blocks,&mut inlines.0,control)?;let mut roots=OwnedNodes(paid_children(&mut blocks.0,None,roots,control)?);if blocks.0.iter().any(Option::is_some)||inlines.0.iter().any(Option::is_some){return Err(invalid("CommonMark logical record contains unowned entities"))}Ok(MdSnapshot{schema,blocks:std::mem::take(&mut roots.0)})
 }
 

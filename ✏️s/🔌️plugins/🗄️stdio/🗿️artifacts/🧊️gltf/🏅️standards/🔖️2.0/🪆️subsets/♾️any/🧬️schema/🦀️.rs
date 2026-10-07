@@ -110,7 +110,7 @@ pub fn empty_gltf_snapshot() -> GltfSnapshot {
 /// mandate). Mirrors `demo_json_snapshot`'s own role in json's pilot report.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_gltf_snapshot() -> GltfSnapshot {
-    use crate::engine::{GltfAccessorType, GltfComponentType};
+    use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
     use crate::schema::snapshot::{
         GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness, GltfPerspective, GltfSampler,
         GltfScene, GltfSkin, GltfTexture,
@@ -143,7 +143,7 @@ pub fn demo_gltf_snapshot() -> GltfSnapshot {
         // `None`, a real asymmetry discovered by `fixture_honesty_law` -- setting a genuine data
         // URI up front keeps BOTH the text (`parse_gltf_document`) and GLB (`decode_glb`, which
         // never embeds when a buffer already declares a `uri`) facets byte-for-byte lossless.
-        buffers: vec![GltfBuffer { byte_length: 36, uri: Some(crate::engine::encode_data_uri("application/octet-stream", &[0u8; 36])), name: Some("geometry".into()), extensions: None, extras: None }],
+        buffers: vec![GltfBuffer { byte_length: 36, uri: Some("data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".into()), name: Some("geometry".into()), extensions: None, extras: None }],
         materials: vec![GltfMaterial {
             name: Some("triangle-material".into()),
             pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], metallic_factor: 0.0, roughness_factor: 0.8, ..GltfPbrMetallicRoughness::default() }),

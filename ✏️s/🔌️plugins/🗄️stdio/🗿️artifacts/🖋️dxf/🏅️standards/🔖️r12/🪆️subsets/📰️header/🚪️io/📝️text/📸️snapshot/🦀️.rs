@@ -12,7 +12,7 @@ const FIELDS:[(u16,&str,semio_framework_dsl_record::Shape,bool);6]=[
     (5,"blocks",semio_framework_dsl_record::Shape::Value,false),
     (6,"entities",semio_framework_dsl_record::Shape::Value,false),
 ];
-pub(super) fn spec()->semio_framework_dsl_record::RecordSpec{
+pub(crate) fn spec()->semio_framework_dsl_record::RecordSpec{
     semio_framework_dsl_record::RecordSpec::new(None,semio_framework_dsl_record::RecordLayout::Lines,FIELDS.into_iter().map(|(id,key,shape,optional)|{let mut field=semio_framework_dsl_record::FieldSpec::new(id,key,shape);field.optional=optional;field}).collect())
 }
 fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{
@@ -23,14 +23,14 @@ fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&m
     })
 }
 /// 🏭️ Owns literal snapshot metadata independently under either native allocation controller.
-pub(super) fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
+pub(crate) fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
 
-pub(super) fn to_record(snapshot:&DxfSnapshot)->semio_framework_dsl_record::RecordValue{
+pub(crate) fn to_record(snapshot:&DxfSnapshot)->semio_framework_dsl_record::RecordValue{
     use semio_framework_dsl_record::FieldValue as V;
     semio_framework_dsl_record::RecordValue{fields:[(1,semio_framework_dsl_record::FieldValue::Text(snapshot.schema.clone())),(2,semio_framework_dsl_record::FieldValue::Value(snapshot.header_vars.to_value())),(3,semio_framework_dsl_record::FieldValue::Value(snapshot.tables.to_value())),(4,semio_framework_dsl_record::FieldValue::Value(snapshot.other_tables.to_value())),(5,semio_framework_dsl_record::FieldValue::Value(snapshot.blocks.to_value())),(6,semio_framework_dsl_record::FieldValue::Value(snapshot.entities.to_value()))].into_iter().collect()}
 }
 
-pub(super) fn to_record_controlled(snapshot:&DxfSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+pub(crate) fn to_record_controlled(snapshot:&DxfSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
     control.scoped_depth(64,|control|control.scoped_stage(|control|->Result<_,ValueError>{
         control.begin_stage(6)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(6,control)?;
         record.insert(1,semio_framework_dsl_record::FieldValue::Text(control.copy_text(&snapshot.schema)?))?;control.step()?;
@@ -43,7 +43,7 @@ pub(super) fn to_record_controlled(snapshot:&DxfSnapshot,control:&mut semio_fram
     }))
 }
 fn project<T:ToValue>(value:&T,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control).map(semio_framework_dsl_record::FieldValue::Value)})}
-pub(super) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<DxfSnapshot,semio_framework_diagnostic::TextError>{
+pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<DxfSnapshot,semio_framework_diagnostic::TextError>{
     if record.fields.keys().any(|id|!(1..=6).contains(id)){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DXF snapshot contains an undeclared root field",semio_framework_diagnostic::TextSpan::at(1,1)));}
     let mut fields=Vec::with_capacity(6);
     for(id,key)in[(1,"schema"),(2,"headerVars"),(3,"tables"),(4,"otherTables"),(5,"blocks"),(6,"entities")]{
@@ -57,7 +57,7 @@ fn owned<T:FromValue>(record:&semio_framework_dsl_record::RecordValue,id:u16,key
     let Some(semio_framework_dsl_record::FieldValue::Value(value))=record.get(id)else{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DXF snapshot field {key} is missing or has a different shape")))};
     let value=T::from_value_controlled(value,control).map_err(|error|error.under(key))?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)
 }
-pub(super) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DxfSnapshot,ValueError>{
+pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DxfSnapshot,ValueError>{
     control.scoped_stage(|control|->Result<_,ValueError>{
         control.begin_stage(6)?;if record.fields.keys().any(|id|!(1..=6).contains(id)){return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot contains an undeclared root field"));}
         let Some(semio_framework_dsl_record::FieldValue::Text(schema))=record.get(1)else{return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot schema is missing or has a different shape"));};let schema=control.copy_text(schema)?;control.step()?;
@@ -110,7 +110,8 @@ use super::*;
 use crate::standards::v_r12::subsets::any::schema::snapshot::*;
 use crate::STDIO_DXF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use crate::standards::v_r12::subsets::any::schema::snapshot::text as snapshot_text;
+use crate::standards::v_r12::subsets::any::io::text::snapshot as snapshot_text;
+use crate::standards::v_r12::subsets::any::io::text::diff::{dec_block, dec_dxf_entities, dec_header_var, dec_list, dec_str, enc_block, enc_dxf_entities, enc_header_var, enc_list, enc_str, split_top_level, strip_brackets};
 
 /// 🧭️ Simplification of the DXF group-code value-type table (spec appendix) into the four
 /// `DxfValue` kinds — good enough for every code this codec reads generically (unknown-group-code
@@ -898,7 +899,7 @@ use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use crate::standards::v_r12::subsets::any::io::text::diff::{enc_other_table, dec_other_table, enc_dxf_tables, dec_dxf_tables};
+use crate::standards::v_r12::subsets::any::io::text::diff::{dec_block, dec_dxf_entities, dec_dxf_tables, dec_header_var, dec_list, dec_other_table, dec_str, enc_block, enc_dxf_entities, enc_dxf_tables, enc_header_var, enc_list, enc_other_table, enc_str, split_top_level, strip_brackets};
 /// 🧬️ Whole `DxfSnapshot` — needed by `🧬️mutations::DxfMutation::SetSnapshot`'s `OpText`/
 /// `OpBinary` payload (§3a's mutation-side blocker: `SetSnapshot` always carries the whole
 /// snapshot, so this grammar is exercised by the mutation codec even though `DxfDiff` never

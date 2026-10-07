@@ -295,20 +295,12 @@ pub use super::dag_assembly::compute_gltf_inference;
 //#endregion 🧩️Assembly
 
 //#region 🧠️InferenceContract
-impl protocol::Inference<GltfSnapshot> for GltfInference {
-    fn infer(snapshot: &GltfSnapshot) -> Result<Self, semio_framework_value::ValueError> {
-        Ok({
-        Self { geometry: compute_gltf_inference(snapshot) }
-    
-        })
-    }
-}
 
 impl Default for GltfInference {
     fn default() -> Self {
         let snapshot = &GltfSnapshot::default();
 
-        Self { geometry: compute_gltf_inference(snapshot) }
+        Self { geometry: compute_gltf_inference(&crate::schema::snapshot::GltfDecodedSnapshot { document:&snapshot.document, accessors:Vec::new(), buffer_fingerprints:Vec::new() }) }
     }
 }
 

@@ -271,7 +271,7 @@ fn fill_run_job_places_only_inside_visible_target_regions() {
                 _ => None,
             })
             .map(|node| {
-                let rectangle = node.shape.as_deref() == Some("rectangle");
+                let rectangle = node.shape.as_ref().is_some_and(|shape|shape.eq_str("rectangle"));
                 fill_node_bounds(node.x, node.y, node.scale, rectangle, if rectangle { node.width } else { node.radius }, node.height)
             })
             .collect::<Vec<_>>()
@@ -593,7 +593,7 @@ fn fill_app(spec: &Value, requested: u64) -> Puzzle2dApp {
     let mut app = app_with_registry();
     load_example(&mut app, text(&spec["example"]));
     let keep = number(&spec["keepNodes"]) as usize;
-    let deletes: Vec<String> = board_snapshot_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node(id.to_string()))).collect();
+    let deletes: Vec<String> = board_snapshot_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node(id.into()))).collect();
     ::semio_framework_async::poll::resolve_ready(app.ingest_operations_text(&deletes.join("\n"))).expect("delete the nodes past keepNodes");
     assert_eq!(fixture_of(&app), example(spec).value().clone(), "the app commits exactly the snapshot document");
     dispatch(&mut app, "setFillCount", Some(&json!({ "count": requested })), None).expect("set fill count");

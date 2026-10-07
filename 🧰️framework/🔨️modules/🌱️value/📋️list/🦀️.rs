@@ -2,6 +2,10 @@
 
 use std::mem::size_of;
 
+#[path = "🎮️edit/🦀️.rs"]
+mod edit;
+pub use edit::{PagedListEditCursor, PagedListEditStep};
+
 //#region 🎟️Progress
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
 pub struct PagedListReturnProgress{pub progressed:bool,pub returned_allocation_bytes:usize}
@@ -733,6 +737,56 @@ impl<T: PartialEq, const N: usize> PartialEq for PagedList<T, N> {
 }
 
 impl<T: Eq, const N: usize> Eq for PagedList<T, N> {}
+
+impl<T, const N: usize> FromIterator<T> for PagedList<T, N> {
+    fn from_iter<I: IntoIterator<Item = T>>(values: I) -> Self { Self::try_from_iter(values).expect("cold list construction must fit its declared capacity") }
+}
+
+impl<T, const N: usize> From<Vec<T>> for PagedList<T, N> {
+    fn from(values: Vec<T>) -> Self { values.into_iter().collect() }
+}
+
+/// 📤️ Transfers native paged owners in semantic order without a contiguous output allocation.
+pub struct PagedIntoIter<T, const N: usize> { owner: PagedList<T, N> }
+
+impl<T, const N: usize> Iterator for PagedIntoIter<T, N> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> { self.owner.pop() }
+    fn size_hint(&self) -> (usize, Option<usize>) { let length = self.owner.len(); (length, Some(length)) }
+}
+
+impl<T, const N: usize> ExactSizeIterator for PagedIntoIter<T, N> {}
+
+impl<T, const N: usize> DoubleEndedIterator for PagedIntoIter<T, N> {
+    fn next_back(&mut self) -> Option<T> { (!self.owner.is_empty()).then(|| self.owner.remove(0)) }
+}
+
+impl<T, const N: usize> IntoIterator for PagedList<T, N> {
+    type Item = T;
+    type IntoIter = PagedIntoIter<T, N>;
+    fn into_iter(mut self) -> Self::IntoIter { self.reverse(); PagedIntoIter { owner: self } }
+}
+
+impl<T, const N: usize> PagedList<T, N> {
+    /// 🧊️ Constructs an empty native sequence; retained writes use explicit reserve and placement.
+    pub fn new() -> Self { Self::default() }
+    pub fn push(&mut self, value: T) { self.try_push(value).expect("cold list append must fit its declared capacity"); }
+    pub fn insert(&mut self, index: usize, value: T) {
+        assert!(index <= self.len());
+        self.push(value);
+        for at in (index..self.len() - 1).rev() { self.swap(at, at + 1); }
+    }
+    pub fn clear(&mut self) { while self.pop().is_some() {} }
+    pub fn truncate(&mut self, length: usize) { while self.len() > length { self.pop(); } }
+    pub fn first(&self) -> Option<&T> { self.get(0) }
+    pub fn first_mut(&mut self) -> Option<&mut T> { self.get_mut(0) }
+    pub fn last(&self) -> Option<&T> { self.len().checked_sub(1).and_then(|index| self.get(index)) }
+    pub fn last_mut(&mut self) -> Option<&mut T> { self.len().checked_sub(1).and_then(|index| self.get_mut(index)) }
+}
+
+impl<T, const N: usize> Extend<T> for PagedList<T, N> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, values: I) { for value in values { self.push(value); } }
+}
 
 #[cfg(test)]
 #[path = "🧪️tests/⚠️refusal/🦀️.rs"]

@@ -5,7 +5,8 @@ use semio_framework_os_kernel::{
     sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
     ArtifactSqliteSnapshot,
 };
-use semio_s_artifact_stdio_xml::schema::snapshot::{sqlite::XmlSqliteTables, XmlSnapshot};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlSnapshot;
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::XmlSqliteTables;
 use semio_s_artifact_stdio_zip::opc::sqlite::OpcSqliteTables;
 
 #[path = "💰️backing/🦀️.rs"]
@@ -53,25 +54,25 @@ struct Parts(Vec<DocxXmlPart>);
 
 impl ArtifactSqliteSnapshot for DocxSnapshot {
     fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
-        crate::standards::v_ecma_376::subsets::base::schema::snapshot::native::encode(self, encoding, control)
+        crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self, encoding, control)
     }
 
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
-        crate::standards::v_ecma_376::subsets::base::schema::snapshot::native::decode(payload, control)
+        crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload, control)
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        crate::standards::v_ecma_376::subsets::base::schema::snapshot::native::preflight(self, encoding, control)
+        crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::preflight(self, encoding, control)
     }
 
-    fn validate_sqlite_snapshot_subset(&self, dialect: &store::io_schema::ArtifactDialect, _database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.stdio.docx" || dialect.standard != "ecma-376" {
             return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "DOCX owned dialect belongs to another snapshot owner")));
         }
         match dialect.subset.as_str() {
             "*" => Ok(store::io_schema::IoOutcome::clean(())),
-            "strict" | "transitional" => crate::standards::v_ecma_376::subsets::base::schema::snapshot::subset::validate(self, &dialect.subset, control),
+            "strict" | "transitional" => crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::subset::validate(self, &dialect.subset, control),
             _ => Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "DOCX owned subset has no declared semantic validator"))),
         }
     }
@@ -99,3 +100,6 @@ impl ArtifactSqliteSnapshot for DocxSnapshot {
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
 
+
+#[path = "🛡️subset/🦀️.rs"]
+pub(crate) mod subset;

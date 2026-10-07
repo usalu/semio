@@ -157,7 +157,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 };
                 let left = view.for_window_instance(left_id).expect("left window");
                 let right = view.for_window_instance(right_id).expect("right window");
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 app.bind_instance_id(INSTANCE).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -223,7 +223,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     }
                     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
                     assert_exact_state(&mut app, &left, &right, expected).await?;
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                     reopened.bind_instance_id(REOPENED_INSTANCE).await;
                     // 🪦️ Nothing between the second app's construction and its close may `?`: an early
                     // return drops a live `VcsArtifactApp` that never ran the close ladder, and the
@@ -294,7 +294,7 @@ fn cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness() {
                     ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let left = view.for_window_instance("cad-shape-left").expect("left window");
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 app.bind_instance_id(93).await;
                 let tree = app.render(shape::BODY_KEY, None, &left).await.expect("CAD shape render");
                 let _json = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire the rendered CAD tree");
@@ -331,7 +331,7 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
                     ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let mut source: Box<VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> =
-                    Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                    Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 source.bind_instance_id(95).await;
                 let _measures = source.window_measures(&view).await;
                 let packs = source.window_config_packs().await.expect("CAD window config packs");
@@ -340,7 +340,7 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
                 drop(source);
 
                 let expected: Vec<(String, String, Vec<u8>, Vec<u8>)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone(), pack.files.pack.clone(), pack.files.spr.clone())).collect();
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 reopened.bind_instance_id(96).await;
                 for pack in packs {
                     // 📍️ `CadCamera::position`/`target` are `#[dsl(coord)] [f64; 3]`, and the pack's

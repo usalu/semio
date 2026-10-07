@@ -4,7 +4,7 @@ use super::{records::*,FormsSnapshot};
 use crate::FormExpr;
 use semio_framework_value::DslValue;
 use semio_framework_value::NativeEncodeControl;
-use super::super::sqlite::admission::Counts;
+use crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::Counts;
 struct Builder<'s,'n,'p>{values:Vec<&'s DslValue>,conditions:Vec<&'s FormExpr>,control:&'n mut NativeEncodeControl<'p>}
 impl<'s>Builder<'s,'_,'_>{
  fn text(&mut self,value:&str)->Result<String,ValueError>{self.control.copy_text(value)}
@@ -17,7 +17,7 @@ impl<'s>Builder<'s,'_,'_>{
   let fields=if let Some(values)=&q.fields{let mut out=self.control.allocate_vec(values.len())?;for value in values{out.push(VectorRecord{key:self.text(&value.key)?,label:self.optional(&value.label)?,value:value.value});self.control.step()?;}Some(out)}else{None};
   self.control.step()?;Ok(Question{id:self.text(&q.id)?,label:self.text(&q.label)?,kind:self.text(&q.kind)?,description:self.optional(&q.description)?,required:q.required,placeholder:self.optional(&q.placeholder)?,default,min:q.min,max:q.max,step:q.step,unit:self.optional(&q.unit)?,text:self.optional(&q.text)?,options,fields,schema:self.optional(&q.schema)?,src:self.optional(&q.src)?,accept:self.optional(&q.accept)?,example_id:self.optional(&q.example_id)?,params,condition})
  }
- fn child<S>(&mut self,child:&store::ArtifactChild<S>)->Result<store::ArtifactChild<S>,ValueError>{Ok(store::ArtifactChild::new(self.text(&child.child_id)?,store::io_schema::ArtifactRef{artifact_id:self.text(&child.target.artifact_id)?,dialect:store::io_schema::ArtifactDialect{artifact_kind:self.text(&child.target.dialect.artifact_kind)?,standard:self.text(&child.target.dialect.standard)?,subset:self.text(&child.target.dialect.subset)?}}))}
+ fn child<S>(&mut self,child:&store::ArtifactChild<S>)->Result<store::ArtifactChild<S>,ValueError>{Ok(store::ArtifactChild::new(self.text(&child.child_id)?,semio_framework_artifact_reference::ArtifactRef{artifact_id:self.text(&child.target.artifact_id)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:self.text(&child.target.dialect.artifact_kind)?,standard:self.text(&child.target.dialect.standard)?,subset:self.text(&child.target.dialect.subset)?}}))}
 }
 pub(super) fn project<'s>(s:&'s FormsSnapshot,counts:&Counts,c:&mut NativeEncodeControl<'_>)->Result<Document,ValueError>{
  let work=[counts.steps,counts.questions,counts.options,counts.fields,counts.responses,counts.answers,counts.values,counts.conditions,counts.array_elements,counts.object_members,counts.condition_items].into_iter().try_fold(0usize,|n,m|n.checked_add(m).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms native projection work overflow")))?;c.begin_stage(work)?;let values=c.allocate_vec(counts.values)?;let conditions=c.allocate_vec(counts.conditions)?;let mut b=Builder{values,conditions,control:c};

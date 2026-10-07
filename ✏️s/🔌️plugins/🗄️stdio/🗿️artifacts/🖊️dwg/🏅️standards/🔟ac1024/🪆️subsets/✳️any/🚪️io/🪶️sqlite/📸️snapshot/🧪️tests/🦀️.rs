@@ -11,7 +11,7 @@ fn sqlite_snapshot_dwg_borrowed_root_admission_precedes_typed_field_allocation()
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️encoding.json")).unwrap();let mut snapshot=DwgSnapshot::default();snapshot.schema=fixture["controlledNative"]["text"].as_str().unwrap().repeat(fixture["controlledNative"]["repeat"].as_u64().unwrap() as usize);
     let limits=SqliteDatabaseLimits{max_rows:fixture["rootAdmissionMaximumRows"].as_u64().unwrap() as usize,..SqliteDatabaseLimits::default()};let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(database.tables.iter().map(|table|table.rows.len()).sum::<usize>()>limits.max_rows);
     let record=snapshot.__dsl_to_record();let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);
-    assert!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::sqlite::construct_native_record(&record,&mut native,limits).is_err(),"borrowed mandatory occurrence admission must reject before materializing typed fields");assert_eq!(native.owned_bytes(),0,"refused known row frontier must not allocate root strings or typed slots");
+    assert!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::construct_native_record(&record,&mut native,limits).is_err(),"borrowed mandatory occurrence admission must reject before materializing typed fields");assert_eq!(native.owned_bytes(),0,"refused known row frontier must not allocate root strings or typed slots");
 }
 
 #[test]
@@ -43,9 +43,9 @@ fn sqlite_snapshot_dwg_controlled_native_admits_all_domain_rows_and_unicode() {
     let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');let rows=0;for(const{name}of d.query(\"SELECT name FROM sqlite_schema WHERE type='table'\").all())rows+=d.query('SELECT COUNT(*) AS n FROM '+name).get().n;await Bun.write(Bun.stdout,String(rows));d.close();";
     let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
     let rows:usize=String::from_utf8(output.stdout).unwrap().parse().unwrap();assert_eq!(rows,database.tables.iter().map(|table|table.rows.len()).sum::<usize>());assert!(rows>snapshot.drawing.objects.len()+1);
-    let record=snapshot.__dsl_to_record();let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);assert_eq!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::sqlite::forecast_native_rows(&record,&mut native,limits).unwrap(),rows,"literal borrowed body forecast matches independent SQLite exactly");assert_eq!(native.owned_bytes(),0);
+    let record=snapshot.__dsl_to_record();let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);assert_eq!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::forecast_native_rows(&record,&mut native,limits).unwrap(),rows,"literal borrowed body forecast matches independent SQLite exactly");assert_eq!(native.owned_bytes(),0);
     let record=snapshot.__dsl_to_record();let limited=SqliteDatabaseLimits{max_rows:rows-1,..limits};let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);
-    assert!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::sqlite::construct_native_record(&record,&mut native,limited).is_err(),"all 43 borrowed body domains must admit their exact descendant frontier before typed construction");assert_eq!(native.owned_bytes(),0,"an independently counted descendant frontier must refuse before any typed string or collection allocation");
+    assert!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::construct_native_record(&record,&mut native,limited).is_err(),"all 43 borrowed body domains must admit their exact descendant frontier before typed construction");assert_eq!(native.owned_bytes(),0,"an independently counted descendant frontier must refuse before any typed string or collection allocation");
     for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
         let restored=DwgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
@@ -67,8 +67,8 @@ fn sqlite_snapshot_complete_typescript_native_relational_interoperability() {
     let output=Command::new("bun").args(["-e",&export_script]).current_dir(root).output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
     let database=import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
     let snapshot=DwgSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
-    let limits=SqliteDatabaseLimits::default();let rows=database.tables.iter().map(|table|table.rows.len()).sum::<usize>();let record=snapshot.__dsl_to_record();let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);assert_eq!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::sqlite::forecast_native_rows(&record,&mut native,limits).unwrap(),rows,"borrowed forecast covers the independent all-entity, all-record and all-constraint SQLite corpus exactly");assert_eq!(native.owned_bytes(),0);
-    let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);assert!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::sqlite::construct_native_record(&record,&mut native,SqliteDatabaseLimits{max_rows:rows-1,..limits}).is_err());assert_eq!(native.owned_bytes(),0);
+    let limits=SqliteDatabaseLimits::default();let rows=database.tables.iter().map(|table|table.rows.len()).sum::<usize>();let record=snapshot.__dsl_to_record();let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);assert_eq!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::forecast_native_rows(&record,&mut native,limits).unwrap(),rows,"borrowed forecast covers the independent all-entity, all-record and all-constraint SQLite corpus exactly");assert_eq!(native.owned_bytes(),0);
+    let mut progress=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);assert!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::construct_native_record(&record,&mut native,SqliteDatabaseLimits{max_rows:rows-1,..limits}).is_err());assert_eq!(native.owned_bytes(),0);
     let projected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(projected.table("dwg_entity").unwrap().rows.len(),19);assert_eq!(projected.table("dwg_table_record").unwrap().rows.len(),7);assert_eq!(projected.table("dwg_constraint_node").unwrap().rows.len(),14);
     let bytes=export_sqlite_database(&projected,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
@@ -177,7 +177,7 @@ fn sqlite_snapshot_named_objects_associative_state_and_evaluation_tags() {
 fn sqlite_snapshot_all_43_body_domains_and_14_constraint_tags_independent_sqlite() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️bodies/🔣️.json")).unwrap();
     let mut snapshot=DwgSnapshot::default();
-    snapshot.drawing=DwgLogicalDrawing::from_native(&dwg_engine::DwgDrawing::default()).unwrap();
+    snapshot.drawing=DwgLogicalDrawing::from_native(&crate::standards::v_ac1024::engine::DwgDrawing::default()).unwrap();
     for (index,body) in bodies::authored_bodies().into_iter().enumerate(){
         snapshot.drawing.objects.push(DwgLogicalObject{handle:10000+index as u64,type_code:u16::MAX,class_name:"authored body vector".into(),category:DwgObjectCategory::Object,owner_handle:Some(u64::MAX),reactor_handles:vec![0,u64::MAX],extension_dictionary_handle:Some(0),referenced_handles:vec![9007199254740993],extended_data:vec![],body:Some(body)});
     }
@@ -226,11 +226,11 @@ fn sqlite_snapshot_exact_nan_payload_identity_and_exact_owned_dialects() {
         let mut snapshot=DwgSnapshot::default();snapshot.version="noncanonical".into();snapshot.header.units.unit1_conversion=f64::from_bits(bits);
         let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
         for row in dialects["sqliteDialects"].as_array().unwrap(){
-            let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};
+            let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};
             assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_ok());
         }
         for row in dialects["invalidSqliteDialects"].as_array().unwrap(){
-            let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};
+            let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};
             assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());
         }
         assert!(<DwgSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().is_some());
@@ -264,7 +264,7 @@ fn sqlite_snapshot_independent_well_formed_sqlite_rejects_invalid_domain_edits()
 
 fn erased_nan_words(encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔢️numbers/🔣️.json")).unwrap();
-    let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:"s.stdio.dwg".into(),standard:"ac1024".into(),subset:"*".into()};
+    let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.dwg".into(),standard:"ac1024".into(),subset:"*".into()};
     let codec=<DwgSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     for value in fixture["nativeEncodingFloat64Bits"].as_array().unwrap(){
         let bits=u64::from_str_radix(value.as_str().unwrap(),16).unwrap();let mut snapshot=DwgSnapshot::default();snapshot.version="noncanonical".into();snapshot.header.units.unit1_conversion=f64::from_bits(bits);
@@ -311,12 +311,12 @@ fn sqlite_snapshot_dwg_owned_guard_rejects_independent_non_document_edits() {
     let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));d.run(\"UPDATE dwg_summary SET title='independently edited state'\");if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,d.serialize());d.close();";
     let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let edited=import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap();
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️bodies/🔣️.json")).unwrap();
-    for row in fixture["sqliteDialects"].as_array().unwrap(){let dialect=store::io_schema::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"guard must compare complete typed state");let restored=DwgSnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();restored.validate_sqlite_snapshot_subset(&dialect,&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();}
+    for row in fixture["sqliteDialects"].as_array().unwrap(){let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"guard must compare complete typed state");let restored=DwgSnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();restored.validate_sqlite_snapshot_subset(&dialect,&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();}
 }
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_dwg_actual_declared_ac1018_ac1024_typed_and_erased_io() {
-    use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route,io_run_with_snapshot_control}};
+    use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("DWG actual owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let mut snapshot=DwgSnapshot::default();snapshot.version="independent intermediate version".into();snapshot.summary.total_editing_time=u64::MAX;snapshot.summary.title="世界 🖊️".into();snapshot.header.units.unit1_conversion=f64::from_bits(0xfff0000000000123);
     let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);

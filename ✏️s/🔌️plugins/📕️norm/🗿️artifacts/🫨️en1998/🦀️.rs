@@ -76,6 +76,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
 fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    use crate::standards::v1::subsets::any::io::{binary::{snapshot as pack, mutations as spr}, text::{snapshot as document_dsl, mutations as op, diff}};
     static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -86,8 +87,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(pack::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1998.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -116,8 +117,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(pack::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1998.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {

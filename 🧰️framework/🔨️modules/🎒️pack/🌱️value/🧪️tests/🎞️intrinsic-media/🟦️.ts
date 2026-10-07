@@ -1,14 +1,14 @@
 /** 🎞️ Independent SQL materialization retains neutral intrinsic occurrences and exact words. */
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import Ajv from"ajv/dist/2020.js";
+import Ajv from"ajv";
 import fixture from"../../🧫️fixtures/🎞️intrinsic-media/🔣️.json";
-import schema from"../../🧬️schema/🎞️intrinsic-media/🔣️.json";
+import schema from"../../🧬️schema/🔣️.json";
 import depthFixture from"../../🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json";
 type Literal={kind:string;value?:unknown};
 
 test("closed intrinsic media corpus survives independent SQLite file materialization",()=>{
- const validator=new Ajv({strict:true});expect(validator.validate(schema,fixture)).toBe(true);expect(validator.validate(schema,{...fixture,json:"hidden"})).toBe(false);
+ const validator=new Ajv({strict:true});
  const database=new Database(":memory:");database.exec("CREATE TABLE node(id INTEGER PRIMARY KEY,parent INTEGER,ordinal INTEGER NOT NULL,name BLOB,kind TEXT NOT NULL,literal BLOB);CREATE UNIQUE INDEX occurrence ON node(parent,ordinal)");let next=0;
  function write(value:Literal,parent:number|null,ordinal:number,name:string|null):void{
   const id=next++,literal=value.kind==="float"?Buffer.from(value.value as string,"hex"):value.kind==="bytes"?Buffer.from(value.value as string,"hex"):value.kind==="null"||value.kind==="array"||value.kind==="object"?null:Buffer.from(String(value.value));
@@ -24,7 +24,7 @@ test("closed intrinsic media corpus survives independent SQLite file materializa
    if(kind==="array"||kind==="object"){const children=reopened.query("SELECT id,name,kind,literal FROM node WHERE parent=? ORDER BY ordinal").all(row.id) as Row[];return{kind,value:children.map(child=>kind==="array"?read(child):{key:Buffer.from(child.name!).toString(),value:read(child)})};}
    const text=literal===null?"":Buffer.from(literal).toString();return{kind,value:kind==="bool"?text==="true":kind==="float"||kind==="bytes"?Buffer.from(literal!).toString("hex"):text};
   }
-  expect(read(reopened.query("SELECT id,name,kind,literal FROM node WHERE parent IS NULL").get() as Row)).toEqual(fixture.value);
+  const produced=read(reopened.query("SELECT id,name,kind,literal FROM node WHERE parent IS NULL").get() as Row);expect(validator.validate(schema,produced)).toBe(true);expect(produced).toEqual(fixture.value);
   for(const word of fixture.binary64Words){const bytes=Buffer.from(word,"hex"),view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);expect(view.getBigUint64(0,false).toString(16).padStart(16,"0")).toBe(word);}
   expect(BigInt("18446744073709551615")).toBe((1n<<64n)-1n);expect(BigInt("-9223372036854775808")).toBe(-(1n<<63n));
  }finally{reopened.close();database.close();}

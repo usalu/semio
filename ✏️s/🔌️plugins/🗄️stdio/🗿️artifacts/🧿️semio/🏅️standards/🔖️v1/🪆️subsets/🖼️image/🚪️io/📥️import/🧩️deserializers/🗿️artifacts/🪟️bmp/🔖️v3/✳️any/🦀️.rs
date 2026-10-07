@@ -3,9 +3,9 @@
 //! BMP-only authority and cannot be reconstructed from this neutral image projection.
 
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_bmp::schema::snapshot::BmpRowOrder;
-use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{bmp_layout, bmp_rgba8_preview, BmpProfile};
+use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_s_artifact_stdio_bmp::schema::snapshot::{BmpRowOrder, BmpProfile};
+use semio_s_artifact_stdio_bmp::schema::operations::bmp_rgba8_preview;
 use semio_s_artifact_stdio_bmp::BmpSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };
@@ -25,11 +25,12 @@ impl ArtifactDeserializer for SemioImageFromBmp {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let layout = bmp_layout(from).map_err(|failure| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("bmp→semio/image: {failure}"))))?;
+        from.validate().map_err(|failure| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, failure)))?;
+        let layout = &from.image;
         let rgba8 = bmp_rgba8_preview(from).map_err(|failure| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("bmp→semio/image: {failure}"))))?;
         let mut metadata = vec![
             SemioImageMetadataEntry { key: "bmp.profile".into(), value: layout.profile.id().into() },
-            SemioImageMetadataEntry { key: "bmp.bitsPerPixel".into(), value: layout.bits_per_pixel.to_string() },
+            SemioImageMetadataEntry { key: "bmp.bitsPerPixel".into(), value: layout.profile.bits_per_pixel().to_string() },
             SemioImageMetadataEntry {
                 key: "bmp.rowOrder".into(),
                 value: match layout.row_order {

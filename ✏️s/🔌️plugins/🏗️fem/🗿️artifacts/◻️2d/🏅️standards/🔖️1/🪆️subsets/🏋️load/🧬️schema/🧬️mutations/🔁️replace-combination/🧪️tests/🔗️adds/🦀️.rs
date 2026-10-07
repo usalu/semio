@@ -13,7 +13,8 @@
 //! 🔗️ Adding the accompanying wind term at 0.9 turns ULS 6.10b into the three-term combination the code actually asks for, in the slot it already occupied.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds/📸️snapshot/⬅️before/🔣️.json");

@@ -45,6 +45,32 @@
 
 use semio_repo_test_host::Json;
 
+/// 🌓️ Independent JPEG luma output through the existing image test interface.
+#[cfg(feature = "oracles")]
+pub fn oracle_decode_luma(input: &[u8]) -> Result<(u32,u32,Vec<u8>),String> {
+    let image=image::load_from_memory_with_format(input,image::ImageFormat::Jpeg).map_err(|error|error.to_string())?.into_luma8();
+    Ok((image.width(),image.height(),image.into_raw()))
+}
+
+/// 📴️ Refuses independent decoding when the explicit oracle feature is absent.
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_decode_luma(_input: &[u8]) -> Result<(u32,u32,Vec<u8>),String> {Err("JPEG oracle feature is disabled".into())}
+
+/// 🎚️ Independent image encoder controlled by an explicit physical export request.
+#[cfg(feature="oracles")]
+pub fn oracle_encode_rgba(width:u32,height:u32,pixels:&[u8],quality:u8)->Result<Vec<u8>,String> {
+    use image::ImageEncoder;
+    let rgba=image::RgbaImage::from_raw(width,height,pixels.to_vec()).ok_or("JPEG oracle raster extent is invalid")?;
+    let rgb=image::DynamicImage::ImageRgba8(rgba).to_rgb8();
+    let mut output=Vec::new();
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output,quality).write_image(rgb.as_raw(),width,height,image::ExtendedColorType::Rgb8).map_err(|error|error.to_string())?;
+    Ok(output)
+}
+
+/// 📴️ Refuses independent encoding when the explicit oracle feature is absent.
+#[cfg(not(feature="oracles"))]
+pub fn oracle_encode_rgba(_width:u32,_height:u32,_pixels:&[u8],_quality:u8)->Result<Vec<u8>,String>{Err("JPEG oracle feature is disabled".into())}
+
 //#region 🔖️Oracles
 #[cfg(feature = "oracles")]
 mod oracles {
@@ -276,7 +302,6 @@ mod oracles {
                 }
                 doc.rgba = rgba;
             }
-            "change-re-encode-quality" => doc.quality = number(params, "quality", DEFAULT_QUALITY as f64).clamp(1.0, 100.0) as u8,
             "set-snapshot" => *doc = from_snapshot(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
             "patch-snapshot" => {
                 for (member, value) in patch_members(params)? {
@@ -298,7 +323,7 @@ mod oracles {
             return Err(format!("set-snapshot carries {} pixel bytes, not the {width}x{height} RGBA raster", rgba.len()));
         }
         let mut doc = OracleDoc { width, height, rgba, version: (1, 1), density_units: 0, x_density: 1, y_density: 1, other_segments: Vec::new(), quality: DEFAULT_QUALITY };
-        for member in ["jfifVersion", "jfifDensityUnits", "jfifXDensity", "jfifYDensity", "reEncodeQuality"] {
+        for member in ["jfifVersion", "jfifDensityUnits", "jfifXDensity", "jfifYDensity"] {
             if let Some(value) = snapshot.get(member) {
                 set_member(&mut doc, member, value)?;
             }
@@ -340,7 +365,6 @@ mod oracles {
             }
             "jfifXDensity" => doc.x_density = as_number(doc.x_density as f64) as u16,
             "jfifYDensity" => doc.y_density = as_number(doc.y_density as f64) as u16,
-            "reEncodeQuality" => doc.quality = as_number(DEFAULT_QUALITY as f64).clamp(1.0, 100.0) as u8,
             other => return Err(format!("`{other}` is a JpgSnapshot member this oracle does not model")),
         }
         Ok(())
@@ -406,7 +430,6 @@ mod oracles {
                 doc.width = original.width;
                 doc.height = original.height;
             }
-            "change-re-encode-quality" => doc.quality = original.quality,
             "set-snapshot" => doc = original,
             "patch-snapshot" => {
                 for (member, _) in patch_members(&params)? {
@@ -415,7 +438,6 @@ mod oracles {
                         "jfifDensityUnits" => doc.density_units = original.density_units,
                         "jfifXDensity" => doc.x_density = original.x_density,
                         "jfifYDensity" => doc.y_density = original.y_density,
-                        "reEncodeQuality" => doc.quality = original.quality,
                         other => return Err(format!("patch-snapshot member `{other}` has no oracle inverse")),
                     }
                 }

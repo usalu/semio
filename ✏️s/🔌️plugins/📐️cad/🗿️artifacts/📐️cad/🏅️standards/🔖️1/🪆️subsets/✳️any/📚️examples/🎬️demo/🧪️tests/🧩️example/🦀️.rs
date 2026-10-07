@@ -22,7 +22,7 @@ fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
         assert!(!crate::cad_scene_pane_objects(&scene, pane).is_empty(), "{pane:?} pane carries objects");
         let pack = crate::cad_genesis_child_pack(&snapshot, crate::cad_pane_model_slot(pane), &child.child_id).unwrap_or_else(|| panic!("{pane:?} pane derives its genesis pack"));
         let model = <semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
-        assert_eq!(crate::standards::v1::subsets::any::io::geometry_import::objects_from_model_snapshot(&model), crate::cad_scene_pane_objects(&scene, pane), "{pane:?} pane genesis objects survive the model bridge exactly");
+        assert_eq!(crate::standards::v1::subsets::any::schema::geometry::objects_from_model_snapshot(&model), crate::cad_scene_pane_objects(&scene, pane), "{pane:?} pane genesis objects survive the model bridge exactly");
     }
 }
 
@@ -53,8 +53,8 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     type Mutation = crate::CadMutation;
     type Inference = crate::standards::v1::subsets::any::schema::inferences::CadInference;
 
-    async fn dialect() -> store::os_io::ArtifactDialect {
-        store::os_io::ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: "*".into() }
+    async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
+        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: "*".into() }
     }
 
     async fn fidelity() -> IoFidelityClass {

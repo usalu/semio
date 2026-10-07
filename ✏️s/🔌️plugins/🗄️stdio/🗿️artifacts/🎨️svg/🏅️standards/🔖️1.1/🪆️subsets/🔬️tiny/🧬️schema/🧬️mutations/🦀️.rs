@@ -21,12 +21,14 @@
 //! @see ../../../../../../🧪️tests/🔬️mutate-svg-1-1-tiny/🥒️.feature — the case that exercises it.
 
 use crate::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::schema::snapshot::{element_attr, node_at, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
-use crate::standards::v1_1::subsets::base::io::text::snapshot::{parse_transform_list};
-use crate::standards::v1_1::subsets::base::io::text::snapshot::{parse_view_box};
+use crate::schema::snapshot::{element_attr, node_at, NodePath, TransformOp, ViewBox};
+
+
+
+
 use crate::SvgSnapshot;
 use protocol::Mutation;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+use crate::schema::snapshot::{SvgAttr, SvgNode, SvgAttributeValue};
 
 //#region 🔖️Mutations
 #[path = "➕insert-tiny-element/🦀️.rs"]
@@ -138,9 +140,9 @@ pub fn is_blocked_attribute(name: &str) -> bool {
 
 /// 🛡️ The gate every authoring mutation passes through: the message naming the first excluded
 /// element or attribute in the subtree, or `None` when the subtree is Tiny-clean.
-pub fn subtree_profile_violation(node: &XmlNode) -> Option<String> {
+pub fn subtree_profile_violation(node: &SvgNode) -> Option<String> {
     match node {
-        XmlNode::Element { name, attrs, children } => {
+        SvgNode::Element { name, attrs, children } => {
             if is_blocked_element(name) {
                 return Some(format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it"));
             }
@@ -154,10 +156,10 @@ pub fn subtree_profile_violation(node: &XmlNode) -> Option<String> {
 }
 
 /// ✂️ Drops every excluded element subtree and every forbidden presentation attribute below `node`.
-fn strip_non_tiny(node: &mut XmlNode) {
-    if let XmlNode::Element { attrs, children, .. } = node {
+fn strip_non_tiny(node: &mut SvgNode) {
+    if let SvgNode::Element { attrs, children, .. } = node {
         attrs.retain(|a| !is_blocked_attribute(&a.name));
-        children.retain(|c| !matches!(c, XmlNode::Element { name, .. } if is_blocked_element(name)));
+        children.retain(|c| !matches!(c, SvgNode::Element { name, .. } if is_blocked_element(name)));
         for child in children.iter_mut() {
             strip_non_tiny(child);
         }
@@ -178,10 +180,10 @@ pub fn stripped_to_tiny(base: &SvgSnapshot) -> SvgSnapshot {
 /// 🏷️ Builds the exact `SvgAttributesDiff` a set of `(name, value)` transitions requires on the
 /// element addressed by `path`, resolving each attribute's PRIOR presence against `base`.
 /// `added.index` refers to FINAL state, so successive additions count up from the surviving length.
-fn attributes_diff_at_path(base: &SvgSnapshot, path: &[usize], changes: &[(&str, Option<String>)]) -> SvgDiff {
+fn attributes_diff_at_path(base: &SvgSnapshot, path: &[usize], changes: &[(&str, Option<SvgAttributeValue>)]) -> SvgDiff {
     let target = node_at(&base.doc, path).ok();
-    let existing: &[XmlAttr] = match target {
-        Some(XmlNode::Element { attrs, .. }) => attrs.as_slice(),
+    let existing: &[SvgAttr] = match target {
+        Some(SvgNode::Element { attrs, .. }) => attrs.as_slice(),
         _ => &[],
     };
     let mut diff = SvgAttributesDiff::default();
@@ -205,8 +207,8 @@ fn attributes_diff_at_path(base: &SvgSnapshot, path: &[usize], changes: &[(&str,
 }
 
 /// 🔎 The PRIOR value of attribute `name` on the element addressed by `path` in `base`.
-fn prior_attribute(base: &SvgSnapshot, path: &[usize], name: &str) -> Option<String> {
-    node_at(&base.doc, path).ok().and_then(|n| element_attr(n, name)).map(|s| s.to_string())
+fn prior_attribute(base: &SvgSnapshot, path: &[usize], name: &str) -> Option<SvgAttributeValue> {
+    node_at(&base.doc, path).ok().and_then(|n| element_attr(n, name)).cloned()
 }
 //#endregion 🔖️AttributeHelper
 
@@ -232,7 +234,7 @@ pub(crate) fn agg_diff(this: &SvgTinyMutation, base: &SvgSnapshot) -> protocol::
     match this {
         SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot)),
         SvgTinyMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgTinyMutation>>::diff(patch, base),
-        SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile, version }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, &[], &[("baseProfile", base_profile.clone()), ("version", version.clone())])),
+        SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile, version }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, &[], &[("baseProfile", base_profile.clone().map(SvgAttributeValue::Text)), ("version", version.clone().map(SvgAttributeValue::Text))])),
         SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent, index, node }) => match subtree_profile_violation(node) {
             Some(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
             None => protocol::MutationOutcome::new(diff_at_path(
@@ -250,8 +252,8 @@ pub(crate) fn agg_diff(this: &SvgTinyMutation, base: &SvgSnapshot) -> protocol::
             protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[(name.as_str(), value.clone())]))
         }
         SvgTinyMutation::SetText(set_text::SetText { path, text }) => protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Text { text: Some(text.clone()) })),
-        SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path, view_box }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("viewBox", view_box.as_ref().map(view_box_to_string))])),
-        SvgTinyMutation::SetTransform(set_transform::SetTransform { path, transform }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("transform", transform.as_ref().map(|ops| transform_list_to_string(ops)))])),
+        SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path, view_box }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("viewBox", view_box.clone().map(SvgAttributeValue::ViewBox))])),
+        SvgTinyMutation::SetTransform(set_transform::SetTransform { path, transform }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("transform", transform.clone().map(SvgAttributeValue::Transform))])),
         SvgTinyMutation::StripNonTiny(_) => protocol::MutationOutcome::new(diff_set_snapshot(base, &stripped_to_tiny(base))),
     }
 }
@@ -265,10 +267,10 @@ pub(crate) fn agg_inverse(this: &SvgTinyMutation, base: &SvgSnapshot) -> Result<
     match this {
         SvgTinyMutation::SetSnapshot(_) | SvgTinyMutation::StripNonTiny(_) => vec![SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         SvgTinyMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgTinyMutation>>::inverse(patch, base)?),
-        SvgTinyMutation::StampBaseProfile(_) => vec![SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: prior_attribute(base, &[], "baseProfile"), version: prior_attribute(base, &[], "version") })],
+        SvgTinyMutation::StampBaseProfile(_) => vec![SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: prior_attribute(base, &[], "baseProfile").and_then(|v| v.text().map(str::to_owned)), version: prior_attribute(base, &[], "version").and_then(|v| v.text().map(str::to_owned)) })],
         SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent, index, .. }) => vec![SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: parent.clone(), index: *index })],
         SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent, index }) => match node_at(&base.doc, parent) {
-            Ok(XmlNode::Element { children, .. }) => match children.get(*index) {
+            Ok(SvgNode::Element { children, .. }) => match children.get(*index) {
                 Some(node) => vec![SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent: parent.clone(), index: *index, node: node.clone() })],
                 None => Vec::new(),
             },
@@ -279,14 +281,14 @@ pub(crate) fn agg_inverse(this: &SvgTinyMutation, base: &SvgSnapshot) -> Result<
         }
         SvgTinyMutation::SetText(set_text::SetText { path, .. }) => {
             let old = match node_at(&base.doc, path) {
-                Ok(XmlNode::Text { text }) => text.clone(),
+                Ok(SvgNode::Text { text }) => text.clone(),
                 _ => String::new(),
             };
             vec![SvgTinyMutation::SetText(set_text::SetText { path: path.clone(), text: old })]
         }
-        SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path, .. }) => vec![SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: path.clone(), view_box: prior_attribute(base, path, "viewBox").and_then(|v| parse_view_box(&v).ok()) })],
+        SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path, .. }) => vec![SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: path.clone(), view_box: prior_attribute(base, path, "viewBox").and_then(|v| if let SvgAttributeValue::ViewBox(value)=v {Some(value)}else{None}) })],
         SvgTinyMutation::SetTransform(set_transform::SetTransform { path, .. }) => {
-            vec![SvgTinyMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| parse_transform_list(&v).ok()) })]
+            vec![SvgTinyMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| if let SvgAttributeValue::Transform(value)=v {Some(value)}else{None}) })]
         }
     }
 

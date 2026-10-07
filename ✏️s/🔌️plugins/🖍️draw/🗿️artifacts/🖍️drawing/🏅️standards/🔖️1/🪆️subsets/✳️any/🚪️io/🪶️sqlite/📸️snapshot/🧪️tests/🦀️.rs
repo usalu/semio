@@ -1,6 +1,6 @@
 //! 🖍️ Native Draw semantic entities, exact words and actual owner I/O.
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
-fn dialect()->store::os_io::ArtifactDialect {store::os_io::ArtifactDialect{artifact_kind:"s.draw.drawing".into(),standard:"1".into(),subset:"*".into()}}
+fn dialect()->semio_framework_artifact_reference::ArtifactDialect {semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.draw.drawing".into(),standard:"1".into(),subset:"*".into()}}
 fn provider()->store::ArtifactSqliteSnapshotCodec{<DrawingSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect("Draw snapshot must declare full semantic SQLite capability")}
 #[test]
 fn sqlite_snapshot_draw_actual_io_declaration_capability(){let codec=crate::standards::v1::subsets::any::io::io().native.codec;let p=codec.snapshot_sqlite.expect("actual Draw native declaration must publish semantic SQLite capability");assert_eq!(p.snapshot_type,Some(std::any::TypeId::of::<DrawingSnapshot>()));}
@@ -17,7 +17,7 @@ fn assert_draw_words(database:&store::sqlite_snapshot::SqliteDatabase,word:u64){
 async fn sqlite_snapshot_draw_every_scalar_word_typed_file_and_erased_native_io(){
  use store::ArtifactSqliteSnapshot;
  use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,export_sqlite_database,import_sqlite_database};
- use semio_framework_os_kernel::io::{register_native_snapshot_codec,Dialect,StandardId,SubsetId,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};
+ use {semio_framework_os_kernel::io::register_native_snapshot_codec,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
  use std::{io::Write,process::{Command,Stdio}};
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let finite:DrawingSnapshot=serde_json::from_value(fixture["snapshot"].clone()).unwrap();
  let limits=SqliteDatabaseLimits::default();let original=finite.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let bytes=export_sqlite_database(&original,limits,&mut |_|true).unwrap();

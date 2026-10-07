@@ -68,7 +68,7 @@ mod context {
     }
 
     pub async fn app() -> Block3dViewerFixture {
-        let mut app = new_app_with_registry::<ViewerApp<Block3dViewer>>(block3d_viewer_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<ViewerApp<Block3dViewer>>(block3d_viewer_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Block3dViewerFixture(app)
     }

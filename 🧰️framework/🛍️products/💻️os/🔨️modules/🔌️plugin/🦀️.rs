@@ -444,7 +444,7 @@ pub mod app {
     /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
     /// the `os_io` mount), so it is named through the `store::os_io::` path everywhere in this file,
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
-    use store::os_io::{ArtifactKindId, ArtifactRef};
+    use {semio_framework_artifact_reference::ArtifactKindId,semio_framework_artifact_reference::ArtifactRef};
     use store::{
         build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, GroupMeta, HistoryColumn, HistoryLane,
         MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
@@ -984,11 +984,7 @@ pub mod app {
     /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
     /// 2). Defined in `semio_framework` so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
-    pub use semio_framework::{
-        io_compose_via, io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries, register_composer_entries, register_subset_validator, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose,
-        wire_decode_composed_artifact, wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource,
-        IoConfidence, IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact,
-    };
+    pub use {semio_framework::io_compose_via,semio_framework::io_dialects_for,semio_framework::io_dispatch,semio_framework::io_keys_for,semio_framework::io_resolve,semio_framework::list_composer_entries,semio_framework::register_composer_entries,semio_framework::register_subset_validator,semio_framework::set_io_fallback_dispatcher,semio_framework::subset_validator_entry_of,semio_framework::wire_artifact_compose,semio_framework::wire_decode_composed_artifact,semio_framework::wire_list_composer_entries,semio_framework::Analysis,semio_framework::AnalyzeSource,semio_framework_artifact_reference::ArtifactDialect,semio_framework::AsyncComposeFn,semio_framework::ComposeError,semio_framework::ComposeFuture,semio_framework::ComposeSource,semio_framework::ComposedArtifact,semio_framework::ComposerEntry,semio_framework::Composition,semio_framework_artifact_reference::Dialect,semio_framework::ErasedComposeSource,semio_framework::IoConfidence,semio_framework::IoDirection,semio_framework::IoFallback,semio_framework::IoFallbackDispatcher,semio_framework::IoKey,semio_framework::IoPayload,semio_framework::IoResolveError,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework::SubsetValidator,semio_framework::SubsetValidatorEntry,semio_framework::WireComposeSource,semio_framework::WireComposedArtifact};
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
     /// struct per `🚪️io/📤️export/🧵️serializers/…` leaf.
@@ -3315,6 +3311,8 @@ pub mod app {
         }
 
         async fn composers_async(mut self, entries: &'static [ComposerEntry]) -> Self {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             for entry in entries {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -3372,6 +3370,8 @@ pub mod app {
         }
 
         async fn subset_validators_async(mut self, entries: &'static [SubsetValidatorEntry]) -> Self {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             for entry in entries {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -3625,6 +3625,8 @@ pub mod app {
 
     impl ArtifactCapabilitySources<'_> {
         fn requirements(self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             let Self { schemas, inferences, inference_services, composers, formats, subset_validators, languages, document_codecs, schema_documents } = self;
             let mut rows = Vec::new();
             for schema in schemas {
@@ -4771,6 +4773,8 @@ pub mod app {
     /// kind — never a second dependency list to keep in sync. Returns one message per breaching
     /// surface, in manifest order; empty means the manifest is admissible.
     pub(crate) fn surface_dependency_breaches(manifest: &PluginManifest) -> Vec<String> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let owned: BTreeSet<&str> = manifest.artifact_kinds.iter().map(|spec| spec.id.as_str()).collect();
         let mut breaches = Vec::new();
         for app in &manifest.apps {
@@ -7663,7 +7667,7 @@ pub mod app {
             }
             let bindings = serde_json::to_value(&node.bindings).map_err(|_| "bindings-json")?;
             let accessibility = serde_json::to_value(&node.accessibility).map_err(|_| "accessibility-json")?;
-            Ok(serde_json::json!({ "key": node.key.as_str(), "component": component, "bindings": bindings, "accessibility": accessibility, "children": children }))
+            Ok(serde_json::json!({ "key": node.key.as_str(), "component": component, "bindings": bindings, "disabled": node.disabled, "accessibility": accessibility, "children": children }))
         }
 
         /// 🖼️ Observes fixture keys/components/children and retires that exact tree before any outcome; not a wire codec.
@@ -7846,34 +7850,34 @@ pub mod app {
 
         /// 🧬️ A registry-less wrapper (`VcsArtifactApp::new`) for store-only tests. UI and typed
         /// command dispatch fail closed until a real registry and exact factory are supplied.
-        pub async fn new_app<A: ArtifactApp + Default>() -> VcsArtifactApp<A> {
-            VcsArtifactApp::new(A::default()).await
+        pub async fn new_app<A: ArtifactApp + Default>(actor: protocol::ActorId) -> VcsArtifactApp<A> {
+            VcsArtifactApp::new(A::default(), actor).await
         }
 
         /// 🧬️ A registry-backed wrapper carrying `manifest`'s real `AppActionRegistry` — needed whenever a
         /// test must exercise declared-arg defaults/required-arg enforcement or View/Shell kind discipline.
-        pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App) -> VcsArtifactApp<A> {
-            new_app_with_registry_and_members::<A, super::NoMembers>(manifest).await
+        pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App, actor: protocol::ActorId) -> VcsArtifactApp<A> {
+            new_app_with_registry_and_members::<A, super::NoMembers>(manifest, actor).await
         }
 
         /// 🧬️ `new_app_with_registry` over an explicit member roster `M` — for an app whose snapshot
         /// composes children it derives (`ArtifactApp::genesis_child_pack`), which `NoMembers` can never open.
-        pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: super::SpaceMember + super::MemberFactory + 'static>(manifest: fn() -> App) -> VcsArtifactApp<A, M> {
+        pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: super::SpaceMember + super::MemberFactory + 'static>(manifest: fn() -> App, actor: protocol::ActorId) -> VcsArtifactApp<A, M> {
             let definition = manifest().definition;
             let registry = AppActionRegistry::from_definition(&definition);
             drop(definition);
-            VcsArtifactApp::with_registry(A::default(), registry).await
+            VcsArtifactApp::with_registry(A::default(), registry, actor).await
         }
 
         /// 🧬️ A registry-backed wrapper whose manifest is authored asynchronously by the concrete fixture,
         /// over the default (empty) member roster. The body lives in
         /// [`new_registered_app_with_members`]; this is the `NoMembers` spelling of it.
-        pub async fn new_registered_app<A, Manifest>(manifest: Manifest) -> VcsArtifactApp<A>
+        pub async fn new_registered_app<A, Manifest>(manifest: Manifest, actor: protocol::ActorId) -> VcsArtifactApp<A>
         where
             A: ArtifactApp + Default,
             Manifest: std::future::Future<Output = App>,
         {
-            new_registered_app_with_members::<A, super::NoMembers, Manifest>(manifest).await
+            new_registered_app_with_members::<A, super::NoMembers, Manifest>(manifest, actor).await
         }
 
         /// 🧬️ [`new_registered_app`] over an explicit member roster `M`. An app whose
@@ -7889,14 +7893,14 @@ pub mod app {
         /// is not the app's bound live runtime instance, and a fresh app has none. `meta` stamps 1,
         /// so every caller of this helper gets the instance its own `meta(...)` addresses; a caller
         /// that binds a different id afterwards simply overwrites this one.
-        pub async fn new_registered_app_with_members<A, M, Manifest>(manifest: Manifest) -> VcsArtifactApp<A, M>
+        pub async fn new_registered_app_with_members<A, M, Manifest>(manifest: Manifest, actor: protocol::ActorId) -> VcsArtifactApp<A, M>
         where
             A: ArtifactApp + Default,
             M: super::SpaceMember + super::MemberFactory + Send + 'static,
             Manifest: std::future::Future<Output = App>,
         {
             let definition = manifest.await.definition;
-            let mut app = VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition)).await;
+            let mut app = VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition), actor).await;
             app.bind_instance_id(meta("local").instance_id).await;
             app
         }
@@ -8101,8 +8105,8 @@ pub mod app {
 
         /// 🔗️ Two registry-less store-only instances joined by an in-memory backbone on `channel`.
         pub async fn paired_apps<A: ArtifactApp + Default>(channel: &str) -> (VcsArtifactApp<A>, VcsArtifactApp<A>) {
-            let mut a = new_app::<A>().await;
-            let mut b = new_app::<A>().await;
+            let mut a = new_app::<A>(protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
+            let mut b = new_app::<A>(protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
             a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
             b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
@@ -8130,8 +8134,8 @@ pub mod app {
             Manifest: std::future::Future<Output = App>,
             Build: Fn() -> Manifest,
         {
-            let mut a = new_registered_app_with_members::<A, M, _>(manifest()).await;
-            let mut b = new_registered_app_with_members::<A, M, _>(manifest()).await;
+            let mut a = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
+            let mut b = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             a.bind_instance_id(meta("local").instance_id).await;
             b.bind_instance_id(meta("local").instance_id).await;
             let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
@@ -8589,7 +8593,7 @@ pub mod app {
             A: ArtifactApp + Default,
             M: super::SpaceMember + super::MemberFactory + Send + 'static,
         {
-            let mut app = VcsArtifactApp::<A, M>::with_registry(A::default(), AppActionRegistry::from_definition(definition)).await;
+            let mut app = VcsArtifactApp::<A, M>::with_registry(A::default(), AppActionRegistry::from_definition(definition), protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             app.bind_instance_id(meta("local").instance_id).await;
             if let Some(boot) = boot {
                 let action_meta = ActionMeta { view_state: Some(boot.view.clone()), ..meta("local") };
@@ -9021,7 +9025,7 @@ pub mod app {
             A: ArtifactApp + Default,
             P: PartialEq + std::fmt::Debug,
         {
-            let mut sender = new_app::<A>().await;
+            let mut sender = new_app::<A>(protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
             sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
             sender.dispatch_typed(command, &meta("local")).await.expect("apply command");
@@ -9034,7 +9038,7 @@ pub mod app {
             }
             let operations = protocol::encode_envelopes(&envelopes);
 
-            let mut receiver = new_app::<A>().await;
+            let mut receiver = new_app::<A>(protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             receiver.ingest_operations(&operations).await.expect("ingest once");
             let once = probe(&receiver);
             receiver.ingest_operations(&operations).await.expect("ingest twice");
@@ -9063,7 +9067,7 @@ pub mod app {
             Manifest: std::future::Future<Output = App>,
             Build: Fn() -> Manifest,
         {
-            let mut sender = new_registered_app_with_members::<A, M, _>(manifest()).await;
+            let mut sender = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             sender.bind_instance_id(meta("local").instance_id).await;
             let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
             sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
@@ -9077,7 +9081,7 @@ pub mod app {
             }
             assert!(!envelopes.is_empty(), "the applied edit must reach the channel as events");
             let operations = protocol::encode_envelopes(&envelopes);
-            let mut receiver = new_registered_app_with_members::<A, M, _>(manifest()).await;
+            let mut receiver = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             receiver.bind_instance_id(meta("local").instance_id).await;
             let genesis = probe(&receiver);
             receiver.ingest_operations(&operations).await.expect("ingest once");
@@ -9451,7 +9455,7 @@ pub mod app {
             V::Command: Default,
         {
             use super::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, PeerPresenceRoot};
-            let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default()).await;
+            let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default(), protocol::ActorId(super::LOCAL_ACTOR_ID.into())).await;
             app.refresh_cache().await.expect("viewer fixture cache");
             let result = {
                 let (_, snapshot, config, history) = app.cache.as_ref().expect("viewer fixture cache populated");
@@ -9493,8 +9497,8 @@ pub mod app {
         /// 👁️ Contract §2.5 helper 3/3 — the viewer twin of `new_app::<A: ArtifactApp>()`. `ViewerApp<V>`
         /// already satisfies the runtime `ArtifactApp` bound (the SDK adapter, contract §2.1), so this
         /// is a thin rename over the existing generic harness rather than new machinery.
-        pub async fn new_viewer<V: ArtifactViewer>() -> VcsArtifactApp<ViewerApp<V>> {
-            new_app::<ViewerApp<V>>().await
+        pub async fn new_viewer<V: ArtifactViewer>(actor: protocol::ActorId) -> VcsArtifactApp<ViewerApp<V>> {
+            new_app::<ViewerApp<V>>(actor).await
         }
 
         //#endregion 👁️✏️SurfaceTestkit
@@ -9509,10 +9513,12 @@ pub mod app {
         /// schema registry, the io registry (when it declares any `IoEntry` rows), and the app router
         /// (manifest apps) — "nothing is silently dropped" (Task 4, law 1/3).
         pub async fn assert_declaration_tree_registers_all<PA: PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             let expected_schema_ids: Vec<&'static str> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter().map(|subset| subset.schema.descriptor.id)).collect();
             let mut expected_io_pairs: Vec<(String, String)> = Vec::new();
             for entry in declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| subset.io.entries.iter()) {
-                expected_io_pairs.push((semio_framework::io_schema::ArtifactDialect::from(entry.from).to_coordinate(), semio_framework::io_schema::ArtifactDialect::from(entry.into).to_coordinate()));
+                expected_io_pairs.push((semio_framework_artifact_reference::ArtifactDialect::from(entry.from).to_coordinate(), semio_framework_artifact_reference::ArtifactDialect::from(entry.into).to_coordinate()));
             }
             let expected_surface_ids: Vec<String> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()]).collect();
 
@@ -9556,7 +9562,7 @@ pub mod app {
         pub async fn assert_subset_declaration_ids_are_derived<PA: PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
             for standard in &declaration.standards {
                 for subset in &standard.subsets {
-                    let dialect: semio_framework::ArtifactDialect = subset.dialect.into();
+                    let dialect: semio_framework_artifact_reference::ArtifactDialect = subset.dialect.into();
                     assert_eq!(subset.editor.definition.id, semio_framework::surface_app_id(&dialect, semio_framework::AppRole::Editor), "editor surface id must be derived via surface_app_id");
                     assert_eq!(subset.viewer.definition.id, semio_framework::surface_app_id(&dialect, semio_framework::AppRole::Viewer), "viewer surface id must be derived via surface_app_id");
                 }
@@ -12700,11 +12706,8 @@ pub mod app {
     /// the kernel's `history_notice("history.unit-spans-documents")`.
     pub const HISTORY_UNIT_SPANS_DOCUMENTS_CODE: &str = "history.unit-spans-documents";
 
-    /// 🙋️ The actor of whatever no admitted actor made: an app's genesis edits (identical on every replica) and the verbs
-    /// of an instance that was opened without one (`instance_actor`). An opened instance acts as its admitted actor from
-    /// its open on ([`PluginApp::bind_actor`]), so no route authors, undoes or reads `revertible` as a stranger (design
-    /// §22.6).
-    pub const LOCAL_ACTOR_ID: &str = "local";
+    /// 🙋️ Explicit actor identity for standalone local births and fixtures.
+    pub use protocol::LOCAL_ACTOR_ID;
 
     /// 🫥️ The fault code of a history verb, a history query or a history-carrying document lane on a head-only pure
     /// evaluation (`📓️api-stepped-document-load.md` §4); its en/de notice is the kernel's
@@ -13075,7 +13078,9 @@ pub mod app {
         for section in ordered {
             sections.try_push(section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         }
-        tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
+        let mut panel = tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))?;
+        panel.layout = ui::LayoutSpec::Scroll(ui::ScrollLayout { axes: ui::ScrollAxes::Vertical, sizing: ui::Sizing::Fill, ..Default::default() });
+        Ok(panel)
     }
 
     /// 🌿️ One alternative row: its name (the trunk's empty one reads "Main line"), a check icon and "Current" when it is the
@@ -14483,8 +14488,9 @@ pub mod app {
             envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
+            actor: protocol::ActorId,
         ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-            Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation))
+            Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
         }
 
         /// 🔐️ Revalidates domain-owned publication authority in the atomic replacement branch.
@@ -17820,7 +17826,7 @@ pub mod app {
     enum BoundedStoreInitializationPhase {
         ValidateEnvelope,
         ValidateEdit { index: usize },
-        CloneInitial,
+        BindGenesis,
         SeedHistory { edit: usize, lane: u8, index: usize },
         FoldSupersessions { transition: usize },
         CountApplied { position: usize },
@@ -17840,7 +17846,7 @@ pub mod app {
 
     /// 🌱️ Retained persisted-document initialization for an explicitly bounded app — the document
     /// twin of [`bounded_document_store_owners`]: every edit id is validated and indexed once (one step each — linear in
-    /// the history, never pairwise), the envelope's initial snapshot is cloned in one page, the supersessions fold one
+    /// the history, never pairwise), the immutable genesis is shared, the supersessions fold one
     /// transition per step, the applied operations are counted one edit per step, every applied and redo edit is found
     /// through the index in one step, every applied edit replays one effective mutation per step (`progress` counts them),
     /// every edit's revision record is the store's canonical one, and every displaced owner — the index included, in
@@ -17853,6 +17859,7 @@ pub mod app {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         schema: &'static str,
+        actor: protocol::ActorId,
         envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<P, M>>>,
         runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<P>>>,
         candidate: std::mem::ManuallyDrop<Option<ArtifactStore<P, M>>>,
@@ -17993,20 +18000,18 @@ pub mod app {
                 BoundedStoreInitializationPhase::ValidateEdit { index } => {
                     let edits = &self.envelope.as_ref().expect("validated bounded envelope remains retained").vcs.edits;
                     match self.edit_index.admit(edits, index, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                        store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = BoundedStoreInitializationPhase::CloneInitial,
+                        store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = BoundedStoreInitializationPhase::BindGenesis,
                         store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = BoundedStoreInitializationPhase::ValidateEdit { index: index + 1 },
                         store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"bounded-store.initializer-duplicate-or-hostile-edit"),
                     }
                     cx.consume_fuel(1);
                     semio_framework_job::StepOutcome::Yield
                 }
-                BoundedStoreInitializationPhase::CloneInitial => {
-                    let envelope = self.envelope.as_ref().expect("bounded envelope remains retained during initial clone");
-                    let pack = envelope.vcs.initial_snapshot.encode_pack();
-                    let digest = store::artifact_initial_digest_of_pack(&pack);
-                    *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.initial_snapshot.clone(), digest));
+                BoundedStoreInitializationPhase::BindGenesis => {
+                    let envelope = self.envelope.as_ref().expect("bounded envelope retains its immutable genesis");
+                    *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), self.actor.clone()));
                     self.phase = BoundedStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
-                    cx.consume_fuel(pack.len().max(1) as u64);
+                    cx.consume_fuel(1);
                     semio_framework_job::StepOutcome::Yield
                 }
                 BoundedStoreInitializationPhase::SeedHistory { edit, lane, index } => {
@@ -18088,7 +18093,25 @@ pub mod app {
                 BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
                     let envelope = self.envelope.as_ref().expect("bounded envelope remains retained while its forwards fold");
                     let entry = envelope.vcs.edits.get(edit).expect("bounded applied edit remains retained");
-                    let folded = self.runtime.as_mut().expect("bounded runtime remains retained while forwards fold").fold_forward(entry, mutation, &envelope.schema, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                    let runtime = self.runtime.as_mut().expect("bounded runtime remains retained while forwards fold");
+                    match runtime.settle_current_retirement_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                        Ok(store::SnapshotRetirementStep::Complete) => {}
+                        Ok(_) => return semio_framework_job::StepOutcome::Yield,
+                        Err(_) => {
+                            self.fail(b"bounded-store.initializer-current-retirement");
+                            return semio_framework_job::StepOutcome::Yield;
+                        }
+                    }
+                    if runtime.effective_forward(entry, mutation, &envelope.schema).is_some_and(|effective| effective.operation().is_some()) && runtime.current_mut().is_none() {
+                        let current = runtime.current_ref().clone();
+                        if let Err(rejected) = runtime.adopt_current_owned(current, std::sync::Arc::new(BoundedConfigRetirementFactory::<P>::new())) {
+                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&BoundedConfigRetirementFactory::<P>::new(), rejected));
+                            self.fail(b"bounded-store.initializer-workspace-adoption");
+                        }
+                        cx.consume_fuel(1);
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                    let folded = runtime.fold_forward(entry, mutation, &envelope.schema, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
                     match folded {
                         Ok(store::ArtifactStoreInitializationForward::Exhausted) => self.phase = BoundedStoreInitializationPhase::CommitApplied { position, edit },
                         Ok(store::ArtifactStoreInitializationForward::Folded { displaced, fuel }) => {
@@ -18106,9 +18129,8 @@ pub mod app {
                 BoundedStoreInitializationPhase::CommitApplied { position, edit } => {
                     let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded applied edit remains retained");
                     let runtime = self.runtime.as_mut().expect("bounded runtime remains retained");
-                    match runtime.push_applied_edit(entry) {
+                    match runtime.push_applied_edit(entry, self.envelope.as_ref().expect("bounded envelope remains retained").vcs.edits.key_at(edit).expect("bounded applied edit generation remains retained")) {
                         Ok(()) => {
-                            runtime.set_local_actor_id(entry.actor.clone());
                             cx.consume_fuel((entry.forwards.len() + entry.inverse.len()).max(1) as u64);
                             self.phase = BoundedStoreInitializationPhase::FindApplied { position: position + 1 };
                         }
@@ -18133,7 +18155,7 @@ pub mod app {
                 }
                 BoundedStoreInitializationPhase::CommitRedo { position, edit } => {
                     let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded redo edit remains retained");
-                    match self.runtime.as_mut().expect("bounded runtime remains retained").push_redo_edit(entry) {
+                    match self.runtime.as_mut().expect("bounded runtime remains retained").push_redo_edit(entry, self.envelope.as_ref().expect("bounded envelope remains retained").vcs.edits.key_at(edit).expect("bounded redo edit generation remains retained")) {
                         Ok(()) => {
                             cx.consume_fuel((entry.forwards.len() + entry.inverse.len()).max(1) as u64);
                             self.phase = BoundedStoreInitializationPhase::FindRedo { position: position + 1 };
@@ -18248,6 +18270,7 @@ pub mod app {
         schema: &'static str,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> ArtifactStoreInitializationJob<P, M>
     where
         P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
@@ -18257,6 +18280,7 @@ pub mod app {
             operation,
             generation,
             schema,
+            actor,
             envelope: std::mem::ManuallyDrop::new(Some(envelope)),
             runtime: std::mem::ManuallyDrop::new(None),
             candidate: std::mem::ManuallyDrop::new(None),
@@ -18300,7 +18324,7 @@ pub mod app {
             match owner.close_owned_store_step(maximum_items.min(1), maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.document-store-close-over-budget"), "document store close exceeded its exact one-owner grant")),
-                store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "document store close awaits a retained reader or owner" }),
+                store::SnapshotRetirementStep::Blocked => { static LOGGED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false); if !LOGGED.swap(true,std::sync::atomic::Ordering::Relaxed){eprintln!("[DEBUG] document close blocked phase={} displaced={}",owner.close_owned_phase_witness(),owner.close_displaced_witness());} Ok(PluginCloseStep::Blocked { reason: "document store close awaits a retained reader or owner" }) },
                 store::SnapshotRetirementStep::Complete => Ok(PluginCloseStep::Complete),
             }
         }
@@ -22041,7 +22065,7 @@ pub mod app {
         let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
         for case in fixture["cases"].as_array().unwrap() {
-            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
+            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone(), protocol::ActorId("fixture".into())).await;
             app.test_tool_clock = clock;
             app.bind_instance_id(7).await;
             let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
@@ -22124,7 +22148,7 @@ pub mod app {
             eprintln!("[TRACE] actual registered keyed dispatch {} preserved exact target supersession, rebased its worker, published count{expected}, and closed every retained owner", case["id"]);
         }
         for case in fixture["lostReservations"].as_array().unwrap() {
-            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
+            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone(), protocol::ActorId("fixture".into())).await;
             app.bind_instance_id(7).await;
             let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
             let command = Box::new(command("aä🧵", 42));
@@ -22194,7 +22218,7 @@ pub mod app {
     #[cfg(test)]
     pub(crate) async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
         const VACANT: usize = 11;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into())).await;
         app.bind_instance_id(7).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
         for slot in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
@@ -22264,7 +22288,7 @@ pub mod app {
         const ACTIONS: usize = 200;
         const HOST_CONTINUATIONS_PER_ACTION: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into())).await;
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         let mut highest = 0;
@@ -22295,7 +22319,7 @@ pub mod app {
     pub(crate) async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into())).await;
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("settled", 1)), &meta).await;
@@ -22436,7 +22460,7 @@ pub mod app {
     pub(crate) async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into())).await;
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("own-call", 1)), &meta).await;
@@ -22459,7 +22483,7 @@ pub mod app {
     pub(crate) async fn test_typed_operation_completes_under_a_status_only_host_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into())).await;
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("drain-call", 2)), &meta).await;
@@ -22495,7 +22519,7 @@ pub mod app {
     pub(crate) async fn test_typed_operation_lands_its_edit_inside_the_admitting_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into())).await;
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("admitting-call", 3)), &meta).await;
@@ -23924,6 +23948,7 @@ pub mod app {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         child_content_generation: u64,
+        actor: protocol::ActorId,
         marker: std::marker::PhantomData<fn() -> A>,
     }
 
@@ -23935,7 +23960,7 @@ pub mod app {
             if envelope.schema != A::DOCUMENT_SCHEMA || envelope.dialect != Some(A::DIALECT.into()) || !self.jobs.can_insert(self.operation.0) {
                 return Err(envelope);
             }
-            let job = A::build_document_store_initialization_job(envelope, self.operation, self.generation)?;
+            let job = A::build_document_store_initialization_job(envelope, self.operation, self.generation, self.actor.clone())?;
             self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, self.child_content_generation, job));
             Ok(())
         }
@@ -24058,7 +24083,7 @@ pub mod app {
             PluginCloseStep::Pending { released_items: 0, released_bytes }
         }
 
-        fn take_ingress(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<OwnedDocumentMemberIngress, (Fault, OwnedDocumentMemberIngress)> {
+        fn take_ingress(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, actor: protocol::ActorId) -> Result<OwnedDocumentMemberIngress, (Fault, OwnedDocumentMemberIngress)> {
             let mut entry = self.entry.take().ok_or_else(|| (document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "document archive member identity owner is absent"), Self::empty_ingress()))?;
             if !entry.envelope_pack.is_empty() {
                 self.entry = Some(entry);
@@ -24084,7 +24109,7 @@ pub mod app {
             };
             let ordinal = entry.ordinal as usize;
             drop(entry);
-            let request = match store::MemberOpenRequest::new(handle.operation, handle.generation, u64::MAX, reference.clone(), Some(owner.clone()), pages).admit(1) {
+            let request = match store::MemberOpenRequest::new(handle.operation, handle.generation, u64::MAX, reference.clone(), Some(owner.clone()), pages, actor).admit(1) {
                 Ok(request) => request,
                 Err(rejected) => {
                     let ingress = OwnedDocumentMemberIngress { identity: std::mem::ManuallyDrop::new(Some((ordinal, reference, owner))), request: std::mem::ManuallyDrop::new(Some(rejected.request)), identity_field: 0 };
@@ -24843,6 +24868,8 @@ pub mod app {
     /// roster's own open declarations, so an app deriving a child of a dialect its `M` never declares
     /// is a fault rather than a member nothing could ever open.
     fn genesis_member_schema<M: MemberFactory>(dialect: &ArtifactDialect) -> Result<&'static str, Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         M::OPEN_DECLARATIONS
             .iter()
             .find(|declaration| declaration.kind == dialect.artifact_kind && declaration.standard == dialect.standard && declaration.subset == dialect.subset)
@@ -25576,8 +25603,8 @@ pub mod app {
 
         /// 🧬️ Constructs a store-only wrapper with an empty registry. Every action and typed
         /// command fails closed before decoding until a registry-backed wrapper is constructed.
-        pub async fn new(app: A) -> Self {
-            Self::with_registry(app, AppActionRegistry::default()).await
+        pub async fn new(app: A, actor: protocol::ActorId) -> Self {
+            Self::with_registry(app, AppActionRegistry::default(), actor).await
         }
 
         /// 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
@@ -25589,12 +25616,12 @@ pub mod app {
             A::initial_snapshot().await
         }
 
-        pub async fn with_registry(app: A, registry: AppActionRegistry) -> Self {
-            Self::with_registry_on_bus(app, registry, semio_framework::ActionBus::new()).await
+        pub async fn with_registry(app: A, registry: AppActionRegistry, actor: protocol::ActorId) -> Self {
+            Self::with_registry_on_bus(app, registry, semio_framework::ActionBus::new(), actor).await
         }
 
         /// 🫂️ Activates an app controller against Platform's injected shared production registry.
-        pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus) -> Self {
+        pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus, actor: protocol::ActorId) -> Self {
             let app_id = app.instance_id().await.to_string();
             PluginRuntimeRegistry::publish_framework_schema_documents().expect("the OS's own schema documents never conflict");
             for documents in <A::Mutation as ::protocol::Mutation<A::Snapshot>>::INPUT_SCHEMA_DOCUMENTS {
@@ -25609,26 +25636,25 @@ pub mod app {
             let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft().await, None);
             let interaction_id = format!("{}-interaction", app_id);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
-            let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
+            let mut store = ArtifactStore::new(envelope, actor.clone()).await.expect("failed to create document store");
             store.enable_convergence_early_exit();
             store.defer_remote_replays(Some(time_travel::time_travel_replay_turn_budget()));
             store.defer_local_replays(Some(time_travel::time_travel_replay_turn_budget()));
             if let Some(owners) = A::build_document_store_owners() {
                 store.install_document_store_owners_exact(owners);
             }
-            let mut config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
+            let mut config_store = ConfigStore::new(config_envelope.await, actor.clone()).await.expect("failed to create config store");
             if let Some(owners) = A::build_config_store_owners() {
                 config_store.install_document_store_owners_exact(owners);
             }
-            let mut draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
+            let mut draft_store = store::DraftStore::new(draft_envelope, actor.clone()).await.expect("failed to create draft store");
             if let Some(owners) = A::build_draft_store_owners() {
                 draft_store.install_document_store_owners_exact(owners);
             }
-            let mut interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
+            let mut interaction_store = ConfigStore::new(interaction_envelope, actor.clone()).await.expect("failed to create interaction store");
             interaction_store.install_document_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
-                store.set_local_actor_id(Some(LOCAL_ACTOR_ID.to_string())).expect("a fresh document store holds no durable group");
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, transaction: None }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
             }
             let dispatch_report = protocol::DispatchReport { policy: store.merge_policy(), worst: None, messages: Vec::new() };
@@ -25649,7 +25675,7 @@ pub mod app {
             let transient_one_item_factory = A::build_transient_store_one_item_preparation_factory();
             let presence_local_root_retirement_factory = A::build_presence_local_root_retirement_factory();
             let transient_local_root_retirement_factory = A::build_transient_local_root_retirement_factory();
-            let mut window_config_store = WindowConfigOwnerRegistry::default();
+            let mut window_config_store = WindowConfigOwnerRegistry::new(actor);
             A::register_window_config_owners(&mut window_config_store).expect("window config owners must be uniquely registered by exact window kind");
             let mut window_transient_store = WindowTransientOwnerRegistry::default();
             A::register_window_transient_owners(&mut window_transient_store).expect("window transient owners must be uniquely registered by exact window kind");
@@ -26127,7 +26153,7 @@ pub mod app {
                 return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.persisted-ingress-saturated"), "every fixed persisted document replacement slot already owns a live operation"), envelope));
             };
             let operation = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64);
-            let job = match A::build_document_store_initialization_job(envelope, operation, generation) {
+            let job = match A::build_document_store_initialization_job(envelope, operation, generation, self.store.local_actor_id().clone()) {
                 Ok(job) => job,
                 Err(envelope) => {
                     return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.persisted-initializer-refused"), "app refused the persisted document's retained initialization authority"), envelope));
@@ -26395,7 +26421,7 @@ pub mod app {
                 .and_then(|active| active.completion.ticket())
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-output-not-ready"), "decoded envelope is not ready for retained store initialization"))?;
             let child_content_generation = self.child_content_generation;
-            let mut target = ArtifactStoreReplacementAdmissionTarget::<A, M> { jobs: &mut self.store_replacement_jobs, operation: handle.operation, generation: handle.generation, child_content_generation, marker: std::marker::PhantomData };
+            let mut target = ArtifactStoreReplacementAdmissionTarget::<A, M> { jobs: &mut self.store_replacement_jobs, operation: handle.operation, generation: handle.generation, child_content_generation, actor: self.store.local_actor_id().clone(), marker: std::marker::PhantomData };
             match self.envelope_completed_records.try_publish_to(ticket, &mut target) {
                 Ok(false) | Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => Ok(false),
                 Ok(true) => {
@@ -26623,12 +26649,12 @@ pub mod app {
                 let candidate_children = active.candidate_children.take().expect("complete replacement retains its exact member registry");
                 let candidate_content = active.candidate_content.take().expect("complete replacement retains its exact content view");
                 let candidate_composition = active.candidate_composition.take().expect("complete replacement retains its exact coordinator");
-                let local_actor = self.store.local_actor_id().map(str::to_string);
+                let local_actor = self.store.local_actor_id().clone();
                 let displaced = match publish_boxed_document_store_candidate_if_authoritative(&mut self.store, candidate, || Ok(())) {
                     Ok(displaced) => displaced,
                     Err(_) => unreachable!("prevalidated publication cannot reject inside its non-suspending commit boundary"),
                 };
-                self.store.set_local_actor_id(local_actor).map_err(|error| error.into_fault())?;
+                assert_eq!(self.store.local_actor_id(), &local_actor, "document replacement retains its opened actor");
                 self.store.enable_convergence_early_exit();
                 self.store.defer_remote_replays(Some(time_travel::time_travel_replay_turn_budget()));
                 self.store.defer_local_replays(Some(time_travel::time_travel_replay_turn_budget()));
@@ -26807,7 +26833,7 @@ pub mod app {
                 let mut pending = PendingDocumentArchiveMember::new(entry).map_err(|(fault, _)| fault)?;
                 while !pending.fill_one_page(store::OWNED_SCHEMA_DECODE_PAGE_BYTES)? {}
                 while pending.retire_source_step(store::OWNED_SCHEMA_DECODE_PAGE_BYTES) != PluginCloseStep::Complete {}
-                let ingress = pending.take_ingress(handle).map_err(|(fault, _)| fault)?;
+                let ingress = pending.take_ingress(handle, self.store.local_actor_id().clone()).map_err(|(fault, _)| fault)?;
                 active.admit_member(ingress).map_err(|(fault, _)| fault)?;
             }
             active.seal_members()?;
@@ -26902,6 +26928,7 @@ pub mod app {
                             semio_framework_job::Generation(self.store.generation_now()),
                             u64::MAX,
                             store::PersistedDocumentHydrationTarget::Envelope,
+                            self.store.local_actor_id().clone(),
                         ));
                         return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                     }
@@ -27020,7 +27047,7 @@ pub mod app {
                 }
                 ActiveDocumentArchiveLoadPhase::AdmitMember => {
                     let handle = active.replacement.ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive replacement handle is absent"))?;
-                    let ingress = match active.member.as_mut().ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive active member owner is absent"))?.take_ingress(handle) {
+                    let ingress = match active.member.as_mut().ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive active member owner is absent"))?.take_ingress(handle, self.store.local_actor_id().clone()) {
                         Ok(ingress) => ingress,
                         Err((fault, ingress)) => {
                             if !ingress.terminal_is_empty() {
@@ -27595,8 +27622,8 @@ pub mod app {
 
         /// 🌐️ Delivers [`HostEvent::BaseMoved`] to every window once a remote edit moved the base, as the local actor.
         async fn deliver_base_moved(&mut self) -> Result<(), Fault> {
-            let (Some(instance_id), Some(actor)) = (self.live_runtime_instance_id, self.store.local_actor_id()) else { return Ok(()) };
-            let meta = ActionMeta { actor: actor.to_string(), instance_id, view_state: None };
+            let Some(instance_id) = self.live_runtime_instance_id else { return Ok(()) };
+            let meta = ActionMeta { actor: self.store.local_actor_id().0.clone(), instance_id, view_state: None };
             self.deliver_host_event_to_every_window(|window_id| HostEvent::BaseMoved { window_id }, &meta).await
         }
 
@@ -27840,7 +27867,7 @@ pub mod app {
                 return Err(plugin_sdk_fault("failed child retirement waits on retirements that are all still borrowed").with_retryable(true));
             }
             let admission = self.admit_child_member(slot, child_id, dialect).await?;
-            let mut member = match M::open(&admission.expected, Some(&admission.owner), envelope_pack).await {
+            let mut member = match M::open(&admission.expected, Some(&admission.owner), envelope_pack, self.store.local_actor_id().clone()).await {
                 Ok(member) => member,
                 Err(error) => {
                     assert!(self.children.cancel_admission(&admission.member), "failed child open retains its exact admission until cancellation");
@@ -28597,7 +28624,7 @@ pub mod app {
             let document_applied = position.is_some();
             let child_applied = entry.child_edit_ids.iter().any(|edit_id| reads.child_applied_tails.contains(edit_id));
             let local_actor = self.store.local_actor_id();
-            let revertible = (document_applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor)) || child_applied || (entry.inverse.is_some() && !self.shell_undone.contains(&entry.seq));
+            let revertible = (document_applied && edit.is_some_and(|edit| edit.actor.as_deref() == Some(local_actor.0.as_str()))) || child_applied || (entry.inverse.is_some() && !self.shell_undone.contains(&entry.seq));
             let child_edits: Vec<&time_travel::MemberEditHistory> = entry.child_edit_ids.iter().filter_map(|edit_id| reads.members.get(edit_id.as_str())).collect();
             if edit.is_none() {
                 op_count = child_edits.iter().map(|child| child.op_count).sum();
@@ -28934,10 +28961,9 @@ pub mod app {
             if let Some((forwards, inverse, mutation_meta)) = self.store.edit_mutations() {
                 let (forwards_offset, backwards_offset) = tail_offset;
                 let forwards = &forwards[forwards_offset.min(forwards.len())..];
-                let inverse = &inverse[backwards_offset.min(inverse.len())..];
                 let mutation_meta = &mutation_meta[forwards_offset.min(mutation_meta.len())..];
-                let mut inverse_op_bytes = Vec::with_capacity(inverse.len());
-                for op in inverse.iter() {
+                let mut inverse_op_bytes = Vec::with_capacity(inverse.len().saturating_sub(backwards_offset));
+                for op in inverse.iter().skip(backwards_offset) {
                     inverse_op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
                 }
                 let inverse_payload = protocol::encode_ops_vec(&inverse_op_bytes);
@@ -29209,7 +29235,6 @@ pub mod app {
             self.last_emit_wire = Some(EmitWire { document: protocol::encode_ops_vec(&artifact_op_bytes), config: protocol::encode_ops_vec(&config_op_bytes), draft: protocol::encode_ops_vec(&draft_op_bytes), children: Vec::new() });
 
             if !draft_mutations.is_empty() {
-                self.draft_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
                 self.draft_store.dispatch(ArtifactCommand::Apply { mutations: draft_mutations, transaction: None }).await.map_err(|error| error.into_fault())?;
             }
 
@@ -29220,7 +29245,6 @@ pub mod app {
 
             let config_edited = !config_mutations.is_empty();
             if config_edited {
-                self.config_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
                 let config_command = ArtifactCommand::Apply { mutations: config_mutations, transaction: None };
                 self.config_store.set_authoring_verb(Some(verb.to_string()));
                 let dispatched = self.config_store.dispatch(config_command).await;
@@ -29269,7 +29293,6 @@ pub mod app {
                 return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
             }
             let aborting = matches!(vcs_commands.as_slice(), [ArtifactCommand::AbortTransaction { .. }]);
-            self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
             let (before_forwards_len, before_backwards_len) = self.store.edit_mutations().map_or((0, 0), |(f, b, _)| (f.len(), b.len()));
             for vcs_command in vcs_commands {
@@ -29555,7 +29578,6 @@ pub mod app {
                 parent_ops.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
 
-            self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             let mut seen_keys = ::std::collections::HashSet::with_capacity(child_emits.len());
             let mut child_ptrs: Vec<(*mut M, ChildDispatch<'_>)> = Vec::with_capacity(child_emits.len());
             for child_emit in child_emits {
@@ -29989,7 +30011,6 @@ pub mod app {
             let requested = Self::interaction_selection_witness(&persisted);
             let minted = persisted != persisted_before;
             if minted {
-                self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
                 self.interaction_store
                     .dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted.clone())], lane: HistoryLane::Interaction, transaction: None })
                     .await
@@ -31099,7 +31120,6 @@ pub mod app {
             if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
             }
-            self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             if action == "undo" || action == "redo" {
                 if let Some(result) = self.dispatch_supersede_history_action(action, meta).await? {
                     return Ok(result);
@@ -31142,7 +31162,6 @@ pub mod app {
         /// answers its complete result.
         async fn begin_framework_revert_route(&mut self, args: Option<&DslValue>, meta: &ActionMeta) -> Result<Result<InvocationResult, String>, Fault> {
             let action = REVERT_TO_COMMAND_ACTION_ID;
-            self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             self.refresh_cache().await?;
             let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(semio_framework_value::DslValue::as_f64).map(|seq| seq as u64);
             let transition_id = entry_seq.and_then(|seq| self.command_log.iter().find(|entry| entry.seq == seq)).and_then(|entry| entry.transition_id.clone());
@@ -33525,7 +33544,6 @@ pub mod app {
             if permit.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "configuration binary was cancelled before config-store commit"));
             }
-            self.config_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             self.config_store.dispatch(command).await.map_err(|error| error.into_fault())?;
             self.cache = None;
             permit.finish();
@@ -34575,7 +34593,11 @@ pub mod app {
         }
 
         async fn bind_actor(&mut self, actor: &str) {
-            self.store.set_local_actor_id(Some(actor.to_string())).expect("an opening instance holds no durable group");
+            assert_eq!(self.store.local_actor_id().0, actor, "opening actor must own the document store from construction");
+            assert_eq!(self.config_store.local_actor_id().0, actor, "opening actor must own the config store from construction");
+            assert_eq!(self.draft_store.local_actor_id().0, actor, "opening actor must own the draft store from construction");
+            assert_eq!(self.interaction_store.local_actor_id().0, actor, "opening actor must own the interaction store from construction");
+            assert_eq!(self.window_config_store.local_actor_id().0, actor, "opening actor must own the window config registry from construction");
         }
 
         /// 🧾️ A stage that reports `Complete` HANDED OFF: one retained authority really did cross the
@@ -35762,7 +35784,6 @@ pub mod app {
                 return self.commit_transaction_group(&txn_id, ops, children, origin, meta).await;
             }
             let label = ops.first().map(|op| protocol::SemanticMutation::<A::Snapshot>::label(op));
-            self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             self.store.dispatch(ArtifactCommand::Apply { mutations: ops, transaction: None }).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
             self.cache = None;
             self.store.stamp_tail_group_id(&txn_id).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
@@ -35826,10 +35847,10 @@ pub mod app {
             let id = self.store.envelope().id.clone();
             let envelope = store::create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &id, head, None);
             let window_reset = self.prepare_document_window_reset()?;
-            let actor = self.store.local_actor_id().map(str::to_string);
+            let actor = self.store.local_actor_id().clone();
             self.store.reset(loaded_with_app_dialect::<A>(envelope)).await.map_err(|error| error.into_fault())?;
             self.commit_document_window_reset(window_reset);
-            self.store.set_local_actor_id(actor).map_err(|error| error.into_fault())?;
+            assert_eq!(self.store.local_actor_id(), &actor, "pure head retains its opened actor");
             self.cache = None;
             self.retire_displaced_document_rows();
             self.time_travel.set_history_unavailable(true);
@@ -35936,6 +35957,8 @@ pub mod app {
         /// persisted child list that reshuffles between reads would make every save look like a
         /// change to anything diffing it.
         async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             let mut entries: Vec<protocol::ChildPackEntry> = Vec::with_capacity(self.children.len());
             for (key, entry) in self.children.keyed_entries() {
                 let envelope_pack = entry.member.envelope_pack_bytes().await.map_err(|error| error.into_fault())?;
@@ -35947,6 +35970,8 @@ pub mod app {
         }
 
         async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             let mut entries: Vec<protocol::ChildHeadPackEntry> = Vec::with_capacity(self.children.len());
             for (key, entry) in self.children.keyed_entries() {
                 let head_pack = entry.member.document_pack_bytes().await.map_err(|error| error.into_fault())?;
@@ -36512,7 +36537,7 @@ pub mod app {
                             artifact.decode_intrinsic(&mut control)?
                         };
                         let instance_id = self.live_runtime_instance_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "intrinsic media import requires a bound live app instance"))?;
-                        let actor = self.store.local_actor_id().unwrap_or("local").to_string();
+                        let actor = self.store.local_actor_id().0.clone();
                         self.dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }).await.map(|_| MediaConsumption::Applied).map_err(MediaArtifactError::Import)
                     }
                 };
@@ -36525,7 +36550,7 @@ pub mod app {
                 return Err(MediaArtifactError::NoImporter(format_kind));
             }
             let instance_id = self.live_runtime_instance_id.ok_or_else(|| MediaArtifactError::Payload("natural file import requires a bound live app instance".into()))?;
-            let actor = self.store.local_actor_id().unwrap_or("local").to_string();
+            let actor = self.store.local_actor_id().0.clone();
             let media_type = A::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
             let media = natural_file_input_media(codec, media_type, artifact.data);
             self.dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None })
@@ -36670,7 +36695,7 @@ pub mod app {
     pub trait PluginProgram: Send {
         type App: PluginApp;
         fn manifest(&self) -> PluginManifest;
-        fn create_app(&self, app_id: &str) -> Option<Self::App>;
+        fn create_app(&self, app_id: &str, actor: protocol::ActorId) -> Option<Self::App>;
         fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
     }
 
@@ -36868,8 +36893,8 @@ pub mod app {
             self
         }
 
-        pub fn create_app(&self, app_id: &str) -> Option<PA> {
-            self.apps.get(app_id).map(|factory| (factory.create)(&factory.definition))
+        pub fn create_app(&self, app_id: &str, actor: protocol::ActorId) -> Option<PA> {
+            self.apps.get(app_id).map(|factory| (factory.create)(&factory.definition, actor))
         }
 
         /// 🪪️ The document schema the registered app opens — its type's own `DOCUMENT_SCHEMA`, recorded
@@ -36892,8 +36917,8 @@ pub mod app {
             self.manifest.clone()
         }
 
-        fn create_app(&self, app_id: &str) -> Option<PA> {
-            Plugin::create_app(self, app_id)
+        fn create_app(&self, app_id: &str, actor: protocol::ActorId) -> Option<PA> {
+            Plugin::create_app(self, app_id, actor)
         }
 
         fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -38554,8 +38579,9 @@ pub mod app {
             envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
+            actor: protocol::ActorId,
         ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-            Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation))
+            Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
         }
 
         fn validate_document_store_publication(_operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
@@ -38941,7 +38967,7 @@ pub mod app {
             envelope.retire_unadopted();
             return printed;
         }
-        let mut owner = store::ArtifactStore::<A::Snapshot, A::Mutation>::new(envelope).await?;
+        let mut owner = store::ArtifactStore::<A::Snapshot, A::Mutation>::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?;
         owner.install_document_store_owners_exact(A::build_document_store_owners().unwrap_or_else(store::bounded_artifact_store_owners));
         let printed = match owner.dispatch(store::ArtifactCommand::Apply { mutations, transaction: None }).await {
             Ok(_) => store::print_document_pack(owner.envelope()).await,
@@ -39073,8 +39099,9 @@ pub mod app {
             envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
+            actor: protocol::ActorId,
         ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-            Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation))
+            Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
         }
 
         /// 🔐️ Framework-owned owner catalogs, paired with this trait's default disposers below — the
@@ -39913,8 +39940,9 @@ pub mod app {
             envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
+            actor: protocol::ActorId,
         ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-            E::build_document_store_initialization_job(envelope, operation, generation)
+            E::build_document_store_initialization_job(envelope, operation, generation, actor)
         }
         fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
             E::validate_document_store_publication(operation, generation, live_generation)
@@ -40179,8 +40207,9 @@ pub mod app {
             envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
+            actor: protocol::ActorId,
         ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-            V::build_document_store_initialization_job(envelope, operation, generation)
+            V::build_document_store_initialization_job(envelope, operation, generation, actor)
         }
 
         fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -40717,7 +40746,7 @@ pub mod app {
         pub struct SurfaceDeclaration<PA: PluginApp = NoPluginApp> {
             pub definition: AppDefinition,
             /// 🚫️async: E4 fn-pointer slot
-            pub factory: fn(&AppDefinition) -> PA,
+            pub factory: fn(&AppDefinition, protocol::ActorId) -> PA,
             /// 🚫️async: E4 fn-pointer slot
             pub app_schema: fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>,
             pub document_schema: &'static str,
@@ -40740,8 +40769,8 @@ pub mod app {
         /// 🚫️async: E4 fn-pointer slot — `E::app_schema()` is a genuine (pure, non-suspending)
         /// AFIT trait method; resolved synchronously via `resolve_ready` to fit the bare slot.
         pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-            fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition) -> PA {
-                PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
+            fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition, actor: protocol::ActorId) -> PA {
+                PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor)))
             }
             fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
                 E::app_schema()
@@ -40774,8 +40803,8 @@ pub mod app {
         ///
         /// 🚫️async: E4 fn-pointer slot — see `editor_surface`'s `app_schema` doc.
         pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-            fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition) -> PA {
-                PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
+            fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition, actor: protocol::ActorId) -> PA {
+                PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor)))
             }
             fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
                 V::app_schema()
@@ -40861,7 +40890,7 @@ pub mod app {
         pub(crate) struct AppFactory<PA> {
             pub definition: AppDefinition,
             /// 🚫️async: E4 fn-pointer slot
-            pub create: fn(&AppDefinition) -> PA,
+            pub create: fn(&AppDefinition, protocol::ActorId) -> PA,
             pub document_schema: &'static str,
             pub codec: super::ArtifactCodecTableV1,
         }
@@ -40981,6 +41010,8 @@ pub mod app {
         }
 
         fn preflight_io_entries<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
             let mut proposed: BTreeMap<(String, String), semio_framework::io_schema::IoFidelity> = BTreeMap::new();
             for artifact in declarations {
                 for standard in &artifact.standards {
@@ -41653,8 +41684,8 @@ use semio_framework_value::ToValue;
 
     impl RuntimeActorAuthority {
         fn new(actor: &str) -> Result<Self, Fault> {
-            if actor.len() > PLUGIN_RUNTIME_ACTOR_BYTES {
-                return Err(plugin_internal_fault("runtime actor identity exceeds its fixed byte cap"));
+            if actor.is_empty() || actor.len() > PLUGIN_RUNTIME_ACTOR_BYTES {
+                return Err(plugin_internal_fault("runtime actor identity is empty or exceeds its fixed byte cap"));
             }
             let mut bytes = [0; PLUGIN_RUNTIME_ACTOR_BYTES];
             bytes[..actor.len()].copy_from_slice(actor.as_bytes());
@@ -41962,9 +41993,9 @@ use semio_framework_value::ToValue;
         vec![protocol::AppFrame::Conflicts { in_reply_to: Some(seq), conflicts: encode_wire_serialized(&app.open_conflicts().await) }]
     }
 
-    /// 🪪️ Reads the actor retained by exact instance-open admission, with a local fallback.
-    pub(crate) async fn instance_actor<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> String {
-        runtime.instance_actors.try_borrow().ok().and_then(|actors| actors.get(instance_id).map(RuntimeActorAuthority::to_string)).unwrap_or_else(|| crate::app::LOCAL_ACTOR_ID.to_string())
+    /// 🪪️ Reads the actor retained by exact instance-open admission.
+    pub(crate) async fn instance_actor<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<String, Fault> {
+        runtime.instance_actors.try_borrow().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?.get(instance_id).map(RuntimeActorAuthority::to_string).ok_or_else(|| plugin_internal_fault("instance has no admitted actor authority"))
     }
 
     /// 🧬️ The local async mutex keeps the instance in-place across a suspending app call. Dropping an
@@ -42200,7 +42231,7 @@ use semio_framework_value::ToValue;
         }
         let program = runtime.plugin.try_borrow().map_err(|_| plugin_internal_fault("plugin factory authority busy"))?;
         let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
-        let mut app = program.create_app(app_id).ok_or_else(|| plugin_internal_fault("unknown app"))?;
+        let mut app = program.create_app(app_id, protocol::ActorId(actor.to_string())).ok_or_else(|| plugin_internal_fault("unknown app"))?;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(request.instance_id));
         ::semio_framework_async::poll::resolve_ready(app.bind_actor(&actor.to_string()));
         let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: request.instance_id, app, surface_contexts: Default::default() }));
@@ -42213,35 +42244,28 @@ use semio_framework_value::ToValue;
         Ok(())
     }
 
-    pub async fn plugin_create_app<PA: PluginApp>(runtime: &PluginRuntime<PA>, app_id: &str) -> Result<u32, Fault> {
-        plugin_create_app_with_id(runtime, NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst), app_id).await
+    pub async fn plugin_create_app<PA: PluginApp>(runtime: &PluginRuntime<PA>, app_id: &str, actor: protocol::ActorId) -> Result<u32, Fault> {
+        plugin_create_app_with_id(runtime, NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst), app_id, actor).await
     }
 
-    /// 🧬️ A2 (design-abi.md §2): `Event::InstanceOpen` carries a host-assigned `PluginInstanceId`
-    /// (WIT `instance-id`) — the actor no longer allocates its own; it must open the app under
-    /// EXACTLY the id the host names. `⚛️reactor::poll`'s `InstanceOpen` routing calls this instead
-    /// of `plugin_create_app`. `plugin_create_app` (unchanged signature, still used by every
-    /// pre-existing caller) now delegates here with a locally-allocated id, so nothing observing
-    /// its old auto-increment behavior breaks.
-    ///
-    /// 🌉️ `slot.borrow()` is a `Ref` from `LocalKey::with`'s sync `FnOnce(&T) -> R` closure,
-    /// which cannot itself be `async` — bridged via `resolve_ready` exactly like every other
-    /// E4/E5-adjacent sync-context call in this file (`Plugin::create_app`'s body does no real
-    /// awaiting; see the framework io module's `resolve_ready` doc comment).
-    pub async fn plugin_create_app_with_id<PA: PluginApp>(runtime: &PluginRuntime<PA>, id: u32, app_id: &str) -> Result<u32, Fault> {
+    /// 🧬️ Constructs every store under the explicit instance id and opened actor before publishing the app.
+    pub async fn plugin_create_app_with_id<PA: PluginApp>(runtime: &PluginRuntime<PA>, id: u32, app_id: &str, actor: protocol::ActorId) -> Result<u32, Fault> {
         if let Some(fault) = runtime.plugin_assembly_error.borrow().clone() {
             return Err(fault);
         }
         if !runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.can_insert(id)
             || !runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.can_insert(id)
+            || !runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?.can_insert(id)
         {
             return Err(plugin_internal_fault(format!("fixed instance authority is saturated, collided, or quarantined: {id}")));
         }
         {
             let program = runtime.plugin.borrow();
             let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
-            let mut app = program.create_app(app_id).ok_or_else(|| plugin_internal_fault(format!("unknown app: {app_id}")))?;
+            let authority = RuntimeActorAuthority::new(&actor.0)?;
+            let mut app = program.create_app(app_id, actor).ok_or_else(|| plugin_internal_fault(format!("unknown app: {app_id}")))?;
             ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(id));
+            runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?.insert_admitted(id, authority);
             ::semio_framework_async::poll::resolve_ready(with_instances_mut(runtime, |list| {
                 list.insert_admitted(id, std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() })));
                 Ok(())
@@ -43600,7 +43624,7 @@ use semio_framework_value::ToValue;
         let invocation: ManifestActionInvocation = semio_framework_pack_json::from_json_str(action_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| plugin_internal_fault(error.to_string()))?;
         debug_runtime_line(format_args!("[TRACE] plugin_handle_action actionId={} branch={}", invocation.address.action_id, debug_action_dispatch_branch(&invocation.address.action_id)));
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
-        let actor = instance_actor(runtime, instance_id).await;
+        let actor = instance_actor(runtime, instance_id).await?;
         let owner_matches = runtime.plugin.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == invocation.address.plugin_id);
         if !owner_matches {
             return Err(plugin_internal_fault(format!("action plugin owner {} does not match the active program", invocation.address.plugin_id)));
@@ -43628,7 +43652,7 @@ use semio_framework_value::ToValue;
         validate_public_json_envelope(context_json, "command context")?;
         let invocation: ManifestCommandInvocation = semio_framework_pack_json::from_json_str(command_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
-        let actor = instance_actor(runtime, instance_id).await;
+        let actor = instance_actor(runtime, instance_id).await?;
         let view_state = context.get("viewState").cloned().map(serde_json::from_value::<ViewModel>).transpose().map_err(|error| plugin_internal_fault(error.to_string()))?;
         let meta = ActionMeta { actor, instance_id, view_state };
         match &invocation.address.owner {
@@ -43737,13 +43761,17 @@ use semio_framework_value::ToValue;
 
     /// 🏛️ `codec.sqlite-schema` names a registered dialect's handwritten relational declaration.
     pub fn plugin_snapshot_sqlite_schema(dialect: &str) -> Result<String, Fault> {
-        let dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(dialect).map_err(|error| plugin_internal_fault(&error))?;
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+        let dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(dialect).map_err(|error| plugin_internal_fault(&error))?;
         semio_framework::io::io_mechanism::native_snapshot_sqlite_schema(&dialect).map_err(|error| plugin_internal_fault(&error.to_string()))
     }
 
     /// 📤️ `codec.sqlite-export` executes the exact declared native snapshot provider.
     pub async fn plugin_snapshot_sqlite_export(input: crate::sqlite_wire::SnapshotInput) -> Result<crate::sqlite_wire::SnapshotFileResult, Fault> {
-        use semio_framework::io_schema::{ArtifactDialect, IoPayload, SQLITE_SNAPSHOT};
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::IoPayload,semio_framework::io_schema::SQLITE_SNAPSHOT};
         let limits = input.limits.native().map_err(|error| plugin_internal_fault(&error))?;
         let dialect = ArtifactDialect::parse_coordinate(&input.dialect).map_err(|error| plugin_internal_fault(&error))?;
         let encoding = semio_framework::sqlite_snapshot::SnapshotEncoding::parse(&input.encoding).map_err(|error| plugin_internal_fault(&error.to_string()))?;
@@ -43764,7 +43792,9 @@ use semio_framework_value::ToValue;
 
     /// 📥️ `codec.sqlite-import` validates exact dialect and DDL before reconstructing native values.
     pub async fn plugin_snapshot_sqlite_import(input: crate::sqlite_wire::SnapshotInput) -> Result<crate::sqlite_wire::SnapshotPayloadResult, Fault> {
-        use semio_framework::io_schema::{ArtifactDialect, IoPayload, SQLITE_SNAPSHOT};
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::IoPayload,semio_framework::io_schema::SQLITE_SNAPSHOT};
         let limits = input.limits.native().map_err(|error| plugin_internal_fault(&error))?;
         let dialect = ArtifactDialect::parse_coordinate(&input.dialect).map_err(|error| plugin_internal_fault(&error))?;
         let route = semio_framework::io::io_mechanism::io_route(&ArtifactDialect::from(SQLITE_SNAPSHOT), &dialect, 1).await.map_err(|error| plugin_internal_fault(&error.cause.message))?.value;
@@ -44536,14 +44566,16 @@ use semio_framework_value::ToValue;
         }
     }
 
-    async fn opening_dialect(artifact_kind: String, standard: String, subset: String) -> Result<semio_framework::ArtifactDialect, Fault> {
+    async fn opening_dialect(artifact_kind: String, standard: String, subset: String) -> Result<semio_framework_artifact_reference::ArtifactDialect, Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         for (field, value) in [("artifact_kind", &artifact_kind), ("standard", &standard), ("subset", &subset)] {
             if value.trim().is_empty() {
                 return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), format!("opening {field} must be non-empty")));
             }
         }
-        let dialect = semio_framework::ArtifactDialect { artifact_kind, standard, subset };
-        semio_framework::ArtifactDialect::parse_coordinate(&dialect.to_coordinate()).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), error))?;
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind, standard, subset };
+        semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&dialect.to_coordinate()).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), error))?;
         Ok(dialect)
     }
 
@@ -44552,6 +44584,8 @@ use semio_framework_value::ToValue;
     }
 
     async fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let role = opening_role(role_wire).await?;
         let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
         if role != artifact_role {
@@ -44571,6 +44605,8 @@ use semio_framework_value::ToValue;
     }
 
     async fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         let dialect = opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone()).await?;
         let role = opening_role(role_wire).await?;
         if plugin_id.trim().is_empty() {
@@ -45119,7 +45155,16 @@ use semio_framework_value::ToValue;
         .await
         .ok()
         .flatten();
-        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state };
+        let actor = match instance_actor(runtime, instance_id).await {
+            Ok(actor) => actor,
+            Err(fault) => {
+                push_app_fault(&mut frames, None, fault).await;
+                let mut output = PluginExchangeOutput::default();
+                for frame in &frames { output.frames.push(protocol::encode_app_frame(frame).await); }
+                return output;
+            }
+        };
+        let meta = ActionMeta { actor, instance_id, view_state };
         let plugin_id = runtime.plugin.borrow().as_ref().map(|program| program.manifest.plugin_id.clone()).unwrap_or_default();
         let arguments = match args {
             semio_framework_value::DslValue::Object(entries) => entries.iter().cloned().collect(),
@@ -45225,7 +45270,7 @@ use semio_framework_value::ToValue;
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
-        let actor = instance_actor(runtime, instance_id).await;
+        let actor = instance_actor(runtime, instance_id).await?;
 
         for intent in intents {
             let dispatched = with_instances_mut(runtime, |list| {
@@ -45474,6 +45519,8 @@ use semio_framework_value::ToValue;
     /// 🌉️ Rewritten from a `.map(protocol::encode_app_frame).collect()` into an explicit loop
     /// (sync — `Iterator::map` cannot take an async closure, and `encode_app_frame` is genuinely async).
     pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>) -> Result<PluginExchangeOutput, Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         debug_runtime_line(format_args!("[TRACE] plugin_exchange entry instance={instance_id} command={}", command.is_some()));
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
@@ -45588,7 +45635,7 @@ use semio_framework_value::ToValue;
                     frames.push(protocol::AppFrame::Done { in_reply_to: seq });
                 }
                 protocol::AppCommand::ConfigCommand { seq, command } => {
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
+                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await?, instance_id, view_state: None };
                     let dispatched = with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
                         ::semio_framework_async::poll::resolve_ready(instance.app.dispatch_config_command(&command, &meta))
@@ -45614,7 +45661,7 @@ use semio_framework_value::ToValue;
                             }
                         }
                     };
-                    let mut meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state };
+                    let mut meta = ActionMeta { actor: instance_actor(runtime, instance_id).await?, instance_id, view_state };
                     with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
                         if let Some(view) = &meta.view_state {
@@ -45747,7 +45794,7 @@ use semio_framework_value::ToValue;
                     if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action.as_str()) {
                         push_os_fault(&mut frames, Some(seq), "unsupported", format!("ArtifactCommand action {action:?} not supported (Wave 1: history verbs only)")).await;
                     } else {
-                        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
+                        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await?, instance_id, view_state: None };
                         let dispatched = with_instances_mut(runtime, |list| {
                             let mut instance = find_instance(list, instance_id)?;
                             drive_self_waking_ready(instance.app.handle_action(&action, args.as_ref(), &meta))
@@ -45804,7 +45851,7 @@ use semio_framework_value::ToValue;
                             if !entry.owner.is_empty() {
                                 return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), format!("child pack {}/{} belongs to member {}: a member's own children load with the document archive", entry.slot, entry.child_id, entry.owner)));
                             }
-                            let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), error))?;
+                            let dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&entry.dialect).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), error))?;
                             ::semio_framework_async::poll::resolve_ready(instance.app.load_child_pack(&entry.slot, &entry.child_id, dialect, &entry.envelope_pack))?;
                         }
                         Ok(())
@@ -46070,7 +46117,7 @@ use semio_framework_value::ToValue;
                     }
                 }
                 protocol::AppCommand::PureCommand { seq, command, head } => {
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
+                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await?, instance_id, view_state: None };
                     let dispatched = with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
                         drive_self_waking_ready(instance.app.hydrate_pure_head(&head))?;
@@ -46117,7 +46164,7 @@ use semio_framework_value::ToValue;
                     }
                 }
                 protocol::AppCommand::TransactionCommit { seq, txn_id } => {
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
+                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await?, instance_id, view_state: None };
                     let outcome = with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
                         ::semio_framework_async::poll::resolve_ready(instance.app.transaction_commit(&txn_id, &meta))

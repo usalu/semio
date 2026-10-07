@@ -1,104 +1,344 @@
 {
   "$comment": "Language-agnostic compact snapshot fragment validation vectors. Rust validates addressed fragments and bounded post-edit frontiers; AJV validates the same complete candidate documents.",
-  "schema": {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "required": ["metadata", "variant", "bytes", "samples", "payload"],
-    "additionalProperties": false,
-    "properties": {
-      "metadata": {
-        "type": "object",
-        "required": ["mode", "count", "items"],
-        "additionalProperties": false,
-        "properties": {
-          "mode": { "type": "string", "enum": ["draft", "final"] },
-          "count": { "type": "integer", "minimum": 0, "maximum": 15 },
-          "items": { "type": "array", "minItems": 1, "items": { "type": "string" } },
-          "enabled": { "type": "boolean" },
-          "reason": { "type": "string", "minLength": 1 }
-        },
-        "dependencies": {
-          "enabled": ["reason"]
-        }
-      },
-      "variant": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": ["kind", "count"],
-            "additionalProperties": false,
-            "properties": {
-              "kind": { "const": "counted" },
-              "count": { "type": "integer", "minimum": 0, "maximum": 4 }
-            }
-          },
-          {
-            "type": "object",
-            "required": ["kind", "name"],
-            "additionalProperties": false,
-            "properties": {
-              "kind": { "const": "named" },
-              "name": { "type": "string", "minLength": 1 }
-            }
-          }
-        ]
-      },
-      "bytes": {
-        "type": "array",
-        "minItems": 1,
-        "maxItems": 2097152,
-        "items": { "type": "integer", "minimum": 0, "maximum": 255 }
-      },
-      "samples": { "$ref": "#/definitions/Samples", "x-semio-state": "artifact" },
-      "payload": { "type": "string" }
-    },
-    "definitions": {
-      "Samples": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": ["kind", "value"],
-            "additionalProperties": false,
-            "properties": {
-              "kind": { "const": "pcm8" },
-              "value": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
-            }
-          },
-          {
-            "type": "object",
-            "required": ["kind", "value"],
-            "additionalProperties": false,
-            "properties": {
-              "kind": { "const": "pcm16" },
-              "value": { "type": "array", "items": { "type": "integer", "minimum": -32768, "maximum": 32767 } }
-            }
-          }
-        ]
-      }
-    }
-  },
   "payloadRepeatBytes": 2097152,
   "base": {
-    "metadata": { "mode": "draft", "count": 7, "items": ["first"] },
-    "variant": { "kind": "counted", "count": 2 },
-    "bytes": [0],
-    "samples": { "kind": "pcm8", "value": [0, 0] }
+    "metadata": {
+      "mode": "draft",
+      "count": 7,
+      "items": [
+        "first"
+      ]
+    },
+    "variant": {
+      "kind": "counted",
+      "count": 2
+    },
+    "bytes": [
+      0
+    ],
+    "samples": {
+      "kind": "pcm8",
+      "value": [
+        0,
+        0
+      ]
+    }
   },
   "cases": [
-    { "id": "range-boundary", "operation": "set", "path": ["metadata", "count"], "candidate": 15, "accepted": true },
-    { "id": "range-overflow", "operation": "set", "path": ["metadata", "count"], "candidate": 16, "accepted": false },
-    { "id": "enum", "operation": "set", "path": ["metadata", "mode"], "candidate": "other", "accepted": false },
-    { "id": "discriminated-union-boundary", "operation": "set", "path": ["variant", "count"], "candidate": 4, "accepted": true },
-    { "id": "discriminated-union-overflow", "operation": "set", "path": ["variant", "count"], "candidate": 5, "accepted": false },
-    { "id": "discriminated-union-tag-incomplete", "operation": "set", "path": ["variant", "kind"], "candidate": "named", "accepted": false },
-    { "id": "annotated-reference-union-boundary", "operation": "set", "path": ["samples", "value", 1], "candidate": 255, "accepted": true },
-    { "id": "annotated-reference-union-overflow", "operation": "set", "path": ["samples", "value", 1], "candidate": 256, "accepted": false },
-    { "id": "required-removal", "operation": "remove", "path": ["metadata", "mode"], "accepted": false },
-    { "id": "min-items-removal", "operation": "remove", "path": ["metadata", "items", 0], "accepted": false },
-    { "id": "cross-field-dependency", "operation": "insert", "path": ["metadata", "enabled"], "candidate": true, "accepted": false },
-    { "id": "large-array-insert-boundary", "operation": "insert", "path": ["bytes", 2097151], "candidate": 255, "arrayLengthBefore": 2097151, "accepted": true },
-    { "id": "large-array-insert-overflow", "operation": "insert", "path": ["bytes", 2097152], "candidate": 255, "arrayLengthBefore": 2097152, "accepted": false },
-    { "id": "large-array-remove", "operation": "remove", "path": ["bytes", 0], "arrayLengthBefore": 2097152, "accepted": true },
-    { "id": "large-array-remove-minimum", "operation": "remove", "path": ["bytes", 0], "arrayLengthBefore": 1, "accepted": false }
-  ]
+    {
+      "id": "range-boundary",
+      "operation": "set",
+      "path": [
+        "metadata",
+        "count"
+      ],
+      "candidate": 15,
+      "accepted": true
+    },
+    {
+      "id": "range-overflow",
+      "operation": "set",
+      "path": [
+        "metadata",
+        "count"
+      ],
+      "candidate": 16,
+      "accepted": false
+    },
+    {
+      "id": "enum",
+      "operation": "set",
+      "path": [
+        "metadata",
+        "mode"
+      ],
+      "candidate": "other",
+      "accepted": false
+    },
+    {
+      "id": "discriminated-union-boundary",
+      "operation": "set",
+      "path": [
+        "variant",
+        "count"
+      ],
+      "candidate": 4,
+      "accepted": true
+    },
+    {
+      "id": "discriminated-union-overflow",
+      "operation": "set",
+      "path": [
+        "variant",
+        "count"
+      ],
+      "candidate": 5,
+      "accepted": false
+    },
+    {
+      "id": "discriminated-union-tag-incomplete",
+      "operation": "set",
+      "path": [
+        "variant",
+        "kind"
+      ],
+      "candidate": "named",
+      "accepted": false
+    },
+    {
+      "id": "annotated-reference-union-boundary",
+      "operation": "set",
+      "path": [
+        "samples",
+        "value",
+        1
+      ],
+      "candidate": 255,
+      "accepted": true
+    },
+    {
+      "id": "annotated-reference-union-overflow",
+      "operation": "set",
+      "path": [
+        "samples",
+        "value",
+        1
+      ],
+      "candidate": 256,
+      "accepted": false
+    },
+    {
+      "id": "required-removal",
+      "operation": "remove",
+      "path": [
+        "metadata",
+        "mode"
+      ],
+      "accepted": false
+    },
+    {
+      "id": "min-items-removal",
+      "operation": "remove",
+      "path": [
+        "metadata",
+        "items",
+        0
+      ],
+      "accepted": false
+    },
+    {
+      "id": "cross-field-dependency",
+      "operation": "insert",
+      "path": [
+        "metadata",
+        "enabled"
+      ],
+      "candidate": true,
+      "accepted": false
+    },
+    {
+      "id": "large-array-insert-boundary",
+      "operation": "insert",
+      "path": [
+        "bytes",
+        2097151
+      ],
+      "candidate": 255,
+      "arrayLengthBefore": 2097151,
+      "accepted": true
+    },
+    {
+      "id": "large-array-insert-overflow",
+      "operation": "insert",
+      "path": [
+        "bytes",
+        2097152
+      ],
+      "candidate": 255,
+      "arrayLengthBefore": 2097152,
+      "accepted": false
+    },
+    {
+      "id": "large-array-remove",
+      "operation": "remove",
+      "path": [
+        "bytes",
+        0
+      ],
+      "arrayLengthBefore": 2097152,
+      "accepted": true
+    },
+    {
+      "id": "large-array-remove-minimum",
+      "operation": "remove",
+      "path": [
+        "bytes",
+        0
+      ],
+      "arrayLengthBefore": 1,
+      "accepted": false
+    }
+  ],
+  "input": {
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "required": [
+        "metadata",
+        "variant",
+        "bytes",
+        "samples",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "required": [
+            "mode",
+            "count",
+            "items"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "final"
+              ]
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 15
+            },
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "dependencies": {
+            "enabled": [
+              "reason"
+            ]
+          }
+        },
+        "variant": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "count"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "counted"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "name"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "named"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          ]
+        },
+        "bytes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2097152,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "samples": {
+          "$ref": "#/definitions/Samples",
+          "x-semio-state": "artifact"
+        },
+        "payload": {
+          "type": "string"
+        }
+      },
+      "definitions": {
+        "Samples": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "value"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "pcm8"
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "value"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "pcm16"
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": -32768,
+                    "maximum": 32767
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
 }

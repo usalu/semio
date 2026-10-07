@@ -1,0 +1,15 @@
+# Retained Root Alias Retirement
+
+The exact lifecycle probe is the existing erased-member returned-read test. Empty history now shares the immutable genesis decoded allocation, while current retirement precedes final envelope retirement. The probe's exact snapshot factory refuses to consume any allocation until unique. Current source therefore contains an internal alias cycle; the fresh registered RED must establish its runtime phase before implementation.
+
+The repair will distinguish retained capabilities from distinct allocations by identity, never by an arbitrary strong-count threshold. A root that is pointer-identical to a still-owned genesis, current, or tail capability releases only its duplicate Arc. The last canonical capability continues through its exact bounded retirement factory. Registered reader leases must still reach their existing terminal witness before current detaches. No loop budget, cancellation rule, decoder, or Raster factory changes.
+
+Publication must use the same classification. Relevant source owners are `replace_current_retained`, `replace_tail_undo_cache_retained`, document-root replacement/commit, and durable-group abort/adoption/unstaged outcomes. Whole-envelope replacement must classify against both the old envelope genesis and the newly retained roots before moving owners; otherwise a displaced current factory can wait on an immutable genesis retained in the new envelope. Reservations may over-reserve conservatively, but every reserved-owner capability must still transfer or release exactly once.
+
+Retirement counts must count allocations: the shared empty-history allocation belongs to final genesis's initial-value factory, while a genuinely edited current allocation belongs to the snapshot factory. A regression needs independent counters for both factories and must prove exact terminal-empty completion, external registered-read blocking, zero-mutation empty history, and edit/undo/redo root transfers. Existing projection-root tests remain required.
+
+This design is not a runtime result. The compiler/preparation/Nx execution logs will be recorded separately when the registered requests complete.
+
+The source fanout also includes prefix-ring and durable staged roots: displaced retirement is pumped before those capabilities release at close. Classify against explicit owned identities after detaching each candidate, including each remaining prefix allocation and a durable staged current/tail. A pointer comparison against known retained authority is the witness; a raw strong count is insufficient. The neutral allocation regression has been authored first and remains unexecuted while the original focused RED request waits on the shared graph.
+
+The original exact RED probe now emits a temporary `[DEBUG]` pointer-identity/current alias witness after the genuine erased returned-read cursor reaches terminal-empty. Its temporary genesis comparison capability is dropped before closing. This adds observation only: no retirement, grant, loop limit, assertion, or ownership behavior changed. The message will be removed after the actual RED/repair/GREEN sequence.

@@ -96,3 +96,23 @@ async fn disabled_cache_matches_pure_recompute() {
     assert_eq!(pure_planes, via_disabled);
 }
 //#endregion 🧪️CacheTransparencyLaw
+
+/// 🧪️ Native serde independently checks the neutral logical dependency projection.
+#[semio_framework_async_macros::async_test]
+async fn typed_dependency_matches_neutral_serde_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔑️dependency/🔣.json")).unwrap();
+    let snapshot = chain_snapshot();
+    let plane = Puzzle3dFlatPlane::dep_input(&snapshot, &"root".into(), &[]);
+    let center = Puzzle3dFlatCenter::dep_input(&snapshot, &"mid".into(), &[]);
+    let plane: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&plane).to_string()).unwrap();
+    let center: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&center).to_string()).unwrap();
+    let object = &snapshot.objects[0];
+    let mut independent_plane = vec![serde_json::Value::Bool(matches!(object.anchor, Puzzle3dObjectAnchor::Fixed))];
+    independent_plane.extend(object.origin.into_iter().chain(object.orientation.unwrap()).map(|number| serde_json::json!(number)));
+    let vortex = &object.vortices[0];
+    let independent_center = serde_json::json!([vortex.direction.unwrap()[0],vortex.direction.unwrap()[1],vortex.direction.unwrap()[2],0.0,snapshot.attractions[0].x,snapshot.attractions[0].y]);
+    assert_eq!(plane, fixture["rootPlane"]);
+    assert_eq!(plane, serde_json::Value::Array(independent_plane));
+    assert_eq!(center, fixture["midCenter"]);
+    assert_eq!(center, independent_center);
+}

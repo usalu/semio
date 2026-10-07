@@ -149,7 +149,6 @@ pub fn note_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 //#region 🔖️DocumentHelpers
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL — {@link semio_example_snapshot}/
 /// {@link semio_example_json} are the only ways it should be consumed.
-const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_NOTE_EXAMPLE_TEXT;
 
 /// 🆔️ Durable identifier cursor owned by one exact app operation or importer child.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]

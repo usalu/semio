@@ -1,4 +1,5 @@
 /** 🧪️ Neutral IO descriptors agree with owned parsers and the independent Ajv schema oracle. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import schema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
@@ -7,7 +8,7 @@ import fixture from "../../🧫️fixtures/📇️descriptor-parity.json" with {
 import { ioEntries } from "../../🟦️.ts";
 
 export function testArtifactIoDescriptorParity(): number {
-  const ajv = new Ajv({ strict: true, allErrors: true });
+  const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(artifactReferenceSchema);
   ajv.addKeyword({ keyword: "x-semio-ui", valid: true });
   ajv.addSchema(schema);
   const descriptor = ajv.compile({ $ref: `${schema.$id}#/$defs/IoEntryDescriptor` });

@@ -64,6 +64,3 @@ pub fn contribute(base: &JpgSnapshot, table: JpgHuffmanTable) -> JpgDiff {
 //#endregion Semantics
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
-mod tests_direct_behavior;

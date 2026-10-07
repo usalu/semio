@@ -79,7 +79,7 @@
         "async": false,
         "qualification": "associated",
         "header": "fn document_codec<A: ArtifactApp>(self) -> Self",
-        "body": "resolve_ready(self.document_codec_async::<A>())"
+        "body": "::semio_framework_async::poll::resolve_ready(self.document_codec_async::<A>())"
       },
       {
         "id": "declaration.app-async",
@@ -92,7 +92,7 @@
         "async": true,
         "qualification": "associated",
         "header": "fn document_codec_async<A: ArtifactApp>(mut self) -> Self",
-        "body": "let codec = DocumentCodecSpec::of::<A>().await; let namespace_codec = ArtifactIdentityNamespace::codec();\nlet claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()) {\nOk(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {\nOk(extension) => Ok(vec![schema, extension]), Err(error) => Err(error),\n}, Err(error) => Err(error),\n};\nrequire_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::codec(), claims);\nself.document_codecs.push(codec); self"
+        "body": "let codec = DocumentCodecSpec::of::<A>().await; let namespace_codec = ArtifactIdentityNamespace::codec();\nlet claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()) {\nOk(schema) => match ArtifactIdentityClaim::codec_extension(&codec.schema, codec.extension) {\nOk(extension) => Ok(vec![schema, extension]), Err(error) => Err(error),\n}, Err(error) => Err(error),\n};\nrequire_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::codec(), claims);\nself.document_codecs.push(codec); self"
       },
       {
         "id": "spec.app",
@@ -105,7 +105,7 @@
         "async": true,
         "qualification": "associated",
         "header": "fn of<A: ArtifactApp>() -> Self",
-        "body": "fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec { store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema) } DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: false }"
+        "body": "fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec { store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema) } DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), dialect: A::DIALECT, extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: false }"
       },
       {
         "id": "spec.app-thunk",
@@ -120,7 +120,7 @@
         "async": false,
         "qualification": "associated",
         "header": "fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec",
-        "body": "store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)"
+        "body": "store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema)"
       },
       {
         "id": "builder.foreign",
@@ -146,7 +146,7 @@
         "async": false,
         "qualification": "associated",
         "header": "fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self",
-        "body": "fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec { store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema) } DocumentCodecSpec { schema: schema.into(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: true }"
+        "body": "fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec { store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema) } DocumentCodecSpec { schema: schema.into(), dialect: A::DIALECT, extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: true }"
       },
       {
         "id": "spec.foreign-thunk",
@@ -161,7 +161,7 @@
         "async": false,
         "qualification": "associated",
         "header": "fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec",
-        "body": "store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)"
+        "body": "store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema)"
       },
       {
         "id": "declaration.bare",
@@ -173,8 +173,8 @@
         "name": "document_codec_bare",
         "async": false,
         "qualification": "bare",
-        "header": "fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>) -> Self where Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
-        "body": "resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema))"
+        "header": "fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>, dialect: Dialect) -> Self where Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
+        "body": "::semio_framework_async::poll::resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema, dialect))"
       },
       {
         "id": "declaration.bare-async",
@@ -186,8 +186,8 @@
         "name": "document_codec_bare_async",
         "async": true,
         "qualification": "bare",
-        "header": "fn document_codec_bare_async<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self where Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
-        "body": "let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema); let namespace_codec = ArtifactIdentityNamespace::codec();\nlet claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()) {\nOk(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {\nOk(extension) => Ok(vec![schema, extension]), Err(error) => Err(error),\n}, Err(error) => Err(error),\n};\nrequire_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::codec(), claims);\nself.document_codecs.push(codec); self"
+        "header": "fn document_codec_bare_async<Snapshot, Mutation>(mut self, schema: impl Into<String>, dialect: Dialect) -> Self where Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
+        "body": "let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema, dialect); let namespace_codec = ArtifactIdentityNamespace::codec();\nlet claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()) {\nOk(schema) => match ArtifactIdentityClaim::codec_extension(&codec.schema, codec.extension) {\nOk(extension) => Ok(vec![schema, extension]), Err(error) => Err(error),\n}, Err(error) => Err(error),\n};\nrequire_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::codec(), claims);\nself.document_codecs.push(codec); self"
       },
       {
         "id": "spec.bare",
@@ -199,8 +199,8 @@
         "name": "bare",
         "async": false,
         "qualification": "bare",
-        "header": "fn bare<Snapshot, Mutation>(schema: impl Into<String>) -> Self where Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
-        "body": "fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec where Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static, { store::ArtifactCodec::of::<Snapshot, Mutation>(schema) } DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: \"\", foreign: false }"
+        "header": "fn bare<Snapshot, Mutation>(schema: impl Into<String>, dialect: Dialect) -> Self where Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
+        "body": "fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec where Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + ::protocol::OpText + ::protocol::OpBinary + 'static, { store::ArtifactCodec::bare::<Snapshot, Mutation>(schema) } DocumentCodecSpec { schema: schema.into(), dialect, extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: \"\", foreign: false }"
       },
       {
         "id": "spec.bare-thunk",
@@ -214,8 +214,8 @@
         "name": "codec",
         "async": false,
         "qualification": "bare",
-        "header": "fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec where Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
-        "body": "store::ArtifactCodec::of::<Snapshot, Mutation>(schema)"
+        "header": "fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec where Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static, Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,",
+        "body": "store::ArtifactCodec::bare::<Snapshot, Mutation>(schema)"
       },
       {
         "id": "registration.app",
@@ -227,12 +227,12 @@
         "name": "register_document_codec_for_app",
         "async": true,
         "qualification": "associated",
-        "header": "fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), store::DocumentCodecRegistryError>",
-        "body": "store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)).await"
+        "header": "fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), PluginAssemblyError>",
+        "body": "let codec = store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema); let plan = semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(A::DIALECT.into(), codec).into_iter().collect(), ..Default::default() }; let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new(\"plugin-assembly.unavailable\", error.to_string()))?; semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new(\"plugin-assembly.snapshot\", error.to_string()))"
       }
     ],
-    "specFields": "schema: String, extension: &'static str, codec: fn(String) -> store::ArtifactCodec, app_id: &'static str, foreign: bool,",
-    "mutationField": "type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;",
+    "specFields": "schema: String, dialect: Dialect, extension: &'static str, codec: fn(String) -> store::ArtifactCodec, app_id: &'static str, foreign: bool,",
+    "mutationField": "type Mutation: protocol::SemanticMutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;",
     "traits": [
       {
         "name": "ArtifactApp",
@@ -247,12 +247,12 @@
         "header": "pub trait ArtifactViewer: Default + Send + 'static"
       }
     ],
-    "protocolTrait": "pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned",
+    "protocolTrait": "pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue",
     "codecFields": [
       "pub compile_dsl: for<'a> fn(&'a str, &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>,",
       "pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>,",
       "pub edit_text_from_envelope: for<'a> fn(&'a crate::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,",
-      "pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>,"
+      "pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,"
     ]
   },
   "invariants": {

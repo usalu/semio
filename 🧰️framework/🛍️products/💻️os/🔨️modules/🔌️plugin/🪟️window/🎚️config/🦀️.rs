@@ -397,6 +397,8 @@ trait ErasedWindowConfigStoreOwner: Send {
 
 struct TypedWindowConfigStoreOwner<O: WindowConfigOwner> {
     partitions: BTreeMap<String, WindowConfigPartition<O>>,
+    actor: Option<protocol::ActorId>,
+    actor_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
 impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
@@ -404,7 +406,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
         if !self.partitions.contains_key(window_id) {
             let id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
             let envelope = store::create_config_envelope::<O::State, O::Mutation>(O::SCHEMA, &id, O::State::default(), None).await;
-            let mut config = store::ConfigStore::new(envelope).await.map_err(|error| error.into_fault())?;
+            let mut config = store::ConfigStore::new(envelope, self.actor.as_ref().expect("live window owner retains its opened actor").clone()).await.map_err(|error| error.into_fault())?;
             config.install_document_store_owners_exact(O::build_store_owners());
             self.partitions.insert(window_id.to_string(), WindowConfigPartition { store: config, disposer: Some(O::build_store_disposer()) });
         }
@@ -436,8 +438,10 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         Box::pin(async move {
             let window_id = mutation.window_id;
             let typed = mutation.mutation.into_any().downcast::<O::Mutation>().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.mutation-type"), "window config mutation did not match its registered window owner"))?;
+            if self.actor.as_ref().is_none_or(|opened| opened.0 != actor) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.actor"), "window config edit actor differs from its opened session"));
+            }
             let partition = self.partition(&window_id).await?;
-            partition.store.set_local_actor_id(Some(actor.to_string())).map_err(|error| error.into_fault())?;
             let command = store::ArtifactCommand::Apply { mutations: vec![*typed], transaction: None };
             partition.store.dispatch(command).await.map_err(|error| error.into_fault())?;
             Ok(())
@@ -459,6 +463,9 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             mutation: WindowConfigMutation { window_id: authority.window_id.clone(), window_kind_id, mutation: typed },
             fault: Fault::new(FaultOrigin::Framework, FaultCode::new(code), message),
         };
+        if self.actor.as_ref().is_none_or(|opened| opened.0 != actor) {
+            return Err(reject(typed, "window-config.actor", "window config edit actor differs from its opened session"));
+        }
         let Some(partition) = self.partitions.get(&window_id) else {
             return Err(reject(typed, "window-config.partition", "captured window config partition is absent"));
         };
@@ -508,7 +515,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
 
     fn begin_retained_load(&mut self, registry_lifetime: u64, pack: WindowConfigPack) -> WindowConfigPackLoad {
         let partition_generation = self.partitions.get(&pack.window_id).map(|partition| partition.store.generation());
-        retained::begin_typed_window_config_pack_load::<O>(registry_lifetime, partition_generation, pack)
+        retained::begin_typed_window_config_pack_load::<O>(registry_lifetime, partition_generation, pack, self.actor.as_ref().expect("live window owner retains its opened actor").clone())
     }
 
     fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic> {
@@ -552,7 +559,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        let Some(window_id) = self.partitions.keys().next().cloned() else { return Ok(PluginCloseStep::Complete) };
+        let Some(window_id) = self.partitions.keys().next().cloned() else { return close_window_actor(&mut self.actor, &mut self.actor_retirement, maximum_items, maximum_bytes) };
         let partition = self.partitions.get_mut(&window_id).expect("selected window config partition remains owned");
         let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.disposer"), "window config partition lost its exact disposer"))?;
         let step = disposer.close_step(&mut partition.store, maximum_items.min(1), maximum_bytes)?;
@@ -568,7 +575,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.partitions.is_empty()
+        self.partitions.is_empty() && self.actor.is_none() && self.actor_retirement.is_none()
     }
 
     /// 🧹️ Retires the displaced owners a LIVE partition accumulates — every coalesced amend (a
@@ -597,21 +604,43 @@ pub struct WindowConfigOwnerRegistry {
     owners: BTreeMap<&'static str, Box<dyn ErasedWindowConfigStoreOwner>>,
     retiring: Vec<WindowConfigPackLoad>,
     lifetime: u64,
+    actor: Option<protocol::ActorId>,
+    actor_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
-impl Default for WindowConfigOwnerRegistry {
-    fn default() -> Self {
-        static NEXT_LIFETIME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-        Self { owners: BTreeMap::new(), retiring: Vec::new(), lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed) }
+fn close_window_actor(actor: &mut Option<protocol::ActorId>, retirement: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    if maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+    if let Some(actor) = actor.take() {
+        *retirement = Some(semio_framework_value::retirement::owned_retirement(actor.0));
+        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    }
+    let Some(cursor) = retirement.as_mut() else { return Ok(PluginCloseStep::Complete) };
+    match cursor.close_step(maximum_items.min(1), maximum_bytes).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.actor-retirement"), error.into_message()))? {
+        store::SnapshotRetirementStep::Complete if cursor.terminal_is_empty() => {
+            retirement.take();
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        }
+        store::SnapshotRetirementStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.actor-retirement"), "opened window actor reported false terminal emptiness")),
+        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+        store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
     }
 }
 
 impl WindowConfigOwnerRegistry {
+    pub fn new(actor: protocol::ActorId) -> Self {
+        static NEXT_LIFETIME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        Self { owners: BTreeMap::new(), retiring: Vec::new(), lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed), actor: Some(actor), actor_retirement: None }
+    }
+
+    pub fn local_actor_id(&self) -> &protocol::ActorId {
+        self.actor.as_ref().expect("live window registry retains its opened actor")
+    }
+
     pub fn register<O: WindowConfigOwner>(&mut self) -> Result<(), Fault> {
         if O::WINDOW_KIND_ID.is_empty() || O::SCHEMA.is_empty() || self.owners.contains_key(O::WINDOW_KIND_ID) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config owner identity is empty or already registered"));
         }
-        self.owners.insert(O::WINDOW_KIND_ID, Box::new(TypedWindowConfigStoreOwner::<O> { partitions: BTreeMap::new() }));
+        self.owners.insert(O::WINDOW_KIND_ID, Box::new(TypedWindowConfigStoreOwner::<O> { partitions: BTreeMap::new(), actor: Some(self.local_actor_id().clone()), actor_retirement: None }));
         Ok(())
     }
 
@@ -823,7 +852,7 @@ impl WindowConfigOwnerRegistry {
                 step => Ok(step),
             };
         }
-        let Some(kind) = self.owners.keys().next().copied() else { return Ok(PluginCloseStep::Complete) };
+        let Some(kind) = self.owners.keys().next().copied() else { return close_window_actor(&mut self.actor, &mut self.actor_retirement, maximum_items, maximum_bytes) };
         let owner = self.owners.get_mut(kind).expect("selected window config owner remains registered");
         let step = owner.close_step(maximum_items, maximum_bytes)?;
         if step == PluginCloseStep::Complete {
@@ -837,7 +866,7 @@ impl WindowConfigOwnerRegistry {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.owners.is_empty() && self.retiring.is_empty()
+        self.owners.is_empty() && self.retiring.is_empty() && self.actor.is_none() && self.actor_retirement.is_none()
     }
 
     /// 🧹️ One maintenance step over the live partitions' displaced-owner queues — the first owner

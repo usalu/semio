@@ -11,7 +11,7 @@ use crate::SvgSnapshot;
 pub struct SetAttributePayload {
     pub path: NodePath,
     pub name: String,
-    pub value: Option<String>,
+    pub value: Option<crate::schema::snapshot::SvgAttributeValue>,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

@@ -1972,3 +1972,13 @@ Caching artifact inventory proof code is a pure test oracle; moved it from the s
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️artifact-packages/🧬️schema/🟦️.ts`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️artifact-packages/🔮️oracle/🟦️.ts`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts`
+
+## Final schema facet closure and native qualification
+
+Caching artifact-package proof moved from schema facet to sibling oracle facet; actual runtime package inventory domain remains. Exact Ajv2020/jsonschema proof passed1test9assertions. Borrowed-object authored-static frozen-example schema was removed with only its whole-corpus/mutated-shape admissions; actual SQLite/UTF8/variant/native allocation observations remain, exact owner12tests9539assertions passed. UI native metadata3laws passed. Flow selected native check could not execute its laws because shared stdio compilation failed. Current Go correction preserves the twelve-second probe while separately preparing compiler inputs and assigning an outer inherited overlay owner to compiled test execution.
+
+## Final Go cancellation implementation and verification
+
+The canonical Go test execution route admits only an executable within the caller-owned artifact directory and a single strict Test name from a canonical root Go package. Test setup compiles the real CLI binary and warms the exact stable nested package under independent bounded, cancelable preparation. Runtime probe retains the original12000ms budget and all readiness, nesting, processgroup, stop, kill, marker stabilization and overlay cleanup predicates. Compiled execution now owns the inherited nested compiler overlay directory, requests throwing budget failures so its finally runs, and keeps that resource beneath the unique proof artifact owner. Additional earlyAbort and binary-directory cleanup assertions verify those seams. The standard Go compiler/toolchain remains the independent oracle. Current exact isolated Nx recheck3PASS0FAIL11assertions43.44seconds.
+
+Files: library root 🟦️.ts (AbortSignal forwarding); library/🧪️execution/🐹️go/🟦️.ts (admitted compiled binary/overlay owner); library/🧪️tests/🚦️test-dispatch/🟦️.ts (prepared actual probe, early cancellation, resource cleanup); repo client/⌨️cli/🧪️tests/🚦️test-dispatch/🐹️.go (bounded exact nested package preparation). All four exact paths are in the machine authored ledger. All owned jobs settled.

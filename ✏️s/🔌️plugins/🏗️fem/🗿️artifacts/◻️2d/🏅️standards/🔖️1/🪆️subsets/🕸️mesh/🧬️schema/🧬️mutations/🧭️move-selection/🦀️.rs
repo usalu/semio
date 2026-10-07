@@ -95,7 +95,8 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for MoveSelection {
 #[cfg(test)]
 pub mod laws {
     use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-    use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation, Fem2dMutation};
+    use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation,Fem2dMutation};
+
     use crate::Fem2dSnapshot;
 
     fn snapshot(text: &str) -> Fem2dSnapshot {

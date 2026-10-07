@@ -13,9 +13,9 @@ fn sqlite_snapshot_ifc2x3_inline_root_and_mvd_consumers_follow_concrete_backing_
         let limits=store::sqlite_snapshot::SqliteDatabaseLimits{max_allocation_bytes:0,..Default::default()};
         let mut progress=|_|true;let mut control=SqliteSnapshotControl::new(&mut progress,limits);
         let refused=match subset{
-            "cv20"=>crate::standards::v2x3::subsets::cv20::schema::check_cv20_conformance_controlled(&value,&mut control),
-            "sav"=>crate::standards::v2x3::subsets::sav::schema::check_sav_conformance_controlled(&value,&mut control),
-            _=>crate::standards::v2x3::subsets::cobie::schema::check_cobie_conformance_controlled(&value,&mut control),
+            "cv20"=>crate::standards::v2x3::subsets::cv20::io::check_cv20_conformance_controlled(&value,&mut control),
+            "sav"=>crate::standards::v2x3::subsets::sav::io::check_sav_conformance_controlled(&value,&mut control),
+            _=>crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance_controlled(&value,&mut control),
         };
         assert_eq!(refused.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);
     }

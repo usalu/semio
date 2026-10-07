@@ -95,20 +95,6 @@
     "remove-secondary"
   ],
   "replyNodeBounds": {
-    "ownerSchema": {
-      "$id": "neutral:reply-list",
-      "type": "array",
-      "items": {
-        "type": "null"
-      }
-    },
-    "oracleSchema": {
-      "type": "array",
-      "items": {
-        "type": "null"
-      },
-      "maxItems": 4095
-    },
     "vectors": [
       {
         "items": 4095,

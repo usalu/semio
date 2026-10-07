@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/testing/declared-bridge-arguments/schema.json",
+  "title": "Declared Bridge Representative Value Policies",
+  "$defs": {
+    "required-texts": {
+      "type": "object",
+      "required": [
+        "entity",
+        "channel",
+        "value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "required-toggle": {
+      "type": "object",
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "single-option": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "only"
+          ]
+        }
+      }
+    },
+    "declared-default": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "first",
+            "second"
+          ]
+        }
+      }
+    },
+    "bounded-number": {
+      "type": "object",
+      "required": [
+        "amount"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 3
+        }
+      }
+    },
+    "exclusive-bound-selects-second": {
+      "type": "object",
+      "required": [
+        "amount"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 2,
+          "maximum": 3
+        }
+      }
+    },
+    "optional-is-not-invented": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "json-text": {
+      "type": "object",
+      "required": [
+        "payload"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "type": "string",
+          "enum": [
+            "{}",
+            "[]"
+          ]
+        }
+      }
+    },
+    "nullable-required-scalar": {
+      "type": "object",
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "nullable-declared-null-default": {
+      "type": "object",
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "any-declared-null-default": {
+      "type": "object",
+      "required": [
+        "payload"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "payload": {}
+      }
+    },
+    "record-declared-default": {
+      "type": "object",
+      "required": [
+        "record"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "record": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        }
+      }
+    },
+    "optional-declared-default": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

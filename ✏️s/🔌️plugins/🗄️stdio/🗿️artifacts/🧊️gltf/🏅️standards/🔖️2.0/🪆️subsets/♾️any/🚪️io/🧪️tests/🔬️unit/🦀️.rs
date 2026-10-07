@@ -334,7 +334,8 @@ async fn gltf_json_serialize_embeds_glb_sourced_buffer_as_data_uri() {
 /// wave (json/csv/zip/png/txt/binary) established.
 mod conformance_laws {
     use super::*;
-    use crate::standards::v2_0::subsets::any::io::mutations as mutation_transport;
+    use crate::standards::v2_0::subsets::any::io::text::mutations as text_mutations;
+    use crate::standards::v2_0::subsets::any::io::binary::mutations as binary_mutations;
     use crate::schema::mutations::change_material_alpha_mode::{ChangeMaterialAlphaModeMutation, GltfChangeMaterialAlphaModePayload};
     use crate::schema::mutations::GltfMutation;
     use crate::schema::snapshot::GltfAlphaMode;
@@ -358,11 +359,11 @@ mod conformance_laws {
     /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
-        for (label, text) in [("snapshot grammar", crate::standards::v2_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutation_transport::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v2_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+        for (label, text) in [("snapshot grammar", crate::standards::v2_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", text_mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v2_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
             let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
             assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
-        for (label, text) in [("snapshot protocol", crate::standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutation_transport::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v2_0::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+        for (label, text) in [("snapshot protocol", crate::standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", binary_mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v2_0::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
             semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
@@ -383,7 +384,7 @@ mod conformance_laws {
     /// envelope, independently of the registered command payload shape.
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(mutation_transport::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let grammar = semio_framework_dsl::parse_grammar(text_mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let forward = alpha_mode_mutation();
         let inverse = forward.inverse(&material_snapshot()).expect("valid retained mutation inverse fixture").pop().expect("inverse envelope");
@@ -430,7 +431,7 @@ mod conformance_laws {
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
-        let op_spec = semio_framework_dsl::parse_protocol(mutation_transport::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(binary_mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         let forward = alpha_mode_mutation();
         let inverse = forward.inverse(&material_snapshot()).expect("valid retained mutation inverse fixture").pop().expect("inverse envelope");
         for mutation in [forward, inverse] {

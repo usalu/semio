@@ -1,4 +1,8 @@
 //! 💾️ Direct set-snapshot binary codec.
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::*;
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::set_snapshot::SetSnapshot;
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
+use crate::standards::v_jfif_1_01::subsets::document::io::binary::diff::*;
 
 use crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::Entry;

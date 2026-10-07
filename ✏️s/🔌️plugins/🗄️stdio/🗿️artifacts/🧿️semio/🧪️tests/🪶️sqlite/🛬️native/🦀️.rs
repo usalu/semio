@@ -7,7 +7,7 @@ fn check<P:ArtifactSqliteSnapshot+ArtifactDsl+ArtifactPack+Default+PartialEq+std
     let snapshot=P::default();
     let Some(provider)=codec.snapshot_sqlite.as_ref() else{failures.push(format!("{name}: declaration has no capability"));return};
     if provider.snapshot_type!=Some(std::any::TypeId::of::<P>()){failures.push(format!("{name}: declaration type differs"));return;}
-    let dialect=store::os_io::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:subset.into()};
+    let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:subset.into()};
     for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(snapshot.print_dsl())};
         match P::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())){Ok(actual)=>assert_eq!(actual,snapshot,"{name} {encoding:?}"),Err(error)=>{failures.push(format!("{name} {encoding:?}: {error}"));continue;}}

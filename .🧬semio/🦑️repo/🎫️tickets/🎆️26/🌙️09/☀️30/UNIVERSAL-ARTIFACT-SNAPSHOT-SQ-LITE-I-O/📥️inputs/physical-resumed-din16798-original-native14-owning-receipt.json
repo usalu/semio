@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-06T12:55:53.916Z",
+  "sessionId": 2733,
+  "route": "@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+  "terminalOwnerStatus": 0,
+  "scope": "Actual original remaining Norm8 fourth owner, unchanged quick laws and controls",
+  "testsRun": 14,
+  "passed": 14,
+  "failed": 0,
+  "skipped": 95,
+  "runtimeSeconds": 0.226,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-eight-norm-native.log",
+  "selected": [
+    "@semio-tech/norm-din16798-rs:     Starting 14 tests across 1 binary (95 tests skipped)",
+    "@semio-tech/norm-din16798-rs:      Summary [   0.226s] 14 tests run: 14 passed, 95 skipped"
+  ]
+}

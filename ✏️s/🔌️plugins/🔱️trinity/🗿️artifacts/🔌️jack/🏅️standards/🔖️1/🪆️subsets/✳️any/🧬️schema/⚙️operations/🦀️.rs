@@ -19,17 +19,13 @@ pub fn create_trinity_graph_envelope(id: &str, snapshot: JackSnapshot) -> Trinit
 /// can be read but never mutated, undone or closed. The editor app installs the same catalog
 /// through `build_document_store_owners`; every standalone store (tests, the rewriting bridge)
 /// goes through here instead.
-pub async fn new_trinity_graph_store(envelope: TrinityGraphEnvelope) -> Result<OwnedTrinityGraphStore, store::VcsError> {
-    let mut store = TrinityGraphStore::new(envelope).await?;
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::jack_document_store_owners());
-    Ok(OwnedTrinityGraphStore(store))
-}
+
 
 /// 🔚 A standalone Jack store that retires itself: `ArtifactStore::drop` panics `artifact store
 /// reached Drop without its exact terminal-empty shallow-shell witness` unless the store walked its
 /// bounded close loop first, so the guard runs that loop on drop (skipped while unwinding, where the
 /// original panic is the report worth keeping). Derefs to the bare store for every read and dispatch.
-pub struct OwnedTrinityGraphStore(TrinityGraphStore);
+pub struct OwnedTrinityGraphStore(pub(crate) TrinityGraphStore);
 
 impl OwnedTrinityGraphStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.

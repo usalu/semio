@@ -494,6 +494,7 @@
     "stale": "timeTravel.stale",
     "invalidInput": "timeTravel.invalid-input",
     "schemaUnavailable": "timeTravel.schema-unavailable",
-    "invalidInputValue": "seven"
+    "invalidInputValue": "seven",
+    "unchanged": "timeTravel.unchanged"
   }
 }

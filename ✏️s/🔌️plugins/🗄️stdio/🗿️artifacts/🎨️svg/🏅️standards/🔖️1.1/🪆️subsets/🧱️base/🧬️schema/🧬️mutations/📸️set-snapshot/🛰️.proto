@@ -1,4 +1,5 @@
 syntax = "proto3";
 package stdio.svg.mutation;
+import "s_stdio_svg/snapshot.proto";
 import "../../📸️snapshot/🛰️.proto";
 message SetSnapshot { semio.s_stdio_svg.snapshot.SvgSnapshot snapshot = 1; }

@@ -106,7 +106,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "457f492653803c8dfb46e6f6799228aafd550cabc44fa4002fe643a17d573281",
+      "sha256": "0cc3490b67694cd82fe1e0132f1e8469704cd86b44ae4902d76540da2b622a69",
       "laws": [
         "preview_eval_tests_laws::laws::a_hop_carries_the_window_id_and_kind_it_was_addressed_to",
         "preview_eval_tests_laws::laws::only_declared_preview_kinds_are_evaluation_windows",
@@ -140,7 +140,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "e9c01f045c373bd44d1d1a5999f7b163b447cf05ad4d8b1cbe6ba827265b4bca",
+      "sha256": "076b79a4d5721e8699650c95dc65541b58559636d0367d1946fc84f2d0d682d9",
       "laws": [
         "viewer_domain::viewer_laws::create_generation3d_viewer_builds_a_definition_for_the_viewer_role",
         "viewer_domain::viewer_laws::viewer_dialect_matches_the_artifact_coordinate",
@@ -373,7 +373,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "53ddc589b548e2f7108d766866b1db7425c8f47756e45cfac7348e78307f89b5",
+      "sha256": "fabb3ac1ca2bbf173a73a594d3b9cf22bd153232e40d0852affbb98a93b15ba6",
       "laws": [
         "editor_domain::editor_laws::preview_eval_exact_window_transient_isolates_and_resets_in_the_registered_app",
         "editor_domain::editor_laws::generation_preview_is_one_evaluation_shared_by_two_generation_windows",
@@ -448,7 +448,8 @@
         "editor_domain::editor_laws::a_hub_genesis_pair_is_produced_and_parses_back_without_trapping",
         "editor_domain::editor_laws::geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_authority",
         "editor_domain::editor_laws::mesh_quick_actions_execute_through_the_registered_preview_app",
-        "editor_domain::editor_laws::mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale"
+        "editor_domain::editor_laws::mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale",
+        "editor_domain::editor_laws::mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_history"
       ],
       "targetPath": "🧪️tests/🧊️generation3d/🦀️.rs"
     },
@@ -559,7 +560,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "91d282bd12609d2141d260e70b288038b74cf60c0a5eba830f38035bf6926c39",
+      "sha256": "133b7dc104792f4757b76f9348e4fb444d5890145813cec65ae61a3dedcd6790",
       "laws": [
         "editor_generation3d_modes_edit_windows_flow_tests_laws::laws::renders_node_graph_scene",
         "editor_generation3d_modes_edit_windows_flow_tests_laws::laws::main_graph_scene_exports_flow_backed_node_graph_fields",
@@ -863,7 +864,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️translate-selection/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️translate-selection/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "352b5686c3dec5f5b543bda25fba1ab654dfa0e085f2e0ca7917ae1abdd26f5e",
+      "sha256": "9b72b4b89db203bd5de720b5e63d94495e1d40921e8f5ef7a3c9068e6cf1f629",
       "laws": [
         "editor_generation3d_commands_translate_selection_tests_laws::laws::translate_selection_persists_transform_into_flow_graph"
       ],
@@ -931,7 +932,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️fold-contract/🦀️.rs",
-      "sha256": "4646bfa1db0a54827f8dafb5af67122e0f24d88fad1be9398d88043bbf5198b3",
+      "sha256": "ba1d525a2fd899c0e6049835924b7bbe00fed9ba39ca8f6b5408f181ee7360ee",
       "laws": [
         "editor::generation3d::component::fold_contract::a_one_work_item_declaration_cannot_carry_a_point_invertible_item",
         "editor::generation3d::component::fold_contract::set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every_example",
@@ -940,7 +941,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "ce14732b5dd8166aea3f0d88150ca2ef8e319157d745a7b271a10d2160528444",
+      "sha256": "d3a7b2bfd38ecfc66c189d5886158ac0a44f20dc0998a6aed1054ff5f2221ee8",
       "laws": [
         "editor::generation3d::component::unit_tests::command_ids_are_unique_and_cover_every_row",
         "editor::generation3d::component::unit_tests::contributions_route_declares_a_reachable_wire_ceiling",
@@ -949,7 +950,9 @@
         "editor::generation3d::component::unit_tests::no_pointer_down_route_survives_the_framework_owned_selection_domain",
         "editor::generation3d::component::unit_tests::retained_route_dispositions_are_exact_and_exhaustive",
         "editor::generation3d::component::unit_tests::tessellate_transfer_unit_fits_the_declared_response_wire_bound",
-        "editor::generation3d::component::unit_tests::vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed"
+        "editor::generation3d::component::unit_tests::vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed",
+        "editor::generation3d::component::unit_tests::document_io_import_state_values_agree_with_serde_json",
+        "editor::generation3d::component::unit_tests::document_io_import_continuation_restores_original_generation_selection_and_preview"
       ]
     },
     {
@@ -962,7 +965,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "a0d2380065a6924102ba4d62d74e63034eea64321035c32a51d9e291e03ba4df",
+      "sha256": "5ad2736c6d99b93df7bb2863a31b9da22e23c6844b0c153cb51fca42d287d701",
       "laws": [
         "editor::generation3d::modes::edit::windows::flow::tests::flow_graph_node_status_is_localized",
         "editor::generation3d::modes::edit::windows::flow::tests::the_node_graph_canvas_declares_the_activate_binding_the_keyboard_snapshot_states",
@@ -994,7 +997,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "cf96c415ba5b1a12d38d8db8b3ddf7043689d9dfde7526a01ae0c1aeedbaf503",
+      "sha256": "a74980dbf9784e487a52bb2045ad6cbe1c342d56ed55e19e17a847778ffcba78",
       "laws": [
         "editor::generation3d::commands::rotate_selection::tests::rotate_selection_refuses_invalid_motions_and_targets_atomically"
       ]
@@ -1017,7 +1020,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "7df30aadc5a3fe0bf892cefdf4ff0399fc82c23a8dfade17db322e1dd1d28f41",
+      "sha256": "205e8061853e8d5e9b54d7b68ce685efc77709164ed050859ff3a9135e53d659",
       "laws": [
         "editor::generation3d::commands::navigate_graph::tests::a_keyboard_step_authors_no_document_and_no_config_operation",
         "editor::generation3d::commands::navigate_graph::tests::every_anchor_rule_the_fixture_states_holds",

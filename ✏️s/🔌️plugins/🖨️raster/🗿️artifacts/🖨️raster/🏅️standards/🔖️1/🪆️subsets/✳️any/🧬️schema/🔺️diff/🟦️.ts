@@ -2,7 +2,7 @@
 import {inverse} from "../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
 import {
   parseRasterArtifact,
-  parseRasterImageAsset,
+  parseSemioImageSnapshot,
   parseRasterLayerNode,
   parseRasterLayerMask,
   parseRasterTransform,
@@ -10,7 +10,7 @@ import {
   type RasterTransform,
   type RasterLayerMask,
   type RasterArtifact,
-  type RasterImageAsset,
+  type SemioImageSnapshot,
   type RasterLayerNode,
 } from "../🟦️.ts";
 
@@ -30,7 +30,7 @@ export interface RasterDiff {
 }
 
 export interface RasterAssetsDelta {
-  entries: Record<string, RasterImageAsset | null>;
+  entries: Record<string, SemioImageSnapshot | null>;
 }
 
 export interface RasterLayersDelta {
@@ -144,7 +144,7 @@ export function parseRasterAssetsDelta(value: unknown, at = "$"): RasterAssetsDe
   return {
     entries: Object.fromEntries(
       Object.entries(rasterRasterDiffGuardObject(row["entries"], `${at}.entries`))
-        .map(([key, item]) => [key, item == null ? null : parseRasterImageAsset(item, `${at}.entries.${key}`)]),
+        .map(([key, item]) => [key, item == null ? null : parseSemioImageSnapshot(item, `${at}.entries.${key}`)]),
     ),
   };
 }

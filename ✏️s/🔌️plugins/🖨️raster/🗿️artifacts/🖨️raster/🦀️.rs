@@ -646,14 +646,14 @@ pub struct RasterImageAsset {
 /// `page_drawing_from_world`, `🚪️io/🦀️.rs`). That already satisfies "consumes/reads drawing
 /// content but doesn't own it" — no `ArtifactLink` was needed because there was no persisted/duplicated
 /// drawing field to convert.
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+pub use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 
 pub type RasterAssetChild = store::ArtifactChild<SemioImageSnapshot>;
 
 fn mint_asset_child_handle(asset_id: &str, content: &[u8]) -> RasterAssetChild {
     let child_id = store::content_id("raster-asset", content);
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
@@ -675,7 +675,10 @@ pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> Ras
 /// `decode → cache → re-encode → decode` idempotent at the handle level, which `add-layer-asset`'s
 /// inverse (`🧬️mutations/🖇️add-layer-asset/↩️inverse`) depends on to restore the exact prior handle.
 fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
-    mint_asset_child_handle(asset_id, &<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image))
+    let child_id = raster_image_content_id("raster-asset", image);
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
+    store::ArtifactChild::new(child_id, target)
 }
 
 /// 🌉️ The single funnel-through "add real content" primitive: converts the real bytes into the
@@ -686,7 +689,7 @@ fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> Ras
 /// materialization. Every call site receives one self-contained child owner; no process-global cache
 /// can leak content between snapshots or retain abandoned payloads.
 pub fn mint_raster_asset_child(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
-    match io::semio_image_snapshot_from_raster_asset(asset) {
+    match crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(asset) {
         Ok(image) => image_content_child_handle(asset_id, &image).with_local_owner(std::sync::Arc::new(image)),
         Err(_) => image_asset_child_handle(asset_id, asset),
     }
@@ -697,7 +700,7 @@ pub fn mint_raster_asset_child(asset_id: &str, asset: &RasterImageAsset) -> Rast
 pub fn raster_asset(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -> Option<RasterImageAsset> {
     let handle = assets.get(asset_id)?;
     let image = handle.local_owner::<SemioImageSnapshot>()?;
-    io::raster_asset_from_semio_image_snapshot(image.as_ref()).ok()
+    crate::standards::v1::subsets::any::io::raster_asset_from_semio_image_snapshot(image.as_ref()).ok()
 }
 
 /// 🪆 Carries one asset child's immutable materialization onto another handle for the SAME asset —
@@ -926,26 +929,26 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("raster.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "raster.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("raster.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "raster.document.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("raster.document.diff"),
@@ -956,8 +959,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("raster.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -966,8 +969,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("raster.spr"),
                 },
             ]
@@ -1434,7 +1437,8 @@ pub mod standards {
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation, RasterMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation,RasterMutation};
+
 }
 
 pub mod diff {
@@ -1656,3 +1660,58 @@ pub mod viewer {
 }
 
 pub use crate::standards::v1::subsets::any::io::{RasterBuilderConstruction, RasterParts, RasterAnalyzerAnalysis, RasterBuilderFacets, RasterBuilder, RasterAnalyzer, RasterComposer};
+
+/// 🆔️ Stable identity of decoded image fields, independent of every carrier encoding.
+pub fn raster_image_content_id(prefix: &str, image: &SemioImageSnapshot) -> String {
+    let mut hash = framework_hash::Sha256::new();
+    let mut field = |bytes: &[u8]| {
+        hash.update(&(bytes.len() as u64).to_le_bytes());
+        hash.update(bytes);
+    };
+    field(image.schema.as_bytes());
+    field(&image.width.to_le_bytes());
+    field(&image.height.to_le_bytes());
+    field(&[image.colorspace as u8, image.bit_depth]);
+    field(&(image.frames.len() as u64).to_le_bytes());
+    for frame in &image.frames {
+        field(&frame.delay_ms.to_le_bytes());
+        field(&frame.rgba8);
+    }
+    field(&[u8::from(image.icc.is_some())]);
+    if let Some(icc) = &image.icc { field(icc); }
+    field(&(image.metadata.len() as u64).to_le_bytes());
+    for entry in &image.metadata { field(entry.key.as_bytes()); field(entry.value.as_bytes()); }
+    format!("{prefix}-{}", framework_hash::hex_lower(&hash.finalize()[..8]))
+}
+
+/// 🪆️ Attaches decoded image content without reading or writing a physical representation.
+pub fn mint_raster_image_child(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
+    image_content_child_handle(asset_id, image).with_local_owner(std::sync::Arc::new(image.clone()))
+}
+
+/// 🖼️ Reads the decoded content owned by this exact snapshot child.
+pub fn raster_image(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -> Option<SemioImageSnapshot> {
+    Some(assets.get(asset_id)?.local_owner::<SemioImageSnapshot>()?.as_ref().clone())
+}
+
+pub fn create_raster_id(prefix: &str) -> String {
+    use std::hash::BuildHasher;
+    use std::sync::{OnceLock,atomic::{AtomicU64,Ordering}};
+    static NAMESPACE:OnceLock<[u64;2]>=OnceLock::new();
+    static NEXT:AtomicU64=AtomicU64::new(0);
+    let namespace=NAMESPACE.get_or_init(||{
+        let state=std::collections::hash_map::RandomState::new();
+        [state.hash_one(0_u8),state.hash_one(1_u8)]
+    });
+    let next=NEXT.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect("Raster identity sequence exhausted");
+    format!("{prefix}-{:016x}{:016x}{next:016x}",namespace[0],namespace[1])
+}
+
+impl<V:semio_framework_dsl_record::BorrowedDslField> semio_framework_dsl_record::BorrowedDslField for RasterOwnedMap<V>{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Map(semio_framework_dsl_record::borrowed_field_shape::<V>);}
+impl semio_framework_dsl_record::BorrowedDslField for RasterAdjustmentNumber{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;}
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

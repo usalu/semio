@@ -1,6 +1,6 @@
 /** ➗️ Handcrafted Equation entities preserve labeled syntax, the parent-owned graph and point cloud, and the derived child identities. */
 import type {EquationSnapshot,EquationNode,EquationNodeKind,EquationGraph,EquationGeometry} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {ArtifactDialect} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteReal as real,artifactSqliteBoolean as boolean,artifactSqliteTextBytes,artifactSqliteValueBudget,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 /** 🏛️ Eighteen explicit tables mirror the adjacent SQL schema. */

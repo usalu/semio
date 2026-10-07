@@ -5,3 +5,5 @@
 Two directory move endpoints and one unsupported absent updated path were excluded. Production policy explicit file-move endpoints retained; artifact-policy Files list checked. Print measurement/project/task files are already represented in print-measurement-closure-ledger, and shared launch profiles appear in the component update list. Production builder prose lacks additional exact authored paths, so none are inferred from references.
 
 Full evidence and existence receipts are in 📥️missing-root-authored-paths.json.
+
+The earlier boundary executor separately recorded 171 exact authored file endpoints in its framework-wrapper-edits report. These explicit bullet paths have been captured as closure input fixture-boundary-authored-paths.json; current directories and non-file descriptions are excluded.

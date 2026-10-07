@@ -7,10 +7,10 @@ use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_finite;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceEdgeGeometry, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if let Err(reason) = puzzle2d_finite(&[("newGap", payload.new_gap), ("newShift", payload.new_shift), ("newRise", payload.new_rise), ("newRotation", payload.new_rotation), ("newTurn", payload.new_turn), ("newTilt", payload.new_tilt), ("newX", payload.new_x), ("newY", payload.new_y)]) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.id.to_string_owner()]);
     }
     let Some(edge) = base.edges.iter().find(|entry| entry.id == payload.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "edge", payload.id), vec![payload.id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "edge", payload.id), vec![payload.id.to_string_owner()]);
     };
     let mut next = edge.clone();
     next.gap = payload.new_gap;
@@ -22,7 +22,7 @@ pub fn diff(payload: &super::ReplaceEdgeGeometry, base: &Puzzle2dSnapshot) -> pr
     next.x = payload.new_x;
     next.y = payload.new_y;
     if next == *edge {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
         edges: Some(Puzzle2dEdgesDelta { patched: vec![Puzzle2dEdgePatchEntry { id: payload.id.clone(), patch: Puzzle2dEdgePatch { replacement: Some(next) } }], ..Default::default() }),

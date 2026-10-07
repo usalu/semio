@@ -41,7 +41,7 @@ pub(crate) mod context {
     semio_framework_plugin::history_edit_acceptance_law!("fem", Fem2dPlayApp, manifest, "../..");
 
     pub fn fem2d_app() -> Fem2dApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FEM2D_TEST_INSTANCE));
         Fem2dApp(app)
     }

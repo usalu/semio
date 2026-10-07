@@ -3,6 +3,7 @@ use super::*;
 use semio_framework_value::{DecodedValue,FromValue,ToValue,NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
 macro_rules! tagged_field{
  ($($name:ty),+)=>{$(
+  impl semio_framework_dsl_record::BorrowedDslField for $name{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Statements(<Self as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);}
   impl semio_framework_dsl_record::DslField for $name{
    fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants())}
    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{<Self as semio_framework_dsl_record::DslVariants>::variants_controlled(control).map(semio_framework_dsl_record::Shape::Statements)}

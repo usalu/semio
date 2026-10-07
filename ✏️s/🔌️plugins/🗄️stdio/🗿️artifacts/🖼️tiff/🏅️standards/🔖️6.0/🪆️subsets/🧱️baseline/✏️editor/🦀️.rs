@@ -5,9 +5,9 @@
 
 use crate::editor::tiff_baseline::modes::edit;
 use crate::editor::tiff_baseline::modes::edit::windows::main;
-use crate::standards::v6_0::subsets::baseline::schema::mutations::{patch_snapshot, set_bits_per_sample, set_compression, set_photometric_interpretation, set_snapshot, set_strip_offsets, TiffBaselineMutation};
+use crate::standards::v6_0::subsets::baseline::schema::mutations::{patch_snapshot, set_bits_per_sample, set_photometric_interpretation, set_snapshot, TiffBaselineMutation};
 use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
-use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS};
+use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_PHOTOMETRIC};
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -27,7 +27,7 @@ use semio_framework_plugin::ToolOperationSpec;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
@@ -127,10 +127,8 @@ fn tiffBaselineEditor_compact_mutation(event: &editing::SnapshotEditEvent, next:
     let tag = &next.ifds[0].entries[index];
     let single = matches!(rest, "values" | "values/0") && (matches!(&tag.values, TiffValues::Short(values) if values.len() == 1) || matches!(&tag.values, TiffValues::Long(values) if values.len() == 1));
     match (tag.tag, rest, &tag.values) {
-        (TAG_COMPRESSION, _, values) if single => tiffBaselineEditor_first_u16(values).map(|compression| TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression })),
         (TAG_PHOTOMETRIC, _, values) if single => tiffBaselineEditor_first_u16(values).map(|photometric| TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric })),
         (TAG_BITS_PER_SAMPLE, "values", TiffValues::Short(bits)) => Some(TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: bits.clone() })),
-        (TAG_STRIP_OFFSETS, "values", TiffValues::Long(offsets)) => Some(TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: offsets.clone() })),
         _ => None,
     }
 }
@@ -204,8 +202,8 @@ impl ArtifactEditor for TiffBaselineEditor {
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
-    fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation))
+    fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str { tiffBaselineEditor_command_id(command) }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiffBaselineEditor_command_from_action(action, args) }

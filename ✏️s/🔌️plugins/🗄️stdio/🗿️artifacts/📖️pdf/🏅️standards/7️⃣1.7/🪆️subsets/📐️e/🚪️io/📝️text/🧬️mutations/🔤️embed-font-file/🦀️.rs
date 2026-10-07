@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "embed-font-file";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::EmbedFontFile;
+use crate::standards::v1_7::subsets::e::schema::mutations::EmbedFontFile;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &EmbedFontFile) -> Result<String, String> {

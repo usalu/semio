@@ -3,30 +3,27 @@
   "cases": [
     {
       "fixture": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/↔️panel-resize/🔣️.json",
-      "schema": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/↔️panel-resize/🔣️.json",
       "removed": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/↔️panel-resize/🔣️.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/↔️panel-resize/📐️schema/🔣️.json"
-      ],
-      "schemaId": "https://semio.tech/framework/ui/panel-resize.fixture.schema.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/↔️panel-resize/📐️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🛰️Panel/🧬️schema/↔️resize/🔣️.json"
+      ]
     },
     {
       "fixture": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🪪️window-surface-owner/🔣️.json",
-      "schema": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪪️window-surface-owner/🔣️.json",
       "removed": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🔣️.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🧬️schema/🔣️.json"
-      ],
-      "schemaId": "https://semio.tech/framework/ui/window-surface-owner.fixture.schema.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧬️schema/🪪️window-surface-owner/🔣️.json"
+      ]
     },
     {
       "fixture": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🛟️panel-window-reservation/🔣️.json",
-      "schema": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛟️panel-window-reservation/🔣️.json",
       "removed": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🛟️panel-window-reservation/🔣️.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🛟️panel-window-reservation/🧬️schema/🔣️.json"
-      ],
-      "schemaId": "https://semio.tech/framework/ui/panel-window-reservation.fixture.schema.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🛟️panel-window-reservation/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧬️schema/🛟️panel-window-reservation/🔣️.json"
+      ]
     }
   ]
 }

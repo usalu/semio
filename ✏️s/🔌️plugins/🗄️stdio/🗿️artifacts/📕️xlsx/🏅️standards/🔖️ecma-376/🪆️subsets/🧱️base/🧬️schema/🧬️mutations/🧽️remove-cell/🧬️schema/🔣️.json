@@ -4,7 +4,10 @@
   "title": "RemoveCell",
   "type": "object",
   "additionalProperties": false,
-  "required": ["mutation","address"],
+  "required": [
+    "mutation",
+    "address"
+  ],
   "properties": {
     "address": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json",
@@ -18,7 +21,8 @@
           "de": "Arbeitsblatt und Bezug (zum Beispiel B7) der Zelle."
         },
         "group": "target",
-        "order": 10
+        "order": 10,
+        "widget": "hidden"
       }
     },
     "mutation": {

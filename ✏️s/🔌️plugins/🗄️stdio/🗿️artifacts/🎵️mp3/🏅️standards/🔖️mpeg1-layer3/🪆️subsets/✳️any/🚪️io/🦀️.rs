@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
     use crate::standards::mpeg1_layer3::subsets::any::io::Mp3Analyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
 
@@ -46,7 +46,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.mp3", standard: semio_framework_plugin::StandardId("mpeg1-layer3"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.mp3", standard: semio_framework_artifact_reference::StandardId("mpeg1-layer3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -874,7 +874,8 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
-    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, Mp3Mutation};
+    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation,Mp3Mutation};
+
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -917,7 +918,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::mpeg1_layer3::subsets::any::io;
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Mp3Parts {

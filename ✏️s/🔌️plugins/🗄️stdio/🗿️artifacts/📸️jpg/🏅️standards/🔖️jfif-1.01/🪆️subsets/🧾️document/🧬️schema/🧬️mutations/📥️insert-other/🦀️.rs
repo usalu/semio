@@ -50,6 +50,3 @@ pub fn contribute(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgD
 //#endregion Semantics
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
-mod tests_direct_behavior;

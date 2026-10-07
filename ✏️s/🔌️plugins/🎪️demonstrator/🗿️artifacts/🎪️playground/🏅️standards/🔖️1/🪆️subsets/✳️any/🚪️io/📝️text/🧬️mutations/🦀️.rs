@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
-pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("ChangeSchema", crate::standards::v1::subsets::any::schema::mutations::change_schema::TEXT_OPCODE)];
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("ChangeSchema", crate::standards::v1::subsets::any::io::text::mutations::change_schema::TEXT_OPCODE)];
 
 #[path = "✒️change-schema/🦀️.rs"]
 pub mod change_schema;

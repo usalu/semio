@@ -9,7 +9,7 @@ use std::collections::{BTreeMap,BTreeSet};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits every timeline, channel, keyframe and exact scalar detail through one row writer.
-fn visit_rows(snapshot:&SemioAnimationSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub(crate)fn visit_rows(snapshot:&SemioAnimationSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_animation_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,timeline)in snapshot.timelines.iter().enumerate(){
   let timeline_id=out.insert("semio_animation_timeline",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),timeline.name.as_deref().map(Cell::Text).unwrap_or(Cell::Null)])?;

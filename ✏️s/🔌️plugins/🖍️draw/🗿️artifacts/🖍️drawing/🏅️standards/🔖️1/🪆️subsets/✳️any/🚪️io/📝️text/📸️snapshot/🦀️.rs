@@ -116,17 +116,6 @@ use crate::DrawingImageAsset;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::DrawingLayerNode;
 
-pub(crate) fn drawing_id_hex(material: &[u8]) -> String {
-    let mut hasher = DefaultHasher::new();
-    material.hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
-}
-
-/// 🪪️ Content-addressed layer/object id — no process-wide counter.
-pub fn create_drawing_id(prefix: &str, material: &[u8]) -> String {
-    format!("{prefix}-{}", drawing_id_hex(material))
-}
-
 pub fn semio_drawing_example_document() -> DrawingSnapshot {
     DrawingSnapshot::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_drawing_snapshot())
 }
@@ -139,35 +128,5 @@ pub fn semio_drawing_example_json() -> String {
     semio_framework_pack_json::to_json_string(&semio_drawing_example_document())
 }
 
-pub fn create_drawing_path_layer(name: &str, segments: Vec<PathSegment>) -> DrawingLayerNode {
-    DrawingLayerNode::Path(DrawingPathBody {
-        base: DrawingLayerBase {
-            id: create_drawing_id("path", name.as_bytes()),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes::default(),
-        },
-        segments,
-    })
-}
-
-pub fn default_drawing_document(id: &str, title: Option<&str>) -> DrawingSnapshot {
-    DrawingSnapshot {
-        schema: DRAWING_DOCUMENT_SCHEMA.into(),
-        id: id.into(),
-        title: title.map(str::to_string),
-        layers: vec![create_drawing_path_layer("Layer 1", Vec::new())],
-        assets: Default::default(),
-        artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }),
-    }
-}
-
-pub fn empty_drawing_snapshot() -> DrawingSnapshot {
-    default_drawing_document("empty", None)
-}
 }
 pub use snapshot_codec::*;

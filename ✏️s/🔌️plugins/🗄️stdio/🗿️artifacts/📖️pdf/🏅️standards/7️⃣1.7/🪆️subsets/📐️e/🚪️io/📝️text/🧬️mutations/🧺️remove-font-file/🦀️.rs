@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-font-file";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::RemoveFontFile;
+use crate::standards::v1_7::subsets::e::schema::mutations::RemoveFontFile;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveFontFile) -> Result<String, String> {

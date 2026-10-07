@@ -24,7 +24,7 @@ pub use valid_mutations::{apply_xml_valid_mutation, XmlValidMutation, KINDS as V
 /// undo) that would land on an invalid document, so an empty new document could never be edited.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_valid_xml_snapshot() -> crate::XmlSnapshot {
-    let doc = crate::schema::snapshot::xml_document_from_text("<!DOCTYPE root><root/>").expect("blank_valid_xml_snapshot: the minimal valid document parses");
+    let doc = crate::schema::snapshot::XmlDocument { root: Some(crate::schema::snapshot::XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: Some(crate::schema::snapshot::XmlDoctype { name: "root".into(), ..Default::default() }), ..Default::default() };
     crate::XmlSnapshot { doc, ..crate::XmlSnapshot::default() }
 }
 //#endregion 🧬️Mutations
@@ -40,3 +40,7 @@ pub fn blank_valid_xml_snapshot() -> crate::XmlSnapshot {
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+#[path="🏅️conformance/🦀️.rs"]
+pub mod conformance;
+pub use conformance::*;

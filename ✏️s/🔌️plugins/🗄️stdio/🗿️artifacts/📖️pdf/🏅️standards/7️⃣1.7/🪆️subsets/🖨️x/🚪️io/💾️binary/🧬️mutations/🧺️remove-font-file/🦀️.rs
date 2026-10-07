@@ -1,6 +1,6 @@
 //! 🧺️ Direct binary codec for `remove-font-file`.
 
-use super::RemoveFontFile;
+use crate::standards::v1_7::subsets::x::schema::mutations::RemoveFontFile;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 7;

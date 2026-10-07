@@ -1,3 +1,4 @@
+import { pdfFunctionFromNativeJson,pdfColorFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
 /** 🌈️ All authored function and color variants, exact IEEE words and independent SQL queries. */
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
@@ -77,6 +78,6 @@ test("PDF function and alternate color traversal is iterative, bounded and rejec
 });
 
 test("PDF function and color native JSON admission uses the same owned Binary64 model", () => {
-  expect(parsePdfFunction({ kind: "exponential", domain: [0, -0], range: null, c0: [1], c1: [], n: -0 })).toEqual({ kind: "exponential", domain: [{ bits: 0n }, { bits: 0x8000000000000000n }], range: null, c0: [{ bits: 0x3ff0000000000000n }], c1: [], n: { bits: 0x8000000000000000n } });
-  expect(parsePdfColorSpace({ kind: "pattern", base: { kind: "calGray", whitePoint: [1, 0, -0], blackPoint: null, gamma: 0 } })).toEqual({ kind: "pattern", base: { kind: "calGray", whitePoint: [{ bits: 0x3ff0000000000000n }, { bits: 0n }, { bits: 0x8000000000000000n }], blackPoint: null, gamma: { bits: 0n } } });
+  expect(parsePdfFunction(pdfFunctionFromNativeJson({ kind: "exponential", domain: [0, -0], range: null, c0: [1], c1: [], n: -0 }))).toEqual({ kind: "exponential", domain: [{ bits: 0n }, { bits: 0x8000000000000000n }], range: null, c0: [{ bits: 0x3ff0000000000000n }], c1: [], n: { bits: 0x8000000000000000n } });
+  expect(parsePdfColorSpace(pdfColorFromNativeJson({ kind: "pattern", base: { kind: "calGray", whitePoint: [1, 0, -0], blackPoint: null, gamma: 0 } }))).toEqual({ kind: "pattern", base: { kind: "calGray", whitePoint: [{ bits: 0x3ff0000000000000n }, { bits: 0n }, { bits: 0x8000000000000000n }], blackPoint: null, gamma: { bits: 0n } } });
 });

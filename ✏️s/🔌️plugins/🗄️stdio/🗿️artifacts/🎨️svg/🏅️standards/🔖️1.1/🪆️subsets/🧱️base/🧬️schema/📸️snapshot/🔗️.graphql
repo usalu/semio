@@ -1,5 +1,26 @@
-""" 📸️ Persisted logical SVG document. """
-type SvgSnapshot {
-  schema: String!
-  doc: XmlDocument!
-}
+# SVG document owners; XML declaration/doctype use their canonical schema types.
+""" 📸️ Persisted SVG document with decoded attributes. """
+type SvgSnapshot { schema: String! doc: SvgDocument! }
+type SvgDocument { declaration: XmlDeclaration doctype: XmlDoctype prolog: [SvgNode!]! root: SvgNode epilog: [SvgNode!]! }
+union SvgNode = SvgElementNode | SvgTextNode | SvgCDataNode | SvgCommentNode | SvgProcessingInstructionNode
+type SvgElementNode { name: String! attrs: [SvgAttr!]! children: [SvgNode!]! }
+type SvgTextNode { text: String! }
+type SvgCDataNode { text: String! }
+type SvgCommentNode { text: String! }
+type SvgProcessingInstructionNode { target: String! data: String! }
+type SvgAttr { name: String! value: SvgAttributeValue! }
+union SvgAttributeValue = SvgLocalReferenceAttribute | SvgTextAttribute | SvgNumberAttribute | SvgLengthAttribute | SvgViewBoxAttribute | SvgTransformAttribute | SvgPointsAttribute | SvgPathDataAttribute
+type SvgTextAttribute { value: String! }
+type SvgNumberAttribute { value: Float! }
+type SvgLengthAttribute { value: SvgLength! }
+type SvgViewBoxAttribute { value: ViewBox! }
+type SvgTransformAttribute { value: [TransformOp!]! }
+type SvgPointsAttribute { value: [SvgPoint!]! }
+type SvgPathDataAttribute { value: [PathCommand!]! }
+type SvgLength { magnitude: Float! unit: String! }
+type ViewBox { minX: Float! minY: Float! width: Float! height: Float! }
+type SvgPoint { x: Float! y: Float! }
+type TransformOp { op: String! a: Float b: Float c: Float d: Float e: Float f: Float x: Float y: Float angle: Float center: [Float!] }
+type PathCommand { cmd: String! relative: Boolean x: Float y: Float x1: Float y1: Float x2: Float y2: Float rx: Float ry: Float xAxisRotation: Float largeArc: Boolean sweep: Boolean }
+
+type SvgLocalReferenceAttribute { value: String! }

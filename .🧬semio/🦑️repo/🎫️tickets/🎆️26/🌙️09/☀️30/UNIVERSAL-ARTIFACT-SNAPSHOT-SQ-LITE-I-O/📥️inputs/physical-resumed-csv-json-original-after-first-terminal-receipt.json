@@ -1,0 +1,18 @@
+{
+  "session": 12523,
+  "exitCode": 1,
+  "owners": [
+    {
+      "owner": "JSON",
+      "status": "compiler-only",
+      "errors": 1
+    },
+    {
+      "owner": "CSV",
+      "status": "compiler-only",
+      "errors": 1
+    }
+  ],
+  "runtimeCredit": 0,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-csv-json-original-owning-native-after-canonical-glue.log"
+}

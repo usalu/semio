@@ -1,5 +1,6 @@
 /** 🎯️ Cross-plugin app addresses belong to the manifest contract. */
-import { dialectCoordinate, parseDialectCoordinate, type ArtifactDialect } from "../../🚪️io/🧬️schema/🟦️.ts";
+import { type ArtifactDialect } from "../../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { dialectCoordinate, parseDialectCoordinate } from "../../🚪️io/🧬️schema/🟦️.ts";
 export type AppRole = "viewer" | "editor";
 export interface AppRef { pluginId: string; appId: string }
 

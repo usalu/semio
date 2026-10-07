@@ -8,7 +8,8 @@ use semio_framework_os_kernel::{
     },
     ArtifactSqliteSnapshot,
 };
-use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{append_xml_document_views, measure_xml_document_views, XmlDocumentView};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{append_xml_document_views,measure_xml_document_views};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView};
 use semio_s_artifact_stdio_zip::opc::sqlite::{append_opc_package, measure_opc_package};
 use semio_framework_value::native_encoding::NativeEncodeProgress;
 use semio_framework_value::NativeEncodeControl;
@@ -50,7 +51,7 @@ fn materialize_package(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotCont
         })?
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::backing::super) fn project(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+pub(crate) fn project(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
     control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
     let opc = materialize_package(snapshot, control)?;
     let mut materialized = MaterializedDocuments(reserve(snapshot.xml_parts.len(), control)?);

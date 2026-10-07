@@ -57,7 +57,7 @@ async fn identical_snapshots_produce_byte_identical_deltas() {
 
 #[semio_framework_async_macros::async_test]
 async fn changing_an_earlier_pose_changes_the_dep_input_of_a_later_key_indirectly_through_its_own_chain() {
-    // 🔗 dep_input for "c1" only covers c1's own bytes by design (see the fn's own docstring) —
+    // 🔗 dep_input for "c1" only covers c1's own pose values by design (see the fn's own docstring) —
     // the earlier pose's change reaches c1 through DepHash::chain folding c0's hash, which is
     // `store::infer_field`'s own concern, not this field's. This test instead pins the
     // structural half of that contract: plan() must keep naming c0 as c1's parent.
@@ -65,4 +65,18 @@ async fn changing_an_earlier_pose_changes_the_dep_input_of_a_later_key_indirectl
     let steps = RemodelingRelativeCameraPose::plan(&snapshot);
     assert_eq!(steps[1].key, "c1");
     assert_eq!(steps[1].parents, vec!["c0".to_string()]);
+}
+
+/// 🧪️ Native serde independently checks the neutral logical dependency projection.
+#[semio_framework_async_macros::async_test]
+async fn typed_dependency_matches_neutral_serde_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔑️dependency/🔣.json")).unwrap();
+    let snapshot = two_pose_snapshot();
+    let key = fixture["key"].as_str().unwrap().to_owned();
+    let dependency = RemodelingRelativeCameraPose::dep_input(&snapshot, &key, &[]);
+    let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&dependency).to_string()).unwrap();
+    let pose = &snapshot.results.trajectory.as_ref().unwrap().poses[1];
+    let independent = serde_json::json!({"rotation":pose.rotation_wxyz,"translation":pose.translation});
+    assert_eq!(actual, fixture["expected"]);
+    assert_eq!(actual, independent);
 }

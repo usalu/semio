@@ -42,7 +42,7 @@ use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::CommandDefinition;
 use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Dialect;
+use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DomainTopology;
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
@@ -1988,8 +1988,9 @@ impl ArtifactEditor for Generation3dPlayApp {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::host::generation3d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::host::generation3d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {

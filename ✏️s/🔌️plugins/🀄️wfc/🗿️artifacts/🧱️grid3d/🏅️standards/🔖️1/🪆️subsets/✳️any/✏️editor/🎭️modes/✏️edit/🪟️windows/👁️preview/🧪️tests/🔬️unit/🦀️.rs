@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::schema::inferences::Grid3dAssignment;
-use crate::schema::scene_internals::preview_instances_json;
+use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_instances_json;
 
 fn row(x: u32, y: u32, z: u32, tile: &str) -> Grid3dAssignment {
     Grid3dAssignment { x, y, z, tile_id: tile.to_string() }

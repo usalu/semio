@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::animation::io::gltf_deserializer::SemioAnimat
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use semio_framework_plugin::ArtifactDeserializer;
-use semio_s_artifact_stdio_gltf::engine::decode_accessor;
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::decode_accessor;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn real_world_animation() -> SemioAnimationSnapshot {

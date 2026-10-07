@@ -1,0 +1,27 @@
+dialect protocol
+protocol stdio.docx.strict.mutations
+version 1
+schema stdio.docx
+start record
+framing record
+header fixed 2
+field format u8
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-main-namespace tag=1
+field payload bytes
+record set-relationship-base tag=2
+field payload bytes
+record set-conformance-attribute tag=3
+field payload bytes
+record remove-conformance-attribute tag=4
+field payload bytes
+record insert-vml-part tag=5
+field payload bytes
+record remove-vml-part tag=6
+field payload bytes
+record insert-alternate-content tag=7
+field payload bytes
+record remove-alternate-content tag=8
+field payload bytes

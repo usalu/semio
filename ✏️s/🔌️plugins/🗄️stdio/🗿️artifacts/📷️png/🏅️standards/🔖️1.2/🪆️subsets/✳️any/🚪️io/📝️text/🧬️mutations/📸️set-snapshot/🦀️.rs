@@ -1,6 +1,8 @@
 //! 📝️ Direct set-snapshot text codec.
 
 use crate::standards::v1_2::subsets::any::io::text::mutations::*;
+use crate::schema::mutations::SetSnapshot;
+use crate::PngSnapshot;
 use crate::standards::v1_2::subsets::any::io::text::mutations::Entry;
 
 pub const TEXT_OPCODE: &str = "set-snapshot";

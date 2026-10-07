@@ -15,16 +15,6 @@
     "derived": ["owner/🧬️schema/🔣️.json"],
     "allowedDirectories": ["owner", "owner/📚️Café"]
   },
-  "caseSchema": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": ["id", "occupiedPaths", "collisions"],
-    "properties": {
-      "id": { "type": "string", "minLength": 1 },
-      "occupiedPaths": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-      "collisions": { "type": "array", "items": { "type": "string", "minLength": 1 } }
-    }
-  },
   "cases": [
     { "id": "empty", "occupiedPaths": [], "collisions": [] },
     { "id": "exact-leaf", "occupiedPaths": ["owner/📚️Café/🟦️.ts"], "collisions": ["owner/📚️Café/🟦️.ts"] },

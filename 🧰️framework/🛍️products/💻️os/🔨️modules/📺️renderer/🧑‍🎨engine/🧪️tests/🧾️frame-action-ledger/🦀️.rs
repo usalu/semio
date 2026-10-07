@@ -28,7 +28,7 @@ fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_pay
     for row in rows {
         batch
             .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
-                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
+                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor,
                     token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                     member: row["member"].as_u64().unwrap() as u8,
                     abort_correlation_on_error: row["abort"].as_bool().unwrap(),

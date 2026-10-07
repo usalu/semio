@@ -391,7 +391,7 @@ impl ArtifactApp for DummyApp {
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_the_registered_catalogue_without_a_declared_action() {
-    let mut app = new_app::<DummyApp>().await;
+    let mut app = new_app::<DummyApp>(protocol::ActorId("actor".into())).await;
     let args = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("four".to_string()))]);
     let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor")).await.expect("catalogue load");
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("load effect") else {
@@ -414,7 +414,7 @@ async fn meta_carries_actor_and_local_instance_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn new_app_constructs_a_registry_less_wrapper() {
-    let mut app = new_app::<DummyApp>().await;
+    let mut app = new_app::<DummyApp>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let error = app.dispatch_typed(DummyCommand::Increment, &meta("local")).await.expect_err("registry-less wrapper must fail closed");
     assert_eq!(error.code.0, "interactive-job.unknown-key");
     assert!(error.message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.message);
@@ -424,7 +424,7 @@ async fn new_app_constructs_a_registry_less_wrapper() {
 
 #[semio_framework_async_macros::async_test]
 async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
-    let mut app = new_registered_app::<DummyApp, _>(dummy_manifest()).await;
+    let mut app = new_registered_app::<DummyApp, _>(dummy_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1).await;
     close_registered_fixture_app(&mut app);
 }

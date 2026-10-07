@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
@@ -501,6 +501,22 @@ describe("framework renderer wgpu generated worker", () => {
       const declaration = source.statements.find((node) => ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === scenario.module);
       expect(declaration?.getText(source)).toContain(scenario.binding);
       expect(profile.sourceModulePaths).toContain(`${profile.ownerPath}/${scenario.target}`);
+    }
+  });
+
+  it("owns every static relative browser runtime import in the neutral package authority", () => {
+    const profile = loadTaxonomy().generatorContracts["wgpu-frame-worker"]!.packageGeneration!.browserProfile;
+    let root = dirname(fileURLToPath(import.meta.url));
+    while (!existsSync(join(root, "nx.json"))) root = dirname(root);
+    for (const path of profile.sourceModulePaths) {
+      if (!/\.(ts|mjs)$/u.test(path)) continue;
+      const emitted = ts.transpileModule(readFileSync(join(root, path), "utf8"), { compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } }).outputText;
+      const source = ts.createSourceFile(path, emitted, ts.ScriptTarget.Latest, true);
+      for (const declaration of source.statements) {
+        if (!(ts.isImportDeclaration(declaration) || ts.isExportDeclaration(declaration)) || !declaration.moduleSpecifier || !ts.isStringLiteral(declaration.moduleSpecifier) || !declaration.moduleSpecifier.text.startsWith(".")) continue;
+        const target = relative(root, resolve(root, dirname(path), declaration.moduleSpecifier.text)).replaceAll("\\", "/");
+        expect(profile.sourceModulePaths, `${path} imports ${target}`).toContain(target);
+      }
     }
   });
 

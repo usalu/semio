@@ -1,0 +1,25 @@
+> bun ./📜️script.ts test-owner-command "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts" prepare
+
+[DEBUG] isolated Nx verification test-owner-command
+[print-bundle] Acquiring 500 verified TeX support files
+[print-bundle] Verified 25/500
+[print-bundle] Verified 50/500
+[print-bundle] Verified 75/500
+[print-bundle] Verified 100/500
+[print-bundle] Verified 125/500
+[print-bundle] Verified 150/500
+[print-bundle] Verified 175/500
+[print-bundle] Verified 200/500
+[print-bundle] Verified 225/500
+[print-bundle] Verified 250/500
+[print-bundle] Verified 275/500
+[print-bundle] Verified 300/500
+[print-bundle] Verified 325/500
+[print-bundle] Verified 350/500
+[print-bundle] Verified 375/500
+[print-bundle] Verified 400/500
+[print-bundle] Verified 425/500
+[print-bundle] Verified 450/500
+[print-bundle] Verified 475/500
+[print-bundle] Verified 500/500
+[print-bundle] Ready: 500 files, 19856791 bytes

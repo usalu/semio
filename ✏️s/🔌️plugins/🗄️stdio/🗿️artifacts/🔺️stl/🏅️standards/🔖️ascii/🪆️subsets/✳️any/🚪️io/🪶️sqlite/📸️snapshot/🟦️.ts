@@ -84,7 +84,7 @@ export async function stlSnapshotFromSqliteDatabase(database: SqliteDatabase, op
   return { schema: artifactSqliteText(solid, 1), solidName: artifactSqliteText(solid, 2), triangles };
 }
 /** 🛂️ Validate the exact owned dialect and document at the semantic I/O boundary. */
-export async function stlSnapshotValidateSqliteSubset(snapshot:StlSnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
+export async function stlSnapshotValidateSqliteSubset(snapshot:StlSnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
   await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);
   if(dialect.artifactKind!=="s.stdio.stl"||dialect.standard!=="ascii"||dialect.subset!=="*")throw new Error("geometry owned SQLite dialect differs");
   const expected=await stlSnapshotToSqliteDatabase(snapshot,options),candidate=await stlSnapshotFromSqliteDatabase(database,options),actual=await stlSnapshotToSqliteDatabase(candidate,options);

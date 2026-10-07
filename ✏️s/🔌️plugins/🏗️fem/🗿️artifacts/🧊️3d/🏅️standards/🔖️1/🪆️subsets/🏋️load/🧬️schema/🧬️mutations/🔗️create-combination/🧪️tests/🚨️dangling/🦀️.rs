@@ -13,7 +13,8 @@
 //! Terms are resolved in the map's own sorted order, so `dead` passes and `seismic` — the case that was never opened — is the one reported.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️create-combination/🚨️dangling/📸️snapshot/⬅️before/🔣️.json");

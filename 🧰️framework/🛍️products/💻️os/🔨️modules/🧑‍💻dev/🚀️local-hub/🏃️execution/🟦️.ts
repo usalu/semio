@@ -598,6 +598,7 @@ export type DevServeOptionsV1 = Readonly<{
   hubUrl?: string;
   signal?: AbortSignal;
   onProgress?: (status: DevServeStatusV1, line: string) => void;
+  beforeSpawn?: () => Promise<void>;
   bootBoundMs?: number;
   intervalMs?: number;
   logPath?: string;
@@ -674,6 +675,17 @@ export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevSer
     report({ kind: "reusing", url });
     return { url, reused: true, stop: async () => {} };
   }
+  await options.beforeSpawn?.();
+  options.signal?.throwIfAborted();
+  if (options.beforeSpawn) {
+    const preparedPlan = devServePlanV1(options.port, await world.answers(url), await world.portInUse(options.port));
+    if (preparedPlan === "reuse") {
+      report({ kind: "reusing", url });
+      return { url, reused: true, stop: async () => {} };
+    }
+    if (preparedPlan !== "spawn") throw new Error(`dev serve: port ${options.port} was occupied during preparation`);
+  }
+  options.signal?.throwIfAborted();
   const logPath = options.logPath ?? join(options.repoRoot, ".🧬semio", "🌐hub", "dev-serves", `serve-${options.port}.log`);
   const child = world.spawnServe({ port: options.port, variant: options.variant ?? "s", renderer: options.renderer ?? "react", profile: options.profile ?? "dev", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
   report({ kind: "spawning", url, pid: child.pid, logPath });

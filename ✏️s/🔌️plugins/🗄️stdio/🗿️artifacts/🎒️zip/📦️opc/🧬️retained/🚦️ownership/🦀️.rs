@@ -65,7 +65,7 @@ impl RetainedOpcPackage {
             let content_types = RetainedOpcContentTypes { defaults: metadata(package.content_types.defaults, control)?, overrides: metadata(package.content_types.overrides, control)? };
             let mut owners = PagedList::default();
             for (owner, values) in package.relationships.into_groups() {
-                let owner = control.copy_text(&owner)?;
+                let owner = PagedUtf8::<{usize::MAX}>::try_from_str_controlled(&owner, control)?;
                 let mut relationships = RetainedOpcRelationships::default();
                 for value in values {
                     let value = RetainedOpcRelationship { id: text(&value.id, control)?, rel_type: text(&value.rel_type, control)?, target: text(&value.target, control)?, target_mode: value.target_mode.into() };

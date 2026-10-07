@@ -40,7 +40,7 @@ pub struct Din16798Snapshot {
     pub night_setback_k: f64,
 }
 
-crate::impl_norm_artifact_record!(Din16798Snapshot, extension = "din16798", envelope_id = "norm.din16798", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+
 
 impl Default for Din16798Snapshot {
     fn default() -> Self {

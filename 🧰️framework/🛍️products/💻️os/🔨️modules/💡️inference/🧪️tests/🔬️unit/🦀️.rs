@@ -11,6 +11,7 @@ struct DagSnapshot {
 
 struct WeightSum;
 impl InferredField<DagSnapshot> for WeightSum {
+    type Dependency = Vec<u8>;
     // 🔑️ String, not &'static str: FromValue (needed for the session's whole-result cache in
     // `infer_field_after_diff`, via `decode_map`) can't be satisfied by a borrowed str —
     // matches real usage (e.g. Puzzle3dFlatPlane's Key = object id String).
@@ -145,6 +146,7 @@ async fn identical_snapshot_recompute_is_all_cache_hits() {
 //#region 🧪️VersionSaltLaw
 struct WeightSumV2;
 impl InferredField<DagSnapshot> for WeightSumV2 {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = i64;
     const FIELD_ID: &'static str = "test.dag.weight-sum";
@@ -219,3 +221,31 @@ async fn clear_drops_every_entry_and_resets_used_bytes() {
     assert_eq!(cache.used_bytes, 0);
 }
 //#endregion 🧪️Config
+
+struct OwnedWeightSum;
+impl InferredField<DagSnapshot> for OwnedWeightSum {
+    type Key=String;
+    type Value=i64;
+    type Dependency=Vec<i64>;
+    const FIELD_ID:&'static str="test.dag.owned-weight-sum";
+    const SCHEMA_VERSION:u32=1;
+    fn reads()->&'static[&'static str]{WeightSum::reads()}
+    fn plan(snapshot:&DagSnapshot)->Vec<InferenceStep<Self::Key>>{WeightSum::plan(snapshot)}
+    fn dep_input(snapshot:&DagSnapshot,key:&Self::Key,_parents:&[Self::Key])->Self::Dependency{vec![snapshot.weights.get(key.as_str()).copied().unwrap_or(0)]}
+    fn compute(snapshot:&DagSnapshot,key:&Self::Key,parents:&[Self::Value])->Self::Value{WeightSum::compute(snapshot,key,parents)}
+}
+#[semio_framework_async_macros::async_test]
+async fn inference_owned_dependency_values_match_neutral_and_serde_oracle(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependencies/🔣️.json")).unwrap();
+    let snapshot=base_snapshot().await;
+    let dependency=OwnedWeightSum::dep_input(&snapshot,&"leaf_a".into(),&[]);
+    assert_eq!(serde_json::to_value(&dependency).unwrap(),fixture["dependency"]);
+    assert_eq!(semio_framework_pack_json::to_json_string(&dependency),serde_json::to_string(&dependency).unwrap());
+    let expected:BTreeMap<String,i64>=serde_json::from_value(fixture["expected"].clone()).unwrap();
+    let mut cache=InferenceCache::new(InferenceCacheConfig{enabled:true,record_stats:true,..Default::default()}).await;
+    assert_eq!(infer_field::<DagSnapshot,OwnedWeightSum>(&snapshot,None),expected);
+    assert_eq!(infer_field::<DagSnapshot,OwnedWeightSum>(&snapshot,Some(&mut cache)),expected);
+    assert_eq!(infer_field::<DagSnapshot,OwnedWeightSum>(&snapshot,Some(&mut cache)),expected);
+    assert!(cache.stats().await.hits>0);
+    eprintln!("[DEBUG] Inference owned dependency values and cache transparency oracle=serde_json");
+}

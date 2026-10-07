@@ -91,3 +91,6 @@ pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String>
 
 
 //#endregion 🔖️Codec
+
+semio_framework_value::artifact_retire_struct!(Ifc2x3EdmPreamble { producer,module,creation_date,host,database,database_version,database_creation_date,schema,model,model_creation_date,header_model,header_model_creation_date,user,group,license,options });
+semio_framework_value::artifact_retire_struct!(Ifc2x3Snapshot { schema,document,edm_preamble });

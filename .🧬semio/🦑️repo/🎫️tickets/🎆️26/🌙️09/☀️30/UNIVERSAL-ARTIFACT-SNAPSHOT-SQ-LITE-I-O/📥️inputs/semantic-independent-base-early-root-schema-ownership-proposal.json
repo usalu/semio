@@ -1,0 +1,24 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "sha256": "d228e22b790beaa390a08e8c252618b42d6d5ad30b2ca54b332ab8cb8c991f89",
+    "regions": [
+      {
+        "before": "let schema=control.borrow_text(bytes(&mut reader)?)?;let limits=super::semantic::subset_limits(limits,schema.len(),super::semantic::tag(ordinal)?)?;",
+        "after": "let schema=control.borrow_text(bytes(&mut reader)?)?;let limits=super::semantic::subset_limits(limits,schema.len(),super::semantic::tag(ordinal)?)?;let schema=Owned::new(control.copy_text(schema)?);"
+      },
+      {
+        "before": "SemioSnapshot{schema:control.copy_text(schema)?,subset:subset.take()}",
+        "after": "SemioSnapshot{schema:schema.take(),subset:subset.take()}"
+      },
+      {
+        "before": "let limits=super::semantic::subset_limits(limits,hex_text_extent(schema,control)?,tag)?;",
+        "after": "if !schema.len().is_multiple_of(2){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"Semio native odd hex length\"))}let limits=super::semantic::subset_limits(limits,schema.len()/2,tag)?;let schema=Owned::new(hex_text(schema,control)?);"
+      },
+      {
+        "before": "SemioSnapshot{schema:hex_text(schema,control)?,subset:subset.take()}",
+        "after": "SemioSnapshot{schema:schema.take(),subset:subset.take()}"
+      }
+    ]
+  }
+]

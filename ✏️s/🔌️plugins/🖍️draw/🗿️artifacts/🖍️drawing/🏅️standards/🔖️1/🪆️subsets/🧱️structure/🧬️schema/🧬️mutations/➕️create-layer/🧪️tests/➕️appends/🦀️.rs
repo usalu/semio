@@ -128,3 +128,20 @@ async fn committed_diff_applies_to_after() {
     let produced = <crate::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-layer/appends-shape-b-at-the-root: committed diff did not carry before to after");
 }
+
+/// 🎛️ Native history mutation choices match the language-neutral schema-derived renderer corpus.
+#[test]
+fn drawing_create_layer_inputs_publish_closed_choices() {
+    let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(include_str!("../../../../../../✳️any/🧬️schema/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    let defs = semio_framework::mutation_input_defs(include_str!("../../🧬️schema/🔣️.json"), &|id: &str| (document.get("$id").and_then(semio_framework::DslValue::as_str) == Some(id)).then(|| document.clone())).unwrap();
+    let layer = defs.iter().find(|def| def.id == "/layer").unwrap();
+    let semio_framework::ArgSchema::Object { fields } = &layer.schema else { panic!("Layer input is an object") };
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️input-choices/🔣️.json")).unwrap();
+    for row in law["fields"].as_array().unwrap() {
+        let id = format!("/{}", row["id"].as_str().unwrap());
+        let field = fields.iter().find(|def| def.id == id).unwrap();
+        let semio_framework::ArgSchema::String { options, .. } = &field.schema else { panic!("Choice input is a string") };
+        assert_eq!(options.iter().map(|option| option.value.as_str()).collect::<Vec<_>>(), row["options"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>());
+        assert!(matches!(field.control(), semio_framework::ActionArgControl::Select { .. }));
+    }
+}

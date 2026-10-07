@@ -6,18 +6,18 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::presentation::schema::diff::*;
+use crate::standards::v1::subsets::presentation::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
 /// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND
 /// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
 /// module (matching the pre-existing convention where this file is the one place that owns every
 /// value codec presentation's other facets import from).
-use crate::document::io::text::diff::{dec_block};
-use crate::document::io::text::diff::{enc_block};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
 use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
@@ -260,6 +260,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::presentation::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_f64, dec_f64, parse_usize, enc_list, dec_list, enc_semio_point2, dec_semio_point2, enc_frame, dec_frame, enc_image, dec_image, enc_placeholder_kind, dec_placeholder_kind, enc_table_cell, dec_table_cell, enc_table_row, dec_table_row, enc_shape, dec_shape, enc_master, dec_master, enc_layout, dec_layout, enc_slide, dec_slide, enc_indexed_triple, dec_indexed_triple, enc_named_triple, dec_named_triple, enc_frame_diff, dec_frame_diff, enc_image_diff, dec_image_diff, enc_doc_blocks_diff, dec_doc_blocks_diff, enc_table_cell_diff, dec_table_cell_diff, enc_table_cells_diff, dec_table_cells_diff, enc_table_row_diff, dec_table_row_diff, enc_table_rows_diff, dec_table_rows_diff, enc_shapes_diff, dec_shapes_diff, enc_shape_diff, dec_shape_diff, enc_master_diff, dec_master_diff, enc_layout_diff, dec_layout_diff, enc_slide_diff, dec_slide_diff, enc_masters_diff, dec_masters_diff, enc_layouts_diff, dec_layouts_diff, enc_slides_diff, dec_slides_diff};
+use crate::standards::v1::subsets::presentation::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_f64, dec_f64, parse_usize, enc_list, dec_list, enc_semio_point2, dec_semio_point2, enc_frame, dec_frame, enc_image, dec_image, enc_placeholder_kind, dec_placeholder_kind, enc_table_cell, dec_table_cell, enc_table_row, dec_table_row, enc_shape, dec_shape, enc_master, dec_master, enc_layout, dec_layout, enc_slide, dec_slide, enc_indexed_triple, dec_indexed_triple, enc_named_triple, dec_named_triple, enc_frame_diff, dec_frame_diff, enc_image_diff, dec_image_diff, enc_doc_blocks_diff, dec_doc_blocks_diff, enc_table_cell_diff, dec_table_cell_diff, enc_table_cells_diff, dec_table_cells_diff, enc_table_row_diff, dec_table_row_diff, enc_table_rows_diff, dec_table_rows_diff, enc_shapes_diff, dec_shapes_diff, enc_shape_diff, dec_shape_diff, enc_master_diff, dec_master_diff, enc_layout_diff, dec_layout_diff, enc_slide_diff, dec_slide_diff, enc_masters_diff, dec_masters_diff, enc_layouts_diff, dec_layouts_diff, enc_slides_diff, dec_slides_diff};
 }
 pub use diff_codec::*;

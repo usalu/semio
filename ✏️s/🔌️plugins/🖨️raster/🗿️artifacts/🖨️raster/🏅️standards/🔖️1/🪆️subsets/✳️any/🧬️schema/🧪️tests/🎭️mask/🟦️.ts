@@ -1,14 +1,20 @@
 /** 🎭️ Persisted mask metadata checked against the shared schema through Ajv. */
 import {expect,test} from "bun:test";
+
 import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+
 import sharp from "sharp";
 import schema from "../../🔣️.json";
 import fixture from "../../🧫️fixtures/🎭️mask/🔣️.json";
 import diffSchema from "../../🔺️diff/🔣️.json";
 import mutationSchema from "../../🧬️mutations/🎭️change-layer-mask/🧬️schema/🔣️.json";
 import mutations from "../../🧬️mutations/🎭️change-layer-mask/🧪️tests/🔣️.json";
-import {parseRasterLayerPatch} from "../../🔺️diff/🟦️.ts";
-import {parseRasterLayerMask,parseRasterTransform,printRasterLayerMask,rasterTransformNumbers} from "../../🟦️.ts";
+
+import {rasterLayerPatchFromJson as parseRasterLayerPatch} from "./../../../🚪️io/📝️text/🔺️diff/🟦️.ts";
+import {rasterTransformNumbers} from "../../🟦️.ts";
+import {rasterLayerMaskFromJson as parseRasterLayerMask} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
+import {rasterTransformFromJson as parseRasterTransform} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
+import {printRasterLayerMask} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
 import transforms from "../../🧫️fixtures/📐️transform/🔣️.json";
 
 const validate=semioSchemaAjvV1({allErrors:true}).compile({$ref:"#/$defs/RasterLayerMask",$defs:schema.$defs});

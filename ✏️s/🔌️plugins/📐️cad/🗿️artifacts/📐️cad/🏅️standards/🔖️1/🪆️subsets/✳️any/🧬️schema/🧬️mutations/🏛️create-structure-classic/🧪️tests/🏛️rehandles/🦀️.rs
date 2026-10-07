@@ -34,6 +34,8 @@ fn applied() -> CadSnapshot {
 /// ▶️ `create-structure-classic-model` writes the fixed `structure_classic_model` slot even when it is already occupied; the other three slots never move.
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_structure_classic_handle_in_place() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let after = applied();
     let handle = after.structure_classic_model.as_ref().expect("create-structure-classic-model leaves the slot occupied");
     assert_eq!(handle.child_id, "cad-structure-2", "create-structure-classic-model must install the payload's child id");

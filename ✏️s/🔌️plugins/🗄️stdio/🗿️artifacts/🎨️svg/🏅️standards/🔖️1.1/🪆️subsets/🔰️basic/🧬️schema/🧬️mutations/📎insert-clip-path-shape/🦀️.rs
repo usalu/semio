@@ -12,7 +12,7 @@ use super::*;
 pub struct InsertClipPathShape {
     pub(crate) clip_path_id: String,
     pub(crate) index: usize,
-    pub(crate) node: XmlNode,
+    pub(crate) node: SvgNode,
 }
 
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertClipPathShape {

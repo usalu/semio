@@ -24,7 +24,7 @@ use crate::standards::v_ecma_376::subsets::base::schema::diff::{DocxDiff, DocxOp
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 //#region 🔖️Dialect
@@ -136,11 +136,6 @@ fn main_part_path(base: &DocxSnapshot) -> Option<String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_part(part: &DocxXmlPart) -> Option<XmlDocument> {
     part.materialize_document_exact().ok()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn part_text(base: &DocxSnapshot, path: &str) -> Option<String> {
-    base.part_text(path)
 }
 
 /// ✍️ Rewrites every attribute value equal to a member of `from` to `to`, through the whole
@@ -303,24 +298,16 @@ fn diff_conformance_attribute(base: &DocxSnapshot, value: Option<&str>) -> DocxD
     <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
-/// 🧩️ The canonical legacy-VML part body this vocabulary inserts — real VML, so the namespace the
-/// 📏️strict check scans a part for is genuinely present.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn vml_markup() -> String {
-    format!("<xml xmlns:v=\"{VML_NS}\"><v:shape id=\"legacyShape\" type=\"#_x0000_t202\"/></xml>")
-}
-
 /// 🔺️ The diff of adding a legacy VML drawing part together with its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_insert_vml_part(base: &DocxSnapshot, path: &str, markup: &str) -> DocxDiff {
+fn diff_insert_vml_part(base: &DocxSnapshot, path: &str, document: &XmlDocument) -> DocxDiff {
     let path = path.trim_start_matches('/').to_string();
     if base.xml_part(&path).is_some() || base.opc.part(&path).is_some() {
         return DocxDiff::default();
     }
-    let Ok(document) = xml_document_from_text(markup) else { return DocxDiff::default() };
     let mut next = base.clone();
     next.opc.content_types.set_override(&path, VML_CONTENT_TYPE).expect("VML override fits retained OPC ownership");
-    let Ok(part) = DocxXmlPart::try_from_document(path, VML_CONTENT_TYPE.into(), document) else { return DocxDiff::default() };
+    let Ok(part) = DocxXmlPart::try_from_document(path, VML_CONTENT_TYPE.into(), document.clone()) else { return DocxDiff::default() };
     if next.xml_parts.try_push(part).is_err() {
         return DocxDiff::default();
     }
@@ -394,7 +381,7 @@ pub(crate) fn agg_diff(this: &DocxStrictMutation, base: &DocxSnapshot) -> protoc
         DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
         DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
         DocxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
+        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, document }) => diff_insert_vml_part(base, path, document),
         DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
         DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => diff_append_alternate_content(base, path),
         DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => diff_strip_alternate_content(base, path),
@@ -403,16 +390,15 @@ pub(crate) fn agg_diff(this: &DocxStrictMutation, base: &DocxSnapshot) -> protoc
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &DocxStrictMutation, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    vec![match this {
+    Ok(vec![match this {
         DocxStrictMutation::SetSnapshot(_) => DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         DocxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
             Some(namespace) => DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         DocxStrictMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
             Some(target) => DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         DocxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
             Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
@@ -420,18 +406,16 @@ pub(crate) fn agg_inverse(this: &DocxStrictMutation, base: &DocxSnapshot) -> Res
         },
         DocxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
             Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
-        DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match part_text(base, path) {
-            Some(markup) => DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup }),
-            None => return Vec::new(),
+        DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match base.xml_part(path.trim_start_matches('/')) {
+            Some(part) => DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: part.materialize_document_exact()? }),
+            None => return Ok(Vec::new()),
         },
         DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),
         DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.clone() }),
-    }]
-
-    })())
+    }])
 }
 //#endregion 🔖️MutationTrait
 

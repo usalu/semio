@@ -1,6 +1,6 @@
 //! 🧹️ Direct binary codec for `remove-dpart-root`.
 
-use super::RemoveDpartRoot;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveDpartRoot;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 15;

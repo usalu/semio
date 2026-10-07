@@ -1,7 +1,6 @@
 CREATE TABLE jpg_document (
  id INTEGER PRIMARY KEY CHECK (id = 1), schema TEXT NOT NULL,
  width INTEGER NOT NULL CHECK (width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK (height BETWEEN 0 AND 4294967295),
- re_encode_quality INTEGER CHECK (re_encode_quality BETWEEN 0 AND 255),
  jfif_major INTEGER NOT NULL CHECK (jfif_major BETWEEN 0 AND 255), jfif_minor INTEGER NOT NULL CHECK (jfif_minor BETWEEN 0 AND 255),
  density_units TEXT NOT NULL CHECK (density_units IN ('aspect','pixelsPerInch','pixelsPerCm')),
  x_density INTEGER NOT NULL CHECK (x_density BETWEEN 0 AND 65535), y_density INTEGER NOT NULL CHECK (y_density BETWEEN 0 AND 65535),

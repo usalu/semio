@@ -1,4 +1,4 @@
-fn sqlite_guest_refusal_origin(dialect: &semio_framework::io_schema::ArtifactDialect) -> semio_framework::io_schema::IoError {
+fn sqlite_guest_refusal_origin(dialect: &semio_framework_artifact_reference::ArtifactDialect) -> semio_framework::io_schema::IoError {
     use semio_framework_value::{ValueError, ValueRefusalKind};
     let kind = match dialect.subset.as_str() {
         "invalidValue" => ValueRefusalKind::InvalidValue,
@@ -19,11 +19,11 @@ fn sqlite_guest_refusal_origin(dialect: &semio_framework::io_schema::ArtifactDia
     }
 }
 
-fn sqlite_guest_refusal_export(_: &str, dialect: &semio_framework::io_schema::ArtifactDialect, _: &semio_framework::io_schema::IoPayload, _: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<store::sqlite_snapshot::SqliteDatabase> {
+fn sqlite_guest_refusal_export(_: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, _: &semio_framework::io_schema::IoPayload, _: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<store::sqlite_snapshot::SqliteDatabase> {
     Err(sqlite_guest_refusal_origin(dialect))
 }
 
-fn sqlite_guest_refusal_import(_: &str, dialect: &semio_framework::io_schema::ArtifactDialect, _: store::sqlite_snapshot::SqliteDatabase, _: store::sqlite_snapshot::SnapshotEncoding, _: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+fn sqlite_guest_refusal_import(_: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, _: store::sqlite_snapshot::SqliteDatabase, _: store::sqlite_snapshot::SnapshotEncoding, _: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
     Err(sqlite_guest_refusal_origin(dialect))
 }
 
@@ -40,6 +40,8 @@ fn sqlite_guest_assert_refusal(rejection: &crate::sqlite_wire::SnapshotRejection
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_guest_refusal_runtime_export_import_preserves_all_eight_causes() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     use semio_framework::io::io_mechanism::{attach_sqlite_snapshot_metadata, NativeSnapshotRegistration};
     use semio_framework::io::{ArtifactAssemblyRegistryPlan, commit_artifact_assembly_registry_plan};
     use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteSnapshotControl, export_sqlite_database};
@@ -49,7 +51,7 @@ async fn sqlite_snapshot_guest_refusal_runtime_export_import_preserves_all_eight
     let mut dialects = Vec::new();
     for kind in fixture["kinds"].as_array().unwrap() {
         let kind = kind.as_str().unwrap();
-        let dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&format!("s.testkit.sqlite-refusal@1/{kind}")).unwrap();
+        let dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&format!("s.testkit.sqlite-refusal@1/{kind}")).unwrap();
         let mut codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>(&format!("semio.testkit.sqlite-refusal.{kind}/v1"));
         codec.snapshot_sqlite = Some(store::ArtifactSqliteSnapshotCodec {
             schema: <Std1AnySnapshot as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA.into(),

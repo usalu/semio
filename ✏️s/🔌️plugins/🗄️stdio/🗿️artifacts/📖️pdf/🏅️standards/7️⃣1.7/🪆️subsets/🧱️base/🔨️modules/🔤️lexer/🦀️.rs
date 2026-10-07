@@ -648,6 +648,8 @@ pub fn write_object(out: &mut Vec<u8>, object: &PdfObject) {
         PdfObject::Int(value) => out.extend_from_slice(value.to_string().as_bytes()),
         PdfObject::Real(value) => out.extend_from_slice(number_text(value.to_f64().unwrap_or(0.0)).as_bytes()),
         PdfObject::Str(bytes) => write_string(out, bytes),
+        PdfObject::Text(text) => write_string(out,&super::fonts::encode_text_string(text)),
+        PdfObject::Date(date) => write_string(out,crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(date).as_bytes()),
         PdfObject::Name(name) => write_name(out, name),
         PdfObject::Array(items) => {
             out.push(b'[');
@@ -683,7 +685,7 @@ pub fn write_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry]) {
         if !matches!(entry.value, PdfObject::Name(_) | PdfObject::Array(_) | PdfObject::Dict(_) | PdfObject::Str(_) | PdfObject::Stream { .. }) {
             out.push(b' ');
         }
-        write_object(out, &entry.value);
+        if let ("URI",PdfObject::Text(text))=(entry.key.as_str(),&entry.value) {write_string(out,text.as_bytes());}else{write_object(out, &entry.value);}
     }
     out.extend_from_slice(b">>");
 }

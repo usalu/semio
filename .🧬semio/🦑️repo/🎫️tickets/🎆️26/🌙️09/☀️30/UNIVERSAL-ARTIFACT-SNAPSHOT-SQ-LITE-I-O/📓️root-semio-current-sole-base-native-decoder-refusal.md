@@ -1,0 +1,11 @@
+# Current Sole Base Native Decoder Refusal
+
+Actual original repaired whole After66676 compiled2m19s and ran271 laws:270 passed/1failed/2181skipped69.412s, Nextest4a057a80-5af3-4657-8ebb-3e349a839f8a. All original18x2 default output cumulative backing branches and paid root cancellation now DEBUG-qualified, all19 individual semantic laws and five controlled native-output laws pass; Model exact backing and final-schema cancellation pass. Whole Semio remains unqualified.
+
+Only Base complete full/empty copied semantic law fails at native decoding line187:422 with OwnershipLimit native decoding ownership exceeds caller limit. The original limits and assertion remain; a narrow unwrap diagnostic adds the actual case/encoding/copied semantic byte cap to its existing refusal. Shared decoder currently initializes native ownership using remaining.min(max_value_bytes), but no cause or role repair is claimed without exact current runtime case and all19 gate audit. Input is one fresh full-source guard; no provider, grant, selector or fixture changes.
+
+## Independently Audited Role Separation
+
+The read-only nineteen-owner audit verifies all eighteen child native decoders run complete binary/document semantic cell admission before constructing owned fields. Base validates/subtracts its exact root schema/discriminator cells before copying its root field and delegates the same child gate. Value already initializes actual native ownership from remaining allocation allowance alone. Consequently the shared min(max_value_bytes) additionally constrains paid Vec/enum/reference frontier layout using SQL storage-class cell bytes, two distinct dimensions.
+
+A one-region fresh current-source correction initializes native control from remaining max_allocation_bytes instead; all copied semantic caps continue unchanged through existing complete admission. File/wrapper grammar, row/layout/schema checks, callbacks, Owned guards, final checkpoints and cumulative owned_bytes settlement remain. Original66676 supplies genuine RED; unchanged whole original After and all short semantic/allocation refusal assertions are required for qualification. The diagnostic context changes no assertion or limit and will expose exact case if refusal persists. No numeric grant is raised.

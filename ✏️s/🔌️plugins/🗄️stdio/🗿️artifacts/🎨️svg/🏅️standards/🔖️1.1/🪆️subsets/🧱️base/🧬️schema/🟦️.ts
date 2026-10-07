@@ -1,9 +1,9 @@
-import { parseXmlDocument, type XmlDocument } from '../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import { parseSvgDocument, type SvgDocument } from './📸️snapshot/🧩️document/🟦️.ts';
 
 /** 🧬️ Full logical SVG artifact state. */
 export interface SvgArtifact {
   schema: string;
-  doc: XmlDocument;
+  doc: SvgDocument;
 }
 
 //#region 🚪️Parsers
@@ -57,6 +57,6 @@ export function parseSvgArtifact(value: unknown, at = "$"): SvgArtifact {
   const row = stdioSvg11BaseArtifactGuardObject(value, at);
   return {
     schema: stdioSvg11BaseArtifactGuardString(row["schema"], `${at}.schema`),
-    doc: parseXmlDocument(row["doc"], `${at}.doc`),
+    doc: parseSvgDocument(row["doc"], `${at}.doc`),
   };
 }

@@ -1,6 +1,6 @@
 //! 🤐️ Direct text codec for `remove-lang`.
 
-use super::RemoveLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveLang;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-lang";

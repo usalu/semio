@@ -42,7 +42,8 @@ const VECTORS: &str = "shared://🧬️mutations";
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::{apply_note_mutation_outcome, inverse_note_mutation_steps, NoteMutation};
+    use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::{apply_note_mutation_outcome,inverse_note_mutation_steps,NoteMutation};
+
     use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::snapshot::{encode_note_snapshot_json};
     use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::snapshot::{decode_note_snapshot_json};
     use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::mutations::{decode_note_mutation_json};

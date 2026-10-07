@@ -91,7 +91,7 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
     let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-view-state-routing/🔣️.json")).expect("surface view-state routing fixture");
     let node_key = fixture["pickedNodeKey"].as_str().expect("picked node");
     let domain = fixture["domainId"].as_str().expect("domain");
-    let mut app = VcsArtifactApp::with_registry(TestApp::<false>::default(), surface_routing_registry().await).await;
+    let mut app = VcsArtifactApp::with_registry(TestApp::<false>::default(), surface_routing_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), node_key))).await;
     assert_eq!(app.interaction_state().await.selection.get(domain).map(|selection| selection.ids.clone()), Some(vec![node_key.to_string()]), "the browser-shaped pick must be persisted before any surface renders");
     drop(PluginApp::take_pending_presence(&mut app).await);

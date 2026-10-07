@@ -2,13 +2,6 @@
 #[path = "../../🦀️.rs"]
 mod vocabulary;
 pub use vocabulary::{
-    StandardId,
-    SubsetId,
-    Dialect,
-    ArtifactDialect,
-    ArtifactKindId,
-    ArtifactRef,
-    is_canonical_artifact_kind,
     IoPayload,
     CARRIER_BINARY,
     CARRIER_TEXT,
@@ -31,9 +24,5 @@ mod ownership_tests;
 #[path = "../../⚠️refusal/🧪️tests/🦀️.rs"]
 mod refusal_tests;
 
-#[cfg(test)]
-#[path="../../🔗️reference/🧪️tests/🏛️ownership/🦀️.rs"]
-mod binding_owner_tests;
 
-#[path="../../🔗️reference/🦀️.rs"]
-mod reference_binding;
+

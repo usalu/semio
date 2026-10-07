@@ -8,6 +8,9 @@ use std::collections::VecDeque;
 #[path="🧮️census/🦀️.rs"] mod semantic_census;
 #[derive(semio_framework_dsl_record_derive::DslScalar)]enum Kind{Null,Boolean,Unsigned,Signed,Float,Text,Bytes,Array,Object}
 pub(crate) struct Octets(Vec<u8>);
+impl semio_framework_dsl_record::BorrowedDslField for Octets {
+ const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Bytes64;
+}
 impl DslField for Octets{
  fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Bytes64}
  fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Bytes64)}

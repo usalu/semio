@@ -6,17 +6,18 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::brep::schema::diff::*;
+use crate::standards::v1::subsets::brep::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, NamedModified, NamedTripleDiff};
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_face};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_face};
-use crate::flow::io::text::diff::{dec_edge};
-use crate::flow::io::text::diff::{enc_edge};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_edge};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_edge};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_vertex};
 use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_vertex};
 use protocol::command::DiffAlgebra;
@@ -232,6 +233,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::brep::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, parse_u32, enc_bool, parse_bool, enc_list, dec_list, enc_point3, dec_point3, enc_curve, dec_curve, enc_surface, dec_surface, enc_loop_edge, dec_loop_edge, enc_shell_face, dec_shell_face, enc_solid_shell, dec_solid_shell, enc_loop, dec_loop, enc_shell, dec_shell, enc_solid, dec_solid, enc_vertex_diff, dec_vertex_diff, enc_edge_diff, dec_edge_diff, enc_loop_diff, dec_loop_diff, enc_face_diff, dec_face_diff, enc_shell_diff, dec_shell_diff, enc_solid_diff, dec_solid_diff};
+use crate::standards::v1::subsets::brep::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, parse_u32, enc_bool, parse_bool, enc_list, dec_list, enc_point3, dec_point3, enc_curve, dec_curve, enc_surface, dec_surface, enc_loop_edge, dec_loop_edge, enc_shell_face, dec_shell_face, enc_solid_shell, dec_solid_shell, enc_loop, dec_loop, enc_shell, dec_shell, enc_solid, dec_solid, enc_vertex_diff, dec_vertex_diff, enc_edge_diff, dec_edge_diff, enc_loop_diff, dec_loop_diff, enc_face_diff, dec_face_diff, enc_shell_diff, dec_shell_diff, enc_solid_diff, dec_solid_diff};
 }
 pub use diff_codec::*;

@@ -49,7 +49,7 @@ mod tests {
         let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = PdfXComposerComposition::compose(&sources).expect_err("a document with no OutputIntent must not stamp x");
-        assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::schema::CODE_OUTPUT_INTENT), "got {:?}", err.diagnostics);
+        assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::io::CODE_OUTPUT_INTENT), "got {:?}", err.diagnostics);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -58,6 +58,6 @@ mod tests {
         let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         assert_eq!(<PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(), snapshot);
         let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes)).await;
-        assert_eq!(diagnostics, crate::standards::v1_7::subsets::x::schema::check_x_conformance(&snapshot));
+        assert_eq!(diagnostics, crate::standards::v1_7::subsets::x::io::check_x_conformance(&snapshot));
     }
 }

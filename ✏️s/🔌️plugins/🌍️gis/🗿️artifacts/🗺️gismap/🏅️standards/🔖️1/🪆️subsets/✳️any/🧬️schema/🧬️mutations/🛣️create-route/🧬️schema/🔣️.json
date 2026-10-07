@@ -11,7 +11,17 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Insertion index",
+          "de": "Einfügeindex"
+        },
+        "step": 1,
+        "group": "order"
+      }
     },
     "item": {
       "title": "MapFeature",
@@ -23,10 +33,32 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Feature ID",
+              "de": "Kartenobjekt-ID"
+            }
+          }
         },
         "data": {
-          "description": "any JSON value"
+          "description": "any JSON value",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Feature data",
+              "de": "Kartenobjektdaten"
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Feature",
+          "de": "Kartenobjekt"
         }
       }
     }

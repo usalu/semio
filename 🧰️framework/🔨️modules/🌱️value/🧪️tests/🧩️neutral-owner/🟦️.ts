@@ -1,13 +1,67 @@
+import Ajv from "ajv";
 import { test, expect } from "bun:test";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, lstatSync } from "node:fs";
 import { resolve, join, dirname, isAbsolute } from "node:path";
 import { spawnSync } from "node:child_process";
 import * as toml from "@iarna/toml";
+import { applyPatch } from "fast-json-patch";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../..");
 const owner = "🧰️framework/🔨️modules/🌱️value";
 const fixture = JSON.parse(readFileSync(join(root, owner, "🧫️fixtures/🧩️neutral-owner/🔣️.json"), "utf8"));
+const validValue = new Ajv({strict:false}).compile(JSON.parse(readFileSync(join(root, owner, "🧬️schema/🔣️.json"), "utf8")));
+test("borrowed clone authority follows independent JSON Patch", () => {
+  for (const row of fixture.vectors.filter((row: {accepted:boolean}) => row.accepted)) {
+    const input = structuredClone(row.input);
+    const copied = applyPatch({}, [{ op: "add", path: "/value", value: structuredClone(input) }], true, false).newDocument.value;
+    expect(copied).toEqual(row.input);
+    expect(input).toEqual(row.input);
+    for (const at of fixture.borrowAuthority.cancelAt) {
+      const partial = applyPatch({ owners: Object.entries(copied).slice(0, at) }, [{ op: "replace", path: "/owners", value: [] }], true, false).newDocument;
+      expect(partial.owners).toEqual([]);
+      expect(input).toEqual(row.input);
+    }
+  }
+  console.log("[DEBUG] borrowed clone independent JSON Patch laws verified");
+});
+test("paged native ownership follows semantic JSON and independent UTF-8 ordering", () => {
+  const local = join(root, owner, "📦️paged");
+  const law = JSON.parse(readFileSync(join(local, "🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8"));
+  const prefix = law.prefix.repeat(law.prefixRepeat);
+  expect(new TextEncoder().encode(prefix).length).toBeGreaterThan(law.bodyBytes);
+  const object = Object.fromEntries(law.objectEntries.map((row: {suffix:string,value:number}) => [prefix + row.suffix, row.value]));
+  expect(Object.keys(object).length).toBe(law.objectEntries.length);
+  expect(validValue(object)).toBe(true);
+  const replacementKey = prefix + law.objectReplacement.suffix;
+  expect(object[replacementKey]).toBe(law.objectReplacement.previous);
+  const edited = structuredClone(object);
+  edited[replacementKey] = law.objectReplacement.value;
+  expect(edited[replacementKey]).toBe(law.objectReplacement.value);
+  const lexicalTail = Object.keys(edited).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))).at(-1)!;
+  expect(lexicalTail).toBe(prefix + law.lexicalTailSuffix);
+  delete edited[lexicalTail];
+  expect(Object.hasOwn(edited, lexicalTail)).toBe(false);
+  expect(validValue(edited)).toBe(true);
+
+  expect(applyPatch({}, [{op:"add",path:"/object",value:object}], true, false).newDocument.object).toEqual(JSON.parse(JSON.stringify(object)));
+  for (const row of law.comparisons) {
+    expect(Math.sign(Buffer.compare(Buffer.from(prefix + row.left), Buffer.from(prefix + row.right)))).toBe(row.ordering);
+    expect(JSON.parse(JSON.stringify({ text: prefix + row.left }))).toEqual({ text: prefix + row.left });
+  }
+  for (const row of law.listEdits) {
+    const operation = row.kind === "insert" ? {op:"add" as const,path:`/${row.index}`,value:row.value} : {op:"remove" as const,path:`/${row.index}`};
+    expect(applyPatch(structuredClone(row.initial), [operation], true, false).newDocument).toEqual(row.expected);
+    if (row.kind === "remove") expect(row.initial[row.index]).toBe(row.removed);
+  }
+  expect(law.comparatorClose.bindings).toBe(2);
+  expect(law.comparatorClose.maximumItems).toBe(1);
+  expect(law.comparatorClose.maximumBytes).toBe(0);
+  const aliases = applyPatch({bindings:["left","right"]}, [{op:"remove",path:"/bindings/0"}], true, false).newDocument;
+  expect(aliases.bindings).toEqual(["right"]);
+  expect(applyPatch(aliases, [{op:"remove",path:"/bindings/0"}], true, false).newDocument.bindings).toEqual([]);
+  console.log("[DEBUG] paged native JSON/UTF-8 comparison law verified");
+});
 /** 🗂️ Admits explicitly owned compiler storage without following directory links. */
 function compilerStorage(path: string): string {
   if (!isAbsolute(path)) throw new Error("Compiler storage must be an absolute directory");

@@ -1,10 +1,11 @@
 //! 🚪️ IO stdio.jpg (jfif-1.01/🧾️document) — registration now flows through 🎹️composer::register
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
+pub use binary::snapshot::encode_options::{JpgEncodeOptions,JpgEncodeComponent};
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_jfif_1_01::subsets::document::io::JpgAnalyzer;
     use crate::JpgSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -626,8 +627,8 @@ fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
 /// divide the frame's maximum, is refused rather than silently rounded: both would make the MCU
 /// geometry unrepresentable.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn frame_components_of(snap: &JpgSnapshot) -> Result<Vec<JpgFrameComponent>, JpgError> {
-    let declared = snap.frame.as_ref().map(|frame| frame.components.clone()).unwrap_or_default();
+fn frame_components_of(options: &JpgEncodeOptions) -> Result<Vec<JpgFrameComponent>, JpgError> {
+    let declared = options.components.iter().map(|component|JpgFrameComponent{id:component.id,h_sampling:component.h_sampling,v_sampling:component.v_sampling,quant_table_id:0}).collect::<Vec<_>>();
     if declared.is_empty() {
         return Ok(vec![
             JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 },
@@ -674,7 +675,7 @@ fn frame_components_of(snap: &JpgSnapshot) -> Result<Vec<JpgFrameComponent>, Jpg
 /// components at all (a snapshot that was never decoded from a real file) keeps that 4:2:0 default,
 /// since there is nothing to honour.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
+pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u8>, JpgError> {
     if snap.width == 0 || snap.height == 0 {
         return Err(JpgError::Malformed("empty image".into()));
     }
@@ -685,8 +686,9 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
         return Err(JpgError::Unsupported("image dimensions exceed JPEG's 16-bit SOF0 width/height field".into()));
     }
     let (width, height): (u16, u16) = (snap.width as u16, snap.height as u16);
-    let quality = snap.re_encode_quality.map_or(90, |q| q as i32);
-    let comps = frame_components_of(snap)?;
+    if !(1..=100).contains(&options.quality) {return Err(JpgError::Malformed("JPEG export quality must be 1..=100".into()));}
+    let quality = options.quality as i32;
+    let comps = frame_components_of(options)?;
     let hmax = comps.iter().map(|c| c.h_sampling as usize).max().unwrap_or(1);
     let vmax = comps.iter().map(|c| c.v_sampling as usize).max().unwrap_or(1);
     let mcu_w = 8 * hmax;
@@ -939,7 +941,7 @@ struct JpgHeader {
     jfif_x_density: u16,
     jfif_y_density: u16,
     jfif_thumbnail: Option<JfifThumbnail>,
-    scan_tabs: Vec<(u8, u8)>,
+    scan_tabs: Vec<(usize,u8,u8)>,
     scan_start: usize,
 }
 
@@ -1104,13 +1106,16 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                 let len = read_u16(data, i)?;
                 let seg = source_range(data, i + 2, len.saturating_sub(2))?;
                 let ns = *seg.first().ok_or_else(|| JpgError::Malformed("SOS truncated".into()))? as usize;
-                let mut scan_tabs: Vec<(u8, u8)> = Vec::with_capacity(ns);
+                if !(1..=4).contains(&ns) || seg.len()!=1+2*ns+3 {return Err(JpgError::Malformed("SOS component shape is invalid".into()));}
+                if seg[1+2*ns..]!=[0,63,0] {return Err(JpgError::Unsupported("non-baseline sequential scan parameters".into()));}
+                let mut scan_tabs: Vec<(usize,u8,u8)> = Vec::with_capacity(ns);
                 for k in 0..ns {
                     let base = 1 + k * 2;
                     let sel = *seg.get(base).ok_or_else(|| JpgError::Malformed("SOS truncated".into()))?;
                     let dcac = *seg.get(base + 1).ok_or_else(|| JpgError::Malformed("SOS truncated".into()))?;
-                    let _ = sel;
-                    scan_tabs.push((dcac >> 4, dcac & 0x0F));
+                    let ci=frame.components.iter().position(|component|component.id==sel).ok_or_else(||JpgError::Malformed("SOS names an absent frame component".into()))?;
+                    if scan_tabs.iter().any(|(index,_,_)|*index==ci) {return Err(JpgError::Malformed("SOS component selectors must be unique".into()));}
+                    scan_tabs.push((ci,dcac >> 4,dcac & 0x0F));
                 }
                 if ns != frame.components.len() {
                     return Err(JpgError::Unsupported("multi-scan (non-interleaved) baseline JPEG".into()));
@@ -1198,7 +1203,10 @@ pub struct JpgStepDecoder {
 impl JpgStepDecoder {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &dyn JpgByteSource) -> Result<Self, JpgError> {
-        let header = parse_jpg_header(data)?;
+        Self::from_header(parse_jpg_header(data)?, true)
+    }
+
+    fn from_header(header: JpgHeader, initialize: bool) -> Result<Self, JpgError> {
         let frame = &header.frame;
         let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
         let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
@@ -1210,7 +1218,10 @@ impl JpgStepDecoder {
         for c in frame.components.iter() {
             let pwc = mcus_x * c.h_sampling.max(1) as usize * 8;
             let phc = mcus_y * c.v_sampling.max(1) as usize * 8;
-            planes.push(vec![0f64; pwc * phc]);
+            let mut plane=Vec::new();
+            plane.try_reserve_exact(pwc*phc).map_err(|error|JpgError::Malformed(format!("JPEG plane allocation refused: {error}")))?;
+            if initialize {plane.resize(pwc*phc,0.0);}
+            planes.push(plane);
             plane_dims.push((pwc, phc));
         }
         let dc_pred = vec![0i32; frame.components.len()];
@@ -1220,7 +1231,7 @@ impl JpgStepDecoder {
 
     /// ⏱️ One bounded unit of work: `Ok(None)` while decoding continues, `Ok(Some(snapshot))` once.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn step(&mut self, data: &dyn JpgByteSource, unit_budget: usize) -> Result<Option<JpgSnapshot>, JpgError> {
+    fn step_entropy(&mut self, data: &dyn JpgByteSource, unit_budget: usize) -> Result<bool, JpgError> {
         let budget = unit_budget.max(1);
         let header = self.header.as_deref().ok_or_else(|| JpgError::Malformed("JPEG decoder stepped after completion".into()))?;
         let frame = &header.frame;
@@ -1238,8 +1249,8 @@ impl JpgStepDecoder {
                     }
                     self.mcus_since_restart = 0;
                 }
-                for (ci, c) in frame.components.iter().enumerate() {
-                    let (dc_id, ac_id) = header.scan_tabs[ci];
+                for &(ci,dc_id,ac_id) in &header.scan_tabs {
+                    let c=&frame.components[ci];
                     let dc_tab = header.dc_tables.get(&dc_id).ok_or_else(|| JpgError::Malformed("missing DC huffman table".into()))?;
                     let ac_tab = header.ac_tables.get(&ac_id).ok_or_else(|| JpgError::Malformed("missing AC huffman table".into()))?;
                     let q = header.quant.get(&c.quant_table_id).ok_or_else(|| JpgError::Malformed("missing quant table".into()))?;
@@ -1268,12 +1279,27 @@ impl JpgStepDecoder {
             if self.mcu == total {
                 br.expect_end_of_image()?;
                 self.entropy_done = true;
-                self.rgba = vec![0u8; frame.width as usize * frame.height as usize * 4];
+
             }
             (self.pos, self.acc, self.nbits) = (br.pos, br.acc, br.nbits);
+            return Ok(self.entropy_done);
+        }
+        Ok(true)
+    }
+
+    /// 🎞️ Decodes bounded MCU or output-row units into the logical RGBA snapshot.
+    pub fn step(&mut self, data: &dyn JpgByteSource, unit_budget: usize) -> Result<Option<JpgSnapshot>, JpgError> {
+        let budget=unit_budget.max(1);
+        if !self.entropy_done {
+            self.step_entropy(data,budget)?;
+            if self.entropy_done {
+                let frame=&self.header.as_ref().expect("active JPEG header").frame;
+                self.rgba=vec![0;frame.width as usize*frame.height as usize*4];
+            }
             return Ok(None);
         }
-
+        let header=self.header.as_deref().ok_or_else(||JpgError::Malformed("JPEG decoder stepped after completion".into()))?;
+        let frame=&header.frame;
         let (width, height) = (frame.width as usize, frame.height as usize);
         let (hmax, vmax) = (self.hmax, self.vmax);
         let grayscale = frame.components.len() == 1;
@@ -1328,7 +1354,6 @@ impl JpgStepDecoder {
             width: width as u32,
             height: height as u32,
             pixels: std::mem::take(&mut self.rgba),
-            re_encode_quality: None,
             jfif_version: header.jfif_version,
             jfif_density_units: header.jfif_density_units,
             jfif_x_density: header.jfif_x_density,
@@ -1427,7 +1452,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::JpgSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.jpg` parts.
@@ -1521,3 +1546,10 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: JpgAnalyzer,
     composer: JpgComposer,
 );
+
+/// 🆕️ Constructs the canonical decoded white image at native admission.
+pub fn blank_jpg_snapshot() -> JpgSnapshot {
+    use crate::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
+    let seed = JpgSnapshot { width: 1, height: 1, pixels: vec![255, 255, 255, 255], ..JpgSnapshot::default() };
+    encode_jpg(&seed, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(seed.frame.as_ref())).and_then(|bytes| decode_jpg(&bytes)).expect("blank_jpg_snapshot: the 1×1 seed round-trips through the real codec")
+}

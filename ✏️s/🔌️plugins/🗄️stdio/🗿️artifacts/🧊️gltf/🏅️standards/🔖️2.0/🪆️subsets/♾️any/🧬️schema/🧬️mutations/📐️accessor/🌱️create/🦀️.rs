@@ -1,5 +1,5 @@
 //! 🧬️ Direct create-accessor mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::engine::{GltfAccessorType, GltfComponentType};
+use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::snapshot::*;

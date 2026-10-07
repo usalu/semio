@@ -1,6 +1,6 @@
 //! 🧽️ Direct binary codec for `remove-output-intent`.
 
-use super::RemoveOutputIntent;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveOutputIntent;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 3;

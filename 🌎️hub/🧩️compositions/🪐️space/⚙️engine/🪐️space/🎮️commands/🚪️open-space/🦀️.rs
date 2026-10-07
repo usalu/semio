@@ -48,11 +48,11 @@ pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _c
     // yet — never the space manifest's own bytes.
     let is_demo_space = space_id == "demo" || document.name == crate::DEMO_STUDIO_NAME;
     let workflow_snapshot = resolve_future(crate::resolve_workflow_artifact_document(space_id, &document)).or_else(|| is_demo_space.then(|| resolve_future(crate::parse_demo_space_document()))).unwrap_or_else(|| resolve_future(crate::empty_workflow_artifact_document(space_id, &document.name)));
-    let active_node_id = workflow_snapshot.vcs.initial_snapshot.graph.nodes.first().map(|node| node.id.clone());
+    let active_node_id = workflow_snapshot.vcs.genesis.snapshot().graph.nodes.first().map(|node| node.id.clone());
     config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: active_node_id });
     match resolve_future(crate::workflow_artifact_envelope_pack(&workflow_snapshot)) {
         Some(files) => {
-            eprintln!("[TRACE] openSpace id={} workflow_id={} nodes={} collections={}", space_id, workflow_snapshot.id, workflow_snapshot.vcs.initial_snapshot.graph.nodes.len(), document.vcs.initial_snapshot.collections.len());
+            eprintln!("[TRACE] openSpace id={} workflow_id={} nodes={} collections={}", space_id, workflow_snapshot.id, workflow_snapshot.vcs.genesis.snapshot().graph.nodes.len(), document.vcs.genesis.snapshot().collections.len());
             Ok(Emit { config_mutations, effects: vec![Effect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
         }
         None => {

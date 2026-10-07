@@ -5,19 +5,19 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🔀 `set-layer-boolean-operation` payload.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "set-layer-boolean-operation")]
 pub struct SetLayerBooleanOperation {
-    pub layer_id: String,
-    pub boolean_operation: String,
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub boolean_operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_boolean_operation(layer_id: String, boolean_operation: String) -> DrawingMutation {
+pub fn set_layer_boolean_operation(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, boolean_operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
     DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id, boolean_operation })
 }
 
@@ -37,7 +37,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerBoolea
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" boolean operation to {}", self.layer_id, self.boolean_operation), &format!("Boolesche Operation von Ebene \"{}\" auf {} setzen", self.layer_id, self.boolean_operation))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.layer_id.clone()]
+        vec![self.layer_id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

@@ -72,7 +72,7 @@ Feature: Apply every typed XLSX ECMA-376 Strict conformance-class mutation to a 
       | set-relationships-namespace  | {"namespace": "http://purl.oclc.org/ooxml/officeDocument/relationships"}                                                                                      |
       | set-conformance-attribute    | {"value": "strict"}                                                                                                                                           |
       | remove-conformance-attribute | {}                                                                                                                                                            |
-      | insert-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml", "markup": "<xml xmlns:v=\"urn:schemas-microsoft-com:vml\"><v:shape id=\"legacyShape\" type=\"#_x0000_t202\"/></xml>"} |
+      | insert-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml", "document": {"root": {"kind": "element", "name": "xml", "attrs": [{"name": "xmlns:v", "value": "urn:schemas-microsoft-com:vml"}], "children": [{"kind": "element", "name": "v:shape", "attrs": [{"name": "id", "value": "legacyShape"}, {"name": "type", "value": "#_x0000_t202"}], "children": []}]}}} |
       | remove-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml"}                                                                                                                       |
       | set-worksheet-content-type   | {"path": "xl/worksheets/sheet1.xml", "content_type": "application/xml"}                                                                                       |
 
@@ -93,7 +93,7 @@ Feature: Apply every typed XLSX ECMA-376 Strict conformance-class mutation to a 
       | set-relationships-namespace  | {"namespace": "http://purl.oclc.org/ooxml/officeDocument/relationships"}                                                                                      |
       | set-conformance-attribute    | {"value": "strict"}                                                                                                                                           |
       | remove-conformance-attribute | {}                                                                                                                                                            |
-      | insert-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml", "markup": "<xml xmlns:v=\"urn:schemas-microsoft-com:vml\"><v:shape id=\"legacyShape\" type=\"#_x0000_t202\"/></xml>"} |
+      | insert-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml", "document": {"root": {"kind": "element", "name": "xml", "attrs": [{"name": "xmlns:v", "value": "urn:schemas-microsoft-com:vml"}], "children": [{"kind": "element", "name": "v:shape", "attrs": [{"name": "id", "value": "legacyShape"}, {"name": "type", "value": "#_x0000_t202"}], "children": []}]}}} |
       | remove-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml"}                                                                                                                       |
       | set-worksheet-content-type   | {"path": "xl/worksheets/sheet1.xml", "content_type": "application/xml"}                                                                                       |
 

@@ -11,8 +11,8 @@
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
-use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{compose_affine, semio_transform_affine, similarity_scale, transformed_segments};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use crate::standards::v1::subsets::drawing::schema::geometry::{compose_affine, semio_transform_affine, similarity_scale, transformed_segments};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dxf::{
     schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
     DxfSnapshot,

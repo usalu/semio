@@ -25,8 +25,8 @@ use crate::standards::v1::subsets::cad::schema::diff::{diff_set_snapshot, wrap_b
 
 
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
+
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "🧱add-block/🦀️.rs"]
@@ -330,3 +330,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/⭕️dims/🦀️.rs"]
 mod set_snapshot_dims_the_walls_layer_and_widens_the_circle;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

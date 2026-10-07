@@ -38,7 +38,7 @@ test("actual format policy matches shared asserted and annotation-only format ca
   for (const row of vectors.cases.filter(value => value.id === "string-formats-pinned-assertions" || value.id === "annotation-only-formats-never-reject")) {
     const ajv = semioSchemaAjvV1({ strict: false });
     for (const document of row.documents ?? []) ajv.addSchema(document);
-    const validate = ajv.compile(row.schema);
+    const validate = ajv.compile(row.input.schema);
     for (const value of row.valid) expect(validate(value), row.id).toBe(true);
     for (const value of row.invalid) expect(validate(value.instance), row.id).toBe(false);
   }

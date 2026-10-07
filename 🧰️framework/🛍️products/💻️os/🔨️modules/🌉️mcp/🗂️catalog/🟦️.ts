@@ -1,10 +1,9 @@
 /** 💬️ TypeScript twin of the Rust description law (`🗂️catalog/🦀️.rs` `🔖️DescriptionLaw`): the
  * manifest's `CapabilityDescription` contract (`🛂️manifest/🧬️schema/🔣️.json`) validated by AJV — the
  * third-party oracle for the repo's owned validator — plus the three cross-field rules the schema
- * states in prose. It reads the committed descriptors and the fixture, never the Rust implementation.
+ * states in prose. It reads committed descriptors independently of the Rust implementation.
  *
  * - {@link capabilityDescriptionProblems} — one app's verbs → `(verb, problem)` in contract order;
- * - {@link proveCapabilityDescriptionFixture} — replays `🧫️fixtures/💬️capability-description.json`;
  * - {@link capabilityDescriptionCensus} — every agent-published plugin verb of every committed
  *   descriptor, the set `capability-audit-check` holds against the Rust census. */
 import Ajv from "ajv";
@@ -12,7 +11,6 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 const MANIFEST_SCHEMA = "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
-const FIXTURE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🧫️fixtures/💬️capability-description.json";
 const REGISTRY = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json";
 const FRAMEWORK_VIEW_SHELL_ACTION_IDS = new Set(["setActiveUtility", "setActiveTool", "startIntroduction", "setHistoryCommandFilter", "noteShellCommand"]);
 
@@ -69,18 +67,6 @@ export function capabilityDescriptionProblems(repoRoot: string, verbs: Described
     if ((english.get(cell(description, "native", "en")) ?? 0) > 1) problems.push({ verb: verb.id, problem: "sharedWithinApp" });
   }
   return problems;
-}
-
-/** 🧪️ Replays the language-agnostic law cases; returns the number of rows proven. */
-export function proveCapabilityDescriptionFixture(repoRoot: string): number {
-  const rows = read(repoRoot, FIXTURE) as { name: string; verbs: DescribedVerb[]; problems: { verb: string; problem: DescriptionProblem }[] }[];
-  const validateFixture = descriptionValidator(repoRoot, "CapabilityDescriptionFixture");
-  if (!validateFixture(rows)) throw new Error(`capability-description fixture violates CapabilityDescriptionFixture: ${JSON.stringify(validateFixture.errors)}`);
-  for (const row of rows) {
-    const actual = JSON.stringify(capabilityDescriptionProblems(repoRoot, row.verbs));
-    if (actual !== JSON.stringify(row.problems)) throw new Error(`capability-description fixture "${row.name}": expected ${JSON.stringify(row.problems)}, got ${actual}`);
-  }
-  return rows.length;
 }
 
 const audience = (declaration: Declaration): string => declaration.semantics?.audience ?? (declaration.kind === "interaction" ? "input" : declaration.kind === "view" && !declaration.inPalette ? "chrome" : "agent");

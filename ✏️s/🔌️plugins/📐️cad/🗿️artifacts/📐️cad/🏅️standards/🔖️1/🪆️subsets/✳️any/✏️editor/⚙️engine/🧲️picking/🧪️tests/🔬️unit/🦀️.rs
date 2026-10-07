@@ -5,7 +5,7 @@
 //! `applyModelDiff`.
 
 use super::*;
-use crate::standards::v1::subsets::any::io::geometry_import::{CadEdgeCurve, CadPlaneSurface, CadPrimitiveSlot};
+use crate::standards::v1::subsets::any::schema::geometry::{CadEdgeCurve, CadPlaneSurface, CadPrimitiveSlot};
 
 //#region 🧫️Fixtures
 fn vertex(id: &str, position: [f64; 3]) -> CadVertex {

@@ -10,12 +10,13 @@
 //! `f6-final-summary.md` §4.4, minus the container type itself, which now has one shared home).
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+
 
 
 use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
 use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
+use protocol::{DiffCodec, MutationDiff};
 
 //#region 🔖️GenericNamedEngine
 /// 🧮️ Generic name/id-keyed collection glue — `between`/`apply`/`inverse`/`absorb` over the
@@ -644,3 +645,6 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioModelDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+use protocol::{DiffBinary,DiffText};

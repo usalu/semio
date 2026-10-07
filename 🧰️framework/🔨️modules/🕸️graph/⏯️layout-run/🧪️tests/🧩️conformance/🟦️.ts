@@ -1,4 +1,4 @@
-/** 🧩️ Language-neutral conformance of the layout run fixture: ajv validates the fixture and hostile mutations against the schema of record, and the `x-semio-toolRun` table obeys the ToolRun contract (unique reason codes below the reserved floor, dense stage and counter indices, checkpoint layout adds up). */
+/** 🧩️ Independent Ajv conformance of actual layout graph and config payloads and hostile inputs; the ToolRun table retains its reason, stage, counter and checkpoint laws. */
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🎞️layout-run.json";
@@ -15,27 +15,26 @@ describe("schema oracle (ajv)", () => {
   ajv.addSchema(schema);
   const validator = (name: string) => ajv.getSchema(`${(schema as any).$id}#/$defs/${name}`)!;
 
-  test("the fixture validates against LayoutRunFixture", () => {
-    const validate = validator("LayoutRunFixture");
-    expect(validate(law), JSON.stringify(validate.errors)).toBe(true);
+  test("actual graph and config payloads satisfy their domain contracts", () => {
+    const config = validator("LayoutRunConfig"), graph = validator("LayoutRunGraph");
+    expect(config(law.defaultConfig), JSON.stringify(config.errors)).toBe(true);
+    for (const row of law.cases) {
+      expect(config(row.config), JSON.stringify(config.errors)).toBe(true);
+      if (row.graph) expect(graph(row.graph), JSON.stringify(graph.errors)).toBe(true);
+    }
   });
 
-  test("hostile fixture mutations are rejected", () => {
-    const validate = validator("LayoutRunFixture");
-    const firstCase = law.cases[0];
-    const withCase = (patch: object) => ({ ...law, cases: [{ ...firstCase, ...patch }, ...law.cases.slice(1)] });
-    expect(validate({ ...law, extra: true })).toBe(false);
-    expect(validate(withCase({ config: { ...firstCase.config, compactOps: 65537 } }))).toBe(false);
-    expect(validate(withCase({ config: { ...firstCase.config, repulsionFalloff: "cubic" } }))).toBe(false);
-    expect(validate(withCase({ config: { ...firstCase.config, velocityDamping: 1.5 } }))).toBe(false);
-    expect(validate(withCase({ config: (({ seed, ...rest }) => rest)(firstCase.config) }))).toBe(false);
-    expect(validate(withCase({ graph: { nodes: [], edges: [] } }))).toBe(false);
-    expect(validate(withCase({ expect: { ...firstCase.expect, positionsDigest: "xyz" } }))).toBe(false);
-    expect(validate(withCase({ expect: { ...firstCase.expect, verdictPrefix: ["0:rejected/moving"] } }))).toBe(false);
-    const graphValidate = validator("LayoutRunGraph");
-    expect(graphValidate({ nodes: [{ entity: 1, origin: null, radius: 0, pinned: false, anchor: null }], edges: [] })).toBe(false);
-    expect(graphValidate({ nodes: [{ entity: 1, origin: { x: 0 }, radius: 1, pinned: false, anchor: null }], edges: [] })).toBe(false);
-    expect(graphValidate(law.cases.find((row: any) => row.graph).graph)).toBe(true);
+  test("hostile config and malformed graph payloads are rejected", () => {
+    const config = validator("LayoutRunConfig"), graph = validator("LayoutRunGraph");
+    const first = law.cases[0].config;
+    expect(config({ ...first, extra: true })).toBe(false);
+    expect(config({ ...first, compactOps: 65537 })).toBe(false);
+    expect(config({ ...first, repulsionFalloff: "cubic" })).toBe(false);
+    expect(config({ ...first, velocityDamping: 1.5 })).toBe(false);
+    expect(config((({ seed, ...rest }) => rest)(first))).toBe(false);
+    expect(graph({ nodes: [], edges: [] })).toBe(true);
+    expect(graph({ nodes: [{ entity: 1, origin: null, radius: 0, pinned: false, anchor: null }], edges: [] })).toBe(false);
+    expect(graph({ nodes: [{ entity: 1, origin: { x: 0 }, radius: 1, pinned: false, anchor: null }], edges: [] })).toBe(false);
   });
 
   test("every case config is complete and the default config is a valid config", () => {

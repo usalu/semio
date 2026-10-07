@@ -10,9 +10,9 @@ fn authored_fill_rules_survive_pack_and_reach_paint_picking_and_export() {
         let rule=FillRule::parse(row["rule"].as_str().unwrap()).unwrap();
         assert_eq!(FillRule::from_value(rule.to_value()).unwrap(),rule);
         let segments=crate::standards::v1::subsets::any::io::import::deserializers::artifacts::svg::v1_1::any::path::parse_editable_svg_path(row["path"].as_str().unwrap()).unwrap();
-        let mut layer=crate::schema::create_drawing_path_layer("Compound",segments.clone());
+        let mut layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Compound",segments.clone().into());
         crate::schema::layer_base_mut(&mut layer).attributes.fill_rule=rule;
-        let doc=crate::DrawingSnapshot {id:"winding".into(),layers:vec![layer],..Default::default()};
+        let doc=crate::DrawingSnapshot {id:"winding".into(),layers:vec![layer].into(),..Default::default()};
         let restored=crate::DrawingSnapshot::decode_pack(&doc.encode_pack()).unwrap();
         assert_eq!(restored,doc);
         let nodes=crate::schema::flatten_drawing_document_to_scene_nodes(&doc);

@@ -96,6 +96,18 @@ impl semio_framework_value::FromValue for WavData {
     }
 }
 
+const fn wav_borrowed_optional(mut field:semio_framework_dsl_record::BorrowedFieldSpec)->semio_framework_dsl_record::BorrowedFieldSpec{field.optional=true;field}
+impl semio_framework_dsl_record::BorrowedDslRecord for WavData{
+ const RECORD:semio_framework_dsl_record::BorrowedRecordSpec={use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as H,BorrowedDslField};
+ semio_framework_dsl_record::BorrowedRecordSpec{keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,fields:&[
+ F::new(1,"kind",H::Enum(&[("pcm16",0),("pcm8",1),("float32",2),("raw",3)])),wav_borrowed_optional(F::new(2,"pcm16",<Vec<i16> as BorrowedDslField>::SHAPE)),wav_borrowed_optional(F::new(3,"pcm8",<Vec<u8> as BorrowedDslField>::SHAPE)),wav_borrowed_optional(F::new(4,"float32",<Vec<f32> as BorrowedDslField>::SHAPE)),wav_borrowed_optional(F::new(5,"raw",<Vec<u8> as BorrowedDslField>::SHAPE))]}};
+}
+impl semio_framework_dsl_record::BorrowedDslField for WavData{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);}
+impl semio_framework_dsl_record::BorrowedDslRecord for WavChunkRef{
+ const RECORD:semio_framework_dsl_record::BorrowedRecordSpec={use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as H};semio_framework_dsl_record::BorrowedRecordSpec{keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,fields:&[F::new(1,"kind",H::Enum(&[("format",0),("samples",1),("other",2)])),wav_borrowed_optional(F::new(2,"index",H::UInt))]}};
+}
+impl semio_framework_dsl_record::BorrowedDslField for WavChunkRef{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);}
+
 fn wav_data_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(
         None,

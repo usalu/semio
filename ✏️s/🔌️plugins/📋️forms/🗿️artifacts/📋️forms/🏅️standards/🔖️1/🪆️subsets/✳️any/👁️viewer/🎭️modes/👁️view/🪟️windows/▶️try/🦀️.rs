@@ -6,7 +6,8 @@
 //! (`ViewEmit`), so every step's questions render flat, in document order, showing each question's
 //! typed default value as plain text.
 
-use crate::schema::{default_value_for_question, dsl_to_value, is_extension_question_kind, json_string_value};
+use crate::standards::v1::subsets::any::io::text::snapshot::{dsl_to_value,json_string_value};
+use crate::schema::{default_value_for_question,is_extension_question_kind};
 use crate::{forms_steps, FormQuestion, FormsSnapshot};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;

@@ -226,7 +226,7 @@ fn main() {
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
     let envelope = protocol::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None);
-    let mut document_store = protocol::ArtifactStore::new(envelope).await.map_err(|error| error.to_string())?;
+    let mut document_store = protocol::ArtifactStore::new(envelope, protocol::os_spr::ActorId(protocol::os_spr::LOCAL_ACTOR_ID.into())).await.map_err(|error| error.to_string())?;
     if !sink.mutations.is_empty() {
         document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), transaction: None }).await.map_err(|error| error.to_string())?;
     }

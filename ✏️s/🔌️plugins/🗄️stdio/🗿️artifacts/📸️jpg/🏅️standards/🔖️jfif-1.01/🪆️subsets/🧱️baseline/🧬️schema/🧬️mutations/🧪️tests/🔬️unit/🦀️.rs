@@ -1,4 +1,3 @@
-use crate::standards::v_jfif_1_01::subsets::baseline::io::text::mutations::component;
 use super::*;
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::{check_baseline_conformance, CODE_ARITHMETIC, CODE_COMPONENT_SAMPLING, CODE_HUFFMAN_TABLE_COUNT, CODE_PRECISION, CODE_SOF_MARKER};
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameHeader, JpgHuffmanClass};
@@ -61,11 +60,9 @@ fn kinds_match_enum_variants_in_declaration_order() {
     ];
     assert_eq!(variants.len(), KINDS.len(), "every variant needs exactly one KINDS entry");
     for (variant, kind) in variants.iter().zip(KINDS) {
-        let tag = match serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(variant)).expect("serialize") {
-            serde_json::Value::Object(members) => members.get("mutation").and_then(|value| value.as_str()).expect("tagged enum carries its own discriminant").to_string(),
-            other => panic!("a tagged enum must serialize as an object, got {other:?}"),
-        };
-        assert_eq!(&tag.as_str(), kind, "declaration order must match KINDS");
+        let value=semio_framework_value::ToValue::to_value(variant);
+        let tag=value.get("mutation").and_then(semio_framework_value::DslValue::as_str).expect("tagged enum carries its own discriminant");
+        assert_eq!(&tag, kind, "declaration order must match KINDS");
     }
 }
 

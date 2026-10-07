@@ -1,0 +1,18 @@
+{
+  "schema": "semio.general-flow.canonical-workspace/v1",
+  "canonicalIdentity": "semio-framework-os-flow",
+  "definingManifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+  "cases": [
+    {
+      "path": "Cargo.toml",
+      "retiredBindings": ["semio-s-kernel-flow-extension-brep", "semio-s-kernel-flow-extension-wasm"],
+      "retiredComments": ["# REMOVED missing: semio-s-kernel-flow-extension-wasm ="]
+    },
+    {
+      "path": "✏️s/Cargo.toml",
+      "retiredBindings": [],
+      "retiredComments": ["# REMOVED missing: semio-s-kernel-flow-extension-wasm ="]
+    }
+  ],
+  "expected": {"remainingRetiredBindings": 0, "remainingRetiredComments": 0, "conservedOtherDeclarations": true}
+}

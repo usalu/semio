@@ -1,0 +1,10 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🦀️.rs",
+    "bytes": 58361,
+    "beforeBytes": 55857,
+    "afterEqual": false,
+    "sha256": "77c006f97b90780893b9c8c279a20327e43c332b5f4f752265e1ba683be658d4",
+    "prefix": "//! 🧩️ Relational row controls for explicitly authored artifact projections.\nuse super::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, Value"
+  }
+]

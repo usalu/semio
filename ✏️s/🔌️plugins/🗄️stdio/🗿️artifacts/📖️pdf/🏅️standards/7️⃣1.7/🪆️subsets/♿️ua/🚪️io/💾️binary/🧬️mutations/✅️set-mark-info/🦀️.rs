@@ -1,6 +1,6 @@
 //! 🏷️ Direct binary codec for `set-mark-info`.
 
-use super::SetMarkInfo;
+use crate::standards::v1_7::subsets::ua::schema::mutations::SetMarkInfo;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 0;

@@ -11,7 +11,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator};
+    use {semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator};
 
     const DIALECT_GEOJSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -70,6 +70,9 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
 #[path="."]
 pub mod sqlite {
     #[path="🪶️sqlite/📸️snapshot/🦀️.rs"]
@@ -77,7 +80,7 @@ pub mod sqlite {
 }
 
 pub mod derived_construction {
-    use super::check_geojson_conformance;
+    use crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance;
     use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
     use crate::standards::v_rfc8259::subsets::base::schema::mutations::JsonMutation;
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
@@ -134,10 +137,10 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use super::check_geojson_conformance;
+    use crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance;
     use crate::standards::v_rfc8259::subsets::base::io::JsonAnalyzer as JsonAnyAnalyzer;
     use crate::standards::v_rfc8259::subsets::base::io::JsonParts;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };

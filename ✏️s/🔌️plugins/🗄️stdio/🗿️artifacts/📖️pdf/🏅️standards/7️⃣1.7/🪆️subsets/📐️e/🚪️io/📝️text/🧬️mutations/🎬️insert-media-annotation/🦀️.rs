@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "insert-media-annotation";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::InsertMediaAnnotation;
+use crate::standards::v1_7::subsets::e::schema::mutations::InsertMediaAnnotation;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &InsertMediaAnnotation) -> Result<String, String> {

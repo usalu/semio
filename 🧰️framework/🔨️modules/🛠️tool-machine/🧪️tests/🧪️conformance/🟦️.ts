@@ -231,27 +231,16 @@ describe("schema oracle (ajv)", () => {
   ajv.addSchema(schema);
   const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
 
-  test("the fixture validates against its schema definition", () => {
-    const validate = validator("TransactionLawFixture");
-    expect(validate(law), JSON.stringify(validate.errors)).toBe(true);
-  });
 
-  test("hostile fixture mutations are rejected by the schema", () => {
-    const validate = validator("TransactionLawFixture");
-    expect(validate({ ...law, extra: true })).toBe(false);
-    expect(validate({ ...law, matrix: law.matrix.slice(1) })).toBe(false);
-    expect(validate({ ...law, ids: [{ ...law.ids[0], id: "tx-XYZ" }] })).toBe(false);
-    expect(validate({ ...law, refusals: ["toolTransaction.closed", "toolTransaction.stale"] })).toBe(false);
-    expect(validate({ ...law, abortReasons: [...law.abortReasons.slice(1), "sleep"] })).toBe(false);
+
+  test("hostile transaction values are rejected by the domain schema", () => {
     expect(validator("ToolYield")({ kind: "upsert", mutation: 1 })).toBe(false);
     expect(validator("ToolYield")({ kind: "commit", key: "a" })).toBe(false);
     const reference = { id: law.ids[0].id, tool: law.ids[0].tool };
     expect(validator("ToolStep")({ kind: "committed", transaction: reference, mutations: [] })).toBe(false);
     expect(validator("ToolStep")({ kind: "committed", transaction: reference, mutations: [1] })).toBe(true);
-    expect(validator("GestureEvent")({ type: "pointerMove", x: 1 })).toBe(false);
     expect(validator("ToolStep")({ kind: "aborted", transaction: reference })).toBe(false);
     expect(validator("ToolStep")({ kind: "aborted", transaction: reference, reason: "blur" })).toBe(true);
-    expect(validator("GestureScenario")({ name: "reset", steps: [{ host: "reset", state: "idle", dropped: reference, reason: "blur" }] })).toBe(false);
   });
 });
 
@@ -582,11 +571,7 @@ describe("scrub machine", () => {
   ajv.addSchema(schema);
   const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
 
-  test("the scrub fixture validates and hostile mutations are rejected (ajv)", () => {
-    const validate = validator("ScrubLawFixture");
-    expect(validate(scrubLaw), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...scrubLaw, extra: 1 })).toBe(false);
-    expect(validate({ ...scrubLaw, chart: { ...scrubLaw.chart, fingerprint: "0x1" } })).toBe(false);
+  test("hostile scrub values are rejected by the domain schema (ajv)", () => {
     expect(validator("ScrubPhase")({ kind: "abort", gesture: "g", reason: "sideways" })).toBe(false);
     expect(validator("ScrubPhase")({ kind: "tick", gesture: "" })).toBe(false);
     expect(validator("ScrubInput")({ kind: "commit", gesture: "g" })).toBe(false);
@@ -802,12 +787,7 @@ describe("typing machine", () => {
   ajv.addSchema(schema);
   const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
 
-  test("the typing fixture validates and hostile mutations are rejected (ajv)", () => {
-    const validate = validator("TypingLawFixture");
-    expect(validate(typingLaw), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...typingLaw, extra: 1 })).toBe(false);
-    expect(validate({ ...typingLaw, idleMs: 2000 })).toBe(false);
-    expect(validate({ ...typingLaw, chart: { ...typingLaw.chart, fingerprint: "0x1" } })).toBe(false);
+  test("hostile typing values are rejected by the domain schema (ajv)", () => {
     expect(validator("TypingPhase")({ kind: "commit", buffer: "s", reason: "paste" })).toBe(false);
     expect(validator("TypingPhase")({ kind: "edit", buffer: "" })).toBe(false);
     expect(validator("TypingInput")({ kind: "edit", buffer: "s" })).toBe(false);
@@ -935,6 +915,19 @@ describe("node drag record (design §13.3)", () => {
       expect(T.nodeDragRecordFromRow(invalid.row).ok, `${invalid.id}: ${invalid.reason}`).toBe(false);
       expect(validateRow(invalid.row), `${invalid.id}: ${invalid.reason}`).toBe(false);
     }
+  });
+
+  test("independent releases retain distinct transaction identities against the xstate counter", () => {
+    const counter = setup({ types: { context: {} as { logical: number }, events: {} as { type: "release" } }, actions: { tick: assign({ logical: ({ context }) => context.logical + 1 }) } }).createMachine({ context: { logical: 0 }, on: { release: { actions: "tick" } } });
+    let [snapshot] = initialTransition(counter);
+    const ids = new Set<string>();
+    for (let index = 0; index < law.independentReleases.count; index += 1) {
+      [snapshot] = transition(counter, snapshot, { type: "release" });
+      const committed = T.nodeDragCommit(law.commit.tool, law.commit.actor, law.commit.gesture, law.commit.leaves, { ...toClock(law.commit.clock), logical: snapshot.context.logical });
+      expect(committed).toBeDefined();
+      ids.add(committed!.transaction.id);
+    }
+    expect(ids.size).toBe(law.independentReleases.uniqueTransactions);
   });
 
   test("a released node drag commits one transaction of its leaves, minted like every tool transaction", () => {

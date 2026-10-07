@@ -43,7 +43,7 @@ pub(crate) mod context {
     
     /// 🧪️ Constructs the Writer app with its declared command registry.
     pub async fn new_app() -> WriterApp {
-        let mut app = framework_new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(writer_app_manifest_for_tests).await;
+        let mut app = framework_new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(writer_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(meta("local").instance_id).await;
         WriterApp(app)
     }
@@ -86,7 +86,7 @@ pub(crate) mod context {
     /// so the artifact's OWN owner catalog retires it here — the same shape `🖨️raster`'s
     /// `retire_raster_envelope` uses for exactly this fixture pattern.
     pub fn retire_writer_envelope(envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>) {
-        let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::writer_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled writer owner catalog retires one envelope");
+        let mut retirement = crate::host::owned::writer_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled writer owner catalog retires one envelope");
         for _ in 0..1_000_000 {
             if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) {
                 return;
@@ -176,16 +176,16 @@ async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework
     serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
 }
 
-/// 🧾️ The live-load wire exactly as the host streams it: `vcs.initialSnapshot` is the snapshot's
+/// 🧾️ The live-load wire exactly as the host streams it: `vcs.initialPack` is the snapshot's
 /// hex `ArtifactPack` SCALAR (the Writer snapshot field authority refuses anything else with
 /// `writer-envelope.snapshot-pack-must-be-scalar`), the same shape the Jack/Raster/Presentation
 /// live-load fixtures build.
 fn writer_envelope_wire() -> Vec<u8> {
     let snapshot = crate::schema::empty_writer_snapshot();
     let snapshot_hex = <WriterSnapshot as ArtifactPack>::encode_pack(&snapshot).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialSnapshot\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
+    let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialPack\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
     let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None);
-    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::host::owned::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..10_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {

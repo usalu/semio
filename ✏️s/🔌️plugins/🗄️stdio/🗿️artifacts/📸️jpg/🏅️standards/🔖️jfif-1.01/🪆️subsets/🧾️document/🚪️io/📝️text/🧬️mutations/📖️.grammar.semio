@@ -1,11 +1,11 @@
-# Direct identities: change-jfif-header, replace-quant-table, remove-quant-table, replace-huffman-table, remove-huffman-table, change-restart-interval, insert-other-segment, remove-other-segment, replace-pixels, change-re-encode-quality
+# Direct identities: set-snapshot, patch-snapshot, change-jfif-header, replace-quant-table, remove-quant-table, replace-huffman-table, remove-huffman-table, change-restart-interval, insert-other-segment, remove-other-segment, replace-pixels
 dialect grammar
 grammar stdio.jpg.mutations
 extension jpg
 start document
 comment none
 
-document = set-snapshot-op | patch-snapshot-op | change-jfif-header | replace-quant-table | remove-quant-table | replace-huffman-table | remove-huffman-table | change-restart-interval | insert-other-segment | remove-other-segment | replace-pixels | change-re-encode-quality
+document = set-snapshot-op | patch-snapshot-op | change-jfif-header | replace-quant-table | remove-quant-table | replace-huffman-table | remove-huffman-table | change-restart-interval | insert-other-segment | remove-other-segment | replace-pixels
 
 patch-snapshot-op = "patch-snapshot" "patch" "=" hex
 
@@ -18,7 +18,6 @@ change-restart-interval = "change-restart-interval" "restart-interval" "=" opt-u
 insert-other-segment = "insert-other-segment" "index" "=" INT "segment" "=" segment-lit
 remove-other-segment = "remove-other-segment" "index" "=" INT
 replace-pixels = "replace-pixels" "pixels" "=" hex
-change-re-encode-quality = "change-re-encode-quality" "quality" "=" opt-u8
 
 opt-u8 = "[" "0" "]" | "[" "1" "," INT "]"
 opt-u16 = "[" "0" "]" | "[" "1" "," INT "]"
@@ -44,4 +43,4 @@ opt-frame-header = "[" "0" "]" | "[" "1" "," frame-header-lit "]"
 frame-header-lit = "[" INT "," INT "," INT "," "[" frame-component* "]" "]"
 frame-component = "[" INT "," INT "," INT "," INT "]" ","?
 
-set-snapshot-op = "set-snapshot" "snapshot" "=" (IDENT | TEXT)
+set-snapshot-op = "set-snapshot" "snapshot" "=" hex

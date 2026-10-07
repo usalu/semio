@@ -51,3 +51,8 @@ The actual retained-surface collection exposed deleted schema reads in private T
 ## Final Handoff
 
 The final union contains 1,173 authored paths. No schema writers, behavior checks or audit jobs remain active. Current fixture scope closure includes all five extra Semio complete/hex-float corpus documents, all private Interpreter schema consumers discovered by actual collection, and all reviewed standalone/inline whole-example admissions. Genuine domain authority and independent native/third-party/source behavior checks remain. The remaining latest-wins predicate mismatch is concrete and preserved; see its dedicated evidence report. Parent owns root/global native compilation qualification, final catalogue validation and ticket closure.
+
+
+## Final Source-Oracle And Embedded Selection Followup
+
+Complete ledger now covers 1175 distinct authored paths, including the late renderer example schema removal and consumer update. Actual embedded selection: 8/8 green. Current native source obligations and hostile controls: 46/46 plus admission-order control green; retained no-await publication law remains red. Scoped parse and assertion integrity green. See `📓️latest-wins-current-owner-followup.md`. No new genuine schema owner writes; no production Rust edits in this followup.

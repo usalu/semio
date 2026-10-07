@@ -7,7 +7,7 @@ pub type QuantizedImage = (Vec<Rgb>, Vec<u8>, Option<u8>);
 pub mod derived_composition {
     use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
     use crate::standards::v87a::subsets::any::io::GifAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -679,7 +679,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_plugin::StandardId("87a"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_artifact_reference::StandardId("87a"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 💡️ Registers `s.stdio.gif.inference`'s facet leaves into the OS-wide inference catalog —
@@ -852,7 +852,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.gif` parts.
@@ -871,7 +871,7 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            crate::subsets::any::io::sniff_magic(source, b"GIF87a")
+            crate::standards::v87a::subsets::any::io::sniff_magic(source, b"GIF87a")
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {

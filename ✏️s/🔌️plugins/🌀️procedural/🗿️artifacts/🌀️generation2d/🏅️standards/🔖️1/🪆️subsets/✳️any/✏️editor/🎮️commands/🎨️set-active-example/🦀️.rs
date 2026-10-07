@@ -1,7 +1,8 @@
 //! 🎨️ Generation2d editor command — `set-active-example`.
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_host_snapshot_operations, generation_mutation_to_generation2d, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation2d_host_snapshot_operations,generation_mutation_to_generation2d,Generation2dMutation};
+
 use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;

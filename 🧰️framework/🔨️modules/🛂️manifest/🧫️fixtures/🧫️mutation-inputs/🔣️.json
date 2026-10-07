@@ -5,293 +5,1012 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "$id": "https://json.schemas.assets.semio-tech.com/test/input-ui/shared.json",
       "$defs": {
-        "Length": { "type": "number", "minimum": 0, "x-semio-ui": { "unit": "m", "step": 0.1, "precision": 3, "label": { "en": "Length", "de": "Länge" } } },
-        "Radius": { "$ref": "#/$defs/Length", "x-semio-ui": { "label": { "en": "Radius", "de": "Radius" } } }
+        "Length": {
+          "type": "number",
+          "minimum": 0,
+          "x-semio-ui": {
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "label": {
+              "en": "Length",
+              "de": "Länge"
+            }
+          }
+        },
+        "Radius": {
+          "$ref": "#/$defs/Length",
+          "x-semio-ui": {
+            "label": {
+              "en": "Radius",
+              "de": "Radius"
+            }
+          }
+        }
       }
     }
   },
   "cases": [
     {
       "name": "annotated-drag-selection",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "DragSelection",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["mutation", "targets", "dx", "dy"],
-        "properties": {
-          "mutation": { "const": "dragSelection", "x-semio-ui": { "role": "discriminator", "widget": "hidden" } },
-          "targets": {
-            "type": "array",
-            "minItems": 1,
-            "uniqueItems": true,
-            "items": { "type": "string" },
-            "x-semio-ui": {
-              "widget": "reference",
-              "role": "target",
-              "label": { "en": "Targets", "de": "Ziele" },
-              "description": { "en": "Nodes and target regions to drag.", "de": "Zu ziehende Knoten und Zielbereiche." },
-              "ref": { "kind": ["node", "targetRegion"], "domain": "vortex", "granularity": "node" },
-              "group": "targets",
-              "order": 0
-            }
-          },
-          "dx": { "type": "number", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset X", "de": "Versatz X" }, "step": 1, "precision": 2, "unit": "px", "snapSource": { "config": "gridFactor" }, "group": "offset", "order": 1 } },
-          "dy": { "type": "number", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset Y", "de": "Versatz Y" }, "step": 1, "precision": 2, "unit": "px", "snapSource": { "config": "gridFactor" }, "group": "offset", "order": 2 } }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/targets",
-          "label": { "native": { "en": "Targets", "de": "Ziele" }, "reuse": { "en": "Targets", "de": "Ziele" } },
-          "schema": { "kind": "reference", "kinds": ["node", "targetRegion"], "domain": "vortex", "granularity": "node", "many": true, "minItems": 1 },
+          "label": {
+            "native": {
+              "en": "Targets",
+              "de": "Ziele"
+            },
+            "reuse": {
+              "en": "Targets",
+              "de": "Ziele"
+            }
+          },
+          "schema": {
+            "kind": "reference",
+            "kinds": [
+              "node",
+              "targetRegion"
+            ],
+            "domain": "vortex",
+            "granularity": "node",
+            "many": true,
+            "minItems": 1
+          },
           "required": true,
-          "description": { "native": { "en": "Nodes and target regions to drag.", "de": "Zu ziehende Knoten und Zielbereiche." }, "reuse": { "en": "Nodes and target regions to drag.", "de": "Zu ziehende Knoten und Zielbereiche." } },
+          "description": {
+            "native": {
+              "en": "Nodes and target regions to drag.",
+              "de": "Zu ziehende Knoten und Zielbereiche."
+            },
+            "reuse": {
+              "en": "Nodes and target regions to drag.",
+              "de": "Zu ziehende Knoten und Zielbereiche."
+            }
+          },
           "group": "targets",
           "order": 0
         },
         {
           "id": "/dx",
-          "label": { "native": { "en": "Offset X", "de": "Versatz X" }, "reuse": { "en": "Offset X", "de": "Versatz X" } },
-          "schema": { "kind": "number", "step": 1, "integer": false, "unit": "px", "snapSource": { "kind": "config", "key": "gridFactor" }, "precision": 2 },
-          "presentation": { "kind": "stepper" },
+          "label": {
+            "native": {
+              "en": "Offset X",
+              "de": "Versatz X"
+            },
+            "reuse": {
+              "en": "Offset X",
+              "de": "Versatz X"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "step": 1,
+            "integer": false,
+            "unit": "px",
+            "snapSource": {
+              "kind": "config",
+              "key": "gridFactor"
+            },
+            "precision": 2
+          },
+          "presentation": {
+            "kind": "stepper"
+          },
           "required": true,
           "group": "offset",
           "order": 1
         },
         {
           "id": "/dy",
-          "label": { "native": { "en": "Offset Y", "de": "Versatz Y" }, "reuse": { "en": "Offset Y", "de": "Versatz Y" } },
-          "schema": { "kind": "number", "step": 1, "integer": false, "unit": "px", "snapSource": { "kind": "config", "key": "gridFactor" }, "precision": 2 },
-          "presentation": { "kind": "stepper" },
+          "label": {
+            "native": {
+              "en": "Offset Y",
+              "de": "Versatz Y"
+            },
+            "reuse": {
+              "en": "Offset Y",
+              "de": "Versatz Y"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "step": 1,
+            "integer": false,
+            "unit": "px",
+            "snapSource": {
+              "kind": "config",
+              "key": "gridFactor"
+            },
+            "precision": 2
+          },
+          "presentation": {
+            "kind": "stepper"
+          },
           "required": true,
           "group": "offset",
           "order": 2
         }
-      ]
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "DragSelection",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "targets",
+            "dx",
+            "dy"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "dragSelection",
+              "x-semio-ui": {
+                "role": "discriminator",
+                "widget": "hidden"
+              }
+            },
+            "targets": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Targets",
+                  "de": "Ziele"
+                },
+                "description": {
+                  "en": "Nodes and target regions to drag.",
+                  "de": "Zu ziehende Knoten und Zielbereiche."
+                },
+                "ref": {
+                  "kind": [
+                    "node",
+                    "targetRegion"
+                  ],
+                  "domain": "vortex",
+                  "granularity": "node"
+                },
+                "group": "targets",
+                "order": 0
+              }
+            },
+            "dx": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Offset X",
+                  "de": "Versatz X"
+                },
+                "step": 1,
+                "precision": 2,
+                "unit": "px",
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "group": "offset",
+                "order": 1
+              }
+            },
+            "dy": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Offset Y",
+                  "de": "Versatz Y"
+                },
+                "step": 1,
+                "precision": 2,
+                "unit": "px",
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "group": "offset",
+                "order": 2
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "dial-in-degrees",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["angle", "pivotX", "pivotY"],
-        "properties": {
-          "angle": {
-            "type": "number",
-            "minimum": -3.141592653589793,
-            "maximum": 3.141592653589793,
-            "x-semio-ui": { "widget": "dial", "label": { "en": "Angle", "de": "Winkel" }, "unit": "rad", "displayUnit": "°", "displayFactor": 57.29577951308232, "precision": 1, "step": 0.017453292519943295, "snaps": [0, 1.5707963267948966, 3.141592653589793] }
-          },
-          "pivotX": { "type": "number" },
-          "pivotY": { "type": "number" }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/angle",
-          "label": { "native": { "en": "Angle", "de": "Winkel" }, "reuse": { "en": "Angle", "de": "Winkel" } },
-          "schema": { "kind": "number", "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "integer": false, "unit": "rad", "snaps": [0, 1.5707963267948966, 3.141592653589793], "precision": 1, "displayUnit": "°", "displayFactor": 57.29577951308232 },
-          "presentation": { "kind": "dial" },
+          "label": {
+            "native": {
+              "en": "Angle",
+              "de": "Winkel"
+            },
+            "reuse": {
+              "en": "Angle",
+              "de": "Winkel"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": -3.141592653589793,
+            "max": 3.141592653589793,
+            "step": 0.017453292519943295,
+            "integer": false,
+            "unit": "rad",
+            "snaps": [
+              0,
+              1.5707963267948966,
+              3.141592653589793
+            ],
+            "precision": 1,
+            "displayUnit": "°",
+            "displayFactor": 57.29577951308232
+          },
+          "presentation": {
+            "kind": "dial"
+          },
           "required": true
         },
         {
           "id": "/pivotX",
-          "label": { "native": { "en": "Pivot X", "de": "Drehpunkt X" }, "reuse": { "en": "Pivot X", "de": "Drehpunkt X" } },
-          "schema": { "kind": "number", "integer": false },
+          "label": {
+            "native": {
+              "en": "Pivot X",
+              "de": "Drehpunkt X"
+            },
+            "reuse": {
+              "en": "Pivot X",
+              "de": "Drehpunkt X"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "integer": false
+          },
           "required": true
         },
         {
           "id": "/pivotY",
-          "label": { "native": { "en": "Pivot Y", "de": "Drehpunkt Y" }, "reuse": { "en": "Pivot Y", "de": "Drehpunkt Y" } },
-          "schema": { "kind": "number", "integer": false },
+          "label": {
+            "native": {
+              "en": "Pivot Y",
+              "de": "Drehpunkt Y"
+            },
+            "reuse": {
+              "en": "Pivot Y",
+              "de": "Drehpunkt Y"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "integer": false
+          },
           "required": true
         }
-      ]
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "angle",
+            "pivotX",
+            "pivotY"
+          ],
+          "properties": {
+            "angle": {
+              "type": "number",
+              "minimum": -3.141592653589793,
+              "maximum": 3.141592653589793,
+              "x-semio-ui": {
+                "widget": "dial",
+                "label": {
+                  "en": "Angle",
+                  "de": "Winkel"
+                },
+                "unit": "rad",
+                "displayUnit": "°",
+                "displayFactor": 57.29577951308232,
+                "precision": 1,
+                "step": 0.017453292519943295,
+                "snaps": [
+                  0,
+                  1.5707963267948966,
+                  3.141592653589793
+                ]
+              }
+            },
+            "pivotX": {
+              "type": "number"
+            },
+            "pivotY": {
+              "type": "number"
+            }
+          }
+        }
+      }
     },
     {
       "name": "log-slider-with-soft-range",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "factor": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "default": 1, "x-semio-ui": { "widget": "slider", "label": { "en": "Factor", "de": "Faktor" }, "softMin": 0.1, "softMax": 10, "scale": "log", "snaps": [0.5, 1, 2], "precision": 2 } }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/factor",
-          "label": { "native": { "en": "Factor", "de": "Faktor" }, "reuse": { "en": "Factor", "de": "Faktor" } },
-          "schema": { "kind": "number", "min": 0, "minExclusive": true, "max": 100, "integer": false, "snaps": [0.5, 1, 2], "softMin": 0.1, "softMax": 10, "precision": 2, "scale": "log" },
-          "presentation": { "kind": "slider" },
+          "label": {
+            "native": {
+              "en": "Factor",
+              "de": "Faktor"
+            },
+            "reuse": {
+              "en": "Factor",
+              "de": "Faktor"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "minExclusive": true,
+            "max": 100,
+            "integer": false,
+            "snaps": [
+              0.5,
+              1,
+              2
+            ],
+            "softMin": 0.1,
+            "softMax": 10,
+            "precision": 2,
+            "scale": "log"
+          },
+          "presentation": {
+            "kind": "slider"
+          },
           "required": false,
           "default": 1
         }
-      ]
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "factor": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "default": 1,
+              "x-semio-ui": {
+                "widget": "slider",
+                "label": {
+                  "en": "Factor",
+                  "de": "Faktor"
+                },
+                "softMin": 0.1,
+                "softMax": 10,
+                "scale": "log",
+                "snaps": [
+                  0.5,
+                  1,
+                  2
+                ],
+                "precision": 2
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "inferred-from-glossary",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["mutation", "id", "index", "newName"],
-        "properties": {
-          "mutation": { "const": "renameLayer" },
-          "id": { "type": "string" },
-          "index": { "type": "integer", "minimum": 0 },
-          "newName": { "type": "string", "minLength": 1, "maxLength": 64 },
-          "value": { "type": "number", "minimum": 0, "maximum": 1 },
-          "visible": { "type": "boolean" },
-          "layerId": { "type": "string" },
-          "newZoneId": { "type": "string" },
-          "ids": { "type": "array", "items": { "type": "string" }, "maxItems": 8 },
-          "count": { "type": ["integer", "null"], "minimum": 1 }
-        }
-      },
       "expectedInputs": [
-        { "id": "/id", "label": { "native": { "en": "ID", "de": "ID" }, "reuse": { "en": "ID", "de": "ID" } }, "schema": { "kind": "string" }, "required": true },
-        { "id": "/index", "label": { "native": { "en": "Index", "de": "Index" }, "reuse": { "en": "Index", "de": "Index" } }, "schema": { "kind": "number", "min": 0, "step": 1, "integer": true }, "required": true },
-        { "id": "/newName", "label": { "native": { "en": "New Name", "de": "Neuer Name" }, "reuse": { "en": "New Name", "de": "Neuer Name" } }, "schema": { "kind": "string", "minLen": 1, "maxLen": 64 }, "required": true },
-        { "id": "/value", "label": { "native": { "en": "Value", "de": "Wert" }, "reuse": { "en": "Value", "de": "Wert" } }, "schema": { "kind": "number", "min": 0, "max": 1, "integer": false }, "required": false },
-        { "id": "/visible", "label": { "native": { "en": "Visible", "de": "Sichtbar" }, "reuse": { "en": "Visible", "de": "Sichtbar" } }, "schema": { "kind": "boolean" }, "required": false },
-        { "id": "/layerId", "label": { "native": { "en": "Layer ID", "de": "Ebenen-ID" }, "reuse": { "en": "Layer ID", "de": "Ebenen-ID" } }, "schema": { "kind": "reference", "kinds": ["layer"] }, "required": false },
-        { "id": "/newZoneId", "label": { "native": { "en": "New Zone ID", "de": "Neue Zonen-ID" }, "reuse": { "en": "New Zone ID", "de": "Neue Zonen-ID" } }, "schema": { "kind": "reference", "kinds": ["zone"] }, "required": false },
-        { "id": "/ids", "label": { "native": { "en": "IDs", "de": "IDs" }, "reuse": { "en": "IDs", "de": "IDs" } }, "schema": { "kind": "array", "items": { "kind": "string" }, "maxItems": 8 }, "required": false },
-        { "id": "/count", "label": { "native": { "en": "Count", "de": "Anzahl" }, "reuse": { "en": "Count", "de": "Anzahl" } }, "schema": { "kind": "number", "min": 1, "step": 1, "integer": true }, "required": false, "nullable": true }
-      ]
+        {
+          "id": "/id",
+          "label": {
+            "native": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "reuse": {
+              "en": "ID",
+              "de": "ID"
+            }
+          },
+          "schema": {
+            "kind": "string"
+          },
+          "required": true
+        },
+        {
+          "id": "/index",
+          "label": {
+            "native": {
+              "en": "Index",
+              "de": "Index"
+            },
+            "reuse": {
+              "en": "Index",
+              "de": "Index"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "step": 1,
+            "integer": true
+          },
+          "required": true
+        },
+        {
+          "id": "/newName",
+          "label": {
+            "native": {
+              "en": "New Name",
+              "de": "Neuer Name"
+            },
+            "reuse": {
+              "en": "New Name",
+              "de": "Neuer Name"
+            }
+          },
+          "schema": {
+            "kind": "string",
+            "minLen": 1,
+            "maxLen": 64
+          },
+          "required": true
+        },
+        {
+          "id": "/value",
+          "label": {
+            "native": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "reuse": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "integer": false
+          },
+          "required": false
+        },
+        {
+          "id": "/visible",
+          "label": {
+            "native": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            },
+            "reuse": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            }
+          },
+          "schema": {
+            "kind": "boolean"
+          },
+          "required": false
+        },
+        {
+          "id": "/layerId",
+          "label": {
+            "native": {
+              "en": "Layer ID",
+              "de": "Ebenen-ID"
+            },
+            "reuse": {
+              "en": "Layer ID",
+              "de": "Ebenen-ID"
+            }
+          },
+          "schema": {
+            "kind": "reference",
+            "kinds": [
+              "layer"
+            ]
+          },
+          "required": false
+        },
+        {
+          "id": "/newZoneId",
+          "label": {
+            "native": {
+              "en": "New Zone ID",
+              "de": "Neue Zonen-ID"
+            },
+            "reuse": {
+              "en": "New Zone ID",
+              "de": "Neue Zonen-ID"
+            }
+          },
+          "schema": {
+            "kind": "reference",
+            "kinds": [
+              "zone"
+            ]
+          },
+          "required": false
+        },
+        {
+          "id": "/ids",
+          "label": {
+            "native": {
+              "en": "IDs",
+              "de": "IDs"
+            },
+            "reuse": {
+              "en": "IDs",
+              "de": "IDs"
+            }
+          },
+          "schema": {
+            "kind": "array",
+            "items": {
+              "kind": "string"
+            },
+            "maxItems": 8
+          },
+          "required": false
+        },
+        {
+          "id": "/count",
+          "label": {
+            "native": {
+              "en": "Count",
+              "de": "Anzahl"
+            },
+            "reuse": {
+              "en": "Count",
+              "de": "Anzahl"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 1,
+            "step": 1,
+            "integer": true
+          },
+          "required": false,
+          "nullable": true
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id",
+            "index",
+            "newName"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "renameLayer"
+            },
+            "id": {
+              "type": "string"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "newName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "layerId": {
+              "type": "string"
+            },
+            "newZoneId": {
+              "type": "string"
+            },
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 8
+            },
+            "count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            }
+          }
+        }
+      }
     },
     {
       "name": "local-defs-override-options-nullable",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["opacity"],
-        "properties": {
-          "opacity": { "$ref": "#/$defs/UnitInterval", "x-semio-ui": { "label": { "en": "Opacity", "de": "Deckkraft" }, "order": 20 } },
-          "blendMode": { "$ref": "#/$defs/BlendMode", "x-semio-ui": { "label": { "native": { "en": "Blend Mode", "de": "Mischmodus" }, "reuse": { "en": "Blending", "de": "Überblendung" } } } },
-          "tint": { "oneOf": [{ "$ref": "#/$defs/UnitInterval" }, { "type": "null" }], "x-semio-ui": { "label": { "en": "Tint", "de": "Tönung" } } }
-        },
-        "$defs": {
-          "UnitInterval": { "type": "number", "minimum": 0, "maximum": 1, "x-semio-ui": { "widget": "slider", "step": 0.01, "precision": 2, "label": { "en": "Fraction", "de": "Anteil" }, "group": "appearance" } },
-          "BlendMode": { "type": "string", "enum": ["normal", "multiply"], "x-semio-ui": { "widget": "segmented", "options": { "normal": { "en": "Normal", "de": "Normal" }, "multiply": { "en": "Multiply", "de": "Multiplizieren" } } } }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/opacity",
-          "label": { "native": { "en": "Opacity", "de": "Deckkraft" }, "reuse": { "en": "Opacity", "de": "Deckkraft" } },
-          "schema": { "kind": "number", "min": 0, "max": 1, "step": 0.01, "integer": false, "precision": 2 },
-          "presentation": { "kind": "slider" },
+          "label": {
+            "native": {
+              "en": "Opacity",
+              "de": "Deckkraft"
+            },
+            "reuse": {
+              "en": "Opacity",
+              "de": "Deckkraft"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.01,
+            "integer": false,
+            "precision": 2
+          },
+          "presentation": {
+            "kind": "slider"
+          },
           "required": true,
           "group": "appearance",
           "order": 20
         },
         {
           "id": "/blendMode",
-          "label": { "native": { "en": "Blend Mode", "de": "Mischmodus" }, "reuse": { "en": "Blending", "de": "Überblendung" } },
+          "label": {
+            "native": {
+              "en": "Blend Mode",
+              "de": "Mischmodus"
+            },
+            "reuse": {
+              "en": "Blending",
+              "de": "Überblendung"
+            }
+          },
           "schema": {
             "kind": "string",
             "options": [
-              { "value": "normal", "label": { "native": { "en": "Normal", "de": "Normal" }, "reuse": { "en": "Normal", "de": "Normal" } } },
-              { "value": "multiply", "label": { "native": { "en": "Multiply", "de": "Multiplizieren" }, "reuse": { "en": "Multiply", "de": "Multiplizieren" } } }
+              {
+                "value": "normal",
+                "label": {
+                  "native": {
+                    "en": "Normal",
+                    "de": "Normal"
+                  },
+                  "reuse": {
+                    "en": "Normal",
+                    "de": "Normal"
+                  }
+                }
+              },
+              {
+                "value": "multiply",
+                "label": {
+                  "native": {
+                    "en": "Multiply",
+                    "de": "Multiplizieren"
+                  },
+                  "reuse": {
+                    "en": "Multiply",
+                    "de": "Multiplizieren"
+                  }
+                }
+              }
             ]
           },
-          "presentation": { "kind": "segmented" },
+          "presentation": {
+            "kind": "segmented"
+          },
           "required": false
         },
         {
           "id": "/tint",
-          "label": { "native": { "en": "Tint", "de": "Tönung" }, "reuse": { "en": "Tint", "de": "Tönung" } },
-          "schema": { "kind": "number", "min": 0, "max": 1, "step": 0.01, "integer": false, "precision": 2 },
-          "presentation": { "kind": "slider" },
+          "label": {
+            "native": {
+              "en": "Tint",
+              "de": "Tönung"
+            },
+            "reuse": {
+              "en": "Tint",
+              "de": "Tönung"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.01,
+            "integer": false,
+            "precision": 2
+          },
+          "presentation": {
+            "kind": "slider"
+          },
           "required": false,
           "nullable": true,
           "group": "appearance"
         }
-      ]
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "opacity"
+          ],
+          "properties": {
+            "opacity": {
+              "$ref": "#/$defs/UnitInterval",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Opacity",
+                  "de": "Deckkraft"
+                },
+                "order": 20
+              }
+            },
+            "blendMode": {
+              "$ref": "#/$defs/BlendMode",
+              "x-semio-ui": {
+                "label": {
+                  "native": {
+                    "en": "Blend Mode",
+                    "de": "Mischmodus"
+                  },
+                  "reuse": {
+                    "en": "Blending",
+                    "de": "Überblendung"
+                  }
+                }
+              }
+            },
+            "tint": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/UnitInterval"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "label": {
+                  "en": "Tint",
+                  "de": "Tönung"
+                }
+              }
+            }
+          },
+          "$defs": {
+            "UnitInterval": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "x-semio-ui": {
+                "widget": "slider",
+                "step": 0.01,
+                "precision": 2,
+                "label": {
+                  "en": "Fraction",
+                  "de": "Anteil"
+                },
+                "group": "appearance"
+              }
+            },
+            "BlendMode": {
+              "type": "string",
+              "enum": [
+                "normal",
+                "multiply"
+              ],
+              "x-semio-ui": {
+                "widget": "segmented",
+                "options": {
+                  "normal": {
+                    "en": "Normal",
+                    "de": "Normal"
+                  },
+                  "multiply": {
+                    "en": "Multiply",
+                    "de": "Multiplizieren"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "registry-refs",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["width"],
-        "properties": {
-          "width": { "$ref": "https://json.schemas.assets.semio-tech.com/test/input-ui/shared.json#/$defs/Length", "x-semio-ui": { "label": { "en": "Width", "de": "Breite" } } },
-          "radius": { "$ref": "https://json.schemas.assets.semio-tech.com/test/input-ui/shared.json#/$defs/Radius" }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/width",
-          "label": { "native": { "en": "Width", "de": "Breite" }, "reuse": { "en": "Width", "de": "Breite" } },
-          "schema": { "kind": "number", "min": 0, "step": 0.1, "integer": false, "unit": "m", "precision": 3 },
+          "label": {
+            "native": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "reuse": {
+              "en": "Width",
+              "de": "Breite"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "step": 0.1,
+            "integer": false,
+            "unit": "m",
+            "precision": 3
+          },
           "required": true
         },
         {
           "id": "/radius",
-          "label": { "native": { "en": "Radius", "de": "Radius" }, "reuse": { "en": "Radius", "de": "Radius" } },
-          "schema": { "kind": "number", "min": 0, "step": 0.1, "integer": false, "unit": "m", "precision": 3 },
+          "label": {
+            "native": {
+              "en": "Radius",
+              "de": "Radius"
+            },
+            "reuse": {
+              "en": "Radius",
+              "de": "Radius"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "step": 0.1,
+            "integer": false,
+            "unit": "m",
+            "precision": 3
+          },
           "required": false
         }
-      ]
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width"
+          ],
+          "properties": {
+            "width": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/input-ui/shared.json#/$defs/Length",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Width",
+                  "de": "Breite"
+                }
+              }
+            },
+            "radius": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/input-ui/shared.json#/$defs/Radius"
+            }
+          }
+        }
+      }
     },
     {
       "name": "nested-object-array-and-vector",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["node", "placements"],
-        "properties": {
-          "node": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["x", "y"],
-            "properties": {
-              "x": { "type": "number" },
-              "y": { "type": "number" },
-              "kind": { "type": "string", "enum": ["fixed", "derived"], "x-semio-ui": { "options": { "fixed": { "en": "Fixed", "de": "Fest" }, "derived": { "en": "Derived", "de": "Abgeleitet" } } } }
-            },
-            "x-semio-ui": { "label": { "en": "Node", "de": "Knoten" }, "group": "node" }
-          },
-          "placements": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["objectId", "newOrigin"],
-              "properties": {
-                "objectId": { "type": "string" },
-                "newOrigin": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
-              }
-            }
-          },
-          "newPosition": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "x-semio-ui": { "widget": "vector", "unit": "m", "step": 0.5 } }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/node",
-          "label": { "native": { "en": "Node", "de": "Knoten" }, "reuse": { "en": "Node", "de": "Knoten" } },
+          "label": {
+            "native": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "reuse": {
+              "en": "Node",
+              "de": "Knoten"
+            }
+          },
           "schema": {
             "kind": "object",
             "fields": [
-              { "id": "/x", "label": { "native": { "en": "X", "de": "X" }, "reuse": { "en": "X", "de": "X" } }, "schema": { "kind": "number", "integer": false }, "required": true },
-              { "id": "/y", "label": { "native": { "en": "Y", "de": "Y" }, "reuse": { "en": "Y", "de": "Y" } }, "schema": { "kind": "number", "integer": false }, "required": true },
+              {
+                "id": "/x",
+                "label": {
+                  "native": {
+                    "en": "X",
+                    "de": "X"
+                  },
+                  "reuse": {
+                    "en": "X",
+                    "de": "X"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "/y",
+                "label": {
+                  "native": {
+                    "en": "Y",
+                    "de": "Y"
+                  },
+                  "reuse": {
+                    "en": "Y",
+                    "de": "Y"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              },
               {
                 "id": "/kind",
-                "label": { "native": { "en": "Kind", "de": "Art" }, "reuse": { "en": "Kind", "de": "Art" } },
+                "label": {
+                  "native": {
+                    "en": "Kind",
+                    "de": "Art"
+                  },
+                  "reuse": {
+                    "en": "Kind",
+                    "de": "Art"
+                  }
+                },
                 "schema": {
                   "kind": "string",
                   "options": [
-                    { "value": "fixed", "label": { "native": { "en": "Fixed", "de": "Fest" }, "reuse": { "en": "Fixed", "de": "Fest" } } },
-                    { "value": "derived", "label": { "native": { "en": "Derived", "de": "Abgeleitet" }, "reuse": { "en": "Derived", "de": "Abgeleitet" } } }
+                    {
+                      "value": "fixed",
+                      "label": {
+                        "native": {
+                          "en": "Fixed",
+                          "de": "Fest"
+                        },
+                        "reuse": {
+                          "en": "Fixed",
+                          "de": "Fest"
+                        }
+                      }
+                    },
+                    {
+                      "value": "derived",
+                      "label": {
+                        "native": {
+                          "en": "Derived",
+                          "de": "Abgeleitet"
+                        },
+                        "reuse": {
+                          "en": "Derived",
+                          "de": "Abgeleitet"
+                        }
+                      }
+                    }
                   ]
                 },
                 "required": false
@@ -303,14 +1022,59 @@
         },
         {
           "id": "/placements",
-          "label": { "native": { "en": "Placements", "de": "Platzierungen" }, "reuse": { "en": "Placements", "de": "Platzierungen" } },
+          "label": {
+            "native": {
+              "en": "Placements",
+              "de": "Platzierungen"
+            },
+            "reuse": {
+              "en": "Placements",
+              "de": "Platzierungen"
+            }
+          },
           "schema": {
             "kind": "array",
             "items": {
               "kind": "object",
               "fields": [
-                { "id": "/objectId", "label": { "native": { "en": "Object ID", "de": "Objekt-ID" }, "reuse": { "en": "Object ID", "de": "Objekt-ID" } }, "schema": { "kind": "reference", "kinds": ["object"] }, "required": true },
-                { "id": "/newOrigin", "label": { "native": { "en": "New Origin", "de": "Neuer Ursprung" }, "reuse": { "en": "New Origin", "de": "Neuer Ursprung" } }, "schema": { "kind": "vector", "dims": 3 }, "required": true }
+                {
+                  "id": "/objectId",
+                  "label": {
+                    "native": {
+                      "en": "Object ID",
+                      "de": "Objekt-ID"
+                    },
+                    "reuse": {
+                      "en": "Object ID",
+                      "de": "Objekt-ID"
+                    }
+                  },
+                  "schema": {
+                    "kind": "reference",
+                    "kinds": [
+                      "object"
+                    ]
+                  },
+                  "required": true
+                },
+                {
+                  "id": "/newOrigin",
+                  "label": {
+                    "native": {
+                      "en": "New Origin",
+                      "de": "Neuer Ursprung"
+                    },
+                    "reuse": {
+                      "en": "New Origin",
+                      "de": "Neuer Ursprung"
+                    }
+                  },
+                  "schema": {
+                    "kind": "vector",
+                    "dims": 3
+                  },
+                  "required": true
+                }
               ]
             }
           },
@@ -318,487 +1082,2941 @@
         },
         {
           "id": "/newPosition",
-          "label": { "native": { "en": "New Position", "de": "Neue Position" }, "reuse": { "en": "New Position", "de": "Neue Position" } },
-          "schema": { "kind": "vector", "dims": 3, "unit": "m", "step": 0.5 },
+          "label": {
+            "native": {
+              "en": "New Position",
+              "de": "Neue Position"
+            },
+            "reuse": {
+              "en": "New Position",
+              "de": "Neue Position"
+            }
+          },
+          "schema": {
+            "kind": "vector",
+            "dims": 3,
+            "unit": "m",
+            "step": 0.5
+          },
           "required": false
         }
-      ]
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node",
+            "placements"
+          ],
+          "properties": {
+            "node": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y"
+              ],
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "fixed",
+                    "derived"
+                  ],
+                  "x-semio-ui": {
+                    "options": {
+                      "fixed": {
+                        "en": "Fixed",
+                        "de": "Fest"
+                      },
+                      "derived": {
+                        "en": "Derived",
+                        "de": "Abgeleitet"
+                      }
+                    }
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Node",
+                  "de": "Knoten"
+                },
+                "group": "node"
+              }
+            },
+            "placements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "objectId",
+                  "newOrigin"
+                ],
+                "properties": {
+                  "objectId": {
+                    "type": "string"
+                  },
+                  "newOrigin": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                  }
+                }
+              }
+            },
+            "newPosition": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "unit": "m",
+                "step": 0.5
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "all-of-composition",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "allOf": [{ "$ref": "#/$defs/Payload" }, { "required": ["index"], "properties": { "index": { "type": "integer", "minimum": 0 } } }],
-        "$defs": { "Payload": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" }, "visible": { "type": "boolean" } } } }
-      },
       "expectedInputs": [
-        { "id": "/id", "label": { "native": { "en": "ID", "de": "ID" }, "reuse": { "en": "ID", "de": "ID" } }, "schema": { "kind": "string" }, "required": true },
-        { "id": "/visible", "label": { "native": { "en": "Visible", "de": "Sichtbar" }, "reuse": { "en": "Visible", "de": "Sichtbar" } }, "schema": { "kind": "boolean" }, "required": false },
-        { "id": "/index", "label": { "native": { "en": "Index", "de": "Index" }, "reuse": { "en": "Index", "de": "Index" } }, "schema": { "kind": "number", "min": 0, "step": 1, "integer": true }, "required": true }
-      ]
+        {
+          "id": "/id",
+          "label": {
+            "native": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "reuse": {
+              "en": "ID",
+              "de": "ID"
+            }
+          },
+          "schema": {
+            "kind": "string"
+          },
+          "required": true
+        },
+        {
+          "id": "/visible",
+          "label": {
+            "native": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            },
+            "reuse": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            }
+          },
+          "schema": {
+            "kind": "boolean"
+          },
+          "required": false
+        },
+        {
+          "id": "/index",
+          "label": {
+            "native": {
+              "en": "Index",
+              "de": "Index"
+            },
+            "reuse": {
+              "en": "Index",
+              "de": "Index"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "step": 1,
+            "integer": true
+          },
+          "required": true
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/$defs/Payload"
+            },
+            {
+              "required": [
+                "index"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "$defs": {
+            "Payload": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "visible": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "empty-payload",
-      "leafSchema": { "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false },
-      "expectedInputs": []
+      "expectedInputs": [],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false
+        }
+      }
     },
     {
       "name": "discriminated-union-by-const",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "MoveThingMutation",
-        "oneOf": [
-          { "type": "object", "additionalProperties": false, "required": ["phase", "value"], "properties": { "phase": { "const": "apply" }, "value": { "$ref": "#/$defs/Move" } } },
-          { "type": "object", "additionalProperties": false, "required": ["phase", "index"], "properties": { "phase": { "const": "restore" }, "index": { "type": "integer", "minimum": 0 } } }
-        ],
-        "$defs": { "Move": { "type": "object", "additionalProperties": false, "required": ["index", "position"], "properties": { "index": { "type": "integer", "minimum": 0 }, "position": { "type": "integer", "minimum": 0 } } } }
-      },
       "expectedInputs": [
         {
           "id": "/phase",
-          "label": { "native": { "en": "Phase", "de": "Phase" }, "reuse": { "en": "Phase", "de": "Phase" } },
+          "label": {
+            "native": {
+              "en": "Phase",
+              "de": "Phase"
+            },
+            "reuse": {
+              "en": "Phase",
+              "de": "Phase"
+            }
+          },
           "schema": {
             "kind": "string",
             "options": [
-              { "value": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } } },
-              { "value": "restore", "label": { "native": { "en": "Restore", "de": "Wiederherstellen" }, "reuse": { "en": "Restore", "de": "Wiederherstellen" } } }
+              {
+                "value": "apply",
+                "label": {
+                  "native": {
+                    "en": "Apply",
+                    "de": "Anwenden"
+                  },
+                  "reuse": {
+                    "en": "Apply",
+                    "de": "Anwenden"
+                  }
+                }
+              },
+              {
+                "value": "restore",
+                "label": {
+                  "native": {
+                    "en": "Restore",
+                    "de": "Wiederherstellen"
+                  },
+                  "reuse": {
+                    "en": "Restore",
+                    "de": "Wiederherstellen"
+                  }
+                }
+              }
             ]
           },
-          "presentation": { "kind": "segmented" },
+          "presentation": {
+            "kind": "segmented"
+          },
           "required": true
         },
         {
           "id": "/value",
-          "label": { "native": { "en": "Value", "de": "Wert" }, "reuse": { "en": "Value", "de": "Wert" } },
+          "label": {
+            "native": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "reuse": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          },
           "schema": {
             "kind": "object",
             "fields": [
-              { "id": "/index", "label": { "native": { "en": "Index", "de": "Index" }, "reuse": { "en": "Index", "de": "Index" } }, "schema": { "kind": "number", "min": 0, "step": 1, "integer": true }, "required": true },
-              { "id": "/position", "label": { "native": { "en": "Position", "de": "Position" }, "reuse": { "en": "Position", "de": "Position" } }, "schema": { "kind": "number", "min": 0, "step": 1, "integer": true }, "required": true }
+              {
+                "id": "/index",
+                "label": {
+                  "native": {
+                    "en": "Index",
+                    "de": "Index"
+                  },
+                  "reuse": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0,
+                  "step": 1,
+                  "integer": true
+                },
+                "required": true
+              },
+              {
+                "id": "/position",
+                "label": {
+                  "native": {
+                    "en": "Position",
+                    "de": "Position"
+                  },
+                  "reuse": {
+                    "en": "Position",
+                    "de": "Position"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0,
+                  "step": 1,
+                  "integer": true
+                },
+                "required": true
+              }
             ]
           },
           "required": true,
           "group": "apply"
         },
-        { "id": "/index", "label": { "native": { "en": "Index", "de": "Index" }, "reuse": { "en": "Index", "de": "Index" } }, "schema": { "kind": "number", "min": 0, "step": 1, "integer": true }, "required": true, "group": "restore" }
-      ]
+        {
+          "id": "/index",
+          "label": {
+            "native": {
+              "en": "Index",
+              "de": "Index"
+            },
+            "reuse": {
+              "en": "Index",
+              "de": "Index"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "step": 1,
+            "integer": true
+          },
+          "required": true,
+          "group": "restore"
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "MoveThingMutation",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "phase",
+                "value"
+              ],
+              "properties": {
+                "phase": {
+                  "const": "apply"
+                },
+                "value": {
+                  "$ref": "#/$defs/Move"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "phase",
+                "index"
+              ],
+              "properties": {
+                "phase": {
+                  "const": "restore"
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ],
+          "$defs": {
+            "Move": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "position"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "discriminated-union-annotated-variants",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "oneOf": [{ "$ref": "#/$defs/SetOpacity" }, { "$ref": "#/$defs/SetVisible" }, { "$ref": "#/$defs/SetName" }, { "$ref": "#/$defs/SetCount" }, { "$ref": "#/$defs/Reset" }],
-        "$defs": {
-          "SetOpacity": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["mutation", "value"],
-            "properties": { "mutation": { "const": "setOpacity", "x-semio-ui": { "label": { "en": "Setting", "de": "Einstellung" }, "description": { "en": "Which setting changes.", "de": "Welche Einstellung sich ändert." } } }, "value": { "type": "number", "minimum": 0, "maximum": 1 } },
-            "x-semio-ui": { "label": { "en": "Opacity", "de": "Deckkraft" } }
-          },
-          "SetVisible": { "type": "object", "additionalProperties": false, "required": ["mutation", "visible"], "properties": { "mutation": { "const": "setVisible" }, "visible": { "type": "boolean" } }, "x-semio-ui": { "label": { "en": "Visibility", "de": "Sichtbarkeit" } } },
-          "SetName": { "type": "object", "additionalProperties": false, "required": ["mutation", "name"], "properties": { "mutation": { "const": "setName" }, "name": { "type": "string", "minLength": 1 } }, "x-semio-ui": { "label": { "en": "Name", "de": "Name" } } },
-          "SetCount": { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "setCount" }, "count": { "type": "integer", "minimum": 1 } }, "x-semio-ui": { "label": { "en": "Count", "de": "Anzahl" } } },
-          "Reset": { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "reset" } }, "x-semio-ui": { "label": { "en": "Reset", "de": "Zurücksetzen" } } }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/mutation",
-          "label": { "native": { "en": "Setting", "de": "Einstellung" }, "reuse": { "en": "Setting", "de": "Einstellung" } },
+          "label": {
+            "native": {
+              "en": "Setting",
+              "de": "Einstellung"
+            },
+            "reuse": {
+              "en": "Setting",
+              "de": "Einstellung"
+            }
+          },
           "schema": {
             "kind": "string",
             "options": [
-              { "value": "setOpacity", "label": { "native": { "en": "Opacity", "de": "Deckkraft" }, "reuse": { "en": "Opacity", "de": "Deckkraft" } } },
-              { "value": "setVisible", "label": { "native": { "en": "Visibility", "de": "Sichtbarkeit" }, "reuse": { "en": "Visibility", "de": "Sichtbarkeit" } } },
-              { "value": "setName", "label": { "native": { "en": "Name", "de": "Name" }, "reuse": { "en": "Name", "de": "Name" } } },
-              { "value": "setCount", "label": { "native": { "en": "Count", "de": "Anzahl" }, "reuse": { "en": "Count", "de": "Anzahl" } } },
-              { "value": "reset", "label": { "native": { "en": "Reset", "de": "Zurücksetzen" }, "reuse": { "en": "Reset", "de": "Zurücksetzen" } } }
+              {
+                "value": "setOpacity",
+                "label": {
+                  "native": {
+                    "en": "Opacity",
+                    "de": "Deckkraft"
+                  },
+                  "reuse": {
+                    "en": "Opacity",
+                    "de": "Deckkraft"
+                  }
+                }
+              },
+              {
+                "value": "setVisible",
+                "label": {
+                  "native": {
+                    "en": "Visibility",
+                    "de": "Sichtbarkeit"
+                  },
+                  "reuse": {
+                    "en": "Visibility",
+                    "de": "Sichtbarkeit"
+                  }
+                }
+              },
+              {
+                "value": "setName",
+                "label": {
+                  "native": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "reuse": {
+                    "en": "Name",
+                    "de": "Name"
+                  }
+                }
+              },
+              {
+                "value": "setCount",
+                "label": {
+                  "native": {
+                    "en": "Count",
+                    "de": "Anzahl"
+                  },
+                  "reuse": {
+                    "en": "Count",
+                    "de": "Anzahl"
+                  }
+                }
+              },
+              {
+                "value": "reset",
+                "label": {
+                  "native": {
+                    "en": "Reset",
+                    "de": "Zurücksetzen"
+                  },
+                  "reuse": {
+                    "en": "Reset",
+                    "de": "Zurücksetzen"
+                  }
+                }
+              }
             ]
           },
           "required": true,
-          "description": { "native": { "en": "Which setting changes.", "de": "Welche Einstellung sich ändert." }, "reuse": { "en": "Which setting changes.", "de": "Welche Einstellung sich ändert." } }
+          "description": {
+            "native": {
+              "en": "Which setting changes.",
+              "de": "Welche Einstellung sich ändert."
+            },
+            "reuse": {
+              "en": "Which setting changes.",
+              "de": "Welche Einstellung sich ändert."
+            }
+          }
         },
-        { "id": "/value", "label": { "native": { "en": "Value", "de": "Wert" }, "reuse": { "en": "Value", "de": "Wert" } }, "schema": { "kind": "number", "min": 0, "max": 1, "integer": false }, "required": true, "group": "setOpacity" },
-        { "id": "/visible", "label": { "native": { "en": "Visible", "de": "Sichtbar" }, "reuse": { "en": "Visible", "de": "Sichtbar" } }, "schema": { "kind": "boolean" }, "required": true, "group": "setVisible" },
-        { "id": "/name", "label": { "native": { "en": "Name", "de": "Name" }, "reuse": { "en": "Name", "de": "Name" } }, "schema": { "kind": "string", "minLen": 1 }, "required": true, "group": "setName" },
-        { "id": "/count", "label": { "native": { "en": "Count", "de": "Anzahl" }, "reuse": { "en": "Count", "de": "Anzahl" } }, "schema": { "kind": "number", "min": 1, "step": 1, "integer": true }, "required": false, "group": "setCount" }
-      ]
+        {
+          "id": "/value",
+          "label": {
+            "native": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "reuse": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "integer": false
+          },
+          "required": true,
+          "group": "setOpacity"
+        },
+        {
+          "id": "/visible",
+          "label": {
+            "native": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            },
+            "reuse": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            }
+          },
+          "schema": {
+            "kind": "boolean"
+          },
+          "required": true,
+          "group": "setVisible"
+        },
+        {
+          "id": "/name",
+          "label": {
+            "native": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "reuse": {
+              "en": "Name",
+              "de": "Name"
+            }
+          },
+          "schema": {
+            "kind": "string",
+            "minLen": 1
+          },
+          "required": true,
+          "group": "setName"
+        },
+        {
+          "id": "/count",
+          "label": {
+            "native": {
+              "en": "Count",
+              "de": "Anzahl"
+            },
+            "reuse": {
+              "en": "Count",
+              "de": "Anzahl"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 1,
+            "step": 1,
+            "integer": true
+          },
+          "required": false,
+          "group": "setCount"
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SetOpacity"
+            },
+            {
+              "$ref": "#/$defs/SetVisible"
+            },
+            {
+              "$ref": "#/$defs/SetName"
+            },
+            {
+              "$ref": "#/$defs/SetCount"
+            },
+            {
+              "$ref": "#/$defs/Reset"
+            }
+          ],
+          "$defs": {
+            "SetOpacity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation",
+                "value"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "setOpacity",
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Setting",
+                      "de": "Einstellung"
+                    },
+                    "description": {
+                      "en": "Which setting changes.",
+                      "de": "Welche Einstellung sich ändert."
+                    }
+                  }
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Opacity",
+                  "de": "Deckkraft"
+                }
+              }
+            },
+            "SetVisible": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation",
+                "visible"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "setVisible"
+                },
+                "visible": {
+                  "type": "boolean"
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Visibility",
+                  "de": "Sichtbarkeit"
+                }
+              }
+            },
+            "SetName": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation",
+                "name"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "setName"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
+            },
+            "SetCount": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "setCount"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Count",
+                  "de": "Anzahl"
+                }
+              }
+            },
+            "Reset": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "mutation"
+              ],
+              "properties": {
+                "mutation": {
+                  "const": "reset"
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Reset",
+                  "de": "Zurücksetzen"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "recursive-tree-is-a-structured-value",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["tree"],
-        "properties": { "tree": { "$ref": "#/$defs/Node", "x-semio-ui": { "label": { "en": "Tree", "de": "Baum" } } }, "root": { "$ref": "#", "x-semio-ui": { "label": { "en": "Nested Payload", "de": "Verschachtelte Nutzlast" } } } },
-        "$defs": {
-          "Node": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["name"],
-            "properties": { "name": { "type": "string" }, "children": { "type": "array", "items": { "$ref": "#/$defs/Node" }, "x-semio-ui": { "label": { "en": "Children", "de": "Kinder" } } } }
-          }
-        }
-      },
       "expectedInputs": [
         {
           "id": "/tree",
-          "label": { "native": { "en": "Tree", "de": "Baum" }, "reuse": { "en": "Tree", "de": "Baum" } },
+          "label": {
+            "native": {
+              "en": "Tree",
+              "de": "Baum"
+            },
+            "reuse": {
+              "en": "Tree",
+              "de": "Baum"
+            }
+          },
           "schema": {
             "kind": "object",
             "fields": [
-              { "id": "/name", "label": { "native": { "en": "Name", "de": "Name" }, "reuse": { "en": "Name", "de": "Name" } }, "schema": { "kind": "string" }, "required": true },
-              { "id": "/children", "label": { "native": { "en": "Children", "de": "Kinder" }, "reuse": { "en": "Children", "de": "Kinder" } }, "schema": { "kind": "array", "items": { "kind": "any" } }, "required": false }
+              {
+                "id": "/name",
+                "label": {
+                  "native": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "reuse": {
+                    "en": "Name",
+                    "de": "Name"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "/children",
+                "label": {
+                  "native": {
+                    "en": "Children",
+                    "de": "Kinder"
+                  },
+                  "reuse": {
+                    "en": "Children",
+                    "de": "Kinder"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "any"
+                  }
+                },
+                "required": false
+              }
             ]
           },
           "required": true
         },
-        { "id": "/root", "label": { "native": { "en": "Nested Payload", "de": "Verschachtelte Nutzlast" }, "reuse": { "en": "Nested Payload", "de": "Verschachtelte Nutzlast" } }, "schema": { "kind": "any" }, "required": false }
-      ]
+        {
+          "id": "/root",
+          "label": {
+            "native": {
+              "en": "Nested Payload",
+              "de": "Verschachtelte Nutzlast"
+            },
+            "reuse": {
+              "en": "Nested Payload",
+              "de": "Verschachtelte Nutzlast"
+            }
+          },
+          "schema": {
+            "kind": "any"
+          },
+          "required": false
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tree"
+          ],
+          "properties": {
+            "tree": {
+              "$ref": "#/$defs/Node",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Tree",
+                  "de": "Baum"
+                }
+              }
+            },
+            "root": {
+              "$ref": "#",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Nested Payload",
+                  "de": "Verschachtelte Nutzlast"
+                }
+              }
+            }
+          },
+          "$defs": {
+            "Node": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Node"
+                  },
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Children",
+                      "de": "Kinder"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "integer-references",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "zoneIds"],
-        "properties": {
-          "id": { "type": "integer", "minimum": 0, "x-semio-ui": { "role": "target", "label": { "en": "Zone", "de": "Zone" }, "ref": { "kind": "zone", "domain": "energyModel", "granularity": "zone" } } },
-          "zoneIds": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 }, "x-semio-ui": { "label": { "en": "Zones", "de": "Zonen" }, "ref": { "kind": "zone", "domain": "energyModel" } } },
-          "supplyNodeId": { "type": "integer", "minimum": 0, "x-semio-ui": { "label": { "en": "Supply Node", "de": "Zulaufknoten" } } }
-        }
-      },
       "expectedInputs": [
-        { "id": "/id", "label": { "native": { "en": "Zone", "de": "Zone" }, "reuse": { "en": "Zone", "de": "Zone" } }, "schema": { "kind": "reference", "kinds": ["zone"], "domain": "energyModel", "granularity": "zone", "idType": "integer" }, "required": true },
-        { "id": "/zoneIds", "label": { "native": { "en": "Zones", "de": "Zonen" }, "reuse": { "en": "Zones", "de": "Zonen" } }, "schema": { "kind": "reference", "kinds": ["zone"], "domain": "energyModel", "many": true, "minItems": 1, "idType": "integer" }, "required": true },
-        { "id": "/supplyNodeId", "label": { "native": { "en": "Supply Node", "de": "Zulaufknoten" }, "reuse": { "en": "Supply Node", "de": "Zulaufknoten" } }, "schema": { "kind": "number", "min": 0, "step": 1, "integer": true }, "required": false }
-      ]
+        {
+          "id": "/id",
+          "label": {
+            "native": {
+              "en": "Zone",
+              "de": "Zone"
+            },
+            "reuse": {
+              "en": "Zone",
+              "de": "Zone"
+            }
+          },
+          "schema": {
+            "kind": "reference",
+            "kinds": [
+              "zone"
+            ],
+            "domain": "energyModel",
+            "granularity": "zone",
+            "idType": "integer"
+          },
+          "required": true
+        },
+        {
+          "id": "/zoneIds",
+          "label": {
+            "native": {
+              "en": "Zones",
+              "de": "Zonen"
+            },
+            "reuse": {
+              "en": "Zones",
+              "de": "Zonen"
+            }
+          },
+          "schema": {
+            "kind": "reference",
+            "kinds": [
+              "zone"
+            ],
+            "domain": "energyModel",
+            "many": true,
+            "minItems": 1,
+            "idType": "integer"
+          },
+          "required": true
+        },
+        {
+          "id": "/supplyNodeId",
+          "label": {
+            "native": {
+              "en": "Supply Node",
+              "de": "Zulaufknoten"
+            },
+            "reuse": {
+              "en": "Supply Node",
+              "de": "Zulaufknoten"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "step": 1,
+            "integer": true
+          },
+          "required": false
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "zoneIds"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 0,
+              "x-semio-ui": {
+                "role": "target",
+                "label": {
+                  "en": "Zone",
+                  "de": "Zone"
+                },
+                "ref": {
+                  "kind": "zone",
+                  "domain": "energyModel",
+                  "granularity": "zone"
+                }
+              }
+            },
+            "zoneIds": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Zones",
+                  "de": "Zonen"
+                },
+                "ref": {
+                  "kind": "zone",
+                  "domain": "energyModel"
+                }
+              }
+            },
+            "supplyNodeId": {
+              "type": "integer",
+              "minimum": 0,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Supply Node",
+                  "de": "Zulaufknoten"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "hidden-input-is-not-read-into",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["diff"],
-        "properties": {
-          "diff": { "type": "object", "properties": { "deep": { "type": "object", "properties": { "blorp": { "type": "string" } } } }, "x-semio-ui": { "widget": "hidden", "label": { "en": "Diff", "de": "Differenz" } } },
-          "trail": { "type": "array", "items": { "type": "object", "properties": { "zorp": { "type": "string" } } }, "x-semio-ui": { "widget": "hidden", "label": { "en": "Trail", "de": "Spur" } } }
-        }
-      },
       "expectedInputs": [
-        { "id": "/diff", "label": { "native": { "en": "Diff", "de": "Differenz" }, "reuse": { "en": "Diff", "de": "Differenz" } }, "schema": { "kind": "any" }, "presentation": { "kind": "hidden" }, "required": true },
-        { "id": "/trail", "label": { "native": { "en": "Trail", "de": "Spur" }, "reuse": { "en": "Trail", "de": "Spur" } }, "schema": { "kind": "any" }, "presentation": { "kind": "hidden" }, "required": false }
-      ]
+        {
+          "id": "/diff",
+          "label": {
+            "native": {
+              "en": "Diff",
+              "de": "Differenz"
+            },
+            "reuse": {
+              "en": "Diff",
+              "de": "Differenz"
+            }
+          },
+          "schema": {
+            "kind": "any"
+          },
+          "presentation": {
+            "kind": "hidden"
+          },
+          "required": true
+        },
+        {
+          "id": "/trail",
+          "label": {
+            "native": {
+              "en": "Trail",
+              "de": "Spur"
+            },
+            "reuse": {
+              "en": "Trail",
+              "de": "Spur"
+            }
+          },
+          "schema": {
+            "kind": "any"
+          },
+          "presentation": {
+            "kind": "hidden"
+          },
+          "required": false
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "diff"
+          ],
+          "properties": {
+            "diff": {
+              "type": "object",
+              "properties": {
+                "deep": {
+                  "type": "object",
+                  "properties": {
+                    "blorp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "widget": "hidden",
+                "label": {
+                  "en": "Diff",
+                  "de": "Differenz"
+                }
+              }
+            },
+            "trail": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "zorp": {
+                    "type": "string"
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "widget": "hidden",
+                "label": {
+                  "en": "Trail",
+                  "de": "Spur"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "collects-every-nested-finding",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "properties": {
-          "frame": {
-            "type": "object",
-            "properties": {
-              "wibble": { "type": "number" },
-              "tilt": { "type": "number", "x-semio-ui": { "label": { "en": "Tilt" } } },
-              "flavor": { "type": "string", "enum": ["sweet", "sour"], "x-semio-ui": { "label": { "en": "Flavor", "de": "Geschmack" } } }
-            },
-            "x-semio-ui": { "label": { "en": "Frame", "de": "Rahmen" } }
-          },
-          "steps": { "type": "array", "items": { "type": "object", "properties": { "zorp": { "type": "string" } } }, "x-semio-ui": { "label": { "en": "Steps", "de": "Schritte" }, "color": "red" } },
-          "blorp": { "type": "string", "x-semio-ui": { "widget": "slider" } },
-          "diff": { "type": "object", "properties": { "deep": { "type": "string" } }, "x-semio-ui": { "widget": "hidden", "label": { "en": "Diff", "de": "Differenz" } } }
-        }
+      "expectedError": {
+        "code": "labelMissing",
+        "pointer": "/frame/wibble"
       },
-      "expectedError": { "code": "labelMissing", "pointer": "/frame/wibble" },
       "expectedFindings": [
-        { "code": "labelMissing", "pointer": "/frame/wibble" },
-        { "code": "localeMissing", "pointer": "/frame/tilt" },
-        { "code": "optionLabelMissing", "pointer": "/frame/flavor" },
-        { "code": "uiInvalid", "pointer": "/steps" },
-        { "code": "labelMissing", "pointer": "/steps/-/zorp" },
-        { "code": "labelMissing", "pointer": "/blorp" },
-        { "code": "widgetIncompatible", "pointer": "/blorp" }
-      ]
+        {
+          "code": "labelMissing",
+          "pointer": "/frame/wibble"
+        },
+        {
+          "code": "localeMissing",
+          "pointer": "/frame/tilt"
+        },
+        {
+          "code": "optionLabelMissing",
+          "pointer": "/frame/flavor"
+        },
+        {
+          "code": "uiInvalid",
+          "pointer": "/steps"
+        },
+        {
+          "code": "labelMissing",
+          "pointer": "/steps/-/zorp"
+        },
+        {
+          "code": "labelMissing",
+          "pointer": "/blorp"
+        },
+        {
+          "code": "widgetIncompatible",
+          "pointer": "/blorp"
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "frame": {
+              "type": "object",
+              "properties": {
+                "wibble": {
+                  "type": "number"
+                },
+                "tilt": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Tilt"
+                    }
+                  }
+                },
+                "flavor": {
+                  "type": "string",
+                  "enum": [
+                    "sweet",
+                    "sour"
+                  ],
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Flavor",
+                      "de": "Geschmack"
+                    }
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Frame",
+                  "de": "Rahmen"
+                }
+              }
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "zorp": {
+                    "type": "string"
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Steps",
+                  "de": "Schritte"
+                },
+                "color": "red"
+              }
+            },
+            "blorp": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "slider"
+              }
+            },
+            "diff": {
+              "type": "object",
+              "properties": {
+                "deep": {
+                  "type": "string"
+                }
+              },
+              "x-semio-ui": {
+                "widget": "hidden",
+                "label": {
+                  "en": "Diff",
+                  "de": "Differenz"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "vector-with-grid-facets",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["offset"],
-        "properties": {
-          "offset": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number", "minimum": -100, "maximum": 100 }, "x-semio-ui": { "label": { "en": "Offset", "de": "Versatz" }, "unit": "m", "step": 0.5, "snapSource": { "config": "gridFactor" }, "snaps": [0], "precision": 2, "displayUnit": "cm", "displayFactor": 100 } }
-        }
-      },
       "expectedInputs": [
-        { "id": "/offset", "label": { "native": { "en": "Offset", "de": "Versatz" }, "reuse": { "en": "Offset", "de": "Versatz" } }, "schema": { "kind": "vector", "dims": 3, "min": -100, "max": 100, "unit": "m", "step": 0.5, "snaps": [0], "snapSource": { "kind": "config", "key": "gridFactor" }, "precision": 2, "displayUnit": "cm", "displayFactor": 100 }, "required": true }
-      ]
+        {
+          "id": "/offset",
+          "label": {
+            "native": {
+              "en": "Offset",
+              "de": "Versatz"
+            },
+            "reuse": {
+              "en": "Offset",
+              "de": "Versatz"
+            }
+          },
+          "schema": {
+            "kind": "vector",
+            "dims": 3,
+            "min": -100,
+            "max": 100,
+            "unit": "m",
+            "step": 0.5,
+            "snaps": [
+              0
+            ],
+            "snapSource": {
+              "kind": "config",
+              "key": "gridFactor"
+            },
+            "precision": 2,
+            "displayUnit": "cm",
+            "displayFactor": 100
+          },
+          "required": true
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "offset"
+          ],
+          "properties": {
+            "offset": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": -100,
+                "maximum": 100
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Offset",
+                  "de": "Versatz"
+                },
+                "unit": "m",
+                "step": 0.5,
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "snaps": [
+                  0
+                ],
+                "precision": 2,
+                "displayUnit": "cm",
+                "displayFactor": 100
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "color-rgb-and-rgba",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["fill"],
-        "properties": {
-          "fill": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number", "minimum": 0, "maximum": 1 }, "x-semio-ui": { "widget": "color", "label": { "en": "Fill", "de": "Füllung" } } },
-          "stroke": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number", "minimum": 0, "maximum": 1 }, "x-semio-ui": { "widget": "color", "label": { "en": "Stroke", "de": "Kontur" } } }
-        }
-      },
       "expectedInputs": [
-        { "id": "/fill", "label": { "native": { "en": "Fill", "de": "Füllung" }, "reuse": { "en": "Fill", "de": "Füllung" } }, "schema": { "kind": "vector", "dims": 4, "min": 0, "max": 1 }, "presentation": { "kind": "color" }, "required": true },
-        { "id": "/stroke", "label": { "native": { "en": "Stroke", "de": "Kontur" }, "reuse": { "en": "Stroke", "de": "Kontur" } }, "schema": { "kind": "vector", "dims": 3, "min": 0, "max": 1 }, "presentation": { "kind": "color" }, "required": false }
-      ]
+        {
+          "id": "/fill",
+          "label": {
+            "native": {
+              "en": "Fill",
+              "de": "Füllung"
+            },
+            "reuse": {
+              "en": "Fill",
+              "de": "Füllung"
+            }
+          },
+          "schema": {
+            "kind": "vector",
+            "dims": 4,
+            "min": 0,
+            "max": 1
+          },
+          "presentation": {
+            "kind": "color"
+          },
+          "required": true
+        },
+        {
+          "id": "/stroke",
+          "label": {
+            "native": {
+              "en": "Stroke",
+              "de": "Kontur"
+            },
+            "reuse": {
+              "en": "Stroke",
+              "de": "Kontur"
+            }
+          },
+          "schema": {
+            "kind": "vector",
+            "dims": 3,
+            "min": 0,
+            "max": 1
+          },
+          "presentation": {
+            "kind": "color"
+          },
+          "required": false
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fill"
+          ],
+          "properties": {
+            "fill": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "x-semio-ui": {
+                "widget": "color",
+                "label": {
+                  "en": "Fill",
+                  "de": "Füllung"
+                }
+              }
+            },
+            "stroke": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "x-semio-ui": {
+                "widget": "color",
+                "label": {
+                  "en": "Stroke",
+                  "de": "Kontur"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "numeric-array-items-take-the-array-facets",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["monthly"],
-        "properties": {
-          "monthly": { "type": "array", "minItems": 12, "maxItems": 12, "items": { "type": "number", "minimum": -50, "maximum": 50, "x-semio-ui": { "precision": 1 } }, "x-semio-ui": { "label": { "en": "Monthly Temperature", "de": "Monatstemperatur" }, "unit": "°C", "step": 0.1, "precision": 3 } }
-        }
-      },
       "expectedInputs": [
-        { "id": "/monthly", "label": { "native": { "en": "Monthly Temperature", "de": "Monatstemperatur" }, "reuse": { "en": "Monthly Temperature", "de": "Monatstemperatur" } }, "schema": { "kind": "array", "items": { "kind": "number", "min": -50, "max": 50, "step": 0.1, "integer": false, "unit": "°C", "precision": 1 }, "minItems": 12, "maxItems": 12 }, "required": true }
-      ]
+        {
+          "id": "/monthly",
+          "label": {
+            "native": {
+              "en": "Monthly Temperature",
+              "de": "Monatstemperatur"
+            },
+            "reuse": {
+              "en": "Monthly Temperature",
+              "de": "Monatstemperatur"
+            }
+          },
+          "schema": {
+            "kind": "array",
+            "items": {
+              "kind": "number",
+              "min": -50,
+              "max": 50,
+              "step": 0.1,
+              "integer": false,
+              "unit": "°C",
+              "precision": 1
+            },
+            "minItems": 12,
+            "maxItems": 12
+          },
+          "required": true
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "monthly"
+          ],
+          "properties": {
+            "monthly": {
+              "type": "array",
+              "minItems": 12,
+              "maxItems": 12,
+              "items": {
+                "type": "number",
+                "minimum": -50,
+                "maximum": 50,
+                "x-semio-ui": {
+                  "precision": 1
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Monthly Temperature",
+                  "de": "Monatstemperatur"
+                },
+                "unit": "°C",
+                "step": 0.1,
+                "precision": 3
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "nullable-versus-optional",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["newText", "newVisible"],
-        "properties": {
-          "newText": { "type": ["string", "null"], "maxLength": 40, "x-semio-ui": { "label": { "en": "New Text", "de": "Neuer Text" } } },
-          "newVisible": { "anyOf": [{ "type": "boolean" }, { "type": "null" }], "x-semio-ui": { "label": { "en": "Visible", "de": "Sichtbar" } } },
-          "newKind": { "oneOf": [{ "type": "string", "enum": ["box", "disk"] }, { "type": "null" }], "x-semio-ui": { "label": { "en": "New Kind", "de": "Neue Art" }, "options": { "box": { "en": "Box", "de": "Kasten" }, "disk": { "en": "Disk", "de": "Scheibe" } } } },
-          "newScale": { "type": "number", "exclusiveMinimum": 0, "x-semio-ui": { "label": { "en": "New Scale", "de": "Neue Skalierung" } } }
-        }
-      },
       "expectedInputs": [
-        { "id": "/newText", "label": { "native": { "en": "New Text", "de": "Neuer Text" }, "reuse": { "en": "New Text", "de": "Neuer Text" } }, "schema": { "kind": "string", "maxLen": 40 }, "required": true, "nullable": true },
-        { "id": "/newVisible", "label": { "native": { "en": "Visible", "de": "Sichtbar" }, "reuse": { "en": "Visible", "de": "Sichtbar" } }, "schema": { "kind": "boolean" }, "required": true, "nullable": true },
-        { "id": "/newKind", "label": { "native": { "en": "New Kind", "de": "Neue Art" }, "reuse": { "en": "New Kind", "de": "Neue Art" } }, "schema": { "kind": "string", "options": [{ "value": "box", "label": { "native": { "en": "Box", "de": "Kasten" }, "reuse": { "en": "Box", "de": "Kasten" } } }, { "value": "disk", "label": { "native": { "en": "Disk", "de": "Scheibe" }, "reuse": { "en": "Disk", "de": "Scheibe" } } }] }, "required": false, "nullable": true },
-        { "id": "/newScale", "label": { "native": { "en": "New Scale", "de": "Neue Skalierung" }, "reuse": { "en": "New Scale", "de": "Neue Skalierung" } }, "schema": { "kind": "number", "min": 0, "minExclusive": true, "integer": false }, "required": false }
-      ]
+        {
+          "id": "/newText",
+          "label": {
+            "native": {
+              "en": "New Text",
+              "de": "Neuer Text"
+            },
+            "reuse": {
+              "en": "New Text",
+              "de": "Neuer Text"
+            }
+          },
+          "schema": {
+            "kind": "string",
+            "maxLen": 40
+          },
+          "required": true,
+          "nullable": true
+        },
+        {
+          "id": "/newVisible",
+          "label": {
+            "native": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            },
+            "reuse": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            }
+          },
+          "schema": {
+            "kind": "boolean"
+          },
+          "required": true,
+          "nullable": true
+        },
+        {
+          "id": "/newKind",
+          "label": {
+            "native": {
+              "en": "New Kind",
+              "de": "Neue Art"
+            },
+            "reuse": {
+              "en": "New Kind",
+              "de": "Neue Art"
+            }
+          },
+          "schema": {
+            "kind": "string",
+            "options": [
+              {
+                "value": "box",
+                "label": {
+                  "native": {
+                    "en": "Box",
+                    "de": "Kasten"
+                  },
+                  "reuse": {
+                    "en": "Box",
+                    "de": "Kasten"
+                  }
+                }
+              },
+              {
+                "value": "disk",
+                "label": {
+                  "native": {
+                    "en": "Disk",
+                    "de": "Scheibe"
+                  },
+                  "reuse": {
+                    "en": "Disk",
+                    "de": "Scheibe"
+                  }
+                }
+              }
+            ]
+          },
+          "required": false,
+          "nullable": true
+        },
+        {
+          "id": "/newScale",
+          "label": {
+            "native": {
+              "en": "New Scale",
+              "de": "Neue Skalierung"
+            },
+            "reuse": {
+              "en": "New Scale",
+              "de": "Neue Skalierung"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "min": 0,
+            "minExclusive": true,
+            "integer": false
+          },
+          "required": false
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "newText",
+            "newVisible"
+          ],
+          "properties": {
+            "newText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 40,
+              "x-semio-ui": {
+                "label": {
+                  "en": "New Text",
+                  "de": "Neuer Text"
+                }
+              }
+            },
+            "newVisible": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "label": {
+                  "en": "Visible",
+                  "de": "Sichtbar"
+                }
+              }
+            },
+            "newKind": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "box",
+                    "disk"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "label": {
+                  "en": "New Kind",
+                  "de": "Neue Art"
+                },
+                "options": {
+                  "box": {
+                    "en": "Box",
+                    "de": "Kasten"
+                  },
+                  "disk": {
+                    "en": "Disk",
+                    "de": "Scheibe"
+                  }
+                }
+              }
+            },
+            "newScale": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "x-semio-ui": {
+                "label": {
+                  "en": "New Scale",
+                  "de": "Neue Skalierung"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-undiscriminated-union",
-      "leafSchema": { "oneOf": [{ "type": "object", "properties": { "id": { "type": "string" } } }, { "type": "object", "properties": { "index": { "type": "integer" } } }] },
-      "expectedError": { "code": "malformed", "pointer": "" }
+      "expectedError": {
+        "code": "malformed",
+        "pointer": ""
+      },
+      "input": {
+        "leafSchema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "name": "refuses-an-unlabelled-variant",
-      "leafSchema": { "oneOf": [{ "type": "object", "properties": { "mutation": { "const": "frobA" }, "id": { "type": "string" } } }, { "type": "object", "properties": { "mutation": { "const": "frobB" } } }] },
-      "expectedError": { "code": "optionLabelMissing", "pointer": "/mutation" },
-      "expectedFindings": [{ "code": "optionLabelMissing", "pointer": "/mutation" }, { "code": "optionLabelMissing", "pointer": "/mutation" }]
+      "expectedError": {
+        "code": "optionLabelMissing",
+        "pointer": "/mutation"
+      },
+      "expectedFindings": [
+        {
+          "code": "optionLabelMissing",
+          "pointer": "/mutation"
+        },
+        {
+          "code": "optionLabelMissing",
+          "pointer": "/mutation"
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "mutation": {
+                  "const": "frobA"
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "mutation": {
+                  "const": "frobB"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "name": "refuses-an-unlabelled-input",
-      "leafSchema": { "type": "object", "properties": { "frobnicate": { "type": "string" } } },
-      "expectedError": { "code": "labelMissing", "pointer": "/frobnicate" }
+      "expectedError": {
+        "code": "labelMissing",
+        "pointer": "/frobnicate"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "frobnicate": {
+              "type": "string"
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-label-missing-a-locale",
-      "leafSchema": { "type": "object", "properties": { "name": { "type": "string", "x-semio-ui": { "label": { "en": "Name" } } } } },
-      "expectedError": { "code": "localeMissing", "pointer": "/name" }
+      "expectedError": {
+        "code": "localeMissing",
+        "pointer": "/name"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Name"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-unlabelled-option",
-      "leafSchema": { "type": "object", "properties": { "kind": { "type": "string", "enum": ["alpha", "omega"] } } },
-      "expectedError": { "code": "optionLabelMissing", "pointer": "/kind" }
+      "expectedError": {
+        "code": "optionLabelMissing",
+        "pointer": "/kind"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "alpha",
+                "omega"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-slider-on-text",
-      "leafSchema": { "type": "object", "properties": { "name": { "type": "string", "x-semio-ui": { "widget": "slider" } } } },
-      "expectedError": { "code": "widgetIncompatible", "pointer": "/name" }
+      "expectedError": {
+        "code": "widgetIncompatible",
+        "pointer": "/name"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "slider"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-reference-on-a-number",
-      "leafSchema": { "type": "object", "properties": { "x": { "type": "number", "x-semio-ui": { "widget": "reference" } } } },
-      "expectedError": { "code": "widgetIncompatible", "pointer": "/x" }
+      "expectedError": {
+        "code": "widgetIncompatible",
+        "pointer": "/x"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "reference"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-step-on-a-reference",
-      "leafSchema": { "type": "object", "properties": { "zoneId": { "type": "integer", "x-semio-ui": { "role": "target", "label": { "en": "Zone", "de": "Zone" }, "ref": { "kind": "zone" }, "step": 1 } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/zoneId" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/zoneId"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "zoneId": {
+              "type": "integer",
+              "x-semio-ui": {
+                "role": "target",
+                "label": {
+                  "en": "Zone",
+                  "de": "Zone"
+                },
+                "ref": {
+                  "kind": "zone"
+                },
+                "step": 1
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-color-outside-the-unit-range",
-      "leafSchema": { "type": "object", "properties": { "fill": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-ui": { "widget": "color", "label": { "en": "Fill", "de": "Füllung" } } } } },
-      "expectedError": { "code": "widgetIncompatible", "pointer": "/fill" }
+      "expectedError": {
+        "code": "widgetIncompatible",
+        "pointer": "/fill"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "fill": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "x-semio-ui": {
+                "widget": "color",
+                "label": {
+                  "en": "Fill",
+                  "de": "Füllung"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "option-source-from-the-previewed-document",
-      "leafSchema": { "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "channel"], "properties": { "mutation": { "const": "changeWidgetInput", "x-semio-ui": { "role": "discriminator", "widget": "hidden" } }, "id": { "type": "string", "minLength": 1, "x-semio-ui": { "label": { "en": "Widget", "de": "Widget" } } }, "channel": { "type": "string", "minLength": 1, "x-semio-ui": { "widget": "select", "label": { "en": "Channel", "de": "Kanal" }, "optionSource": { "snapshot": "/hostSnapshot/widgets/{id}/params" } } } } },
       "expectedInputs": [
-        { "id": "/id", "label": { "native": { "en": "Widget", "de": "Widget" }, "reuse": { "en": "Widget", "de": "Widget" } }, "schema": { "kind": "string", "minLen": 1 }, "required": true },
-        { "id": "/channel", "label": { "native": { "en": "Channel", "de": "Kanal" }, "reuse": { "en": "Channel", "de": "Kanal" } }, "schema": { "kind": "string", "optionSource": { "kind": "snapshot", "pointer": "/hostSnapshot/widgets/{id}/params" }, "minLen": 1 }, "required": true }
-      ]
+        {
+          "id": "/id",
+          "label": {
+            "native": {
+              "en": "Widget",
+              "de": "Widget"
+            },
+            "reuse": {
+              "en": "Widget",
+              "de": "Widget"
+            }
+          },
+          "schema": {
+            "kind": "string",
+            "minLen": 1
+          },
+          "required": true
+        },
+        {
+          "id": "/channel",
+          "label": {
+            "native": {
+              "en": "Channel",
+              "de": "Kanal"
+            },
+            "reuse": {
+              "en": "Channel",
+              "de": "Kanal"
+            }
+          },
+          "schema": {
+            "kind": "string",
+            "optionSource": {
+              "kind": "snapshot",
+              "pointer": "/hostSnapshot/widgets/{id}/params"
+            },
+            "minLen": 1
+          },
+          "required": true
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id",
+            "channel"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "changeWidgetInput",
+              "x-semio-ui": {
+                "role": "discriminator",
+                "widget": "hidden"
+              }
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Widget",
+                  "de": "Widget"
+                }
+              }
+            },
+            "channel": {
+              "type": "string",
+              "minLength": 1,
+              "x-semio-ui": {
+                "widget": "select",
+                "label": {
+                  "en": "Channel",
+                  "de": "Kanal"
+                },
+                "optionSource": {
+                  "snapshot": "/hostSnapshot/widgets/{id}/params"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-option-source-on-a-number",
-      "leafSchema": { "type": "object", "properties": { "count": { "type": "number", "x-semio-ui": { "label": { "en": "Count", "de": "Anzahl" }, "optionSource": { "snapshot": "/counts" } } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/count" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/count"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "number",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Count",
+                  "de": "Anzahl"
+                },
+                "optionSource": {
+                  "snapshot": "/counts"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-option-source-beside-an-enum",
-      "leafSchema": { "type": "object", "properties": { "flavor": { "type": "string", "enum": ["sweet", "sour"], "x-semio-ui": { "label": { "en": "Flavor", "de": "Geschmack" }, "options": { "sweet": { "en": "Sweet", "de": "Süß" }, "sour": { "en": "Sour", "de": "Sauer" } }, "optionSource": { "snapshot": "/flavors" } } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/flavor" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/flavor"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "flavor": {
+              "type": "string",
+              "enum": [
+                "sweet",
+                "sour"
+              ],
+              "x-semio-ui": {
+                "label": {
+                  "en": "Flavor",
+                  "de": "Geschmack"
+                },
+                "options": {
+                  "sweet": {
+                    "en": "Sweet",
+                    "de": "Süß"
+                  },
+                  "sour": {
+                    "en": "Sour",
+                    "de": "Sauer"
+                  }
+                },
+                "optionSource": {
+                  "snapshot": "/flavors"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-relative-option-source",
-      "leafSchema": { "type": "object", "properties": { "channel": { "type": "string", "x-semio-ui": { "widget": "select", "label": { "en": "Channel", "de": "Kanal" }, "optionSource": { "snapshot": "widgets/params" } } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/channel" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/channel"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "channel": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "select",
+                "label": {
+                  "en": "Channel",
+                  "de": "Kanal"
+                },
+                "optionSource": {
+                  "snapshot": "widgets/params"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-grid-snap-on-a-plain-array",
-      "leafSchema": { "type": "object", "properties": { "tags": { "type": "array", "items": { "type": "string" }, "x-semio-ui": { "label": { "en": "Tags", "de": "Schlagwörter" }, "snapSource": { "config": "gridFactor" } } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/tags" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/tags"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Tags",
+                  "de": "Schlagwörter"
+                },
+                "snapSource": {
+                  "config": "gridFactor"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-undeclared-annotation-key",
-      "leafSchema": { "type": "object", "properties": { "name": { "type": "string", "x-semio-ui": { "color": "red" } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/name" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/name"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "color": "red"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-snap-outside-the-bounds",
-      "leafSchema": { "type": "object", "properties": { "value": { "type": "number", "minimum": 0, "maximum": 1, "x-semio-ui": { "snaps": [0, 2] } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/value" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/value"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "x-semio-ui": {
+                "snaps": [
+                  0,
+                  2
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-log-scale-from-zero",
-      "leafSchema": { "type": "object", "properties": { "factor": { "type": "number", "minimum": 0, "x-semio-ui": { "scale": "log" } } } },
-      "expectedError": { "code": "uiInvalid", "pointer": "/factor" }
+      "expectedError": {
+        "code": "uiInvalid",
+        "pointer": "/factor"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "factor": {
+              "type": "number",
+              "minimum": 0,
+              "x-semio-ui": {
+                "scale": "log"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-unresolved-reference",
-      "leafSchema": { "type": "object", "properties": { "width": { "$ref": "https://json.schemas.assets.semio-tech.com/test/input-ui/missing.json#/$defs/Length" } } },
-      "expectedError": { "code": "refUnresolved", "pointer": "/width" }
+      "expectedError": {
+        "code": "refUnresolved",
+        "pointer": "/width"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/test/input-ui/missing.json#/$defs/Length"
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-unlabelled-nested-field",
-      "leafSchema": { "type": "object", "properties": { "node": { "type": "object", "properties": { "frobnicate": { "type": "number" } } } } },
-      "expectedError": { "code": "labelMissing", "pointer": "/node/frobnicate" }
+      "expectedError": {
+        "code": "labelMissing",
+        "pointer": "/node/frobnicate"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "node": {
+              "type": "object",
+              "properties": {
+                "frobnicate": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-an-unlabelled-array-item-field",
-      "leafSchema": { "type": "object", "properties": { "placements": { "type": "array", "items": { "type": "object", "properties": { "frobnicate": { "type": "number" } } } } } },
-      "expectedError": { "code": "labelMissing", "pointer": "/placements/-/frobnicate" }
+      "expectedError": {
+        "code": "labelMissing",
+        "pointer": "/placements/-/frobnicate"
+      },
+      "input": {
+        "leafSchema": {
+          "type": "object",
+          "properties": {
+            "placements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "frobnicate": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-non-object-payload",
-      "leafSchema": { "type": "string" },
-      "expectedError": { "code": "malformed", "pointer": "" }
+      "expectedError": {
+        "code": "malformed",
+        "pointer": ""
+      },
+      "input": {
+        "leafSchema": {
+          "type": "string"
+        }
+      }
     },
     {
       "name": "numeric-transport-reads-as-a-number",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "SetCameraAndOffset",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["dx", "x", "tilt"],
-        "properties": {
-          "dx": { "$ref": "#/$defs/Binary64Transport", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset X", "de": "Versatz X" }, "step": 1, "precision": 2, "unit": "px" } },
-          "x": { "$ref": "#/$defs/Binary64Transport", "x-semio-ui": { "widget": "stepper", "label": { "en": "Pan X", "de": "Verschiebung X" }, "step": 1, "precision": 1 } },
-          "tilt": { "oneOf": [{ "type": "number" }, { "$ref": "#/$defs/Binary64Word" }], "x-semio-ui": { "widget": "stepper", "label": { "en": "Tilt", "de": "Neigung" }, "step": 0.5, "precision": 1 } },
-          "zoom": { "anyOf": [{ "$ref": "#/$defs/Binary64Transport" }, { "type": "null" }], "x-semio-ui": { "widget": "slider", "label": { "en": "Zoom", "de": "Zoom" }, "step": 0.01, "precision": 2, "softMin": 0.1, "softMax": 10, "scale": "log" } }
-        },
-        "$defs": {
-          "Binary64Word": { "title": "Binary64Word", "type": "object", "additionalProperties": false, "required": ["bits"], "properties": { "bits": { "type": "string", "pattern": "^[0-9a-f]{16}$" } } },
-          "Binary64Transport": { "anyOf": [{ "$ref": "#/$defs/Binary64Word" }, { "type": "number" }] }
-        }
-      },
       "expectedInputs": [
-        { "id": "/dx", "label": { "native": { "en": "Offset X", "de": "Versatz X" }, "reuse": { "en": "Offset X", "de": "Versatz X" } }, "schema": { "kind": "number", "step": 1, "integer": false, "unit": "px", "precision": 2 }, "presentation": { "kind": "stepper" }, "required": true },
-        { "id": "/x", "label": { "native": { "en": "Pan X", "de": "Verschiebung X" }, "reuse": { "en": "Pan X", "de": "Verschiebung X" } }, "schema": { "kind": "number", "step": 1, "integer": false, "precision": 1 }, "presentation": { "kind": "stepper" }, "required": true },
-        { "id": "/tilt", "label": { "native": { "en": "Tilt", "de": "Neigung" }, "reuse": { "en": "Tilt", "de": "Neigung" } }, "schema": { "kind": "number", "step": 0.5, "integer": false, "precision": 1 }, "presentation": { "kind": "stepper" }, "required": true },
-        { "id": "/zoom", "label": { "native": { "en": "Zoom", "de": "Zoom" }, "reuse": { "en": "Zoom", "de": "Zoom" } }, "schema": { "kind": "number", "step": 0.01, "integer": false, "softMin": 0.1, "softMax": 10, "precision": 2, "scale": "log" }, "presentation": { "kind": "slider" }, "required": false, "nullable": true }
-      ]
+        {
+          "id": "/dx",
+          "label": {
+            "native": {
+              "en": "Offset X",
+              "de": "Versatz X"
+            },
+            "reuse": {
+              "en": "Offset X",
+              "de": "Versatz X"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "step": 1,
+            "integer": false,
+            "unit": "px",
+            "precision": 2
+          },
+          "presentation": {
+            "kind": "stepper"
+          },
+          "required": true
+        },
+        {
+          "id": "/x",
+          "label": {
+            "native": {
+              "en": "Pan X",
+              "de": "Verschiebung X"
+            },
+            "reuse": {
+              "en": "Pan X",
+              "de": "Verschiebung X"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "step": 1,
+            "integer": false,
+            "precision": 1
+          },
+          "presentation": {
+            "kind": "stepper"
+          },
+          "required": true
+        },
+        {
+          "id": "/tilt",
+          "label": {
+            "native": {
+              "en": "Tilt",
+              "de": "Neigung"
+            },
+            "reuse": {
+              "en": "Tilt",
+              "de": "Neigung"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "step": 0.5,
+            "integer": false,
+            "precision": 1
+          },
+          "presentation": {
+            "kind": "stepper"
+          },
+          "required": true
+        },
+        {
+          "id": "/zoom",
+          "label": {
+            "native": {
+              "en": "Zoom",
+              "de": "Zoom"
+            },
+            "reuse": {
+              "en": "Zoom",
+              "de": "Zoom"
+            }
+          },
+          "schema": {
+            "kind": "number",
+            "step": 0.01,
+            "integer": false,
+            "softMin": 0.1,
+            "softMax": 10,
+            "precision": 2,
+            "scale": "log"
+          },
+          "presentation": {
+            "kind": "slider"
+          },
+          "required": false,
+          "nullable": true
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "SetCameraAndOffset",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dx",
+            "x",
+            "tilt"
+          ],
+          "properties": {
+            "dx": {
+              "$ref": "#/$defs/Binary64Transport",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Offset X",
+                  "de": "Versatz X"
+                },
+                "step": 1,
+                "precision": 2,
+                "unit": "px"
+              }
+            },
+            "x": {
+              "$ref": "#/$defs/Binary64Transport",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Pan X",
+                  "de": "Verschiebung X"
+                },
+                "step": 1,
+                "precision": 1
+              }
+            },
+            "tilt": {
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "#/$defs/Binary64Word"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Tilt",
+                  "de": "Neigung"
+                },
+                "step": 0.5,
+                "precision": 1
+              }
+            },
+            "zoom": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Binary64Transport"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "slider",
+                "label": {
+                  "en": "Zoom",
+                  "de": "Zoom"
+                },
+                "step": 0.01,
+                "precision": 2,
+                "softMin": 0.1,
+                "softMax": 10,
+                "scale": "log"
+              }
+            }
+          },
+          "$defs": {
+            "Binary64Word": {
+              "title": "Binary64Word",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bits"
+              ],
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              }
+            },
+            "Binary64Transport": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Binary64Word"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "name": "refuses-a-word-only-float",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "DragRuleNodes",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["dx", "dy"],
-        "properties": {
-          "dx": { "$ref": "#/$defs/Binary64", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset X", "de": "Versatz X" }, "step": 1, "precision": 2, "unit": "px" } },
-          "dy": { "type": "number", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset Y", "de": "Versatz Y" }, "step": 1, "precision": 2, "unit": "px" } },
-          "points": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["x"], "properties": { "x": { "type": "object", "additionalProperties": false, "required": ["bits"], "properties": { "bits": { "type": "string", "pattern": "^[0-9a-f]{16}$" } }, "x-semio-ui": { "label": { "en": "X", "de": "X" } } } } }, "x-semio-ui": { "label": { "en": "Points", "de": "Punkte" } } }
-        },
-        "$defs": {
-          "Binary64": { "type": "object", "additionalProperties": false, "required": ["bits"], "properties": { "bits": { "type": "string", "pattern": "^[0-9a-f]{16}$" } } }
-        }
+      "expectedError": {
+        "code": "wordOnlyFloat",
+        "pointer": "/dx"
       },
-      "expectedError": { "code": "wordOnlyFloat", "pointer": "/dx" },
-      "expectedFindings": [{ "code": "wordOnlyFloat", "pointer": "/dx" }, { "code": "wordOnlyFloat", "pointer": "/points/-/x" }]
+      "expectedFindings": [
+        {
+          "code": "wordOnlyFloat",
+          "pointer": "/dx"
+        },
+        {
+          "code": "wordOnlyFloat",
+          "pointer": "/points/-/x"
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "DragRuleNodes",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dx",
+            "dy"
+          ],
+          "properties": {
+            "dx": {
+              "$ref": "#/$defs/Binary64",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Offset X",
+                  "de": "Versatz X"
+                },
+                "step": 1,
+                "precision": 2,
+                "unit": "px"
+              }
+            },
+            "dy": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Offset Y",
+                  "de": "Versatz Y"
+                },
+                "step": 1,
+                "precision": 2,
+                "unit": "px"
+              }
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "bits"
+                    ],
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "x-semio-ui": {
+                      "label": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    }
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Points",
+                  "de": "Punkte"
+                }
+              }
+            }
+          },
+          "$defs": {
+            "Binary64": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bits"
+              ],
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "multiline-text",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["text"],
-        "properties": {
-          "text": { "type": "string", "x-semio-ui": { "widget": "multiline", "label": { "en": "Text", "de": "Text" }, "description": { "en": "The paragraph's text; line breaks are kept.", "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten." } } },
-          "title": { "type": "string", "maxLength": 80, "x-semio-ui": { "widget": "text", "label": { "en": "Title", "de": "Titel" } } }
-        }
-      },
       "expectedInputs": [
-        { "id": "/text", "label": { "native": { "en": "Text", "de": "Text" }, "reuse": { "en": "Text", "de": "Text" } }, "schema": { "kind": "string" }, "presentation": { "kind": "multiline" }, "required": true, "description": { "native": { "en": "The paragraph's text; line breaks are kept.", "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten." }, "reuse": { "en": "The paragraph's text; line breaks are kept.", "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten." } } },
-        { "id": "/title", "label": { "native": { "en": "Title", "de": "Titel" }, "reuse": { "en": "Title", "de": "Titel" } }, "schema": { "kind": "string", "maxLen": 80 }, "required": false }
-      ]
+        {
+          "id": "/text",
+          "label": {
+            "native": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "reuse": {
+              "en": "Text",
+              "de": "Text"
+            }
+          },
+          "schema": {
+            "kind": "string"
+          },
+          "presentation": {
+            "kind": "multiline"
+          },
+          "required": true,
+          "description": {
+            "native": {
+              "en": "The paragraph's text; line breaks are kept.",
+              "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten."
+            },
+            "reuse": {
+              "en": "The paragraph's text; line breaks are kept.",
+              "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten."
+            }
+          }
+        },
+        {
+          "id": "/title",
+          "label": {
+            "native": {
+              "en": "Title",
+              "de": "Titel"
+            },
+            "reuse": {
+              "en": "Title",
+              "de": "Titel"
+            }
+          },
+          "schema": {
+            "kind": "string",
+            "maxLen": 80
+          },
+          "required": false
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "description": {
+                  "en": "The paragraph's text; line breaks are kept.",
+                  "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten."
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 80,
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Title",
+                  "de": "Titel"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     {
       "name": "keyed-list-of-typed-values",
-      "leafSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["newFields"],
-        "properties": {
-          "newFields": { "anyOf": [{ "$ref": "#/$defs/Dictionary" }, { "type": "null" }], "x-semio-ui": { "role": "value", "label": { "en": "Data fields", "de": "Datenfelder" }, "description": { "en": "Typed question values; absence clears the dictionary.", "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch." }, "group": "data", "order": 10 } }
-        },
-        "$defs": {
-          "Dictionary": { "type": "object", "additionalProperties": false, "required": ["entries"], "properties": { "entries": { "type": "array", "x-semio-ui": { "label": { "en": "Entries", "de": "Einträge" } }, "items": { "type": "object", "additionalProperties": false, "required": ["questionId", "value"], "properties": { "questionId": { "type": "string", "x-semio-ui": { "widget": "text", "label": { "en": "Question", "de": "Frage" } } }, "value": { "$ref": "#/$defs/Literal", "x-semio-ui": { "label": { "en": "Value", "de": "Wert" } } } } } } } },
-          "Literal": { "oneOf": [{ "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "null" } } }, { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "text" }, "value": { "type": "string" } } }, { "type": "object", "additionalProperties": false, "required": ["kind", "items"], "properties": { "kind": { "const": "array" }, "items": { "type": "array", "items": { "$ref": "#/$defs/Literal" } } } }] }
-        }
-      },
       "expectedInputs": [
-        { "id": "/newFields", "label": { "native": { "en": "Data fields", "de": "Datenfelder" }, "reuse": { "en": "Data fields", "de": "Datenfelder" } }, "schema": { "kind": "object", "fields": [{ "id": "/entries", "label": { "native": { "en": "Entries", "de": "Einträge" }, "reuse": { "en": "Entries", "de": "Einträge" } }, "schema": { "kind": "array", "items": { "kind": "object", "fields": [{ "id": "/questionId", "label": { "native": { "en": "Question", "de": "Frage" }, "reuse": { "en": "Question", "de": "Frage" } }, "schema": { "kind": "string" }, "required": true }, { "id": "/value", "label": { "native": { "en": "Value", "de": "Wert" }, "reuse": { "en": "Value", "de": "Wert" } }, "schema": { "kind": "any" }, "required": true }] } }, "required": true }] }, "required": true, "nullable": true, "description": { "native": { "en": "Typed question values; absence clears the dictionary.", "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch." }, "reuse": { "en": "Typed question values; absence clears the dictionary.", "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch." } }, "group": "data", "order": 10 }
-      ]
+        {
+          "id": "/newFields",
+          "label": {
+            "native": {
+              "en": "Data fields",
+              "de": "Datenfelder"
+            },
+            "reuse": {
+              "en": "Data fields",
+              "de": "Datenfelder"
+            }
+          },
+          "schema": {
+            "kind": "object",
+            "fields": [
+              {
+                "id": "/entries",
+                "label": {
+                  "native": {
+                    "en": "Entries",
+                    "de": "Einträge"
+                  },
+                  "reuse": {
+                    "en": "Entries",
+                    "de": "Einträge"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "object",
+                    "fields": [
+                      {
+                        "id": "/questionId",
+                        "label": {
+                          "native": {
+                            "en": "Question",
+                            "de": "Frage"
+                          },
+                          "reuse": {
+                            "en": "Question",
+                            "de": "Frage"
+                          }
+                        },
+                        "schema": {
+                          "kind": "string"
+                        },
+                        "required": true
+                      },
+                      {
+                        "id": "/value",
+                        "label": {
+                          "native": {
+                            "en": "Value",
+                            "de": "Wert"
+                          },
+                          "reuse": {
+                            "en": "Value",
+                            "de": "Wert"
+                          }
+                        },
+                        "schema": {
+                          "kind": "any"
+                        },
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                "required": true
+              }
+            ]
+          },
+          "required": true,
+          "nullable": true,
+          "description": {
+            "native": {
+              "en": "Typed question values; absence clears the dictionary.",
+              "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch."
+            },
+            "reuse": {
+              "en": "Typed question values; absence clears the dictionary.",
+              "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch."
+            }
+          },
+          "group": "data",
+          "order": 10
+        }
+      ],
+      "input": {
+        "leafSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "newFields"
+          ],
+          "properties": {
+            "newFields": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Dictionary"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Data fields",
+                  "de": "Datenfelder"
+                },
+                "description": {
+                  "en": "Typed question values; absence clears the dictionary.",
+                  "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch."
+                },
+                "group": "data",
+                "order": 10
+              }
+            }
+          },
+          "$defs": {
+            "Dictionary": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entries"
+              ],
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Entries",
+                      "de": "Einträge"
+                    }
+                  },
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "questionId",
+                      "value"
+                    ],
+                    "properties": {
+                      "questionId": {
+                        "type": "string",
+                        "x-semio-ui": {
+                          "widget": "text",
+                          "label": {
+                            "en": "Question",
+                            "de": "Frage"
+                          }
+                        }
+                      },
+                      "value": {
+                        "$ref": "#/$defs/Literal",
+                        "x-semio-ui": {
+                          "label": {
+                            "en": "Value",
+                            "de": "Wert"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Literal": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "null"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "text"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "items"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "array"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Literal"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
     }
   ],
   "referenceIds": [
-    { "idType": "integer", "text": "42", "value": 42, "spelled": "42" },
-    { "idType": "integer", "text": "-7", "value": -7, "spelled": "-7" },
-    { "idType": "integer", "text": "007", "value": 7, "spelled": "7" },
-    { "idType": "integer", "text": "9007199254740991", "value": 9007199254740991, "spelled": "9007199254740991" },
-    { "idType": "integer", "text": "9007199254740992", "value": null },
-    { "idType": "integer", "text": "4.5", "value": null },
-    { "idType": "integer", "text": "+4", "value": null },
-    { "idType": "integer", "text": "", "value": null },
-    { "idType": "integer", "text": "abc", "value": null },
-    { "idType": "integer", "text": "-", "value": null },
-    { "idType": "string", "text": "zone-1", "value": "zone-1", "spelled": "zone-1" },
-    { "idType": "string", "text": "42", "value": "42", "spelled": "42" },
-    { "idType": "string", "text": "", "value": null }
+    {
+      "idType": "integer",
+      "text": "42",
+      "value": 42,
+      "spelled": "42"
+    },
+    {
+      "idType": "integer",
+      "text": "-7",
+      "value": -7,
+      "spelled": "-7"
+    },
+    {
+      "idType": "integer",
+      "text": "007",
+      "value": 7,
+      "spelled": "7"
+    },
+    {
+      "idType": "integer",
+      "text": "9007199254740991",
+      "value": 9007199254740991,
+      "spelled": "9007199254740991"
+    },
+    {
+      "idType": "integer",
+      "text": "9007199254740992",
+      "value": null
+    },
+    {
+      "idType": "integer",
+      "text": "4.5",
+      "value": null
+    },
+    {
+      "idType": "integer",
+      "text": "+4",
+      "value": null
+    },
+    {
+      "idType": "integer",
+      "text": "",
+      "value": null
+    },
+    {
+      "idType": "integer",
+      "text": "abc",
+      "value": null
+    },
+    {
+      "idType": "integer",
+      "text": "-",
+      "value": null
+    },
+    {
+      "idType": "string",
+      "text": "zone-1",
+      "value": "zone-1",
+      "spelled": "zone-1"
+    },
+    {
+      "idType": "string",
+      "text": "42",
+      "value": "42",
+      "spelled": "42"
+    },
+    {
+      "idType": "string",
+      "text": "",
+      "value": null
+    }
   ]
 }

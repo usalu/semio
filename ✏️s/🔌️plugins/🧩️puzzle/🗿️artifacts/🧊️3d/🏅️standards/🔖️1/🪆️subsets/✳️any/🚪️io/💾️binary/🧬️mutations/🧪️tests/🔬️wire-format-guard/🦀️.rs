@@ -8,7 +8,8 @@
 //! literals for a wire shape this ticket deliberately changed.
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate as puzzle_3d;
-use crate::standards::v1::subsets::any::schema::mutations::{change_object_anchor, connect_vortices, create_object, delete_object};
+use crate::standards::v1::subsets::any::schema::mutations::{change_object_anchor,connect_vortices,create_object,delete_object};
+
 use protocol::OpText;
 
 fn ops() -> Vec<Puzzle3dMutation> {

@@ -1,3 +1,0 @@
-# 🧬️ change-re-encode-quality/ChangeReEncodeQuality
-scalar ChangeReEncodeQualityMutationValue
-input ChangeReEncodeQualityMutation { quality: ChangeReEncodeQualityMutationValue }

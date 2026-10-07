@@ -28,7 +28,9 @@ pub fn snapshot(model: crate::model::Model) -> EnergyModelSnapshot {
 
 /// 🔗️ A head-pinned forward link to another artifact.
 pub fn link(uri: &str, role: &str) -> store::ArtifactLink {
-    store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri(uri).expect("fixture link uri parses"), pin: store::LinkPin::Head, role: role.to_string() }
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri(uri).expect("fixture link uri parses"), pin: store::LinkPin::Head, role: role.to_string() }
 }
 
 //#region 🧰️G1Constructors

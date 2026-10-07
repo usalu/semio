@@ -853,6 +853,7 @@ pub(crate) fn solve_with_clock(snapshot: &Wfc3dSnapshot, now_us: fn() -> Option<
 }
 
 impl store::InferredField<Wfc3dSnapshot> for Wfc3dSolve {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = Wfc3dSolveResult;
 
@@ -877,6 +878,7 @@ impl store::InferredField<Wfc3dSnapshot> for Wfc3dSolve {
 }
 
 impl store::InferredField<Wfc3dSnapshot> for Wfc3dContradiction {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = bool;
 
@@ -898,6 +900,7 @@ impl store::InferredField<Wfc3dSnapshot> for Wfc3dContradiction {
 }
 
 impl store::InferredField<Wfc3dSnapshot> for Wfc3dEntropy {
+    type Dependency = Vec<u8>;
     type Key = String;
     type Value = f64;
 

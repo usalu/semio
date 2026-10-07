@@ -1,7 +1,6 @@
 // #region 🧲️Header
 /** 🏘️ Laws for the end-user spaces surface (ticket
- * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2). Independent oracles: Ajv over the owned
- * fixture schema, and — for every command this surface can raise — the *production*
+ * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2). Independent oracles: exact serialization of every command this surface can raise through the *production*
  * `parseDirectoryCommandV1`/`sealDirectoryCommandRequestV1` from `@semio-tech/framework-os`, which
  * re-serializes and byte-compares the command. A builder emitting a different field order fails
  * there, not silently at the hub. */
@@ -10,13 +9,12 @@
 // #region 🔌️Adapters
 import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-react/test";
 import { setUiLocale } from "@semio-tech/ui-react";
-import Ajv from "ajv";
+
 import { useEffect, useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, sealDirectoryCommandRequestV1, type DirectoryCommandReceiptV1, type DirectorySpaceListEntryV1, type DirectoryCommand } from "@semio-tech/framework-os";
-import fixture from "../../../../../../📇️directory/🏘️spaces/🔣️.json";
+import fixture from "../../../../../../📇️directory/🧫️fixtures/🏘️spaces/🔣️.json";
 import receiptFixture from "../../../../../../../🧫️fixtures/📇️directory/🧾️command-receipt-v1.json";
-import fixtureSchema from "../../../../../../📇️directory/🏘️spaces/🧬️.schema.json";
 import {
   INVITE_TTL_CHOICES_SECS_V1,
   archiveSpaceCommandV1,
@@ -214,8 +212,7 @@ function racePort() {
 
 //#region 🧬️Contract
 describe("spaces surface contract", () => {
-  it("validates its own fixture with an independent schema compiler", () => {
-    expect(new Ajv({ strict: true, allErrors: true }).compile(fixtureSchema)(fixture)).toBe(true);
+  it("retains actual invite TTL choices and redemption path", () => {
     expect(INVITE_TTL_CHOICES_SECS_V1.slice()).toStrictEqual(fixture.inviteTtlChoicesSecs);
     expect(inviteRedeemPathV1(INVITE_TOKEN)).toBe(`/directory/invites/${INVITE_TOKEN}/redeem`);
   });

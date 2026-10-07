@@ -150,14 +150,28 @@ pub(crate) mod ordered_attr_map {
 #[cfg(test)]
 pub(crate) use serde_oracle::ordered_attr_map;
 
+#[cfg(test)]
 mod semantic_cache_codec {
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
-use crate::engine::GltfAccessorType;
-use crate::engine::GltfComponentType;
+use crate::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
+use crate::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+impl Serialize for GltfCameraProjection {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        #[serde(tag = "type", rename_all = "lowercase")]
+        enum Wire<'a> {
+            Perspective { perspective: &'a GltfPerspective },
+            Orthographic { orthographic: &'a GltfOrthographic },
+        }
+        match self {
+            Self::Perspective(perspective) => Wire::Perspective { perspective }.serialize(serializer),
+            Self::Orthographic(orthographic) => Wire::Orthographic { orthographic }.serialize(serializer),
+        }
+    }
+}
 impl<'de> Deserialize<'de> for GltfCameraProjection {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         #[derive()]

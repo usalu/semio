@@ -1,0 +1,13 @@
+# Remaining Audio Presentation Imports and Forest Signature Review
+
+Five exact current full-file guards in the attached remaining-import input change only mapped import/qualified caller lines. Full before/digests protect concurrent modules with identical repeated schema import lines; do not blindly apply obsolete guards after Root's other imports mount.
+
+Audio binary/text diff has `triples::enc/dec_indexed_triple` calls while alias currently names Schema triples. Keep IndexAdded/IndexModified/IndexedTripleDiff types imported from Schema, alias triples to actual Base text Snapshot. Audio text diff has two repeated schema import sites, both included. Its existing explicit unqualified Base helper imports do not repair qualified triples calls by themselves.
+
+Audio Snapshot has a second diff_codec module after snapshot_codec closes. The earlier split/strip imports reside inside snapshot_codec and are unavailable to sibling diff_codec's enc_snapshot/dec_snapshot. Add Base split_top_level/strip_brackets plus Audio text diff hex_decode_string to that actual second module. Presentation Snapshot likewise has a second diff_codec where enc_presentation_snapshot/dec_presentation_snapshot need existing Presentation diff list/master/layout/slide helpers and existing matching primitive enc_str/dec_str. Imports in its first snapshot_codec do not supply sibling scope. Both actual whole Snapshot helper functions are pubcrate and exported via the corresponding codec module. Presentation mutation qualified calls must use actual IO text Snapshot, not Schema diff.
+
+No added visibility, functions, type aliases, compatibility API or grammar changes. Existing helper definitions verified as first-party pubcrate/public. Five guarded afters remain proposals, not production edits or compilation results.
+
+Cross-owner current roster readback: Value reconstruct_value_forest still takes Option<&BTreeMap<i64,&str>> in current canonical held pair; its sole Some caller has the matching map, Graph/Table pass None. Immutable's new seven region drafts are not yet merged into canonical pairs, so namesSlice signature is pending rather than a current integration mismatch. When integrated, inspect its new borrowed names-slice definition and Some caller together; Graph/Table None remains type-inferred and requires no fabricated map adapter. Document shared block forest current held accepts Option<&RowIndex>; actual Document Some(style/image) and Presentation None calls match. Shared RowIndex new helper remains a coordinated additional path, not proof of compile availability until registered/mounted.
+
+No owning runtime or complete all80 compiler-clean claim. Actual compiler must qualify these sources after prerequisite mount.

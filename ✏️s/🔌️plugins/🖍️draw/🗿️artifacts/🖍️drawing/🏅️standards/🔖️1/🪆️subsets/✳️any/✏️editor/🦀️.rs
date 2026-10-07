@@ -1599,7 +1599,7 @@ impl ArtifactEditor for DrawingPlayApp {
 
     type Command = DrawingCommand;
 
-    const DIALECT: semio_framework::Dialect = crate::DRAWING_DIALECT;
+    const DIALECT: semio_framework_artifact_reference::Dialect = crate::DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
     fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<protocol::InteractionTopology, semio_framework_value::ValueError> {
@@ -1633,8 +1633,9 @@ impl ArtifactEditor for DrawingPlayApp {
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
+        actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1755,7 +1756,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn initial_snapshot() -> DrawingSnapshot {
-        crate::schema::default_drawing_document("empty", None)
+        crate::standards::v1::subsets::any::schema::default_drawing_document("empty", None)
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

@@ -1,0 +1,278 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};\n",
+    "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{dec_frame};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{enc_frame};\n",
+    "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{enc_frame};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 3
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 3
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 3
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 3
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 3
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 3
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};\n",
+    "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{dec_frame};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::snapshot::{enc_frame};\n",
+    "after": "use crate::standards::v1::subsets::presentation::io::text::diff::{enc_frame};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::flow::io::text::diff::{dec_edge};\n",
+    "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_edge};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::flow::io::text::diff::{enc_edge};\n",
+    "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_edge};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📝️text/🔺️diff/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::flow::io::text::diff::{dec_edge};\n",
+    "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_edge};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📝️text/🔺️diff/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::flow::io::text::diff::{enc_edge};\n",
+    "after": "use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_edge};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::mutations::{dec_snapshot};\n",
+    "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_snapshot};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::mutations::{enc_snapshot};\n",
+    "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_snapshot};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::mutations::{dec_snapshot};\n",
+    "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_snapshot};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::image::io::text::mutations::{enc_snapshot};\n",
+    "after": "use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_snapshot};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_block};\n",
+    "matches": 2
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{dec_style};\n",
+    "matches": 1
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "before": "use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};\n",
+    "after": "use crate::standards::v1::subsets::document::io::text::diff::{enc_style};\n",
+    "matches": 1
+  }
+]

@@ -1,7 +1,6 @@
 /** 🧬️ Transparent TiffMutation union. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
-import type { ChangeByteOrderMutation } from './🧭️change-byte-order/🟦️.ts';
 import type { InsertIfdMutation } from './📥️insert-ifd/🟦️.ts';
 import type { RemoveIfdMutation } from './📤️remove-ifd/🟦️.ts';
 import type { ReplaceTagMutation } from './🏷️replace-tag/🟦️.ts';
@@ -9,7 +8,6 @@ import type { RemoveTagMutation } from './🗑️remove-tag/🟦️.ts';
 import type { PaintRegionMutation } from './🎨️paint-region/🟦️.ts';
 export type TiffMutation =
   | { readonly mutation: 'patch-snapshot'; readonly payload: { readonly patch: SnapshotPatch } }
-  | { readonly mutation: 'change-byte-order'; readonly payload: ChangeByteOrderMutation }
   | { readonly mutation: 'insert-ifd'; readonly payload: InsertIfdMutation }
   | { readonly mutation: 'remove-ifd'; readonly payload: RemoveIfdMutation }
   | { readonly mutation: 'replace-tag'; readonly payload: ReplaceTagMutation }

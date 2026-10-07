@@ -3,7 +3,7 @@
   "payload": {
     "patch": {
       "operation": "set",
-      "path": "/bytes/82",
+      "path": "/image/pixels/indices/12",
       "value": 5
     }
   }

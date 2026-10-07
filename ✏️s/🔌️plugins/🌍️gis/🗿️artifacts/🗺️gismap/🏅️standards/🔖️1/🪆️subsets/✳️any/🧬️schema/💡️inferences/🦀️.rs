@@ -90,7 +90,8 @@ impl GisMapInference {
     /// 🧬️ Builds exactly one stable-member parent+drawing+value CreateRegion work group.
     pub fn create_region_group_work(&self, snapshot: &GisMapSnapshot, job_id: &str) -> Result<GisMapCreateRegionGroupWorkV1, GisMapProposalError> {
         use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
-        use crate::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
+        use crate::schema::gis_map_snapshot_to_drawing;
+
         use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
         use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
@@ -135,9 +136,9 @@ use semio_framework_value::ToValue;
             return Err(GisMapProposalError::Composition);
         }
 
-        let before_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(snapshot));
-        let after_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&after));
-        let value_payload = crate::semio_value_from_serde_json(&serde_json::Value::from(&created.item.data));
+        let before_value = crate::gis_map_value_from_descriptor(&crate::schema::gis_map_descriptor_value(snapshot));
+        let after_value = crate::gis_map_value_from_descriptor(&crate::schema::gis_map_descriptor_value(&after));
+        let value_payload = crate::semio_value_from_intrinsic(&created.item.data);
         let value = SemioValueMutation::from_value(semio_framework_value::DslValue::object([
             ("mutation".into(), semio_framework_value::DslValue::String("insertListItem".into())),
             ("path".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("kind".into(), semio_framework_value::DslValue::String("key".into())), ("key".into(), semio_framework_value::DslValue::String("regions".into()))])])),
@@ -151,12 +152,7 @@ use semio_framework_value::ToValue;
         if projected_value != after_value {
             return Err(GisMapProposalError::Composition);
         }
-        let bytes = semio_framework_pack_json::to_json_string(&parent).len()
-            + semio_framework_pack_json::to_json_string(&parent_inverse).len()
-            + semio_framework_pack_json::to_json_string(&drawing).len()
-            + semio_framework_pack_json::to_json_string(&drawing_inverse).len()
-            + semio_framework_pack_json::to_json_string(&value).len()
-            + semio_framework_pack_json::to_json_string(&value_inverse).len();
+        let bytes = [&parent.to_value(),&parent_inverse.to_value(),&drawing.to_value(),&drawing_inverse.to_value(),&value.to_value(),&value_inverse.to_value()].into_iter().fold(0usize,|sum,value|sum.saturating_add(intrinsic_extent(value)));
         if bytes > 65_536 {
             return Err(GisMapProposalError::Bounds);
         }
@@ -214,3 +210,6 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::bounds::GisMapBounds;
 //#endregion 🔁️Re-exports
+
+/// 📏️ Complete owned intrinsic extent, independent of wire escaping and serializer choices.
+fn intrinsic_extent(root:&semio_framework_value::DslValue)->usize{use semio_framework_value::DslValue;let mut bytes=0usize;let mut pending=vec![root];while let Some(value)=pending.pop(){bytes=bytes.saturating_add(std::mem::size_of::<DslValue>());match value{DslValue::String(text)=>bytes=bytes.saturating_add(text.len()),DslValue::Bytes(data)=>bytes=bytes.saturating_add(data.len()),DslValue::Array(items)=>pending.extend(items),DslValue::Object(members)=>for(name,value)in members{bytes=bytes.saturating_add(name.len());pending.push(value)},_=>()}}bytes}

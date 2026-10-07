@@ -124,7 +124,7 @@ test("registered Go dispatch budget owns every nested process and overlay", asyn
     cwd: repo,
     env: {
       ...process.env,
-      SEMIO_TEST_ARTIFACT_DIR: process.env.SEMIO_TEST_ARTIFACT_DIR ?? compiledRoot,
+      SEMIO_TEST_ARTIFACT_DIR: compiledRoot,
       GOWORK: join(repo, "go.work"),
       SEMIO_GO_CANCELLATION_ROOT: root,
       SEMIO_TEST_BUDGET_MS: "12000",
@@ -174,6 +174,7 @@ test("registered Go dispatch budget owns every nested process and overlay", asyn
     await Bun.sleep(200);
     expect(readFileSync(marker, "utf8")).toBe(before);
     expect(readdirSync(temporary).filter((name) => name.startsWith("semio-go-tests-"))).toEqual([]);
+    expect(readdirSync(compiledRoot).filter((name) => name.startsWith("go-test-binary-"))).toEqual([]);
   } catch (error) {
     throw new Error(String(error) + "\n" + output.stderr + "\n" + output.stdout);
   } finally {

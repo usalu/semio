@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v1_1::subsets::base::io::SvgAnalyzer;
     use crate::SvgSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -83,10 +83,11 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::snapshot::{set_element_attr, svg_element_to_xml_node, view_box_to_string, CommonAttrs, PathCommand, SvgElement, ViewBox};
+    use crate::schema::snapshot::{set_element_attr, CommonAttrs, PathCommand, SvgElement, ViewBox};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::{svg_element_to_xml_node,svg_document_to_typed,native_svg_document,bind_svg_node,bind_svg_attribute};
     use crate::{SvgDiff, SvgMutation, SvgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
-    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+    use crate::schema::snapshot::SvgNode;
 
     //#region 🔖️PathBuilder
     /// 🖊️ Fluent constructor for a `d` attribute's typed command list -- mirrors the path mini-language
@@ -357,7 +358,7 @@ pub mod derived_construction {
     /// 🏗️ Builds a `stdio.svg` snapshot. `set_view_box`/`add_*`/`define_*` accumulate typed elements
     /// (via an internal `ElementBuilder`) that are lowered into `snapshot.doc` only at `build()` time;
     /// `from_snapshot`/`from_text`/`from_binary`/`mutate` continue to operate on the persisted
-    /// `XmlDocument` directly (unchanged), so both entry points compose.
+    /// `SvgDocument` directly (unchanged), so both entry points compose.
     #[derive(Clone, Debug, Default)]
     pub struct SvgBuilderConstruction {
         snapshot: SvgSnapshot,
@@ -493,27 +494,27 @@ pub mod derived_construction {
             let pending = self.elements.build();
             if !pending.is_empty() || self.view_box.is_some() || self.width.is_some() || self.height.is_some() || self.xmlns.is_some() {
                 if snapshot.doc.root.is_none() {
-                    snapshot.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs: vec![], children: vec![] });
+                    snapshot.doc.root = Some(SvgNode::Element { name: "svg".into(), attrs: vec![], children: vec![] });
                 }
                 if let Some(root) = snapshot.doc.root.as_mut() {
                     if let Some(xmlns) = &self.xmlns {
-                        set_element_attr(root, "xmlns", Some(xmlns.clone()));
+                        set_element_attr(root, "xmlns", Some(crate::schema::snapshot::SvgAttributeValue::Text(xmlns.clone())));
                     }
                     if let Some(vb) = &self.view_box {
-                        set_element_attr(root, "viewBox", Some(view_box_to_string(vb)));
+                        set_element_attr(root, "viewBox", Some(crate::schema::snapshot::SvgAttributeValue::ViewBox(*vb)));
                     }
                     if let Some(w) = &self.width {
-                        set_element_attr(root, "width", Some(w.clone()));
+                        set_element_attr(root, "width", Some(bind_svg_attribute("width",w).map_err(|detail|vec![semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new("svg.builder.invalid-attribute"),severity:semio_framework_diagnostic::Severity::Error,span:semio_framework_diagnostic::TextSpan::at(1,1),message:detail,expected:None,scope:semio_framework_diagnostic::FaultScope::default()}])?));
                     }
                     if let Some(h) = &self.height {
-                        set_element_attr(root, "height", Some(h.clone()));
+                        set_element_attr(root, "height", Some(bind_svg_attribute("height",h).map_err(|detail|vec![semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new("svg.builder.invalid-attribute"),severity:semio_framework_diagnostic::Severity::Error,span:semio_framework_diagnostic::TextSpan::at(1,1),message:detail,expected:None,scope:semio_framework_diagnostic::FaultScope::default()}])?));
                     }
-                    if let XmlNode::Element { children, .. } = root {
-                        children.extend(pending.iter().map(svg_element_to_xml_node));
+                    if let SvgNode::Element { children, .. } = root {
+                        children.extend(pending.iter().map(|element|bind_svg_node(svg_element_to_xml_node(element)).expect("typed SVG builder element")));
                     }
                 }
             }
-            if let Err(error) = semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc) {
+            if let Err(error) = snapshot.doc.validate_boundaries() {
                 diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.svg.boundary", semio_framework_diagnostic::TextSpan::at(1, 1), error));
             }
             if diagnostics.is_empty() {
@@ -528,10 +529,12 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::schema::snapshot::{svg_document_to_typed, SvgElement};
+    use crate::schema::snapshot::SvgElement;
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::{svg_document_to_typed,native_svg_document};
     use crate::SvgSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use crate::schema::snapshot::{SvgNode};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.svg` parts. `typed` is the real 1.1 semantic model (`SvgElement` tree),
@@ -560,7 +563,7 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Text(text) => match xml_document_from_text(text) {
                     Ok(doc) => match &doc.root {
-                        Some(XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => IoConfidence::High,
+                        Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => IoConfidence::High,
                         Some(_) => IoConfidence::Low,
                         None => IoConfidence::Low,
                     },
@@ -581,7 +584,7 @@ pub mod derived_analysis {
                     AnalyzeSource::Text(text) => {
                         match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()) } {
                             Ok(snapshot) => {
-                                match svg_document_to_typed(&snapshot.doc) {
+                                match svg_document_to_typed(&native_svg_document(&snapshot.doc)) {
                                     Ok(typed) => parts.typed = Some(typed),
                                     Err(err) => {
                                         confidence = IoConfidence::Low;
@@ -598,7 +601,7 @@ pub mod derived_analysis {
                     }
                     AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => {
-                            if let Ok(typed) = svg_document_to_typed(&snapshot.doc) {
+                            if let Ok(typed) = svg_document_to_typed(&native_svg_document(&snapshot.doc)) {
                                 parts.typed = Some(typed);
                             }
                             parts.snapshot = Some(snapshot);

@@ -1,0 +1,7 @@
+# BRep Native-Matched Independent SQL Census
+
+Exact actual Native SQLite test fixture() line3 handcraft at `📥️inputs/semio-brep-complete-semantic`: two vertices; four3Dcurves, four2Dpcurves and sixsurfaces including actual NURBS controls/weights/degrees/knots; fouredges, outer/emptyinner loops, sixfaces+innerrefs, shell/solid memberships including duplicate shell with distinct void flags, four cyclic next/previous coedges and -1/2 ranges. nextLabel retains maximumu64 decimal20digits and hydrates to BigInt. Metadata empty clears all7topology collections and retains schema+nextLabel.
+
+Independent explicit semantic cells/manual SQLite without owning projection yield79rows5149bytes; empty1row44bytes. Canonical9552schema/25tables/max54. Public9845/26tables full80 B5190/T5188, empty2 B85/T83; observed293schema and41/39valuebyte delta. Six integrity/FK checks passed. Strict closed Ajv/transpiled hydrate and actual Binary64 parser129 exactwords passed. All scalar SQL companions finite; degree/count INTEGER; all topology references intentionally literal native-ID TEXT where actual SQL declares it. Source facet exposes types rather than semantic parser; no full owner runtime credited. Production/tests unchanged.
+
+Curve/Surface rows populate only their variant-owned geometry columns, leave unrelated columns null, and preserve zero counts/degrees; actual NURBS controls/weights/knots use separate ordinal child rows. No endpoint/loop/coedge alias projection into artificial numeric FK was introduced.

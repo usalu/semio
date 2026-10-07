@@ -48,8 +48,8 @@ use crate::schema::diff::{diff_add_element, diff_insert_row, diff_remove_element
 use crate::schema::snapshot::{PlyElement, PlyFormat, PlyRow, PlyValue};
 use crate::PlySnapshot;
 use protocol::Mutation;
-use protocol::OpBinary;
-use protocol::OpText;
+
+
 
 //#region 🔖️Mutations
 #[path = "🧱add-element/🦀️.rs"]
@@ -282,3 +282,6 @@ mod codec_tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

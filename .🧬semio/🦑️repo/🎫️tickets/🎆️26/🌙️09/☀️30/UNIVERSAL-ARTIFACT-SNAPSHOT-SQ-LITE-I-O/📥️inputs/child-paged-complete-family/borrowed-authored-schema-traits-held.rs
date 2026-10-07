@@ -12,6 +12,16 @@ pub trait BorrowedDslVariants {
     fn projected_borrowed_variant_identity(&self)->(&'static str,usize,crate::BorrowedRecordSpec);
 }
 
+/// 🏭️ A finite static producer returns original borrowed metadata under the caller control.
+#[derive(Clone,Copy)]
+pub struct BorrowedRecordSpecProducer{produce:fn()->crate::BorrowedRecordSpec}
+impl BorrowedRecordSpecProducer{
+ /// 🌱️ Binds one required authored record without an owned schema factory.
+ pub const fn of<T:BorrowedDslRecord>()->Self{Self{produce:borrowed_record::<T>}}
+ /// ⛽️ Reads a static descriptor using the same cumulative output control and progress callback.
+ pub fn encode(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<crate::BorrowedRecordSpec,crate::ValueError>{control.checkpoint()?;control.step()?;Ok((self.produce)())}
+}
+
 macro_rules! borrowed_scalar_fields {
     ($shape:ident;$($owner:ty),+)=>{$(impl BorrowedDslField for $owner{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::$shape;})+};
 }

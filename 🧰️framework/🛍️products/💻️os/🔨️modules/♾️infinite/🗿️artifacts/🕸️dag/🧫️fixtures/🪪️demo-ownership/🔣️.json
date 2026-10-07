@@ -12,5 +12,6 @@
     "e2",
     "e3",
     "e4"
-  ]
+  ],
+  "openedActor": "actor:dag-opening-fixture"
 }

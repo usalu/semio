@@ -1,9 +1,7 @@
 //! 📝️ insert-page text payload owner.
 
-use crate::standards::v1_4::subsets::base::schema::mutations::{
-    text::{hex, unhex},
-    PdfMutation,
-};
+use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
+use crate::standards::v1_4::subsets::base::io::text::mutations::{hex, unhex};
 use crate::standards::v1_4::subsets::base::schema::mutations::InsertPage;
 
 //#region 🔖️Codec

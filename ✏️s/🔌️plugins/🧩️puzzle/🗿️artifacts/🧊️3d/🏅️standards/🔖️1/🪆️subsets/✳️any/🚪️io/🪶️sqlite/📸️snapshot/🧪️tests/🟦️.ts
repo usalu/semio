@@ -105,7 +105,7 @@ test('SQLite Puzzle3d consistently renumbered surrogate identities preserve the 
  try{db.exec('PRAGMA foreign_keys=OFF');for(const table of relational.tables)db.exec('UPDATE "'+table.name+'" SET id=id+1000');for(const [table,column] of links)db.exec('UPDATE "'+table+'" SET "'+column+'"="'+column+'"+1000');expect(db.query('PRAGMA integrity_check').values()).toEqual([['ok']]);expect(db.query('PRAGMA foreign_key_check').values()).toEqual([]);expect(await restore(await importSqliteDatabase(db.serialize()))).toEqual(expected)}finally{db.close()}
 });
 for(let batch=0;batch<12;batch++)test('SQLite Puzzle3d actual declared neutral snapshot assets batch '+batch,async()=>{
- const root=new URL('../../../../🧫️fixtures',import.meta.url),validate=new Ajv({strict:false}).compile(artifactSchema),{project,restore}=providers();let index=0,count=0;
+ const root=new URL('../../../../🧫️fixtures/',import.meta.url),validate=new Ajv({strict:false}).compile(artifactSchema),{project,restore}=providers();let index=0,count=0;
  for await(const path of new Bun.Glob('**/📸️snapshot/**/🔣️.json').scan({cwd:fileURLToPath(root)})){if(index++%12!==batch)continue;const source=await Bun.file(new URL(path,root)).text();expect(validate(JSON.parse(source))).toBe(true);const value=io.puzzle3dSnapshotFromJsonText(source),db=await project(value);expect(await restore(db)).toEqual(value);expect(io.puzzle3dSnapshotFromJsonText(io.puzzle3dSnapshotToJsonText(value))).toEqual(value);count++}
  expect(count).toBeGreaterThan(0);
 });
@@ -114,4 +114,15 @@ for(const branch of ['catalogObjects','representations'] as const)test('SQLite P
  const {project}=providers(),value=specimen(0n),catalog=value.meta.kindCatalogs!,kind=catalog.objects[0]!;
  const objects=branch==='catalogObjects'?Array.from({length:1024},()=>kind):[{...kind,representations:Array.from({length:1024},()=>kind.representations[0]!)}],many={...value,meta:{...value.meta,kindCatalogs:{...catalog,objects}}},abort=new AbortController();let known=false;
  await expect(project(many,{signal:abort.signal,onProgress:p=>{if(p.phase==='projectSnapshot'&&p.completed>=256&&p.completed<p.total){known=true;abort.abort()}}})).rejects.toThrow();expect(known).toBe(true);
+});
+
+test("Puzzle3d borrowed Scale and diff metadata preserve the authored neutral records",async()=>{
+ const validate=new Ajv({strict:true}).compile({type:"array",items:{type:"number"},oneOf:[{minItems:1,maxItems:1},{minItems:3,maxItems:3}]});
+ for(const sample of laws.scaleDsl.samples){expect(validate(sample)).toBe(true);expect(JSON.parse(JSON.stringify(sample))).toEqual(sample)}
+ for(const sample of laws.scaleDsl.invalidSamples)expect(validate(sample)).toBe(false);
+ const owner=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text();
+ expect(owner).toContain("impl semio_framework_dsl_record::BorrowedDslField for Puzzle3dScale");
+ expect(owner).toContain("<Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE");
+ const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
+ for(const name of laws.diffRecordOwners){expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"))}
 });

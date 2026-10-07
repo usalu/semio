@@ -5,13 +5,13 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::text::schema::diff::*;
+use crate::standards::v1::subsets::text::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
 impl protocol::DiffBinary for SemioTextDiff {
@@ -22,7 +22,7 @@ impl protocol::DiffBinary for SemioTextDiff {
 /// chain is needed.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::text::schema::snapshot::write_run;
+    use crate::standards::v1::subsets::text::io::binary::snapshot::write_run;
     let presence: u8 = if self.runs.is_some() { 0b0000_0001 } else { 0 };
     let mut out = vec![DIFF_BINARY_FORMAT, presence];
     if let Some(list) = &self.runs {
@@ -35,7 +35,7 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::text::schema::snapshot::read_run;
+    use crate::standards::v1::subsets::text::io::binary::snapshot::read_run;
     if bytes.len() < 2 {
         return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
     }

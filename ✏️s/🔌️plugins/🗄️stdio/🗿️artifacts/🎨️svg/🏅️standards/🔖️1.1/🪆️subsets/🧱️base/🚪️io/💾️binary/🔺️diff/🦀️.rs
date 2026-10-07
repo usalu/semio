@@ -7,16 +7,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod diff_codec {
 use super::*;
 use crate::standards::v1_1::subsets::base::schema::diff::*;
-use semio_s_artifact_stdio_xml::schema::diff::{enc_xml_node, enc_xml_node_bin};
+use crate::standards::v1_1::subsets::base::io::text::diff::enc_svg_node;
+
 use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlQuote};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+use crate::schema::snapshot::SvgAttr;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use crate::schema::snapshot::SvgNode;
 
 /// 🧪️ P2-FG3: real LEB128-varint-framed binary primitives (length-prefixed bytes/utf8) backing
 /// the upgraded `DiffCodec` frame below (and, via re-export, `../🧬️mutations/🦀️.rs`'s own
@@ -47,17 +48,17 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
+pub(crate) fn enc_prolog_bin(prolog: &Vec<SvgNode>, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, prolog.len() as u64);
     for node in prolog {
-        enc_xml_node_bin(node, out);
+        enc_svg_node_bin(node, out);
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
+pub(crate) fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<SvgNode>, String> {
     let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
-    (0..count).map(|_| dec_xml_node_bin(reader)).collect()
+    (0..count).map(|_| dec_svg_node_bin(reader)).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -111,10 +112,10 @@ pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlD
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
+pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgAttr, String> {
     let name = read_str_lp(reader)?;
     let value = read_str_lp(reader)?;
-    Ok(XmlAttr { name, value })
+    Ok(SvgAttr { value: crate::standards::v1_1::subsets::base::io::text::snapshot::attributes::bind_svg_attribute(&name, &value)?, name })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -142,7 +143,7 @@ pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
+pub(crate) fn dec_svg_node_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgNode, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -155,25 +156,25 @@ pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<Xml
             let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
-                children.push(dec_xml_node_bin(reader)?);
+                children.push(dec_svg_node_bin(reader)?);
             }
-            Ok(XmlNode::Element { name, attrs, children })
+            Ok(SvgNode::Element { name, attrs, children })
         }
-        1 => Ok(XmlNode::Text { text: read_str_lp(reader)? }),
-        2 => Ok(XmlNode::CData { text: read_str_lp(reader)? }),
-        3 => Ok(XmlNode::Comment { text: read_str_lp(reader)? }),
+        1 => Ok(SvgNode::Text { text: read_str_lp(reader)? }),
+        2 => Ok(SvgNode::CData { text: read_str_lp(reader)? }),
+        3 => Ok(SvgNode::Comment { text: read_str_lp(reader)? }),
         4 => {
             let target = read_str_lp(reader)?;
             let data = read_str_lp(reader)?;
-            Ok(XmlNode::ProcessingInstruction { target, data })
+            Ok(SvgNode::ProcessingInstruction { target, data })
         }
         other => Err(format!("xml node binary: unknown tag {other}")),
     }
 }
 
 /// 🧪️ P2-FG3: real recursive binary twins of [`enc_node_diff`]/[`dec_node_diff`] -- same 1-byte tag
-/// numbering scheme as [`enc_xml_node_bin`] (`0`=Element/`1`=Text) plus `2`=`Replace` (needs its own
-/// arm since `Replace` wraps a whole [`XmlNode`], not a bare scalar payload). `attrs`/`children`
+/// numbering scheme as [`enc_svg_node_bin`] (`0`=Element/`1`=Text) plus `2`=`Replace` (needs its own
+/// arm since `Replace` wraps a whole [`SvgNode`], not a bare scalar payload). `attrs`/`children`
 /// collection triples encode as three varint-counted, recursively-encoded lists (removed/modified/
 /// added) -- genuinely structured binary, backing the upgraded `DiffBinary::encode_diff`/
 /// `decode_diff` below.
@@ -206,7 +207,7 @@ pub(crate) fn enc_node_diff_bin(diff: &SvgNodeDiff, out: &mut Vec<u8>) {
             out.push(2);
             out.push(if node.is_some() { 1 } else { 0 });
             if let Some(node) = node {
-                enc_xml_node_bin(node, out);
+                enc_svg_node_bin(node, out);
             }
         }
     }
@@ -227,7 +228,7 @@ pub(crate) fn dec_node_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Sv
             Ok(SvgNodeDiff::Text { text })
         }
         2 => {
-            let node = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+            let node = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_svg_node_bin(reader)?) } else { None };
             Ok(SvgNodeDiff::Replace { node })
         }
         other => Err(format!("svg node diff binary: unknown tag {other}")),
@@ -243,13 +244,13 @@ pub(crate) fn enc_attrs_diff_bin(diff: &SvgAttributesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
     for entry in &diff.modified {
         write_str_lp(out, &entry.name);
-        write_str_lp(out, &entry.value);
+        write_str_lp(out, &crate::standards::v1_1::subsets::base::io::text::snapshot::print_svg_attribute(&entry.value));
     }
     store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
     for entry in &diff.added {
         store::pack_rt::write_varint_u64(out, entry.index as u64);
         write_str_lp(out, &entry.name);
-        write_str_lp(out, &entry.value);
+        write_str_lp(out, &crate::standards::v1_1::subsets::base::io::text::snapshot::print_svg_attribute(&entry.value));
     }
 }
 
@@ -265,7 +266,7 @@ pub(crate) fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<S
     for _ in 0..modified_count {
         let name = read_str_lp(reader)?;
         let value = read_str_lp(reader)?;
-        modified.push(SvgAttrModified { name, value });
+        modified.push(SvgAttrModified { value:crate::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_attribute(&name,&value)?,name });
     }
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
@@ -273,7 +274,7 @@ pub(crate) fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<S
         let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let name = read_str_lp(reader)?;
         let value = read_str_lp(reader)?;
-        added.push(SvgAttrAdded { index, name, value });
+        added.push(SvgAttrAdded { index,value:crate::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_attribute(&name,&value)?,name });
     }
     Ok(SvgAttributesDiff { removed, modified, added })
 }
@@ -292,7 +293,7 @@ pub(crate) fn enc_children_diff_bin(diff: &SvgChildrenDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
     for entry in &diff.added {
         store::pack_rt::write_varint_u64(out, entry.index as u64);
-        enc_xml_node_bin(&entry.item, out);
+        enc_svg_node_bin(&entry.item, out);
     }
 }
 
@@ -314,7 +315,7 @@ pub(crate) fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
         let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let item = dec_xml_node_bin(reader)?;
+        let item = dec_svg_node_bin(reader)?;
         added.push(SvgChildAdded { index, item });
     }
     Ok(SvgChildrenDiff { removed, modified, added })
@@ -399,18 +400,19 @@ pub use diff_codec::*;
 mod diff_wire_codec {
 use super::*;
 use crate::standards::v1_1::subsets::base::schema::diff::*;
-use semio_s_artifact_stdio_xml::schema::diff::{enc_xml_node, enc_xml_node_bin};
+use crate::standards::v1_1::subsets::base::io::text::diff::enc_svg_node;
+
 use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlQuote};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+use crate::schema::snapshot::SvgAttr;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use crate::schema::snapshot::SvgNode;
 
-/// 🧪️ P2-FG3: real recursive binary twins of [`enc_xml_node`]/[`dec_xml_node`] and
+/// 🧪️ P2-FG3: real recursive binary twins of [`enc_svg_node`]/[`dec_svg_node`] and
 /// [`enc_declaration`]/[`dec_declaration`] above -- a 1-byte kind tag (`0`=Element/`1`=Text/
 /// `2`=CData/`3`=Comment/`4`=ProcessingInstruction, distinct numbering from the text codec's letter
 /// tags) followed by the real payload (length-prefixed strings for scalars, a varint COUNT then
@@ -419,9 +421,11 @@ use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 /// 🦀️.rs`'s own `pub(crate)` re-export, the upgraded `OpBinary` frame (same intra-artifact
 /// reuse convention `📰️xml`'s own sibling module already establishes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
+pub(crate) fn enc_attr_bin(a: &SvgAttr, out: &mut Vec<u8>) {
     write_str_lp(out, &a.name);
-    write_str_lp(out, &a.value);
+    write_str_lp(out, &crate::standards::v1_1::subsets::base::io::text::snapshot::print_svg_attribute(&a.value));
 }
 }
 pub use diff_wire_codec::*;
+
+pub(crate) fn enc_svg_node_bin(node:&crate::schema::snapshot::SvgNode,out:&mut Vec<u8>) {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::binary::diff::enc_xml_node_bin(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node),out)}

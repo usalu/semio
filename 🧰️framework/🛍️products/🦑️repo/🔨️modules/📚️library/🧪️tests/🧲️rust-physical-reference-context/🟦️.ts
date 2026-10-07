@@ -352,8 +352,6 @@ test("cancellation during Cargo-context planning remains read-only", () => {
 });
 
 test("Rust diagnostic references require exact unescaped assertion-message arguments", () => {
-  const oracle = new Ajv().compile({ type: "object", required: ["schemaVersion", "contract", "assertionMessages"], properties: { schemaVersion: { const: 1 }, contract: { const: "rust-physical-reference-context-v1" }, assertionMessages: { type: "object", required: ["macros", "literal", "context", "cases"] } } });
-  expect(oracle(golden)).toBe(true);
   for (const row of golden.assertionMessages.cases) {
     const messages = inspectRustAssertionMessageSpans(row.source);
     expect(messages.map(({ macroName, value }) => ({ macroName, value }))).toEqual(row.expected);

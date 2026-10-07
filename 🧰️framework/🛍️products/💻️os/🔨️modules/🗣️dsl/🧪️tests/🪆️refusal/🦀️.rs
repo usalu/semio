@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(Debug)]
 struct Refusing(ValueError);
+impl semio_framework_dsl_record::BorrowedDslField for Refusing{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Text;}
 impl DslField for Refusing {
     fn shape()->Shape{Shape::Text}
     fn to_value(&self)->FieldValue{panic!("ordinary conversion is outside this controlled law")}
@@ -25,6 +26,6 @@ fn os_controlled_field_derive_retains_all_refusal_categories_and_position(){
         let position=TextSpan::at(7,11);let positioned=TextError::from_value_error(error,position);assert_eq!(positioned.kind,kind);assert_eq!(positioned.span,position);
         let value=ControlledRefusalRecord{value:Box::new(Refusing(ValueError::new(kind,"refused field")))};
         let error=value.__dsl_to_record_controlled(&mut NativeEncodeControl::new(4096,&mut |_|true)).unwrap_err();assert_eq!(error.kind,kind);assert_eq!(error.message,"refused field");
-        let error=native_encoding::project_list(&[value],&mut NativeEncodeControl::new(4096,&mut |_|true)).unwrap_err();assert_eq!(error.kind,kind);
+        let error=native_encoding::project_list([value].as_slice(),&mut NativeEncodeControl::new(4096,&mut |_|true)).unwrap_err();assert_eq!(error.kind,kind);
     }
 }

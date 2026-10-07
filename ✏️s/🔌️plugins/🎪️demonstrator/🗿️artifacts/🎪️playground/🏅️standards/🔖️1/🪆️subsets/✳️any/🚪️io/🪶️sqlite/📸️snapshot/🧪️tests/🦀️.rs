@@ -11,7 +11,7 @@ fn sqlite_snapshot_playground_actual_bare_owner_has_capability() {
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_playground_actual_declaration_registers_both_io_directions() {
     use store::io::io_mechanism::{io_route, io_run};
-    use store::io_schema::{ArtifactDialect, IoPayload, SQLITE_SNAPSHOT};
+    use {semio_framework_artifact_reference::ArtifactDialect,store::io_schema::IoPayload,store::io_schema::SQLITE_SNAPSHOT};
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("demonstrator")
         .label("Playground SQLite Declaration")
         .version("0.0.1")
@@ -55,7 +55,7 @@ fn sqlite_snapshot_playground_actual_erased_native_formats_use_queryable_parent(
     let codec = store::ArtifactCodec::bare::<PlaygroundSnapshot, crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(crate::PLAYGROUND_DOCUMENT_SCHEMA);
     let provider = codec.snapshot_sqlite.expect("Playground declared snapshot capability missing");
     assert_eq!(provider.snapshot_type, Some(std::any::TypeId::of::<PlaygroundSnapshot>()));
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.demonstrator.playground".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.demonstrator.playground".into(), standard: "1".into(), subset: "*".into() };
     for case in fixture()["nativeCases"].as_array().unwrap() {
         let source = PlaygroundSnapshot { schema: case["schema"].as_str().unwrap().into() };
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -107,7 +107,7 @@ fn sqlite_snapshot_playground_owned_rows_are_literal_and_refuse_hostile_shapes()
         assert!(PlaygroundSnapshot::from_sqlite_database(&bad, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err(), "case {case}");
     }
     for (kind, standard, subset) in [("s.demonstrator.other", "1", "*"), ("s.demonstrator.playground", "v1", "*"), ("s.demonstrator.playground", "1", "other")] {
-        let dialect = store::io_schema::ArtifactDialect { artifact_kind: kind.into(), standard: standard.into(), subset: subset.into() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.into(), standard: standard.into(), subset: subset.into() };
         assert!(source.validate_sqlite_snapshot_subset(&dialect, &database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
     }
     println!("[DEBUG] Playground literal identity, closed rows and exact dialect refusals confirmed");
@@ -191,7 +191,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
         .artifact(crate::declaration().unwrap())
         .try_build()
         .unwrap();
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.demonstrator.playground".into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.demonstrator.playground".into(), standard: "1".into(), subset: "*".into() };
     let source = PlaygroundSnapshot { schema: fixture()["nativeCases"][2]["schema"].as_str().unwrap().into() };
     let limits = SqliteDatabaseLimits { max_rows: fixture()["controls"]["finalRows"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {

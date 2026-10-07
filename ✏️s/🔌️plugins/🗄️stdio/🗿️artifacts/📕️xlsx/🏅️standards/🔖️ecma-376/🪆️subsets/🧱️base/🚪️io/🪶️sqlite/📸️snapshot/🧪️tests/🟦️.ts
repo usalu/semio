@@ -8,7 +8,7 @@ import xmlSchema from"../../../../../../../../../📰️xml/🏅️standards/�
 import{XLSX_SQLITE_SCHEMA,xlsxSnapshotToSqliteDatabase,xlsxSnapshotFromSqliteDatabase}from"../../../../../../../../🟦️.ts";
 import type{OpcPackage,XlsxSnapshot}from"../../../../../../../../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
-import{parseXmlDocument}from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import{parseXmlDocumentJson as parseXmlDocument}from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import{validateXlsxSnapshotProfile}from"../../../../../../../../🟦️.ts";
 import profiles from"../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛡️profile/🔣️.json";
 
@@ -24,7 +24,7 @@ test("XLSX exact profile policies match independently queried namespaces and rel
 });
 test("XLSX exact profile diagnostics expose long-field interior cancellation and caller bounds",async()=>{
  const snapshot=profileSnapshot(profiles.cases[0]!);if(snapshot.xmlParts[0]!.document.root?.kind!=="element")throw new Error("workbook");snapshot.xmlParts[0]!.document.root.attrs[0]!.value="x".repeat(profiles.largeTextCharacters);
- const controller=new AbortController();let reached=false;await expect(validateXlsxSnapshotProfile(snapshot,"strict",{signal:controller.signal,onProgress:event=>{if(event.total>=profiles.largeTextCharacters&&event.completed>=profiles.cancelAfter&&event.completed<event.total){reached=true;controller.abort();}}})).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);await expect(validateXlsxSnapshotProfile(snapshot,"strict",{maxValueBytes:profiles.smallValueBudget})).rejects.toThrow();
+ const controller=new AbortController();let reached=false;await expect(validateXlsxSnapshotProfile(snapshot,"strict",{signal:controller.signal,onProgress:event=>{if(event.total>=profiles.largeTextCharacters&&event.completed>=profiles.cancelAfter&&event.completed<event.total){reached=true;controller.abort();}}})).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);await expect(validateXlsxSnapshotProfile(snapshot,"strict",{maximumBytes:profiles.smallValueBudget})).rejects.toThrow();
 });
 test("XLSX all owned OPC/XML fields expose independent relational identities",async()=>{
  const ajv=new Ajv({strict:false}).addSchema(xmlSchema);const admitted=ajv.validate(schema,fixture);expect(admitted,JSON.stringify(ajv.errors)).toBe(true);expect(XLSX_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../🗄️.sql",import.meta.url)).text());

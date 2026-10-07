@@ -1,0 +1,15 @@
+{
+  "label": "Opacity",
+  "initial": 0.5,
+  "typed": "0.75",
+  "expected": 0.75,
+  "keys": [
+    "Enter",
+    "F2",
+    " "
+  ],
+  "blocked": [
+    "disabled",
+    "readOnly"
+  ]
+}

@@ -541,7 +541,7 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
         id: "edit-owner".repeat(128),
         actor: Some("actor-owner".repeat(128)),
         forwards: Vec::new(),
-        inverse: Vec::new(),
+        inverse: Vec::new().into(),
         mutation_meta: Vec::new(),
         verb: None,
         sequence_number: 1,
@@ -571,7 +571,7 @@ fn artifact_store_edit_retirement_rejects_and_returns_the_exact_nonempty_mutatio
         id: "edit-owner".into(),
         actor: None,
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
-        inverse: Vec::new(),
+        inverse: Vec::new().into(),
         mutation_meta: Vec::new(),
         verb: None,
         sequence_number: 1,
@@ -595,7 +595,7 @@ fn artifact_store_history_metadata_retirement_cursors_authors_pins_and_ids_under
         message: Some("message".repeat(64)),
         timestamp: "timestamp".repeat(64),
         composition_pins: vec![crate::os_vcs::CompositionPin {
-            child_ref: crate::os_io::ArtifactRef { artifact_id: "child".repeat(64), dialect: crate::os_io::ArtifactDialect { artifact_kind: "kind".repeat(64), standard: "standard".repeat(64), subset: "subset".repeat(64) } },
+            child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: "child".repeat(64), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "kind".repeat(64), standard: "standard".repeat(64), subset: "subset".repeat(64) } },
             checkpoint_id: "child-checkpoint".repeat(64),
         }],
     };
@@ -774,7 +774,7 @@ fn displaced_owner_reservations_preserve_capacity_generation_and_interrupted_clo
 }
 
 fn completed_record_owner(id: &str) -> Box<dyn ArtifactEnvelopeCompletedRecord<(), ()>> {
-    Box::new(ArtifactEnvelopeCompletedRecordOwner::new(create_document_envelope("test.completed-record/v1", id, (), None), Arc::new(UnitOwnedRetirementFactory), Arc::new(UnitOwnedRetirementFactory)))
+    Box::new(ArtifactEnvelopeCompletedRecordOwner::new(create_document_envelope_from_genesis("test.completed-record/v1", id, ArtifactGenesis::from_decoded_pack((), vec![0]), None), Arc::new(UnitOwnedRetirementFactory), Arc::new(UnitOwnedRetirementFactory)))
 }
 
 fn drain_completed_record(mut owner: Box<dyn ArtifactEnvelopeCompletedRecord<(), ()>>) {
@@ -1469,20 +1469,26 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self
     where
         P: MemberStoreOwner<Mutation>,
     {
-        let mut store = super::ArtifactStore::new(envelope).await.expect("test fixture history is valid");
+        Self::new_with_actor(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await
+    }
+
+    async fn new_with_actor(envelope: ArtifactEnvelope<P, Mutation>, actor: ActorId) -> Self
+    where P: MemberStoreOwner<Mutation>,
+    {
+        let mut store = super::ArtifactStore::new(envelope, actor).await.expect("test fixture history is valid");
         store.install_document_store_owners_exact(P::member_store_owners());
         Self(store, Some(close_test_store::<P, Mutation>))
     }
 
     async fn bare(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
-        Self(super::ArtifactStore::new(envelope).await.expect("test fixture history is valid"), None)
+        Self(super::ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid"), None)
     }
 
     /// 🧹️ Arms the drop-close on a `bare` store once the test has installed its OWN owner catalog:
@@ -1526,7 +1532,7 @@ where
 /// 🧹️ Drives a test store's owned close to its terminal-empty witness.
 fn close_test_store<P, Mutation>(store: &mut super::ArtifactStore<P, Mutation>)
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     drop(store.detach_backbone().expect("a closing test store releases its backbone"));
@@ -1562,10 +1568,13 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
+    fn local_actor_id(&self) -> &ActorId {
+        SpaceMember::local_actor_id(&self.0)
+    }
     async fn document_id(&self) -> &str {
         SpaceMember::document_id(&self.0).await
     }
-    fn artifact_ref(&self) -> Option<crate::os_io::ArtifactRef> {
+    fn artifact_ref(&self) -> Option<semio_framework_artifact_reference::ArtifactRef> {
         SpaceMember::artifact_ref(&self.0)
     }
     fn owner_ref(&self) -> Option<OwnerRef> {
@@ -1718,17 +1727,17 @@ macro_rules! fixture_member_factory {
                 UnsupportedMemberFactoryOpen::begin(request)
             }
 
-            async fn create(id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
+            async fn create(id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId) -> Result<Self, VcsError> {
                 if dialect != &demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
+                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack, actor).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
-            async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<Self, VcsError> {
+            async fn open(expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId) -> Result<Self, VcsError> {
                 if expected.dialect != demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
+                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack, actor).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
         }
 
@@ -2007,7 +2016,7 @@ fn drive_retirement_terminal(mut retirement: Box<dyn ErasedSnapshotRetirement>) 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_close_order() {
     let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None);
-    let mut store = super::ArtifactStore::new(envelope).await.expect("valid empty-history store");
+    let mut store = super::ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid empty-history store");
     store.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
     *store.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.current)));
 
@@ -2087,7 +2096,7 @@ fn rejected_history_mutation_and_metadata_owners_close_under_one_item_grants() {
         id: "rejected-edit".repeat(32),
         actor: Some("actor".repeat(64)),
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
-        inverse: vec![DemoMutation::SetN(SetN { n: 3 })],
+        inverse: vec![DemoMutation::SetN(SetN { n: 3 })].into(),
         mutation_meta: Vec::new(),
         verb: None,
         sequence_number: 1,
@@ -2212,18 +2221,18 @@ async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
     let fixture = member_dialect_fixture();
     let seed = DemoSnapshot { n: Some(7) };
     for row in fixture["cases"].as_array().unwrap() {
-        let dialect: crate::os_io::ArtifactDialect = serde_json::from_value(row["requested"].clone()).unwrap();
-        let expected = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect };
+        let dialect: semio_framework_artifact_reference::ArtifactDialect = serde_json::from_value(row["requested"].clone()).unwrap();
+        let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect };
         MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
         let result = if row["operation"] == "create" {
-            RetainedTestMembers::create(&expected.artifact_id, &expected.dialect, &seed.encode_pack()).await
+            RetainedTestMembers::create(&expected.artifact_id, &expected.dialect, &seed.encode_pack(), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await
         } else {
             let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(row["persisted"]["schema"].as_str().unwrap(), "child-1", seed.clone(), None);
             envelope.dialect = serde_json::from_value(row["persisted"]["dialect"].clone()).unwrap();
             let files = print_document_pack(&envelope).await.unwrap();
             let packed = encode_document_pack_bytes(&files.pack, &files.spr).await;
             close_member_dialect_envelope(envelope);
-            RetainedTestMembers::open(&expected, None, &packed).await
+            RetainedTestMembers::open(&expected, None, &packed, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await
         };
         assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), usize::from(row["accepted"].as_bool().unwrap()), "{}: rejected identity must not hydrate a typed snapshot", row["id"]);
         assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}: {:?}", row["id"], result.as_ref().err());
@@ -2242,26 +2251,28 @@ async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
             close_member_dialect_fixture(&mut member);
         }
     }
-    let expected = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
     for bytes in [&[][..], &[1][..], &[0xff, 0xff][..]] {
         MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
-        assert!(RetainedTestMembers::open(&expected, None, bytes).await.is_err());
+        assert!(RetainedTestMembers::open(&expected, None, bytes, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.is_err());
         assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), 0);
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn member_factory_closed_dialect_rejects_identity_and_owner_substitution() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
     let fixture = member_dialect_fixture();
-    let expected = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
-    let owner = OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent-1".into(), dialect: crate::os_io::ArtifactDialect::parse_coordinate("s.test.parent@v1/*").unwrap() }, slot: "content".into(), child_id: "child-1".into() };
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
+    let owner = OwnerRef { parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect::parse_coordinate("s.test.parent@v1/*").unwrap() }, slot: "content".into(), child_id: "child-1".into() };
     for row in fixture["identityCases"].as_array().unwrap() {
         let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["persistedId"].as_str().unwrap(), DemoSnapshot { n: Some(7) }, None);
         envelope.dialect = Some(expected.dialect.clone());
         if !row["persistedOwner"].is_null() {
             let persisted = &row["persistedOwner"];
             envelope.owner = Some(OwnerRef {
-                parent: crate::os_io::ArtifactRef { artifact_id: persisted["parentId"].as_str().unwrap().into(), dialect: crate::os_io::ArtifactDialect::parse_coordinate(persisted["parentDialect"].as_str().unwrap()).unwrap() },
+                parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: persisted["parentId"].as_str().unwrap().into(), dialect: semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(persisted["parentDialect"].as_str().unwrap()).unwrap() },
                 slot: persisted["slot"].as_str().unwrap().into(),
                 child_id: persisted["childId"].as_str().unwrap().into(),
             });
@@ -2271,7 +2282,7 @@ async fn member_factory_closed_dialect_rejects_identity_and_owner_substitution()
         close_member_dialect_envelope(envelope);
         let expected_owner = row["expectedOwned"].as_bool().unwrap().then_some(&owner);
         MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
-        let result = RetainedTestMembers::open(&expected, expected_owner, &packed).await;
+        let result = RetainedTestMembers::open(&expected, expected_owner, &packed, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await;
         assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), usize::from(row["accepted"].as_bool().unwrap()), "{}: rejected owner must not hydrate a typed snapshot", row["id"]);
         assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}: {:?}", row["id"], result.as_ref().err());
         if let Ok(mut member) = result {
@@ -2346,8 +2357,8 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 3 }).unwrap();
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(&[1, 97, 83]).unwrap()).unwrap();
         pages.seal().unwrap();
-        let expected = crate::os_io::ArtifactRef { artifact_id: "member-retained".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
-        let request = MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), 1000, expected, None, pages).admit(1).unwrap_or_else(|_| panic!("admitted request fixture"));
+        let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "member-retained".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
+        let request = MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), 1000, expected, None, pages, ActorId(fixture["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("admitted request fixture"));
         let mut retained = member_open::MemberStoreOpenRetained::new(request, owners);
         let stage = row["stage"].as_str().unwrap();
         if stage != "input" {
@@ -2362,7 +2373,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
                     finished_at: Some("finished".into()),
                     verb: None,
                     ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(vec![0xff; 129]) }],
-                    inverse: Vec::new(),
+                    inverse: Vec::new().into(),
                     meta: Some(vec![crate::os_spr::HistoryOpMeta {
                         dependencies: vec!["dependency".into()],
                         payload_hash: Some([3; 32]),
@@ -2382,7 +2393,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
                 retained.stage_envelope(envelope).unwrap_or_else(|_| panic!("unique parsed owner slot"));
                 if stage == "initialization" {
                     let current = DemoSnapshot::decode_pack(&packed).unwrap();
-                    let runtime = ArtifactStoreInitializationRuntime::new("member-retained", "demo/v1", current, [7; 32]);
+                    let runtime = ArtifactStoreInitializationRuntime::new("member-retained", "demo/v1", Arc::new(current), [7; 32], ActorId(fixture["openedActor"].as_str().unwrap().into()));
                     retained.stage_runtime(runtime).unwrap_or_else(|_| panic!("unique initialized owner slot"));
                 }
             } else {
@@ -2399,7 +2410,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
                     id: "pending-edit".into(),
                     actor: Some("actor".into()),
                     forwards,
-                    inverse,
+                    inverse: inverse.into(),
                     mutation_meta: Vec::new(),
                     verb: None,
                     sequence_number: 1,
@@ -2918,7 +2929,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
             id: id.clone(),
             actor: Some(authority.actor.clone()),
             forwards: vec![forward],
-            inverse,
+            inverse: inverse.into(),
             mutation_meta: vec![MutationMeta {
                 mutation_id: Some(mutation_id),
                 dependencies: Vec::new(),
@@ -3142,19 +3153,19 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert!(store.snapshot_read_derived(&derived).is_err(), "a prior derived source cannot be relabelled with the new frontier");
     drive_retirement_terminal(store.retire_snapshot_alias(derived.into_snapshot_owner()).expect("derived alias retirement"));
     drive_retirement_terminal(store.retire_snapshot_alias(base.into_snapshot_owner()).expect("base alias retirement"));
-    let mut replay = Some(store.begin_derived_report_replay(&BTreeMap::new(), None).expect("genuine history replay"));
+    let mut replay = Some(store.begin_derived_report_replay(BTreeMap::new(), None).expect("genuine history replay"));
     let owner = replay.as_ref().expect("retained replay") as *const _;
-    let projection = Arc::as_ptr(replay.as_ref().unwrap().replay.state.as_ref().unwrap());
+    let plan = replay.as_ref().unwrap().plan.as_ref().unwrap() as *const _;
     let registry = Arc::as_ptr(&replay.as_ref().unwrap().registry);
     assert!(store.finish_derived_report_replay(&mut replay).is_err(), "unfinished admission retains its actual owner");
     assert_eq!(owner, replay.as_ref().expect("unfinished replay retained") as *const _);
-    assert_eq!(projection, Arc::as_ptr(replay.as_ref().unwrap().replay.state.as_ref().unwrap()));
+    assert_eq!(plan, replay.as_ref().unwrap().plan.as_ref().unwrap() as *const _);
     assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
-    assert!(matches!(store.step_derived_report_replay(replay.as_mut().expect("retained replay"), &mut || false).expect("own actual ledger"), ReplayStep::Finished(_)));
+    while matches!(store.step_derived_report_replay(replay.as_mut().expect("retained replay"), &mut || false).expect("own actual ledger"), ReplayStep::Pending(_)) {}
     assert!(foreign.finish_derived_report_replay(&mut replay).is_err(), "foreign finishing cannot consume the source owner");
     assert_eq!(owner, replay.as_ref().expect("foreign-refused replay retained") as *const _);
     assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
-    assert_eq!(replay.as_ref().unwrap().replay.state.as_ref().unwrap().n, Some(6));
+    assert_eq!(replay.as_ref().unwrap().replay.as_ref().unwrap().state.as_ref().unwrap().n, Some(6));
     let (result, head) = store.finish_derived_report_replay(&mut replay).expect("sealed completed replay");
     assert!(replay.is_none());
     let head = head.expect("complete actual history projection");
@@ -3166,16 +3177,16 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert!(foreign.snapshot_read_derived(&head).is_err());
     drop(result);
     drive_retirement_terminal(store.retire_snapshot_alias(head.into_snapshot_owner()).expect("replay alias retirement"));
-    let mut stale = Some(store.begin_derived_report_replay(&BTreeMap::new(), None).expect("second actual replay"));
+    let mut stale = Some(store.begin_derived_report_replay(BTreeMap::new(), None).expect("second actual replay"));
     let owner = stale.as_ref().expect("retained stale replay") as *const _;
-    let projection = Arc::as_ptr(stale.as_ref().unwrap().replay.state.as_ref().unwrap());
+    let plan = stale.as_ref().unwrap().plan.as_ref().unwrap() as *const _;
     let registry = Arc::as_ptr(&stale.as_ref().unwrap().registry);
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("new actual frontier");
     assert!(store.finish_derived_report_replay(&mut stale).is_err(), "stale admission cannot consume the actual replay owner");
     assert_eq!(owner, stale.as_ref().expect("stale replay retained") as *const _);
-    assert_eq!(projection, Arc::as_ptr(stale.as_ref().unwrap().replay.state.as_ref().unwrap()));
+    assert_eq!(plan, stale.as_ref().unwrap().plan.as_ref().unwrap() as *const _);
     assert_eq!(registry, Arc::as_ptr(&stale.as_ref().unwrap().registry));
-    assert_eq!(stale.as_ref().unwrap().replay.state.as_ref().unwrap().n, Some(6));
+    assert!(stale.as_ref().unwrap().replay.is_none(), "stale planning never begins projection work");
     drop(stale);
     close_demo_artifact_store(&mut store);
     close_demo_artifact_store(&mut foreign);
@@ -3272,8 +3283,41 @@ async fn erased_member_snapshot_read_releases_its_alias_before_the_live_current_
     assert_eq!(retirement.close_step(1, 512).expect("erased read releases its alias"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
     assert!(retirement.terminal_is_empty());
     drop(retirement);
+    let genesis = store.envelope.vcs.genesis.share_snapshot();
+    let shared_genesis = Arc::ptr_eq(&genesis, &store.current);
+    drop(genesis);
+    eprintln!("[DEBUG] erased returned read released; retained genesis identity={shared_genesis}; current aliases={}", Arc::strong_count(&store.current));
     close_demo_artifact_store(&mut store);
     assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 1, "the live member current root remains owned until store close");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
+    struct InitialFactory(Arc<std::sync::atomic::AtomicUsize>);
+    impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for InitialFactory {
+        fn retire_owned(&self, value: DemoSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
+            Box::new(ExactDemoSnapshotRetirement { owner: Some(Arc::new(value)), value: None, completed: Arc::clone(&self.0) })
+        }
+    }
+    let text = include_str!("../../🧫️fixtures/🌱️retained-genesis-aliases/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_str(text).expect("independent fixture oracle");
+    let neutral = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party neutral fixture");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&semio_framework_pack_json::to_dsl_value(&neutral))).unwrap(), fixture);
+    for case in fixture["cases"].as_array().unwrap() {
+        let snapshots = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", case["name"].as_str().unwrap(), DemoSnapshot { n: Some(0) }, None)).await;
+        store.install_document_store_owners_exact(DocumentStoreOwners::new(Arc::new(ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots))), Arc::new(InitialFactory(Arc::clone(&genesis))), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())));
+        for command in case["commands"].as_array().unwrap() {
+            let command = match command.as_str().unwrap() { "apply" => ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }, "undo" => ArtifactCommand::Undo, "redo" => ArtifactCommand::Redo, other => panic!("unknown neutral command {other}") };
+            store.dispatch(command).await.expect("neutral command executes");
+        }
+        assert_eq!(serde_json::to_value(store.snapshot_ref()).unwrap(), case["final"]);
+        close_demo_artifact_store(&mut store);
+        assert_eq!(snapshots.load(std::sync::atomic::Ordering::SeqCst) as u64, case["snapshotRetirements"].as_u64().unwrap());
+        assert_eq!(genesis.load(std::sync::atomic::Ordering::SeqCst) as u64, case["genesisRetirements"].as_u64().unwrap());
+        eprintln!("[DEBUG] retained genesis alias {} completed exact allocation retirement", case["name"].as_str().unwrap());
+    }
 }
 
 pub(super) fn demo_closable_store_owners() -> DocumentStoreOwners<DemoSnapshot, DemoMutation> {
@@ -3317,7 +3361,7 @@ impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
 }
 
 impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEditCursor {
-    fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: &DemoMutation, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String> {
+    fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: RetainedCloneRef<'_, DemoMutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String> {
         if self.cancelled || self.closing || grant.maximum_items == 0 {
             return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress::default()));
         }
@@ -3341,6 +3385,7 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
             return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress::default()));
         }
         let base = base.get();
+        let mutation=mutation.get();
         let outcome = mutation.diff(base);
         if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err("retained clone fixture mutation rejected against its immutable base".into());
@@ -3617,7 +3662,7 @@ impl RetainedCloneEdit<RetainedTextSnapshot, RetainedTextMutation> for RetainedT
 }
 
 impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for RetainedTextEditCursor {
-    fn advance(&mut self, _base: RetainedCloneRef<'_, RetainedTextSnapshot>, _post: &mut RetainedTextSnapshot, _mutation: &RetainedTextMutation, _grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String> {
+    fn advance(&mut self, _base: RetainedCloneRef<'_, RetainedTextSnapshot>, _post: &mut RetainedTextSnapshot, _mutation: RetainedCloneRef<'_, RetainedTextMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String> {
         Err("retained text edit must not run after contiguous-capacity refusal".into())
     }
 
@@ -4077,7 +4122,7 @@ async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_cas
     assert_eq!(store.snapshot_ref().n, Some(7));
     let staged = store.envelope.vcs.edits.last().expect("staged edit");
     assert_eq!(staged.forwards, vec![DemoMutation::SetN(SetN { n: 7 })]);
-    assert_eq!(staged.inverse, vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
+    assert_eq!(staged.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
     assert_eq!(staged.mutation_meta[0].mutation_id, Some(MutationId(staged.id.clone())), "a one-mutation gesture names its mutation after its edit on the batched route as on every other");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
@@ -4700,7 +4745,7 @@ impl ToValue for GroupReadTriggerSnapshot {
 }
 
 fn group_read_fixture_edit(id: &str) -> Edit<()> {
-    Edit { line: None, id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), verb: None, sequence_number: 0, started_at: String::new(), finished_at: None }
+    Edit { line: None, id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new().into(), mutation_meta: Vec::new(), verb: None, sequence_number: 0, started_at: String::new(), finished_at: None }
 }
 
 fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEnvelope<GroupReadTriggerSnapshot, ()> {
@@ -4709,7 +4754,7 @@ fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEn
     ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema: "group-read/v1".into(),
         id: "group-reader".into(),
-        vcs: ArtifactVcs { initial_snapshot: snapshot, edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
+        vcs: ArtifactVcs { genesis: ArtifactGenesis::from_decoded_pack(snapshot, vec![0]), edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
         backbone: None,
         active_alternative_id: None,
         cursor: Some(ArtifactCursor::new(vec!["initial".into()], Vec::new(), None)),
@@ -4743,7 +4788,7 @@ fn close_group_read_fixture(envelope: ArtifactEnvelope<GroupReadTriggerSnapshot,
 }
 
 #[test]
-fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_commit() {
+fn retained_group_envelope_read_captures_history_and_cursor_before_decision() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️group-read.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let owner = Arc::new(Mutex::new(crate::os_vcs::ArtifactGroupVisibilityOwner::new()));
@@ -4764,9 +4809,10 @@ fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_co
         if case["decision"] == "aborted" {
             assert!(owner.lock().unwrap().abort());
         }
+        if inject_commit { assert!(owner.lock().unwrap().commit()); }
         let captured: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&read)).unwrap();
         let fresh: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&envelope.capture_read().unwrap())).unwrap();
-        assert_eq!(reads.load(std::sync::atomic::Ordering::SeqCst), 2);
+        assert_eq!(reads.load(std::sync::atomic::Ordering::SeqCst), 0);
         for (value, selector) in [(&captured, "captured"), (&fresh, "fresh")] {
             let expected = &fixture[case[selector].as_str().unwrap()];
             let actual_ids: Vec<_> = value["vcs"]["edits"].as_array().unwrap().iter().map(|edit| edit["id"].clone()).collect();
@@ -4945,8 +4991,8 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
     let original_revision = original.content_revision().await;
     let mut changed = owned_test_envelope(&original).await;
     changed.vcs.edits[1].forwards = vec![DemoMutation::SetN(SetN { n: 99 })];
-    changed.vcs.edits[1].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(1) })];
-    changed.vcs.edits[2].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(99) })];
+    changed.vcs.edits[1].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(1) })].into();
+    changed.vcs.edits[2].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(99) })].into();
 
     let mut loaded = ArtifactStore::bare(changed).await;
     loaded.install_document_store_owners_exact(demo_closable_store_owners());
@@ -5090,7 +5136,7 @@ async fn fresh_demo_store() -> ArtifactStore<DemoSnapshot, DemoMutation> {
 
 async fn owned_test_envelope<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> ArtifactEnvelope<P, Mutation>
 where
-    P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + 'static,
+    P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
     Mutation: Clone + OpText + OpBinary + super::Mutation<P> + PartialEq + ToValue + FromValue + Send + 'static,
 {
     let files = print_document_pack(store.envelope()).await.expect("print owned test envelope");
@@ -5188,7 +5234,7 @@ async fn empty_store_replays_a_remote_event_log_in_hlc_order_and_keeps_its_local
 async fn a_backbone_genesis_of_another_document_is_refused_without_mutation() {
     let foreign = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(5) }, None)).await;
     let (channel, remote) = ChannelBackbone::pair("genesis").await;
-    remote.push(BackboneMessage::Genesis { pack: foreign.envelope().vcs.initial_snapshot.encode_pack() }).await.expect("push foreign genesis");
+    remote.push(BackboneMessage::Genesis { pack: foreign.envelope().vcs.genesis.pack().to_vec() }).await.expect("push foreign genesis");
     let mut target = fresh_demo_store().await;
     let error = target.attach_backbone(Backbones::Channel(channel)).await.expect_err("a different genesis names a different document");
     assert!(matches!(error, VcsError::ValidationFailed(message) if message.contains("different initial snapshot")));
@@ -5614,17 +5660,17 @@ async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation(
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).await.expect("checkpoint");
     let original_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
     let before = owned_test_envelope(&store).await;
-    let invalid = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
+    let invalid = crate::os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
 
     assert!(store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![invalid]).await.is_err());
     assert_eq!(store.envelope(), &before);
 
-    let pin = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: "child".into(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
+    let pin = crate::os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: "child".into(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
     store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![pin]).await.expect("valid pin update");
     let rederived = &store.envelope().vcs.checkpoints[0];
     assert_ne!(rederived.id, original_checkpoint_id);
     assert_eq!(rederived.composition_pins.len(), 1);
-    let mut revalidated = super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(owned_test_envelope(&store).await).await.expect("a persisted pinned checkpoint must validate its rederived identity");
+    let mut revalidated = super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(owned_test_envelope(&store).await, store.local_actor_id().clone()).await.expect("a persisted pinned checkpoint must validate its rederived identity");
     revalidated.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
     close_test_store(&mut revalidated);
     retire_demo_envelope(before);
@@ -5884,7 +5930,7 @@ async fn apply_computes_backwards_from_pre_state() {
     let mut store = ArtifactStore::new(envelope).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let edit = &store.envelope().vcs.edits[0];
-    assert_eq!(edit.inverse, vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
+    assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -6226,7 +6272,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
         id: "edit-1".into(),
         actor: Some("peer".into()),
         forwards: vec![DemoMutation::SetN(SetN { n: 9 })],
-        inverse: vec![DemoMutation::SetN(SetN { n: 4 })],
+        inverse: vec![DemoMutation::SetN(SetN { n: 4 })].into(),
         mutation_meta: Vec::new(),
         verb: None,
         sequence_number: 1,
@@ -6363,8 +6409,8 @@ async fn dialect_migration_preflight_and_batch_commit_are_conflict_free_or_noop(
         Ok([bytes, b"-migrated"].concat())
     }
 
-    let from = crate::os_io::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "1".into(), subset: "*".into() };
-    let to = crate::os_io::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "2".into(), subset: "*".into() };
+    let from = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "1".into(), subset: "*".into() };
+    let to = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "2".into(), subset: "*".into() };
     let migration = DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_marker };
     preflight_dialect_migrations(std::slice::from_ref(&migration)).await.expect("preflight accepts an unclaimed dialect pair without mutation");
     assert!(matches!(migrate_document(&from, &to, b"seed").await, Err(DialectMigrationError::Missing { .. })), "preflight must not publish a migration");
@@ -6457,7 +6503,7 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
     let fresh = || create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: Some(0) }, None);
     let mut malformed_constructor = fresh();
     malformed_constructor.cursor = Some(ArtifactCursor::new(vec!["missing".into()], Vec::new(), None));
-    assert!(matches!(super::ArtifactStore::new(malformed_constructor).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
+    assert!(matches!(super::ArtifactStore::new(malformed_constructor, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
 
     let mut legacy_seed = ArtifactStore::new(fresh()).await;
     legacy_seed.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("seed edit");
@@ -6471,7 +6517,7 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
     duplicate_history.cursor = None;
     let duplicate_edit = duplicate_history.vcs.edits[0].clone();
     duplicate_history.vcs.edits.try_push(duplicate_edit).expect("duplicate test edit fits the fixed history ledger");
-    assert!(matches!(super::ArtifactStore::new(duplicate_history).await, Err(VcsError::ValidationFailed(message)) if message.contains("repeats authoritative edit")), "duplicate authoritative edits cannot be hidden by first-match replay");
+    assert!(matches!(super::ArtifactStore::new(duplicate_history, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::ValidationFailed(message)) if message.contains("repeats authoritative edit")), "duplicate authoritative edits cannot be hidden by first-match replay");
 
     let mut store = ArtifactStore::new(fresh()).await;
     let generation = store.generation();
@@ -6493,7 +6539,7 @@ async fn attach_folds_a_pushed_event_log() {
     let mut seed_store = fresh_demo_store().await;
     seed_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     seed_store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("seed".into()), authors: Vec::new() }).await.expect("commit");
-    remote.push(BackboneMessage::Genesis { pack: seed_store.envelope().vcs.initial_snapshot.encode_pack() }).await.expect("push genesis");
+    remote.push(BackboneMessage::Genesis { pack: seed_store.envelope().vcs.genesis.pack().to_vec() }).await.expect("push genesis");
     remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&seed_store.event_log().expect("seed log")) }).await.expect("push events");
 
     let mut store = fresh_demo_store().await;
@@ -6587,17 +6633,14 @@ async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
 }
 
 /// ↩️ Builds on the existing Revert/Reinstate ledger (S11/S12 history_row_applied_v1): plain Undo is
-/// selective; pack+.spr reload folds the same cursor; the session rebinds local_actor_id so Redo
-/// can reinstate this author's entry from the shared redo stack (hub restart model).
-///
-/// Session rebind: construct seeds local_actor from the applied tail (here foreign). Real apps
-/// call set_local_actor_id from the signed-in actor before Undo/Redo — same as hub restart.
+/// selective; Pack/SPR reload folds the same cursor with the supplied opened actor, so Redo
+/// reinstates this author's entry from the shared redo stack.
 #[semio_framework_async_macros::async_test]
 async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local a1");
     let local_a1 = store.applied_edit_ids()[0].clone();
-    let author = store.local_actor_id().expect("local apply stamps an actor").to_string();
+    let author = store.local_actor_id().0.clone();
     let foreign = foreign_mutation_envelope("author-b", DemoMutation::SetN(SetN { n: 2 })).await;
     let foreign_id = foreign.mutation_id.0.clone();
     store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign }).await.expect("ingest foreign");
@@ -6610,10 +6653,9 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
 
     let files = print_document_pack(store.envelope()).await.expect("print pack");
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("parse pack");
-    let mut reloaded = ArtifactStore::new(parsed.envelope).await;
+    let mut reloaded = ArtifactStore::new_with_actor(parsed.envelope, ActorId(author)).await;
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()], "reload preserves selective undo projection");
     assert_eq!(reloaded.redo_edit_ids(), std::slice::from_ref(&local_a2), "durable collaborative redo stack survives reload");
-    reloaded.set_local_actor_id(Some(author)).expect("rebind session actor");
     reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo after reload reinstates the local edit");
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1, foreign_id, local_a2]);
     assert!(reloaded.redo_edit_ids().is_empty());
@@ -6637,7 +6679,7 @@ async fn edit_mutations_exposes_the_latest_edit() {
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
     assert_eq!(forwards, &[DemoMutation::SetN(SetN { n: 5 })]);
-    assert_eq!(inverse, &[DemoMutation::RestoreN(RestoreN { n: Some(0) })], "inverse restores the pre-state");
+    assert_eq!(inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })], "inverse restores the pre-state");
     assert_eq!(meta.len(), 1);
 }
 
@@ -6703,7 +6745,7 @@ async fn test_support_round_trip_helpers_pass_for_demo_operation() {
         id: "edit-command-envelope".into(),
         actor: Some("actor-fallback".into()),
         forwards: vec![DemoMutation::SetN(SetN { n: 9 })],
-        inverse: vec![DemoMutation::SetN(SetN { n: 4 })],
+        inverse: vec![DemoMutation::SetN(SetN { n: 4 })].into(),
         mutation_meta: vec![MutationMeta {
             mutation_id: Some(MutationId("op-a".into())),
             dependencies: vec![MutationId("op-0".into())],
@@ -6739,7 +6781,7 @@ async fn command_envelope_round_trip_panics_on_a_lossy_operation() {
         id: "edit-lossy".into(),
         actor: None,
         forwards: vec![LossyMutation::SetN(LossySetN { n: 7 })],
-        inverse: vec![],
+        inverse: vec![].into(),
         mutation_meta: vec![],
         verb: None,
         sequence_number: 0,
@@ -6948,7 +6990,7 @@ async fn register_space_documents_registers_manifest_collections_and_artifacts_t
     let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: Some(0) }, None)).await;
     artifact_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("apply artifact edit");
 
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_space_documents(manifest, vec![collection_a, collection_b], vec![artifact_a]).await;
 
     assert!(host.member("space-manifest").await.is_some(), "manifest registered");
@@ -6974,7 +7016,7 @@ async fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
     member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).await.expect("commit b upfront, so it starts clean");
     let member_b_checkpoint = member_b.current_checkpoint_id().await.expect("b checkpoint").to_string();
 
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
     host.register_member(member_b).await;
 
@@ -6993,8 +7035,8 @@ async fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
 #[semio_framework_async_macros::async_test]
 async fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
     let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b").await;
-    let mut host_a = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid first space host history");
-    let mut host_b = SpaceHost::<ArtifactStore<DemoSnapshot, DemoMutation>>::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid second space host history");
+    let mut host_a = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid first space host history");
+    let mut host_b = SpaceHost::<ArtifactStore<DemoSnapshot, DemoMutation>>::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid second space host history");
     assert!(host_a.backbone_ref().await.is_none(), "default is unattached, like any other ArtifactStore");
 
     host_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
@@ -7019,7 +7061,7 @@ async fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
 #[semio_framework_async_macros::async_test]
 async fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
     let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
 
     demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply 1");
@@ -7036,7 +7078,7 @@ async fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
 #[semio_framework_async_macros::async_test]
 async fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
     let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
 
     demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply 1");
@@ -7059,7 +7101,7 @@ async fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_b
     let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: Some(0) }, None)).await;
     member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 9, physical_ms: 2_000 })], transaction: None }).await.expect("apply late");
 
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_early).await;
     host.register_member(member_late).await;
 
@@ -7608,7 +7650,7 @@ async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
             finished_at: None,
             verb: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode")) }],
-            inverse: Vec::new(),
+            inverse: Vec::new().into(),
             meta: None,
             lane: None,
         }],
@@ -7834,7 +7876,7 @@ async fn switch_to_an_unknown_alternative_is_rejected() {
 async fn malformed_alternative_checkpoint_pin_is_rejected_at_construction() {
     let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     envelope.vcs.alternatives.try_push(Alternative { id: "alt-dangling".into(), name: "dangling".into(), checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()] }).expect("test alternative fits the fixed history ledger");
-    let error = match super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(envelope).await {
+    let error = match super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await {
         Ok(_) => panic!("the alternative's pinned checkpoint id must actually exist"),
         Err(error) => error,
     };
@@ -8437,13 +8479,13 @@ impl MemberStoreOwner<TimestampedMutation> for DemoSnapshot {
 }
 
 /// 🎯️ The dialect every composition fixture below mints children under.
-fn demo_child_dialect() -> crate::os_io::ArtifactDialect {
-    crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "1".into(), subset: "*".into() }
+fn demo_child_dialect() -> semio_framework_artifact_reference::ArtifactDialect {
+    semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "1".into(), subset: "*".into() }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_child_dsl_field_round_trips_via_pack_and_value() {
-    let target = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "87a".into(), subset: "mesh".into() } };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "87a".into(), subset: "mesh".into() } };
     let child: ArtifactChild<DemoSnapshot> = ArtifactChild::new("child-1".into(), target);
 
     let spec = artifact_child_spec();
@@ -8462,7 +8504,7 @@ async fn artifact_child_dsl_field_round_trips_via_pack_and_value() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_child_required_owner_distinguishes_absence_and_wrong_type() {
-    let target = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect: demo_child_dialect() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect: demo_child_dialect() };
     let absent: ArtifactChild<DemoSnapshot> = ArtifactChild::new("child-1".into(), target.clone());
     assert_eq!(absent.require_local_owner::<String>(), Err(ArtifactChildMaterializationError::Absent));
 
@@ -8474,7 +8516,7 @@ async fn artifact_child_required_owner_distinguishes_absence_and_wrong_type() {
 #[semio_framework_async_macros::async_test]
 async fn owner_ref_dsl_field_round_trips_via_pack() {
     let owner = OwnerRef {
-        parent: crate::os_io::ArtifactRef { artifact_id: "parent-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.object".into(), standard: "1".into(), subset: "*".into() } },
+        parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.object".into(), standard: "1".into(), subset: "*".into() } },
         slot: "mesh-slot".into(),
         child_id: "child-1".into(),
     };
@@ -8488,7 +8530,7 @@ async fn owner_ref_dsl_field_round_trips_via_pack() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_link_dsl_field_round_trips_every_link_pin_variant() {
-    let target = crate::os_io::ArtifactRef { artifact_id: "linked-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.image".into(), standard: "1".into(), subset: "*".into() } };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "linked-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.image".into(), standard: "1".into(), subset: "*".into() } };
     let pins = vec![LinkPin::Head, LinkPin::Checkpoint { id: "ck-abc123".into() }, LinkPin::Snapshot { blob: BlobRef { hash: "deadbeef".into(), size: 42, media_type: "image/png".into() } }];
     for pin in pins {
         let link = ArtifactLink { target: target.clone(), pin: pin.clone(), role: "cover-image".into() };
@@ -8514,7 +8556,7 @@ async fn artifact_refs_defaults_to_empty_for_a_leaf_snapshot() {
 async fn typed_child_store_factory_round_trips_a_child_through_create_persist_open() {
     let dialect = demo_child_dialect();
 
-    let mut child = create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack()).await.expect("create");
+    let mut child = create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack(), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("create");
     assert!(child.snapshot_retirement_factory.is_some(), "generated member creation must install the exact snapshot retirement factory before returning ownership");
     assert!(child.owned_disposer_installed(), "generated member creation must install the exact whole-store bounded disposer before returning ownership");
     child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply");
@@ -8523,8 +8565,8 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
 
     let files = print_document_pack(child.envelope()).await.expect("print");
     let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
-    let expected = crate::os_io::ArtifactRef { artifact_id: "child-round-trip".into(), dialect };
-    let mut reopened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, None, &persisted).await.expect("open");
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-round-trip".into(), dialect };
+    let mut reopened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, None, &persisted, child.local_actor_id().clone()).await.expect("open");
 
     assert!(reopened.snapshot_retirement_factory.is_some(), "generated member reopen must install the exact snapshot retirement factory before returning ownership");
     assert!(reopened.owned_disposer_installed(), "generated member reopen must install the exact whole-store bounded disposer before returning ownership");
@@ -8541,11 +8583,11 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
 #[semio_framework_async_macros::async_test]
 async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_store() {
     let dialect = demo_child_dialect();
-    let parent = crate::os_io::ArtifactRef { artifact_id: "genesis-parent".into(), dialect: dialect.clone() };
+    let parent = semio_framework_artifact_reference::ArtifactRef { artifact_id: "genesis-parent".into(), dialect: dialect.clone() };
     let owner = OwnerRef { parent: parent.clone(), slot: "slot".into(), child_id: "genesis-child".into() };
-    let expected = crate::os_io::ArtifactRef { artifact_id: "genesis-child".into(), dialect: dialect.clone() };
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "genesis-child".into(), dialect: dialect.clone() };
     let envelope_pack = genesis_member_envelope_pack("demo/v1", &expected, &owner, &DemoSnapshot { n: Some(5) }.encode_pack()).await.expect("genesis envelope");
-    let mut opened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&owner), &envelope_pack).await.expect("open genesis member");
+    let mut opened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&owner), &envelope_pack, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("open genesis member");
     assert_eq!(opened.envelope().id, "genesis-child");
     assert_eq!(opened.envelope().owner.as_ref(), Some(&owner));
     assert_eq!(opened.envelope().dialect.as_ref(), Some(&dialect));
@@ -8553,7 +8595,7 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
     assert!(opened.envelope().vcs.edits.is_empty(), "a genesis member carries no history");
     close_member_dialect_fixture(&mut opened);
     let other = OwnerRef { parent, slot: "other".into(), child_id: "genesis-child".into() };
-    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&other), &envelope_pack).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
+    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&other), &envelope_pack, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
     assert!(matches!(genesis_member_envelope_pack("demo/v1", &expected, &owner, &[]).await, Err(VcsError::Deserialize(_))), "an empty initial pack is rejected, never substituted");
 }
 
@@ -8561,15 +8603,15 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
 async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog() {
     type Wrapped = ArtifactStore<DemoSnapshot, DemoMutation>;
     let dialect = demo_child_dialect();
-    let mut created = <Wrapped as MemberFactory>::create("wrapped-member", &dialect, &DemoSnapshot { n: Some(3) }.encode_pack()).await.expect("wrapper create");
+    let mut created = <Wrapped as MemberFactory>::create("wrapped-member", &dialect, &DemoSnapshot { n: Some(3) }.encode_pack(), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("wrapper create");
     assert!(created.snapshot_retirement_factory.is_some());
     assert!(created.initial_snapshot_retirement_factory.is_some());
     assert!(created.mutation_retirement_factory.is_some());
     assert!(created.owned_disposer_installed());
     let files = print_document_pack(created.envelope()).await.expect("print wrapped member");
     let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
-    let expected = crate::os_io::ArtifactRef { artifact_id: "wrapped-member".into(), dialect };
-    let mut reopened = <Wrapped as MemberFactory>::open(&expected, None, &persisted).await.expect("wrapper open");
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "wrapped-member".into(), dialect };
+    let mut reopened = <Wrapped as MemberFactory>::open(&expected, None, &persisted, created.local_actor_id().clone()).await.expect("wrapper open");
     assert!(reopened.snapshot_retirement_factory.is_some());
     assert!(reopened.initial_snapshot_retirement_factory.is_some());
     assert!(reopened.mutation_retirement_factory.is_some());
@@ -8599,14 +8641,14 @@ async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer
 /// typed by its parent, so `open` must fail closed rather than hand back an untypable member.
 #[semio_framework_async_macros::async_test]
 async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child() {
-    assert!(matches!(create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-empty", &demo_child_dialect(), &[]).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
+    assert!(matches!(create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-empty", &demo_child_dialect(), &[], ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
 
     let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: Some(1) }, None);
-    envelope.owner = Some(OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
+    envelope.owner = Some(OwnerRef { parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
     let files = print_document_pack(&envelope).await.expect("print");
     let orphan = encode_document_pack_bytes(&files.pack, &files.spr).await;
-    let expected = crate::os_io::ArtifactRef { artifact_id: "child-no-dialect".into(), dialect: demo_child_dialect() };
-    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, envelope.owner.as_ref(), &orphan).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-no-dialect".into(), dialect: demo_child_dialect() };
+    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, envelope.owner.as_ref(), &orphan, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
     retire_demo_envelope(envelope);
 }
 
@@ -8644,7 +8686,7 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
     member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], transaction: None }).await.expect("apply after pin");
 
     let resolver = MemberLinkResolver::new(FixtureDirectory { member }).await;
-    let target = crate::os_io::ArtifactRef { artifact_id: "linked-doc".into(), dialect: demo_child_dialect() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "linked-doc".into(), dialect: demo_child_dialect() };
     let link_of = |pin: LinkPin| ArtifactLink { target: target.clone(), pin, role: "representation".into() };
     let decode = async |state: LinkState| match state {
         LinkState::Resolved { pack_bytes, .. } => DemoSnapshot::decode_pack(&pack_bytes).expect("decode"),
@@ -8657,7 +8699,7 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
     let blob = BlobRef { hash: "deadbeef".into(), size: 3, media_type: "application/octet-stream".into() };
     assert!(matches!(resolver.resolve(&link_of(LinkPin::Snapshot { blob })).await, LinkState::PinnedOnly { .. }), "a snapshot pin with no blob store must degrade to PinnedOnly, never Missing");
 
-    let absent = ArtifactLink { target: crate::os_io::ArtifactRef { artifact_id: "gone".into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "representation".into() };
+    let absent = ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "gone".into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "representation".into() };
     assert_eq!(resolver.resolve(&absent).await, LinkState::Missing);
 }
 
@@ -8673,7 +8715,7 @@ async fn link_resolver_reports_resolved_missing_and_pinned_only_states() {
             }
         }
     }
-    let target = crate::os_io::ArtifactRef { artifact_id: "linked-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.image".into(), standard: "1".into(), subset: "*".into() } };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "linked-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.image".into(), standard: "1".into(), subset: "*".into() } };
     let resolver = DemoResolver;
     assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "known".into() }).await, LinkState::Resolved { .. }));
     assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "pinned".into() }).await, LinkState::PinnedOnly { .. }));
@@ -8808,8 +8850,8 @@ async fn member_factory_closed_dialect_graph_sync_preserves_prior_state_on_rejec
             self.links.clone()
         }
     }
-    let child_ref = |slot: &str, child: &str| ChildRef { slot: slot.into(), child_id: child.into(), target: crate::os_io::ArtifactRef { artifact_id: child.into(), dialect: demo_child_dialect() } };
-    let link_ref = |target: &str| ArtifactLink { target: crate::os_io::ArtifactRef { artifact_id: target.into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "reference".into() };
+    let child_ref = |slot: &str, child: &str| ChildRef { slot: slot.into(), child_id: child.into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id: child.into(), dialect: demo_child_dialect() } };
+    let link_ref = |target: &str| ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef { artifact_id: target.into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "reference".into() };
     let fixture = member_dialect_fixture();
     let rows = fixture["graphCases"].as_array().unwrap();
     assert_eq!(rows.len(), 7);
@@ -8919,8 +8961,8 @@ async fn mint_child_id_converges_across_two_replicas_and_varies_by_ordinal_and_s
 /// default, since neither member's policy is configured here) rejects Fatal.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-atomic-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-atomic-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-atomic-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-atomic-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -8955,8 +8997,8 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
 /// record that `parent_ref` owns `child_ref`.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-unowned-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-unowned-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-unowned-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-unowned-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -8982,9 +9024,9 @@ async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
 /// that a clean rollback restores every member's pre-group snapshot.
 #[semio_framework_async_macros::async_test]
 async fn compensate_undoes_applied_members_in_reverse_order() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-comp-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_a_ref = crate::os_io::ArtifactRef { artifact_id: "child-comp-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
-    let child_b_ref = crate::os_io::ArtifactRef { artifact_id: "child-comp-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-comp-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let child_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply parent");
@@ -9025,8 +9067,8 @@ async fn compensate_undoes_applied_members_in_reverse_order() {
 /// `NothingToUndo` — simulating a member whose own rollback errors mid-compensation.
 #[semio_framework_async_macros::async_test]
 async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_compensation_failed() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-comp-fail-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-comp-fail-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-comp-fail-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-fail-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -9059,7 +9101,7 @@ async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_c
 /// explicit element type — the same local test wrapper `parent_1` uses.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let genesis = vec![ChildGenesis { slot: "mesh-slot".into(), dialect: demo_child_dialect(), initial_pack: DemoSnapshot { n: Some(0) }.encode_pack() }];
     let parent_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode")];
 
@@ -9089,9 +9131,9 @@ async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replica
 #[semio_framework_async_macros::async_test]
 async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
     let group_id = "group-xyz";
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-undo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-undo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
-    let foreign_ref = crate::os_io::ArtifactRef { artifact_id: "foreign-undo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let foreign_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "foreign-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply parent");
@@ -9124,8 +9166,8 @@ async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
 #[semio_framework_async_macros::async_test]
 async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
     let group_id = "group-redo-1";
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-redo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let foreign_ref = crate::os_io::ArtifactRef { artifact_id: "foreign-redo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-redo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let foreign_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "foreign-redo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply parent");
@@ -9159,8 +9201,8 @@ async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
 /// consults `owner_of` at all.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
-    let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-initiator-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let peer_ref = crate::os_io::ArtifactRef { artifact_id: "peer-member-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-initiator-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let peer_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-member-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -9202,9 +9244,9 @@ async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
 /// A) as `applied_children`/`parent_applied`.
 #[semio_framework_async_macros::async_test]
 async fn compensate_undoes_applied_peer_members_in_reverse_order() {
-    let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-initiator".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let peer_a_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
-    let peer_b_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-initiator".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let peer_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let peer_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     initiator_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply initiator");
@@ -9238,8 +9280,8 @@ async fn compensate_undoes_applied_peer_members_in_reverse_order() {
 /// minted, with no code path specific to `Peer` needed.
 #[semio_framework_async_macros::async_test]
 async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
-    let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-undo-initiator".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let peer_ref = crate::os_io::ArtifactRef { artifact_id: "peer-undo-member".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-undo-initiator".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let peer_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-undo-member".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -9272,8 +9314,8 @@ async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
 /// would close A -> B -> A and is rejected with zero side effects.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_cycle() {
-    let artifact_a_ref = crate::os_io::ArtifactRef { artifact_id: "peer-cycle-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let artifact_b_ref = crate::os_io::ArtifactRef { artifact_id: "peer-cycle-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let artifact_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-cycle-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let artifact_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-cycle-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut store_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut store_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -9309,8 +9351,8 @@ async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_
 /// compensation order) is untouched, unmodified, still green.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-owned-origin-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-owned-origin-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-owned-origin-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-owned-origin-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
@@ -9337,8 +9379,8 @@ async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
 /// own `Apply` command, so the ledger, the revision and the outbound envelopes all see it at apply time.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-transaction-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-transaction-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-transaction-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-transaction-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     let mut coordinator = CompositionCoordinator::new().await;
@@ -9393,8 +9435,8 @@ async fn dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child() 
 /// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_error_and_nothing_applies() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-normal".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-normal".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
@@ -9445,8 +9487,8 @@ async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_erro
 /// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-lf".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-lf".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
@@ -9482,8 +9524,8 @@ async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_fai
 /// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-vigilant".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-vigilant".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::Vigilant);
@@ -9523,8 +9565,10 @@ async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
 /// vtable indirection, no `Normal`-default trap.
 #[semio_framework_async_macros::async_test]
 async fn group_receipt_messages_contains_the_union_with_member_path_prefixed_targets() {
-    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-    let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-union".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-union".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
@@ -9701,8 +9745,8 @@ mod snapshot_capability_tests;
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️child-dispatch/🔣️.json")).expect("neutral borrowed child declaration");
-    let parent_ref=crate::os_io::ArtifactRef{artifact_id:fixture["parent"].as_str().unwrap().into(),dialect:crate::os_io::ArtifactDialect{artifact_kind:"s.stdio.demoparent".into(),standard:"1".into(),subset:"*".into()}};
-    let child_ref=crate::os_io::ArtifactRef{artifact_id:fixture["child"].as_str().unwrap().into(),dialect:crate::os_io::ArtifactDialect{artifact_kind:"s.stdio.demochild".into(),standard:"1".into(),subset:"*".into()}};
+    let parent_ref=semio_framework_artifact_reference::ArtifactRef{artifact_id:fixture["parent"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.demoparent".into(),standard:"1".into(),subset:"*".into()}};
+    let child_ref=semio_framework_artifact_reference::ArtifactRef{artifact_id:fixture["child"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.demochild".into(),standard:"1".into(),subset:"*".into()}};
     let mut parent=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&parent_ref.artifact_id,DemoSnapshot{n:Some(0)},None)).await;
     let mut child=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&child_ref.artifact_id,DemoSnapshot{n:Some(0)},None)).await;
     let mut coordinator=CompositionCoordinator::new().await;
@@ -9729,4 +9773,162 @@ async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
     assert_eq!(source[0].as_ptr(),bytes);
     assert_eq!(source[0],expected);
     println!("[DEBUG] exact child source, label and schema borrows survive genuine group policy refusal");
+}
+
+#[test]
+fn immutable_stored_genesis_obeys_the_neutral_law() {
+    #[derive(Debug, PartialEq)]
+    struct GenesisLawSnapshot { n: i64 }
+    static ENCODED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    static DECODED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    impl ArtifactGenesisCodec for GenesisLawSnapshot {
+        fn encode_genesis_pack(&self) -> Result<Vec<u8>, ValueError> { ENCODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); Ok(format!("{{\"n\":{}}}", self.n).into_bytes()) }
+        fn decode_genesis_pack(pack: &[u8]) -> Result<Self, ValueError> { DECODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); let value: serde_json::Value = serde_json::from_slice(pack).unwrap(); Ok(Self { n: value["n"].as_i64().unwrap() }) }
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
+    let born = ArtifactGenesis::born(GenesisLawSnapshot { n: 0 }).unwrap();
+    assert_eq!(ENCODED.load(std::sync::atomic::Ordering::SeqCst), 1);
+    let mut digests = Vec::new();
+    for row in fixture["packs"].as_array().unwrap() {
+        let raw = row["hex"].as_str().unwrap();
+        let bytes: Vec<u8> = raw.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+        let stored = ArtifactGenesis::<GenesisLawSnapshot>::from_stored_pack(bytes.clone()).unwrap();
+        assert_eq!(stored.snapshot().n, row["decoded"]["n"].as_i64().unwrap());
+        assert_eq!(stored.pack(), bytes);
+        assert_eq!(stored.to_value(), DslValue::String(raw.into()));
+        assert_eq!(stored.digest(), *semio_framework_hash::hash(&bytes).as_bytes());
+        let alias = stored.share_snapshot();
+        let cloned = stored.clone();
+        assert!(Arc::ptr_eq(&alias, &cloned.share_snapshot()));
+        assert!(Arc::ptr_eq(&stored.share_pack(), &cloned.share_pack()));
+        assert_eq!(stored.digest(), cloned.digest());
+        digests.push(stored.digest());
+    }
+    assert_eq!(ENCODED.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(DECODED.load(std::sync::atomic::Ordering::SeqCst), 2);
+    assert_eq!(born.digest(), digests[0]);
+    assert_ne!(digests[0], digests[1]);
+    assert!(ArtifactGenesis::<GenesisLawSnapshot>::from_value(DslValue::String("7B".into())).is_err());
+    eprintln!("[DEBUG] Immutable genesis law preserves exact stored bytes, cached identity and shared decoded owners; birth1 encode, reload2 decodes0 encode");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn opened_actor_ownership_obeys_the_neutral_law() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
+    let actors = &fixture["actors"];
+    let actor = ActorId(actors["opened"].as_str().unwrap().into());
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actor-genesis-law", DemoSnapshot { n: Some(0) }, None);
+    let mut real = super::ArtifactStore::new(envelope, actor.clone()).await.unwrap();
+    real.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    assert!(Arc::ptr_eq(&*real.current, &real.envelope().vcs.genesis.share_snapshot()));
+    let mut live = ArtifactStore(real, Some(close_test_store::<DemoSnapshot, DemoMutation>));
+    live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.unwrap();
+    let first = live.envelope().vcs.edits.iter().next().unwrap();
+    assert_eq!(first.actor.as_deref(), actors["bareAuthor"].as_str());
+    assert_eq!(first.mutation_meta[0].author_id.as_ref(), Some(&actor));
+    let remote = foreign_mutation_envelope(actors["explicitAuthor"].as_str().unwrap(), DemoMutation::SetN(SetN { n: 2 })).await;
+    live.dispatch(ArtifactCommand::IngestRemote { envelope: remote }).await.unwrap();
+    let foreign = live.envelope().vcs.edits.iter().last().unwrap();
+    assert_eq!(foreign.actor.as_deref(), actors["explicitAuthor"].as_str());
+    assert_eq!(live.local_actor_id(), &actor);
+    live.dispatch(ArtifactCommand::Undo).await.unwrap();
+    assert_eq!(live.envelope().transitions.last().unwrap().actor.0, actors["transitionAuthor"].as_str().unwrap());
+    let files = print_document_pack(live.envelope()).await.unwrap();
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.unwrap();
+    let mut reopened = super::ArtifactStore::new(parsed.into_envelope(), actor.clone()).await.unwrap();
+    reopened.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    assert_eq!(reopened.local_actor_id().0, actors["reopened"].as_str().unwrap());
+    close_test_store(&mut reopened);
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.unwrap();
+    let mut candidate = parsed.into_envelope();
+    candidate.vcs.edits.iter_mut().next().unwrap().actor = None;
+    assert!(super::ArtifactStore::new(candidate, actor).await.is_err());
+    eprintln!("[DEBUG] Opened actor law preserves construction identity, explicit peer author, bare local author, transition author and reopen; actorless durable edit refused");
+}
+
+#[test]
+fn stored_genesis_capture_is_bounded_and_cancellable() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
+    for row in fixture["packs"].as_array().unwrap() {
+        let hex = row["hex"].as_str().unwrap();
+        for fuel in [1, 2, 7] {
+            let raw = format!("{{\"schema\":\"{hex}\",\"id\":\"capture\"}}");
+            let mut cursor = owned_schema_test_cursor(&[raw.as_bytes()]);
+            let cancel = semio_framework_job::root_cancel_token();
+            let mut sequence = 0;
+            let token = loop {
+                let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(7, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
+                match cursor.step(&mut cx) { OwnedSchemaRecordStep::FieldToken { field_id: 1, token, .. } => break token, OwnedSchemaRecordStep::Pending => {}, _ => panic!("canonical Pack token") }
+            };
+            let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
+            let mut capture = ArtifactGenesisPackCapture::new(token, &cx).unwrap();
+            for _ in 0..hex.len()+2 {
+                let before = capture.relative;
+                let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
+                let complete = capture.step(&cursor, &mut cx).unwrap();
+                assert!(capture.relative-before <= fuel as usize);
+                if complete { break; }
+            }
+            assert!(capture.complete);
+            assert_eq!(capture.bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), hex);
+            assert!(capture.hasher.finalize() == semio_framework_hash::hash(&capture.bytes));
+            let mut stale = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(2), semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
+            let before = capture.bytes.len();
+            assert!(capture.step(&cursor, &mut stale).is_err());
+            assert_eq!(capture.bytes.len(), before);
+            cancel.cancel_now();
+            let mut cancelled = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel, semio_framework_job::default_now_us, &mut sequence);
+            assert!(capture.step(&cursor, &mut cancelled).is_err());
+            assert_eq!(capture.bytes.len(), before);
+            let retirement = semio_framework_value::retirement::owned_retirement(capture.bytes);
+            drive_retirement_terminal(retirement);
+            while cursor.close_step(1) != SnapshotRetirementStep::Complete {}
+        }
+    }
+    eprintln!("[DEBUG] Stored Pack capture respects one-byte fuel and stale/cancel fences, hashes incrementally and retires exact admitted bytes");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
+    for config in [false, true] {
+        for row in fixture["retainedAdmissions"].as_array().unwrap() {
+            eprintln!("[DEBUG] Retained admission begins config={config}, authors={row}");
+            let initial = DemoSnapshot { n: Some(0) };
+            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actorless-hydration", initial.clone(), None);
+            if config { envelope.history_shape = crate::os_spr::HistoryShape::Config; }
+            else { envelope.dialect = Some(semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() }); }
+            let mut live = ArtifactStore::new(envelope).await;
+            live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.unwrap();
+            let files = print_document_pack(live.envelope()).await.unwrap();
+            let mut history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.unwrap();
+            history.edits[0].actor = row["editAuthor"].as_str().map(str::to_owned);
+            history.edits[0].meta.as_mut().unwrap()[0].author_id = row["operationAuthor"].as_str().map(str::to_owned);
+            let actor = ActorId(fixture["actors"]["opened"].as_str().unwrap().into());
+            let mut rejected = false;
+            if config {
+                let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(), 0, 65536, actor);
+                for _ in 0..10000 { match hydration.advance(1, 65536) { ConfigStoreHydrationStep::Pending(_) => {}, ConfigStoreHydrationStep::Rejected(_) => { rejected = true; break; }, ConfigStoreHydrationStep::Ready(mut store) => { close_test_store(&mut store); break; } } }
+                eprintln!("[DEBUG] Retained admission cleanup config={config}, rejected={rejected}");
+                let mut closed = false;
+                for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } hydration.close_step(1, 4096).unwrap(); }
+                assert!(closed, "retained hydration closes exactly");
+            } else {
+                let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: live.envelope().id.clone(), dialect: live.envelope().dialect.clone().unwrap() };
+                let (operation, generation) = (semio_framework_job::OperationId(801), semio_framework_job::Generation(1));
+                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.digest(), history, expected, None, "demo/v1".into(), <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
+                let mut sequence = 0;
+                for _ in 0..10000 {
+                    let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);
+                    match hydration.step(&mut cx) { PersistedDocumentHydrationStep::Pending(_) => {}, PersistedDocumentHydrationStep::Rejected(_) => { rejected = true; break; }, PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Store(mut store)) => { close_test_store(&mut store); break; }, _ => panic!("requested store output") }
+                }
+                eprintln!("[DEBUG] Retained admission cleanup config={config}, rejected={rejected}");
+                let mut closed = false;
+                for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } hydration.close_step(1, 4096).unwrap(); }
+                assert!(closed, "retained hydration closes exactly");
+            }
+            assert_eq!(!rejected, row["accepted"].as_bool().unwrap(), "config={config}, authors={row}");
+        }
+    }
+    eprintln!("[DEBUG] Original document/config retained admission rejects missing edit and operation authors under exact cleanup");
 }

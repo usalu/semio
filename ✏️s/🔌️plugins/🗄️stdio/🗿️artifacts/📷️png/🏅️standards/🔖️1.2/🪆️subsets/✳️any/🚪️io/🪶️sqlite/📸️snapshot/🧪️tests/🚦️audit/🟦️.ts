@@ -4,7 +4,7 @@ import { expect, test } from "bun:test";
 import { PNG } from "pngjs";
 import { inflateSync } from "node:zlib";
 import corpus from "../../🧫️fixtures/🚦️audit/🔣️.json";
-import type { PngSnapshot } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import {decodePngSnapshot,encodePngSnapshot} from "../../../../💾️binary/📸️snapshot/🟦️.ts";
 import { pngSnapshotFromSqliteDatabase, pngSnapshotToSqliteDatabase } from "../../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 
@@ -36,15 +36,15 @@ test("PNG neutral profiles keep exact source bytes through SQLite and reopen ind
     const source = png(item);
     const independent = PNG.sync.read(source);
     expect([...independent.data]).toEqual(item.pixels);
-    const snapshot: PngSnapshot = { schema: "stdio.png", bytes: [...source] };
+    const snapshot = await decodePngSnapshot(source);
     const restored = await pngSnapshotFromSqliteDatabase(await pngSnapshotToSqliteDatabase(snapshot));
     expect(restored).toEqual(snapshot);
-    expect([...PNG.sync.read(Buffer.from(restored.bytes)).data]).toEqual(item.pixels);
+    expect([...PNG.sync.read(Buffer.from(await encodePngSnapshot(restored))).data]).toEqual(item.pixels);
     const database = Database.deserialize(await exportSqliteDatabase(await pngSnapshotToSqliteDatabase(snapshot)));
     try {
-      expect(database.query("SELECT role FROM png_document WHERE id=1").get()).toEqual({role:"native"});
-      expect(database.query("SELECT kind FROM png_chunk ORDER BY ordinal").all().map((row:any)=>row.kind)).toEqual(item.chunks.map(chunk=>chunk.tag));
-      expect((await pngSnapshotFromSqliteDatabase(await importSqliteDatabase(database.serialize()))).bytes).toEqual([...source]);
+      expect(database.query("SELECT schema FROM png_image WHERE id=1").get()).toEqual({schema:"stdio.png"});
+      expect(database.query("SELECT value FROM png_sample ORDER BY ordinal").all().map((row:any)=>row.value)).toEqual(snapshot.image.samples);
+      expect(await pngSnapshotFromSqliteDatabase(await importSqliteDatabase(database.serialize()))).toEqual(snapshot);
     } finally {
       database.close();
     }
@@ -55,9 +55,9 @@ test("PNG Latin-1, compressed text and international text remain exact source ch
   const item = corpus.validPng.find(value => value.id === "latin1-and-itext")!;
   const source = png(item);
   expect([...PNG.sync.read(source).data]).toEqual(item.pixels);
-  const restored = await pngSnapshotFromSqliteDatabase(await importSqliteDatabase(await exportSqliteDatabase(await pngSnapshotToSqliteDatabase({ schema: "stdio.png", bytes: [...source] }))));
-  expect(restored.bytes).toEqual([...source]);
-  for (const chunk of item.chunks.filter(value => ["tEXt", "zTXt", "iTXt"].includes(value.tag))) expect(Buffer.from(restored.bytes).includes(hex(chunk.dataHex))).toBe(true);
+  const restored = await pngSnapshotFromSqliteDatabase(await importSqliteDatabase(await exportSqliteDatabase(await pngSnapshotToSqliteDatabase(await decodePngSnapshot(source)))));
+  expect(restored).toEqual(await decodePngSnapshot(source));
+  expect(restored.image.textChunks.map(chunk=>chunk.value)).toEqual([corpus.text.latin1Value,corpus.text.latin1Value,corpus.text.internationalValue]);
 });
 
 test("PNG zlib corpus independently enforces CINFO distance and dictionary identity", () => {

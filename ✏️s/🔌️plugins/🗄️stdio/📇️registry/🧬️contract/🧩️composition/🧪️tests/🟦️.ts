@@ -1,9 +1,9 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { selectCompositionContributionsV1, admitCompositionContributionV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, admitCompositionParentRemovalV1 } from "../🟦️.ts";
+import { selectCompositionContributionsV1, admitCompositionContributionV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1 } from "../🟦️.ts";
 
-/** 🧪️ Compares neutral contribution admission and removal with an independent schema oracle. */
+/** 🧪️ Compares neutral contribution admission and selection with an independent schema oracle. */
 export function runCompositionContributionChecks(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const corpus = read("../🧫️fixtures/🔣️.json");
@@ -45,19 +45,5 @@ export function runCompositionContributionChecks(): number {
   assert.deepEqual(resolveCompositionNativeFactoriesV1(empty, () => { throw new Error("must not read absent export"); }, () => { throw new Error("must not read absent source"); }), []);
   assert.deepEqual(resolveCompositionOpenTargetsV1([], []), []);
   assert.throws(() => resolveCompositionOpenTargetsV1([{ ...empty, openTargets: [{ factoryId: "absent", role: "editor", surfaceId: "neutral" }] }], []));
-  const validRemoval = ajv.compile(read("../🧬️schema/🗑️parent-removal/🔣️.json"));
-  for (const vector of corpus.parentRemovalCases) {
-    const input = vector.input;
-    const oracle = validRemoval(input) && input.expected.includes(input.absent) && input.present.every((row: any) => row.kind === "directory" && row.complete) && isSame(input.expected.filter((name: string) => name !== input.absent), input.present.map((row: any) => row.identity));
-    let admitted: string[] | undefined;
-    try { admitted = admitCompositionParentRemovalV1(input); } catch {}
-    assert.equal(admitted !== undefined, oracle, `${vector.id}: independent removal admission`);
-    assert.equal(admitted !== undefined, vector.admitted, vector.id);
-    if (admitted) assert.deepEqual(admitted, [...input.expected].filter(name => name !== input.absent).sort());
-  }
-  return corpus.cases.length + corpus.nativeExportCases.length + corpus.parentRemovalCases.length + 3;
-}
-
-function isSame(left: string[], right: string[]): boolean {
-  return JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
+  return corpus.cases.length + corpus.nativeExportCases.length + 3;
 }

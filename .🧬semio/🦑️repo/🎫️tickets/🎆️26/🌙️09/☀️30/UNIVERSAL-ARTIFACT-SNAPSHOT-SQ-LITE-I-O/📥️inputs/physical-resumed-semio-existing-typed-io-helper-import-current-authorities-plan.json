@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-06T13:15:32.515Z",
+  "options": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::text::schema::snapshot::write_run;",
+      "after": "use crate::standards::v1::subsets::text::io::binary::snapshot::write_run;",
+      "names": [
+        "write_run"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::text::schema::snapshot::read_run;",
+      "after": "use crate::standards::v1::subsets::text::io::binary::snapshot::read_run;",
+      "names": [
+        "read_run"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::table::schema::snapshot::write_column;",
+      "after": "use crate::standards::v1::subsets::table::io::binary::snapshot::write_column;",
+      "names": [
+        "write_column"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::object::schema::snapshot::{write_child_opt, write_transform};",
+      "after": "use crate::standards::v1::subsets::object::io::binary::snapshot::{write_child_opt, write_transform};",
+      "names": [
+        "write_child_opt",
+        "write_transform"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::object::schema::snapshot::{read_child_opt, read_transform};",
+      "after": "use crate::standards::v1::subsets::object::io::binary::snapshot::{read_child_opt, read_transform};",
+      "names": [
+        "read_child_opt",
+        "read_transform"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::graph::schema::snapshot::{write_edge};",
+      "after": "use crate::standards::v1::subsets::graph::io::binary::snapshot::{write_edge};",
+      "names": [
+        "write_edge"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::graph::schema::snapshot::{read_edge, read_node};",
+      "after": "use crate::standards::v1::subsets::graph::io::binary::snapshot::{read_edge, read_node};",
+      "names": [
+        "read_edge",
+        "read_node"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::kit::schema::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};",
+      "after": "use crate::standards::v1::subsets::kit::io::binary::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};",
+      "names": [
+        "write_child_list",
+        "write_child_opt",
+        "write_design_list",
+        "write_link_list",
+        "write_type_list"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "before": "use crate::standards::v1::subsets::kit::schema::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};",
+      "after": "use crate::standards::v1::subsets::kit::io::binary::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};",
+      "names": [
+        "read_child_list",
+        "read_child_opt",
+        "read_design_list",
+        "read_link_list",
+        "read_type_list"
+      ],
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/💾️binary/📸️snapshot/🦀️.rs"
+    }
+  ]
+}

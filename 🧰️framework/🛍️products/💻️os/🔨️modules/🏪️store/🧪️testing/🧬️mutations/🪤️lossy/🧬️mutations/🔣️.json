@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/lossy/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/testing/lossy/mutations.json",
   "title": "LossyMutation",
   "oneOf": [
     {
@@ -11,7 +11,7 @@
       ],
       "properties": {
         "SetN": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/lossy/mutation/set-n/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/lossy/mutation/set-n/schema.json"
         }
       }
     }

@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "kind": "create-position",
+      "schema": "🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧬️schema/🔣️.json",
+      "payload": {
+        "index": 0,
+        "item": {
+          "id": "a",
+          "data": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      },
+      "inputs": [
+        "/index",
+        "/item"
+      ]
+    },
+    {
+      "kind": "reorder-positions",
+      "schema": "🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧬️schema/🔣️.json",
+      "payload": {
+        "id": "a",
+        "toIndex": 1
+      },
+      "inputs": [
+        "/id",
+        "/toIndex"
+      ]
+    },
+    {
+      "kind": "replace-position-data",
+      "schema": "🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧬️schema/🔣️.json",
+      "payload": {
+        "id": "a",
+        "newData": {
+          "x": 4
+        }
+      },
+      "inputs": [
+        "/id",
+        "/newData"
+      ]
+    },
+    {
+      "kind": "change-imported-features",
+      "schema": "🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧬️schema/🔣️.json",
+      "payload": {
+        "newImportedMap": {
+          "positions": [],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        }
+      },
+      "inputs": [
+        "/newImportedMap"
+      ]
+    }
+  ]
+}

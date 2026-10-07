@@ -1,0 +1,91 @@
+{
+  "cases": [
+    {
+      "name": "resolved-alias-and-inert-payload",
+      "xml": "<root xmlns:compat=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" conformance=\"strict\"><compat:AlternateContent/><text>urn:schemas-microsoft-com:vml</text></root>",
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "root",
+          "attrs": [
+            {
+              "name": "xmlns:compat",
+              "value": "http://schemas.openxmlformats.org/markup-compatibility/2006"
+            },
+            {
+              "name": "conformance",
+              "value": "strict"
+            }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "name": "compat:AlternateContent",
+              "attrs": [],
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "text",
+              "attrs": [],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "urn:schemas-microsoft-com:vml"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "namespaces": [
+        "http://schemas.openxmlformats.org/markup-compatibility/2006"
+      ],
+      "alternateContent": true,
+      "strictRoot": true
+    },
+    {
+      "name": "shadowed-alias-and-qualified-attribute",
+      "xml": "<root xmlns:compat=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" compat:conformance=\"strict\"><compat:AlternateContent xmlns:compat=\"urn:other\"/><!--urn:schemas-microsoft-com:vml--></root>",
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "root",
+          "attrs": [
+            {
+              "name": "xmlns:compat",
+              "value": "http://schemas.openxmlformats.org/markup-compatibility/2006"
+            },
+            {
+              "name": "compat:conformance",
+              "value": "strict"
+            }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "name": "compat:AlternateContent",
+              "attrs": [
+                {
+                  "name": "xmlns:compat",
+                  "value": "urn:other"
+                }
+              ],
+              "children": []
+            },
+            {
+              "kind": "comment",
+              "text": "urn:schemas-microsoft-com:vml"
+            }
+          ]
+        }
+      },
+      "namespaces": [
+        "http://schemas.openxmlformats.org/markup-compatibility/2006",
+        "urn:other"
+      ],
+      "alternateContent": false,
+      "strictRoot": false
+    }
+  ]
+}

@@ -23,7 +23,7 @@
 //! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
 use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
-use semio_framework_plugin::{io_dispatch,  Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use {semio_framework_plugin::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoDirection,semio_framework_plugin::IoKey,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io as semio_drawing_composer;

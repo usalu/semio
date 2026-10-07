@@ -1,7 +1,7 @@
 //! 🌱️ Pure bounded initial-child identity; this digest grants no creation or publication authority.
 
 use crate::os_directory::schema::DocumentScope;
-use crate::os_io::{ArtifactDialect, ArtifactRef};
+use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 
 const INITIAL_CHILD_DOMAIN: &[u8] = b"semio.initial-child.v1\0";
 const INITIAL_CHILD_FIELD_BYTES: usize = 256;

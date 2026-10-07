@@ -11,21 +11,17 @@ pub type SemioAudioDiffText = String;
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::audio::schema::diff::*;
+use crate::standards::v1::subsets::audio::io::binary::diff::{encode_option, decode_option};
+use crate::standards::v1::subsets::base::io::text::snapshot::{enc_indexed_triple, dec_indexed_triple};
+use crate::standards::v1::subsets::audio::schema::diff::*;
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot as triples;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::parse_u32;
-use crate::standards::v1::subsets::audio::io::text::snapshot::enc_format;
-use crate::standards::v1::subsets::audio::io::text::snapshot::dec_format;
-use crate::standards::v1::subsets::animation::io::text::snapshot::enc_channel;
-use crate::standards::v1::subsets::animation::io::text::snapshot::dec_channel;
-use crate::standards::v1::subsets::audio::io::text::snapshot::enc_tag;
-use crate::standards::v1::subsets::audio::io::text::snapshot::dec_tag;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_audio_diff(d: &SemioAudioDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -101,12 +97,12 @@ pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    triples::split_top_level(s, sep)
+    crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(s, sep)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
-    triples::strip_brackets(s)
+    crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -186,9 +182,10 @@ pub use diff_codec::*;
 
 #[allow(unused_imports)]
 mod residual_diff_helper {
-use crate::audio::schema::diff::*;
+use crate::standards::v1::subsets::audio::schema::diff::*;
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot as triples;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.

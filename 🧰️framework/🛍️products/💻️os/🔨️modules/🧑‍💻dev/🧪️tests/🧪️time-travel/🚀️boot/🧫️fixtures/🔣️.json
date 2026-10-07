@@ -1,0 +1,198 @@
+{
+  "description": "Manifest-admitted universal history serve selection. Catalog rows come from generated playground authority.",
+  "cases": [
+    {
+      "name": "specialized journey keeps declared puzzle default",
+      "universal": false,
+      "url": "http://127.0.0.1:6064/?plugin=draw",
+      "renderer": "react",
+      "expected": "puzzle2d"
+    },
+    {
+      "name": "custom route forwards declared drawing family",
+      "universal": true,
+      "url": "http://127.0.0.1:6064/?plugin=draw",
+      "renderer": "react",
+      "expected": "draw"
+    },
+    {
+      "name": "native catalog port admits drawing family",
+      "universal": true,
+      "url": "http://127.0.0.1:6164/",
+      "renderer": "wgpu",
+      "expected": "draw"
+    },
+    {
+      "name": "explicit custom family works on a free port",
+      "universal": true,
+      "url": "http://127.0.0.1:6901/",
+      "renderer": "react",
+      "explicit": "draw",
+      "expected": "draw"
+    },
+    {
+      "name": "conflicting route and explicit family is refused",
+      "universal": true,
+      "url": "http://127.0.0.1:6901/?plugin=puzzle2d",
+      "renderer": "react",
+      "explicit": "draw",
+      "error": true
+    },
+    {
+      "name": "unknown route is refused before serve startup",
+      "universal": true,
+      "url": "http://127.0.0.1:6901/?plugin=not-declared",
+      "renderer": "react",
+      "error": true
+    },
+    {
+      "name": "unclaimed port without declared variant is refused",
+      "universal": true,
+      "url": "http://127.0.0.1:6901/",
+      "renderer": "react",
+      "error": true
+    }
+  ],
+  "startups": [
+    {
+      "name": "cold puzzle React activates before listener",
+      "variant": "puzzle2d",
+      "renderer": "react",
+      "port": 6012,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "ready",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev",
+        "spawn",
+        "stop"
+      ]
+    },
+    {
+      "name": "cold custom WGPU activates its declared family",
+      "variant": "draw",
+      "renderer": "wgpu",
+      "port": 6164,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "ready",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-draw-wgpu-dev",
+        "spawn",
+        "stop"
+      ]
+    },
+    {
+      "name": "existing serve is reused without activation",
+      "variant": "draw",
+      "renderer": "react",
+      "port": 6064,
+      "answers": true,
+      "occupied": true,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "reused",
+      "trace": []
+    },
+    {
+      "name": "failed activation starts no listener",
+      "variant": "puzzle2d",
+      "renderer": "react",
+      "port": 6012,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": true,
+      "outcome": "error",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev"
+      ]
+    },
+    {
+      "name": "pre-cancelled journey owns no producer or listener",
+      "variant": "draw",
+      "renderer": "wgpu",
+      "port": 6164,
+      "answers": false,
+      "occupied": false,
+      "cancel": "before",
+      "activationFails": false,
+      "outcome": "error",
+      "trace": []
+    },
+    {
+      "name": "cancelled activation starts no listener",
+      "variant": "draw",
+      "renderer": "wgpu",
+      "port": 6164,
+      "answers": false,
+      "occupied": false,
+      "cancel": "during",
+      "activationFails": false,
+      "outcome": "error",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-draw-wgpu-dev"
+      ]
+    },
+    {
+      "name": "occupied non-server port refuses before activation",
+      "variant": "puzzle2d",
+      "renderer": "react",
+      "port": 6012,
+      "answers": false,
+      "occupied": true,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "error",
+      "trace": []
+    },
+    {
+      "name": "canonical hub port refuses before activation",
+      "variant": "puzzle2d",
+      "renderer": "react",
+      "port": 7800,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "error",
+      "trace": []
+    },
+    {
+      "name": "another journey finishes the listener during activation",
+      "variant": "puzzle2d",
+      "renderer": "react",
+      "port": 6012,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "reused",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev"
+      ],
+      "afterActivationAnswers": true,
+      "afterActivationOccupied": true
+    },
+    {
+      "name": "a non-server claims the port during activation",
+      "variant": "puzzle2d",
+      "renderer": "react",
+      "port": 6012,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "error",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev"
+      ],
+      "afterActivationAnswers": false,
+      "afterActivationOccupied": true
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "id": "simple-one-byte",
+      "width": 1,
+      "fragments": [
+        "<00",
+        "ff> Tj"
+      ],
+      "codes": [
+        0,
+        255
+      ]
+    },
+    {
+      "id": "identity-two-byte",
+      "width": 2,
+      "fragments": [
+        "BT /F1 12 Tf <0000",
+        "80ff> Tj ET"
+      ],
+      "codes": [
+        0,
+        33023
+      ]
+    },
+    {
+      "id": "embedded-four-byte",
+      "width": 4,
+      "fragments": [
+        "BT /F1 12 Tf <00000000",
+        "12345678ffffffff> Tj ET"
+      ],
+      "codes": [
+        0,
+        305419896,
+        4294967295
+      ]
+    }
+  ]
+}

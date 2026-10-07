@@ -1,0 +1,3 @@
+# Artifact Reference Semantic Owner
+
+TypeScript already owns ArtifactRef and ArtifactDialect in framework/schema/artifact-reference. Rust will use the same pure source owner, compiled by a small first-party artifact-reference package outside the schema tree. Physical record binding and URI/coordinate text extensions remain under framework/IO/text/artifact-reference. Native extension traits require explicit IO imports; semantic mutations receive owned references and do not decode URI strings. IO facades will not reexport the semantic models. A new native test target is registered through the permanent script and launch grouping. Initial native RED pending.

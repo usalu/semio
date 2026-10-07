@@ -32,22 +32,22 @@ fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshot for JsonSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_rfc8259::subsets::base::schema::snapshot::owned_pack::encode(self,encoding,control)}
-    fn retire_sqlite_snapshot(self) { crate::standards::v_rfc8259::subsets::base::schema::snapshot::owned_pack::retire(self); }
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control)}
+    fn retire_sqlite_snapshot(self) { crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::retire(self); }
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        crate::standards::v_rfc8259::subsets::base::schema::snapshot::owned_pack::preflight(self, control)
+        crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::preflight(self, control)
     }
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
         use semio_framework_os_kernel::io_schema::IoError;
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.json"||dialect.standard!="rfc8259"{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON owned snapshot dialect differs from RFC8259")));}
         let row=database.table("json_document").map_err(IoError::from_value_error)?.single_row().map_err(IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(IoError::from_value_error)?!=self.schema{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"JSON owned document identity differs from semantic projection")));}
-        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"i-json"=>crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance_controlled(self,control).map_err(IoError::from_value_error)?,"geojson"=>crate::standards::v_rfc8259::subsets::geojson::io::sqlite::snapshot::check_geojson_conformance_controlled(self,control).map_err(IoError::from_value_error)?,_=>return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON named subset has no owned semantic validator")))};
+        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"i-json"=>crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance_controlled(self,control).map_err(IoError::from_value_error)?,"geojson"=>crate::standards::v_rfc8259::subsets::geojson::io::sqlite::snapshot::check_geojson_conformance_controlled(self,control).map_err(IoError::from_value_error)?,_=>return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON named subset has no owned semantic validator")))};
         Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
     fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
-        crate::standards::v_rfc8259::subsets::base::schema::snapshot::owned_pack::decode(payload,control)
+        crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control)
     }
 
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
@@ -63,7 +63,7 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
             let id = integer(values.len() + 1)?; let mut boolean = SqliteValue::Null; let mut number = SqliteValue::Null; let mut string = SqliteValue::Null;let mut query_number=SqliteValue::Null;
             match value {
                 JsonValue::Bool { value } => boolean = SqliteValue::Integer(i64::from(*value)),
-                JsonValue::Number { lexeme } => {query_number=crate::standards::v_rfc8259::subsets::base::schema::snapshot::number::meaning(lexeme,control,SqliteSnapshotPhase::ProjectSnapshot,1+values.len()+members.len()+elements.len(),total)?.numeric.map(SqliteValue::Real).unwrap_or(SqliteValue::Null);number=SqliteValue::Text(lexeme.clone());},
+                JsonValue::Number { lexeme } => {query_number=crate::standards::v_rfc8259::subsets::base::schema::snapshot::number::meaning(lexeme,&mut ||control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1+values.len()+members.len()+elements.len(),total))?.numeric.map(SqliteValue::Real).unwrap_or(SqliteValue::Null);number=SqliteValue::Text(lexeme.clone());},
                 JsonValue::String { value } => string = SqliteValue::Text(value.clone()),
                 JsonValue::Array { items } => for (ordinal, child) in items.iter().enumerate().rev() { stack.push((child, Parent::Element(id, ordinal))); },
                 JsonValue::Object { members } => for (ordinal, member) in members.iter().enumerate().rev() { stack.push((&member.value, Parent::Member(id, ordinal, &member.key))); },
@@ -100,7 +100,7 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
             match kind {
                 "null" | "array" | "object" if empty(2) && empty(3) && empty(4) && empty(5) => {}
                 "boolean" if empty(3) && empty(4) && empty(5) && matches!(row.integer(2)?, 0 | 1) => {}
-                "number" if empty(2) && empty(4) => {let expected=crate::standards::v_rfc8259::subsets::base::schema::snapshot::number::meaning(row.text(3)?,control,SqliteSnapshotPhase::ReconstructSnapshot,0,total)?.numeric;if match expected{None=>!empty(5),Some(value)=>empty(5)||row.real(5)?!=value}{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JSON derived numeric value disagrees with its owned lexeme"))}},
+                "number" if empty(2) && empty(4) => {let expected=crate::standards::v_rfc8259::subsets::base::schema::snapshot::number::meaning(row.text(3)?,&mut ||control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,total))?.numeric;if match expected{None=>!empty(5),Some(value)=>empty(5)||row.real(5)?!=value}{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JSON derived numeric value disagrees with its owned lexeme"))}},
                 "string" if empty(2) && empty(3) && empty(5) => { row.text(4)?; }
                 _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JSON primitive kind and payload columns disagree")),
             }

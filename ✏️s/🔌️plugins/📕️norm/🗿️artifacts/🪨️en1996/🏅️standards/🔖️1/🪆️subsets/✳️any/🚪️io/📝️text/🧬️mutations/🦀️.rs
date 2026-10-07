@@ -18,14 +18,7 @@ impl OpText for En1996Mutation {
 
 /// 💾️ The norm-wide payload op frame (`semio_s_artifact_norm_contract::payload_op_binary`), tagged by this subset's
 /// `📡️.protocol.semio` records.
-impl OpBinary for En1996Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::encode::<crate::En1996Snapshot, _>(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::decode::<crate::En1996Snapshot, _>(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -13,7 +13,7 @@ fn profile_fixture(plan: &serde_json::Value) -> PptxSnapshot {
         xml_parts: vec![PptxXmlPart {
             path: "ppt/presentation.xml".into(),
             content_type: "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml".into(),
-            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(plan["xml"].as_str().unwrap()).unwrap(),
+            document: semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(plan["xml"].as_str().unwrap()).unwrap(),
         }],
     }
 }
@@ -23,7 +23,7 @@ fn sqlite_snapshot_pptx_exact_profile_policies_use_typed_root_namespace_entities
     let limits = SqliteDatabaseLimits::default();
     for case in plan["cases"].as_array().unwrap() {
         let snapshot = profile_fixture(case);
-        let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: case["subset"].as_str().unwrap().into() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: case["subset"].as_str().unwrap().into() };
         let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
         let result = snapshot.validate_sqlite_snapshot_subset(&dialect, &db, &mut SqliteSnapshotControl::new(&mut |_| true, limits));
         assert_eq!(result.is_ok(), case["codes"].as_array().unwrap().len() == case["warnings"].as_u64().unwrap() as usize, "{}", case["id"]);
@@ -50,14 +50,14 @@ async fn sqlite_snapshot_pptx_actual_exact_profile_declarations_preserve_owned_w
     let limits = SqliteDatabaseLimits::default();
     for case in plan["cases"].as_array().unwrap().iter().filter(|case| case["codes"].as_array().unwrap().len() == case["warnings"].as_u64().unwrap() as usize) {
         let snapshot = profile_fixture(case);
-        let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: case["subset"].as_str().unwrap().into() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: case["subset"].as_str().unwrap().into() };
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
             let exported = io_export_sqlite_snapshot(&dialect, &snapshot, encoding, limits, &mut |_| true).await.unwrap();
             assert_eq!(exported.diagnostics.len(), case["warnings"].as_u64().unwrap() as usize);
             let restored = io_import_sqlite_snapshot::<PptxSnapshot>(&dialect, &exported.value, limits, &mut |_| true).await.unwrap();
             assert_eq!(restored.value, snapshot);
             assert_eq!(restored.diagnostics.len(), exported.diagnostics.len());
-            let foreign = store::io_schema::ArtifactDialect { subset: if dialect.subset == "strict" { "transitional".into() } else { "strict".into() }, ..dialect.clone() };
+            let foreign = semio_framework_artifact_reference::ArtifactDialect { subset: if dialect.subset == "strict" { "transitional".into() } else { "strict".into() }, ..dialect.clone() };
             assert!(io_import_sqlite_snapshot::<PptxSnapshot>(&foreign, &exported.value, limits, &mut |_| true).await.is_err());
             restored.value.retire_sqlite_snapshot();
         }
@@ -202,10 +202,7 @@ fn sqlite_snapshot_pptx_partial_part_reconstruction_retires_deep_completed_docum
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_pptx_actual_declaration_exposes_complete_typed_snapshot() {
-    use semio_framework_os_kernel::io::{
-        io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot},
-        ArtifactDialect,
-    };
+    use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("PPTX SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let snapshot = fixture();
@@ -241,7 +238,7 @@ fn sqlite_snapshot_pptx_complete_signed64_transform_domain() {
 fn sqlite_snapshot_pptx_actual_erased_native_boundaries_retain_all_owned_fields() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let codec = <PptxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
@@ -281,7 +278,7 @@ fn sqlite_snapshot_pptx_deep_erased_native_input_output_are_interior_cancellable
             snapshot.xml_parts[1].content_type = "z".repeat(plan["lateTextBytes"].as_u64().unwrap() as usize);
             let snapshot = Owner(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
-            let dialect = store::io_schema::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
+            let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
             let codec = <PptxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
@@ -545,7 +542,7 @@ async fn sqlite_snapshot_pptx_strict_initial_has_independent_complete_package_an
     assert_eq!(independent_relationships(&native),expected_edges);
     eprintln!("[DEBUG] strict PPTX initial independent ZIP/QuickXML parts=9 resolved_relationships=5");
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("PPTX SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind:"s.stdio.pptx".into(),standard:"ecma-376".into(),subset:"strict".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind:"s.stdio.pptx".into(),standard:"ecma-376".into(),subset:"strict".into() };
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
         let limits=SqliteDatabaseLimits::default();
         let bytes=io_export_sqlite_snapshot(&dialect,&owner,encoding,limits,&mut |_|true).await.unwrap().value;

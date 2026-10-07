@@ -22,8 +22,8 @@ fn request_with_admission(bytes: &[u8], subset: &str, admitted: bool) -> MemberO
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap();
     }
     pages.seal().unwrap();
-    let expected = store::io::ArtifactRef { artifact_id: "flow-member".into(), dialect: store::io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
-    let request = MemberOpenRequest::new(OperationId(1), Generation(1), 1000, expected, None, pages);
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "flow-member".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
+    let request = MemberOpenRequest::new(OperationId(1), Generation(1), 1000, expected, None, pages, store::ActorId(store::LOCAL_ACTOR_ID.into()));
     if admitted {
         request.admit(1).unwrap_or_else(|_| panic!("neutral request must admit"))
     } else {
@@ -63,22 +63,22 @@ fn close_with_grants(value: &mut dyn ErasedSnapshotRetirement, grants: &[usize])
     panic!("bounded decoder retirement must finish");
 }
 
-fn reference_bytes(reference: &store::io::ArtifactRef) -> usize {
+fn reference_bytes(reference: &semio_framework_artifact_reference::ArtifactRef) -> usize {
     reference.artifact_id.len() + reference.dialect.artifact_kind.len() + reference.dialect.standard.len() + reference.dialect.subset.len()
 }
 
-fn request_identity_bytes(expected: &store::io::ArtifactRef, owner: Option<&OwnerRef>) -> usize {
+fn request_identity_bytes(expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>) -> usize {
     reference_bytes(expected) + owner.map_or(0, |owner| reference_bytes(&owner.parent) + owner.slot.len() + owner.child_id.len())
 }
 
-fn retained_request(bytes: &[u8], expected: store::io::ArtifactRef, owner: Option<OwnerRef>) -> (MemberOpenRequest, usize) {
+fn retained_request(bytes: &[u8], expected: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>) -> (MemberOpenRequest, usize) {
     let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: bytes.len().div_ceil(4096), maximum_bytes: bytes.len() }).unwrap();
     for chunk in bytes.chunks(4096) {
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap();
     }
     pages.seal().unwrap();
     let retained = bytes.len() + request_identity_bytes(&expected, owner.as_ref());
-    let request = MemberOpenRequest::new(OperationId(71), Generation(17), 10_000, expected, owner, pages).admit(1).unwrap_or_else(|_| panic!("complete request authority must admit"));
+    let request = MemberOpenRequest::new(OperationId(71), Generation(17), 10_000, expected, owner, pages, store::ActorId(store::LOCAL_ACTOR_ID.into())).admit(1).unwrap_or_else(|_| panic!("complete request authority must admit"));
     (request, retained)
 }
 
@@ -317,15 +317,15 @@ fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes(
 
 #[semio_framework_async_macros::async_test]
 async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
-    let dialect = store::io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let expected = store::io::ArtifactRef { artifact_id: "flow-member".into(), dialect: dialect.clone() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "flow-member".into(), dialect: dialect.clone() };
     let owner = OwnerRef {
-        parent: store::io::ArtifactRef { artifact_id: "parent-document".into(), dialect: store::io::ArtifactDialect { artifact_kind: "s.test.parent".into(), standard: "v1".into(), subset: "root".into() } },
+        parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-document".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.parent".into(), standard: "v1".into(), subset: "root".into() } },
         slot: "flow".into(),
         child_id: expected.artifact_id.clone(),
     };
     let snapshot = SemioFlowSnapshot { schema: "stdio.semio.flow".into(), nodes: Vec::new(), edges: Vec::new() };
-    let mut created = create_semio_member(&expected.artifact_id, &dialect, &snapshot.encode_pack()).await.expect("real Flow child creation");
+    let mut created = create_semio_member(&expected.artifact_id, &dialect, &snapshot.encode_pack(), store::ActorId(store::LOCAL_ACTOR_ID.into())).await.expect("real Flow child creation");
     created.set_owner(Some(owner.clone())).await;
     assert_eq!(created.artifact_ref(), Some(expected.clone()));
     assert_eq!(created.owner_ref(), Some(owner.clone()));
@@ -390,7 +390,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
     let denied = <SemioMembers as MemberFactory>::OPEN_DECLARATIONS.iter().filter(|declaration| declaration.subset != "flow").collect::<Vec<_>>();
     assert_eq!(denied.len(), 17);
     for declaration in denied {
-        let expected = store::io::ArtifactRef { artifact_id: owner.child_id.clone(), dialect: store::io::ArtifactDialect { artifact_kind: declaration.kind.into(), standard: declaration.standard.into(), subset: declaration.subset.into() } };
+        let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: owner.child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: declaration.kind.into(), standard: declaration.standard.into(), subset: declaration.subset.into() } };
         for cancelled in [false, true] {
             let (request, exact_retired) = retained_request(&envelope, expected.clone(), Some(owner.clone()));
             let mut denied_open = begin_member_open(request);
@@ -441,7 +441,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         ("member-open.history.copy", "expired", MemberOpenDiagnostic::Expired),
         ("member-open.history.decode", "close", MemberOpenDiagnostic::Cancelled),
     ] {
-        let expected = store::io::ArtifactRef { artifact_id: owner.child_id.clone(), dialect: dialect.clone() };
+        let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: owner.child_id.clone(), dialect: dialect.clone() };
         let (request, retained) = retained_request(&envelope, expected, Some(owner.clone()));
         let mut lifecycle_open = begin_member_open(request);
         let cancel = root_cancel_token();

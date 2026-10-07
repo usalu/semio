@@ -1,12 +1,10 @@
 /** ✏️ TypeScript twin of the plugin runtime's supersede ledger (`⏪️time-travel/🦀️.rs` region `🔖️Supersessions`), checked
  * against the language-agnostic fixture `🧫️fixtures/🧫️supersede-ledger/🔣️.json` that `🧪️tests/🧪️supersede-ledger/🦀️.rs`
- * runs through the Rust ledger. Independent where it counts: Ajv (2020-12) validates the fixture against its schema, and
- * every case is classified by this file's own implementation of the ownership law — so the roles, applied history edits,
+ * runs through the Rust ledger. Independent where it counts: every case is classified by this file's own implementation of the ownership law — so the roles, applied history edits,
  * undo restores and redos both runtimes reach are the fixture's. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
 
 type Input = string | null;
 type SupersededInput = Readonly<{ target: string; input: Input }>;
@@ -35,6 +33,7 @@ class Ledger {
   readonly redoStacks = new Map<string, [number, number][]>();
 
   constructor(transitions: readonly Transition[], readonly originals: Readonly<Record<string, string>>) {
+    for (const transition of transitions) assert.ok(transition.inputs.length > 0, "a supersession names at least one input");
     this.records = [...transitions].sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map((transition) => ({ ...transition, role: "edit" as Role, entry: 0 }));
     this.records.forEach((_, index) => this.classify(index));
   }
@@ -132,13 +131,10 @@ class Ledger {
   }
 }
 
-/** ⚖️ Validates the fixture and classifies every case through the twin; answers the case count. */
+/** ⚖️ Rejects empty supersessions and classifies every case through the twin; answers the case count. */
 export function supersedeLedgerOracle(repoRoot: string): number {
   const fixture: Fixture = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(repoRoot, FIXTURE_ROOT, "🧬️schema/🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
-  assert.equal(validate({ ...fixture, cases: [{ ...fixture.cases[0], transitions: [{ ...fixture.cases[0]!.transitions[0], inputs: [] }] }] }), false, "a supersession names at least one input");
+  assert.throws(() => new Ledger([{ ...fixture.cases[0]!.transitions[0]!, inputs: [] }], fixture.cases[0]!.originals), /at least one input/);
   for (const testCase of fixture.cases) {
     const ledger = new Ledger(testCase.transitions, testCase.originals);
     const name = (index: number) => ledger.records[index]!.id;

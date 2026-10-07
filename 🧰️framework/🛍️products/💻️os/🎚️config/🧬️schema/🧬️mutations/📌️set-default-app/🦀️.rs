@@ -4,7 +4,7 @@ use super::super::{DefaultApp, OpeningPreferences};
 use super::clear_default_app::ClearDefaultApp;
 use super::OpeningConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
-use semio_framework::{AppRef, AppRole, ArtifactDialect};
+use {semio_framework::AppRef,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
@@ -29,7 +29,7 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
         if base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role && entry.app == self.app) {
             let role = role_name(self.role);
-            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", self.app.app_id, role, self.dialect.to_coordinate()));
+            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", self.app.app_id, role, format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)));
         }
         let mut defaults: Vec<DefaultApp> = base.defaults.iter().filter(|entry| !(entry.dialect == self.dialect && entry.role == self.role)).cloned().collect();
         defaults.push(DefaultApp { dialect: self.dialect.clone(), role: self.role, app: self.app.clone() });
@@ -47,11 +47,11 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
 }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), self.dialect.to_coordinate()), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), self.dialect.to_coordinate()))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)))
     }
 
     fn target(&self) -> Vec<String> {
-        vec![self.dialect.to_coordinate(), role_name(self.role).to_string()]
+        vec![self.dialect.artifact_kind.clone(),self.dialect.standard.clone(),self.dialect.subset.clone(),role_name(self.role).to_string()]
     }
 }
 

@@ -21,7 +21,8 @@
         "roots": [
           "../.."
         ]
-      }
+      },
+      "surface": null
     },
     {
       "crate": "semio-s-artifact-block-3d",
@@ -43,7 +44,8 @@
         "roots": [
           "../.."
         ]
-      }
+      },
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient"
     },
     {
       "crate": "semio-s-artifact-block-5d",
@@ -65,7 +67,8 @@
         "roots": [
           "../.."
         ]
-      }
+      },
+      "surface": null
     }
   ],
   "retiredParentFiles": [

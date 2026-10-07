@@ -27,3 +27,6 @@ pub use mutations::{apply_svg_basic_mutation, SvgBasicMutation, KINDS as BASIC_M
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+#[path="🏅️conformance/🦀️.rs"]
+pub mod conformance;

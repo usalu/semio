@@ -24,7 +24,7 @@
       }
     },
     "doc": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json#/$defs/SvgDocument",
       "x-semio-state": "artifact",
       "x-semio-ui": {
         "label": {
@@ -32,6 +32,992 @@
           "de": "Dokument"
         }
       }
+    }
+  },
+  "$defs": {
+    "SvgPoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "SvgLength": {
+      "type": "object",
+      "properties": {
+        "magnitude": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "magnitude",
+        "unit"
+      ],
+      "additionalProperties": false
+    },
+    "ViewBox": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "minX": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "minX",
+        "minY",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "TransformOp": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "matrix"
+            },
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            },
+            "c": {
+              "type": "number"
+            },
+            "d": {
+              "type": "number"
+            },
+            "e": {
+              "type": "number"
+            },
+            "f": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "translate"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "scale"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "rotate"
+            },
+            "angle": {
+              "type": "number"
+            },
+            "center": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "op",
+            "angle"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "skewX"
+            },
+            "angle": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "angle"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "skewY"
+            },
+            "angle": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "angle"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "PathCommand": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "moveTo"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "x",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "lineTo"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "x",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "horizontalLineTo"
+            },
+            "x": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "x",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "verticalLineTo"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "curveTo"
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "x2": {
+              "type": "number"
+            },
+            "y2": {
+              "type": "number"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "x1",
+            "y1",
+            "x2",
+            "y2",
+            "x",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "smoothCurveTo"
+            },
+            "x2": {
+              "type": "number"
+            },
+            "y2": {
+              "type": "number"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "x2",
+            "y2",
+            "x",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "quadraticCurveTo"
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "x1",
+            "y1",
+            "x",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "smoothQuadraticCurveTo"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "x",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "arc"
+            },
+            "rx": {
+              "type": "number"
+            },
+            "ry": {
+              "type": "number"
+            },
+            "xAxisRotation": {
+              "type": "number"
+            },
+            "largeArc": {
+              "type": "boolean"
+            },
+            "sweep": {
+              "type": "boolean"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "relative": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "cmd",
+            "rx",
+            "ry",
+            "xAxisRotation",
+            "largeArc",
+            "sweep",
+            "x",
+            "y",
+            "relative"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cmd": {
+              "const": "closePath"
+            }
+          },
+          "required": [
+            "cmd"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "SvgAttributeValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "length"
+            },
+            "value": {
+              "$ref": "#/$defs/SvgLength"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "viewBox"
+            },
+            "value": {
+              "$ref": "#/$defs/ViewBox"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "transform"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TransformOp"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "points"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SvgPoint"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "pathData"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PathCommand"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "localReference"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "SvgAttr": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/SvgAttributeValue"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "viewBox"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "viewBox"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "transform"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "transform"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "points"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "points"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "d"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "pathData"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "width",
+                  "height",
+                  "x",
+                  "y",
+                  "x1",
+                  "y1",
+                  "x2",
+                  "y2",
+                  "cx",
+                  "cy",
+                  "r",
+                  "rx",
+                  "ry",
+                  "fx",
+                  "fy"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "length"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "opacity",
+                  "fill-opacity",
+                  "stroke-opacity"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "number"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "clip-path"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "localReference",
+                      "text"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "not": {
+                  "enum": [
+                    "viewBox",
+                    "transform",
+                    "points",
+                    "d",
+                    "width",
+                    "height",
+                    "x",
+                    "y",
+                    "x1",
+                    "y1",
+                    "x2",
+                    "y2",
+                    "cx",
+                    "cy",
+                    "r",
+                    "rx",
+                    "ry",
+                    "fx",
+                    "fy",
+                    "opacity",
+                    "fill-opacity",
+                    "stroke-opacity",
+                    "clip-path"
+                  ]
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "properties": {
+                  "kind": {
+                    "const": "text"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SvgNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "element"
+            },
+            "name": {
+              "type": "string"
+            },
+            "attrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SvgAttr"
+              }
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SvgNode"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "cData"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "processingInstruction"
+            },
+            "target": {
+              "type": "string"
+            },
+            "data": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "SvgDocument": {
+      "type": "object",
+      "properties": {
+        "declaration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDeclaration"
+        },
+        "doctype": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDoctype"
+        },
+        "prolog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SvgNode"
+          }
+        },
+        "root": {
+          "$ref": "#/$defs/SvgNode"
+        },
+        "epilog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SvgNode"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
     }
   }
 }

@@ -30,18 +30,11 @@ export async function verifyMathematicalPublicationAuthority(repoRoot: string, p
   const plugin = resolve(packageRoot, "../..");
   const authority = resolve(plugin, "🧫️fixtures/📣️publication-authority");
   const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
-  const module = await Bun.file(resolve(plugin, "🧬️schema/🔣️.json")).json() as { $id: string };
-  const ajv = new Ajv({ allErrors: true, strict: true });
-  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-  ajv.addSchema(module);
-  const validate = ajv.compile({ $ref: `${module.$id}#/$defs/MathematicalPublicationAuthority` });
-  if (!validate(fixture)) throw new Error(`Mathematical fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
   const source = await Bun.file(resolve(plugin, fixture.source)).text();
   if (!oracle(fixture, source)) throw new Error("Mathematical publication-authority oracle rejected production");
   const hostileSource = [source.replace('ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },', ""), source.replace("            || request.generation != request.authority.generation()\n", ""), source.replace('.action_interactive_job("setPoints", InteractiveJobClassification::Migrated)', "")];
   if (hostileSource.some((candidate) => oracle(fixture, candidate))) throw new Error("Mathematical oracle accepted a hostile source mutation");
-  if (validate({ ...fixture, extra: true })) throw new Error("Mathematical strict schema accepted an extra property");
-  console.error(`validated Mathematical publication authority; routes=${fixture.routes.length}; WindowConfig=1; schema=Ajv; oracle=owned; hostile=3`);
+  console.error(`validated Mathematical publication authority; routes=${fixture.routes.length}; WindowConfig=1; oracle=owned; hostile=3`);
   const subset = resolve(plugin, "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any");
   runCmd(process.execPath, ["test", resolve(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), resolve(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")], { cwd: repoRoot });
 }

@@ -136,6 +136,8 @@ pub enum AviStreamFormat {
     Raw { data: Vec<u8> },
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for AviStreamFormat{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Statements(<Self as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);}
+
 impl semio_framework_dsl_record::DslField for AviStreamFormat{
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{control.step()?;let mut statements=control.allocate_vec(1)?;statements.push(<Self as semio_framework_dsl_record::DslVariants>::to_named_record_controlled(self,control)?);Ok(semio_framework_dsl_record::FieldValue::Statements(statements))}
 

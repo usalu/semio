@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::image::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
@@ -161,8 +161,8 @@ mod native_snapshot_codec {
 use super::*;
 use super::*;
 use crate::standards::v1::subsets::image::schema::snapshot::*;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::image::io::text::snapshot::*;
 /// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioImageSnapshot`] —

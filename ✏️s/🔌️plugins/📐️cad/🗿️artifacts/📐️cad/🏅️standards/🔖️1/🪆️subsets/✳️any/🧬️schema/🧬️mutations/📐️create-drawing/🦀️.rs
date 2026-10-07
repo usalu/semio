@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "create-drawing")]
 pub struct CreateDrawing {
     pub child_id: String,
-    pub target: String,
+    pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
 impl MutationKind<CadSnapshot, CadMutation> for CreateDrawing {

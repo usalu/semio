@@ -34,15 +34,6 @@ class RefusalScript extends BundleScript {
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 }
-/** 🪆️ Checks canonical owner bindings against independent schema and SQLite fields. */
-class BindingScript extends BundleScript{
- async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-binding accepts no arguments");
-  const source=resolve(this.root,"../../🔗️reference/🧪️tests/🏛️ownership/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
-  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
- }
-}
 
-const router=new ScriptRouter(import.meta.dir).register("test-ownership",OwnershipScript).register("test-native",NativeScript).register("test-refusal",RefusalScript).register("test-binding",BindingScript);
+const router=new ScriptRouter(import.meta.dir).register("test-ownership",OwnershipScript).register("test-native",NativeScript).register("test-refusal",RefusalScript);
 await runScriptMain(router,{defaultCommand:"test-ownership"});

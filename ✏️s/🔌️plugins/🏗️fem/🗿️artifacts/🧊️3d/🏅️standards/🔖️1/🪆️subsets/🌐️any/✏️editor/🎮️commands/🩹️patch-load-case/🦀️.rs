@@ -2,7 +2,8 @@
 //! `ChangeLoadCaseName`, `selfWeight` → `ChangeLoadCaseSelfWeight`).
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{change_load_case_name, change_load_case_self_weight};
+use crate::standards::v1::subsets::any::schema::mutations::{change_load_case_name,change_load_case_self_weight};
+
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

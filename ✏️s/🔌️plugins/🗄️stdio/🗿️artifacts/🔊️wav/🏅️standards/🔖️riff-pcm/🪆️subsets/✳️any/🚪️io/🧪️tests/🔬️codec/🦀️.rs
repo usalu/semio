@@ -190,7 +190,8 @@ async fn complete_chunk_sequence_preserves_order_and_duplicate_canonical_chunks(
 
 #[semio_framework_async_macros::async_test]
 async fn exact_serialization_boundaries_survive_typed_edit_save_and_reopen() {
-    use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, set_snapshot, WavMutation};
+    use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation,set_snapshot,WavMutation};
+
     use std::io::Cursor;
 
     let maximum_ext = serialization_boundary("maximumFmtExtensionBytes");

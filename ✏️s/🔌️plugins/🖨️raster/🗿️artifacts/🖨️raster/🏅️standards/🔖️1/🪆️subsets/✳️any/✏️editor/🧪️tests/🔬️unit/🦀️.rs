@@ -53,7 +53,7 @@ pub(crate) mod context {
     /// every typed command until the app carries the live runtime instance the `ActionMeta` names, so
     /// an unmounted fixture can construct and render but never mutate.
     pub async fn app() -> RasterAppFixture {
-        let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests).await;
+        let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(artifact_laws::meta("local").instance_id).await;
         RasterAppFixture(app)
     }
@@ -110,7 +110,7 @@ pub(crate) mod context {
     /// raster document owns a populated asset pool) asserts in `Drop` that the bounded protocol ran
     /// first, and only a store ever runs it. The artifact's own owner catalog retires it instead.
     pub fn retire_raster_envelope(envelope: store::ArtifactEnvelope<RasterSnapshot, RasterMutation>) {
-        let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled raster owner catalog retires one envelope");
+        let mut retirement = crate::host::owned::raster_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled raster owner catalog retires one envelope");
         // ⛽️ A `RasterOwnedMap` page backing is one 16 KiB allocation released whole.
         let grant = crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES;
         for _ in 0..1_000_000 {
@@ -158,7 +158,7 @@ fn raster_envelope_wire() -> Vec<u8> {
         (
             "vcs".to_string(),
             semio_framework_pack_json::object([
-                ("initialSnapshot".to_string(), Value::String(snapshot_hex)),
+                ("initialPack".to_string(), Value::String(snapshot_hex)),
                 ("edits".to_string(), semio_framework_pack_json::array([])),
                 ("changes".to_string(), semio_framework_pack_json::array([])),
                 ("checkpoints".to_string(), semio_framework_pack_json::array([])),
@@ -170,7 +170,7 @@ fn raster_envelope_wire() -> Vec<u8> {
     ]))
     .into_bytes();
     let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None);
-    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::raster_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::host::owned::raster_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Raster fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -960,7 +960,7 @@ pub(crate) mod mounted {
     }
 
     pub fn mounted_app() -> MountedRasterApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<RasterPlayApp>>(manifest));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<RasterPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(RASTER_TEST_INSTANCE));
         MountedRasterApp(app)
     }
@@ -1289,7 +1289,7 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let edits = envelope.vcs.edits.len();
     let operation = semio_framework_job::OperationId(4_401);
     let generation = semio_framework_job::Generation(1);
-    let mut job = crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_initialization_job(envelope, operation, generation);
+    let mut job = crate::host::owned::raster_document_store_initialization_job(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut steps = 0usize;
@@ -1337,4 +1337,13 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let snapshot = app.snapshot().expect("loaded snapshot");
     assert!(crate::raster_asset(&snapshot.assets, "semio-emblem").is_some(), "the emblem survives the archive door");
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn raster_close_diagnosis_registered_add_layer_releases_all_owners() {
+    use semio_framework_plugin::PluginApp;
+    let mut app=context::app().await;
+    context::dispatch(&mut app,RasterCommand::AddLayer(commands::add_layer::AddLayer{kind:"pixel".into()})).await;
+    for _ in 0..100000 {if app.close_terminal_is_empty(){break;}app.close_step(1,16384).unwrap();semio_framework_async::yield_once().await;}
+    assert!(app.close_terminal_is_empty(),"registered AddLayer closure must release all owners");
 }

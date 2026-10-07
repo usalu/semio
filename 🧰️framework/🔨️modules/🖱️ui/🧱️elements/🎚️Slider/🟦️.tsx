@@ -37,7 +37,7 @@ const sliderTickClassName = cn("bg-element pointer-events-none absolute w-px dat
 const sliderThumbBaseClassName = cn(
   "block shrink-0 rounded-full bg-element transition-[background-color] outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
-  "focus-visible:bg-active-base focus-visible:ring-0",
+  "focus-visible:bg-active-base focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
   "data-[dragging=true]:bg-active-base",
   "disabled:pointer-events-none disabled:opacity-50",
 );
@@ -49,7 +49,7 @@ const sliderDialClassName = cn("relative aspect-square h-medium shrink-0 rounded
 const sliderRefusalClassName = cn("text-destructive block text-xs leading-tight");
 
 /** 🎚️ Slider numeric readout presentation. */
-const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
+const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2");
 
 // #region 📐️Contract
 export type SliderOrientation = "horizontal" | "vertical";
@@ -219,11 +219,16 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   const gestureChangedRef = reactHostPort.useRef(false);
   const keyboardActiveRef = reactHostPort.useRef(false);
   const trackRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const readoutRef = reactHostPort.useRef<HTMLSpanElement | null>(null);
+  const returnFocusRef = reactHostPort.useRef(false);
   const [editValue, setEditValue] = reactHostPort.useState("");
   const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
-  const doubleClickToEditLabel = useLabel("ui.common.doubleClickToEdit");
+  const editExactValueLabel = useLabel("ui.common.editExactValue");
+  reactHostPort.useEffect(() => {
+    if (!isEditing && returnFocusRef.current) { returnFocusRef.current = false; readoutRef.current?.focus(); }
+  }, [isEditing]);
   const [refusal, setRefusal] = reactHostPort.useState<{ readonly message: string | null } | null>(null);
   const range = reactHostPort.useMemo(() => normalizeSliderRange(min, max, step), [max, min, step]);
   const snaps = reactHostPort.useMemo(() => snapValues ?? [], [snapValues]);
@@ -364,8 +369,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
 
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      if (commitTyped()) setIsEditing(false);
+      if (commitTyped()) { returnFocusRef.current = true; setIsEditing(false); }
     } else if (e.key === "Escape") {
+      returnFocusRef.current = true;
       setRefusal(null);
       setIsEditing(false);
     }
@@ -597,6 +603,8 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
         {isEditing ? (
           <Input
             type="number"
+            aria-label={props["aria-label"] ?? sliderTitle}
+            aria-labelledby={showLabel && id ? `${id}-label` : props["aria-labelledby"]}
             value={editValue}
             onChange={(e) => {
               setEditValue(e.target.value);
@@ -613,7 +621,12 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             id={id}
           />
         ) : (
-          <span data-slot="slider-value" className={sliderValueClassName} role="button" onDoubleClick={handleValueClick} title={doubleClickToEditLabel}>
+          <span ref={readoutRef} data-slot="slider-value" className={sliderValueClassName} role="button" tabIndex={disabled || readOnly ? -1 : 0} aria-disabled={disabled || readOnly || undefined} aria-label={props["aria-label"] ?? sliderTitle} aria-labelledby={showLabel && id ? `${id}-label` : props["aria-labelledby"]} aria-keyshortcuts="Enter F2 Space" onDoubleClick={handleValueClick} onKeyDown={(event) => {
+            if (disabled || readOnly || !["Enter", "F2", " "].includes(event.key)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            handleValueClick();
+          }} title={editExactValueLabel}>
             {formatReadout(displayValue)}
           </span>
         )}

@@ -98,8 +98,8 @@ async fn descriptor_round_trips_through_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_vcs_replays_operations() {
-    let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)).await.expect("map store");
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_owners());
+    let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("map store");
+    store.install_document_store_owners_exact(crate::host::owned::gis_map_document_store_owners());
     store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     use semio_framework_plugin::ArtifactOwnedDisposer;

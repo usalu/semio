@@ -156,8 +156,8 @@ pub fn publish(window_id: &str, document: &Grid3dSnapshot, assignments: Vec<Grid
     };
     let entry = residency.entry(window_id.to_string()).or_default();
     entry.refresh(assignments);
-    let instances = scene_internals::preview_instances_json(document, &entry.current);
-    let delta = entry.delta_is_worth_publishing().then(|| scene_internals::preview_instances_delta_json(document, &entry.previous, &entry.current, entry.revision));
+    let instances = crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_instances_json(document, &entry.current);
+    let delta = entry.delta_is_worth_publishing().then(|| crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_instances_delta_json(document, &entry.previous, &entry.current, entry.revision));
     (instances, delta)
 }
 //#endregion 🚚️Residency
@@ -170,7 +170,7 @@ pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, window_id:
     let (assignments, satisfiable) = paint_assignments(document, tool_run);
     let live = live_fill_payload(tool_run).is_some();
     let (instances, delta) = if live {
-        (scene_internals::preview_instances_json(document, &assignments), None)
+        (crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_instances_json(document, &assignments), None)
     } else {
         publish(window_id, document, assignments)
     };
@@ -180,7 +180,7 @@ pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, window_id:
         status_json: Some(status),
         ..world3d_scene(
             world3d_camera_json(position, target, 45.0),
-            scene_internals::preview_meshes_json(document),
+            crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_meshes_json(document),
             instances,
             world3d_selection_json("interactionSelect", &[], None),
             &WorldSunConfig::default(),

@@ -1,7 +1,7 @@
 {
   "mutation": "change-gamma",
   "payload": {
-    "revision": "7985741d54001585",
-    "gama": 45455
+    "revision": "84688c5a659ee12d",
+    "gama": 100000
   }
 }

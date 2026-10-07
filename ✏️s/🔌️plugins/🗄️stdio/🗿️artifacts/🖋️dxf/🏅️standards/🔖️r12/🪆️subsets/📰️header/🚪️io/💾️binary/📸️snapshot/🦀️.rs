@@ -39,6 +39,7 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
+use crate::standards::v_r12::subsets::any::io::binary::diff::{dec_block_bin, dec_dxf_entities_bin, dec_header_var_bin, enc_block_bin, enc_dxf_entities_bin, enc_header_var_bin, read_str_lp, write_str_lp};
 use crate::standards::v_r12::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};

@@ -6,15 +6,15 @@ start mutation
 
 mutation = op-line+
 op-line = create-shape-model | delete-shape-model | create-building-model | delete-building-model | create-energy-model | delete-energy-model | create-structure-classic-model | delete-structure-classic-model | create-drawing | delete-drawing | create-node | delete-node | rename-node | change-reference-hidden | change-reference-locked | change-reference-width | move-reference | replace-reference-media | replace-references
-create-shape-model = "create-shape-model" "child-id" "=" IDENT "target" "=" TEXT
+create-shape-model = "create-shape-model" "child-id" "=" IDENT "target" "=" artifact-reference
 delete-shape-model = "delete-shape-model"
-create-building-model = "create-building-model" "child-id" "=" IDENT "target" "=" TEXT
+create-building-model = "create-building-model" "child-id" "=" IDENT "target" "=" artifact-reference
 delete-building-model = "delete-building-model"
-create-energy-model = "create-energy-model" "child-id" "=" IDENT "target" "=" TEXT
+create-energy-model = "create-energy-model" "child-id" "=" IDENT "target" "=" artifact-reference
 delete-energy-model = "delete-energy-model"
-create-structure-classic-model = "create-structure-classic-model" "child-id" "=" IDENT "target" "=" TEXT
+create-structure-classic-model = "create-structure-classic-model" "child-id" "=" IDENT "target" "=" artifact-reference
 delete-structure-classic-model = "delete-structure-classic-model"
-create-drawing = "create-drawing" "child-id" "=" IDENT "target" "=" TEXT
+create-drawing = "create-drawing" "child-id" "=" IDENT "target" "=" artifact-reference
 delete-drawing = "delete-drawing" "child-id" "=" IDENT
 create-node = "create-node" node-block
 delete-node = "delete-node" "node-id" "=" IDENT
@@ -37,3 +37,5 @@ reference-scale-field = "scale" "=" FLOAT
 opacity-field = "opacity" "=" FLOAT
 coord-tuple = CRD | TUPLE
 orientation-tuple = TUPLE
+
+artifact-reference = "{" "artifact-id" "=" TEXT "artifact-kind" "=" TEXT "standard" "=" TEXT "subset" "=" TEXT "}"

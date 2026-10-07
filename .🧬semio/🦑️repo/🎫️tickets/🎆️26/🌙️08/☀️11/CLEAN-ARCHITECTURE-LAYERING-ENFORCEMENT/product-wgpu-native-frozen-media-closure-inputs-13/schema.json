@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "required": [
+    "declared",
+    "held",
+    "exists"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "declared": {
+      "const": true
+    },
+    "held": {
+      "enum": [
+        "unguarded",
+        "positive"
+      ]
+    },
+    "exists": {
+      "const": true
+    }
+  }
+}

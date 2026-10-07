@@ -1,6 +1,6 @@
 /** 🪐️ Three literal entities preserve ordered Space metadata and full unsigned64 clocks. */
 import{parseSpaceArtifactRow,parseSpaceTimestamp,type SSpaceSnapshot,type SpaceArtifactRow}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type{ArtifactDialect}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type{ ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueBudget,artifactSqliteInteger as integer,artifactSqliteText as text,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 export const SPACE_SQLITE_SCHEMA=String.raw`CREATE TABLE space_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, space_id TEXT NOT NULL);

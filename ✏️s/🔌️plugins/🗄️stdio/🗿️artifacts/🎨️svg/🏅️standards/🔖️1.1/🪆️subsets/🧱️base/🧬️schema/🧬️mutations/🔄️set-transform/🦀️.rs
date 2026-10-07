@@ -1,7 +1,7 @@
 //! 🧬️ Direct set-transform mutation owner.
 use crate::schema::diff::SvgDiff;
 use crate::schema::mutation_support::attribute_diff_at_path;
-use crate::schema::snapshot::{transform_list_to_string, NodePath, TransformOp};
+use crate::schema::snapshot::{NodePath, TransformOp};
 use crate::SvgSnapshot;
 
 
@@ -26,7 +26,7 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTransformMut
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(attribute_diff_at_path(base, &payload.path, "transform", payload.transform.as_ref().map(|operations| transform_list_to_string(operations)))),
+            Self::Apply(payload) => protocol::MutationOutcome::new(attribute_diff_at_path(base, &payload.path, "transform", payload.transform.clone().map(crate::schema::snapshot::SvgAttributeValue::Transform))),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
         }
     }

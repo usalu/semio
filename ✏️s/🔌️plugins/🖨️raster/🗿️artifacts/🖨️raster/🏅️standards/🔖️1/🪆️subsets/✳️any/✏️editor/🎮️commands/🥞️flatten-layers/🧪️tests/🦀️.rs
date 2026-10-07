@@ -1,4 +1,5 @@
 //! 🥞️ Flattening preserves rendered pixels, world placement and complete inverse history.
+use crate::RasterImageAsset;
 use super::*;
 use protocol::Mutation;
 #[test]

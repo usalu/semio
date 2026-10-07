@@ -29,7 +29,7 @@ fn sqlite_snapshot_refuses_valid_sqlite_incoherent_identity_and_child_order(){
 
 #[test]
 fn sqlite_snapshot_owned_coordinates_controls_and_actual_declarations(){
-    let snapshot=snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for (key,accepted) in [("acceptedDialects",true),("rejectedDialects",false)]{for row in fixture[key].as_array().unwrap(){let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert_eq!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_ok(),accepted);}}
+    let snapshot=snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for (key,accepted) in [("acceptedDialects",true),("rejectedDialects",false)]{for row in fixture[key].as_array().unwrap(){let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert_eq!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_ok(),accepted);}}
     let limits=SqliteDatabaseLimits{max_rows:1,..SqliteDatabaseLimits::default()};assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(LasSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(LasSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(<LasSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().is_some());
     let declaration=crate::declaration(crate::definition().unwrap()).unwrap();assert_eq!(declaration.hosted_kinds().unwrap().len(),1);assert_eq!(declaration.definition().identity().as_str(),"s.stdio.las");
 }
@@ -37,8 +37,8 @@ fn sqlite_snapshot_owned_coordinates_controls_and_actual_declarations(){
 #[test]
 fn sqlite_snapshot_complete_typescript_native_relational_interoperability() {
     let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(7).unwrap();
-    let base=root.join("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot");
-    let fixture=base.join("🧫️fixtures/🪶️sqlite/🟦️.ts");let provider=base.join("🪶️sqlite/🟦️.ts");
+    let base=root.join("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot");
+    let fixture=base.join("🧪️tests/🧰️support/🟦️.ts");let provider=base.join("🟦️.ts");
     let physical=root.join("🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts");
     let export_script=format!("import{{lasSnapshotFixture as snapshot}}from{fixture:?};import{{lasSnapshotToSqliteDatabase}}from{provider:?};import{{exportSqliteDatabase}}from{physical:?};import{{Database}}from'bun:sqlite';const n=Database.deserialize(await exportSqliteDatabase(await lasSnapshotToSqliteDatabase(snapshot)));if(n.query('PRAGMA integrity_check').get().integrity_check!=='ok'||n.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,n.serialize());n.close();");
     let output=Command::new("bun").args(["-e",&export_script]).current_dir(root).output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
@@ -65,7 +65,7 @@ fn sqlite_snapshot_large_semantic_loops_cancel_before_completion(){
 fn sqlite_snapshot_erased_binary_and_text_capabilities_preserve_every_native_field(){
     let snapshot=snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
     let codec=<LasSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
-    let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:"s.stdio.las".into(),standard:"1.0".into(),subset:"*".into()};
+    let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.las".into(),standard:"1.0".into(),subset:"*".into()};
     for encoding in [semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text]{
         let payload=(codec.import)(&snapshot.schema,&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
         let restored=(codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;

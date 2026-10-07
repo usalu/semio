@@ -3,6 +3,12 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 
+#[path = "🔗️graph-source/🦀️.rs"]
+pub mod graph_source;
+
+#[path = "🧭️content-mapping/🦀️.rs"]
+pub mod content_mapping;
+
 //#region 🏅️ConformanceSupport
 #[path = "🏅️conformance-support/🦀️.rs"]
 pub mod conformance_support;

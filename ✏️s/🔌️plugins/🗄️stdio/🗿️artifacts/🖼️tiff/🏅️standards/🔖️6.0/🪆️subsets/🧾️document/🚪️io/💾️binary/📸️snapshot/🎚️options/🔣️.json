@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/stdio/tiff/6.0/document/io/binary/snapshot/options",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "byteOrder",
+    "compression",
+    "layout"
+  ],
+  "properties": {
+    "byteOrder": {
+      "enum": [
+        "littleEndian",
+        "bigEndian"
+      ]
+    },
+    "compression": {
+      "enum": [
+        "none",
+        "packBits",
+        "lzw",
+        "deflate",
+        "modifiedHuffman",
+        "group3",
+        "group4"
+      ]
+    },
+    "layout": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "singleStrip"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rows"
+          ],
+          "properties": {
+            "kind": {
+              "const": "strips"
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "kind": {
+              "const": "tiles"
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          }
+        }
+      ]
+    }
+  }
+}

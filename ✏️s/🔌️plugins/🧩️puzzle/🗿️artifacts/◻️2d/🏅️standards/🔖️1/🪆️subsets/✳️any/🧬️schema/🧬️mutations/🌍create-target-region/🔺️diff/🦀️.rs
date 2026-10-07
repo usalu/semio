@@ -7,14 +7,14 @@ use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_region_invar
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateTargetRegion, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if let Err(reason) = puzzle2d_region_invariant(&payload.target_region) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.target_region.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.target_region.id.to_string_owner()]);
     }
     if base.target_regions.iter().any(|entry| entry.id == payload.target_region.id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "target region"), vec![payload.target_region.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "target region"), vec![payload.target_region.id.to_string_owner()]);
     }
     let mut delta = Puzzle2dTargetRegionsDelta { added: vec![payload.target_region.clone()], ..Default::default() };
     if let Some(index) = payload.index {
-        let mut order: Vec<String> = base.target_regions.iter().map(|entry| entry.id.clone()).collect();
+        let mut order: Vec<semio_framework_value::paged::PagedUtf8<{usize::MAX}>> = base.target_regions.iter().map(|entry| entry.id.clone()).collect();
         let at = index.min(order.len());
         order.insert(at, payload.target_region.id.clone());
         delta.reordered = Some(order);

@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::bitmap::transient::component::mutations::*;
 use crate::editor::bitmap::transient::component::BitmapTransient;
-use set_solve::SetSolve;
 
 impl protocol::OpBinary for BitmapTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

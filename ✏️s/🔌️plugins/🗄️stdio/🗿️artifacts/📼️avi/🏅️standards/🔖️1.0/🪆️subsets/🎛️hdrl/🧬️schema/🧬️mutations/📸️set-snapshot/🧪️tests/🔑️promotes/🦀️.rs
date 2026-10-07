@@ -10,7 +10,8 @@
 //! (`streams.modified[0] → chunks.modified[1]`) and nothing else.
 
 use crate::standards::v1_0::subsets::any::schema::diff::AviDiff;
-use crate::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
+use crate::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation,AviMutation};
+
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔑️promotes/📸️snapshot/⬅️before/🔣️.json");

@@ -52,7 +52,7 @@ pub(crate) mod context {
         if app.child_store("content", &child_id).await.is_some() {
             return;
         }
-        let member = create_semio_member(&child_id, &dialect, &content.encode_pack()).await.expect("Sequence child member");
+        let member = create_semio_member(&child_id, &dialect, &content.encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("Sequence child member");
         app.register_child("content", child_id, dialect, member).await.expect("register Sequence content child");
     }
 
@@ -85,7 +85,7 @@ pub(crate) mod context {
     /// its bound live runtime instance (`interactive-job.live-instance`), and a freshly constructed
     /// wrapper has none — so the id `meta(..)` stamps is bound here, before the content child lands.
     pub async fn new_app_with_registry_wired() -> SequenceApp {
-        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::with_registry(EditorApp::default(), AppActionRegistry::from_definition(&sequence_manifest_for_tests().definition)).await;
+        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::with_registry(EditorApp::default(), AppActionRegistry::from_definition(&sequence_manifest_for_tests().definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(SEQUENCE_TEST_INSTANCE).await;
         let mut app = SequenceApp(app);
         register_content_child(&mut app).await;

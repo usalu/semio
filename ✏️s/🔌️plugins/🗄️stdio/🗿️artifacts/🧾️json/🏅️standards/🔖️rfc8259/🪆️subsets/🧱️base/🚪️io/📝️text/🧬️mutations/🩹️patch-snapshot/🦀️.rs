@@ -1,6 +1,7 @@
 //! 📝️ Direct compact JSON snapshot-patch text codec.
 
-use crate::standards::v_rfc8259::subsets::base::io::text::mutations::*;
+use crate::standards::v_rfc8259::subsets::base::schema::mutations::{JsonMutation, patch_snapshot::PatchSnapshot};
+use semio_s_artifact_stdio_contract::editing;
 use protocol::OpText;
 
 pub const TEXT_OPCODE: &str = "patch-snapshot";

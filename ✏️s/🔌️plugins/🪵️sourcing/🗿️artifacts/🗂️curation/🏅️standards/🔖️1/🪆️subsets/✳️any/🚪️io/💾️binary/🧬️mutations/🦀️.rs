@@ -42,3 +42,31 @@ pub mod create_curated_item;
 
 #[path = "🔢change-curated-item/🦀️.rs"]
 pub mod change_curated_item_count;
+
+mod native_codec {
+use super::*;
+use crate::schema::mutations::SourcingMutation;
+use crate::schema::mutations::{change_curated_item_count, create_curated_item, delete_curated_item};
+use crate::CuratedItem;
+use protocol::OpText;
+use crate::standards::v1::subsets::any::io::text::mutations::{SourcingMutationDsl,sourcing_mutation_to_dsl,sourcing_mutation_from_dsl};
+
+impl protocol::OpBinary for SourcingMutationDsl {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+
+impl protocol::OpBinary for SourcingMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        sourcing_mutation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(sourcing_mutation_from_dsl(SourcingMutationDsl::decode_op(bytes)?))
+    }
+}
+}

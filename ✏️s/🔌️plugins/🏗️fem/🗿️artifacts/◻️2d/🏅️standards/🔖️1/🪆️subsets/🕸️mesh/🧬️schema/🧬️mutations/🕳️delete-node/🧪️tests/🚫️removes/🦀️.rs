@@ -8,7 +8,8 @@
 //! `delete-node` is deliberately cascade-free: support `s3` survives still pointing at the removed node.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️delete-node/🚫️removes/📸️snapshot/⬅️before/🔣️.json");

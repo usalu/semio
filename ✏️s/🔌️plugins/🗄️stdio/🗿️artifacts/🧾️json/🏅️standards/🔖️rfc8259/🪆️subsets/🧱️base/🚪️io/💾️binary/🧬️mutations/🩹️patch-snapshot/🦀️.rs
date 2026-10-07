@@ -1,6 +1,7 @@
 //! 💾️ Direct compact JSON snapshot-patch binary codec.
 
-use crate::standards::v_rfc8259::subsets::base::io::binary::mutations::*;
+use crate::standards::v_rfc8259::subsets::base::schema::mutations::{JsonMutation, patch_snapshot::PatchSnapshot};
+use semio_s_artifact_stdio_contract::editing;
 use protocol::OpBinary;
 
 pub const BINARY_TAG: u8 = 6;

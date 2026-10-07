@@ -14,7 +14,7 @@ type FragmentCase = {
 };
 
 type FragmentFixture = {
-  readonly schema: Record<string, unknown>;
+  readonly input: { readonly schema: Record<string, unknown> };
   readonly payloadRepeatBytes: number;
   readonly base: Record<string, unknown>;
   readonly cases: readonly FragmentCase[];
@@ -44,7 +44,7 @@ const apply = (source: Record<string, unknown>, testCase: FragmentCase): Record<
 describe("compact snapshot fragment validation oracle", () => {
   it("matches AJV while preserving the unrelated large payload", () => {
     const ajv = new AjvConstructor({ allErrors: true, strict: false });
-    const validate = ajv.compile(fixture.schema);
+    const validate = ajv.compile(fixture.input.schema);
     for (const testCase of fixture.cases) {
       const base = {
         ...structuredClone(fixture.base),

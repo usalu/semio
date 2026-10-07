@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🤝connect-kind-compatibility/🤝️adds/📸️snapshot/⬅️before/🔣️.json");
@@ -37,7 +38,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "connect-kind-compatibility/adds-handle-kind-pair: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.meta.kind_compatibility.len(), 2, "connect-kind-compatibility/adds-handle-kind-pair: the new allowance was not appended");
     let row = &snapshot.meta.kind_compatibility[1];
-    assert_eq!((row.source.as_str(), row.target.as_str()), ("handle-kind-b", "handle-kind-c"), "connect-kind-compatibility/adds-handle-kind-pair: the row must be pushed at the end, in payload order");
+    assert_eq!((row.source.to_string_owner(), row.target.to_string_owner()), ("handle-kind-b".to_string(), "handle-kind-c".to_string()), "connect-kind-compatibility/adds-handle-kind-pair: the row must be pushed at the end, in payload order");
     assert!(row.important && !row.bidirectional, "connect-kind-compatibility/adds-handle-kind-pair: the payload flags must be carried onto the row verbatim");
 }
 

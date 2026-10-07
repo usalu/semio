@@ -6,7 +6,7 @@
 //! `z` is always written `0.0` (`cad` is 2D-only).
 
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_step::{
     schema::snapshot::{StepEntity, StepFileName, StepFileSchema, StepHeader, StepValue},
     StepSnapshot,

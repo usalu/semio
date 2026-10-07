@@ -1,0 +1,6 @@
+{
+  "initial": { "count": 0, "label": "" },
+  "replacement": { "count": 7, "label": "changed" },
+  "reader": "retainedImmutableSnapshot",
+  "publication": { "revisionChanged": false, "generationChanged": false }
+}

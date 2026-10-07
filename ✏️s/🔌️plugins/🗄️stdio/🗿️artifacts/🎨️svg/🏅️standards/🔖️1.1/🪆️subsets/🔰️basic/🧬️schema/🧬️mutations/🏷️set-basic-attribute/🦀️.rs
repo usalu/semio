@@ -11,7 +11,7 @@ use super::*;
 pub struct SetBasicAttribute {
     pub(crate) path: NodePath,
     pub(crate) name: String,
-    pub(crate) value: Option<String>,
+    pub(crate) value: Option<SvgAttributeValue>,
 }
 
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetBasicAttribute {

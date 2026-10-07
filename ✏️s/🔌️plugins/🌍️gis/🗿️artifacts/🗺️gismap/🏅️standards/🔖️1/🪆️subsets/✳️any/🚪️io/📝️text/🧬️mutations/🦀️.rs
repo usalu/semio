@@ -22,14 +22,7 @@ impl protocol::OpText for GisMapMutation {
     }
 }
 
-impl protocol::OpBinary for GisMapMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📜️ Describes the artifact mutation dialect.
@@ -47,7 +40,7 @@ use crate::GisMapSnapshot;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use protocol::Mutation;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::ArtifactEnvelope;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///

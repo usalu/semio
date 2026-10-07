@@ -49,7 +49,7 @@ use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code too, not merely under `#[cfg(test)]` (same fix this facet's OLD file already
 /// needed, and flow's own mutations facet needs for the same reason).
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Leaves
 use super::create_edge;
@@ -220,3 +220,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

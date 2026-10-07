@@ -5,9 +5,8 @@ use crate::op::FormMutation;
 // value/derive surface) for `value_to_dsl`/`dsl_to_value` below — importing the artifact's own `dsl`
 // submodule under the bare name would shadow that crate and break every `semio_framework_value::DslValue`/`semio_framework_value::ToValue::to_value`
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
-use crate::standards::v1::subsets::any::io::text::snapshot as forms_dsl;
+
 use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
-use semio_framework_pack_json::{Object, Value};
 use framework_schema::ArtifactSchema;
 
 #[path = "📝️definition/🦀️.rs"]
@@ -97,11 +96,7 @@ pub use crate::playbook::{
     is_extension_block_kind as is_extension_question_kind, visible_blocks as visible_questions,
 };
 
-pub fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
-    let overrides_map: crate::playbook::PlaybookValues = overrides.iter().map(|(key, value)| (key.to_string(), semio_framework_pack_json::to_dsl_value(value))).collect();
-    let result = crate::playbook::initial_values(&crate::mutations::as_playbook_spec(spec), &overrides_map);
-    result.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect()
-}
+
 /// 🧾️ Configured defaults retain the actual value owners and declared question order.
 pub fn configured_dictionary(spec:&FormsSnapshot)->Result<dictionary::FormDictionary,semio_framework_value::ValueError>{let spec=crate::mutations::as_playbook_spec(spec);let mut entries=Vec::new();for step in &spec.steps{for block in &step.blocks{entries.push(dictionary::FormDictionaryEntry{question_id:block.id.clone(),value:crate::playbook::default_value_for_block(block)});}}let owner=semio_framework_value::DecodedValue::new(dictionary::FormDictionary{entries},<dictionary::FormDictionary as semio_framework_value::FromValue>::retire_decoded);owner.get().validate()?;Ok(owner.take())}
 //#endregion 🔖️PlaybookVocabulary
@@ -190,45 +185,25 @@ pub fn forms_play_step_tree_id(step_id: &str) -> String {
 
 //#region 🔖️Values
 /// 🔄️ Converts a `dsl::os_pack::json::Value` to a `semio_framework_value::DslValue` — first-party, infallible.
-pub fn value_to_dsl(value: &Value) -> semio_framework_value::DslValue {
-    semio_framework_pack_json::to_dsl_value(value)
-}
+
 
 /// 🔄️ Converts a `semio_framework_value::DslValue` back to a `dsl::os_pack::json::Value` — first-party, infallible.
-pub fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
-    semio_framework_pack_json::from_dsl_value(value)
-}
+
 
 /// 🔤️ A `semio_framework_value::DslValue` rendered as a display string — the inspector's text-field representation of a
 /// question's typed default.
-pub fn dsl_string_value(value: &semio_framework_value::DslValue) -> String {
-    json_string_value(&dsl_to_value(value))
-}
+
 
 /// 🔢️ A `semio_framework_value::DslValue` rendered as `f64` — the inspector's numeric-field representation of a question's
 /// typed default.
-pub fn dsl_f64_value(value: &semio_framework_value::DslValue) -> f64 {
-    json_f64_value(&dsl_to_value(value))
-}
+
 
 /// 🔤️ A `dsl::os_pack::json::Value` rendered as a display string — shared by the inspector's editable fields and
 /// the try wizard's current-answer rendering.
-pub fn json_string_value(value: &Value) -> String {
-    match value {
-        Value::String(text) => text.clone(),
-        Value::Bool(flag) => flag.to_string(),
-        Value::Number(semio_framework_pack_json::Number::UInt(v)) => v.to_string(),
-        Value::Number(semio_framework_pack_json::Number::Int(v)) => v.to_string(),
-        Value::Number(semio_framework_pack_json::Number::Float(v)) => v.to_string(),
-        Value::Null => String::new(),
-        other => other.to_string(),
-    }
-}
+
 
 /// 🔢️ A `dsl::os_pack::json::Value` rendered as `f64` (0.0 on a non-numeric shape).
-pub fn json_f64_value(value: &Value) -> f64 {
-    value.as_f64().unwrap_or(0.0)
-}
+
 //#endregion 🔖️Values
 
 //#region 🔖️Descriptor

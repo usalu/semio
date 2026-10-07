@@ -1975,6 +1975,2499 @@
         "diagnosticCodes": [],
         "placementPaths": []
       }
+    },
+    {
+      "id": "embedded-whole-corpus-contract",
+      "reason": "Examples cannot define schema authority, including embedded per-value policies. Nested schema parser inputs and virtual workspace file specimens remain inert test data.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧫️fixtures/🧪️sample/🔣️.json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "cases": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "input": {},
+                    "expected": {}
+                  }
+                }
+              }
+            }
+          },
+          "cases": [
+            {
+              "input": 1,
+              "expected": 2
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "embedded-per-value-authority",
+      "reason": "Examples cannot define schema authority, including embedded per-value policies. Nested schema parser inputs and virtual workspace file specimens remain inert test data.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧫️fixtures/🧪️sample/🔣️.json": {
+          "valueSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          },
+          "cases": [
+            {
+              "value": 1
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "nested-inert-parser-input",
+      "reason": "Examples cannot define schema authority, including embedded per-value policies. Nested schema parser inputs and virtual workspace file specimens remain inert test data.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧫️fixtures/🧪️sample/🔣️.json": {
+          "cases": [
+            {
+              "input": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "value"
+                  ],
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "expected": true
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "inert-workspace-file-inputs",
+      "reason": "Examples cannot define schema authority, including embedded per-value policies. Nested schema parser inputs and virtual workspace file specimens remain inert test data.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧫️fixtures/🧪️sample/🔣️.json": {
+          "cases": [
+            {
+              "files": {
+                "schema.json": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "value"
+                  ],
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "expected": {
+                "valid": true
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "embedded-policy-inside-control",
+      "reason": "Examples cannot define schema authority, including embedded per-value policies. Nested schema parser inputs and virtual workspace file specimens remain inert test data.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧫️fixtures/🧪️sample/🔣️.json": {
+          "control": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            },
+            "vectors": [
+              {
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "expected-schema-reader-projection-is-inert",
+      "reason": "A schema reader produces structured argument-schema projections as expected test data; expectedInputs cannot become independent schema authority.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧫️fixtures/🧪️sample/🔣️.json": {
+          "cases": [
+            {
+              "input": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "expectedInputs": [
+                {
+                  "schema": {
+                    "kind": "array",
+                    "items": {
+                      "kind": "string"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-frozen-source-ownership",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "format",
+                "package",
+                "module",
+                "manifest",
+                "library",
+                "mount",
+                "dependencies",
+                "publicEntries",
+                "forbiddenProviders"
+              ],
+              "properties": {
+                "format": {
+                  "const": 1
+                },
+                "package": {
+                  "const": "owned-pack"
+                },
+                "module": {
+                  "const": "record"
+                },
+                "manifest": {
+                  "const": "../Cargo.toml"
+                },
+                "library": {
+                  "const": {
+                    "name": "pack",
+                    "path": "value.rs"
+                  }
+                },
+                "mount": {
+                  "const": "../../value.rs"
+                },
+                "dependencies": {
+                  "const": [
+                    "owned-value"
+                  ]
+                },
+                "publicEntries": {
+                  "const": [
+                    "encode",
+                    "decode"
+                  ]
+                },
+                "forbiddenProviders": {
+                  "const": [
+                    "product-runtime"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-import-context-projection",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "imports",
+                "contexts"
+              ],
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "imports": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "path",
+                      "source",
+                      "imports"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "imports": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "contexts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "source",
+                      "phases"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "phases": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "file",
+                            "projects",
+                            "packages",
+                            "locked",
+                            "targets"
+                          ],
+                          "properties": {
+                            "file": {
+                              "type": "string"
+                            },
+                            "projects": {
+                              "type": "object"
+                            },
+                            "packages": {
+                              "type": "object"
+                            },
+                            "locked": {
+                              "type": "object"
+                            },
+                            "targets": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-fixed-source-revision-examples",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schemaVersion",
+                "scope",
+                "rows"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1
+                },
+                "scope": {
+                  "const": "selected-source-examples"
+                },
+                "rows": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "path",
+                      "originalSha256",
+                      "currentSha256"
+                    ],
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "originalSha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "currentSha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-count-execution-envelope",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "counts",
+                "rows",
+                "refused",
+                "table",
+                "columns",
+                "identity",
+                "encodings"
+              ],
+              "properties": {
+                "owner": {
+                  "const": "count-owner"
+                },
+                "counts": {
+                  "const": [
+                    0,
+                    1,
+                    -1
+                  ]
+                },
+                "rows": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "refused": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "table": {
+                  "const": "counts"
+                },
+                "columns": {
+                  "const": [
+                    "count"
+                  ]
+                },
+                "identity": {
+                  "const": "one-record"
+                },
+                "encodings": {
+                  "const": [
+                    "sqlite",
+                    "literal"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-exact-target-width-example",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "renderId",
+                "kind",
+                "group",
+                "handle",
+                "label",
+                "revision",
+                "expectedBytes"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "target-record/v1"
+                },
+                "renderId": {
+                  "const": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                },
+                "kind": {
+                  "const": "component"
+                },
+                "group": {
+                  "const": "group"
+                },
+                "handle": {
+                  "const": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "label": {
+                  "const": "fixture target"
+                },
+                "revision": {
+                  "const": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+                },
+                "expectedBytes": {
+                  "const": 425
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-i32-count-value",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "count"
+              ],
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "MetadataRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-produced-owner-catalog-input",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "owners"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "composition-owner-input/v1"
+                },
+                "owners": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "root",
+                      "enum",
+                      "label",
+                      "main"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "root": {
+                        "type": "string"
+                      },
+                      "enum": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "main": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "MetadataRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-canonical-wire-declaration",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "kind",
+                "ownership",
+                "binding"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "typed-wire-binding/v1"
+                },
+                "kind": {
+                  "const": "binding"
+                },
+                "ownership": {
+                  "const": "transferred"
+                },
+                "binding": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "MetadataRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-source-seal-event-ledger",
+      "reason": "Composed test metadata examples have no schema authority; actual bounded values and live source declarations remain canonical domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "MetadataRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "contracts",
+                "later",
+                "catalogs"
+              ],
+              "properties": {
+                "contracts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "revision",
+                      "reason",
+                      "seal"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "revision": {
+                        "type": "integer"
+                      },
+                      "reason": {
+                        "type": "string"
+                      },
+                      "seal": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "later": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "catalogs": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct MetadataRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "MetadataRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-schema-specimen-remains-inert-input",
+      "reason": "A schema parser may test metadata corpus recognition using schema-shaped input without authoring independent fixture authority.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧫️fixtures/🧪️sample/🔣️.json": {
+          "cases": [
+            {
+              "input": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "format",
+                    "package",
+                    "module",
+                    "manifest",
+                    "library",
+                    "mount",
+                    "dependencies",
+                    "publicEntries",
+                    "forbiddenProviders"
+                  ],
+                  "properties": {
+                    "format": {
+                      "const": 1
+                    },
+                    "package": {
+                      "const": "owned-pack"
+                    },
+                    "module": {
+                      "const": "record"
+                    },
+                    "manifest": {
+                      "const": "../Cargo.toml"
+                    },
+                    "library": {
+                      "const": {
+                        "name": "pack",
+                        "path": "value.rs"
+                      }
+                    },
+                    "mount": {
+                      "const": "../../value.rs"
+                    },
+                    "dependencies": {
+                      "const": [
+                        "owned-value"
+                      ]
+                    },
+                    "publicEntries": {
+                      "const": [
+                        "encode",
+                        "decode"
+                      ]
+                    },
+                    "forbiddenProviders": {
+                      "const": [
+                        "product-runtime"
+                      ]
+                    }
+                  }
+                }
+              },
+              "expected": {
+                "admitted": false
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-frozen-source-registration",
+      "reason": "An exact owner/router/artifact declaration census with fixed source registration is testing metadata; actual compiler owner inputs remain domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "SourceRegistration": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schemaVersion",
+                "owners",
+                "routers",
+                "artifactDefinitions",
+                "inputs",
+                "registration"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1
+                },
+                "owners": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "routers": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "artifactDefinitions": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "inputs": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "build": {
+                      "const": [
+                        "source.ts"
+                      ]
+                    }
+                  }
+                },
+                "registration": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "projectName": {
+                      "const": "source-owner"
+                    },
+                    "projectPath": {
+                      "const": "project.json"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct SourceRegistration;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-paired-producer-refusal-trials",
+      "reason": "Paired normal/tiny budgets, copy/frontier cancellation trials and frozen refusal outcomes are corpus authority; actual single field declarations remain domain values.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "fields",
+                "copy",
+                "frontier",
+                "maximumBytes",
+                "tinyMaximumBytes",
+                "recursiveDepth",
+                "refusals"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "semio.native-schema-producer/v1"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "key",
+                      "shape",
+                      "optional"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65535
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "shape": {
+                        "enum": [
+                          "text",
+                          "uint",
+                          "record",
+                          "bytes"
+                        ]
+                      },
+                      "optional": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "copy": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "seed",
+                    "repeatCount",
+                    "cancelAt"
+                  ],
+                  "properties": {
+                    "seed": {
+                      "type": "string"
+                    },
+                    "repeatCount": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "cancelAt": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                },
+                "frontier": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "fieldCount",
+                    "cancelAt"
+                  ],
+                  "properties": {
+                    "fieldCount": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 65535
+                    },
+                    "cancelAt": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                },
+                "maximumBytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "tinyMaximumBytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "recursiveDepth": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 64
+                },
+                "refusals": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ownership",
+                    "cancellation"
+                  ],
+                  "properties": {
+                    "ownership": {
+                      "const": "ownershipLimit"
+                    },
+                    "cancellation": {
+                      "const": "canceled"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-producer-field-declaration",
+      "reason": "Paired normal/tiny budgets, copy/frontier cancellation trials and frozen refusal outcomes are corpus authority; actual single field declarations remain domain values.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "key",
+                "shape",
+                "optional"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                "key": {
+                  "type": "string"
+                },
+                "shape": {
+                  "enum": [
+                    "text",
+                    "uint",
+                    "record",
+                    "bytes"
+                  ]
+                },
+                "optional": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "WorkRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-message-copy-grant-trials",
+      "reason": "Copy-grant/cancellation trial controls and frozen empty-capacity outcomes are test corpus metadata; an actual copied message value remains a domain payload.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "byteGrants",
+                "capacityGrant",
+                "cancelAt",
+                "cases",
+                "emptySegments"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "semio.history.message-copy/v1"
+                },
+                "byteGrants": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 4
+                  }
+                },
+                "capacityGrant": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "cancelAt": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "cases": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "code",
+                      "message",
+                      "target"
+                    ],
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "target": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "emptySegments": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "count",
+                    "accepted"
+                  ],
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "accepted": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-copied-message-value",
+      "reason": "Copy-grant/cancellation trial controls and frozen empty-capacity outcomes are test corpus metadata; an actual copied message value remains a domain payload.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "target"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "WorkRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-borrowed-clone-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "cancelAt",
+                "sourceUnchanged",
+                "changedSourceAccepted"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "semio.value.borrowed-clone/v1"
+                },
+                "cancelAt": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "sourceUnchanged": {
+                  "const": true
+                },
+                "changedSourceAccepted": {
+                  "const": false
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-borrowed-clone-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "WorkRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-paged-owner-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "bodyBytes",
+                "payloadChunkBytes",
+                "prefix",
+                "prefixRepeat",
+                "comparisons",
+                "cancelAt",
+                "treeDepth",
+                "maximumCursorBytes",
+                "objectEntries"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "semio.value.paged-native-owner/v1"
+                },
+                "bodyBytes": {
+                  "const": 4096
+                },
+                "payloadChunkBytes": {
+                  "const": 1024
+                },
+                "treeDepth": {
+                  "const": 17
+                },
+                "maximumCursorBytes": {
+                  "const": 4096
+                },
+                "prefix": {
+                  "type": "string"
+                },
+                "prefixRepeat": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "cancelAt": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "objectEntries": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "suffix",
+                      "value"
+                    ],
+                    "properties": {
+                      "suffix": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "comparisons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "left",
+                      "right",
+                      "ordering"
+                    ],
+                    "properties": {
+                      "left": {
+                        "type": "string"
+                      },
+                      "right": {
+                        "type": "string"
+                      },
+                      "ordering": {
+                        "enum": [
+                          -1,
+                          0,
+                          1
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-paged-owner-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bodyBytes",
+                "prefix",
+                "objectEntries"
+              ],
+              "properties": {
+                "bodyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "prefix": {
+                  "type": "string"
+                },
+                "objectEntries": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "WorkRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-drawing-owner-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "bodyBytes",
+                "text",
+                "repeat",
+                "originalUnchanged",
+                "terminalEmpty"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "drawing.paged-native-owner/v1"
+                },
+                "bodyBytes": {
+                  "const": 4096
+                },
+                "text": {
+                  "type": "string"
+                },
+                "repeat": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "originalUnchanged": {
+                  "const": true
+                },
+                "terminalEmpty": {
+                  "const": true
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-drawing-owner-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "bodyBytes"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "bodyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "WorkRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "metadata-acknowledgement-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "required": [
+                "initial",
+                "first",
+                "latest",
+                "remote",
+                "unsubmitted",
+                "commandsAfterEnterAndBlur",
+                "commandsAfterNextBlur",
+                "draftAfterFirstEcho",
+                "conflictAfterFirstEcho",
+                "dirtyAfterFinalEcho"
+              ],
+              "properties": {
+                "initial": {
+                  "type": "string"
+                },
+                "first": {
+                  "type": "string"
+                },
+                "latest": {
+                  "type": "string"
+                },
+                "remote": {
+                  "type": "string"
+                },
+                "unsubmitted": {
+                  "type": "string"
+                },
+                "draftAfterFirstEcho": {
+                  "type": "string"
+                },
+                "commandsAfterEnterAndBlur": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "commandsAfterNextBlur": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "conflictAfterFirstEcho": {
+                  "type": "boolean"
+                },
+                "dirtyAfterFinalEcho": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-acknowledgement-trials",
+      "reason": "Testing trial inputs and expected outcomes cannot own schema authority; actual value or acknowledgement payloads remain domain-owned.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "controllerId",
+                "commandId",
+                "value",
+                "accepted"
+              ],
+              "properties": {
+                "controllerId": {
+                  "type": "string"
+                },
+                "commandId": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "accepted": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "WorkRecord": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
     }
   ]
 }

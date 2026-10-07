@@ -54,14 +54,14 @@ fn inverse_restores_before() {
 fn outcome_laws() {
     let base = before();
     let codes = |mutation: DrawingMutation, base: &DrawingSnapshot| mutation.diff(base).messages().iter().map(|message| (format!("{:?}", message.level), message.code.0.clone())).collect::<Vec<_>>();
-    assert_eq!(codes(drag_path_points(vec![target("path-a", 9, PathPoint::Anchor)], 1.0, 0.0), &base), vec![("Error".into(), "mutation.target-missing".into())]);
-    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor), target("ghost", 0, PathPoint::Anchor)], 1.0, 0.0), &base), vec![("Warning".into(), "mutation.partial".into())]);
+    assert_eq!(codes(drag_path_points(vec![target("path-a", 9, PathPoint::Anchor)].into(), 1.0, 0.0), &base), vec![("Error".into(), "mutation.target-missing".into())]);
+    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor), target("ghost", 0, PathPoint::Anchor)].into(), 1.0, 0.0), &base), vec![("Warning".into(), "mutation.partial".into())]);
     let mut locked = base.clone();
     crate::schema::layer_base_mut(&mut locked.layers[0]).locked = true;
-    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor)], 1.0, 0.0), &locked), vec![("Error".into(), "mutation.target-missing".into())]);
-    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor)], 0.0, 0.0), &base), vec![("Warning".into(), "mutation.no-op".into())]);
-    assert_eq!(codes(drag_path_points(Vec::new(), 1.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
-    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor), target("path-a", 1, PathPoint::Anchor)], 1.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
+    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor)].into(), 1.0, 0.0), &locked), vec![("Error".into(), "mutation.target-missing".into())]);
+    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor)].into(), 0.0, 0.0), &base), vec![("Warning".into(), "mutation.no-op".into())]);
+    assert_eq!(codes(drag_path_points(Vec::new().into(), 1.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
+    assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor), target("path-a", 1, PathPoint::Anchor)].into(), 1.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);
 }
 
 /// 🗣️ The history row label reads the drag, in English and German.

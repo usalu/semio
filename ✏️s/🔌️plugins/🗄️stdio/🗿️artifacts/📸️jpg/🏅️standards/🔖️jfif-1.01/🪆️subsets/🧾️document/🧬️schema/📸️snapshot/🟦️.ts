@@ -66,7 +66,6 @@ export interface JpgSnapshot {
   width: number;
   height: number;
   pixels: number[];
-  reEncodeQuality?: number;
   jfifVersion: [number, number];
   jfifDensityUnits: JfifDensityUnits;
   jfifXDensity: number;

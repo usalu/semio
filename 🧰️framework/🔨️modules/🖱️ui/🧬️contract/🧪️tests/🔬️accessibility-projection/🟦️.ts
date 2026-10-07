@@ -6,6 +6,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import { JSDOM } from "jsdom";
+import { computeAccessibleDescription } from "dom-accessibility-api";
 import type { Component, UiNodeRecord } from "../../../../🛂️manifest/🟦️.ts";
 import { uiAccessibilityAnnouncedV1, uiAccessibilityIsFocusableV1, uiAccessibilityProjectionNodeV1, uiAccessibilityRoleV1, uiAccessibilityValueV1, uiProgressFractionV1 } from "../../♿️accessibility/🟦️.ts";
 
@@ -65,6 +67,25 @@ export function accessibilityProjectionSelfTests(): number {
     assert.equal(node.checked, row.expected.stateAttribute === "aria-checked" ? row.expected.stateValue : null, `${row.id}: checked`);
     assert.equal(node.pressed, row.expected.stateAttribute === "aria-pressed" ? row.expected.stateValue : null, `${row.id}: pressed`);
     checks += 3;
+  }
+
+  const document = new JSDOM("<!doctype html><body></body>").window.document;
+  for (const row of fixture.expected.filter((row) => row.role === "treeitem")) {
+    const record = fixture.document.nodes.find((record) => record.id === row.nodeId);
+    assert(record?.component.type === "treeItem", `${row.key}: tree item fixture`);
+    const element = document.createElement("div");
+    element.setAttribute("role", "treeitem");
+    const description = record.accessibility?.description ?? record.component.description;
+    if (description != null) {
+      const text = document.createElement("span");
+      text.id = `description-${row.nodeId}`;
+      text.textContent = description;
+      document.body.append(text);
+      element.setAttribute("aria-describedby", text.id);
+    }
+    document.body.append(element);
+    assert.equal(computeAccessibleDescription(element), row.description ?? "", `${row.key}: independent DOM description`);
+    checks += 1;
   }
 
   const projection = fixture.expected.map((row) => {

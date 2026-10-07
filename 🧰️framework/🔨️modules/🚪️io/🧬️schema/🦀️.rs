@@ -1,193 +1,12 @@
-//! 🧬️ Product-neutral I/O identities, payloads and route vocabulary.
+//! 🚪️ Product-neutral I/O payloads and route vocabulary over semantic artifact identities.
 
 use semio_framework_diagnostic::Diagnostic;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::serde::{Deserialize, Serialize};
 
-#[path = "♻️retirement/🦀️.rs"]
-mod retirement;
 
-//#region 🔖️Dialect
-/// 🏅️ A standard slug — the text after `🔖️` in `🏅️standards/🔖️<standard>/` (e.g. "2.0", "ap214", "1").
-/// 🌱️ `'static`-only, compile-time registration data — never crosses a wire, so it carries no
-/// `Serialize`/`Deserialize`/`ToValue`/`FromValue` at all (nothing in the repo (de)serializes it).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct StandardId(pub &'static str);
-
-/// 🪆️ A subset id — the text materialized as `🪆️subsets/✳️<dir>/`. `ANY` is the unconstrained base
-/// subset every standard carries (dir `✳️any`). See `StandardId`'s doc comment for why this has no
-/// wire-codec derive.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct SubsetId(pub &'static str);
-
-impl SubsetId {
-    pub const ANY: SubsetId = SubsetId("*");
-}
-
-/// 🎯️ Fully-qualified dialect coordinate: which artifact, which standard, which subset. See
-/// `StandardId`'s doc comment for why this has no wire-codec derive — `ArtifactDialect` below is
-/// this type's owned/wire twin.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct Dialect {
-    pub artifact_kind: &'static str,
-    pub standard: StandardId,
-    pub subset: SubsetId,
-}
-
-/// 🎯️ Owned twin of `Dialect` — the persisted/wire form; every dialect consumer outside a
-/// `'static` compile-time registration (document envelopes, the hub's multi-user pin, WIT
-/// `io-run`/`io-routes`, the io leaf generators) reads/writes THIS type via `ToValue`/`FromValue`.
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `Serialize`/
-// `Deserialize` restored here ADDITIVELY, not removed — `🛂️manifest/🦀️.rs`'s `AppDefinition` and
-// `WindowKindDefinition` are themselves serde-only (blocked on `ui_wgpu::LocalizedLabel`/
-// `IconName`/`SurfaceKind`/`WindowOptions`, none owned by this pass) and embed `dialect: ArtifactDialect`
-// resp. reach it transitively; `IoEntryDescriptor.owner`/`counterpart` and
-// `ComposerEntryDescriptor.writes`/`reads` are dual-derived but still need the serde half because
-// they are `referenced (directly or transitively) by a BLOCKED serde-only manifest type`. Revisit
-// once `🖱️ui` gains `ToValue`/`FromValue` for those types.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(crate = "semio_framework_value::serde", rename_all = "camelCase")]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ArtifactDialect {
-    pub artifact_kind: String,
-    pub standard: String,
-    pub subset: String,
-}
-
-impl From<Dialect> for ArtifactDialect {
-    fn from(d: Dialect) -> Self {
-        ArtifactDialect { artifact_kind: d.artifact_kind.to_string(), standard: d.standard.0.to_string(), subset: d.subset.0.to_string() }
-    }
-}
-
-impl ArtifactDialect {
-    /// 🧵️ Canonical single-string coordinate form: `"s.stdio.gif@87a/*"`. The one format that
-    /// crosses every boundary in the system — the only dialect-coordinate codec in the repo.
-    // 🚫️async: E1 pure — `format!` only. See R9.
-    pub fn to_coordinate(&self) -> String {
-        format!("{}@{}/{}", self.artifact_kind, self.standard, self.subset)
-    }
-
-    /// 🧵️ Inverse of `to_coordinate`. `@` separates artifact_kind from standard/subset; the LAST
-    /// `/` separates standard from subset.
-    // 🚫️async: E1 pure — `split_once` only. See R9.
-    pub fn parse_coordinate(s: &str) -> Result<Self, String> {
-        let (kind, rest) = s.split_once('@').ok_or_else(|| format!("dialect coordinate {s:?} missing '@'"))?;
-        let (standard, subset) = rest.rsplit_once('/').ok_or_else(|| format!("dialect coordinate {s:?} missing '/'"))?;
-        if kind.is_empty() || standard.is_empty() || subset.is_empty() {
-            return Err(format!("dialect coordinate {s:?} has an empty component"));
-        }
-        Ok(ArtifactDialect { artifact_kind: kind.to_string(), standard: standard.to_string(), subset: subset.to_string() })
-    }
-}
-//#endregion 🔖️Dialect
-
-//#region 🔖️ArtifactRef
-/// 🪪️ Canonical artifact-kind id. Grammar: exactly three dot-separated ASCII segments,
-/// `<domain>.<plugin>.<artifact>`, with each segment in lowercase ASCII kebab form.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
-#[value(transparent)]
-pub struct ArtifactKindId(String);
-
-impl ArtifactKindId {
-    /// 🧵️ Parses and validates the canonical grammar, failing with a message that names which
-    /// rule broke.
-    pub fn parse(s: &str) -> Result<Self, String> {
-        if !is_canonical_artifact_kind(s) {
-            return Err(format!("artifact kind {s:?} must use `<domain>.<plugin>.<artifact>` with three lowercase ASCII kebab segments"));
-        }
-        Ok(ArtifactKindId(s.to_string()))
-    }
-
-    /// 🔍️ Borrows the complete canonical artifact kind.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// 🌐️ Returns the declaring domain namespace.
-    pub fn domain(&self) -> &str {
-        self.0.split('.').next().expect("ArtifactKindId invariant: three segments")
-    }
-
-    /// 🔌️ Second segment — the owning plugin slug.
-    pub fn plugin(&self) -> &str {
-        self.0.split('.').nth(1).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
-    }
-
-    /// 🗿️ Third segment — the artifact slug within the plugin.
-    pub fn artifact(&self) -> &str {
-        self.0.split('.').nth(2).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
-    }
-}
-
-impl std::fmt::Display for ArtifactKindId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-/// ✅️ Standalone canonical-grammar predicate behind `ArtifactKindId::parse`.
-pub fn is_canonical_artifact_kind(kind: &str) -> bool {
-    let mut segments = kind.split('.');
-    let Some(first) = segments.next() else { return false };
-    let Some(plugin) = segments.next() else { return false };
-    let Some(artifact) = segments.next() else { return false };
-    if segments.next().is_some() {
-        return false;
-    }
-    is_kebab_segment(first) && is_kebab_segment(plugin) && is_kebab_segment(artifact)
-}
-
-/// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
-/// hyphen, no doubled hyphen.
-fn is_kebab_segment(segment: &str) -> bool {
-    if segment.is_empty() || segment.starts_with('-') || segment.ends_with('-') || segment.contains("--") {
-        return false;
-    }
-    segment.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
-}
-
-/// 🔗️ A reference to one artifact: its id plus the dialect it is materialized in. Renders to/from
-/// the wire URI `"<artifact_id>!<kind>@<standard>/<subset>"`.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ArtifactRef {
-    pub artifact_id: String,
-    pub dialect: ArtifactDialect,
-}
-
-impl ArtifactRef {
-    /// 🧵️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
-    // 🚫️async: E1 pure — canonical string formatting with no suspension point, consumed by sync
-    // `DslField`/`DslVariants` trait impls that are language-barred from awaiting. See R9.
-    pub fn to_uri(&self) -> String {
-        format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
-    }
-
-    /// 🚦️ Parses identity handles with bounded borrowed scanning and admitted ownership of their four strings.
-    pub fn parse_uri_controlled(text:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,String>{
-        control.scoped_stage(|control|{
-            control.begin_stage(text.len())?;let mut bang=None;let mut at=None;let mut slash=None;let mut position=0;
-            for chunk in text.as_bytes().chunks(256){for(byte_offset,byte)in chunk.iter().enumerate(){let offset=position+byte_offset;if bang.is_none(){if *byte==b'!'{bang=Some(offset);}}else if at.is_none(){if *byte==b'@'{at=Some(offset);}}else if *byte==b'/'{slash=Some(offset);}}position+=chunk.len();control.advance(chunk.len())?;}
-            let bang=bang.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"artifact reference requires '!'"))?;let at=at.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"artifact dialect requires '@'"))?;let slash=slash.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"artifact dialect requires '/'"))?;
-            if bang==0||at==bang+1||slash==at+1||slash+1==text.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"artifact reference has an empty identity component"));}
-            Ok(Self{artifact_id:control.copy_text(&text[..bang])?,dialect:ArtifactDialect{artifact_kind:control.copy_text(&text[bang+1..at])?,standard:control.copy_text(&text[at+1..slash])?,subset:control.copy_text(&text[slash+1..])?}})
-        }).map_err(ValueError::into_message)
-    }
-
-    /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!`.
-    // 🚫️async: E1 pure — string parsing only; same sync consumers as `to_uri`. See R9.
-    pub fn parse_uri(s: &str) -> Result<Self, String> {
-        let (artifact_id, coordinate) = s.split_once('!').ok_or_else(|| format!("artifact ref uri {s:?} missing '!'"))?;
-        if artifact_id.is_empty() {
-            return Err(format!("artifact ref uri {s:?} has an empty artifact id"));
-        }
-        let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
-        Ok(ArtifactRef { artifact_id: artifact_id.to_string(), dialect })
-    }
-}
-//#endregion 🔖️ArtifactRef
+use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef,Dialect,StandardId,SubsetId};
 
 //#region 🔖️Payload
 /// 📦️ The one payload envelope the whole io mechanism moves. **Payload law**: the `IoPayload` of
@@ -398,6 +217,7 @@ const IO_SCHEMA_EXPORTS: [semio_framework_schema_registry::SchemaExport; 1] = [s
 /// types) as the `schema` export of the `framework.io` scope, so every contract that `$ref`s it resolves it.
 // 🚫️async: E1 pure registration helper (no I/O) — see R9
 pub fn register_io_schema_exports() -> Result<(), semio_framework_schema_registry::SchemaExportRegistryError> {
+    semio_framework_artifact_reference::register_artifact_reference_schema_exports()?;
     semio_framework_schema_registry::register_scope_schema_exports(semio_framework_schema_registry::ScopeSchemaExports { scope: "framework.io", exports: &IO_SCHEMA_EXPORTS })
 }
 //#endregion 🔖️SchemaExports

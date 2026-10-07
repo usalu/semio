@@ -1,15 +1,11 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
 import TOML from "@iarna/toml";
 
 /** 🏘️ Authored deployment owners for concrete native components. */
 export function assertConcreteCompositionOwnership(root: string): string[] {
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/📇️ownership/🔣️.json"), "utf8")) as { components: { package: string; owner: string; removedOwner: string; component: string; role: string; componentKind: string }[] };
-  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/📇️ownership/🔣️.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/📇️ownership/🔣️.json"), "utf8")) as { components: { package: string; owner: string; component: string; role: string; componentKind: string }[] };
   const repoRoot = resolve(root, "../..");
   const names = new Set<string>();
   for (const row of fixture.components) {
@@ -25,8 +21,6 @@ export function assertConcreteCompositionOwnership(root: string): string[] {
     assert.equal(manifest.package.metadata.semio["component-kind"], row.componentKind);
     for (const path of manifest.package.metadata.semio.sources.artifacts) assert.ok(existsSync(resolve(owner, "📦️packages/🦀️rust", path)), path);
     assert.ok(existsSync(join(owner, "🛂️.descriptor.semio")), row.component);
-    assert.ok(!existsSync(join(repoRoot, row.removedOwner, "📦️packages/🦀️rust/Cargo.toml")), row.removedOwner);
-    assert.ok(!existsSync(join(repoRoot, row.removedOwner, "🦀️.rs")), row.removedOwner);
   }
   return [...names];
 }

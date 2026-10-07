@@ -9,7 +9,7 @@
 
 use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 
-use crate::standards::v1::subsets::base::schema::triples::split_top_level;
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level};
 use crate::standards::v1::subsets::table::schema::mutations::{
     set_snapshot::SetSnapshot,
     create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn, reorder_columns::ReorderColumns, reorder_rows::ReorderRows,
@@ -18,8 +18,8 @@ use crate::standards::v1::subsets::table::io::text::snapshot::{dec_row};
 use crate::standards::v1::subsets::table::io::text::snapshot::{enc_row};
 use crate::standards::v1::subsets::table::io::text::snapshot::{dec_cell_kind};
 use crate::standards::v1::subsets::table::io::text::snapshot::{enc_cell_kind};
-use crate::value::io::text::diff::{dec_semio_value};
-use crate::value::io::text::diff::{enc_semio_value};
+use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
+use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
 

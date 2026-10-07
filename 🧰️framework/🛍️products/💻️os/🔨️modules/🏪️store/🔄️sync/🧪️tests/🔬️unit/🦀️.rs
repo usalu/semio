@@ -870,7 +870,7 @@ async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
         id: edit_id.into(),
         actor: None,
         forwards: vec![DemoMutation::SetN { n }],
-        inverse: vec![DemoMutation::SetN { n: 0 }],
+        inverse: vec![DemoMutation::SetN { n: 0 }].into(),
         mutation_meta: Vec::new(), verb: None,
         sequence_number: 1,
         started_at: "0".into(),
@@ -2458,7 +2458,7 @@ async fn folder_text_storage_round_trips_pack() {
 
     let mut seed = crate::os_store::test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
     let files = print_document_pack(seed.envelope()).await.expect("print document pack");
-    let dsl_mirror = seed.envelope().vcs.initial_snapshot.print_dsl();
+    let dsl_mirror = seed.envelope().vcs.genesis.snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
@@ -2481,7 +2481,7 @@ async fn folder_text_storage_round_trips_pack() {
     let _ = parsed_pack.into_snapshot();
 
     let files2 = print_document_pack(store.envelope()).await.expect("print document pack 2");
-    let dsl_mirror2 = store.envelope().vcs.initial_snapshot.print_dsl();
+    let dsl_mirror2 = store.envelope().vcs.genesis.snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
     let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
     let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));

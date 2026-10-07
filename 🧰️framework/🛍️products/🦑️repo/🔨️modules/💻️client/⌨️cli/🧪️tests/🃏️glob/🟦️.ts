@@ -3,7 +3,6 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { globSync } from "glob";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
 import { minimatch } from "minimatch";
 
 /** 🃏️ One neutral policy-glob expectation: the pattern, the path it is matched against and the verdict. */
@@ -22,8 +21,6 @@ export function verifyFixtureGlobOracle(): void {
 /** 🪟️ Independently enumerates the neutral lifecycle filesystem with the existing third-party glob oracle. */
 export function verifyTicketRetentionOracle(): void {
   const fixture = JSON.parse(readFileSync(new URL("../../../../🎫️tickets/🧫️fixtures/🔓️open-close-reopen-lifecycle/🔓️lifecycle.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../../../🎫️tickets/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  if (!new Ajv2020({ strict: false }).validate({ ...schema, $ref: "#/$defs/LifecycleVectorFile" }, fixture)) throw new Error("Invalid neutral retention fixture");
   const owner = process.env.SEMIO_TICKET_DIR;
   const root = mkdtempSync(join(owner ? join(owner, "🗑️generated") : tmpdir(), "ticket-retention-oracle-"));
   try {
@@ -38,6 +35,6 @@ export function verifyTicketRetentionOracle(): void {
     const removed = paths.filter(path => eligible.includes(path) && (statSync(join(root, path)).size > 5 * 1024 * 1024 || [...totals].some(([folder, bytes]) => bytes > 10 * 1024 * 1024 && path.startsWith(folder + "/"))));
     const expected = fixture.purge.retention.filter((row: { retained: boolean }) => !row.retained).map((row: { path: string }) => row.path).sort();
     if (JSON.stringify(removed) !== JSON.stringify(expected)) throw new Error(`Independent generated-only filesystem oracle differs: ${JSON.stringify({ removed, expected, eligible })}`);
-    console.log(`Ticket retention filesystem reference: ${fixture.purge.retention.length} vectors verified with glob and AJV`);
+    console.log(`Ticket retention filesystem reference: ${fixture.purge.retention.length} vectors verified with glob`);
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

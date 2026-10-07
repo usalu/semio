@@ -34,6 +34,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     return render(createElement(UiNodeView, { store, id: root, context: { store, onAction: () => {}, onIntent } }));
   }
 
+  const { default: historyViewportFixture } = await import("../../../../../../🔌️plugin/🧫️fixtures/history-panel-command-window/🔣️.json");
+
+  it("uses the authored history scroll layout as its Tree viewport", () => {
+    const root = node(0, "history", { type: "tree" }, [1]);
+    root.layout = historyViewportFixture.rootLayout;
+    const mounted = mount([root, node(1, "commands", { type: "treeSection", label: "History", defaultOpen: true }, [2]), treeItem(2, "entry", "Move")], 0, () => {});
+    const viewport = mounted.container.querySelector<HTMLElement>('[data-ui-node-id="0"]');
+    expect(viewport).not.toBeNull();
+    const expected = historyViewportFixture.rootCss;
+    for (const [property, value] of Object.entries(expected)) expect(viewport!.style[property as "overflowX"]).toBe(value);
+    stubExtent(viewport!, 240, 2400);
+    expect(treeWindowScrollViewport(viewport!)).toBe(viewport);
+  });
+
   const rowHeightPx = treeWindowRowHeightPx();
   const frame = () => new Promise((resolve) => setTimeout(resolve, 40));
 

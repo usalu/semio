@@ -58,7 +58,7 @@ async fn stdio_document_contract_object_rejects_invalid_typed_mutations() {
     let before = snapshot.clone();
     let mutation = SemioObjectMutation::CreateMesh(CreateMesh {
         child_id: "wrong-owner-child".into(),
-        target: store::os_io::ArtifactRef { artifact_id: "mesh-1".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "foreign.artifact".into(), standard: "v1".into(), subset: "mesh".into() } },
+        target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "mesh-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "foreign.artifact".into(), standard: "v1".into(), subset: "mesh".into() } },
     });
     let outcome = apply_semio_object_mutation(&mut snapshot, &mutation);
     assert_eq!(snapshot, before);

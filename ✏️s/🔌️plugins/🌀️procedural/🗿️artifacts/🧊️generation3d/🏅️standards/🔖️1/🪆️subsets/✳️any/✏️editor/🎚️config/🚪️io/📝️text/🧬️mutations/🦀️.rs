@@ -5,13 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::generation3d::config::component::mutations::*;
 use crate::editor::generation3d::config::component::{CameraJson, Generation3dConfig, Generation3dPreviewCamera};
-use set_camera::SetCamera;
-use set_lod_mode::SetLodMode;
-use set_preview_camera::SetPreviewCamera;
-use set_selected_generation::SetSelectedGeneration;
-use set_show_mode::SetShowMode;
-use set_snapshot::SetSnapshot;
-use set_sun::SetSun;
 
 impl protocol::OpText for Generation3dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -40,13 +33,6 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::generation3d::config::component::mutations::*;
 use crate::editor::generation3d::config::component::{CameraJson, Generation3dConfig, Generation3dPreviewCamera};
-use set_camera::SetCamera;
-use set_lod_mode::SetLodMode;
-use set_preview_camera::SetPreviewCamera;
-use set_selected_generation::SetSelectedGeneration;
-use set_show_mode::SetShowMode;
-use set_snapshot::SetSnapshot;
-use set_sun::SetSun;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Generation3dConfig`.

@@ -1,0 +1,36 @@
+{
+  "name": "@semio-tech/framework-artifact-reference-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🗿️artifact-reference",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗿️artifact-reference/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/**/*"
+    ]
+  },
+  "targets": {
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    },
+    "test-binding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-binding"
+      }
+    }
+  }
+}

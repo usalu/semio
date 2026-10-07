@@ -873,9 +873,6 @@ pub struct JpgDiff {
     pub pixels: Option<Vec<u8>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub re_encode_quality: Option<Option<u8>>,
-    #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub jfif_version: Option<(u8, u8)>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -934,9 +931,6 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
         if let Some(v) = &self.pixels {
             next.pixels = v.clone();
         }
-        if let Some(v) = &self.re_encode_quality {
-            next.re_encode_quality = *v;
-        }
         if let Some(v) = self.jfif_version {
             next.jfif_version = v;
         }
@@ -988,9 +982,6 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
         }
         if other.pixels.is_some() {
             self.pixels = other.pixels;
-        }
-        if other.re_encode_quality.is_some() {
-            self.re_encode_quality = other.re_encode_quality;
         }
         if other.jfif_version.is_some() {
             self.jfif_version = other.jfif_version;
@@ -1177,7 +1168,6 @@ impl DiffAlgebra<JpgSnapshot> for JpgDiff {
             width: (base.width != other.width).then_some(other.width),
             height: (base.height != other.height).then_some(other.height),
             pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()),
-            re_encode_quality: (base.re_encode_quality != other.re_encode_quality).then_some(other.re_encode_quality),
             jfif_version: (base.jfif_version != other.jfif_version).then_some(other.jfif_version),
             jfif_density_units: (base.jfif_density_units != other.jfif_density_units).then_some(other.jfif_density_units),
             jfif_x_density: (base.jfif_x_density != other.jfif_x_density).then_some(other.jfif_x_density),
@@ -1288,7 +1278,6 @@ pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
         width: 4,
         height: 4,
         pixels: vec![0u8; 16],
-        re_encode_quality: Some(80),
         jfif_version: (1, 1),
         jfif_density_units: JfifDensityUnits::PixelsPerInch,
         jfif_x_density: 72,
@@ -1307,7 +1296,6 @@ pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
         width: 8,
         height: 6,
         pixels: vec![9u8; 12],
-        re_encode_quality: None,
         jfif_version: (1, 2),
         jfif_density_units: JfifDensityUnits::Aspect,
         jfif_x_density: 1,

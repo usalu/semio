@@ -10,6 +10,7 @@
 //! inverse returns the document to where it started" is the property undo actually depends on.
 
 use super::*;
+use crate::standards::v1_4::subsets::base::io::binary::mutations as binary;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-page/🔄️round/📸️snapshot/⬅️before/🔣️.json");

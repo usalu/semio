@@ -1,0 +1,3 @@
+# Native Formatter Ownership Plan
+
+Print's schema currently includes LaTeX/TikZ serializers and a `tikz` physical output member in its inference carrier. Move native serialization to text I/O inferences, keep chart validation and typed geometry/source inference in schema, and publish physical text outputs through an explicit I/O carrier. Update callers, schema contracts and fixtures together; no alias or old schema export remains. Extend source ownership verification with a neutral parser oracle vector for native emitters before extraction. Re-run native and TypeScript registered tasks after the move.

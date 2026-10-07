@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-06T14:08:32.115Z",
+  "session": 9411,
+  "exitCode": 1,
+  "qualification": "Compiler-only, no Nextest",
+  "actualErrors": 9,
+  "previousPluginActor24": "Previous24 actual actor callers absent",
+  "currentFailure": "Plugin2 missing LOCAL_ACTOR_ID and7 actual typed-retirement bound failures",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-resumed-pdf-original-whole-owner-after-current-plugin-actor-boundaries.log",
+  "contexts": "physical-resumed-pdf-current-actor-boundaries-actual-compiler-contexts.json"
+}

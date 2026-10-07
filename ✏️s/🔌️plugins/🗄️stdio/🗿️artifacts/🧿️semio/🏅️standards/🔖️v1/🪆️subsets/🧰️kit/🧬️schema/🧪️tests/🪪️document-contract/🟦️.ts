@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -52,7 +53,7 @@ function mutationChildIdentity(value: any): boolean {
 
 /** 🧪️ Kit catalog records, child identities and shared links agree with independent validators. */
 export function testSemioKitDocumentContract(): void {
-  const ajv = semioSchemaAjvV1({ allErrors: true });
+  const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   for (const path of [
     "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
     "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json",

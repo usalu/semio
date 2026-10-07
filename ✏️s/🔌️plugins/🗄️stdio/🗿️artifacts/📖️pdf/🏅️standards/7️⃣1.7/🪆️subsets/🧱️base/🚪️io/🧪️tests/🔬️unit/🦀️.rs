@@ -120,7 +120,7 @@ fn rich_document() -> PdfSnapshot {
         PdfOp::ShowText { text: PdfTextString::text("Ab A") },
         PdfOp::ShowTextArray { items: vec![PdfTextArrayItem::Text { text: "A".into() }, PdfTextArrayItem::Adjust { amount: -120.0 }, PdfTextArrayItem::Text { text: "b".into() }] },
         PdfOp::NextLineShowTextSpaced { word_spacing: 2.0, char_spacing: 0.25, text: PdfTextString::text("A") },
-        PdfOp::ShowText { text: PdfTextString::Codes { bytes: vec![0, 99] } },
+        PdfOp::ShowText { text: PdfTextString::Codes { codes: vec![0, 99] } },
         PdfOp::EndText,
         PdfOp::EndMarkedContent,
         PdfOp::Restore,
@@ -410,4 +410,59 @@ fn unresolved_resources_are_reported() {
     let snapshot = text_document(&[(100.0, 100.0, "x")]);
     let ops = vec![PdfOp::SetFont { name: "Nope".into(), size: 1.0 }, PdfOp::PaintXObject { name: "Im9".into() }];
     assert_eq!(unresolved_resources(&snapshot, &ops), vec!["font Nope".to_string(), "xobject Im9".to_string()]);
+}
+
+#[test]
+fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_precision() {
+    use crate::standards::v1_7::subsets::base::modules::{content::{parse_content,print_content},fonts::FontCodec};
+    use std::collections::HashMap;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔢️logical-character-codes/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let width=case["width"].as_u64().unwrap()as usize;
+        let expected:Vec<u32>=case["codes"].as_array().unwrap().iter().map(|code|u32::try_from(code.as_u64().unwrap()).unwrap()).collect();
+        let mut fonts=HashMap::new();
+        if width>1 {
+            let cmap=if width==2 {PdfCMap::identity_h()}else{PdfCMap::Embedded {cmap:PdfEmbeddedCMap {name:"OwnedFourByte".into(),vertical:false,codespace:vec![PdfCodespaceRange {byte_width:4,low:0,high:u32::MAX}],mappings:Vec::new(),use_cmap:None}}};
+            let font=PdfFont {id:"F1".into(),kind:PdfFontKind::Type0 {base_font:"OwnedSans".into(),cmap,descendant:PdfCidFont {true_type:true,base_font:"OwnedSans".into(),system_info:Default::default(),descriptor:PdfFontDescriptor {font_name:"OwnedSans".into(),..Default::default()},default_width:500.0,widths:Vec::new(),default_vertical:None,vertical_metrics:Vec::new(),cid_to_gid:None,program:None,extra:Vec::new()}},to_unicode:None,extra:Vec::new()};
+            fonts.insert("F1".to_string(),FontCodec::new(&font));
+        }
+        let joined=case["fragments"].as_array().unwrap().iter().map(|fragment|fragment.as_str().unwrap()).collect::<Vec<_>>().join("\n");
+        let operations=parse_content(joined.as_bytes(),&fonts);
+        let codes=operations.iter().find_map(|op|match op {PdfOp::ShowText {text:PdfTextString::Codes {codes}}=>Some(codes),_=>None}).unwrap();
+        assert_eq!(codes,&expected);
+        assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_content_codes(joined.as_bytes(),width).unwrap(),vec![expected.clone()]);
+        let native=print_content(&operations,&fonts).unwrap();
+        assert_eq!(parse_content(&native,&fonts),operations);
+        assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_content_codes(&native,width).unwrap(),vec![expected]);
+        println!("[DEBUG] PDF logical character case={} native grouping width={} exact words and complete fragment admission",case["id"],width);
+    }
+}
+
+#[test]
+fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
+    use crate::standards::v1_7::subsets::base::modules::lexer::{Lexer,object_bytes};
+    use semio_framework_value::FromValue;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪪️retained-text/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let native=case["native"].as_str().unwrap();
+        let value=Lexer::new(native.as_bytes()).parse_object().unwrap();
+        let title=case["text"].as_str().unwrap();
+        let date=PdfDate::from_value(serde_json::from_value(case["ownedDate"].clone()).unwrap()).unwrap();
+        let r=|num|ObjRef {num,gen:0};
+        let mut objects=vec![PdfIndirectObject{id:r(1),value:PdfObject::Dict(vec![PdfDictEntry::new("Title",PdfObject::Ref(r(2))),PdfDictEntry::new("CreationDate",PdfObject::Ref(r(3))),PdfDictEntry::new("Opt",PdfObject::Ref(r(4)))] )},PdfIndirectObject{id:r(2),value},PdfIndirectObject{id:r(3),value:PdfObject::Str(case["date"].as_str().unwrap().as_bytes().to_vec())},PdfIndirectObject{id:r(4),value:PdfObject::Array(vec![PdfObject::Str(b"choice".to_vec())])},PdfIndirectObject{id:r(5),value:PdfObject::Str(vec![0,255,1])}];
+        let mut trailer=vec![PdfDictEntry::new("Info",PdfObject::Ref(r(1)))];
+        text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer);
+        assert_eq!(objects.len(),5);
+        assert_eq!(objects[0].value.dict_get("Title"),Some(&PdfObject::Ref(r(2))));
+        assert_eq!(objects[1].value,PdfObject::Text(title.into()));
+        assert_eq!(objects[2].value,PdfObject::Date(date));
+        assert_eq!(objects[3].value,PdfObject::Array(vec![PdfObject::Text("choice".into())]));
+        assert_eq!(objects[4].value,PdfObject::Str(vec![0,255,1]));
+        let original=format!("{native} Tj");
+        let oracle=semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_text_operand(original.as_bytes()).unwrap();
+        assert_eq!(oracle,title);
+        let mut emitted=object_bytes(&objects[1].value);emitted.extend_from_slice(b" Tj");
+        assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_text_operand(&emitted).unwrap(),oracle);
+        println!("[DEBUG] PDF retained text case={} exact logical text/date, indirect identity and independent native text admission",case["id"]);
+    }
 }

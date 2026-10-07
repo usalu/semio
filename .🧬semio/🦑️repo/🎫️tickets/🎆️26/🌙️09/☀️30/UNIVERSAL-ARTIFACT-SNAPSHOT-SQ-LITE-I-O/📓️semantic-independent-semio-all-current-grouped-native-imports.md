@@ -1,0 +1,3 @@
+# Current Semio Grouped Native Imports
+
+Recursive brace expansion read every current IO SQLite Native encode/decode use tree, including Base.497 expanded imports yield exactly one absent former Schema Snapshot Native alias: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs:4. Separate Base io::sqlite::snapshot::native_decoding import; keep child validator and geometry in schema. No second grouped stale Snapshot Native import found. Receipt generated/semio-all-current-native-grouped-import-readback.json. Static path authority only, no compiler/runtime credit.

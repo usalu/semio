@@ -1,4 +1,4 @@
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, set_snapshot, DocxMutation};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxSnapshot, DocxStyle};

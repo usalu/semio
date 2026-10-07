@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -29,7 +30,7 @@ export function testJackDocumentContract(): void {
   const diffSchema = schema(new URL("../../🔺️diff/🔣️.json", import.meta.url));
   const snapshot = json(new URL(cases.snapshotFixture, import.meta.url));
   const diff = json(new URL(cases.diffFixture, import.meta.url));
-  const ajv = semioSchemaAjvV1({ allErrors: true });
+  const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   ajv.addSchema(schema(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",import.meta.url)));
   ajv.addSchema(ioSchema);
   ajv.addSchema(childSchema);

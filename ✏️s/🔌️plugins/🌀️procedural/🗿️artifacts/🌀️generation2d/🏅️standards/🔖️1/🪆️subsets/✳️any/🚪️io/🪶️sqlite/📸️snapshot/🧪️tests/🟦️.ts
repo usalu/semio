@@ -5,7 +5,8 @@ import {generation2dSnapshotToSqliteDatabase,generation2dSnapshotFromSqliteDatab
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import corpus from"../🧫️fixtures/🔣️.json";
 import{proceduralSnapshotFixture}from"../../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🧪️tests/🧰️support/🟦️.ts";
-import type{GenerationValue}from"../../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🟦️.ts";
+
+import {GenerationValue} from "../../../../../../../../../../🫀️core/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts";
 import{parseGeneration2dArtifact}from"../../../../🧬️schema/🟦️.ts";
 import Ajv from"ajv";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";

@@ -1,16 +1,4 @@
 {
-  "schema": {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "required": ["canvas", "windows", "cases", "toleranceMm"],
-    "additionalProperties": false,
-    "properties": {
-      "canvas": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 2, "maxItems": 2 },
-      "toleranceMm": { "type": "number", "exclusiveMinimum": 0 },
-      "windows": { "type": "array", "minItems": 4, "items": { "type": "object", "required": ["id"], "additionalProperties": false, "properties": { "id": { "type": "string" }, "domain": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 } } } },
-      "cases": { "type": "array", "minItems": 3, "items": { "type": "object", "required": ["kind", "mode", "padding", "points", "options"], "additionalProperties": false, "properties": { "kind": { "type": "string" }, "mode": { "enum": ["projectile", "orbital", "phase-space"] }, "padding": { "type": "number", "minimum": 0 }, "points": { "type": "integer", "minimum": 2 }, "options": { "type": "object", "additionalProperties": { "type": "number" } } } } }
-    }
-  },
   "vectors": {
     "canvas": [80, 40],
     "toleranceMm": 0.03,

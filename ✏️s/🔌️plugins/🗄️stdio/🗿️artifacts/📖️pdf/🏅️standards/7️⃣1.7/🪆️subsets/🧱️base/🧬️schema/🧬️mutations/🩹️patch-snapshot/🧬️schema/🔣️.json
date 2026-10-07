@@ -2,7 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/patch-snapshot/schema.json",
   "title": "PatchSnapshot",
-  "x-semio-inverse-rows": { "bounded": 128 },
+  "x-semio-inverse-rows": {
+    "bounded": 128
+  },
   "description": "🩹️ One path-scoped PdfMutation snapshot edit (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).",
   "type": "object",
   "additionalProperties": false,

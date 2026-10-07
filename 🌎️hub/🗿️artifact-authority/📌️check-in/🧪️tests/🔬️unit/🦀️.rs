@@ -225,7 +225,7 @@ async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutati
     let pack = <GisMapSnapshot as ArtifactPack>::encode_pack(&GisMapSnapshot::default());
     let spr = ::directory::os_store::empty_document_spr("karte", GIS_MAP_SCHEMA).await;
     let parsed = ::directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
-    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope()).await.expect("editor store");
+    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope(), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("editor store");
     store.install_document_store_owners_exact(::directory::os_store::bounded_artifact_store_owners());
     let mut applied = Ok(());
     for mutation in mutations {

@@ -270,7 +270,7 @@ impl JackPackRecord {
                 camera: self.camera,
                 content: JackContentChild::new(
                     self.content.child_id,
-                    store::io_schema::ArtifactRef { artifact_id: self.content.artifact_id, dialect: store::io_schema::ArtifactDialect { artifact_kind: self.content.artifact_kind, standard: self.content.standard, subset: self.content.subset } },
+                    semio_framework_artifact_reference::ArtifactRef { artifact_id: self.content.artifact_id, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: self.content.artifact_kind, standard: self.content.standard, subset: self.content.subset } },
                 ),
                 root_node_id: self.root_node_id,
                 query: self.query,

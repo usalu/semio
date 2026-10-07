@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::model::modes::edit::windows::model::config::mutations::*;
 use crate::editor::model::modes::edit::windows::model::config::{EnergyModelCameraPose, EnergyModelWindowConfig};
-use set_camera::SetCamera;
 
 impl protocol::OpBinary for EnergyModelWindowConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -11,6 +11,10 @@
 //! replica-local edit id. Checkpoint, change and alternative ids are minted once by the author
 //! and carried verbatim.
 
+#[path = "🔁️fold/🦀️.rs"]
+mod retained_fold;
+pub use retained_fold::*;
+
 use crate::ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
 
 //#region 🔖️Vocabulary
@@ -306,14 +310,6 @@ fn write_optional_str(out: &mut Vec<u8>, value: &Option<String>) {
     }
 }
 
-fn read_optional_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, crate::ProtocolError> {
-    match read_u8(bytes, pos)? {
-        0 => Ok(None),
-        1 => Ok(Some(crate::read_str(bytes, pos)?)),
-        other => Err(malformed(*pos, format!("invalid option tag {other}"))),
-    }
-}
-
 fn read_u8(bytes: &[u8], pos: &mut usize) -> Result<u8, crate::ProtocolError> {
     let value = *bytes.get(*pos).ok_or_else(|| malformed(*pos, "truncated"))?;
     *pos += 1;
@@ -329,18 +325,6 @@ fn write_ids(out: &mut Vec<u8>, ids: &[MutationId]) {
     for id in ids {
         crate::write_str(out, &id.0);
     }
-}
-
-fn read_ids(bytes: &[u8], pos: &mut usize) -> Result<Vec<MutationId>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    if count > (bytes.len() - (*pos).min(bytes.len())) as u64 {
-        return Err(malformed(*pos, "id count exceeds payload"));
-    }
-    let mut ids = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        ids.push(MutationId(crate::read_str(bytes, pos)?));
-    }
-    Ok(ids)
 }
 
 /// 🎯️ `tag varint | variant fields in declaration order` — the transition payload bytes. A
@@ -417,84 +401,9 @@ pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
     out
 }
 
-fn read_supersede(bytes: &[u8], pos: &mut usize) -> Result<TransitionSupersede, crate::ProtocolError> {
-    let scope = read_optional_str(bytes, pos)?;
-    let input_count = crate::wire::read_varint_u64(bytes, pos)?;
-    if input_count > (bytes.len() - (*pos).min(bytes.len())) as u64 {
-        return Err(malformed(*pos, "input count exceeds payload"));
-    }
-    let mut inputs = Vec::with_capacity(input_count as usize);
-    for _ in 0..input_count {
-        let target = MutationId(crate::read_str(bytes, pos)?);
-        let replacement = match read_u8(bytes, pos)? {
-            0 => {
-                let schema = crate::read_str(bytes, pos)?;
-                let length_at = *pos;
-                let length = crate::wire::read_varint_u64(bytes, pos)?;
-                if length > SUPERSEDE_PAYLOAD_MAX_BYTES as u64 {
-                    return Err(malformed(length_at, format!("supersede payload exceeds {SUPERSEDE_PAYLOAD_MAX_BYTES} bytes")));
-                }
-                *pos = length_at;
-                InputReplacement::Input { schema, payload: crate::read_bytes(bytes, pos)? }
-            }
-            1 => InputReplacement::Withdrawn,
-            other => return Err(malformed(*pos - 1, format!("invalid replacement tag {other}"))),
-        };
-        inputs.push(SupersededInput { target, replacement });
-    }
-    let supersede = TransitionSupersede { scope, inputs };
-    supersede.validate()?;
-    Ok(supersede)
-}
-
 /// 🎯️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
 pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, crate::ProtocolError> {
-    let mut pos = 0usize;
-    let transition = match crate::wire::read_varint_u64(bytes, &mut pos)? {
-        0 => HistoryTransition::Revert { mutation_ids: read_ids(bytes, &mut pos)? },
-        1 => HistoryTransition::Reinstate { mutation_ids: read_ids(bytes, &mut pos)? },
-        2 => {
-            let checkpoint_id = crate::read_str(bytes, &mut pos)?;
-            let parent_id = read_optional_str(bytes, &mut pos)?;
-            let change_id = crate::read_str(bytes, &mut pos)?;
-            let mutation_ids = read_ids(bytes, &mut pos)?;
-            let description = read_optional_str(bytes, &mut pos)?;
-            let saved_at = crate::read_str(bytes, &mut pos)?;
-            let author_count = crate::wire::read_varint_u64(bytes, &mut pos)?;
-            if author_count > (bytes.len() - pos.min(bytes.len())) as u64 {
-                return Err(malformed(pos, "author count exceeds payload"));
-            }
-            let mut authors = Vec::with_capacity(author_count as usize);
-            for _ in 0..author_count {
-                authors.push(TransitionAuthor { id: crate::read_str(bytes, &mut pos)?, name: crate::read_str(bytes, &mut pos)?, avatar: read_optional_str(bytes, &mut pos)? });
-            }
-            let message = read_optional_str(bytes, &mut pos)?;
-            let timestamp = crate::read_str(bytes, &mut pos)?;
-            let line_id = read_optional_str(bytes, &mut pos)?;
-            HistoryTransition::Commit(TransitionCheckpoint { checkpoint_id, parent_id, change_id, mutation_ids, description, saved_at, authors, message, timestamp, line_id })
-        }
-        3 => HistoryTransition::Branch { alternative_id: crate::read_str(bytes, &mut pos)?, name: crate::read_str(bytes, &mut pos)?, checkpoint_id: crate::read_str(bytes, &mut pos)? },
-        4 => HistoryTransition::Checkout { checkpoint_id: crate::read_str(bytes, &mut pos)?, alternative_id: read_optional_str(bytes, &mut pos)? },
-        5 => {
-            let checkpoint_id = crate::read_str(bytes, &mut pos)?;
-            let pinned_checkpoint_id = crate::read_str(bytes, &mut pos)?;
-            let pin_count = crate::wire::read_varint_u64(bytes, &mut pos)?;
-            if pin_count > (bytes.len() - pos.min(bytes.len())) as u64 {
-                return Err(malformed(pos, "pin count exceeds payload"));
-            }
-            let mut pins = Vec::with_capacity(pin_count as usize);
-            for _ in 0..pin_count {
-                pins.push(TransitionPin { child_uri: crate::read_str(bytes, &mut pos)?, checkpoint_id: crate::read_str(bytes, &mut pos)? });
-            }
-            HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins }
-        }
-        6 => HistoryTransition::Supersede(read_supersede(bytes, &mut pos)?),
-        other => return Err(malformed(0, format!("unknown transition tag {other}"))),
-    };
-    if pos != bytes.len() {
-        return Err(malformed(pos, "trailing bytes"));
-    }
-    Ok(transition)
+    HistoryFoldJob::new(|control| async move { decode_history_transition_controlled(bytes, &control).await }).finish_cold()
 }
 //#endregion 🔖️Codec
 
@@ -634,11 +543,6 @@ pub struct HistoryFold {
     pub supersessions: std::collections::BTreeMap<MutationId, EffectiveSupersession>,
 }
 
-enum FoldEvent<'a> {
-    Edit(&'a FoldEdit),
-    Transition { id: &'a str, actor: &'a str, timestamp: HybridLogicalTimestamp, transition: HistoryTransition },
-}
-
 fn fold_error(detail: impl Into<String>) -> crate::ProtocolError {
     crate::ProtocolError::Malformed { what: "history fold", offset: 0, detail: detail.into() }
 }
@@ -672,192 +576,7 @@ pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &
 /// edit is visible only at the tip of the line it is tagged to (`FoldEdit::line` absent or the trunk id
 /// means the trunk).
 pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>, head: &ViewerHead) -> Result<HistoryFold, crate::ProtocolError> {
-    let mut owners: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
-    let mut authors: std::collections::HashMap<&str, Option<&str>> = std::collections::HashMap::new();
-    for edit in edits {
-        authors.insert(edit.id.as_str(), edit.actor.as_deref());
-        for mutation_id in &edit.mutation_ids {
-            owners.insert(mutation_id.0.as_str(), edit.id.as_str());
-        }
-    }
-    let mut events: Vec<((u64, u64, u64), &str, FoldEvent<'_>)> = Vec::with_capacity(edits.len() + transitions.len());
-    for edit in edits {
-        events.push((edit.timestamp.cmp_key(), edit.id.as_str(), FoldEvent::Edit(edit)));
-    }
-    let mut identities: std::collections::HashSet<&str> = edits.iter().map(|edit| edit.id.as_str()).collect();
-    if identities.len() != edits.len() {
-        return Err(fold_error("history repeats an edit"));
-    }
-    for envelope in transitions {
-        if !identities.insert(envelope.mutation_id.0.as_str()) {
-            return Err(fold_error(format!("history repeats transition {}", envelope.mutation_id.0)));
-        }
-        let transition = history_transition_from_envelope(envelope)?.ok_or_else(|| fold_error(format!("{} is not a history transition", envelope.mutation_id.0)))?;
-        events.push((envelope.timestamp.cmp_key(), envelope.mutation_id.0.as_str(), FoldEvent::Transition { id: envelope.mutation_id.0.as_str(), actor: envelope.actor.0.as_str(), timestamp: envelope.timestamp, transition }));
-    }
-    events.sort_by(|left, right| (left.0, left.1).cmp(&(right.0, right.1)));
-    let owned = |mutation_ids: &[MutationId]| -> Result<Vec<String>, crate::ProtocolError> {
-        let mut edit_ids: Vec<String> = Vec::with_capacity(mutation_ids.len());
-        for mutation_id in mutation_ids {
-            let edit_id = owners.get(mutation_id.0.as_str()).ok_or_else(|| fold_error(format!("transition references unknown operation {}", mutation_id.0)))?;
-            if !edit_ids.iter().any(|known| known == edit_id) {
-                edit_ids.push((*edit_id).to_string());
-            }
-        }
-        Ok(edit_ids)
-    };
-    let foreign = |edit_ids: &[String], actor: &str| edit_ids.iter().any(|edit_id| authors.get(edit_id.as_str()).copied().flatten().is_some_and(|author| author != actor));
-    let mut fold = HistoryFold { trunk: trunk_alternative_id(document_id), ..HistoryFold::default() };
-    let mut trunk_chain: Vec<String> = Vec::new();
-    let mut active: std::collections::HashSet<String> = std::collections::HashSet::new();
-    let mut superseding: Vec<(MutationId, EffectiveSupersession)> = Vec::new();
-    let mut renamed: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    for (_, _, event) in events {
-        match event {
-            FoldEvent::Edit(edit) => {
-                if excluded.contains(&edit.id) {
-                    continue;
-                }
-                active.insert(edit.id.clone());
-                fold.redo.retain(|redo| authors.get(redo.as_str()).copied().flatten() != edit.actor.as_deref());
-            }
-            FoldEvent::Transition { id, actor, transition: HistoryTransition::Revert { mutation_ids }, .. } => {
-                let edit_ids = owned(&mutation_ids)?;
-                if foreign(&edit_ids, actor) {
-                    fold.refused.push(id.to_string());
-                    continue;
-                }
-                for edit_id in edit_ids {
-                    if active.remove(&edit_id) {
-                        fold.redo.push(edit_id);
-                    }
-                }
-            }
-            FoldEvent::Transition { id, actor, transition: HistoryTransition::Reinstate { mutation_ids }, .. } => {
-                let edit_ids = owned(&mutation_ids)?;
-                if foreign(&edit_ids, actor) {
-                    fold.refused.push(id.to_string());
-                    continue;
-                }
-                for edit_id in edit_ids {
-                    if let Some(position) = fold.redo.iter().position(|redo| *redo == edit_id) {
-                        fold.redo.remove(position);
-                        active.insert(edit_id);
-                    }
-                }
-            }
-            FoldEvent::Transition { transition: HistoryTransition::Commit(checkpoint), .. } => {
-                let mut change_ids = match &checkpoint.parent_id {
-                    Some(parent_id) => fold.checkpoints.iter().find(|known| known.id == *parent_id).ok_or_else(|| fold_error(format!("checkpoint {} names unknown parent {parent_id}", checkpoint.checkpoint_id)))?.change_ids.clone(),
-                    None => Vec::new(),
-                };
-                change_ids.push(checkpoint.change_id.clone());
-                fold.changes.push(FoldChange { id: checkpoint.change_id, edit_ids: owned(&checkpoint.mutation_ids)?, description: checkpoint.description, saved_at: checkpoint.saved_at });
-                fold.checkpoints.push(FoldCheckpoint { id: checkpoint.checkpoint_id.clone(), change_ids, parent_id: checkpoint.parent_id, authors: checkpoint.authors, message: checkpoint.message, timestamp: checkpoint.timestamp, pins: Vec::new() });
-                let named = checkpoint.line_id.as_ref().filter(|line_id| *line_id != &fold.trunk);
-                match named {
-                    Some(line_id) => {
-                        let alternative = fold.alternatives.iter_mut().find(|alternative| alternative.id == *line_id).ok_or_else(|| fold_error(format!("commit {} names unknown alternative {line_id}", checkpoint.checkpoint_id)))?;
-                        alternative.checkpoint_ids.push(checkpoint.checkpoint_id.clone());
-                    }
-                    None => trunk_chain.push(checkpoint.checkpoint_id.clone()),
-                }
-            }
-            FoldEvent::Transition { transition: HistoryTransition::Branch { alternative_id, name, checkpoint_id }, .. } => {
-                if alternative_id == fold.trunk {
-                    return Err(fold_error(format!("branch claims the trunk alternative {alternative_id}")));
-                }
-                if !fold.checkpoints.iter().any(|known| known.id == checkpoint_id) {
-                    return Err(fold_error(format!("branch names unknown checkpoint {checkpoint_id}")));
-                }
-                fold.alternatives.push(FoldAlternative { id: alternative_id, name, checkpoint_ids: vec![checkpoint_id] });
-            }
-            FoldEvent::Transition { transition: HistoryTransition::Checkout { checkpoint_id, .. }, .. } => {
-                if !fold.checkpoints.iter().any(|known| known.id == checkpoint_id) {
-                    return Err(fold_error(format!("checkout names unknown checkpoint {checkpoint_id}")));
-                }
-            }
-            FoldEvent::Transition { transition: HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins }, .. } => {
-                let checkpoint = fold.checkpoints.iter_mut().find(|known| known.id == checkpoint_id).ok_or_else(|| fold_error(format!("repin names unknown checkpoint {checkpoint_id}")))?;
-                checkpoint.id = pinned_checkpoint_id.clone();
-                checkpoint.pins = pins;
-                for id in fold.alternatives.iter_mut().flat_map(|alternative| alternative.checkpoint_ids.iter_mut()).chain(trunk_chain.iter_mut()) {
-                    if *id == checkpoint_id {
-                        *id = pinned_checkpoint_id.clone();
-                    }
-                }
-                renamed.insert(checkpoint_id, pinned_checkpoint_id);
-            }
-            FoldEvent::Transition { id, actor, timestamp, transition: HistoryTransition::Supersede(supersede) } => {
-                owned(&supersede.targets())?;
-                for input in supersede.inputs {
-                    superseding.push((input.target, EffectiveSupersession { transition_id: id.to_string(), actor: actor.to_string(), timestamp, scope: supersede.scope.clone(), replacement: input.replacement }));
-                }
-            }
-        }
-    }
-    let on_trunk = head.line_id == fold.trunk;
-    let chain = if on_trunk {
-        trunk_chain.clone()
-    } else {
-        fold.alternatives.iter().find(|alternative| alternative.id == head.line_id).ok_or_else(|| fold_error(format!("viewer head names unknown alternative {}", head.line_id)))?.checkpoint_ids.clone()
-    };
-    let mut viewed = head.checkpoint_id.clone();
-    if let Some(id) = &mut viewed {
-        let mut guard = 0u8;
-        while let Some(next) = renamed.get(id).cloned() {
-            *id = next;
-            guard += 1;
-            if guard == 64 {
-                return Err(fold_error("repin cycle"));
-            }
-        }
-        if !chain.iter().any(|known| known == id) {
-            return Err(fold_error(format!("viewer head names unknown checkpoint {id}")));
-        }
-    }
-    let at_tip = viewed.is_none();
-    let checkpoint_id = viewed.or_else(|| chain.last().cloned());
-    let mut visible: std::collections::HashSet<String> = std::collections::HashSet::new();
-    if let Some(id) = &checkpoint_id {
-        let checkpoint = fold.checkpoints.iter().find(|known| known.id == *id).ok_or_else(|| fold_error(format!("viewer head names unknown checkpoint {id}")))?;
-        for change_id in &checkpoint.change_ids {
-            let change = fold.changes.iter().find(|change| change.id == *change_id).ok_or_else(|| fold_error(format!("checkpoint {id} names unknown change {change_id}")))?;
-            visible.extend(change.edit_ids.iter().filter(|edit_id| active.contains(*edit_id)).cloned());
-        }
-    }
-    if at_tip {
-        let mut committed: std::collections::HashSet<&str> = std::collections::HashSet::new();
-        for change in &fold.changes {
-            committed.extend(change.edit_ids.iter().map(String::as_str));
-        }
-        for edit in edits {
-            if !active.contains(&edit.id) || committed.contains(edit.id.as_str()) {
-                continue;
-            }
-            let on_line = match &edit.line {
-                Some(line) if line != &fold.trunk => line == &head.line_id,
-                _ => on_trunk,
-            };
-            if on_line {
-                visible.insert(edit.id.clone());
-            }
-        }
-    }
-    for (target, supersession) in superseding {
-        if supersession.scope.as_ref().is_none_or(|scope| *scope == head.line_id) {
-            fold.supersessions.insert(target, supersession);
-        }
-    }
-    if !trunk_chain.is_empty() {
-        fold.alternatives.insert(0, FoldAlternative { id: fold.trunk.clone(), name: String::new(), checkpoint_ids: trunk_chain });
-    }
-    let mut ordered: Vec<&FoldEdit> = edits.iter().filter(|edit| visible.contains(&edit.id)).collect();
-    ordered.sort_by(|left, right| (left.timestamp.cmp_key(), left.id.as_str()).cmp(&(right.timestamp.cmp_key(), right.id.as_str())));
-    fold.applied = ordered.into_iter().map(|edit| edit.id.clone()).collect();
-    fold.checkpoint = checkpoint_id;
-    fold.alternative = if on_trunk { None } else { Some(head.line_id.clone()) };
-    Ok(fold)
+    HistoryFoldJob::new(|control| async move { fold_history_for_controlled(document_id, edits, transitions, excluded, head, &control).await }).finish_cold()
 }
 
 //#endregion 🔖️Fold

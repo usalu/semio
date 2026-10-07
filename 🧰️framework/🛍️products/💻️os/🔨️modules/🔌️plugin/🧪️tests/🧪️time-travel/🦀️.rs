@@ -166,10 +166,15 @@ fn seed_op(op: &Value) -> TestMutation {
 
 /// 🌱️ A registered toy instance holding the fixture's seed, one edit per op, authored by the fixture actor.
 async fn seeded_app(fixture: &Value) -> ToyApp {
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    app.store.set_local_actor_id(Some(text(&fixture["actor"]).to_string())).expect("local actor");
+    seeded_app_as(fixture, text(&fixture["actor"])).await
+}
+
+/// 🪪️ Opens the toy under its acting actor while preserving each neutral seed edit's author.
+async fn seeded_app_as(fixture: &Value, actor: &str) -> ToyApp {
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into())).await;
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.into()));
     for op in fixture["seed"].as_array().expect("seed") {
-        app.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }).await.expect("seed edit applies");
+        publish_as(&mut app, text(&fixture["actor"]), seed_op(op));
     }
     app.refresh_cache().await.expect("the command log backfills the seed");
     app
@@ -333,7 +338,7 @@ async fn an_overwrite_head_equals_a_fresh_fold_of_the_edited_log() {
     for step in scenario["steps"].as_array().expect("steps") {
         run_step(&mut app, &fixture, step).await;
     }
-    let mut fresh = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut fresh = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into())).await;
     for (index, op) in fixture["seed"].as_array().expect("seed").iter().enumerate() {
         let op = if index == 1 { SetLabel { value: "b".into() }.into() } else { seed_op(op) };
         fresh.store.dispatch(ArtifactCommand::Apply { mutations: vec![op], transaction: None }).await.expect("fresh edit");
@@ -431,10 +436,10 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying, "rerun replays the kept drafts");
     run_step(&mut app, &fixture, &serde_json::json!({ "replay": "clean" })).await;
     assert_eq!(app.time_travel.status().and_then(|status| status.review), Some(semio_framework::kernel::HistoryTimeTravelReview::Ready));
-    let mut remote = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut remote = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("remote".into())).await;
     let (remote_backbone, mut remote_probe) = MemoryBackbone::pair("time-travel-remote-peer", "time-travel-remote-peer").await;
     remote.attach_backbone(store::Backbones::Memory(remote_backbone)).await.expect("attach remote probe");
-    remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
+    assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
     remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
@@ -492,10 +497,10 @@ async fn a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reloa
     for transaction in [&gesture, &select] {
         app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), support_then_intent()), &meta(&fixture)).await.expect("the transaction publishes");
     }
-    let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into())).await;
     artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text")).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
-    let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into())).await;
     artifact_app_laws::load_document(&mut repacked, &app.document_pack().await.expect("document pack")).await.expect("pack reload");
     repacked.refresh_cache().await.expect("the repacked log backfills");
     for (who, app) in [("authored", &mut app), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
@@ -1059,6 +1064,46 @@ async fn the_session_leads_the_history_body_and_the_editor_inputs_are_a_window_o
     close(&mut app);
 }
 
+/// 🧾️ LAW: unchanged Accept is refused through the app route, preserving the draft, preview and committed store.
+#[semio_framework_async_macros::async_test]
+async fn accepting_an_unchanged_input_retains_the_open_editor_and_preview() {
+    let fixture = fixture();
+    let mut app = seeded_app(&fixture).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 })).await;
+    let session = app.time_travel.session().clone();
+    let pending = session.pending.as_ref().expect("the open draft");
+    assert!(session.unchanged(pending), "opening preserves the draft baseline: {pending:?}");
+    assert!(!app.time_travel.panel().expect("native history panel").editor.expect("native editor availability").changed, "unchanged availability comes from the authoritative draft baseline");
+    let input = app.time_travel.editor().expect("the draft editor").value.clone();
+    let body = render_body(&mut app).await;
+    let generation = app.store.generation();
+    for (locale, reason) in [(Locale::En, "Change an input before accepting"), (Locale::De, "Vor dem Übernehmen eine Eingabe ändern")] {
+        let history = render_history(&mut app, locale).await;
+        let accept = find_node(&history, "framework.history.editor.accept").expect("the Accept control");
+        let row = find_node(&history, "framework.history.editor.accept.row").expect("the Accept row");
+        assert_eq!(accept["disabled"], Value::Bool(true), "{locale:?}: {accept}");
+        assert!(row.to_string().contains(reason), "{locale:?}: {row}");
+        assert_ne!(find_node(&history, "framework.history.editor.discard").expect("the Discard control")["disabled"], Value::Bool(true));
+    }
+    let refused = verb(&mut app, &fixture, "historyEditAccept", Vec::new()).await;
+    assert_eq!(rejected(&refused), Some(text(&fixture["refusals"]["unchanged"])));
+    assert_eq!(app.time_travel.session(), &session);
+    assert_eq!(app.time_travel.editor().expect("the draft editor stays open").value, input);
+    assert_eq!(render_body(&mut app).await, body);
+    assert_eq!(app.store.generation(), generation);
+    for (value, changed) in [(7, true), (1, false)] {
+        run_step(&mut app, &fixture, &serde_json::json!({ "input": { "path": "/value", "value": value } })).await;
+        let history = render_history(&mut app, Locale::En).await;
+        let accept = find_node(&history, "framework.history.editor.accept").expect("the Accept control");
+        assert_eq!(accept["disabled"] == Value::Bool(true), !changed, "{accept}");
+    }
+    let discarded = verb(&mut app, &fixture, "historyEditDiscard", Vec::new()).await;
+    assert_eq!(rejected(&discarded), None);
+    assert!(app.time_travel.status().is_none());
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work()).await;
+    close(&mut app);
+}
+
 /// 🧯️ LAW: the input path fails closed — when the edited leaf's payload schema compiles no validator, a draft is refused
 /// with the typed `timeTravel.schema-unavailable` naming the reason on the editor, and the draft and session stay
 /// untouched; never an unvalidated payload.
@@ -1237,7 +1282,7 @@ async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_w
 #[semio_framework_async_macros::async_test]
 async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
     let fixture = fixture();
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into())).await;
     let history = render_history(&mut app, Locale::En).await;
     let undo = find_node(&history, "framework.history.undo").expect("undo row");
     assert_ne!(undo["disabled"], Value::Bool(true), "undo is enabled like its chord: the host routes a remote undo this guest cannot see");
@@ -1311,10 +1356,10 @@ fn snap_sources_resolve_to_numbers_and_colours_take_hex_text() {
 /// 🪞️ A registered toy replica on its own memory backbone, authoring as `actor`; `seed` dispatches the fixture seed
 /// through its store, so every seed edit leaves in its outbox.
 async fn replica(fixture: &Value, uri: &str, actor: &str, seed: bool) -> (ToyApp, MemoryBackbone) {
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into())).await;
     let (backbone, probe) = MemoryBackbone::pair(uri, uri).await;
     app.attach_backbone(store::Backbones::Memory(backbone)).await.expect("attach the replica backbone");
-    app.store.set_local_actor_id(Some(actor.to_string())).expect("replica actor");
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.to_string()));
     if seed {
         for op in fixture["seed"].as_array().expect("seed") {
             app.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }).await.expect("seed edit applies");
@@ -1393,12 +1438,12 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
     assert_eq!(head(&remote), (5, "a".to_string()), "the remote replica holds the seed");
     commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place").await;
     relay(&mut local_probe, &mut remote_probe, &mut remote).await;
-    let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    reloaded.store.set_local_actor_id(Some(actor.clone())).expect("the author reopens the document");
+    let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone())).await;
+    assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(actor.clone()));
     artifact_app_laws::load_document_text(&mut reloaded, &local.document_text().await.expect("document text")).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
-    let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    repacked.store.set_local_actor_id(Some("reader".into())).expect("another reader opens the document");
+    let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("reader".into())).await;
+    assert_eq!(repacked.store.local_actor_id(), &protocol::ActorId("reader".into()));
     artifact_app_laws::load_document(&mut repacked, &local.document_pack().await.expect("document pack")).await.expect("pack reload");
     repacked.refresh_cache().await.expect("the repacked log backfills");
     for (who, app, revertible) in [("local", &mut local, true), ("remote", &mut remote, false), ("text reload", &mut reloaded, true), ("pack reload", &mut repacked, false)] {
@@ -1499,6 +1544,8 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
     let variant = app.store.envelope().active_alternative_id.clone().expect("the new alternative is active");
     assert_eq!(english(&history_edit_rows(&mut app).await), ["History edited — alternative Variant: 1 mutation"]);
     history_verb(&mut app, &actor, "undo", None).await;
+    eprintln!("[DEBUG] Alternative history undo authoring pending={}", app.time_travel.authoring_pending());
+    pump_until(&mut app, "the alternative undo lands", |app| !app.time_travel.authoring_pending()).await;
     assert_eq!(head(&app), (5, "a".to_string()), "the undo restores the original within the alternative");
     let rows = history_edit_rows(&mut app).await;
     assert_eq!(english(&rows), ["History edit undone — alternative Variant: 1 mutation", "History edited — alternative Variant: 1 mutation"]);
@@ -1509,6 +1556,7 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
     );
     assert_eq!(app.store.envelope().active_alternative_id.as_deref(), Some(variant.as_str()), "the alternative stays active");
     history_verb(&mut app, &actor, "redo", None).await;
+    pump_until(&mut app, "the alternative redo lands", |app| !app.time_travel.authoring_pending()).await;
     assert_eq!(head(&app), (5, "b".to_string()));
     drop(probe);
     close(&mut app);
@@ -1637,8 +1685,8 @@ async fn editing_targets_through_the_selection_resolves_a_blocked_review() {
 async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    app.store.set_local_actor_id(Some(actor.clone())).expect("local actor");
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone())).await;
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.clone()));
     for value in ["a", "b"] {
         app.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetLabel { value: value.into() }.into()], transaction: None }).await.expect("a label edit applies");
     }
@@ -1658,12 +1706,12 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
         run_step(&mut app, &fixture, &step).await;
     }
     pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work()).await;
-    let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    reloaded.store.set_local_actor_id(Some(actor.clone())).expect("the author reopens the document");
+    let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone())).await;
+    assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(actor.clone()));
     artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text")).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
-    let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    repacked.store.set_local_actor_id(Some("reader".into())).expect("another reader opens the document");
+    let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("reader".into())).await;
+    assert_eq!(repacked.store.local_actor_id(), &protocol::ActorId("reader".into()));
     artifact_app_laws::load_document(&mut repacked, &app.document_pack().await.expect("document pack")).await.expect("pack reload");
     repacked.refresh_cache().await.expect("the repacked log backfills");
     for (who, app) in [("finalized", &mut app), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
@@ -1697,7 +1745,7 @@ async fn several_drafts_from_a_review_finalize_as_one_overwrite_supersede() {
     let [store::os_spr::HistoryTransition::Supersede(supersede)] = added.as_slice() else { panic!("an overwrite is one Supersede: {added:?}") };
     let targets: BTreeSet<String> = supersede.inputs.iter().map(|input| input.target.0.clone()).collect();
     assert_eq!((supersede.scope.as_deref(), targets), (None, [0, 1].map(|index| seeded_mutation(&app, index)).into_iter().collect()), "one unscoped supersede names both drafts");
-    let mut fresh = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut fresh = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), app.store.local_actor_id().clone()).await;
     for (index, op) in fixture["seed"].as_array().expect("seed").iter().enumerate() {
         let op = match index {
             0 => SetCount { value: 7 }.into(),
@@ -1820,14 +1868,10 @@ async fn history_trace(app: &mut ToyApp) -> ((i32, String), [u8; 32], usize, usi
     (head(app), app.store.content_revision_now(), app.store.envelope().vcs.edits.len(), app.store.envelope().transitions.len(), rows)
 }
 
-/// ✏️ `count` one-operation edits dispatched straight on `app`'s store — a long downstream history a replay steps through
-/// edit by edit. Their mutations name no author, so the store authors every one as the fixture actor (`local`) and takes
-/// that actor as its local one. Each edit displaces owners the runtime's maintenance retires between turns; seeding
-/// straight on the store, this drains them under pressure as that maintenance does, so a long seed never saturates the
-/// store's fixed retirement authority.
+/// ✏️ Publishes a foreign downstream edit per value and drains displaced owners under bounded pressure.
 async fn apply_other_edits(app: &mut ToyApp, count: i32) {
     for value in 0..count {
-        app.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }).await.expect("another author's edit");
+        publish_as(app, "downstream", SetCount { value }.into());
         for _ in 0..4_096 {
             if !app.store.maintenance_retirements_under_pressure() || !matches!(app.store.maintenance_retirements_step(64, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).expect("the store retires what the edits displaced"), store::SnapshotRetirementStep::Pending { .. }) {
                 break;
@@ -1836,9 +1880,7 @@ async fn apply_other_edits(app: &mut ToyApp, count: i32) {
     }
 }
 
-/// 🪶️ One edit of `actor` holding `mutation`, through the store's batched publication — the route a tool's edit takes and
-/// the one that stamps the acting actor on the edit it mints (a plain `Apply`, the runtime's emit route included, authors
-/// as `local` until design §22.34); the store acts as `actor` afterwards.
+/// 🪶️ Publishes one edit with an explicit author while preserving the opened instance actor.
 fn publish_as(app: &mut ToyApp, actor: &str, mutation: TestMutation) {
     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
     let mut publication = app
@@ -1856,6 +1898,7 @@ fn publish_as(app: &mut ToyApp, actor: &str, mutation: TestMutation) {
 /// ([`apply_other_edits`]): the history an interior undo of `author` replays through. Proves what it built: exactly one
 /// history row is `author`'s and it is not the newest.
 async fn bury_edit_of(app: &mut ToyApp, author: &str, count: i32) {
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(author.into()), "the buried edit belongs to the opened actor");
     publish_as(app, author, SetLabel { value: "buried".into() }.into());
     apply_other_edits(app, count).await;
     app.refresh_cache().await.expect("backfill");
@@ -1876,13 +1919,13 @@ async fn bury_edit_of(app: &mut ToyApp, author: &str, count: i32) {
 async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leaves_zero_trace() {
     let fixture = fixture();
     let actor = "author".to_string();
-    let mut undeferred = seeded_app(&fixture).await;
+    let mut undeferred = seeded_app_as(&fixture, &actor).await;
     undeferred.store.defer_local_replays(None);
     bury_edit_of(&mut undeferred, &actor, 600).await;
     history_verb(&mut undeferred, &actor, "undo", None).await;
     let undone = undeferred.store.snapshot().expect("the undeferred undo");
     for cancel in [true, false] {
-        let mut app = seeded_app(&fixture).await;
+        let mut app = seeded_app_as(&fixture, &actor).await;
         bury_edit_of(&mut app, &actor, 600).await;
         let before = history_trace(&mut app).await;
         history_verb(&mut app, &actor, "undo", None).await;
@@ -1936,13 +1979,13 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
 async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
-    let mut source = seeded_app(&fixture).await;
+    let mut source = seeded_app_as(&fixture, &actor).await;
     for value in 0..240 {
         source.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }).await.expect("a source edit");
     }
     let head = source.store.snapshot().expect("the source head");
     let files = source.document_pack().await.expect("the source pair");
-    let mut pure = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut pure = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into())).await;
     let code = |fault: Fault| fault.code.0;
     PluginApp::hydrate_pure_head(&mut pure, &head.encode_pack()).await.expect("the head-only lane hydrates");
     assert_eq!(pure.store.snapshot().expect("the pure head"), head, "the pure document is the source head");
@@ -2098,7 +2141,7 @@ fn counted_clock() -> Option<u64> {
 async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_operation_count() {
     let fixture = fixture();
     let actor = "author".to_string();
-    let mut app = seeded_app(&fixture).await;
+    let mut app = seeded_app_as(&fixture, &actor).await;
     app.time_travel.set_turn_clock(counted_clock);
     app.store.defer_local_replays(Some(store::ReplayTurnBudget { wall_us: TIME_TRAVEL_TURN_WALL_US, operations: time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, now_us: counted_clock }));
     bury_edit_of(&mut app, &actor, 600).await;
@@ -2127,18 +2170,17 @@ fn edit_authors(app: &ToyApp) -> Vec<Option<String>> {
 
 /// ⚖️ LAW (design §22.6, runtime half of §22.34): an opened instance acts as its admitted actor — at its open, across a
 /// reload and on the revert route.
-/// - construction binds nobody (a store that never held an actor retires none); [`PluginApp::bind_actor`], the open, binds
-///   the admitted one;
+/// - construction binds the admitted actor before genesis; [`PluginApp::bind_actor`] verifies that same authority;
 /// - a whole-document reload keeps the instance's actor although the loaded history ends in another author's edit, so an
 ///   undo there takes nothing back; a head-only pure hydrate keeps it too;
 /// - the revert route acts as the reverting actor: the store acts as that actor afterwards and another actor's edit stays
 ///   applied; an undo takes back the acting actor's own edit.
 #[semio_framework_async_macros::async_test]
 async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_revert_route() {
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    assert_eq!(app.store.local_actor_id(), None, "construction binds nobody");
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("ada".into())).await;
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId("ada".into()), "construction binds the admitted actor");
     PluginApp::bind_actor(&mut app, "ada").await;
-    assert_eq!(app.store.local_actor_id(), Some("ada"), "the admitted actor is the instance's");
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId("ada".into()), "the admitted actor is the instance's");
     publish_as(&mut app, "ada", SetCount { value: 1 }.into());
     app.refresh_cache().await.expect("the log backfills the instance's own edit");
     publish_as(&mut app, "grace", SetCount { value: 2 }.into());
@@ -2146,20 +2188,20 @@ async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_
     assert_eq!(edit_authors(&app), [Some("ada".to_string()), Some("grace".to_string())], "each edit names the actor that published it");
     let other = app.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).expect("the other actor's edit");
 
-    let mut reader = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut reader = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("reader".into())).await;
     PluginApp::bind_actor(&mut reader, "reader").await;
     artifact_app_laws::load_document(&mut reader, &app.document_pack().await.expect("document pack")).await.expect("pack reload");
     reader.refresh_cache().await.expect("the reloaded log backfills");
-    assert_eq!((reader.store.local_actor_id(), head(&reader).0), (Some("reader"), 2), "a reload keeps the instance's actor although the history ends in another author's edit");
+    assert_eq!((reader.store.local_actor_id(), head(&reader).0), (&protocol::ActorId("reader".into()), 2), "a reload keeps the instance's actor although the history ends in another author's edit");
     history_verb(&mut reader, "reader", "undo", None).await;
     assert_eq!((head(&reader).0, reader.store.applied_edit_ids().len()), (2, 2), "an undo never takes back another author's edit");
     let pure_head = reader.store.snapshot().expect("the reloaded head").encode_pack();
     PluginApp::hydrate_pure_head(&mut reader, &pure_head).await.expect("the head-only lane hydrates");
-    assert_eq!(reader.store.local_actor_id(), Some("reader"), "a head-only hydrate keeps the instance's actor");
+    assert_eq!(reader.store.local_actor_id(), &protocol::ActorId("reader".into()), "a head-only hydrate keeps the instance's actor");
 
     let own = app.history_patch(true).await.expect("history patch").upserts.into_iter().find(|row| row.author.as_deref() == Some("ada")).expect("the instance's own row").seq;
     history_verb(&mut app, "ada", "revertToCommand", Some(DslValue::object([("entrySeq".to_string(), DslValue::uint(own))]))).await;
-    assert_eq!(app.store.local_actor_id(), Some("ada"), "the revert route acts as the reverting actor");
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId("ada".into()), "the revert route acts as the reverting actor");
     assert!(app.store.applied_edit_ids().iter().any(|id| *id == other), "a revert never takes back another actor's edit");
     history_verb(&mut app, "grace", "undo", None).await;
     pump_until(&mut app, "the undo lands", |app| !app.store.local_step_pending()).await;
@@ -2170,18 +2212,22 @@ async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_
 
 /// ⚖️ LAW (design §22.34, the store half — red until a plain `Apply` authors as the store's actor): every route authors
 /// as its acting actor. A route without an actor of its own (the text ingest) authors as the instance's admitted actor; a
-/// route with one (the plain emit route) authors as it whatever the instance acted as before.
+/// route with one (the plain emit route) authors as its separately admitted user instance.
 #[semio_framework_async_macros::async_test]
 async fn every_route_authors_as_its_acting_actor() {
     let acting = |actor: &str| ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(actor) };
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("ada".into())).await;
     PluginApp::bind_actor(&mut app, "ada").await;
     let first: TestMutation = SetCount { value: 1 }.into();
     PluginApp::ingest_operations_text(&mut app, &::protocol::OpText::print_op(&first)).await.expect("the text ingest applies");
     let ingested = edit_authors(&app);
-    app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace")).await.expect("the emit publishes");
-    let emitted = edit_authors(&app);
+    let pack = app.document_pack().await.expect("Ada's authoritative document");
+    let mut grace = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("grace".into())).await;
+    artifact_app_laws::load_document(&mut grace, &pack).await.expect("Grace opens Ada's shared history");
+    grace.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace")).await.expect("the emit publishes");
+    let emitted = edit_authors(&grace);
     close(&mut app);
+    close(&mut grace);
     assert_eq!(ingested, [Some("ada".to_string())], "a route without an actor of its own authors as the instance's");
     assert_eq!(emitted, [Some("ada".to_string()), Some("grace".to_string())], "the plain emit route authors as its acting actor");
 }
@@ -2713,9 +2759,9 @@ const INERT_SCHEMA: &str = "semio.test.inert-label/v1";
 /// by `local` — with the mutation ids of those four operations.
 async fn inert_document() -> (ArtifactStore<TestSnapshot, InertLabelOp>, Vec<MutationId>) {
     let genesis = store::create_document_envelope::<TestSnapshot, InertLabelOp>(INERT_SCHEMA, "inert-label", TestSnapshot::default(), None);
-    let mut document = Box::pin(ArtifactStore::new(genesis)).await.expect("the document store");
+    let mut document = Box::pin(ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("the document store");
     document.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, InertLabelOp>());
-    document.set_local_actor_id(Some("local".to_string())).expect("local actor");
+    assert_eq!(document.local_actor_id(), &protocol::ActorId("local".to_string()));
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "a".into() }), TestMutation::SetSlotChildren(SetSlotChildren { children: Vec::new() }), TestMutation::SetCount(SetCount { value: 5 })] {
         Box::pin(document.dispatch(ArtifactCommand::Apply { mutations: vec![InertLabelOp(operation)], transaction: None })).await.expect("a seed edit applies");
     }

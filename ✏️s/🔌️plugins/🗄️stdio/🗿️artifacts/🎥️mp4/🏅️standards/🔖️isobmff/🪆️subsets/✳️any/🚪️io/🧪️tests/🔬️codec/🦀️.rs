@@ -1,3 +1,4 @@
+use crate::standards::isobmff::subsets::any::io::Mp4AnalyzerAnalysis;
 use super::*;
 
 #[test]
@@ -111,7 +112,6 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     use crate::standards::isobmff::subsets::any::schema::{
         diff::Mp4Diff,
         mutations::{apply_mp4_mutation, Mp4Mutation},
-        Mp4AnalyzerAnalysis,
     };
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};

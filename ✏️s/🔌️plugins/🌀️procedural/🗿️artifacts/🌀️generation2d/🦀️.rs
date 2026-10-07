@@ -7,7 +7,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 #[cfg(feature = "component-app-assembly")]
 #[path = "../../🫀️core/🖼️semantic-ui/🦀️.rs"]
@@ -757,3 +757,9 @@ pub mod viewer {
 }
 
 pub use crate::standards::v1::subsets::any::io::{Generation2dBuilderConstruction, Generation2dParts, Generation2dAnalyzerAnalysis, Generation2dBuilderFacets, Generation2dBuilder, Generation2dAnalyzer, Generation2dComposer};
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

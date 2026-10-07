@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-signature-field";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use super::RemoveSignatureField;
+use crate::standards::v1_7::subsets::h::schema::mutations::RemoveSignatureField;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveSignatureField) -> Result<String, String> {

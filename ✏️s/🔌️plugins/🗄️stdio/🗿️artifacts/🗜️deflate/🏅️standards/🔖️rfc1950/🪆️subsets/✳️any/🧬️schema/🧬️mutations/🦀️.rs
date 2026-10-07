@@ -4,7 +4,7 @@ use crate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_se
 use crate::schema::snapshot::DeflateLevelHint;
 use crate::DeflateSnapshot;
 use protocol::Mutation;
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutations
 #[path = "🧮set-compression-params/🦀️.rs"]
@@ -140,3 +140,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/📈️raises/🦀️.rs"]
 mod set_snapshot_raises_the_flevel_hint_and_extends_the_payload;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

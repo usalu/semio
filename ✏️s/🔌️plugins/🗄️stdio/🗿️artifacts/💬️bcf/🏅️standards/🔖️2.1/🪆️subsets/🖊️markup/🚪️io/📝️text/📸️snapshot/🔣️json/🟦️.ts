@@ -1,0 +1,10 @@
+/** 🔣️ BCF native numeric JSON. */
+import { binary64, type Binary64 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBcfSnapshot,type BcfSnapshot,type BcfCamera,type BcfPoint3} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+const object=(value:unknown):Record<string,unknown>=>{if(value===null||typeof value!=="object"||Array.isArray(value))throw Error("BCF JSON requires object");return value as Record<string,unknown>};
+const jsonNumber=(value:unknown):Binary64=>{if(typeof value!=="number"||!Number.isFinite(value))throw Error("BCF JSON requires a finite numeric scalar");return binary64(value)};
+function jsonPoint(value:unknown):BcfPoint3{const row=object(value);return{x:jsonNumber(row.x),y:jsonNumber(row.y),z:jsonNumber(row.z)}}
+function jsonCamera(value:unknown):BcfCamera{const row=object(value);const common={viewPoint:jsonPoint(row.viewPoint),direction:jsonPoint(row.direction),upVector:jsonPoint(row.upVector)};if(row.kind==="perspective")return{kind:"perspective",...common,fieldOfView:jsonNumber(row.fieldOfView)};if(row.kind==="orthogonal")return{kind:"orthogonal",...common,viewToWorldScale:jsonNumber(row.viewToWorldScale)};throw Error("BCF JSON camera kind is unknown")}
+/** 📥️ Lowers native numeric cameras before canonical semantic admission. */
+export function parseBcfSnapshotJson(value:unknown):BcfSnapshot{const root=object(value);if(root.topics!==undefined&&!Array.isArray(root.topics))throw Error("BCF JSON topics require an array");return parseBcfSnapshot({...root,topics:((root.topics??[])as unknown[]).map(value=>{const topic=object(value);if(topic.viewpoints!==undefined&&!Array.isArray(topic.viewpoints))throw Error("BCF JSON viewpoints require an array");return{...topic,viewpoints:((topic.viewpoints??[])as unknown[]).map(value=>{const viewpoint=object(value);return{...viewpoint,camera:viewpoint.camera==null?null:jsonCamera(viewpoint.camera)}})}})})}

@@ -9,7 +9,8 @@ use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{effective_try_values, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
 use crate::editor::forms::{ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_number, ui_value_text};
-use crate::schema::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
+use crate::standards::v1::subsets::any::io::text::snapshot::{json_f64_value,json_string_value};
+use crate::schema::{can_advance,default_value_for_question,is_extension_question_kind,step_errors,visible_questions};
 use crate::FormQuestion;
 use semio_framework_pack_json::{Object, Value};
 use semio_framework_ui_locale::LocalizedLabel;
@@ -199,7 +200,7 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
 }
 
 fn json_value_from_dsl(question: &FormQuestion) -> Value {
-    crate::schema::dsl_to_value(&default_value_for_question(question))
+    crate::standards::v1::subsets::any::io::text::snapshot::dsl_to_value(&default_value_for_question(question))
 }
 
 fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
@@ -234,7 +235,7 @@ pub fn render(
     let step_index = (window_config.current_step_index as usize).min(steps.len().saturating_sub(1));
     let step = &steps[step_index];
     let values = effective_try_values(spec, transient);
-    let validation_values = values.iter().map(|(key, value)| (key.to_owned(), crate::schema::value_to_dsl(value))).collect();
+    let validation_values = values.iter().map(|(key, value)| (key.to_owned(), crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl(value))).collect();
     let visible = visible_questions(step, &validation_values);
     let errors = step_errors(step, &validation_values);
     let advance = can_advance(step, &validation_values);

@@ -3,7 +3,7 @@ use crate::schema::{
     mutations::{docx_top_level_run_at, insert_table_row, insert_xml_node, remove_table_row, remove_xml_node, replace_xml_node, set_paragraph_style, set_run_formatting},
     snapshot::{DocxBlock, DocxDocument},
 };
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 fn snapshot_with_blocks(body: Vec<DocxBlock>) -> DocxSnapshot {
     build_minimal_docx(DocxDocument { body, styles: Vec::new() })
@@ -122,7 +122,7 @@ fn formatting_mutation_preserves_explicit_off_rejects_stale_addresses_and_elides
 fn inherited_bold_and_explicit_off_remain_distinct_through_saved_quick_xml_oracle() {
     use crate::schema::snapshot::DocxStyle;
     use quick_xml::{events::Event, reader::Reader};
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     use std::io::Read;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️direct-run-formatting/🔣️.json")).unwrap();
@@ -201,7 +201,7 @@ fn retained_work_refuses_an_unpaged_large_owner_without_publication() {
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "docx-retained-text".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
-    let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+    let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut work = DocxSetPageWork::default();
     assert!(work
         .step(
@@ -281,7 +281,7 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     let mutation = build_set_page_mutation(&imported, &address, after_text).expect("large retained DOCX mutation validates").expect("large retained DOCX mutation changes text");
 
     let envelope = store::create_document_envelope(STDIO_DOCX_DOCUMENT_SCHEMA, "docx-retained-opc-lifecycle", imported, None);
-    let mut store = store::ArtifactStore::new(envelope).await.expect("retained DOCX Store opens");
+    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("retained DOCX Store opens");
     store.install_document_store_owners_exact(<DocxEditor as ArtifactEditor>::build_document_store_owners().expect("DOCX retained Store owners"));
     let factory = <DocxEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("registered DOCX routed preparation factory");
     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
@@ -396,7 +396,7 @@ async fn registered_canonical_page_edit_publishes_once_and_undoes_redoes() {
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = snapshot_with_blocks(vec![DocxBlock::paragraph("before")]);
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let opened = app.snapshot().expect("opened DOCX fixture").clone();
@@ -427,7 +427,7 @@ async fn registered_run_formatting_action_saves_reopens_and_undoes_redoes() {
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = snapshot_with_blocks(vec![DocxBlock::paragraph("format me")]);
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let opened = app.snapshot().expect("opened DOCX fixture").clone();

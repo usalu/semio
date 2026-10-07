@@ -7,8 +7,8 @@
 //! position). A `TiffTag` is a weak value (`kind`/`values` move together atomically), so a
 //! tag-triple's `modified`/`added` payload carries the whole new tag, never a nested diff.
 
-use crate::standards::v6_0::subsets::document::io::binary::diff::write_bytes_lp;
-use crate::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffStorage, TiffStorageKind, TiffTag, TiffValues};
+
+use crate::schema::snapshot::{TiffFieldType, TiffIfd, TiffSampleBlock, TiffWord64, TiffTag, TiffValues};
 use crate::TiffSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -19,14 +19,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 /// 🏷️ One `entries.modified[]`/`.added[]` entity — `TiffTag` is a weak value, so both carry
 /// the entry's NEW `kind`/`values` directly (never a nested per-field diff).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffTagModified {
     pub tag: u16,
     pub values: TiffValues,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffTagAdded {
     pub tag: u16,
     pub values: TiffValues,
@@ -34,7 +34,7 @@ pub struct TiffTagAdded {
 
 /// 🔺️ Tag-id-keyed `entries` triple for one IFD.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffTagsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<u16>,
@@ -142,31 +142,31 @@ fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
 /// raw strip payload (`TiffIfd::pixels` — a weak value, replaced wholesale, never sub-diffed, the
 /// same treatment `TiffDiff::pixels` gives the primary raster).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdDiff {
     #[value(default, skip_serializing_if = "TiffTagsDiff::is_empty")]
     pub entries: TiffTagsDiff,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub storage: Option<TiffStorage>,
+    pub blocks: Option<Vec<TiffSampleBlock>>,
 }
 
 impl TiffIfdDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
-        self.entries.is_empty() && self.storage.is_none()
+        self.entries.is_empty() && self.blocks.is_none()
     }
 }
 
 /// 🗂️ One `ifds.modified[]` entity — the recursive per-IFD delta.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdModified {
     pub index: usize,
     pub diff: TiffIfdDiff,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdAdded {
     pub index: usize,
     pub ifd: TiffIfd,
@@ -174,7 +174,7 @@ pub struct TiffIfdAdded {
 
 /// 🔺️ Index-keyed `ifds` triple (TIFF's IFD chain is positional).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
@@ -253,15 +253,15 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
             Some(Slot::Base(b)) => {
                 let entry = modified_map.entry(*b).or_default();
                 entry.entries = absorb_tags(entry.entries.clone(), m2.diff.entries.clone());
-                if m2.diff.storage.is_some() {
-                    entry.storage = m2.diff.storage.clone();
+                if m2.diff.blocks.is_some() {
+                    entry.blocks = m2.diff.blocks.clone();
                 }
             }
             Some(Slot::Added(ai)) => {
                 if let Some(a) = added_alive[*ai].as_mut() {
                     a.ifd.entries = apply_tags(&a.ifd.entries, &m2.diff.entries);
-                    if let Some(storage) = &m2.diff.storage {
-                        a.ifd.storage = storage.clone();
+                    if let Some(storage) = &m2.diff.blocks {
+                        a.ifd.blocks = storage.clone();
                     }
                 }
             }
@@ -319,8 +319,8 @@ fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
             it.entries = apply_tags(&it.entries, &m.diff.entries);
-            if let Some(storage) = &m.diff.storage {
-                it.storage = storage.clone();
+            if let Some(storage) = &m.diff.blocks {
+                it.blocks = storage.clone();
             }
         }
     }
@@ -346,7 +346,7 @@ fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
-        let diff = TiffIfdDiff { entries: between_tags(&a[i].entries, &b[i].entries).unwrap_or_default(), storage: (a[i].storage != b[i].storage).then(|| b[i].storage.clone()) };
+        let diff = TiffIfdDiff { entries: between_tags(&a[i].entries, &b[i].entries).unwrap_or_default(), blocks: (a[i].blocks != b[i].blocks).then(|| b[i].blocks.clone()) };
         if !diff.is_empty() {
             modified.push(TiffIfdModified { index: i, diff });
         }
@@ -384,12 +384,9 @@ fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>)
 /// requires a direct typed codec for `ReplaceTagMutation.values`, which reaches the same
 /// `TiffValues`. `DiffBinary,DiffCodec,DiffText` is hand-rolled below (see `HandcraftedDiffCodec`).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.stdio.tiff.diff")]
 pub struct TiffDiff {
-    #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub byte_order: Option<TiffByteOrder>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub ifds: Option<TiffIfdsDiff>,
@@ -401,12 +398,10 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
             validate_tiff_ifds(&base.ifds, ifds)?;
         }
         let mut next = base.clone();
-        if let Some(v) = self.byte_order {
-            next.byte_order = v;
-        }
         if let Some(d) = &self.ifds {
             next.ifds = apply_ifds(&next.ifds, d);
         }
+        next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-samples", message).at(["ifds"]))?;
         Ok(next)
     }
 
@@ -414,9 +409,6 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
     /// `byte_order` is LWW; `ifds` uses an index-transported merge with nested tag-id-keyed and
     /// canonical-storage replacement for modified entries.
     fn absorb(&mut self, other: Self) {
-        if other.byte_order.is_some() {
-            self.byte_order = other.byte_order;
-        }
         absorb_ifds_opt(&mut self.ifds, other.ifds);
     }
 }
@@ -479,11 +471,11 @@ impl DiffAlgebra<TiffSnapshot> for TiffDiff {
     /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
     /// `ifds`, recursive tag-id-keyed matching within each surviving IFD pair.
     fn between(base: &TiffSnapshot, other: &TiffSnapshot) -> Self {
-        Self { byte_order: (base.byte_order != other.byte_order).then_some(other.byte_order), ifds: between_ifds(&base.ifds, &other.ifds) }
+        Self { ifds: between_ifds(&base.ifds, &other.ifds) }
     }
 
     fn is_empty(&self) -> bool {
-        self.byte_order.is_none() && self.ifds.is_none()
+        self.ifds.is_none()
     }
 }
 
@@ -526,11 +518,7 @@ pub fn diff_set_snapshot(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
 // 🚫️aaasync: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 
-/// 🔢️aa️agion 🔖️BinaryPrimitives
-/// 🧪️aasync: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
+
 
 //#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
@@ -558,35 +546,7 @@ pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️.rs`).
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn tag(id: u16, values: TiffValues) -> TiffTag {
-        TiffTag { tag: id, values }
-    }
-    let a = TiffSnapshot {
-        schema: "stdio.tiff".into(),
-        byte_order: TiffByteOrder::LittleEndian,
-        ifds: vec![TiffIfd {
-            storage: TiffStorage { kind: TiffStorageKind::Strips, chunks: vec![vec![0u8; 16]], ..TiffStorage::default() },
-            entries: vec![
-                tag(256, TiffValues::Long(vec![4])),
-                tag(258, TiffValues::Short(vec![8, 8, 8])),
-                tag(315, TiffValues::Ascii(b"An Author\0".to_vec())),
-                tag(282, TiffValues::Rational(vec![(72, 1)])),
-            ],
-        }],
-    };
-    let mut b = a.clone();
-    b.byte_order = TiffByteOrder::BigEndian;
-    b.ifds[0].entries.retain(|t| t.tag != 258); // remove
-    b.ifds[0].entries.iter_mut().find(|t| t.tag == 315).unwrap().values = TiffValues::Ascii(b"New Author\0".to_vec()); // modify
-    b.ifds[0].entries.push(tag(37380, TiffValues::SRational(vec![(-3, 10)]))); // add
-    b.ifds[0].entries.push(tag(50003, TiffValues::Float(vec![crate::schema::snapshot::TiffBinary32 { bits: 1.5f32.to_bits() }, crate::schema::snapshot::TiffBinary32 { bits: (-2.25f32).to_bits() }])));
-    b.ifds[0].storage.chunks[0].fill(9);
-    b.ifds.push(TiffIfd { storage: TiffStorage { kind: TiffStorageKind::Strips, chunks: vec![vec![9]], ..TiffStorage::default() }, entries: vec![tag(2, TiffValues::Long(vec![9]))] }); // whole IFD added
-    let c = TiffSnapshot { schema: "stdio.tiff".into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![] };
-    vec![TiffDiff::default(), TiffDiff::between(&a, &b), TiffDiff::between(&b, &a), TiffDiff::between(&a, &c), TiffDiff::between(&c, &a)]
-}
+pub(crate) fn demo_diff_cases()->Vec<TiffDiff>{let a=crate::schema::demo_tiff_snapshot();let mut b=a.clone();b.ifds[0].blocks[0].samples[0].lo=9;b.ifds[0].entries.push(TiffTag{tag:50000,values:TiffValues::Double(vec![TiffWord64{lo:17,hi:0x7ff80000}])});let c=TiffSnapshot::default();vec![TiffDiff::default(),TiffDiff::between(&a,&b),TiffDiff::between(&b,&a),TiffDiff::between(&a,&c),TiffDiff::between(&c,&a)]}
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests

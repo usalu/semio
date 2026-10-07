@@ -79,7 +79,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     id: "puzzle",
     titlePrefix: "🧩️puzzle",
     sourceRoots: [],
-    storyGlobs: ["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/**/🧪️.story.tsx"],
+    storyGlobs: ["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/**/🧪️.story.tsx", "../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/*/📖️stories/**/🧪️.story.tsx"],
   },
   {
     id: "puzzle/2d",

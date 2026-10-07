@@ -1,0 +1,78 @@
+{
+  "sheets": [
+    {
+      "name": "Grüße & <Data>",
+      "cells": [
+        {
+          "row": 1,
+          "col": 0,
+          "value": {
+            "kind": "sharedString",
+            "value": 0
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": {
+            "kind": "number",
+            "value": 12.5
+          }
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        {
+          "row": 3,
+          "col": 0,
+          "value": {
+            "kind": "formula",
+            "expr": "SUM(3,4.5)",
+            "cached": {
+              "kind": "number",
+              "value": 7.5
+            }
+          }
+        },
+        {
+          "row": 4,
+          "col": 1,
+          "value": {
+            "kind": "inlineString",
+            "value": "  A & B < 🌠  "
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empty Strings",
+      "cells": [
+        {
+          "row": 1,
+          "col": 0,
+          "value": {
+            "kind": "sharedString",
+            "value": 1
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": {
+            "kind": "inlineString",
+            "value": ""
+          }
+        }
+      ]
+    }
+  ],
+  "sharedStrings": [
+    "  Grüße & <世界> 🌠  ",
+    ""
+  ]
+}

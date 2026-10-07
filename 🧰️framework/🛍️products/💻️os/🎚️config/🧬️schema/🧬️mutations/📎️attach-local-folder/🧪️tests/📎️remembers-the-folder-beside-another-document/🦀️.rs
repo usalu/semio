@@ -1,7 +1,7 @@
 //! 🧪️ `attach-local-folder` fixture — `📎️remembers-the-folder-beside-another-document`.
 //!
 //! A drawing attached to its folder joins bindings that already remember a puzzle's folder. The bindings are ordered by
-//! document id, so the new binding lands FIRST and the sibling stays untouched; the diff is the whole post-op record
+//! document id, so the new binding follows the sibling; the diff is the whole post-op record
 //! (`LocalFolderBindings` is its own diff). The inverse reads BASE: the document had no folder, so undoing the attachment
 //! detaches it.
 //!
@@ -25,15 +25,15 @@ fn mutation() -> LocalFoldersConfigMutation {
     serde_json::from_str(MUTATION).expect("attach mutation decodes")
 }
 
-/// ▶️ The attached drawing is remembered first (ordered by id) and the puzzle's binding survives untouched.
+/// ▶️ The attached drawing follows the puzzle in document-id order.
 #[test]
 fn remembers_the_folder_beside_its_sibling() {
     let base = before();
     let outcome = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(&mutation(), &base);
     let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("attach applies to its committed before-bindings");
     assert_eq!(applied, expected_after(), "attach-local-folder: the bindings differ from the committed after-snapshot");
-    assert_eq!(applied.bindings[0].document_id, "cad.drawing.fixture", "attach-local-folder: the bindings are ordered by document id");
-    assert_eq!(applied.bindings[1], base.bindings[0], "attach-local-folder: the sibling must survive untouched");
+    assert_eq!(applied.bindings[1].document_id, "cad.drawing.fixture", "attach-local-folder: the bindings are ordered by document id");
+    assert_eq!(applied.bindings[0], base.bindings[0], "attach-local-folder: the sibling must survive untouched");
 }
 
 /// ↩️ Undoing the attachment detaches the document again and restores the committed before-bindings exactly.

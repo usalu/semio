@@ -8,7 +8,8 @@
 //! The last region leaves; the `c30` material it was the only consumer of stays in the catalogue.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation,inverse_fem2d_mutation};
+
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚫️delete-region/🚫️removes/📸️snapshot/⬅️before/🔣️.json");

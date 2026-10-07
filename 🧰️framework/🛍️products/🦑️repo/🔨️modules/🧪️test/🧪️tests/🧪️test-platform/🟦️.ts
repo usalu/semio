@@ -14,6 +14,7 @@ import { basename, dirname, join, relative, sep } from "node:path";
 import { minimatch } from "minimatch";
 import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { isBlockingBreach } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { repoTestArtifactEnvironment } from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { oracleHostPython, provisionPythonInterpreter, pythonSiteDirectories } from "../../🖥️host/🏗️materialization/🟦️.ts";
 import oracleDirectoryCases from "../../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
 import protocolSchema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
@@ -1498,7 +1499,8 @@ describe("🧫️ real-world artifact fixtures", () => {
 
 describe("🧪️ projected vector storage", () => {
   test("profile storage never becomes an executable Nx test project", async () => {
-    const root = mkdtempSync(join(tmpdir(), "projected-nx-"));
+    const artifacts = repoTestArtifactEnvironment(repoRoot, "projected-vector-storage").SEMIO_TEST_ARTIFACT_DIR!;
+    const root = mkdtempSync(join(artifacts, "projected-nx-"));
     const taxonomy = testTaxonomy(repoRoot);
     const featureFilename = testFilenameForKind(taxonomy, taxonomy.testFeatureFileKindId);
     try {

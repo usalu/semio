@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "source": "pub fn owners() -> store::DocumentStoreOwners<P,M> { todo!() }",
+      "host": [
+        "DocumentStoreOwners"
+      ]
+    },
+    {
+      "source": "pub fn open() -> store::ArtifactStore<P,M> { todo!() }",
+      "host": [
+        "ArtifactStore"
+      ]
+    },
+    {
+      "source": "struct Generation2dPublicationLease { revision:u64 }",
+      "host": [
+        "Generation2dPublicationLease"
+      ]
+    },
+    {
+      "source": "fn codec() { let native=store::ArtifactStore::from_initialized_runtime_with_owners(); }",
+      "host": [
+        "ArtifactStore"
+      ]
+    },
+    {
+      "source": "mod hidden { pub fn owners() -> store::DocumentStoreOwners<P,M> { todo!() } }",
+      "host": [
+        "DocumentStoreOwners"
+      ]
+    },
+    {
+      "source": "fn decode(bytes:&[u8])->Result<P,store::PackError>{todo!()}",
+      "host": []
+    },
+    {
+      "source": "struct PngDecodeOwner { cursor:usize }",
+      "host": []
+    },
+    {
+      "source": "impl store::ArtifactPack for P { fn encode_pack(&self)->Vec<u8>{vec![]} }",
+      "host": []
+    },
+    {
+      "source": "// ArtifactStore and Generation2dPublicationLease are host responsibilities\nconst NOTE:&str=\"DocumentStoreOwners\";",
+      "host": []
+    }
+  ]
+}

@@ -1,4 +1,7 @@
 //! 💾️ Direct remove-tag binary codec.
+use crate::standards::v6_0::subsets::document::schema::mutations::*;
+use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+use crate::standards::v6_0::subsets::document::io::binary::diff::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::Entry;
 pub const BINARY_TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "remove-tag");

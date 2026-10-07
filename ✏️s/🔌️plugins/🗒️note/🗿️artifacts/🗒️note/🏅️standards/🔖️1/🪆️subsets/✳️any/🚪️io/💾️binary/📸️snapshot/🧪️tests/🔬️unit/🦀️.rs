@@ -78,7 +78,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` installs
     // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.
-    let mut store = crate::standards::v1::subsets::any::io::binary::snapshot::new_note_store(envelope).await.expect("valid artifact store fixture");
+    let mut store = crate::host::owned::new_note_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_visible(Some(false))], transaction: None }).await.expect("apply");
     let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

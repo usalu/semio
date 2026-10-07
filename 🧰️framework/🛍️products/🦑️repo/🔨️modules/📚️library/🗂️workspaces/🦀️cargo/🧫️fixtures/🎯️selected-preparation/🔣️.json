@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "id": "one-selected-package",
+      "manifest": "specific/models/a/Cargo.toml",
+      "packages": [
+        "model-a"
+      ],
+      "expected": [
+        "bridge",
+        "model-a",
+        "neutral-kernel"
+      ]
+    },
+    {
+      "id": "implicit-child-package",
+      "manifest": "specific/models/a/Cargo.toml",
+      "packages": [],
+      "expected": [
+        "bridge",
+        "model-a",
+        "neutral-kernel"
+      ]
+    },
+    {
+      "id": "workspace-fallback",
+      "manifest": "specific/Cargo.toml",
+      "packages": [],
+      "expected": [
+        "bridge",
+        "model-a",
+        "model-b",
+        "neutral-kernel"
+      ]
+    }
+  ]
+}

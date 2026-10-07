@@ -1,0 +1,11 @@
+{
+  "schema": "semio.history.message-copy/v1",
+  "byteGrants": [4, 7, 16, 4096],
+  "capacityGrant": 4096,
+  "cancelAt": [0, 1, 5, 17],
+  "cases": [
+    { "code": "mutation.Änderung", "message": "Original 😀 Grundstück Aé → Änderung 🪆 Grundstück B", "target": ["", "actor:ä", "😀", ""] },
+    { "code": "", "message": "", "target": ["", "", ""] }
+  ],
+  "emptySegments": { "count": 1000000, "accepted": false }
+}

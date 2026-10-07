@@ -12,8 +12,8 @@ pub type SequenceStore = store::ArtifactStore<SequenceSnapshot, SequenceMutation
 /// insertion requires its exact mutation retirement factory`), so a bare `SequenceStore::new` can be
 /// read but never mutated, undone or closed. `SequencePlayApp::build_document_store_owners` installs
 /// the SAME catalog for the app-hosted store; every standalone store goes through here instead.
-pub async fn new_sequence_store(envelope: SequenceEnvelope) -> Result<OwnedSequenceStore, store::VcsError> {
-    let mut store = SequenceStore::new(envelope).await?;
+pub async fn new_sequence_store(envelope: SequenceEnvelope, actor: protocol::ActorId) -> Result<OwnedSequenceStore, store::VcsError> {
+    let mut store = SequenceStore::new(envelope, actor).await?;
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<SequenceSnapshot, SequenceMutation>());
     Ok(OwnedSequenceStore(store))
 }

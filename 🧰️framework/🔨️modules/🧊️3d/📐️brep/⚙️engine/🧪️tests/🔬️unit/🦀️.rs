@@ -870,11 +870,30 @@ fn brep_preview_vertices_resolve_original_topology_without_sampling_guesses() {
         let shape = match row["kind"].as_str().unwrap() {
             "box" => kernel.box_prim_sync(dimensions[0].as_f64().unwrap(), dimensions[1].as_f64().unwrap(), dimensions[2].as_f64().unwrap()).unwrap(),
             "wire" => kernel.rectangle_wire_sync(dimensions[0].as_f64().unwrap(), dimensions[1].as_f64().unwrap()).unwrap(),
+            "point" => kernel.vertex_sync(std::array::from_fn(|index| row["points"][0][index].as_f64().unwrap())).unwrap(),
             _ => unreachable!(),
         };
         let topology = kernel.deconstruct_sync(&shape).unwrap();
         let transfer = kernel.tessellate_sync(&shape, 0.1).unwrap();
         let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
+        if row["kind"] == "point" {
+            assert!(topology.edges.is_empty() && topology.faces.is_empty() && topology.shells.is_empty());
+            assert!(transfer.position.is_empty() && transfer.index.is_empty() && transfer.edges.is_empty());
+            assert_eq!(transfer.points.len(), 3);
+            let mut job = kernel.tessellate_job_sync(&shape, 0.1).unwrap();
+            assert_eq!(job.progress().units_total, 1);
+            assert!(matches!(job.step(kernel.tessellation_body(), 0).unwrap(), crate::brep::queries::tessellation::TessellationStep::Working(_)));
+            assert_eq!(job.progress().units_done, 0);
+            assert!(matches!(job.step(kernel.tessellation_body(), 1).unwrap(), crate::brep::queries::tessellation::TessellationStep::Done(_)));
+            assert_eq!(job.progress().units_done, 1);
+            let (budgeted, _) = job.into_mesh().unwrap();
+            assert_eq!(budgeted.points, transfer.points);
+            assert_eq!(budgeted.vertex_groups[0].entity_id, transfer.vertex_groups[0].entity_id);
+            let mut cancelled = kernel.tessellate_job_sync(&shape, 0.1).unwrap();
+            cancelled.cancel();
+            assert!(matches!(cancelled.step(kernel.tessellation_body(), 1).unwrap(), crate::brep::queries::tessellation::TessellationStep::Cancelled(_)));
+            assert!(cancelled.into_mesh().is_none());
+        }
         let labels = mesh.component_references.get("vertex").expect("original topology vertex references");
         assert_eq!(labels.len(), topology.vertices.len());
         assert_eq!(labels.len(), row["points"].as_array().unwrap().len());
@@ -896,4 +915,39 @@ fn brep_preview_vertices_resolve_original_topology_without_sampling_guesses() {
         assert_eq!(seen.len(), labels.len());
         println!("[DEBUG] originalVertexPreview kind={} topologyVertices={} independentParry=true surfaceSamplesExcluded=true", row["kind"], labels.len());
     }
+}
+
+/// 🔗️ Merged preview topology resolves the same neutral exact component references.
+#[test]
+fn brep_merged_preview_preserves_original_component_ranges() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json")).unwrap();
+    let wire = semio_framework_pack_json::parse(&fixture["merged"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let transfer = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&wire)).unwrap();
+    let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
+    assert_eq!(serde_json::json!(mesh.face_ids),fixture["expected"]["faceIds"]);
+    assert_eq!(serde_json::json!(mesh.edge_ids),fixture["expected"]["edgeIds"]);
+    assert_eq!(serde_json::json!(mesh.vertex_ids),fixture["expected"]["vertexIds"]);
+    let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::Value::from(mesh.clone()).to_string()).unwrap();
+    assert_eq!(encoded["componentReferences"],fixture["expected"]["componentReferences"]);
+    let area: f32 = mesh.indices.chunks_exact(3).map(|indices| {
+        let points = [indices[0],indices[1],indices[2]].map(|index| {let at=index as usize*3;parry3d::math::Point::new(mesh.positions[at],mesh.positions[at+1],mesh.positions[at+2])});
+        parry3d::shape::Triangle::new(points[0],points[1],points[2]).area()
+    }).sum();
+    assert_eq!(area as f64,fixture["expected"]["area"].as_f64().unwrap());
+    println!("[DEBUG] originalMergedPreview domains=3 independentParryArea={area}");
+}
+
+/// 🚫️ Original vertex ranges obey the same neutral refusal contract before mesh publication.
+#[test]
+fn brep_original_vertex_ranges_refuse_malformed_coverage_and_labels() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
+    let points = fixture["cases"][0]["points"].as_array().unwrap();
+    let raw = serde_json::json!({"position":[0,0,0,1,0,0,0,1,0],"normal":[0,0,1,0,0,1,0,0,1],"index":[0,1,2],"edges":[],"points":points.iter().flat_map(|point|point.as_array().unwrap().iter().cloned()).collect::<Vec<_>>(),"face_groups":[],"edge_groups":[],"vertex_groups":points.iter().enumerate().map(|(index,_)|serde_json::json!({"start":index,"count":1,"entity_id":(index+1).to_string()})).collect::<Vec<_>>()});
+    for refusal in fixture["refusals"].as_array().unwrap() {
+        let mut source = raw.clone();
+        source["vertex_groups"][refusal["row"].as_u64().unwrap() as usize][refusal["field"].as_str().unwrap()] = refusal["value"].clone();
+        let source = semio_framework_pack_json::parse(&source.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        if let Ok(transfer) = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&source)) { assert!(mesh_data_from_mesh_transfer(&transfer).is_err(),"refusal {refusal}"); }
+    }
+    println!("[DEBUG] originalVertexRangeRefusals cases=6 independentSerdeFixture=true");
 }

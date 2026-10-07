@@ -108,3 +108,10 @@ fn hierarchy_reconciliation_and_path_resolution_stay_deterministic() {
     assert_eq!(resolve_entry_by_path(&reconciled, "Renders/sketch").map(|entry| entry.id.as_str()), Some("e1"));
     assert_eq!(messages.len(), 2);
 }
+
+#[test]
+fn collection_borrowed_body_variants_match_the_native_schema_corpus(){
+ let oracle:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
+ let actual:Vec<_>=<ArtifactBody as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS.iter().map(|(_,make)|{let spec=make();serde_json::json!({"keyword":spec.keyword,"fields":spec.fields.iter().map(|field|serde_json::json!({"id":field.id,"key":field.key,"shape":match field.shape{semio_framework_dsl_record::BorrowedShape::Text=>"text",semio_framework_dsl_record::BorrowedShape::UInt=>"uint",_=>panic!("collection field shape")} })).collect::<Vec<_>>()})}).collect();
+ assert_eq!(serde_json::json!(actual),oracle["variants"]);
+}

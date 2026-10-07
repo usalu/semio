@@ -142,20 +142,6 @@ pub fn empty_pdf_snapshot() -> PdfSnapshot {
     PdfSnapshot::default()
 }
 
-/// 📄️ The demo `stdio.pdf` document — the single source of truth for `📚️examples/🎬️demo/🖼️assets/
-/// 🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/
-/// `encode_pack` output, asserted equal by `fixture_honesty_law`).
-///
-/// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT rather than a hand-written
-/// struct: `encode_pdf` writes each page's `/MediaBox` and content stream from the model, and
-/// `decode_pdf` reads them back through the real page-tree walk, so the fixed point is what
-/// `parse_dsl(print_dsl(demo)) == demo` genuinely requires. Same construction 1.7's own
-/// `demo_pdf17_snapshot` uses, for the same reason.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn demo_pdf_snapshot() -> PdfSnapshot {
-    let seed = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: 612.0, height: 792.0, text: "Semio Demo".into() }] };
-    let bytes = crate::standards::v1_4::subsets::base::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
-    crate::standards::v1_4::subsets::base::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
-}
+
 //#endregion 🔖️SnapshotFixtures
 

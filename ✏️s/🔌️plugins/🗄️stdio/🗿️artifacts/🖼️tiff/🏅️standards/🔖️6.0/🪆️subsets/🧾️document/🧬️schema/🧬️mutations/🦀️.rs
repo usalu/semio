@@ -5,7 +5,6 @@ use crate::TiffSnapshot;
 pub use crate::schema::operations::apply_tiff_mutation;
 
 //#region Owners
-pub use super::change_byte_order::ChangeByteOrderMutation;
 pub use super::insert_ifd::InsertIfdMutation;
 pub use super::remove_ifd::RemoveIfdMutation;
 pub use super::remove_tag::RemoveTagMutation;
@@ -23,7 +22,6 @@ use super::patch_snapshot::PatchSnapshot;
 pub enum TiffMutation {
     SetSnapshot(SetSnapshot),
     PatchSnapshot(PatchSnapshot),
-    ChangeByteOrder(ChangeByteOrderMutation),
     InsertIfd(InsertIfdMutation),
     RemoveIfd(RemoveIfdMutation),
     ReplaceTag(ReplaceTagMutation),
@@ -33,15 +31,3 @@ pub enum TiffMutation {
 
 //#endregion Aggregate
 
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
-    vec![
-        crate::schema::mutations::patch_snapshot::test_case(),
-        crate::schema::mutations::change_byte_order::test_case(),
-        crate::schema::mutations::insert_ifd::test_case(),
-        crate::schema::mutations::remove_ifd::test_case(),
-        crate::schema::mutations::replace_tag::test_case(),
-        crate::schema::mutations::remove_tag::test_case(),
-        crate::schema::mutations::paint_region::test_case(),
-    ]
-}

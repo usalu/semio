@@ -1,0 +1,95 @@
+[
+  {
+    "id": "empty",
+    "input": [],
+    "accepted": true,
+    "expected": []
+  },
+  {
+    "id": "equal-duplicate",
+    "input": [
+      {
+        "path": "a",
+        "sha256": "x"
+      },
+      {
+        "path": "a",
+        "sha256": "x"
+      }
+    ],
+    "accepted": true,
+    "expected": [
+      {
+        "path": "a",
+        "sha256": "x"
+      }
+    ]
+  },
+  {
+    "id": "distinct",
+    "input": [
+      {
+        "path": "a",
+        "sha256": "x"
+      },
+      {
+        "path": "b",
+        "sha256": "x"
+      }
+    ],
+    "accepted": true,
+    "expected": [
+      {
+        "path": "a",
+        "sha256": "x"
+      },
+      {
+        "path": "b",
+        "sha256": "x"
+      }
+    ]
+  },
+  {
+    "id": "conflict",
+    "input": [
+      {
+        "path": "a",
+        "sha256": "x"
+      },
+      {
+        "path": "a",
+        "sha256": "y"
+      }
+    ],
+    "accepted": false,
+    "expected": null
+  },
+  {
+    "id": "order-conserved",
+    "input": [
+      {
+        "path": "b",
+        "sha256": "x"
+      },
+      {
+        "path": "a",
+        "sha256": "y"
+      },
+      {
+        "path": "b",
+        "sha256": "x"
+      }
+    ],
+    "accepted": true,
+    "expected": [
+      {
+        "path": "b",
+        "sha256": "x"
+      },
+      {
+        "path": "a",
+        "sha256": "y"
+      }
+    ]
+  }
+]

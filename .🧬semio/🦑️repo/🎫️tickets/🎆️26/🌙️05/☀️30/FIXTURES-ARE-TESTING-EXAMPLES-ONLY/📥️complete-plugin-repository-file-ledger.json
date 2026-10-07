@@ -6967,6 +6967,14 @@
     ]
   },
   {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️embedded-selection/🟦️.ts",
+    "current": "present",
+    "evidence": [
+      "📥️final-plugin-consumer-edits.json",
+      "📥️latest-wins-and-embedded-selection-before.json"
+    ]
+  },
+  {
     "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts",
     "current": "present",
     "evidence": [
@@ -6979,6 +6987,14 @@
     "evidence": [
       "📥️final-plugin-consumer-edits.json",
       "📥️hidden-plugin-consumer-ledger.json"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧪️tests/🧩️embedded-selection/🧬️schema/🔣️.json",
+    "current": "removed-or-reowned-by-team",
+    "evidence": [
+      "📥️final-plugin-consumer-edits.json",
+      "📥️latest-wins-and-embedded-selection-before.json"
     ]
   },
   {
@@ -7192,7 +7208,8 @@
     "evidence": [
       "📥️expanded-consumer-ledger.json",
       "📥️expanded-manual-edits.json",
-      "📥️final-plugin-consumer-edits.json"
+      "📥️final-plugin-consumer-edits.json",
+      "📥️latest-wins-and-embedded-selection-before.json"
     ]
   },
   {

@@ -1,0 +1,812 @@
+{
+  "schemaBytes": 9552,
+  "tableWidths": {
+    "semio_brep_coedge": 16,
+    "semio_brep_curve2": 36,
+    "semio_brep_curve2_knot": 6,
+    "semio_brep_curve2_point": 9,
+    "semio_brep_curve2_weight": 6,
+    "semio_brep_curve3": 48,
+    "semio_brep_curve3_knot": 6,
+    "semio_brep_curve3_point": 12,
+    "semio_brep_curve3_weight": 6,
+    "semio_brep_document": 3,
+    "semio_brep_edge": 10,
+    "semio_brep_face": 10,
+    "semio_brep_inner_loop": 4,
+    "semio_brep_loop": 4,
+    "semio_brep_loop_edge": 5,
+    "semio_brep_shell": 4,
+    "semio_brep_shell_face": 5,
+    "semio_brep_solid": 4,
+    "semio_brep_solid_shell": 5,
+    "semio_brep_surface": 54,
+    "semio_brep_surface_knot_u": 6,
+    "semio_brep_surface_knot_v": 6,
+    "semio_brep_surface_point": 12,
+    "semio_brep_surface_weight": 6,
+    "semio_brep_vertex": 16
+  },
+  "cases": [
+    {
+      "id": "full",
+      "sourceSnapshot": {
+        "schema": "stdio.semio.brep",
+        "vertices": [
+          {
+            "id": "v0",
+            "point": {
+              "x": {
+                "bits": "3ff0000000000000"
+              },
+              "y": {
+                "bits": "4000000000000000"
+              },
+              "z": {
+                "bits": "4008000000000000"
+              }
+            },
+            "tol": {
+              "bits": "3f50624dd2f1a9fc"
+            }
+          },
+          {
+            "id": "v-文",
+            "point": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "0000000000000000"
+              },
+              "z": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "tol": {
+              "bits": "3f60624dd2f1a9fc"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "e0",
+            "startVertex": "v0",
+            "endVertex": "v-文",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "direction": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              }
+            },
+            "tol": {
+              "bits": "3f689374bc6a7efa"
+            }
+          },
+          {
+            "id": "e1",
+            "startVertex": "v0",
+            "endVertex": "v-文",
+            "curve": {
+              "kind": "circle",
+              "center": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "axis": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "radius": {
+                "bits": "4004000000000000"
+              }
+            },
+            "tol": {
+              "bits": "3f689374bc6a7efa"
+            }
+          },
+          {
+            "id": "e2",
+            "startVertex": "v0",
+            "endVertex": "v-文",
+            "curve": {
+              "kind": "ellipse",
+              "center": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "axis": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "radiusMajor": {
+                "bits": "400c000000000000"
+              },
+              "radiusMinor": {
+                "bits": "3ff4000000000000"
+              }
+            },
+            "tol": {
+              "bits": "3f689374bc6a7efa"
+            }
+          },
+          {
+            "id": "e3",
+            "startVertex": "v0",
+            "endVertex": "v-文",
+            "curve": {
+              "kind": "nurbs",
+              "controlPoints": [
+                {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              ],
+              "weights": [
+                {
+                  "bits": "3ff0000000000000"
+                },
+                {
+                  "bits": "3fe0000000000000"
+                }
+              ],
+              "degree": 1,
+              "knots": [
+                {
+                  "bits": "0000000000000000"
+                },
+                {
+                  "bits": "0000000000000000"
+                },
+                {
+                  "bits": "3ff0000000000000"
+                },
+                {
+                  "bits": "3ff0000000000000"
+                }
+              ]
+            },
+            "tol": {
+              "bits": "3f689374bc6a7efa"
+            }
+          }
+        ],
+        "loops": [
+          {
+            "id": "loop",
+            "edges": [
+              {
+                "edge": "e0",
+                "orientation": true
+              },
+              {
+                "edge": "e1",
+                "orientation": false
+              },
+              {
+                "edge": "e2",
+                "orientation": true
+              },
+              {
+                "edge": "e3",
+                "orientation": false
+              }
+            ]
+          },
+          {
+            "id": "inner",
+            "edges": []
+          }
+        ],
+        "faces": [
+          {
+            "id": "f0",
+            "outerLoop": "loop",
+            "innerLoops": [
+              "inner"
+            ],
+            "surface": {
+              "kind": "plane",
+              "origin": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "normal": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              }
+            },
+            "orientation": true,
+            "tol": {
+              "bits": "3f70624dd2f1a9fc"
+            }
+          },
+          {
+            "id": "f1",
+            "outerLoop": "loop",
+            "innerLoops": [
+              "inner"
+            ],
+            "surface": {
+              "kind": "cylinder",
+              "origin": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "axis": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "radius": {
+                "bits": "4004000000000000"
+              }
+            },
+            "orientation": false,
+            "tol": {
+              "bits": "3f70624dd2f1a9fc"
+            }
+          },
+          {
+            "id": "f2",
+            "outerLoop": "loop",
+            "innerLoops": [
+              "inner"
+            ],
+            "surface": {
+              "kind": "cone",
+              "origin": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "axis": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "radius": {
+                "bits": "4004000000000000"
+              },
+              "halfAngle": {
+                "bits": "3fd0000000000000"
+              }
+            },
+            "orientation": true,
+            "tol": {
+              "bits": "3f70624dd2f1a9fc"
+            }
+          },
+          {
+            "id": "f3",
+            "outerLoop": "loop",
+            "innerLoops": [
+              "inner"
+            ],
+            "surface": {
+              "kind": "sphere",
+              "center": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "radius": {
+                "bits": "4004000000000000"
+              }
+            },
+            "orientation": false,
+            "tol": {
+              "bits": "3f70624dd2f1a9fc"
+            }
+          },
+          {
+            "id": "f4",
+            "outerLoop": "loop",
+            "innerLoops": [
+              "inner"
+            ],
+            "surface": {
+              "kind": "torus",
+              "center": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                },
+                "z": {
+                  "bits": "4008000000000000"
+                }
+              },
+              "axis": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                },
+                "z": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "majorRadius": {
+                "bits": "400c000000000000"
+              },
+              "minorRadius": {
+                "bits": "3ff4000000000000"
+              }
+            },
+            "orientation": true,
+            "tol": {
+              "bits": "3f70624dd2f1a9fc"
+            }
+          },
+          {
+            "id": "f5",
+            "outerLoop": "loop",
+            "innerLoops": [
+              "inner"
+            ],
+            "surface": {
+              "kind": "nurbs",
+              "controlPoints": [
+                {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  },
+                  "z": {
+                    "bits": "4008000000000000"
+                  }
+                },
+                {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  },
+                  "z": {
+                    "bits": "3ff0000000000000"
+                  }
+                }
+              ],
+              "weights": [
+                {
+                  "bits": "3ff0000000000000"
+                },
+                {
+                  "bits": "3fe0000000000000"
+                }
+              ],
+              "uCount": 1,
+              "vCount": 2,
+              "degreeU": 0,
+              "degreeV": 1,
+              "knotsU": [
+                {
+                  "bits": "0000000000000000"
+                },
+                {
+                  "bits": "3ff0000000000000"
+                }
+              ],
+              "knotsV": [
+                {
+                  "bits": "0000000000000000"
+                },
+                {
+                  "bits": "0000000000000000"
+                },
+                {
+                  "bits": "3ff0000000000000"
+                },
+                {
+                  "bits": "3ff0000000000000"
+                }
+              ]
+            },
+            "orientation": false,
+            "tol": {
+              "bits": "3f70624dd2f1a9fc"
+            }
+          }
+        ],
+        "shells": [
+          {
+            "id": "shell",
+            "faces": [
+              {
+                "face": "f0",
+                "orientation": true
+              },
+              {
+                "face": "f1",
+                "orientation": false
+              },
+              {
+                "face": "f2",
+                "orientation": true
+              },
+              {
+                "face": "f3",
+                "orientation": false
+              },
+              {
+                "face": "f4",
+                "orientation": true
+              },
+              {
+                "face": "f5",
+                "orientation": false
+              }
+            ]
+          }
+        ],
+        "solids": [
+          {
+            "id": "solid",
+            "shells": [
+              {
+                "shell": "shell",
+                "isVoid": false
+              },
+              {
+                "shell": "shell",
+                "isVoid": true
+              }
+            ]
+          }
+        ],
+        "coedges": [
+          {
+            "id": "c0",
+            "edge": "e0",
+            "forward": true,
+            "pcurve": {
+              "kind": "line",
+              "origin": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                }
+              },
+              "direction": {
+                "x": {
+                  "bits": "4008000000000000"
+                },
+                "y": {
+                  "bits": "4010000000000000"
+                }
+              }
+            },
+            "prange": [
+              {
+                "bits": "bff0000000000000"
+              },
+              {
+                "bits": "4000000000000000"
+              }
+            ],
+            "loopId": "loop",
+            "next": "c1",
+            "prev": "c3"
+          },
+          {
+            "id": "c1",
+            "edge": "e1",
+            "forward": false,
+            "pcurve": {
+              "kind": "circle",
+              "center": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                }
+              },
+              "radius": {
+                "bits": "4004000000000000"
+              }
+            },
+            "prange": [
+              {
+                "bits": "bff0000000000000"
+              },
+              {
+                "bits": "4000000000000000"
+              }
+            ],
+            "loopId": "loop",
+            "next": "c2",
+            "prev": "c0"
+          },
+          {
+            "id": "c2",
+            "edge": "e2",
+            "forward": true,
+            "pcurve": {
+              "kind": "ellipse",
+              "center": {
+                "x": {
+                  "bits": "3ff0000000000000"
+                },
+                "y": {
+                  "bits": "4000000000000000"
+                }
+              },
+              "xAxis": {
+                "x": {
+                  "bits": "4008000000000000"
+                },
+                "y": {
+                  "bits": "4010000000000000"
+                }
+              },
+              "radiusMajor": {
+                "bits": "400c000000000000"
+              },
+              "radiusMinor": {
+                "bits": "3ff4000000000000"
+              }
+            },
+            "prange": [
+              {
+                "bits": "bff0000000000000"
+              },
+              {
+                "bits": "4000000000000000"
+              }
+            ],
+            "loopId": "loop",
+            "next": "c3",
+            "prev": "c1"
+          },
+          {
+            "id": "c3",
+            "edge": "e3",
+            "forward": false,
+            "pcurve": {
+              "kind": "nurbs",
+              "controlPoints": [
+                {
+                  "x": {
+                    "bits": "3ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "4000000000000000"
+                  }
+                },
+                {
+                  "x": {
+                    "bits": "4008000000000000"
+                  },
+                  "y": {
+                    "bits": "4010000000000000"
+                  }
+                }
+              ],
+              "weights": [
+                {
+                  "bits": "3ff0000000000000"
+                },
+                {
+                  "bits": "3fe0000000000000"
+                }
+              ],
+              "degree": 1,
+              "knots": [
+                {
+                  "bits": "0000000000000000"
+                },
+                {
+                  "bits": "0000000000000000"
+                },
+                {
+                  "bits": "3ff0000000000000"
+                },
+                {
+                  "bits": "3ff0000000000000"
+                }
+              ]
+            },
+            "prange": [
+              {
+                "bits": "bff0000000000000"
+              },
+              {
+                "bits": "4000000000000000"
+              }
+            ],
+            "loopId": "loop",
+            "next": "c0",
+            "prev": "c2"
+          }
+        ],
+        "nextLabel": "18446744073709551615"
+      },
+      "rows": 79,
+      "valueBytes": 5149
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "sourceSnapshot": {
+        "schema": "stdio.semio.brep",
+        "vertices": [],
+        "edges": [],
+        "loops": [],
+        "faces": [],
+        "shells": [],
+        "solids": [],
+        "coedges": [],
+        "nextLabel": "18446744073709551615"
+      },
+      "rows": 1,
+      "valueBytes": 44
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 9845,
+    "tableWidths": {
+      "semio_brep_coedge": 16,
+      "semio_brep_curve2": 36,
+      "semio_brep_curve2_knot": 6,
+      "semio_brep_curve2_point": 9,
+      "semio_brep_curve2_weight": 6,
+      "semio_brep_curve3": 48,
+      "semio_brep_curve3_knot": 6,
+      "semio_brep_curve3_point": 12,
+      "semio_brep_curve3_weight": 6,
+      "semio_brep_document": 3,
+      "semio_brep_edge": 10,
+      "semio_brep_face": 10,
+      "semio_brep_inner_loop": 4,
+      "semio_brep_loop": 4,
+      "semio_brep_loop_edge": 5,
+      "semio_brep_shell": 4,
+      "semio_brep_shell_face": 5,
+      "semio_brep_solid": 4,
+      "semio_brep_solid_shell": 5,
+      "semio_brep_surface": 54,
+      "semio_brep_surface_knot_u": 6,
+      "semio_brep_surface_knot_v": 6,
+      "semio_brep_surface_point": 12,
+      "semio_brep_surface_weight": 6,
+      "semio_brep_vertex": 16,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 80,
+        "valueBytes": {
+          "binary": 5190,
+          "text": 5188
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 85,
+          "text": 83
+        }
+      }
+    ]
+  }
+}

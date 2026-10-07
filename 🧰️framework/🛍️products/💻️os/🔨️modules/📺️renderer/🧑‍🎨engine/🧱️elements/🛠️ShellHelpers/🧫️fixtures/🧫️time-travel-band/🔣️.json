@@ -571,6 +571,36 @@
         "en": "The hub refused a history edit; the step was withdrawn.",
         "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen."
       }
+    },
+    "ui.timeTravel.preparationProgress": {
+      "normal": {
+        "en": "Preparing history preview: {done} of {total} steps",
+        "de": "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten"
+      },
+      "beginner": {
+        "en": "Preparing history preview: {done} of {total} steps",
+        "de": "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten"
+      }
+    },
+    "ui.timeTravel.refusal.unchanged": {
+      "normal": {
+        "en": "Change an input before accepting",
+        "de": "Vor dem Übernehmen eine Eingabe ändern"
+      },
+      "beginner": {
+        "en": "Change an input before accepting",
+        "de": "Vor dem Übernehmen eine Eingabe ändern"
+      }
+    },
+    "ui.timeTravel.processed": {
+      "normal": {
+        "en": "Work completed: {processed}",
+        "de": "Arbeitsfortschritt: {processed}"
+      },
+      "beginner": {
+        "en": "Work completed: {processed}",
+        "de": "Arbeitsfortschritt: {processed}"
+      }
     }
   },
   "cases": [
@@ -608,6 +638,73 @@
           "stage": "Mutation wird bearbeitet",
           "target": "Bearbeitet: Auswahl ziehen",
           "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": null
+        }
+      },
+      "controls": [
+        {
+          "control": "accept",
+          "controlId": "ui.timeTravel.accept",
+          "action": "historyEditAccept",
+          "disabledBy": null
+        },
+        {
+          "control": "discard",
+          "controlId": "ui.timeTravel.discard",
+          "action": "historyEditDiscard",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "controlId": "ui.timeTravel.exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "History editing: document before Drag selection",
+        "de": "Verlaufsbearbeitung: Dokument vor Auswahl ziehen"
+      }
+    },
+    {
+      "name": "editing prepares a history preview with visible localized progress",
+      "session": {
+        "sessionId": "1",
+        "generation": 3,
+        "stage": "editing",
+        "target": "m-2",
+        "targetLabel": {
+          "native": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          },
+          "reuse": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          }
+        },
+        "blocking": false,
+        "acceptedCount": 0,
+        "done": 2,
+        "total": 5
+      },
+      "text": {
+        "en": {
+          "stage": "Editing a mutation",
+          "target": "Editing: Drag selection",
+          "progress": "Preparing history preview: 2 of 5 steps",
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": null
+        },
+        "de": {
+          "stage": "Mutation wird bearbeitet",
+          "target": "Bearbeitet: Auswahl ziehen",
+          "progress": "Verlaufsvorschau wird vorbereitet: 2 von 5 Schritten",
           "review": null,
           "outcome": null,
           "fault": null,
@@ -1372,6 +1469,130 @@
         "en": "Reviewing the edited history",
         "de": "Bearbeiteter Verlauf wird geprüft"
       }
+    },
+    {
+      "name": "one running operation reports 128 completed work with cancellation",
+      "session": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "targetLabel": {
+          "native": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          },
+          "reuse": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          }
+        },
+        "done": 0,
+        "total": 1,
+        "blocking": false,
+        "acceptedCount": 1,
+        "processed": 128
+      },
+      "text": {
+        "en": {
+          "stage": "Replaying later mutations",
+          "target": "Editing: Drag selection",
+          "progress": "Replaying 0 of 1 mutations · Work completed: 128",
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Spätere Mutationen werden neu angewendet",
+          "target": "Bearbeitet: Auswahl ziehen",
+          "progress": "0 von 1 Mutationen werden neu angewendet · Arbeitsfortschritt: 128",
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "cancelReplay",
+          "controlId": "shell.time-travel.cancel-replay",
+          "action": "historyEditCancelReplay",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "controlId": "ui.timeTravel.exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Replaying later mutations",
+        "de": "Spätere Mutationen werden neu angewendet"
+      }
+    },
+    {
+      "name": "one running operation reports 256 completed work with cancellation",
+      "session": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "targetLabel": {
+          "native": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          },
+          "reuse": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          }
+        },
+        "done": 0,
+        "total": 1,
+        "blocking": false,
+        "acceptedCount": 1,
+        "processed": 256
+      },
+      "text": {
+        "en": {
+          "stage": "Replaying later mutations",
+          "target": "Editing: Drag selection",
+          "progress": "Replaying 0 of 1 mutations · Work completed: 256",
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Spätere Mutationen werden neu angewendet",
+          "target": "Bearbeitet: Auswahl ziehen",
+          "progress": "0 von 1 Mutationen werden neu angewendet · Arbeitsfortschritt: 256",
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "cancelReplay",
+          "controlId": "shell.time-travel.cancel-replay",
+          "action": "historyEditCancelReplay",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "controlId": "ui.timeTravel.exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Replaying later mutations",
+        "de": "Spätere Mutationen werden neu angewendet"
+      }
     }
   ],
   "rowActions": {
@@ -1594,6 +1815,15 @@
       "text": {
         "en": "The draft editor is closed: open the mutation again",
         "de": "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.unchanged",
+      "label": "ui.timeTravel.refusal.unchanged",
+      "text": {
+        "en": "Change an input before accepting",
+        "de": "Vor dem Übernehmen eine Eingabe ändern"
       },
       "severity": "warning"
     }

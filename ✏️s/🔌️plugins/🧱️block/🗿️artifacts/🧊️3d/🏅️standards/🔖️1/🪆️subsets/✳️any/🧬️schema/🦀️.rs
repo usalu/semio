@@ -10,7 +10,7 @@ pub mod retirement;
 
 //#region 🔖️Artifact
 /// 🧬️ block3d document artifact state.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dArtifact {

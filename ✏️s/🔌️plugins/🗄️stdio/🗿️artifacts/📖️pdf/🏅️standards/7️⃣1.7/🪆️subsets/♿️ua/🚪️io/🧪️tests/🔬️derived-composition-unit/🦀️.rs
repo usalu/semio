@@ -46,6 +46,6 @@ mod tests {
         let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = PdfUaComposerComposition::compose(&sources).expect_err("an untagged document must not stamp ua");
-        assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::ua::schema::CODE_MARKINFO), "got {:?}", err.diagnostics);
+        assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::ua::io::CODE_MARKINFO), "got {:?}", err.diagnostics);
     }
 }

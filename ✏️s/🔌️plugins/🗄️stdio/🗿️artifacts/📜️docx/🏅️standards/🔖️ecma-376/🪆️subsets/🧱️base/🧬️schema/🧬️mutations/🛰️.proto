@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s_stdio_docx.mutation;
+import "s_stdio_xml/snapshot.proto";
 enum DocxMutationKind {
   DOCX_MUTATION_KIND_UNSPECIFIED = 0;
   DOCX_MUTATION_KIND_SET_SNAPSHOT = 1;
@@ -25,3 +26,11 @@ message DocxMutation {
   DocxMutationKind kind = 1;
   bytes payload = 2;
 }
+
+message DocxPartContent {
+  oneof content {
+    semio.s_stdio_xml.snapshot.XmlDocument xml = 1;
+    bytes binary = 2;
+  }
+}
+message DocxSetPart { string path = 1; string content_type = 2; DocxPartContent payload = 3; }

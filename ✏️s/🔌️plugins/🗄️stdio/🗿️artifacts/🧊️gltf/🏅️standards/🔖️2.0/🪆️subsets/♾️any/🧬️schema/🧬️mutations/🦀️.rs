@@ -1,6 +1,7 @@
 //! 🧬️ Transparent glTF mutation aggregate. Every concrete payload, outcome, diff, inverse, and test lives in its direct semantic leaf.
 
 use crate::schema::diff::GltfDiff;
+
 use crate::GltfSnapshot;
 
 pub use super::add_required_extension::AddRequiredExtensionMutation;
@@ -267,20 +268,13 @@ pub fn apply_gltf_mutation(snapshot: &mut GltfSnapshot, mutation: &GltfMutation)
 
 
 /// 🌉️ Reads a `.glb` container or `.gltf` JSON text through the production codec — whichever the bytes are.
-fn gltf_bridge_read(document: &[u8]) -> Result<GltfSnapshot, String> {
-    if document.starts_with(b"glTF") { crate::engine::decode_glb(document) } else { crate::engine::parse_gltf_document(document) }
-}
+
 
 /// 🌉️ Writes a snapshot back in the form it was read from, through the production codec.
-fn gltf_bridge_write(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
-    match snapshot.source_form {
-        crate::schema::snapshot::GltfSourceForm::Glb => crate::engine::encode_glb(snapshot),
-        crate::schema::snapshot::GltfSourceForm::Json => Ok(crate::engine::serialize_gltf_document(snapshot)),
-    }
-}
+
 
 /// 🌉️ Applies one mutation through `Mutation::diff(..).apply_to`; a refusal (error or fatal message) is an error.
-fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, snapshot: &mut GltfSnapshot) -> Result<(), String> {
+pub(crate) fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, snapshot: &mut GltfSnapshot) -> Result<(), String> {
     let base = snapshot.clone();
     let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, &base).apply_to(snapshot);
     match outcome.messages().iter().find(|message| message.level >= semio_framework_diagnostic::Severity::Error) {
@@ -292,28 +286,14 @@ fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, snapshot: 
 /// 🌉️ One glTF document (`.glb` or `.gltf`) after the row's mutation, applied by the production codec and written back
 /// in its own form — the subject half of a mutation case's forward rows. Its signature names only bytes and `str`, so
 /// a generated test host reaches it.
-pub fn gltf_mutated_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
-    let mutation = gltf_row_mutation(kind, params_json)?;
-    let mut snapshot = gltf_bridge_read(document)?;
-    gltf_bridge_apply(kind, "mutation", &mutation, &mut snapshot)?;
-    gltf_bridge_write(&snapshot)
-}
+
 
 /// 🌉️ One glTF document after the row's mutation and then its OWN computed inverse: every step of
 /// `Mutation::inverse(base)` is replayed onto the mutated document in order, and the result is written back in the
 /// document's own form. A mutation case's inverse rows hand exactly these bytes to their judge against the untouched
 /// input, so a lossy production inverse cannot hide behind a hand-written one. Its signature names only bytes and
 /// `str`, so a generated test host reaches it.
-pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
-    let mutation = gltf_row_mutation(kind, params_json)?;
-    let base = gltf_bridge_read(document)?;
-    let mut restored = base.clone();
-    gltf_bridge_apply(kind, "mutation", &mutation, &mut restored)?;
-    for step in <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
-        gltf_bridge_apply(kind, "inverse", &step, &mut restored)?;
-    }
-    gltf_bridge_write(&restored)
-}
+
 //#endregion 🌉️TestBridge
 
 //#region 🧪️StructuralTests

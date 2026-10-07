@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "nodeIds",
+    "edgeIds"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "dag.hostDocument"
+    },
+    "nodeIds": {
+      "const": [
+        "slider",
+        "mode",
+        "scale",
+        "combine",
+        "screen"
+      ]
+    },
+    "edgeIds": {
+      "const": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ]
+    }
+  }
+}

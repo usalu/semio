@@ -1,0 +1,538 @@
+[
+  {
+    "input": "semio-text-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "38e7ecce7000a5852bbf3005b9708d029502af088c43c9e84aa77e4920fd90af",
+    "afterHash": "5dc5c3d2109352d100267d5eb3668c060bcc052c1fc16d6981320776e240c7e9"
+  },
+  {
+    "input": "semio-text-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "95cc95edaf698ac5c2d24262aa06d87e7d7eb8a1adca9563b3aa1cac6679e67a"
+  },
+  {
+    "input": "semio-text-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "be7a079f7e7401ac235f91c2d32e923b47c8721c160a0b140c33e4290fbdad71",
+    "afterHash": "0356cf62ca2cfdeca1ee2f5ec00b814a483fb33c2ef2bb34071170424aad44ab"
+  },
+  {
+    "input": "semio-text-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "e30207569ca7a500da3bd5830d86ef841ecee296bacf4820d1b0d50258c7a8c3",
+    "afterHash": "2de81b45e2a42c932a98cae992c3dbd2cf74aa624b072f00870abc2503d96650"
+  },
+  {
+    "input": "semio-text-complete-semantic/held-pairs.json",
+    "index": 4,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/📏️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "6f9f3554ed14089f2d290ef13d4a1b003aadb1de7cb4c1dedbe6d9f0bc02bf90",
+    "afterHash": "1a85b0be1dd9470426b0e4c5f276aea5a0cb4b56364d16194c12f6dfbc675c7a"
+  },
+  {
+    "input": "semio-text-complete-semantic/held-pairs.json",
+    "index": 5,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "6c423b860004111d139c2e6243fa17fdc2808c3fee557676f868f39b1ed9148e",
+    "afterHash": "9cfbe2fdabafe739d24f92786a1e7f839e62d08261e9b2610c9de0cbf2a5cfcb"
+  },
+  {
+    "input": "semio-text-complete-semantic/held-pairs.json",
+    "index": 6,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "31f17cd62b4b5b75d6ab78daacf622f8ad81838a95eb9f6df94f5384fcfb4794",
+    "afterHash": "068644c9621ee2569a85fa9e47a7039efbbed00e91abbb3e233d96c0d9af0002"
+  },
+  {
+    "input": "semio-audio-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "6a86c57cd84706ba8f75ef3f2a04cf77495ae360a609b570037c216889485271",
+    "afterHash": "5abb77329ea0c8971f24d987f739c34eaab7b03f2ab06150a7177a221ac574e8"
+  },
+  {
+    "input": "semio-audio-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "898e176a3666d550ca95d904647c7c6b2de8f7d24358b6e65e75d46dab2c1b7f"
+  },
+  {
+    "input": "semio-audio-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "6f922b87ba4dac3bbfd97e9e137effdd53d3b1fee5366cccda8fe9c0ceb9a7ba",
+    "afterHash": "a5cefaf668d746df4f3f85fcbeb7e843bd7d3fc0000795f1f55d8ac1b4341f5a"
+  },
+  {
+    "input": "semio-audio-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "f2980acf31b5ae7e85bda3673b7d4e539e218c9fdb2666e2914bd75bcb7ca042",
+    "afterHash": "5efb8ac9d6be49f0ea6879d5402b8f5902276a4e5d09c7e8a723e3831b40a4fd"
+  },
+  {
+    "input": "semio-video-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "aecf529ce918370589a6be63bb50035fcfacc67bd8c2ade1af78e6eafa39042d",
+    "afterHash": "9d0f033d367c5e16409ad6b235dc3d51bcfe07366e8185c17ed5fab4b61fcb46"
+  },
+  {
+    "input": "semio-video-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "1579d7456a90577c4f7fa3fc03deaa6bf82f0e1e2bcd1923376c2c8631c403b9"
+  },
+  {
+    "input": "semio-video-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "d0d8dcf2c71bf3de0af64f6ae436d86da724004e165574017647a960852d3575",
+    "afterHash": "66ea1c6841d8d5465ee4ff70bd96240dc8b0c5b42b618e032728ba1bf2d0443d"
+  },
+  {
+    "input": "semio-video-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "0db4281f7a2d36134c008a29849da06edfaf7650017efd5a2b96da13cbb8d4a7",
+    "afterHash": "671f35e13260750af21e9cad0f2bb9ba66796c92447aeea787160f2bd8cd0dd1"
+  },
+  {
+    "input": "semio-object-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "860ba5bcca8e0030f13951a61c5d6f7293488c0dffeb47677c0f10b8ccd44c5d",
+    "afterHash": "0c8a61ab607a86eed235e6fd03339c2ede3a6e518e9bbbcd80a1d6ef5f30e906"
+  },
+  {
+    "input": "semio-object-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "7482f2c8717398398d043954bf04a5d85fb90e500820a3c0482d2e490ea779eb"
+  },
+  {
+    "input": "semio-object-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "85c01ef5c5156e14a3f2678d920fcdc2dfd0d9bbc83fb3af38106efb45800b26",
+    "afterHash": "6f3a4f124610052a9bad85d91069a947764be1a82444ea1e75a64efb346150ba"
+  },
+  {
+    "input": "semio-object-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "15d051dc38d7ca980c400f9f4fbb39a76f6c67dbc1c45c0b9c398990c263a047",
+    "afterHash": "a74d6466002b05ad285eb813f051ee6358f9094f1445762f6ba06d63e58861ad"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "1b4654a1c25ec8f14e54d67795563afbeaa0996b654802082fa05d093e71e9cf",
+    "afterHash": "fc909c8bd71b436fc9a593ecdb29dc053b0b78cf54d43e6f28ce2230aa0eb3ac"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "3b11942def9f49c1d0343749db5a8dd4e7491d9a667367a9a3444f02777407ed",
+    "afterHash": "99b3dd8772e116973c1a7b975805f0b9bf1af885c625a71cdec45f95470c0dbd"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "f4cdb4a6c7be1f31a1aaef9ce91ef9e0b9e5dc139f7568778c0d5f9e3b9388fc",
+    "afterHash": "5b8d2dba6813f9bd49f103bd8b077522974eb4c16eecd157e07ab157f43b7915"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "3cb645bc1271265a30027e08a67e6f041d6d8007dfeca11536fe8a9ddab8ecf9"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 4,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "848ffd055cb38ae465f5751af201858a0c325d1c273880470b30855ec1ab4acb"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 5,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "5ae3f8d87ebf241afc2eb31c1470695f980fa379e3ea6974032b78de9d98c5cf",
+    "afterHash": "0b25a4bd1744605aba62b05b5c4c1c0afd4e760167e7292018af2cab9e674509"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 6,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "c70d7ca4073505c65b3e1a9633089a716337a8a14290b89d5eced6b9e6dd7b75",
+    "afterHash": "34a2c0ce536fd92e7e2b38303238f57addfb323fb8987e99ac3d739bc93c7998"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 7,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "c69f079ecd7aef76a58b99c4f8f87f653c67a34975c434680b99b1d12c0fdbab",
+    "afterHash": "8f748c03599b2969ac66458a45bfb50855de071b3c76e4e9e7c4fcb6f436dec9"
+  },
+  {
+    "input": "semio-value-table-complete-semantic/held-pairs.json",
+    "index": 8,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "ca4a60b60a9b186b410165585605a74c4baeca084bdaaf25ba3acfe0394d1ea2",
+    "afterHash": "6bb81fb1bd1687dbb85bce44a7068eba5276d963c125f4bc6c606650ce76c5d3"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "59e627e0f73682c68499da446d986ed2c798cd63b04a6e679578024e86c29b88",
+    "afterHash": "a2bc8846bef9a03174e53dcf9dc44e8bc548b9e173aac93307fa57bdde2da274"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "45531a7861d7675d18c4e9e3759117b74dfdf08a382e4ca5d64e53f742d72468"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "d99653f46340d63f0bc4012288df0c24fb4c4c2aeb296292c4a95a6900e0f35d",
+    "afterHash": "13a1f879a24674f36a047d3f9f1cd6f73d74137927e28059d34b116bc5092e20"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "4664a59f14fb652764dfb85c866aa8a6737ee2964560c85e33c12cc0d13a2fb2",
+    "afterHash": "f9cb7c88baea113ef5f916a23cd19b7ec1d7fd7b6038940c5aea3e266ea72557"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 4,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "7fc9cec47b95a348b91bc4491b5ea47d0612d93463d3464f78ce51b53254de7d",
+    "afterHash": "a61028bc835e836a26de285a2a16f6352bbd35322be9e682a813a365a618f370"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 5,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "1b7ee01fd1582090fb90ab06d1afa76f74cc406894291a4b1d09b902df272729"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 6,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "710599dde6155d0ef00d2c5a56c12bf96ffca523ea9427eb477cc09985b182c1",
+    "afterHash": "f0f713bf85ebcd3366b88f0601d933abc57a23f09776ed327b06bda10f129a09"
+  },
+  {
+    "input": "semio-flow-image-complete-semantic/held-pairs.json",
+    "index": 7,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "e2f2b4109fc61342b217755fa72971c575b604c97dae3b0c39fd1e5a49f753e4",
+    "afterHash": "b7848bc45afff73d41e1bf5a7357de47389167664b8717f31fcf1b120401d632"
+  },
+  {
+    "input": "semio-graph-animation-complete-semantic/animation-held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "536882db9845e2511e1f4ce677894932b5ec64bf26b914116a26d875198b6ed5",
+    "afterHash": "710019536ac0fbba5bf325a6549fc1ec0d41018a892ab83b26a313a0c4799077"
+  },
+  {
+    "input": "semio-graph-animation-complete-semantic/animation-held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "2c43d8a6bb82b4eaa887fc01945cf528be99a8dd27ee2d22395263ff62b8eb74"
+  },
+  {
+    "input": "semio-graph-animation-complete-semantic/animation-held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "45d38878b9fbd1ff87eb4c3d435b02e5b25811f7e63512a1b9764d4fd2b83a0e",
+    "afterHash": "1d20174d40f9e84f781c058de52e1e64e5960523d88e0c53428d40666bc1c6f1"
+  },
+  {
+    "input": "semio-graph-animation-complete-semantic/animation-held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "e58d956350bdac073c3baa282580969c4feb0b2f9abdcb9a401f28e72129da02",
+    "afterHash": "d57e494819bf27d6441db85f1e37b253fd581131aedd06c41a9333e45dca2668"
+  },
+  {
+    "input": "semio-graph-animation-complete-semantic/graph-held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "ec32c098109d8cca0e5da262d5e907ff10595d1da7f24d28f1e6725facf7c3b2"
+  },
+  {
+    "input": "semio-graph-animation-complete-semantic/graph-held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "27388d68ac680ba7adc1f6d004d12db151491706051a6101ba3a5972b878aca9",
+    "afterHash": "2c01ddf3f6c569d42dd93ac45ac814b3b9de67ba7400ae062181cb533db7ff96"
+  },
+  {
+    "input": "semio-graph-animation-complete-semantic/graph-held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "4e189313739ab2fa93887407be9385e078b75dbb40fb8294149965cbf756234b",
+    "afterHash": "9739b120ba931351f9c22e1794b19c0438dd6f4a4c2b05bdf9ec42dd2fed33ef"
+  },
+  {
+    "input": "semio-mesh-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "963e0aa1d58f84fe41ceefca2227213e7c1f08aa5a6b0c17987457fc0b48778d",
+    "afterHash": "33f7e222431ce467703b293c4da1b54d2ea7f7fca451a419167fd83dbc661d87"
+  },
+  {
+    "input": "semio-mesh-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "a423dbec0c940776aad957d0001a9b896cf588fd093c8ff8a6a71b0289869d55"
+  },
+  {
+    "input": "semio-mesh-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "5c9ca135c0b9700962f11776c34d8b3e3dee3c30e0077611748c902774d66494",
+    "afterHash": "468c1b6bc285863a14d17989b7e1d5e516bd0c4d420e2f63df732fcab0969d33"
+  },
+  {
+    "input": "semio-mesh-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "28e5bb672df36c43dbad68766b880e747b4e50bc04cbaac2139b8c0d6fea1654",
+    "afterHash": "3fef91485034935610961e6fa8c336a35d9b39bdc40fa4d41c71de2093054fef"
+  },
+  {
+    "input": "semio-kit-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "75181d8582318a2c535fad5aaa19a5e3fb99a52815e850ab010a74faa2c12535",
+    "afterHash": "5067aaa3df05eec33e057e805e9da4a69f1bc3ce3bab6c4587d767b59f0d31cb"
+  },
+  {
+    "input": "semio-kit-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "6393bff4ab3c85f9ef05be349c256c13a9b403f7e6f775360b4f6fbd8b83d0f7"
+  },
+  {
+    "input": "semio-kit-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "64cd806fd27da33b7167c7b96112f69bc6be802878a031059a0b2c4955f12a0f",
+    "afterHash": "9e23d18a4c7ba02a16973ccb883d9bdc0ec4380bd98c6270d531c3c69c698810"
+  },
+  {
+    "input": "semio-kit-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "0e63974d36bc03fcd5b489055c8483d8029971bcb3a57bd9d2cc25c951194b44",
+    "afterHash": "01711f7e9655588489bd05f0125b931b153b48e82c69a766b99d642a6320f331"
+  },
+  {
+    "input": "semio-model-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "18f93c84496a4d3ffd38122272f2ab669c1e7916a1ea6596f2db8451d98bbe20",
+    "afterHash": "6566bee81c1328eef6ce3843e478622a3b5c6c908c8d49b7b8a51e6d176e6abd"
+  },
+  {
+    "input": "semio-model-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "a2107354677fcc73cf778a155811c20fe2acde172886821c08b1bb0a3bbc2b92"
+  },
+  {
+    "input": "semio-model-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "f720e1c86b36f78192866b4fee1ff9f98f5d8c12cf72c01e924ed43a2b6cda58",
+    "afterHash": "ad0ca952d78e14ae0d6102d2bb60f728487d8ae01f1b58a85e474cfdb804ecc2"
+  },
+  {
+    "input": "semio-model-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "0818840c87b84ebfa5efb1d0e2dd58a0bfc6394a16a7bf6f84051c39d1f42930",
+    "afterHash": "28500be913f3494641e77aff31fa1e3e1576a61cc0533dcbd64ee26221e94736"
+  },
+  {
+    "input": "semio-cad-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "bbcc8d17304452e224d711767a8d93b0b086d28cf1a87107c16c21482fd8874a",
+    "afterHash": "75ab88f3e88b9325b680bd3f07fc3a5983b0985dbba6991bbf295f09b831b1ef"
+  },
+  {
+    "input": "semio-cad-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "3cb1da73db464fc95a89edc0d504e19a4048a4188e6c8e1d870e822904345b50"
+  },
+  {
+    "input": "semio-cad-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "c3dc218d40fd168eecd705268024d4e102b6345b519282bf806c87085939705a",
+    "afterHash": "23c4450a03ee0c774c2e035408922ace459cf8a84120daca80bc3a22be54645e"
+  },
+  {
+    "input": "semio-cad-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "52296cd6c909c41de1292aec33f15ffa6c7809509a75431d77285ff6c9fd5e17",
+    "afterHash": "191bb74ec146781bfd982c741c66b651e2f5529db638c000b852214ed0af6cbe"
+  },
+  {
+    "input": "semio-document-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "b6ae8264f275586cb8ab54276a9374f5f2b6296f079939150bc39ecc7651f387",
+    "afterHash": "179b1f16212c323a474106020ba89567389da3fa25b9d4f46392684cf0842f21"
+  },
+  {
+    "input": "semio-document-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "bbe1ee0c7c80841ad09788f81966e4fec50708ddc36671567cebe59b6a55f048"
+  },
+  {
+    "input": "semio-document-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "9472e7b2a8b9c9e9c9bef8570f8417afb473c6c274eb386d2866c59df10e8dbd",
+    "afterHash": "f572a8d85291ef8609baff4a8174c3d26bb3d8718429f742cfcf1dd8818e252f"
+  },
+  {
+    "input": "semio-document-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "3cc0287a71154e4b5a1951944e42a12f2b4ef4b6ab91a1fd8334726f09505d0d",
+    "afterHash": "44b79bc8fe6213a84fb61acc1cfd4fb70e1905f9db788a2b1d15b904b83ec669"
+  },
+  {
+    "input": "semio-presentation-complete-semantic/held-pairs.json",
+    "index": 0,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "new": false,
+    "beforeHash": "a8b98adac52f7c6d6aabb615d75574fb56cfa25588c023a8832c6fa5e5cd3b06",
+    "afterHash": "f56607f3d3d2cd82b330c7694940c56a06c348064f73c72132350194d192ae54"
+  },
+  {
+    "input": "semio-presentation-complete-semantic/held-pairs.json",
+    "index": 1,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "new": true,
+    "beforeHash": null,
+    "afterHash": "4c3887cda16b98bbc874c5b43381552d1544cb9de1ac14faa92cbdfa59de5f18"
+  },
+  {
+    "input": "semio-presentation-complete-semantic/held-pairs.json",
+    "index": 2,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "81a0a13df967dd592ba0821444a8d6dd4f7b5bb41fd07defd4c48430aa434bfa",
+    "afterHash": "9258821dca90e1bd68dde854180698ebdd468531ad7ca41ad5851417f2ebd181"
+  },
+  {
+    "input": "semio-presentation-complete-semantic/held-pairs.json",
+    "index": 3,
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "new": false,
+    "beforeHash": "1114e9edea71014d0e49a705caea1a7dd04f2b1bbdf27652deb45cf37f99f977",
+    "afterHash": "610d82002b1abfb43c7f40925e80a14d2b1370d4f3effc080806d66204d7430b"
+  }
+]

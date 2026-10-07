@@ -6,6 +6,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
+use protocol::DiffText;
 use crate::standards::v5::subsets::any::schema::diff::*;
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
 use framework_schema::ArtifactSchema;

@@ -1,6 +1,6 @@
 //! 🧺️ Direct text codec for `remove-font-file`.
 
-use super::RemoveFontFile;
+use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveFontFile;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-font-file";

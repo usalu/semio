@@ -7,7 +7,7 @@ use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the block3d artifact.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dDiff {
@@ -38,28 +38,28 @@ pub struct Block3dDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dStringList {
     pub values: Vec<String>,
 }
 
 /// 👤️ Author-list wrapper.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dAuthorList {
     pub values: Vec<BlockAuthor>,
 }
 
 /// 🪟 Windows-list wrapper.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dWindowsList {
     pub values: Vec<Block3dWindowView>,
 }
 
 /// 📂 Identified-collection delta for Representations.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dRepresentationsDelta {
     pub added: Vec<BlockRepresentation>,
@@ -69,7 +69,7 @@ pub struct Block3dRepresentationsDelta {
 }
 
 /// 🩹 One patched Representations entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Block3dRepresentationsPatchEntry {
     pub id: String,
@@ -77,14 +77,14 @@ pub struct Block3dRepresentationsPatchEntry {
 }
 
 /// 🩹 Sparse patch over Representations.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dRepresentationsPatch {
     pub replacement: Option<BlockRepresentation>,
 }
 
 /// 📂 Identified-collection delta for VortexKinds.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dVortexKindsDelta {
     pub added: Vec<Block3dVortexKind>,
@@ -94,7 +94,7 @@ pub struct Block3dVortexKindsDelta {
 }
 
 /// 🩹 One patched VortexKinds entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Block3dVortexKindsPatchEntry {
     pub id: String,
@@ -102,14 +102,14 @@ pub struct Block3dVortexKindsPatchEntry {
 }
 
 /// 🩹 Sparse patch over VortexKinds.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dVortexKindsPatch {
     pub replacement: Option<Block3dVortexKind>,
 }
 
 /// 📂 Identified-collection delta for Vortices.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dVorticesDelta {
     pub added: Vec<Block3dVortexTemplate>,
@@ -119,7 +119,7 @@ pub struct Block3dVorticesDelta {
 }
 
 /// 🩹 One patched Vortices entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Block3dVorticesPatchEntry {
     pub id: String,
@@ -127,14 +127,14 @@ pub struct Block3dVorticesPatchEntry {
 }
 
 /// 🩹 Sparse patch over Vortices.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dVorticesPatch {
     pub replacement: Option<Block3dVortexTemplate>,
 }
 
 /// 📂 Identified-collection delta for Compatibility.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dCompatibilityDelta {
     pub added: Vec<BlockCompatibilityRule>,
@@ -144,7 +144,7 @@ pub struct Block3dCompatibilityDelta {
 }
 
 /// 🩹 One patched Compatibility entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Block3dCompatibilityPatchEntry {
     pub id: String,
@@ -152,14 +152,14 @@ pub struct Block3dCompatibilityPatchEntry {
 }
 
 /// 🩹 Sparse patch over Compatibility.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dCompatibilityPatch {
     pub replacement: Option<BlockCompatibilityRule>,
 }
 
 /// 📂 Identified-collection delta for Attributes.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dAttributesDelta {
     pub added: Vec<BlockAttribute>,
@@ -169,7 +169,7 @@ pub struct Block3dAttributesDelta {
 }
 
 /// 🩹 One patched Attributes entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Block3dAttributesPatchEntry {
     pub id: String,
@@ -177,7 +177,7 @@ pub struct Block3dAttributesPatchEntry {
 }
 
 /// 🩹 Sparse patch over Attributes.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Block3dAttributesPatch {
     pub replacement: Option<BlockAttribute>,

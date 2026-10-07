@@ -6,8 +6,8 @@ use super::*;
 async fn package_descriptor_lists_its_io_mechanism_rows_with_their_native_side() {
     use semio_framework::io::io_mechanism::{io_register, IoEntry, IoEntryDirection as Side};
     use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
-    const NATIVE: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.describe-io.native", standard: semio_framework::StandardId("1"), subset: semio_framework::SubsetId("*") };
-    const FOREIGN: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.describe-io-foreign.format", standard: semio_framework::StandardId("1"), subset: semio_framework::SubsetId("*") };
+    const NATIVE: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-io.native", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
+    const FOREIGN: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-io-foreign.format", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
     #[allow(clippy::unnecessary_wraps, reason = "IoEntry test doubles implement its fallible function-pointer contract")]
     fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(payload.clone()))
@@ -22,7 +22,7 @@ async fn package_descriptor_lists_its_io_mechanism_rows_with_their_native_side()
     crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
     let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
     let descriptor: PackageDescriptor = serde_json::from_value(value.into()).expect("descriptor shape decodes");
-    let (native, foreign) = (semio_framework::ArtifactDialect::from(NATIVE), semio_framework::ArtifactDialect::from(FOREIGN));
+    let (native, foreign) = (semio_framework_artifact_reference::ArtifactDialect::from(NATIVE), semio_framework_artifact_reference::ArtifactDialect::from(FOREIGN));
     assert_eq!(
         descriptor.contributions.io_entries,
         vec![

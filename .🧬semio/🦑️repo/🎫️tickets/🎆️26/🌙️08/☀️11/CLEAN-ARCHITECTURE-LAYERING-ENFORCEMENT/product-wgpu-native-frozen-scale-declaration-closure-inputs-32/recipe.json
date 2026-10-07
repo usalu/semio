@@ -1,0 +1,8 @@
+{
+  "seed": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📋️project.json",
+  "requester": "@semio-tech/framework-plugin-host",
+  "projectName": "@semio-tech/framework-os-scale-fixture",
+  "cargoPackage": "semio-framework-os-scale-fixture",
+  "cargo": "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/Cargo.toml",
+  "library": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
+}

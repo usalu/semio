@@ -1,9 +1,4 @@
-/** 🖼️ Rendering: a §79 chart specification into two independent outputs — the dependency-free 2D
- * scene graph of `🧰️framework/🔨️modules/◻️2d` and TikZ source text for `semio-viz`. Both emitters
- * read the same resolved geometry; opaque native styles apply only to the TikZ backend.
- * @see ../../../../../🔨️modules/◻️2d/🟦️.ts
- * @see ../../../🖋️latex/semio-viz-plot.sty
- */
+/** 🖼️ Resolves chart specifications into typed geometry and owned scene graphs. */
 import type { DrawingScene, SceneNode, PathSegment } from "../../../../../🔨️modules/◻️2d/🟦️.ts";
 import { drawVizSymbol, vizCurve, vizPathRecorder, type VizPathCommand } from "../✒️mark/🟦️.ts";
 import { vizArc, vizArea, vizLine, vizLink, vizRibbon, type VizLinkKind } from "../🥧shape/🟦️.ts";
@@ -17,11 +12,11 @@ import type { VizChartSpecification, VizCurveKind, VizExtent, VizLayerSpec, VizG
 
 import { VIZ_AXIS_DEFAULTS, VIZ_LEGEND_DEFAULTS } from "../../📸️snapshot/📊️chart/🟦️.ts";
 
-import { measurePrintSans, printFontFamily, printFontTexSelector } from "../../../🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts";
+import { measurePrintSans, printFontFamily } from "../../../🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts";
 
 //#region 🔖️Items
 /** 🖼️ Resolved geometry uses millimetres; text sizes use TeX points. */
-type VizRenderStyle = { readonly tikzStyle?: string; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; readonly dash?: readonly number[]; readonly rotation?: number; readonly clip?: VizExtent; readonly cap?: "butt" | "round" | "square"; readonly join?: "miter" | "round" | "bevel" };
+type VizRenderStyle = { readonly nativeStyle?: string; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; readonly dash?: readonly number[]; readonly rotation?: number; readonly clip?: VizExtent; readonly cap?: "butt" | "round" | "square"; readonly join?: "miter" | "round" | "bevel" };
 
 export type VizRenderItem = VizRenderStyle & (
   | { readonly kind: "rect"; readonly x: number; readonly y: number; readonly width: number; readonly height: number; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number }
@@ -65,7 +60,7 @@ function axisGuideItems(guide:VizGuideSpec,orientation:string,scale:VizScale<nev
   if(guideBoolean(o.domainLine??o.domain,guide.kind==="axis")){if(orientation==="angular"){const steps=Math.max(8,Math.ceil(Math.abs(endAngle-startAngle)/3));for(let step=1;step<=steps;step++)items.push(line(point(startAngle+(step-1)/steps*(endAngle-startAngle)).p,point(startAngle+step/steps*(endAngle-startAngle)).p));}else{const cap=Number(o.tickSizeOuter??VIZ_AXIS_DEFAULTS.tickSizeOuter);if(cap!==0)items.push(line(extend(from,normal,cap),from));items.push(line(from,to));if(cap!==0)items.push(line(to,extend(to,normal,cap)));}}
   if(broken){const {p,n}=point(breakLo),count=Number(o.breakMarks??2);if(!Number.isInteger(count)||count<0)throw new Error("break marks require a nonnegative integer");for(let index=1;index<=count;index++){const across=(index-(count+1)/2)*gap*0.6;items.push(line([p[0]+across-n[0]*1.1-n[1]*0.8,p[1]+across-n[1]*1.1+n[0]*0.8],[p[0]+across+n[0]*1.1+n[1]*0.8,p[1]+across+n[1]*1.1-n[0]*0.8]));}}
   if(title!==undefined){const fraction=o.titleAnchor==="start"?0:o.titleAnchor==="end"?1:0.5,distance=tick+Number(o.titleGap??VIZ_AXIS_DEFAULTS.titleGap);let at:VizPoint;if(orientation==="angular"){const {p,n}=point(startAngle+fraction*(endAngle-startAngle));at=extend(p,n,distance);}else{const base:VizPoint=[from[0]+fraction*(to[0]-from[0]),from[1]+fraction*(to[1]-from[1])];at=extend(base,normal,distance);}items.push({kind:"text",x:at[0],y:at[1],content:title,size:Number(o.titleSize??VIZ_AXIS_DEFAULTS.titleSize),font:printFontFamily(VIZ_AXIS_DEFAULTS.titleFont),fill,anchor:"middle",rotation:0});}
-  return o.style===undefined?items:items.map(item=>({...item,tikzStyle:String(o.style)}));
+  return o.style===undefined?items:items.map(item=>({...item,nativeStyle:String(o.style)}));
 }
 /** 🖊️ Resolves native theme stroke roles from the owned design-token values. */
 function guideStrokeWidth(theme:VizTheme,role:string):number {const token=role==="default"?theme.strokes.chromeBorderDefault:role==="hairline"?theme.strokes.chromeBorderHairline:undefined;if(token===undefined)throw new Error("unknown guide stroke role "+role);return token*.75*25.4/72.27;}
@@ -93,7 +88,7 @@ function legendGuideItems(guide:VizGuideSpec,orientation:string,scale:VizScale<n
     items.push({kind:"text",x:col+swatch+labelGap,y:row+swatch/2,content,size,font:printFontFamily(d.labelFont),fill:textFill,anchor:"start",baseline:"middle"});advance+=swatch+labelGap+measurePrintSans(content,size)+2*gap;
   }
   const projected=items.map(item=>item.kind==="rect"?{...item,y:height-item.y-item.height}:item.kind==="circle"?{...item,cy:height-item.cy}:item.kind==="line"?{...item,y1:height-item.y1,y2:height-item.y2}:item.kind==="text"?{...item,y:height-item.y}:item);
-  return o.style===undefined?projected:projected.map(item=>({...item,tikzStyle:String(o.style)}));
+  return o.style===undefined?projected:projected.map(item=>({...item,nativeStyle:String(o.style)}));
 }
 function scalesOf(spec: VizChartSpecification): Map<string, VizScale<never, never>> {
   return new Map((spec.scales ?? []).map((s) => [s.name, buildVizScale(s, spec.theme?.appearance ?? "light")]));
@@ -288,7 +283,7 @@ function sceneNode(item: VizRenderItem): SceneNode {
   }
 }
 
-function expandedCommands(commands: readonly VizPathCommand[]): VizPathCommand[] {
+export function expandVizPathCommands(commands: readonly VizPathCommand[]): VizPathCommand[] {
   const out: VizPathCommand[] = [];
   let cursor: VizPoint | undefined, start: VizPoint | undefined;
   const append = (command: VizPathCommand): void => {
@@ -325,7 +320,7 @@ function expandedCommands(commands: readonly VizPathCommand[]): VizPathCommand[]
 function pathSegments(commands: readonly VizPathCommand[]): readonly PathSegment[] {
   const segments: PathSegment[] = [];
   let cursor: VizPoint = [0, 0];
-  for (const command of expandedCommands(commands)) {
+  for (const command of expandVizPathCommands(commands)) {
     switch (command.op) {
       case "moveTo":
         cursor = [command.args[0], command.args[1]];
@@ -378,83 +373,4 @@ export function renderVizScenePlan(plan: VizRenderPlan): DrawingScene {
   return { width: plan.width, height: plan.height, nodes: plan.items.map(sceneNode) };
 }
 //#endregion 🔖️SceneGraph
-
-//#region 🔖️Tikz
-function tikzNumber(value: number): string {
-  return (Math.round(value * 1e4) / 1e4).toString();
-}
-
-function tikzColor(hex: string): string {
-  const [r, g, b] = vizParseColor(hex);
-  return `{rgb,255:red,${r};green,${g};blue,${b}}`;
-}
-
-function tikzPath(commands: readonly VizPathCommand[]): string {
-  const parts: string[] = [];
-  let cursor:VizPoint=[0,0],start:VizPoint=[0,0];
-  const p=(x:number,y:number):string=>`(${tikzNumber(x)},${tikzNumber(y)})`;
-  for(const c of expandedCommands(commands)) {
-    const a=c.args;
-    switch(c.op) {
-      case "moveTo": parts.push(p(a[0]!,a[1]!));cursor=[a[0]!,a[1]!];start=cursor;break;
-      case "lineTo": parts.push(`-- ${p(a[0]!,a[1]!)}`);cursor=[a[0]!,a[1]!];break;
-      case "quadraticCurveTo": parts.push(`.. controls ${p(cursor[0]+2*(a[0]!-cursor[0])/3,cursor[1]+2*(a[1]!-cursor[1])/3)} and ${p(a[2]!+2*(a[0]!-a[2]!)/3,a[3]!+2*(a[1]!-a[3]!)/3)} .. ${p(a[2]!,a[3]!)}`);cursor=[a[2]!,a[3]!];break;
-      case "bezierCurveTo": parts.push(`.. controls ${p(a[0]!,a[1]!)} and ${p(a[2]!,a[3]!)} .. ${p(a[4]!,a[5]!)}`);cursor=[a[4]!,a[5]!];break;
-      case "arc": parts.push(`arc[start angle=${tikzNumber(-a[3]!*180/Math.PI)},end angle=${tikzNumber(-a[4]!*180/Math.PI)},radius=${tikzNumber(a[2]!)}mm]`);cursor=[a[0]!+a[2]!*Math.cos(a[4]!),a[1]!+a[2]!*Math.sin(a[4]!)];break;
-      case "rect": parts.push(`${p(a[0]!,a[1]!)} rectangle ${p(a[0]!+a[2]!,a[1]!+a[3]!)}`);cursor=[a[0]!,a[1]!];break;
-      case "closePath": parts.push("-- cycle");cursor=start;break;
-    }
-  }
-  return parts.join(" ");
-}
-
-function tikzText(value:string):string {
-  const escapes:Record<string,string>={"\\":"\\textbackslash{}","{":"\\{","}":"\\}","$":"\\$","&":"\\&","#":"\\#","%":"\\%","_":"\\_","^":"\\textasciicircum{}","~":"\\textasciitilde{}"};
-  return value.replace(/[\\{}$&#%_^~]/g,(c)=>escapes[c]!).replace(/\r?\n/g,"\\\\");
-}
-
-function tikzItem(item: VizRenderItem): string {
-  const textAnchor=item.kind!=="text"?"":[item.baseline==="alphabetic"?"base":item.baseline==="top"?"north":item.baseline==="bottom"?"south":item.anchor==="start"||item.anchor==="end"?"":"center",item.anchor==="start"?"west":item.anchor==="end"?"east":""].filter(Boolean).join(" ");
-  const textOpacity=item.kind==="text"?(item.opacity??1)*vizParseColor(item.fill??"#000000")[3]/255:1;
-  const paint:string[]=[];
-  if(item.fill!==undefined&&item.kind!=="text") { paint.push(`fill=${tikzColor(item.fill)}`); const alpha=vizParseColor(item.fill)[3]/255; if(alpha<1)paint.push(`fill opacity=${tikzNumber(alpha*(item.opacity??1))}`); }
-  if(item.stroke!==undefined) { paint.push(`draw=${tikzColor(item.stroke)}`,`line width=${tikzNumber(item.strokeWidth??0.2)}mm`,`line cap=${item.cap??"butt"}`,`line join=${item.join??"miter"}`); const alpha=vizParseColor(item.stroke)[3]/255;if(alpha<1)paint.push(`draw opacity=${tikzNumber(alpha*(item.opacity??1))}`); }
-  if(item.opacity!==undefined&&item.opacity<1)paint.unshift(`opacity=${tikzNumber(item.opacity)}`);
-  if(item.dash!==undefined&&item.dash.length>0)paint.push(`dash pattern=${item.dash.map((v,i)=>`${i%2===0?"on":"off"} ${tikzNumber(v)}mm`).join(" ")}`);
-  if(item.rotation&&item.kind!=="text") { const x=item.kind==="circle"?item.cx:item.kind==="line"?item.x1:"x"in item?item.x:0,y=item.kind==="circle"?item.cy:item.kind==="line"?item.y1:"y"in item?item.y:0;paint.push(`rotate around={${tikzNumber(-item.rotation)}:(${tikzNumber(x)},${tikzNumber(y)})}`); }
-  if(item.tikzStyle!==undefined&&item.tikzStyle!==""&&item.kind!=="text")paint.push(item.tikzStyle);
-  const options=paint.length===0?"":`[${paint.join(",")}]`;
-  let line:string;
-  switch(item.kind) {
-    case "rect":line=`\\path${options} (${tikzNumber(item.x)},${tikzNumber(item.y)}) rectangle ++(${tikzNumber(item.width)},${tikzNumber(item.height)});`;break;
-    case "circle":line=`\\path${options} (${tikzNumber(item.cx)},${tikzNumber(item.cy)}) circle[radius=${tikzNumber(item.r)}mm];`;break;
-    case "line":line=`\\path${options} (${tikzNumber(item.x1)},${tikzNumber(item.y1)}) -- (${tikzNumber(item.x2)},${tikzNumber(item.y2)});`;break;
-    case "polygon":line=`\\path${options} ${item.points.map((p)=>`(${tikzNumber(p[0])},${tikzNumber(p[1])})`).join(" -- ")} -- cycle;`;break;
-    case "text":line=`\\node[anchor=${textAnchor},text=${tikzColor(item.fill??"#000000")}${textOpacity===1?"":",text opacity="+tikzNumber(textOpacity)},rotate=${tikzNumber(-(item.rotation??0))},align=left,font=${item.font===undefined?"":printFontTexSelector(item.font)?"\\"+printFontTexSelector(item.font):"\\fontspec{"+tikzText(item.font)+"}"}\\fontsize{${tikzNumber(item.size)}}{${tikzNumber(item.size*1.2)}}\\selectfont${item.tikzStyle?","+item.tikzStyle:""}] at (${tikzNumber(item.x)},${tikzNumber(item.y)}) {${tikzText(item.content)}};`;break;
-    default:line=`\\path${options} ${tikzPath(item.commands)};`;
-  }
-  return item.clip===undefined?line:`\\begin{scope}\n\\clip (${tikzNumber(item.clip.x0)},${tikzNumber(item.clip.y0)}) rectangle (${tikzNumber(item.clip.x1)},${tikzNumber(item.clip.y1)});\n${line}\n\\end{scope}`;
-}
-/** 🖼️ Renders a chart specification into TikZ source text, in figure millimetres. */
-export function renderVizTikz(spec: VizChartSpecification): string {
-  const plan = planVizChart(spec);
-  return renderVizTikzPlan(plan);
-}
-
-/** 🖋️ Emits one previously inferred render plan into TikZ source. */
-export function renderVizTikzPlan(plan: VizRenderPlan): string {
-  const lines = [`\\begin{tikzpicture}[x=1mm,y=-1mm]`, `% ${plan.width}mm × ${plan.height}mm, ${plan.theme.appearance} appearance`, ...plan.items.map(tikzItem), `\\end{tikzpicture}`];
-  return `${lines.join("\n")}\n`;
-}
-//#endregion 🔖️Tikz
-
-
-
-
-
-
-
-
-
-
 

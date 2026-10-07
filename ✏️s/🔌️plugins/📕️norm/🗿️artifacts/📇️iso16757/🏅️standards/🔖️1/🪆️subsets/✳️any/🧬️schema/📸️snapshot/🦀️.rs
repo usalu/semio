@@ -36,7 +36,7 @@ pub struct Iso16757Snapshot {
 // `NormArtifactRecord`/`norm_{parse,print}_dsl`/`norm_{encode,decode}_pack` (see that
 // region's doc comment in `📄️artifact/🦀️.rs` for why it can't collapse further
 // than this one macro call — Rust's orphan rule still needs a concrete per-type impl).
-crate::impl_norm_artifact_record!(Iso16757Snapshot, extension = "iso16757", envelope_id = "norm.iso16757", sqlite=crate::snapshot::sqlite::codec);
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Iso16757Snapshot {

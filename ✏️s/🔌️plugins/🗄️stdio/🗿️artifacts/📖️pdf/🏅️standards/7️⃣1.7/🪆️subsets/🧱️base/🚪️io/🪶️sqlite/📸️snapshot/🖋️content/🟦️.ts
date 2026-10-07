@@ -6,7 +6,7 @@ import { writePdfColorSpace, readPdfColorSpace, pdfColorNumberColumns } from "..
 import { artifactSqliteInteger, artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import type { Ieee754Column } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 
-enum O { LineWidth, LineCap, LineJoin, MiterLimit, DashPhase, RenderingIntent, Flatness, ExtGState, X1, Y1, X2, Y2, X3, Y3, Width, Height, CharSpacing, WordSpacing, HorizontalScale, Leading, FontName, FontSize, TextRenderingMode, TextRise, Tx, Ty, TextKind, TextValue, TextCodes, GlyphWx, GlyphWy, BboxLlx, BboxLly, BboxUrx, BboxUry, ColorSpaceName, PatternName, Gray, Red, Green, Blue, Cyan, Magenta, Yellow, Black, ShadingName, XobjectName, MarkedTag, PropertyKind, PropertyName, PropertyDictionary, InlineImage, UnknownOperator }
+enum O { LineWidth, LineCap, LineJoin, MiterLimit, DashPhase, RenderingIntent, Flatness, ExtGState, X1, Y1, X2, Y2, X3, Y3, Width, Height, CharSpacing, WordSpacing, HorizontalScale, Leading, FontName, FontSize, TextRenderingMode, TextRise, Tx, Ty, TextKind, TextValue, TextCodeCount, GlyphWx, GlyphWy, BboxLlx, BboxLly, BboxUrx, BboxUry, ColorSpaceName, PatternName, Gray, Red, Green, Blue, Cyan, Magenta, Yellow, Black, ShadingName, XobjectName, MarkedTag, PropertyKind, PropertyName, PropertyDictionary, InlineImage, UnknownOperator }
 const width = O.UnknownOperator + 1;
 const column = (value: O): number => value + 4;
 
@@ -37,13 +37,24 @@ export async function readPdfInlineImage(reader: PdfReader, key: bigint): Promis
   return { width:pdfNumber(row,1),height:pdfNumber(row,2),bitsPerComponent:pdfNumber(row,3),colorSpace:row.values[4] === null ? null : await readPdfColorSpace(reader,artifactSqliteInteger(row,4)),imageMask:pdfBoolean(row,5),interpolate:pdfBoolean(row,6),filters:await readPdfFilters(reader,artifactSqliteInteger(row,7)),data:await reader.bytes(row,8),extra:await readPdfDictionary(reader,artifactSqliteInteger(row,9)),decode };
 }
 
+async function writeCodes(out:PdfProjection,table:string,owner:bigint,codes:readonly number[]):Promise<void> {
+  out.checkRowsAdditional(codes.length);
+  for(const [ordinal,code]of codes.entries()){if(!Number.isInteger(code)||code<0||code>0xffffffff)throw new Error("PDF logical character code exceeds u32");await out.insert(table,[owner,BigInt(ordinal),BigInt(code)]);}
+}
+async function readCodes(reader:PdfReader,table:string,owner:bigint,count:bigint):Promise<number[]> {
+  const children=await reader.children(table,1,2,owner);if(count<0n||BigInt(children.length)!==count)throw new Error("PDF logical character-code count differs from owned rows");
+  const codes:number[]=[];
+  for(const child of children){const row=await reader.take(table,child.rowid,4);const code=artifactSqliteInteger(row,3);if(code<0n||code>0xffffffffn)throw new Error("PDF logical character code exceeds u32");codes.push(Number(code));}
+  return codes;
+}
+
 /** 🖋️ Every operator projects its actual named operands and separately ordered child entities. */
 export async function writePdfOperations(out: PdfProjection, operations: readonly PdfOp[]): Promise<bigint> {
   out.checkRowsAdditional(operations.length + 1); const content = await out.insert("pdf_content", []);
   for (const [ordinal, operation] of operations.entries()) {
     const fields: PdfCell[] = new Array(width).fill(null);
     const put = (indices: readonly O[], values: readonly PdfCell[]): void => { for (let index=0;index<indices.length;index++) fields[indices[index]!] = values[index]!; };
-    const text = async (value: PdfTextString): Promise<void> => { switch (value.kind) { case "text": put([O.TextKind,O.TextValue],[value.kind,value.text]); break; case "codes": put([O.TextKind,O.TextCodes],[value.kind,await out.bytes(value.bytes)]); break; default: throw new Error("Unknown PDF text operand"); } };
+    const text = async (value: PdfTextString): Promise<void> => { switch (value.kind) { case "text": put([O.TextKind,O.TextValue],[value.kind,value.text]); break; case "codes": put([O.TextKind,O.TextCodeCount],[value.kind,BigInt(value.codes.length)]); break; default: throw new Error("Unknown PDF text operand"); } };
     switch (operation.op) {
       case "setLineWidth": put([O.LineWidth],[operation.width]); break;
       case "setLineCap": if (!["butt","round","square"].includes(operation.cap)) throw new Error("Unknown PDF line cap"); put([O.LineCap],[operation.cap]); break;
@@ -88,13 +99,14 @@ export async function writePdfOperations(out: PdfProjection, operations: readonl
       default: throw new Error("Unknown PDF operation");
     }
     const key = await out.insert("pdf_operation",[content,BigInt(ordinal),operation.op,...fields]);
+    if ((operation.op==="showText"||operation.op==="nextLineShowText"||operation.op==="nextLineShowTextSpaced")&&operation.text.kind==="codes") await writeCodes(out,"pdf_operation_code",key,operation.text.codes);
     switch (operation.op) {
       case "transform": case "setTextMatrix": if (operation.matrix.length !== 6) throw new Error("PDF matrix requires six components"); await out.insert("pdf_operation_matrix",operation.matrix,key); break;
       case "setDash": out.checkRowsAdditional(operation.array.length); for (const [ordinal,value] of operation.array.entries()) await out.insert("pdf_operation_component",[key,BigInt(ordinal),value]); break;
       case "setStrokeColor": case "setFillColor": case "setStrokeColorN": case "setFillColorN": out.checkRowsAdditional(operation.components.length); for (const [ordinal,value] of operation.components.entries()) await out.insert("pdf_operation_component",[key,BigInt(ordinal),value]); break;
       case "showTextArray": {
         out.checkRowsAdditional(operation.items.length);
-        for (const [ordinal,item] of operation.items.entries()) { switch (item.kind) { case "text": await out.insert("pdf_text_array_item",[key,BigInt(ordinal),item.kind,item.text,null,null]); break; case "codes": await out.insert("pdf_text_array_item",[key,BigInt(ordinal),item.kind,null,await out.bytes(item.bytes),null]); break; case "adjust": await out.insert("pdf_text_array_item",[key,BigInt(ordinal),item.kind,null,null,item.amount]); break; default: throw new Error("Unknown PDF text array item"); } } break;
+        for (const [ordinal,item] of operation.items.entries()) { switch (item.kind) { case "text": await out.insert("pdf_text_array_item",[key,BigInt(ordinal),item.kind,item.text,null,null]); break; case "codes": {const itemKey=await out.insert("pdf_text_array_item",[key,BigInt(ordinal),item.kind,null,BigInt(item.codes.length),null]);await writeCodes(out,"pdf_array_item_code",itemKey,item.codes);break;} case "adjust": await out.insert("pdf_text_array_item",[key,BigInt(ordinal),item.kind,null,null,item.amount]); break; default: throw new Error("Unknown PDF text array item"); } } break;
       }
       case "unknown": out.checkRowsAdditional(operation.operands.length); for (const [ordinal,operand] of operation.operands.entries()) await out.insert("pdf_unknown_operand",[key,BigInt(ordinal),await writePdfObject(out,operand)]); break;
     }
@@ -116,7 +128,7 @@ export async function readPdfOperations(reader: PdfReader,content: bigint): Prom
     const optionalText=(value: O): Promise<string|null> => reader.optionalText(row,use(value));
     const readText=async (): Promise<PdfTextString> => {
       const kind=await text(O.TextKind);
-      switch (kind) { case "text": return {kind,text:await text(O.TextValue)}; case "codes": return {kind,bytes:await reader.bytes(row,use(O.TextCodes))}; default: throw new Error("Unknown PDF text operand"); }
+      switch (kind) { case "text": return {kind,text:await text(O.TextValue)}; case "codes": return {kind,codes:await readCodes(reader,"pdf_operation_code",key,artifactSqliteInteger(row,use(O.TextCodeCount)))}; default: throw new Error("Unknown PDF text operand"); }
     };
     const properties=async (): Promise<PdfPropertyList> => { const kind=await text(O.PropertyKind); switch (kind) { case "named": return {kind,name:await text(O.PropertyName)}; case "inline": return {kind,entries:await readPdfDictionary(reader,artifactSqliteInteger(row,use(O.PropertyDictionary)))}; default: throw new Error("Unknown PDF property list"); } };
     const op=artifactSqliteText(row,3); let operation: PdfOp;
@@ -149,7 +161,7 @@ export async function readPdfOperations(reader: PdfReader,content: bigint): Prom
         const items: PdfTextArrayItem[]=[];
         for (const child of await reader.children("pdf_text_array_item",1,2,key)) {
           const row=await reader.take("pdf_text_array_item",child.rowid,7); const kind=artifactSqliteText(row,3);
-          switch (kind) { case "text": reader.nullExcept("pdf_text_array_item",row,4,7,[4]); items.push({kind,text:await reader.text(row,4)}); break; case "codes": reader.nullExcept("pdf_text_array_item",row,4,7,[5]); items.push({kind,bytes:await reader.bytes(row,5)}); break; case "adjust": reader.nullExcept("pdf_text_array_item",row,4,7,[6]); items.push({kind,amount:reader.real("pdf_text_array_item",row,6)}); break; default: throw new Error("Unknown PDF text array item"); }
+          switch (kind) { case "text": reader.nullExcept("pdf_text_array_item",row,4,7,[4]); items.push({kind,text:await reader.text(row,4)}); break; case "codes": reader.nullExcept("pdf_text_array_item",row,4,7,[5]); items.push({kind,codes:await readCodes(reader,"pdf_array_item_code",row.rowid,artifactSqliteInteger(row,5))}); break; case "adjust": reader.nullExcept("pdf_text_array_item",row,4,7,[6]); items.push({kind,amount:reader.real("pdf_text_array_item",row,6)}); break; default: throw new Error("Unknown PDF text array item"); }
         }
         operation={op,items}; break;
       }

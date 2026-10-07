@@ -4,7 +4,7 @@
 
 use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
-use semio_framework_plugin::StandardId;
+use {semio_framework_artifact_reference::StandardId};
 
 /// 🎯️ `extensions` is the real carried-over value — the old `definition()` codec row claims
 /// `codec-extension: "16:remodeling.scene:remodeling"`, i.e. the `.remodeling` document extension the

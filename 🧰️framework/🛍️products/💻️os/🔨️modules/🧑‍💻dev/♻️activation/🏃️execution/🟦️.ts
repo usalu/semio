@@ -1,5 +1,6 @@
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic activation execution owner. */
 
@@ -121,6 +122,12 @@ class ActivationScript extends BundleScript {
   }
 }
 
+/** 🎯️ Resolves the authored activation producer for one admitted playground runtime. */
+export function playgroundActivationTargetV1(variant: string, profile: "dev" | "release", renderer: "react" | "wgpu"): string {
+  if (!playgroundCatalog.some(row => row.variant === variant)) throw Error(`Missing generated playground ${variant}`);
+  return `@semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`;
+}
+
 /** ♻️ Brings one playground variant's `renderer` runtime up to a publishable activation state by
  * running the Nx target that OWNS that closure — `activate-<variant>-<renderer>-<profile>`, whose declared
  * `dependsOn` (`…🦑️repo/🔨️modules/📚️library/🟨️.mjs` `playgroundPreparationTargets`) is the single
@@ -129,10 +136,10 @@ class ActivationScript extends BundleScript {
  * own `wasm` producer(s), `@semio-tech/plugin-registry:session-<variant>`, then `prepare` and `activate`.
  * Delegating rather than re-listing that closure here is what makes "reuse whatever is already fresh"
  * Nx's cache decision instead of a second, drifting freshness rule — react and wgpu share this one path. */
-async function activatePlaygroundRuntime(variant: string, profile: "dev" | "release", renderer: "react" | "wgpu" = "react"): Promise<void> {
-  const target = `@semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`;
+async function activatePlaygroundRuntime(variant: string, profile: "dev" | "release", renderer: "react" | "wgpu" = "react", options: { signal?: AbortSignal } = {}): Promise<void> {
+  const target = playgroundActivationTargetV1(variant, profile, renderer);
   console.log(`[dev] activating ${variant} ${renderer} ${profile} via ${target}`);
-  if (runCmdStatus("bun", ["nx", "run", target], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`Playground activation failed: ${target}`);
+  await runRepositoryCommand("bun", ["nx", "run", target], repoRoot, `playground-activation:${variant}:${renderer}:${profile}`, buildBudgetMs(), { signal: options.signal });
 }
 
 export { ActivationScript, activatePlaygroundRuntime };

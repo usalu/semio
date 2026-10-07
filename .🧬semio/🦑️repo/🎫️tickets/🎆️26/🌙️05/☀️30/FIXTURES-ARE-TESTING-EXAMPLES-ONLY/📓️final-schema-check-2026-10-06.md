@@ -32,3 +32,27 @@ The five schema-fixture-defines-schema findings are being reviewed against genui
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️artifact-packages/🧬️schema/🟦️.ts`
 
 The four Stdio example-only schemas were retired, with actual independent SQL/typed cell/budget oracles retained (18tests,622assertions passed across the four suites). The cache helper facet is assigned for closure. Extended census additionally found DSL authored-static and graph hex-float corpus schemas; graph closure is included in that same actual suite. The DSL file was created after the final check started, so the first check is a cohort receipt and does not prove the final current filesystem.
+
+## Completed Second Cohort Check
+
+Actual Nx check exited1 after34.3seconds:4,630modules,3,639scopes,9,313findings. Actual docs generation succeeded after32.8seconds for3,639scopes. This second check still found one mesh Semio pure example contract and a stale catalog; the resumed writers are closing current siblings before regeneration. No overall schema pass is claimed.
+
+| Diagnostic | Count |
+| --- | ---: |
+| schema-catalog-stale | 1 |
+| schema-dialect-not-draft-07 | 86 |
+| schema-document-id-duplicate | 367 |
+| schema-document-id-unaddressable | 123 |
+| schema-export-id-duplicate | 285 |
+| schema-export-id-invalid | 257 |
+| schema-export-incomplete | 6627 |
+| schema-fixture-defines-schema | 1 |
+| schema-module-id-inconsistent | 7 |
+| schema-module-id-missing | 237 |
+| schema-mutation-aggregate-id | 6 |
+| schema-mutation-leaf-id | 71 |
+| schema-owner-ineligible | 514 |
+| schema-placement-forbidden-filename | 2 |
+| schema-ref-unresolved | 582 |
+| schema-scope-ambiguous | 147 |
+

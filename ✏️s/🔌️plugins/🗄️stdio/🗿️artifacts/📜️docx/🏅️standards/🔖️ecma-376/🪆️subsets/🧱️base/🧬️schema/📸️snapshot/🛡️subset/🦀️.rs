@@ -1,7 +1,7 @@
 //! 🛡️ Exact DOCX namespace declarations and relationship policies over the owned XML graph.
 use super::DocxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,XmlNode,XmlAttr};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase}};
+
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
@@ -62,7 +62,7 @@ fn path(target:&str,control:&mut NativeEncodeControl<'_>)->Result<String, ValueE
  for(position,part)in parts.iter().enumerate(){if position!=0{output.push('/');control.step()?;}let mut start=0;while start<part.len(){let mut end=(start+256).min(part.len());while !part.is_char_boundary(end){end-=1;}output.push_str(&part[start..end]);control.advance(end-start)?;start=end;}}Ok(output)})
 }
 fn segment<'a>(part:&'a str,parts:&mut Vec<&'a str>,control:&mut NativeEncodeControl<'_>)->Result<(), ValueError>{match part{""|"."=>{},".."=>{parts.pop();},_=>{if parts.len()==parts.capacity(){control.charge(64*std::mem::size_of::<&str>())?;parts.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX relationship path frontier allocation"))?;}parts.push(part);}}Ok(())}
-fn check(snapshot:&DocxSnapshot,subset:&str,control:&mut NativeEncodeControl<'_>)->Result<Vec<Diagnostic>, ValueError>{
+pub(crate) fn check(snapshot:&DocxSnapshot,subset:&str,control:&mut NativeEncodeControl<'_>)->Result<Vec<Diagnostic>, ValueError>{
  let strict=subset=="strict";let mut output=Vec::new();let mut main=None;
  for relationship in snapshot.opc.relationships.get("").into_iter().flat_map(|relationships|relationships.iter()){control.checkpoint()?;if relationship.rel_type.to_string_owner().ends_with("/officeDocument"){main=Some(path(&relationship.target.to_string_owner(),control)?);break}}
  let mut main_part=None;if let Some(path)=main.as_deref(){for part in &snapshot.xml_parts{control.checkpoint()?;if equal(&part.path,path,control)?{main_part=Some(part);break}}}
@@ -77,10 +77,6 @@ fn check(snapshot:&DocxSnapshot,subset:&str,control:&mut NativeEncodeControl<'_>
  else if flags.family{diagnostic(&mut output,subset,"strict-ns-present",Severity::Error,&["part ",&part.path," contains a strict-family namespace (purl.oclc.org/ooxml) -- transitional conformance forbids mixed namespaces"],control)?;}}
  for relationships in snapshot.opc.relationships.values(){for relationship in relationships.iter(){control.checkpoint()?;let rel_type=relationship.rel_type.to_string_owner();let id=relationship.id.to_string_owner();if strict&&rel_type.starts_with(TRANS_REL){diagnostic(&mut output,subset,"non-strict-relationship-base",Severity::Error,&["relationship ",&id," uses the transitional relationship base ",TRANS_REL," -- strict conformance requires ",STRICT_REL],control)?;}
  if !strict&&rel_type.starts_with(STRICT_REL){diagnostic(&mut output,subset,"strict-ns-present",Severity::Error,&["relationship ",&id," uses a strict-family relationship base (purl.oclc.org/ooxml) -- transitional conformance forbids it"],control)?;}}}Ok(output)
-}
-pub(super) fn validate(snapshot:&DocxSnapshot,subset:&str,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
- let limits=control.limits();let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,event.completed,event.total).is_ok();let mut native=NativeEncodeControl::new(limits.max_value_bytes,&mut callback);let diagnostics=check(snapshot,subset,&mut native).map_err(store::io_schema::IoError::from_value_error)?;
- if diagnostics.iter().any(|item|matches!(item.severity,Severity::Error|Severity::Fatal)){Err(store::io_schema::IoError{cause:ValueError::new(ValueRefusalKind::InvalidValue,"DOCX owned snapshot violates its exact profile"),diagnostics})}else{Ok(store::io_schema::IoOutcome{value:(),diagnostics})}
 }
 
 

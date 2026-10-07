@@ -43,7 +43,7 @@ function inventory(rows: Violation[], topLevel = rows) {
 }
 
 test("canonical shard violation closure accepts every language-neutral order without losing metadata or entries", async () => {
-  const validate = new Ajv().compile(vector.violationSchema);
+  const validate = new Ajv().compile(JSON.parse(readFileSync(join(repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📇️inventory/🧬️schema/🔣️.json"),"utf8")));
   for (const row of vector.cases) {
     const expected = row.publishedOrder.map((index: number) => row.rows[index]);
     expect([...row.rows].sort(compareViolation)).toEqual(expected);

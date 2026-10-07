@@ -1,5 +1,23 @@
 {
   "schemaVersion": 1,
+  "actorAuthority": {
+    "historyActor": "historical-window-author",
+    "openedActor": "opened-window-reader-é",
+    "newPartitionActor": "opened-session",
+    "hydratedPartitionActor": "opened-session",
+    "historyActorPreservation": "exact",
+    "storedPackPreservation": "exact",
+    "genesisConstruction": "decoded-original-pack-and-verified-digest",
+    "genesisConstructionEncodeCalls": 0,
+    "genesisConstructionDecodeCalls": 0,
+    "envelopeOwner": "move-exact-original",
+    "binding": "before-construction",
+    "ambientDefault": "refuse",
+    "foreignActorFault": "window-config.actor",
+    "foreignActorPublication": 0,
+    "retirementItems": 1,
+    "retirementBytes": 3
+  },
   "budgets": {
     "threadStackBytes": 2097152,
     "typedMutationBytes": 4096,

@@ -8,7 +8,8 @@
 //! Rx/Ry/Rz are dropped from the DOF list, turning the fixed base into a spherical hinge — the list is swapped, never merged.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation,inverse_fem3d_mutation};
+
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-support/🔄️frees/📸️snapshot/⬅️before/🔣️.json");

@@ -91,12 +91,7 @@ impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
-/// 🧪️ Hand-rolled `protocol::DiffCodec` — `graph`'s two collection fields print as
-/// `nodes=[<node>,...]`/`edges=[<edge>,...]` joined by `;` (empty string = no-op diff), reusing the
-/// snapshot facet's own real hex/bracket node/edge encoders (duplicated locally, same convention
-/// every sibling subset's `🔺️diff` facet already establishes — see that facet's own doc comment
-/// for why).
-use crate::audio::io::text::diff::{strip_brackets};
+
 
 
 

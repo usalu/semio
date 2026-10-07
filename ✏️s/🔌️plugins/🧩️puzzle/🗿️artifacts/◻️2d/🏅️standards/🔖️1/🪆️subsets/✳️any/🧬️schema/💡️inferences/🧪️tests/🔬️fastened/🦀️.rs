@@ -23,7 +23,7 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
                 visible: None,
                 locked: None,
                 anchor: Puzzle2dNodeAnchor::Fixed,
-                handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+                handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
             },
             Puzzle2dNode {
                 id: "c".into(),
@@ -41,9 +41,9 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
                 visible: None,
                 locked: None,
                 anchor: Puzzle2dNodeAnchor::Derived,
-                handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+                handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
             },
-        ],
+        ].into(),
         edges: vec![Puzzle2dEdge {
             id: "e".into(),
             source: "p:h".into(),
@@ -61,8 +61,8 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
             tilt: 0.0,
             x: 0.0,
             y: 0.0,
-        }],
-        target_regions: Vec::new(),
+        }].into(),
+        target_regions: Default::default(),
         meta: Puzzle2dMeta::default(),
     };
     fastened_layout_snapshot(&mut snapshot);

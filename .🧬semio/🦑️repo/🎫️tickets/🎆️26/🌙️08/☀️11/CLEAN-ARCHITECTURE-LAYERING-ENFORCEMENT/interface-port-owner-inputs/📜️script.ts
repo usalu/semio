@@ -275,6 +275,11 @@ async function register(){
   ["🔬️unified-identity-refusal-ownership-witness🧪️","unified-identity-parser-inputs","stage 3",900.0577],
   ["🛠️cargo-explicit-provider-host-syntax🏭️","cargo-inputs","provider-stage 3",900.0578],
   ["🛠️unified-board-owned-brush-weight-keys🎲️","unified-board-caller-inputs","owned-weight-keys 1",900.0579],
+  ["🧪️cargo-explicit-artifact-provider-owning-laws🏭️","cargo-inputs","provider-test 1",900.0580],
+  ["🧪️cargo-explicit-provider-ledger-owning-laws🏭️","cargo-inputs","provider-test 2",900.0581],
+  ["🧪️cargo-explicit-provider-closed-typed-laws🏭️","cargo-inputs","provider-test 3",900.0582],
+  ["📦️cargo-explicit-artifact-provider-authority🏭️","cargo-inputs","provider-seal 1",900.0583],
+  ["🔬️cargo-remaining-owning-law-callers🧪️","cargo-inputs","law-caller-inspect 1",900.0584],
  ],journal:any[]=[];
  const workspace='${workspaceFolder}',relativeTicket=posix.relative(root,ticket),workspaceCwd=workspace+'/'+relativeTicket+'/🗑️generated/fixed-slot-fixture-owners/nx-publication-3',entries=owned.map(([name,directory,args,order])=>({name,type:"node-terminal",request:"launch",command:'bun "'+workspace+'/node_modules/nx/dist/bin/nx.js" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun "'+workspace+'/'+relativeTicket+'/'+directory+'/📜️script.ts" '+args,cwd:workspaceCwd,env:{NX_DAEMON:"false",NX_WORKSPACE_ROOT_PATH:workspaceCwd},presentation:{group:"4_gate",order}})),names=new Set(owned.map(([name])=>name));
  for(const path of[".vscode/🧩️launch.seed.jsonc",".vscode/launch.json"]){

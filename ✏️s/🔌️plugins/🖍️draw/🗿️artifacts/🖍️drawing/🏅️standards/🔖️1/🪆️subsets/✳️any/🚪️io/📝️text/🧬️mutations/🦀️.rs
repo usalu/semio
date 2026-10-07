@@ -1,4 +1,4 @@
-//! 🔧️ Drawing artifact — OpText/OpBinary codecs + grammar for serializing `DrawingMutation`.
+//! 🔧️ Drawing text mutation codecs and native JSON bridges.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
 pub use crate::mutations::{drawing_op_for_layer_field, patch_layer_field, DrawingMutation};
@@ -31,14 +31,6 @@ impl protocol::OpText for DrawingMutation {
     }
 }
 
-impl protocol::OpBinary for DrawingMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📜️ Describes the artifact mutation dialect.
@@ -135,3 +127,23 @@ pub(crate) fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Re
 }
 }
 pub use mutations_wire_codec::*;
+
+/// 🌉️ Decodes native JSON payloads, applies their domain mutation and encodes its answer.
+pub fn apply_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let (applied, messages) = crate::mutations::bridge_step(&snapshot, &mutation)?;
+    Ok(bridge_render(&applied, &messages))
+}
+
+/// ↩️ Encodes the result of one mutation followed by every domain inverse step.
+pub fn undo_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    use protocol::Mutation;
+    let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let (mut current, mut messages) = crate::mutations::bridge_step(&base, &mutation)?;
+    for undo in <DrawingMutation as Mutation<DrawingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
+        let (next, raised) = crate::mutations::bridge_step(&current, &undo)?;
+        current = next;
+        messages.extend(raised);
+    }
+    Ok(bridge_render(&current, &messages))
+}

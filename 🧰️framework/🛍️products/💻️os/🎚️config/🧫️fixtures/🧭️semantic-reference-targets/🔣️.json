@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "dialect": {
+        "artifactKind": "s.cad.cad",
+        "standard": "1",
+        "subset": "*"
+      },
+      "role": "editor",
+      "expected": [
+        "s.cad.cad",
+        "1",
+        "*",
+        "editor"
+      ]
+    },
+    {
+      "dialect": {
+        "artifactKind": "kind!@/世界",
+        "standard": "standard/@!",
+        "subset": ""
+      },
+      "role": "viewer",
+      "expected": [
+        "kind!@/世界",
+        "standard/@!",
+        "",
+        "viewer"
+      ]
+    }
+  ]
+}

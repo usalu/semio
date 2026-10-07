@@ -1,4 +1,5 @@
 syntax = "proto3";
 package semio.os.store;
+import "framework/schema/artifact-reference.proto";
 import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
-message ArtifactChild { string child_id = 1; semio.framework.io.ArtifactRef target = 2; }
+message ArtifactChild { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }

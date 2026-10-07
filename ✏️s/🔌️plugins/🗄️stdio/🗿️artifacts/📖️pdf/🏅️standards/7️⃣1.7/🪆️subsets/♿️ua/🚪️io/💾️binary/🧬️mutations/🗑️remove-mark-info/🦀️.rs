@@ -1,6 +1,6 @@
 //! 🗑️ Direct binary codec for `remove-mark-info`.
 
-use super::RemoveMarkInfo;
+use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveMarkInfo;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 1;

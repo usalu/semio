@@ -5,6 +5,36 @@ use crate::mutations::{
     UpdateLayerTransform,
 };
 
+#[test]
+fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
+    use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let text = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
+    input["id"] = serde_json::Value::String(text.clone());
+    input["title"] = serde_json::Value::String(text.clone());
+    input["assets"] = serde_json::json!({text: {"mime":"image/png","data":"Grundstück🧬"}});
+    let source = RetainedCloneSource::from_owner(serde_json::from_value::<DrawingSnapshot>(input.clone()).unwrap());
+    assert!(std::mem::size_of::<<DrawingSnapshot as RetainedClone>::Cursor>() <= law["bodyBytes"].as_u64().unwrap() as usize);
+    let mut cursor = DrawingSnapshot::retained_clone_cursor();
+    for turn in 0..100000 {
+        let grant = if turn % 2 == 0 { RetainedCloneGrant::one_capacity_turn(4096, 64) } else { RetainedCloneGrant::one_payload_turn(4096, 64) };
+        let step = cursor.advance(source.borrow(), grant).unwrap();
+        let progress = step.progress();
+        assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes <= 4096);
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+    }
+    let output = cursor.take().unwrap();
+    assert_eq!(serde_json::to_value(&output).unwrap(), input);
+    cursor.begin_close();
+    for turn in 0..100000 { if cursor.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } assert!(turn < 99999); }
+    assert!(cursor.terminal_is_empty());
+    let mut owner = semio_framework_value::retirement::owned_retirement(output);
+    for turn in 0..100000 { if owner.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } assert!(turn < 99999); }
+    assert!(owner.terminal_is_empty());
+    eprintln!("[DEBUG] Drawing native paged snapshot long text/key clone matches Serde with exact closure");
+}
+
 fn admit_string_destination(value: &mut String) {
     if value.capacity() < DRAWING_OWNED_FIELD_BYTES {
         value.try_reserve_exact(DRAWING_OWNED_FIELD_BYTES.saturating_sub(value.len())).expect("Drawing fixture string destination is pre-admitted");
@@ -49,7 +79,7 @@ fn initialize_drawing_mutation_arena_pool_for_test() {
 
 fn nested_snapshot() -> DrawingSnapshot {
     initialize_drawing_mutation_arena_pool_for_test();
-    let mut snapshot = crate::schema::default_drawing_document("drawing-retained-mutation", None);
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_drawing_document("drawing-retained-mutation", None);
     let shape = crate::schema::create_drawing_shape_layer_rect("Shape");
     let boolean = crate::schema::create_drawing_boolean_layer("Boolean", "union", vec![crate::schema::layer_id(&shape).into()]);
     let trace = crate::schema::create_drawing_trace_layer("Trace", "asset-a");
@@ -66,11 +96,11 @@ fn nested_snapshot() -> DrawingSnapshot {
 }
 
 fn document_over_byte_bound_snapshot() -> DrawingSnapshot {
-    let mut snapshot = crate::schema::default_drawing_document("drawing-document-plus-one", None);
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_drawing_document("drawing-document-plus-one", None);
     snapshot.layers.clear();
     snapshot.layers.try_reserve_exact(24).expect("D + 1 fixture root container");
     for index in 0..24 {
-        snapshot.layers.push(crate::schema::create_drawing_path_layer(&format!("bounded-layer-{index}"), Vec::new()));
+        snapshot.layers.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(&format!("bounded-layer-{index}"), Vec::new()));
     }
     let source_bytes = |snapshot: &DrawingSnapshot| {
         let mut owners = (1, size_of::<DrawingSnapshot>(), 0, 0);
@@ -299,7 +329,7 @@ fn rich_layer() -> DrawingLayerNode {
     base.attributes.stroke = Some(StrokeStyle { color: [0.5, 0.6, 0.7, 0.8], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0, 2.0]) });
     if let DrawingLayerNode::Group(value) = &mut group {
         value.children.push(crate::schema::create_drawing_shape_layer_rect("Shape"));
-        value.children.push(crate::schema::create_drawing_path_layer(
+        value.children.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(
             "Path",
             vec![
                 PathSegment::Move { to: [1.0, 2.0] },
@@ -362,7 +392,7 @@ fn retained_drawing_mutation_candidate_covers_all_variants_and_returns_exact_own
         DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: shape.clone(), stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0, 2.0]) }) }),
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: boolean, boolean_operation: "subtract".into() }),
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: trace, params: crate::DrawingTraceParams { threshold: 0.4, simplify_epsilon: 1.2 } }),
-        DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("Created", vec![PathSegment::Move { to: [0.0, 0.0] }])) }),
+        DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Created", vec![PathSegment::Move { to: [0.0, 0.0] }])) }),
         DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: shape.clone() }),
         DrawingMutation::DeleteLayer(DeleteLayer { layer_id: shape.clone() }),
         DrawingMutation::ReorderLayer(ReorderLayer { layer_id: shape, parent_id: None, index: 0 }),
@@ -694,7 +724,7 @@ fn retained_drawing_arena_bootstrap_job_cancel_budget_contention_and_saturation_
 
 #[test]
 fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty() {
-    let mut layer = crate::schema::create_drawing_path_layer("leaf", Vec::new());
+    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("leaf", Vec::new());
     for depth in 0..=DRAWING_MAXIMUM_LAYER_DEPTH {
         let mut parent = crate::schema::create_drawing_group_layer(&format!("depth-{depth}"));
         if let DrawingLayerNode::Group(value) = &mut parent {
@@ -702,7 +732,7 @@ fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_
         }
         layer = parent;
     }
-    let mut source = crate::schema::default_drawing_document("drawing-depth-plus-one", None);
+    let mut source = crate::standards::v1::subsets::any::schema::default_drawing_document("drawing-depth-plus-one", None);
     source.layers = vec![layer];
     let mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: "missing".into(), visible: false });
     let (source, error) = apply(source, &mutation).expect_err("retained Drawing depth +1 authority rejects");
@@ -717,13 +747,13 @@ fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_
 
 #[test]
 fn retained_drawing_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner() {
-    let mut snapshot = crate::schema::default_drawing_document("rebuild-reservation", None);
-    snapshot.layers = vec![crate::schema::create_drawing_path_layer("first", Vec::new()), crate::schema::create_drawing_path_layer("second", Vec::new())];
-    let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("pending", Vec::new())) });
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_drawing_document("rebuild-reservation", None);
+    snapshot.layers = vec![crate::standards::v1::subsets::any::schema::create_drawing_path_layer("first", Vec::new()), crate::standards::v1::subsets::any::schema::create_drawing_path_layer("second", Vec::new())];
+    let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("pending", Vec::new())) });
     let workset = live_workset(&mut snapshot, &mutation).expect("live Drawing rebuild workset admitted");
     let source = std::mem::take(&mut snapshot.layers);
     let DrawingMutation::CreateLayer(mut create) = mutation else { unreachable!() };
-    let pending = *std::mem::replace(&mut create.layer, Box::new(crate::schema::create_drawing_path_layer("retired-placeholder", Vec::new())));
+    let pending = *std::mem::replace(&mut create.layer, Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("retired-placeholder", Vec::new())));
     drain_mutation(DrawingMutation::CreateLayer(create));
     drain_snapshot(snapshot);
     let mut reverse = Vec::new();
@@ -767,7 +797,7 @@ fn retained_drawing_container_false_terminal_saturation_and_interrupted_close_pr
     drop(reverse);
     drop(output);
     drain_mutation(DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: None, layer: Box::new(pending) }));
-    let mut restored_snapshot = crate::schema::default_drawing_document("restored-rebuild", None);
+    let mut restored_snapshot = crate::standards::v1::subsets::any::schema::default_drawing_document("restored-rebuild", None);
     restored_snapshot.layers = restored;
     drain_snapshot(restored_snapshot);
 }
@@ -777,14 +807,14 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
     for phase in 0..=3 {
         for stale in [false, true] {
             let pool = DrawingMutationArenaPool::try_new().expect("isolated Drawing rollback pool admits exact owners");
-            let mut source = crate::schema::default_drawing_document("rebuild-rollback", None);
+            let mut source = crate::standards::v1::subsets::any::schema::default_drawing_document("rebuild-rollback", None);
             source.layers.try_reserve_exact(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY).expect("Drawing rollback fixture pre-admits original live container backing");
             for index in 0..3 {
-                source.layers.push(crate::schema::create_drawing_path_layer(&format!("source-{index}"), Vec::new()));
+                source.layers.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(&format!("source-{index}"), Vec::new()));
             }
             let source_owner = source.layers.as_ptr();
             let source_ids: Vec<_> = source.layers.iter().map(|layer| crate::schema::layer_id(layer).to_string()).collect();
-            let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("pending", Vec::new())) });
+            let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("pending", Vec::new())) });
             let operation = semio_framework_job::OperationId(8_500 + phase as u64);
             let generation = semio_framework_job::Generation(850 + phase as u64);
             let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(operation, generation, pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
@@ -1167,7 +1197,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
         DrawingMutation::ReorderLayer(ReorderLayer { layer_id: "layer".into(), parent_id: None, index: 0 }),
         DrawingMutation::ReorderLayer(ReorderLayer { layer_id: "layer".into(), parent_id: Some("parent".into()), index: 1 }),
     );
-    drain_snapshot(DrawingSnapshot { layers: vec![baseline], ..crate::schema::default_drawing_document("digest-owner", None) });
+    drain_snapshot(DrawingSnapshot { layers: vec![baseline], ..crate::standards::v1::subsets::any::schema::default_drawing_document("digest-owner", None) });
 }
 
 #[test]
@@ -1308,8 +1338,8 @@ fn drawing_mutation_admission_fixture_matches_native_dispositions_and_serde_json
 #[test]
 fn retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_concatenation_collision() {
     fn duplicate_id(id: &str, name: &str) -> String {
-        let mut source = crate::schema::default_drawing_document("duplicate-framing", None);
-        let mut layer = crate::schema::create_drawing_path_layer(name, Vec::new());
+        let mut source = crate::standards::v1::subsets::any::schema::default_drawing_document("duplicate-framing", None);
+        let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(name, Vec::new());
         let base = crate::schema::layer_base_mut(&mut layer);
         base.id.clear();
         base.id.push_str(id);
@@ -1330,8 +1360,8 @@ fn retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_con
 
 #[test]
 fn retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner() {
-    let mut source = crate::schema::default_drawing_document("duplicate-name-owner", None);
-    let mut layer = crate::schema::create_drawing_path_layer("Layer", Vec::new());
+    let mut source = crate::standards::v1::subsets::any::schema::default_drawing_document("duplicate-name-owner", None);
+    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Layer", Vec::new());
     admit_layer_string_destinations(&mut layer);
     let target = crate::schema::layer_id(&layer).to_string();
     let original_name_owner = crate::schema::layer_base_mut(&mut layer).name.as_ptr();
@@ -1345,8 +1375,8 @@ fn retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejec
     drain_mutation(mutation);
     drain_snapshot(source);
 
-    let mut rejected = crate::schema::default_drawing_document("duplicate-name-rejected", None);
-    let layer = crate::schema::create_drawing_path_layer("Layer", Vec::new());
+    let mut rejected = crate::standards::v1::subsets::any::schema::default_drawing_document("duplicate-name-rejected", None);
+    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Layer", Vec::new());
     let target = crate::schema::layer_id(&layer).to_string();
     rejected.layers = vec![layer];
     let exact_owner = rejected.layers.as_ptr();
@@ -1383,7 +1413,7 @@ fn retained_drawing_cancel_stale_each_precommit_replay_candidate_container_stage
             };
             let last_valid_id = source.id.clone();
             let mutation = match stage {
-                DrawingMutationCandidatePhase::LocateSecondary => DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group_id), index: Some(0), layer: Box::new(crate::schema::create_drawing_path_layer("cancel-create", Vec::new())) }),
+                DrawingMutationCandidatePhase::LocateSecondary => DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group_id), index: Some(0), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("cancel-create", Vec::new())) }),
                 DrawingMutationCandidatePhase::LocatePrimary => DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: target, visible: false }),
                 DrawingMutationCandidatePhase::RebuildSource | DrawingMutationCandidatePhase::LocateDestination => DrawingMutation::ReorderLayer(ReorderLayer { layer_id: target, parent_id: Some(group_id), index: 2 }),
                 _ => DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target }),
@@ -1469,7 +1499,7 @@ fn retained_path_geometry_mutation_preserves_appearance_and_retires_segments() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧫️fixtures/🔣️.json"))).unwrap();
     let before: Vec<PathSegment> = serde_json::from_value(fixture["before"].clone()).unwrap();
     let after: Vec<PathSegment> = serde_json::from_value(fixture["after"].clone()).unwrap();
-    let mut layer = crate::schema::create_drawing_path_layer("Curve", before);
+    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve", before);
     crate::schema::layer_base_mut(&mut layer).opacity = 0.4;
     let id = crate::schema::layer_id(&layer).to_string();
     let source = DrawingSnapshot { layers: vec![layer], ..Default::default() };
@@ -1485,7 +1515,7 @@ fn retained_path_geometry_mutation_preserves_appearance_and_retires_segments() {
 #[test]
 fn retained_path_edit_cancellation_preserves_the_entire_document() {
     initialize_drawing_mutation_arena_pool_for_test();
-    let layer = crate::schema::create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0,0.0] }, PathSegment::Line { to: [10.0,0.0] }]);
+    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0,0.0] }, PathSegment::Line { to: [10.0,0.0] }]);
     let id = crate::schema::layer_id(&layer).to_string();
     let mut source = DrawingSnapshot { layers: vec![layer], ..Default::default() };
     let expected = source.clone();
@@ -1579,7 +1609,7 @@ fn isolation_mutation_digest_observes_the_boolean() {
 
 #[test]
 fn retained_blend_mutations_validate_vocabulary_and_return_unchanged_rejections() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode") {
         let source = nested_snapshot();
         let id = crate::schema::layer_id(&source.layers[0]).to_owned();

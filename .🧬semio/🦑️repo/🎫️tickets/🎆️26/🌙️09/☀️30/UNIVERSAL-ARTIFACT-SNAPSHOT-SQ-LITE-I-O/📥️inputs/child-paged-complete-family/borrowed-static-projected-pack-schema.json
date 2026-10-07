@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "originalSourceBytes",
+    "initialMaximumAllocationBytes",
+    "positiveMaximumAllocationBytes",
+    "maximumItems",
+    "maximumBytes",
+    "maximumSteps",
+    "terminalAllocatedBytes",
+    "cases",
+    "inlineMaximumAllocationBytes",
+    "inlineLocatorCapacity",
+    "inlineIndexCapacity",
+    "maximumInlineStorageBytes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.source-bound-borrowed-pack.v1"
+    },
+    "originalSourceBytes": {
+      "const": 8194
+    },
+    "initialMaximumAllocationBytes": {
+      "const": 4096
+    },
+    "positiveMaximumAllocationBytes": {
+      "const": 65536
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 4096
+    },
+    "maximumSteps": {
+      "const": 32768
+    },
+    "terminalAllocatedBytes": {
+      "const": 0
+    },
+    "cases": {
+      "const": [
+        "literal-source-and-same-pointer",
+        "same-cumulative-scratch-and-wire",
+        "emission-reuses-scratch-with-zero-requests",
+        "initial4096-refusal-retains-scratch",
+        "nested-record-table-map-intrinsic-wire-canonical-parity",
+        "zero-grant-preserves-complete-state",
+        "observed-one-item4096-retirement",
+        "post-backing-cancellation-retains-scratch",
+        "actual-parent-handback-zero-release"
+      ]
+    },
+    "inlineMaximumAllocationBytes": {
+      "const": 512
+    },
+    "inlineLocatorCapacity": {
+      "const": 1
+    },
+    "inlineIndexCapacity": {
+      "const": 1
+    },
+    "maximumInlineStorageBytes": {
+      "const": 1024
+    }
+  }
+}

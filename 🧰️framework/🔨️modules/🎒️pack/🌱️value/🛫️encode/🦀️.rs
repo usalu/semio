@@ -7,6 +7,12 @@ use std::{cmp::Ordering,mem::size_of};
 #[path = "🫳️borrowed/🦀️.rs"]
 mod borrowed;
 pub(super) use borrowed::projected_record_body_into;
+#[path="🧭️symbols/🦀️.rs"]
+mod retained_symbols;
+pub use retained_symbols::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};
+#[path="🫳️borrowed/🧬️static/🦀️.rs"]
+mod static_borrowed;
+pub use static_borrowed::{BorrowedProjectedPackOperation,BorrowedPackSource,OwnedVariantPackSource};
 
 
 fn push<T>(values:&mut Vec<T>,value:T,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{if values.len()==values.capacity(){let capacity=if values.capacity()==0{1}else{values.capacity().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Pack output frontier capacity overflow"))?};control.charge(capacity.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Pack output frontier size overflow"))?)?;control.checkpoint()?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Pack output frontier allocation"))?;}values.push(value);Ok(())}

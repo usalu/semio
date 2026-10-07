@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 11,
+  "maxItems": 11,
+  "prefixItems": [
+    {
+      "enum": [
+        3,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "enum": [
+        "snapshot",
+        "physical-inputs"
+      ]
+    },
+    {
+      "type": "string",
+      "minLength": 1
+    },
+    {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    {
+      "type": "integer",
+      "minimum": 0
+    },
+    {
+      "type": "integer",
+      "minimum": 0
+    },
+    {
+      "type": "integer",
+      "minimum": 0
+    },
+    {
+      "type": "integer",
+      "minimum": 0
+    },
+    {
+      "type": "integer",
+      "minimum": 0
+    },
+    {
+      "type": "integer",
+      "minimum": 0
+    },
+    {
+      "type": "integer",
+      "minimum": 0
+    }
+  ],
+  "items": false
+}

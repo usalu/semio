@@ -7,7 +7,7 @@ fn laws()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtur
 fn complete(word:u64)->Puzzle5dSnapshot{
  use crate::*;
  let value=f64::from_bits(word);let f=laws();let child=&f["kindCatalogChild"];let target=&child["target"];let dialect=&target["dialect"];
- Puzzle5dSnapshot{schema:String::new(),domain:String::new(),label:Some(String::new()),meta:Puzzle5dMeta{description:"literal\0😀".into()},kind_catalogs:Some(store::ArtifactChild::new(child["childId"].as_str().unwrap().into(),store::os_io::ArtifactRef{artifact_id:target["artifactId"].as_str().unwrap().into(),dialect:store::os_io::ArtifactDialect{artifact_kind:dialect["artifactKind"].as_str().unwrap().into(),standard:dialect["standard"].as_str().unwrap().into(),subset:dialect["subset"].as_str().unwrap().into()}})),
+ Puzzle5dSnapshot{schema:String::new(),domain:String::new(),label:Some(String::new()),meta:Puzzle5dMeta{description:"literal\0😀".into()},kind_catalogs:Some(store::ArtifactChild::new(child["childId"].as_str().unwrap().into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:target["artifactId"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:dialect["artifactKind"].as_str().unwrap().into(),standard:dialect["standard"].as_str().unwrap().into(),subset:dialect["subset"].as_str().unwrap().into()}})),
   kind_catalogs_extra:Some(Puzzle5dKindCatalogsExtra{
    parts:vec![Puzzle5dCatalogPartKindExtra{id:String::new(),name:String::new(),label:String::new(),description:String::new(),icon:String::new(),image:String::new(),unit:String::new(),is_abstract:false,base_kinds:vec![String::new(),String::new()],representations:vec![Puzzle5dRepresentation{id:String::new(),name:String::new(),url:String::new(),mime:String::new(),tags:vec![String::new(),String::new()],lod:None,description:String::new()}],grips:vec![Puzzle5dGripTemplate{id:String::new(),name:String::new(),label:String::new(),description:String::new(),icon:String::new(),grip_kind:None,point:[value;3],direction:[value;3],t:Some(value),mandatory:Some(false),radius:None}],attributes:vec![Puzzle5dAttribute{id:String::new(),key:String::new(),value:String::new(),definition:None}],authors:vec![Puzzle5dAuthor{id:String::new(),name:String::new(),email:String::new(),role:None,rank:Some(i32::MIN)}]}],
    grips:vec![Puzzle5dCatalogGripKindExtra{id:String::new(),code:None,label:Some(String::new()),order:Some(i32::MAX),compatible_with:vec![String::new(),String::new()],description:String::new(),icon:String::new(),color:String::new(),default_rope_kind:String::new()}],fasteners:vec![Puzzle5dCatalogFastenerKindExtra{id:String::new(),name:String::new(),label:None}],ropes:vec![Puzzle5dCatalogRopeKindExtra{id:String::new(),name:String::new(),label:String::new(),default_fastener_kind:String::new()}]}),
@@ -55,7 +55,7 @@ fn sqlite_snapshot_puzzle5d_rejects_malformed_graphs_presence_and_scalar_domains
 #[test]
 fn sqlite_snapshot_puzzle5d_actual_typed_and_play_erased_io_preserves_every_field(){
  let declared=crate::standards::v1::subsets::any::io::sqlite::snapshot::native_codec();let typed=declared.snapshot_sqlite.expect("actual typed declaration");let typed_schema=declared.schema;
- let play=store::ArtifactCodec::bare::<crate::Puzzle5dPlaySnapshot,crate::Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA);let play_schema=play.schema;let play=play.snapshot_sqlite.expect("actual Play declaration");let dialect=store::io_schema::ArtifactDialect{artifact_kind:"s.puzzle.puzzle5d".into(),standard:"1".into(),subset:"*".into()};
+ let play=store::ArtifactCodec::bare::<crate::Puzzle5dPlaySnapshot,crate::Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA);let play_schema=play.schema;let play=play.snapshot_sqlite.expect("actual Play declaration");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.puzzle.puzzle5d".into(),standard:"1".into(),subset:"*".into()};
  for hex in laws()["binary64Bits"].as_array().unwrap(){let s=complete(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&s))};for(provider,schema)in[(&typed,&typed_schema),(&play,&play_schema)]{let d=(provider.export)(schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=(provider.import)(schema,&dialect,d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(actual,payload);}}}
 }
 
@@ -116,4 +116,24 @@ fn sqlite_snapshot_puzzle5d_controlled_native_scale_preserves_both_exact_variant
  }
  let mut cancelled=|_|false;let mut encoding=semio_framework_value::NativeEncodeControl::new(4096,&mut cancelled);assert!(<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::to_value_controlled(&crate::Puzzle5dScale::Uniform(0.0),&mut encoding).is_err());
  let mut accepted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(0,&mut accepted);assert!(<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&semio_framework_dsl_record::FieldValue::List(vec![semio_framework_dsl_record::FieldValue::Float(0.0)]),&mut decoding).is_err());
+}
+
+#[test]
+fn sqlite_snapshot_puzzle5d_borrowed_scale_matches_neutral_list_shape() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    assert_eq!(corpus["scaleDsl"]["shape"], "list");
+    assert_eq!(corpus["scaleDsl"]["item"], "float");
+    let semio_framework_dsl_record::BorrowedShape::List(item) = <crate::Puzzle5dScale as semio_framework_dsl_record::BorrowedDslField>::SHAPE else { panic!("Scale metadata lost its self-delimiting list") };
+    assert!(matches!(item(), semio_framework_dsl_record::BorrowedShape::Float));
+    for row in corpus["scaleDsl"]["invalidSamples"].as_array().unwrap() {
+        let sample: Vec<f64> = serde_json::from_value(row.clone()).unwrap();
+        let value = <Vec<f64> as semio_framework_dsl_record::DslField>::to_value(&sample);
+        assert!(<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value(&value).is_err());
+    }
+    for row in corpus["scaleDsl"]["samples"].as_array().unwrap() {
+        let sample: Vec<f64> = serde_json::from_value(row.clone()).unwrap();
+        let scale = if sample.len() == 1 { crate::Puzzle5dScale::Uniform(sample[0]) } else { crate::Puzzle5dScale::Vec3([sample[0],sample[1],sample[2]]) };
+        let value = <crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::to_value(&scale);
+        assert_eq!(value, <Vec<f64> as semio_framework_dsl_record::DslField>::to_value(&sample));
+    }
 }

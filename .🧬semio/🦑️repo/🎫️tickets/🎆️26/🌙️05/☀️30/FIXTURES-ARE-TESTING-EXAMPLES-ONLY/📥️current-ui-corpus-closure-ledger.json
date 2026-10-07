@@ -1,0 +1,14 @@
+[
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🧬️schema/⌨️draft-lifecycle/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🧬️schema/♿️modal/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🛰️Panel/🧬️schema/↔️resize/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🧬️schema/⌨️exact-entry/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧬️schema/🛟️panel-window-reservation/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧬️schema/🪪️fixture-ownership/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧬️schema/🪪️window-surface-owner/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🧪️tests/🧩️component/🟦️.tsx",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🧪️tests/🧩️component/🟦️.tsx",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx",
+  "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🪪️fixture-ownership/🔣️.json"
+]

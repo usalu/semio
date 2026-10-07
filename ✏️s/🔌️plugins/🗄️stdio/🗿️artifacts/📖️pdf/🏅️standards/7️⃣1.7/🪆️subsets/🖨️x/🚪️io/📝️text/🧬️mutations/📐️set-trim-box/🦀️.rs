@@ -1,6 +1,6 @@
 //! 📐️ Direct text codec for `set-trim-box`.
 
-use super::SetTrimBox;
+use crate::standards::v1_7::subsets::x::schema::mutations::SetTrimBox;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-trim-box";

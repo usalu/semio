@@ -1,4 +1,6 @@
 import Ajv from "ajv";
+import {parseSvgNode} from "../../../../🧬️schema/📸️snapshot/🧩️document/🟦️.ts";
+import {bindSvgAttribute,printSvgAttribute,nativeSvgDocument} from "../../../📝️text/📸️snapshot/🧮️attributes/🟦️.ts";
 import { SaxesParser } from "saxes";
 import boundaryContract from "../🧫️fixtures/🧭️boundaries/🔣️.json";
 
@@ -16,9 +18,9 @@ const input: SvgSnapshot = { schema: fixture.schema, doc: {
   declaration: { version: "1.0", encoding: "UTF-8", quote: "single" },
   prolog: [{ kind: "comment", text: "before" }], epilog: [{ kind: "comment", text: "after" }],
   doctype: { prologPosition: 1n, name: "svg", externalId: { kind: "system", systemId: "svg.dtd" }, declarations: [{ kind: "entity", parameter: false, name: "title", value: "Grüße 🌠" }] },
-  root: { kind: "element", name: "svg", attrs: [{ name: "xmlns", value: "http://www.w3.org/2000/svg" }, { name: "viewBox", value: "0 0 100 100" }], children: [
-    { kind: "element", name: "g", attrs: [{ name: "transform", value: "translate(10 20) rotate(30)" }], children: [
-      { kind: "element", name: "path", attrs: [{ name: "id", value: "shape" }, { name: "d", value: "M0 0L10 20Z" }], children: [] },
+  root: { kind: "element", name: "svg", attrs: [{ name: "xmlns", value: bindSvgAttribute("xmlns","http://www.w3.org/2000/svg") }, { name: "viewBox", value: bindSvgAttribute("viewBox","0 0 100 100") }], children: [
+    { kind: "element", name: "g", attrs: [{ name: "transform", value: bindSvgAttribute("transform","translate(10 20) rotate(30)") }], children: [
+      { kind: "element", name: "path", attrs: [{ name: "id", value: bindSvgAttribute("id","shape") }, { name: "d", value: bindSvgAttribute("d","M0 0L10 20Z") }], children: [] },
       { kind: "element", name: "text", attrs: [], children: [{ kind: "text", text: "Grüße 🌠" }] },
       { kind: "element", name: "style", attrs: [], children: [{ kind: "cData", text: "path { fill: red; }" }] },
       { kind: "comment", text: "kept" }, { kind: "processingInstruction", target: "render", data: "ready" },
@@ -28,7 +30,8 @@ const input: SvgSnapshot = { schema: fixture.schema, doc: {
 
 test("SVG handcrafted thirteen tables preserve typed metadata, nodes and independently edited path attributes", async () => {
   expect(SVG_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../🗄️.sql", import.meta.url)).text());
-  expect(parseSvgSnapshot({ ...input, doc: { ...input.doc, doctype: { ...input.doc.doctype!, prologPosition: input.doc.doctype!.prologPosition.toString() } } })).toEqual(input);
+  expect(parseSvgSnapshot(input)).toEqual(input);
+  expect(()=>parseSvgSnapshot({ ...input, doc: { ...input.doc, doctype: { ...input.doc.doctype!, prologPosition: input.doc.doctype!.prologPosition!.toString() } } })).toThrow();
   const database = await svgSnapshotToSqliteDatabase(input);
   expect(await svgSnapshotFromSqliteDatabase(database)).toEqual(input);
   expect(database.tables.every(table => table.name.startsWith("svg_"))).toBe(true);
@@ -36,14 +39,14 @@ test("SVG handcrafted thirteen tables preserve typed metadata, nodes and indepen
   try {
     expect(db.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
     expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
-    expect(db.query(fixture.query).get()).toEqual({ value: "M0 0L10 20Z" });
+    expect(db.query(fixture.query).get()).toEqual({ value: "M 0 0 L 10 20 Z" });
     expect(db.query("SELECT encoding,quote FROM svg_declaration").get()).toEqual({ encoding: "UTF-8", quote: "single" });
     expect(db.query("SELECT name,value FROM svg_entity").get()).toEqual({ name: "title", value: "Grüße 🌠" });
     db.query("UPDATE svg_attribute SET value=? WHERE name='d'").run(fixture.editedPath);
     const edited = await svgSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())));
     const root = edited.doc.root!;
     if (root.kind !== "element" || root.children[0]?.kind !== "element" || root.children[0].children[0]?.kind !== "element") throw new Error("SVG path fixture tree");
-    expect(root.children[0].children[0].attrs[1]!.value).toBe(fixture.editedPath);
+    expect(root.children[0].children[0].attrs[1]!.value).toEqual(bindSvgAttribute("d",fixture.editedPath));
     expect(edited.doc.declaration).toEqual(input.doc.declaration);
     expect(edited.doc.doctype).toEqual(input.doc.doctype);
   } finally { db.close(); }
@@ -147,7 +150,7 @@ test("SVG owned metadata and boundary nodes remain literal while external XML va
   if(index===0){value.doc.prolog=[{kind:"comment",text:"before"}];value.doc.doctype={prologPosition:BigInt(case_.doctypePosition),name:"svg",declarations:[]};}
   else if(index===1)value.doc.epilog=[{kind:"text",text:"outside"}];
   else{value.doc.declaration={version:"1.0",encoding:case_.encoding,quote:case_.quote};value.doc.root={kind:"element",name:"svg",attrs:[],children:[{kind:"text",text:case_.rootText}]};}
-  expect(()=>validateXmlDocumentWireBoundary(value.doc)).toThrow();
+  expect(()=>validateXmlDocumentWireBoundary(nativeSvgDocument(value.doc))).toThrow();
   const db=Database.deserialize(await exportSqliteDatabase(await svgSnapshotToSqliteDatabase(value)));
   try{
    expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
@@ -162,4 +165,15 @@ test("SVG owned metadata and boundary nodes remain literal while external XML va
  expect(wellFormed('<?xml version="1.0" encoding="UTF-8" standalone="no?><svg/>')).toBe(false);
  expect(wellFormed('<svg/>outside')).toBe(false);
  expect(wellFormed("<?xml version='1.0' encoding='ISO-8859-1'?><svg/>")).toBe(true);
+});
+
+
+test("SVG typed attribute corpus agrees with independent Saxes native attribute admission",async()=>{
+ const corpus=await Bun.file(new URL("../../../../🧫️fixtures/🧩️typed-attributes/🔣️.json",import.meta.url)).json();
+ for(const row of corpus.cases){
+  let observed:string|undefined;const parser=new SaxesParser();parser.on("opentag",tag=>{observed=String(tag.attributes[row.name]);});parser.write(`<svg ${row.name}="${row.native}"/>`).close();
+  expect(observed).toBe(row.native);const owned=bindSvgAttribute(row.name,observed!);expect(owned).toEqual(row.owned);expect(bindSvgAttribute(row.name,printSvgAttribute(owned))).toEqual(row.owned);
+ }
+ for(const row of corpus.invalid)expect(()=>bindSvgAttribute(row.name,row.native)).toThrow();
+ for(const row of corpus.invalidOwned)expect(()=>parseSvgNode({kind:"element",name:"svg",attrs:[row],children:[]})).toThrow();
 });

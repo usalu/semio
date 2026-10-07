@@ -1,6 +1,108 @@
 use super::*;
 use crate::{DslValue, FromValue, ToValue, retained_clone::RetainedCloneSource, retirement::owned_retirement};
 
+#[test]
+fn paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners() {
+    use crate::list::PagedListEditCursor;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    assert!(std::mem::size_of::<PagedListEditCursor>() <= law["bodyBytes"].as_u64().unwrap() as usize);
+    for row in law["listEdits"].as_array().unwrap() {
+        let original: Vec<u64> = serde_json::from_value(row["initial"].clone()).unwrap();
+        let insertion = row["kind"] == "insert";
+        for cancel_at in 0..=original.len() + 3 {
+            let mut list: PagedList<u64, {usize::MAX}> = original.iter().copied().collect();
+            let mut item = insertion.then(|| row["value"].as_u64().unwrap());
+            let index = row["index"].as_u64().unwrap() as usize;
+            let mut cursor = if insertion { PagedListEditCursor::insert(index, list.len()) } else { PagedListEditCursor::remove(index, list.len()) };
+            let before = serde_json::to_value(&list).unwrap();
+            let zero = cursor.step(&mut list, &mut item, 0, 4096).unwrap();
+            assert_eq!(zero.moved_items, 0);
+            assert_eq!(serde_json::to_value(&list).unwrap(), before);
+            for _ in 0..cancel_at {
+                let step = cursor.step(&mut list, &mut item, 1, 4096).unwrap();
+                assert!(step.moved_items <= 1);
+                assert!(step.progress.allocated_bytes + step.progress.placed_bytes + step.progress.released_allocation_bytes <= 4096);
+                if step.complete { break; }
+            }
+            if cursor.is_finished() {
+                assert_eq!(serde_json::to_value(&list).unwrap(), row["expected"]);
+                if !insertion { assert_eq!(item, row["removed"].as_u64()); }
+            }
+            let mut retained: Vec<_> = list.iter().copied().chain(item).collect();
+            let mut expected = original.clone();
+            if insertion { expected.push(row["value"].as_u64().unwrap()); }
+            retained.sort_unstable();
+            expected.sort_unstable();
+            assert_eq!(retained, expected);
+            retire_owner(list, 1, 4096);
+        }
+    }
+    eprintln!("[DEBUG] native paged insert/remove admitted one ordered slot and conserved all cancelled owners");
+}
+
+#[test]
+fn paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let text = law["prefix"].as_str().unwrap().repeat(law["prefixRepeat"].as_u64().unwrap() as usize);
+    for cancel_at in law["cancelAt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).chain([usize::MAX]) {
+        let mut destination = PagedUtf8::<{usize::MAX}>::try_from_str("Änderung:").unwrap();
+        let mut cursor = crate::paged::PagedUtf8AppendCursor::default();
+        for turn in 0..20000 {
+            if turn == cancel_at { break; }
+            let grant = if turn % 2 == 0 { RetainedCloneGrant::one_capacity_turn(4096, 64) } else { RetainedCloneGrant::one_payload_turn(4096, 64) };
+            let step = cursor.advance(&text, &mut destination, grant).unwrap();
+            let progress = step.progress();
+            assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes <= 4096);
+            if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+        }
+        if cancel_at == usize::MAX { assert_eq!(serde_json::to_value(&destination).unwrap(), format!("Änderung:{text}")); }
+        assert!(destination.to_string_owner().starts_with("Änderung:"));
+        cursor.begin_close();
+        for turn in 0..20000 { if cursor.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete { break; } assert!(turn < 19999); }
+        assert!(cursor.terminal_is_empty());
+        retire_owner(destination, 1, 4096);
+    }
+    eprintln!("[DEBUG] native UTF-8 append copied paged chunks and closed every neutral cancellation point");
+}
+
+#[test]
+fn paged_native_object_keys_clone_without_contiguous_key_capacity() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let key = law["prefix"].as_str().unwrap().repeat(law["prefixRepeat"].as_u64().unwrap() as usize);
+    let expected = serde_json::Value::Object(law["objectEntries"].as_array().unwrap().iter().map(|row| (format!("{key}{}", row["suffix"].as_str().unwrap()), row["value"].clone())).collect());
+    let original: PagedMap<u64, {usize::MAX}> = serde_json::from_value(expected.clone()).unwrap();
+    let mut edited = original.clone();
+    let replacement = &law["objectReplacement"];
+    let replacement_key = PagedUtf8::<{usize::MAX}>::try_from_str(&format!("{key}{}", replacement["suffix"].as_str().unwrap())).unwrap();
+    assert_eq!(edited.insert(replacement_key.clone(), replacement["value"].as_u64().unwrap()), Some(replacement["previous"].as_u64().unwrap()));
+    assert_eq!(edited.get(&replacement_key), Some(&replacement["value"].as_u64().unwrap()));
+    let last_key = format!("{key}{}", law["lexicalTailSuffix"].as_str().unwrap());
+    assert!(edited.last_key_value().unwrap().0.eq_str(&last_key));
+    let (removed_key, _) = edited.pop_last().unwrap();
+    assert!(removed_key.eq_str(&last_key));
+    assert!(edited.get(&removed_key).is_none());
+    retire_owner(removed_key, 1, 4096);
+    retire_owner(replacement_key, 1, 4096);
+    retire_owner(edited, 1, 4096);
+
+    let source = RetainedCloneSource::from_owner(original);
+    let mut cursor = PagedMap::<u64, {usize::MAX}>::retained_clone_cursor();
+    for turn in 0..20000 {
+        let grant = if turn % 2 == 0 { RetainedCloneGrant::one_capacity_turn(4096, 64) } else { RetainedCloneGrant::one_payload_turn(4096, 64) };
+        let step = cursor.advance(source.borrow(), grant).unwrap();
+        let progress = step.progress();
+        assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes <= 4096);
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+    }
+    let copied = cursor.take().unwrap();
+    assert_eq!(copied.get(&key), Some(&7));
+    assert_eq!(serde_json::to_value(&copied).unwrap(), expected);
+    assert_eq!(serde_json::Value::from(copied.to_value()), expected);
+    close_cursor::<PagedMap<u64, {usize::MAX}>>(&mut cursor, 1, 4096);
+    retire_owner(copied, 1, 4096);
+    eprintln!("[DEBUG] native paged object long keys match Serde and exact 4096-byte turns");
+}
+
 fn grant(fixture: &serde_json::Value) -> RetainedCloneGrant {
     let value = &fixture["grant"];
     RetainedCloneGrant {
@@ -171,7 +273,7 @@ fn paged_text_and_map_copy_match_serde_oracles_and_close_terminal_empty() {
     }
     let map_copy = map_cursor.take().expect("paged map copy owner");
     assert_eq!(map_copy.to_value(), expected_map);
-    assert_eq!(map_copy.keys().cloned().collect::<Vec<_>>(), entries.iter().map(|entry| entry.0.clone()).collect::<Vec<_>>());
+    assert_eq!(map_copy.keys().map(PagedUtf8::to_string_owner).collect::<Vec<_>>(), entries.iter().map(|entry| entry.0.clone()).collect::<Vec<_>>());
     let map_close_turns = close_cursor::<PagedMap<String, 128>>(&mut map_cursor, grant.maximum_items, grant.maximum_capacity_bytes);
     assert!(map_turns > 1);
     assert!(map_close_turns >= 1);
@@ -180,4 +282,73 @@ fn paged_text_and_map_copy_match_serde_oracles_and_close_terminal_empty() {
     assert!(close_cursor::<PagedMap<String, 128>>(&mut cancelled_map_cursor, 1, grant.maximum_capacity_bytes) > 1);
     retire_owner(map_copy, grant.maximum_items, grant.maximum_capacity_bytes);
     drop(map_source);
+}
+#[test]
+fn paged_native_combined_grants_and_identifier_order_follow_neutral_law() {
+    use super::super::ordered_map::{BoundedOrd, BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let prefix = law["prefix"].as_str().unwrap().repeat(law["prefixRepeat"].as_u64().unwrap() as usize);
+    let bytes = law["bodyBytes"].as_u64().unwrap() as usize;
+    for row in law["comparisons"].as_array().unwrap() {
+        let left = format!("{prefix}{}", row["left"].as_str().unwrap());
+        let right = format!("{prefix}{}", row["right"].as_str().unwrap());
+        let left = RetainedCloneSource::from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(&left).unwrap()), ());
+        let right = RetainedCloneSource::from_authority(std::sync::Arc::new(PagedUtf8::<{usize::MAX}>::try_from_str(&right).unwrap()), ());
+        let mut comparator = PagedUtf8::<{usize::MAX}>::bounded_ord_cursor();
+        let mut completed = false;
+        for _ in 0..100000 {
+            let step = comparator.compare(left.borrow(), right.borrow(), BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }).unwrap();
+            match step {
+                BoundedOrdStep::Progress(progress) => assert!(progress.compared_items <= 1 && progress.compared_bytes <= 7),
+                BoundedOrdStep::Complete { ordering, progress } => {
+                    assert!(progress.compared_items <= 1 && progress.compared_bytes <= 7);
+                    assert_eq!(match ordering { std::cmp::Ordering::Less => -1, std::cmp::Ordering::Equal => 0, std::cmp::Ordering::Greater => 1 }, row["ordering"].as_i64().unwrap());
+                    completed = true;
+                    break;
+                }
+            }
+        }
+        assert!(completed);
+        let close_law = &law["comparatorClose"];
+        assert!(comparator.begin_close());
+        assert!(!comparator.begin_close());
+        assert_eq!(comparator.close_step(0, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let mut released = 0;
+        loop {
+            match comparator.close_step(close_law["maximumItems"].as_u64().unwrap() as usize, close_law["maximumBytes"].as_u64().unwrap() as usize).unwrap() {
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert_eq!(released_items, 1); assert_eq!(released_bytes, 0); released += released_items; }
+                SnapshotRetirementStep::Complete => break,
+                SnapshotRetirementStep::Blocked => panic!("comparator close blocked"),
+            }
+        }
+        assert_eq!(released, close_law["bindings"].as_u64().unwrap() as usize);
+        assert!(comparator.terminal_is_empty());
+        assert!(comparator.compare(left.borrow(), right.borrow(), BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }).is_err());
+        let mut cursor = PagedUtf8::<{usize::MAX}>::retained_clone_cursor();
+        for turn in 0..100000 {
+            let grant = if turn % 2 == 0 { RetainedCloneGrant::one_capacity_turn(bytes, 64) } else { RetainedCloneGrant::one_payload_turn(bytes, 64) };
+            let step = cursor.advance(left.borrow(), grant).unwrap();
+            let progress = step.progress();
+            assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes <= bytes);
+            if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+        }
+        let output = cursor.take().unwrap();
+        assert_eq!(serde_json::to_value(&output).unwrap(), serde_json::to_value(left.borrow().get()).unwrap());
+        close_cursor::<PagedUtf8<{usize::MAX}>>(&mut cursor, 1, bytes);
+        retire_owner(output, 1, bytes);
+        for at in law["cancelAt"].as_array().unwrap() {
+            let mut cancelled = PagedUtf8::<{usize::MAX}>::bounded_ord_cursor();
+            for _ in 0..at.as_u64().unwrap() { cancelled.compare(left.borrow(), right.borrow(), BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }).unwrap(); }
+            cancelled.begin_close();
+            while cancelled.close_step(1, 0).unwrap() != SnapshotRetirementStep::Complete {}
+            assert!(cancelled.terminal_is_empty());
+            let mut cursor = PagedUtf8::<{usize::MAX}>::retained_clone_cursor();
+            for turn in 0..at.as_u64().unwrap() {
+                let grant = if turn % 2 == 0 { RetainedCloneGrant::one_capacity_turn(bytes, 64) } else { RetainedCloneGrant::one_payload_turn(bytes, 64) };
+                cursor.advance(left.borrow(), grant).unwrap();
+            }
+            close_cursor::<PagedUtf8<{usize::MAX}>>(&mut cursor, 1, bytes);
+        }
+    }
+    eprintln!("[DEBUG] paged native long identifiers, alternating total4096 clone, cancellation and serde law verified");
 }

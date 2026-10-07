@@ -1,6 +1,7 @@
 //! ↩️ Inverse for `ChangeRuleLayoutPoint` — the OLD point looked up from BASE: `change` back to it
 //! if the key existed, `remove` if it was previously absent.
-use crate::standards::v1::subsets::any::schema::mutations::{change_rule_layout_point, remove_rule_layout_point, RewriteRuleMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{change_rule_layout_point,remove_rule_layout_point,RewriteRuleMutation};
+
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse

@@ -13,7 +13,7 @@ use std::sync::OnceLock;
 /// subset's own schema module) — the two share a name, only the leading path disambiguates.
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
-    DESCRIPTORS.get_or_init(|| vec![schema::inferences::bitmap_artifact_inference_descriptor()]).as_slice()
+    DESCRIPTORS.get_or_init(|| vec![crate::inferences::bitmap_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.

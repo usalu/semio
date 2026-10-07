@@ -16,7 +16,7 @@ async fn stores() -> [TestStore; 3] {
     let mut result = Vec::new();
     for id in ["document", "config", "interaction"] {
         let envelope = store::create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", id, state.clone(), None);
-        let mut store = TestStore::new(envelope).await.unwrap();
+        let mut store = TestStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
         store.install_document_store_owners_exact(interaction_store_owners());
         result.push(store);
     }

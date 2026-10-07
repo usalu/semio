@@ -24,3 +24,18 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1996Mutation, protocol::ProtocolError
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod native_codec {
+use super::*;
+use crate::artifact_schema::mutations::En1996Mutation;
+use protocol::{OpBinary, OpText};
+
+impl OpBinary for En1996Mutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        semio_s_artifact_norm_contract::payload_op_binary::encode::<crate::En1996Snapshot, _>(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        semio_s_artifact_norm_contract::payload_op_binary::decode::<crate::En1996Snapshot, _>(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "canonicalIdentity", "definingManifest", "cases", "expected"],
+  "properties": {
+    "schema": {"const": "semio.general-flow.canonical-workspace/v1"},
+    "canonicalIdentity": {"const": "semio-framework-os-flow"},
+    "definingManifest": {"type": "string", "minLength": 1, "maxLength": 1024},
+    "cases": {
+      "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "retiredBindings", "retiredComments"],
+        "properties": {
+          "path": {"enum": ["Cargo.toml", "✏️s/Cargo.toml"]},
+          "retiredBindings": {"type": "array", "maxItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 128}},
+          "retiredComments": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1, "maxLength": 1024}}
+        }
+      }
+    },
+    "expected": {
+      "type": "object", "additionalProperties": false,
+      "required": ["remainingRetiredBindings", "remainingRetiredComments", "conservedOtherDeclarations"],
+      "properties": {"remainingRetiredBindings": {"const": 0}, "remainingRetiredComments": {"const": 0}, "conservedOtherDeclarations": {"const": true}}
+    }
+  }
+}

@@ -2,7 +2,7 @@ import {artifactSqliteValueControl} from "../../../../../../../../../../../../�
 /** 🛡️ Borrowed I-JSON admission retains the entire owned JSON syntax domain. */
 import type {JsonSnapshot,JsonValue} from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import {jsonNumberMeaning} from "../../../../🧱️base/🧬️schema/📸️snapshot/🔢️number/🟦️.ts";
-import type {ArtifactDialect} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type {SqliteDatabase} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import {artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 /** 🧭️ An owned named-profile diagnostic without foreign runtime types. */

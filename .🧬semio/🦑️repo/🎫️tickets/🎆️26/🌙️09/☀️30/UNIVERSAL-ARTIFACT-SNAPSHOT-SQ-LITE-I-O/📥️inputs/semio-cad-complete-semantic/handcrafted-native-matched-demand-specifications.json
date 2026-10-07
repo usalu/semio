@@ -1,0 +1,388 @@
+[
+  {
+    "name": "cad",
+    "cap": "Cad",
+    "tables": 14,
+    "maxColumns": 25,
+    "contract": {
+      "schemaBytes": 5607,
+      "tableWidths": {
+        "semio_cad_arc": 16,
+        "semio_cad_block": 10,
+        "semio_cad_circle": 10,
+        "semio_cad_dimension": 17,
+        "semio_cad_document": 2,
+        "semio_cad_ellipse": 22,
+        "semio_cad_entity": 7,
+        "semio_cad_insert": 17,
+        "semio_cad_layer": 7,
+        "semio_cad_line": 13,
+        "semio_cad_polyline": 2,
+        "semio_cad_polyline_vertex": 9,
+        "semio_cad_solid": 25,
+        "semio_cad_text": 14
+      },
+      "cases": [
+        {
+          "id": "full",
+          "sourceSnapshot": {
+            "schema": "stdio.semio.cad",
+            "layers": [
+              {
+                "name": "visible",
+                "colorIndex": -2147483648,
+                "lineType": "CONTINUOUS",
+                "visible": true
+              },
+              {
+                "name": "hidden",
+                "colorIndex": 2147483647,
+                "lineType": "custom",
+                "visible": false
+              }
+            ],
+            "blocks": [
+              {
+                "name": "block-世界",
+                "basePoint": {
+                  "x": {
+                    "bits": "3ff8000000000000"
+                  },
+                  "y": {
+                    "bits": "c004000000000000"
+                  }
+                },
+                "entities": [
+                  {
+                    "handle": "block-line",
+                    "layer": "hidden",
+                    "entity": {
+                      "kind": "line",
+                      "a": {
+                        "x": {
+                          "bits": "3ff0000000000000"
+                        },
+                        "y": {
+                          "bits": "4000000000000000"
+                        }
+                      },
+                      "b": {
+                        "x": {
+                          "bits": "4008000000000000"
+                        },
+                        "y": {
+                          "bits": "4010000000000000"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "entities": [
+              {
+                "handle": "entity-0",
+                "layer": "visible",
+                "entity": {
+                  "kind": "line",
+                  "a": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  "b": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  }
+                }
+              },
+              {
+                "handle": "entity-1",
+                "layer": "hidden",
+                "entity": {
+                  "kind": "arc",
+                  "center": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  "radius": {
+                    "bits": "4004000000000000"
+                  },
+                  "startAngle": {
+                    "bits": "bff0000000000000"
+                  },
+                  "endAngle": {
+                    "bits": "4014000000000000"
+                  }
+                }
+              },
+              {
+                "handle": "entity-2",
+                "layer": "visible",
+                "entity": {
+                  "kind": "circle",
+                  "center": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  "radius": {
+                    "bits": "4004000000000000"
+                  }
+                }
+              },
+              {
+                "handle": "entity-3",
+                "layer": "hidden",
+                "entity": {
+                  "kind": "ellipse",
+                  "center": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  "majorAxisEnd": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  "ratio": {
+                    "bits": "3fe8000000000000"
+                  },
+                  "startParam": {
+                    "bits": "bff0000000000000"
+                  },
+                  "endParam": {
+                    "bits": "4014000000000000"
+                  }
+                }
+              },
+              {
+                "handle": "entity-4",
+                "layer": "visible",
+                "entity": {
+                  "kind": "polyline",
+                  "vertices": [
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "4008000000000000"
+                      },
+                      "y": {
+                        "bits": "4010000000000000"
+                      }
+                    },
+                    {
+                      "x": {
+                        "bits": "3ff0000000000000"
+                      },
+                      "y": {
+                        "bits": "4000000000000000"
+                      }
+                    }
+                  ],
+                  "closed": true
+                }
+              },
+              {
+                "handle": "entity-5",
+                "layer": "hidden",
+                "entity": {
+                  "kind": "text",
+                  "position": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  "height": {
+                    "bits": "4029000000000000"
+                  },
+                  "rotation": {
+                    "bits": "bff8000000000000"
+                  },
+                  "content": "Grüße\u0000世界"
+                }
+              },
+              {
+                "handle": "entity-6",
+                "layer": "visible",
+                "entity": {
+                  "kind": "insert",
+                  "blockName": "block-世界",
+                  "insertionPoint": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  "scale": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  "rotation": {
+                    "bits": "3fd0000000000000"
+                  }
+                }
+              },
+              {
+                "handle": "entity-7",
+                "layer": "hidden",
+                "entity": {
+                  "kind": "solid",
+                  "p1": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  "p2": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  "p3": {
+                    "x": {
+                      "bits": "4014000000000000"
+                    },
+                    "y": {
+                      "bits": "4018000000000000"
+                    }
+                  },
+                  "p4": {
+                    "x": {
+                      "bits": "401c000000000000"
+                    },
+                    "y": {
+                      "bits": "4020000000000000"
+                    }
+                  }
+                }
+              },
+              {
+                "handle": "entity-8",
+                "layer": "visible",
+                "entity": {
+                  "kind": "dimension",
+                  "defPoint": {
+                    "x": {
+                      "bits": "3ff0000000000000"
+                    },
+                    "y": {
+                      "bits": "4000000000000000"
+                    }
+                  },
+                  "textPosition": {
+                    "x": {
+                      "bits": "4008000000000000"
+                    },
+                    "y": {
+                      "bits": "4010000000000000"
+                    }
+                  },
+                  "measurement": {
+                    "bits": "402b800000000000"
+                  },
+                  "text": "Grüße\u0000世界"
+                }
+              }
+            ]
+          },
+          "rows": 27,
+          "valueBytes": 1996
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "sourceSnapshot": {
+            "schema": "stdio.semio.cad",
+            "layers": [],
+            "blocks": [],
+            "entities": []
+          },
+          "rows": 1,
+          "valueBytes": 23
+        }
+      ],
+      "publicIo": {
+        "schemaBytes": 5900,
+        "tableWidths": {
+          "semio_cad_arc": 16,
+          "semio_cad_block": 10,
+          "semio_cad_circle": 10,
+          "semio_cad_dimension": 17,
+          "semio_cad_document": 2,
+          "semio_cad_ellipse": 22,
+          "semio_cad_entity": 7,
+          "semio_cad_insert": 17,
+          "semio_cad_layer": 7,
+          "semio_cad_line": 13,
+          "semio_cad_polyline": 2,
+          "semio_cad_polyline_vertex": 9,
+          "semio_cad_solid": 25,
+          "semio_cad_text": 14,
+          "semio_snapshot": 6
+        },
+        "cases": [
+          {
+            "id": "full",
+            "rows": 28,
+            "valueBytes": {
+              "binary": 2036,
+              "text": 2034
+            }
+          },
+          {
+            "id": "metadataRetainingEmpty",
+            "rows": 2,
+            "valueBytes": {
+              "binary": 63,
+              "text": 61
+            }
+          }
+        ]
+      }
+    },
+    "rustBody": "let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.layers.clear();source.blocks.clear();source.entities.clear();}source",
+    "hydrate": "const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value===\"object\"?(\"bits\"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt(\"0x\"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source))"
+  }
+]

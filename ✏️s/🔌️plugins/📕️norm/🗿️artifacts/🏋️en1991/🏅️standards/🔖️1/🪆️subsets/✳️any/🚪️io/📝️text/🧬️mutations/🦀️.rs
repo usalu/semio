@@ -16,14 +16,7 @@ impl protocol::OpText for En1991Mutation {
     }
 }
 
-impl protocol::OpBinary for En1991Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::encode::<crate::En1991Snapshot, _>(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::decode::<crate::En1991Snapshot, _>(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 
 
 #[cfg(test)]

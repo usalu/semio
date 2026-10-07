@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖇️change-edge-tips/🔀️swaps-edge-1-tips/📸️snapshot/⬅️before/🔣️.json");
@@ -36,8 +37,8 @@ fn applies_to_committed_after() {
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("change-edge-tips applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-edge-tips/swaps-edge-1-tips: applied state differs from committed after-snapshot");
     let edge = snapshot.edges.iter().find(|edge| edge.id == "edge-1").expect("edge-1 survives its tip swap");
-    assert_eq!(edge.source_tip.as_deref(), Some("arrow"), "change-edge-tips/swaps-edge-1-tips: the arrow did not move to the source end");
-    assert_eq!(edge.target_tip.as_deref(), Some("none"), "change-edge-tips/swaps-edge-1-tips: the target end must lose its arrow");
+    assert_eq!(edge.source_tip.as_ref().map(|text| text.eq_str("arrow")), Some(true), "change-edge-tips/swaps-edge-1-tips: the arrow did not move to the source end");
+    assert_eq!(edge.target_tip.as_ref().map(|text| text.eq_str("none")), Some(true), "change-edge-tips/swaps-edge-1-tips: the target end must lose its arrow");
 }
 
 /// ↩️ Applying `change-edge-tips` then the inverse it derives from `before` restores `before` exactly.

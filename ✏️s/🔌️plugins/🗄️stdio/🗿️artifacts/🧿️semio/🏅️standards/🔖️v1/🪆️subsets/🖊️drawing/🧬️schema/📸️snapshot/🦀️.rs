@@ -112,7 +112,7 @@ pub struct DrawLayer {
     pub id: String,
     pub name: String,
     pub visible: bool,
-    #[value(serialize_controlled_with="component::nodes::encode_node",deserialize_controlled_with="component::nodes::decode_node",retire_with="component::nodes::retire_node")]
+    #[value(serialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::encode_node",deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_node",retire_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::retire_node")]
     pub root: DrawNode,
 }
 //#endregion 🔖️Layer
@@ -326,4 +326,9 @@ pub use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 
 
 #[path="🧩️component/🦀️.rs"]
-pub mod component;
+pub mod native_binding;
+
+impl SemioDrawingSnapshot {
+    /// ♻️ Retires an owned drawing through its intrinsic bounded retirement cursor.
+    pub fn retire_owned(self){native_binding::nodes::retire_owned(self);}
+}

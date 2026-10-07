@@ -156,7 +156,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 }
 
                 async fn retained_rejection(view: Option<ViewModel>) -> (Box<TestApp>, String) {
-                    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest).await);
+                    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                     app.bind_instance_id(71).await;
                     let meta = ActionMeta { instance_id: 71, view_state: view, ..artifact_app_laws::meta("generation2d-window-rejection") };
                     let command = Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } });
@@ -193,7 +193,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 let generate_left_value = semio_framework_os_kernel::Viewport2d { x: 51.0, y: 52.0, zoom: 1.5 };
                 let generate_right_value = semio_framework_os_kernel::Viewport2d { x: 61.0, y: 62.0, zoom: 1.6 };
 
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 app.bind_instance_id(71).await;
                 let outcome: Result<(), String> = Box::pin(async {
                     load_exact::<edit_preview::config::Generation2dEditPreviewWindowConfigOwner>(&mut app, "edit-left", edit_preview::config::Generation2dEditPreviewWindowConfig { viewport: edit_left_value }).await?;
@@ -256,7 +256,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     if packs.len() != 6 { return Err(format!("expected six exact Generation2d packs, got {}", packs.len())); }
                     let expected: std::collections::BTreeMap<_, _> = packs.iter().map(|pack| ((pack.window_id.clone(), pack.window_kind_id.clone()), (pack.files.pack.clone(), pack.files.spr.clone()))).collect();
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                     reopened.bind_instance_id(71).await;
                     semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &document_after).await.map_err(|error| format!("{error:?}"))?;
                     reopened.load_config_pack(&app_after).await.map_err(|error| format!("{error:?}"))?;

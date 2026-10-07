@@ -6,9 +6,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::table::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::value::io::text::diff::{dec_semio_value};
-use crate::value::io::text::diff::{enc_semio_value};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
+use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
@@ -52,7 +52,7 @@ pub(crate) fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTab
 pub(crate) fn write_row(out: &mut Vec<u8>, r: &SemioTableRow) {
     store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
     for cell in &r.cells {
-        crate::value::io::binary::diff::enc_semio_value_bin(cell, out);
+        crate::standards::v1::subsets::value::io::binary::diff::enc_semio_value_bin(cell, out);
     }
 }
 
@@ -61,7 +61,7 @@ pub(crate) fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableR
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        cells.push(crate::value::io::binary::diff::dec_semio_value_bin(reader)?);
+        cells.push(crate::standards::v1::subsets::value::io::binary::diff::dec_semio_value_bin(reader)?);
     }
     Ok(SemioTableRow { cells })
 }
@@ -138,10 +138,10 @@ mod native_snapshot_codec {
 use super::*;
 use super::*;
 use crate::standards::v1::subsets::table::schema::snapshot::*;
-use crate::audio::io::text::diff::{strip_brackets};
-use crate::audio::io::text::diff::{split_top_level};
-use crate::value::io::text::diff::{dec_semio_value};
-use crate::value::io::text::diff::{enc_semio_value};
+use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
+use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
+use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
 use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};

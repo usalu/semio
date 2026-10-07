@@ -30,3 +30,7 @@ pub mod mutations;
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+#[path="🏅️conformance/🦀️.rs"]
+pub mod conformance;
+pub use conformance::*;

@@ -6,17 +6,18 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::document::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::document::schema::diff::{diff_block, diff_set_snapshot, BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
-use crate::document::io::text::diff::{dec_run_style};
-use crate::document::io::text::diff::{enc_run_style};
-use crate::document::io::text::diff::{dec_u8};
-use crate::document::io::text::diff::{enc_u8};
-use crate::document::io::text::diff::{dec_image};
-use crate::document::io::text::diff::{enc_image};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_run_style};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_run_style};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_u8};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_u8};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_image};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_image};
 use crate::standards::v1::subsets::video::io::text::snapshot::{dec_bool};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};
+use crate::standards::v1::subsets::document::io::text::diff::{dec_style};
+use crate::standards::v1::subsets::document::io::text::diff::{enc_style};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_bool};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};

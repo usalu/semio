@@ -7,14 +7,14 @@ use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_node_invaria
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateNode, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if let Err(reason) = puzzle2d_node_invariant(&payload.node) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.node.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.node.id.to_string_owner()]);
     }
     if base.nodes.iter().any(|entry| entry.id == payload.node.id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "node"), vec![payload.node.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "node"), vec![payload.node.id.to_string_owner()]);
     }
     let mut delta = Puzzle2dNodesDelta { added: vec![payload.node.clone()], ..Default::default() };
     if let Some(index) = payload.index {
-        let mut order: Vec<String> = base.nodes.iter().map(|entry| entry.id.clone()).collect();
+        let mut order: Vec<semio_framework_value::paged::PagedUtf8<{ usize::MAX }>> = base.nodes.iter().map(|entry| entry.id.clone()).collect();
         let at = index.min(order.len());
         order.insert(at, payload.node.id.clone());
         delta.reordered = Some(order);

@@ -253,7 +253,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     role: uiAccessibilityRoleV1(record.component, activatable),
     depth,
     label: accessibility.label ?? componentLabel,
-    description: accessibility.description ?? null,
+    description: accessibility.description ?? treeItem?.description ?? null,
     live: accessibility.live ?? "off",
     shortcut: accessibility.shortcut ?? null,
     hidden: accessibility.hidden ?? false,

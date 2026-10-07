@@ -1,0 +1,13 @@
+# Base Complete Thirty-Six Demand Preparation
+
+Actual registered manualNx97608terminal0 qualified108independentSQLite databases, strictAjv closedconsts,100Binary32+867Binary64 actualparser words and6actualavailable domainparserexports. No ownerprojection called.
+
+40guarded demandtargets:18test-onlymodulevisibility,18fixture-onlyvisibility,oneBaseNativehelper+3law+Defaultcompilerreferences,oneSourcecomplete law,2newneutralfull/emptyfixtures. Existing18default authorities remain distinct. Actualcomplete-child constructors reuse18canonicalfixturebodies andclearonlyexactmetadataemptycollections; no copiedbodies/runtimeAPI.
+
+Root caught leftover SemioBaseSnapshot type shorthand and singular nonexistent fixture() introduced by default-demand template; replacewithactualSemioSnapshot andactualfirstdefault authority constructor. This is compileprerequisite, notgenuineNativeBefore. Existing assertions/grants remain.
+
+Newcomplete demands pending registeredmount; all78semanticproviders remainheld andmustcarrytest-onlyvisibility narrowly intoafterafterdemandmount.
+
+## Original Source Test Deadline, 2026-10-06 13:45 UTC
+
+OriginalwholeSource23863terminal1:Base18defaultlawnowpasses, complete36aggregatedlawexceeds unchanged5000msBuntestdeadline. Basecohort7pass1timeout, no wholeSourcequalification. Register eachof36independentcasesasoneBuntestwithsamebody/authority/5copiedlimits andoriginal5000msdeadline; no timeout/grant/schema change. OriginalNative59819terminal1 hit24currentPluginActorIdcallers beforeNextest; currentexternalactorjoin stillinprogress.

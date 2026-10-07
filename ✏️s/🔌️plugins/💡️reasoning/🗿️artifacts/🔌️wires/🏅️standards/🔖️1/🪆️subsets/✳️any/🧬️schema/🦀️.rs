@@ -1,6 +1,5 @@
 //! 🧬️ Wires artifact schema — every field of the artifact with its state class.
 
-use semio_framework_pack_json::Value;
 use semio_framework_value::DslValue;
 use framework_schema::ArtifactSchema;
 
@@ -161,9 +160,6 @@ pub fn dsl_id(value: Option<&DslValue>) -> Option<u64> {
     value.and_then(|value| value.as_f64().map(|float| float as u64))
 }
 
-pub fn dsl_to_json(value: &DslValue) -> Value {
-    semio_framework_pack_json::from_dsl_value(value)
-}
 
 
 
@@ -225,7 +221,7 @@ const CANVAS_LAYER_RESERVED_KEYS: &[&str] = &[
 /// canvas showed nothing but its grid (measured live 2026-09-23: seven parsed node layers, zero
 /// shapes drawn). Every other board field rides along untouched, so hit ids and positions still read
 /// exactly as the document stores them; the node's `text` becomes the record's `name`.
-pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
+pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<DslValue> {
     let nodes = board_snapshot_nodes(board);
     let centre = |id: &str| nodes.iter().find(|node| entity_id(node, "id") == Some(id)).map(|node| {
         let (x, y, width, height) = node_box(node);
@@ -242,9 +238,9 @@ pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
             ("y1".to_string(), DslValue::float(target.1)),
         ];
         entries.extend(name.map(|name| ("name".to_string(), name)));
-        dsl_to_json(&semio_framework_value::DslValue::Object(entries))
+        semio_framework_value::DslValue::Object(entries)
     };
-    let mut layers: Vec<Value> = nodes
+    let mut layers: Vec<DslValue> = nodes
         .iter()
         .map(|node| {
             let (_, _, width, height) = node_box(node);
@@ -257,7 +253,7 @@ pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
             entries.push(("width".to_string(), semio_framework_value::DslValue::float(width)));
             entries.push(("height".to_string(), semio_framework_value::DslValue::float(height)));
             entries.extend(node.get("text").cloned().map(|text| ("name".to_string(), text)));
-            dsl_to_json(&semio_framework_value::DslValue::Object(entries))
+            semio_framework_value::DslValue::Object(entries)
         })
         .collect();
     for edge in board_snapshot_edges(board) {

@@ -302,7 +302,7 @@ fn sqlite_snapshot_framework_flow_controlled_value_keeps_actual_owned_state() {
 fn sqlite_snapshot_framework_flow_erased_both_formats_expose_persisted_entities() {
     use store::sqlite_snapshot::*;
     let capability = store::ArtifactCodec::bare::<FlowHostSnapshot, FlowMutation>("flow.host_snapshot").snapshot_sqlite.expect("framework Flow relational owner");
-    let dialect = store::io_schema::ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(words()[6]));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = match encoding {
@@ -364,8 +364,8 @@ fn sqlite_snapshot_framework_flow_native_output_cancels_inside_owned_text_copy()
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_framework_flow_public_io_reaches_actual_persisted_owner_in_both_formats() {
-    use store::io::{ArtifactDialect, io_mechanism::{io_route, io_run_with_snapshot_control}};
-    use store::io_schema::{Dialect, StandardId, SubsetId, IoPayload, IoFidelity, SQLITE_SNAPSHOT};
+    use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
+    use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,store::io_schema::IoPayload,store::io_schema::IoFidelity,store::io_schema::SQLITE_SNAPSHOT};
     use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotPhase};
     let codec = store::ArtifactCodec::bare::<FlowHostSnapshot, FlowMutation>(FLOW_DOCUMENT_SCHEMA);
     store::io::register_native_document_codec(Dialect { artifact_kind: "flow.host_snapshot", standard: StandardId("1"), subset: SubsetId("*") }, codec).unwrap();
@@ -404,7 +404,7 @@ async fn sqlite_snapshot_framework_flow_normal_owner_registration_reaches_public
     let (dialect,codec)=registration.unwrap();
     assert_eq!(dialect.artifact_kind,"flow.host_snapshot");assert_eq!(dialect.standard.0,"1");assert_eq!(dialect.subset.0,"*");assert!(codec.snapshot_sqlite.is_some());
     store::io::register_native_document_codec(dialect,codec).unwrap();
-    let dialect=store::io::ArtifactDialect{artifact_kind:"flow.host_snapshot".into(),standard:"1".into(),subset:"*".into()};
+    let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"flow.host_snapshot".into(),standard:"1".into(),subset:"*".into()};
     for word in words(){let expected=Owned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
         let bytes=independent_sqlite_file_with_metadata(&bytes,Some(encoding));
@@ -419,8 +419,8 @@ async fn sqlite_snapshot_framework_flow_actual_store_open_installs_owned_public_
     use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
     assert!(<FlowHostSnapshot as ArtifactPack>::native_snapshot_registration().is_some(),"normal Store publication needs the actual owner's registration hook");
     let seed=FlowHostSnapshot{schema:FLOW_DOCUMENT_SCHEMA.into(),camera:CameraJson{x:0.0,y:0.0,zoom:1.0},widgets:Vec::new(),synapses:Vec::new(),layout:OrderedMap::new()};
-    let owner=store::create_member_store::<FlowHostSnapshot,FlowMutation>(FLOW_DOCUMENT_SCHEMA,"flow-normal-registration-law",&store::io::ArtifactDialect{artifact_kind:"flow.host_snapshot".into(),standard:"1".into(),subset:"*".into()},&seed.encode_pack()).await.unwrap();
-    let dialect=store::io::ArtifactDialect{artifact_kind:"flow.host_snapshot".into(),standard:"1".into(),subset:"*".into()};
+    let owner=store::create_member_store::<FlowHostSnapshot,FlowMutation>(FLOW_DOCUMENT_SCHEMA,"flow-normal-registration-law",&semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"flow.host_snapshot".into(),standard:"1".into(),subset:"*".into()},&seed.encode_pack(), protocol::ActorId("flow-normal-registration-law".into())).await.unwrap();
+    let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"flow.host_snapshot".into(),standard:"1".into(),subset:"*".into()};
     for word in words(){let expected=Owned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let bytes=independent_sqlite_file_with_metadata(&bytes,Some(encoding));let actual=Owned::new(store::io::io_mechanism::io_import_sqlite_snapshot::<FlowHostSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);assert_full(&actual,&expected);assert_eq!(actual.encode_pack(),expected.encode_pack());assert_eq!(actual.print_dsl(),expected.print_dsl());}}
     retire_flow_store_cold(owner);
     eprintln!("[DEBUG] actual FlowStore open installs owning registration and closes exact lifecycle");

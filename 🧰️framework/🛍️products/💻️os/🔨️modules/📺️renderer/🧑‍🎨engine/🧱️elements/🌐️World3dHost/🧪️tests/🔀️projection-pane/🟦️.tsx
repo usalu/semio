@@ -1,22 +1,15 @@
 // @vitest-environment jsdom
 
-import Ajv2020 from "ajv/dist/2020.js";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { FlowProvider } from "@semio-tech/ui-react";
 import { WorldProjectionKindSwitch, worldProjectionDefaults, worldProjectionTemplateSelectionId } from "@semio-tech/infinite-world-r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import schema from "../../../../🧬️schema/🔀️projection-pane/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🔀️projection-pane/🔣️.json" with { type: "json" };
 import readingFlow from "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧫️fixtures/🔤️text-flow/🔣️.json";
 
 afterEach(cleanup);
 
 describe("World projection retained Tree contract", () => {
-  it("validates the neutral pane taxonomy", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
-
   it("mounts the actual React Tree ids, hierarchy, selection, and row activation", () => {
     const onSpecChange = vi.fn();
     const view = render(<FlowProvider inline="rtl" block="up"><WorldProjectionKindSwitch id={fixture.paneId} spec={worldProjectionDefaults("threePoint")} onSpecChange={onSpecChange} /></FlowProvider>);

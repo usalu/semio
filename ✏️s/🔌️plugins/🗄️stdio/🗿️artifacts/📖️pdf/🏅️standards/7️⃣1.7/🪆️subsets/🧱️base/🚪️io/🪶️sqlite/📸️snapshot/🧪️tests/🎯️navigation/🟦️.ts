@@ -1,3 +1,4 @@
+import { pdfDestinationFromNativeJson,pdfActionFromNativeJson,pdfOutlineFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🟦️.ts";
 /** 🎯️ Independent SQLite queries validate every destination/action and containment order. */
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
@@ -10,8 +11,8 @@ import { writePdfOutline,readPdfOutline,writePdfNamedDestination,readPdfNamedDes
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("Native JSON navigation enters the canonical owned floating point domain",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../../../../🧬️schema/📸️snapshot/🪪️native-json/🎯️navigation/🧫️fixtures/🔣️.json",import.meta.url)).text());const destination=parsePdfDestination(fixture.destination);if(destination.kind!=="page"||destination.fit.kind!=="xyz")throw new Error("Fixture destination");expect(destination.fit.left).toEqual({bits:0x3ff0000000000000n});
-  const action=parsePdfAction(fixture.action);if(action.kind.kind!=="sound")throw new Error("Fixture action");expect(action.kind.volume).toEqual({bits:0x3ff0000000000000n});expect(action.next!.length).toBe(1);expect(parsePdfOutlineItem(fixture.outline).color).toEqual([{bits:0n},{bits:0x3ff0000000000000n},{bits:0n}]);
+  const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🧫️fixtures/🔣️.json",import.meta.url)).text());const destination=parsePdfDestination(pdfDestinationFromNativeJson(fixture.destination));if(destination.kind!=="page"||destination.fit.kind!=="xyz")throw new Error("Fixture destination");expect(destination.fit.left).toEqual({bits:0x3ff0000000000000n});
+  const action=parsePdfAction(pdfActionFromNativeJson(fixture.action));if(action.kind.kind!=="sound")throw new Error("Fixture action");expect(action.kind.volume).toEqual({bits:0x3ff0000000000000n});expect(action.next!.length).toBe(1);expect(parsePdfOutlineItem(pdfOutlineFromNativeJson(fixture.outline)).color).toEqual([{bits:0n},{bits:0x3ff0000000000000n},{bits:0n}]);
 });
 
 test("All PDF destinations and action variants roundtrip as explicit semantic SQL",async()=>{

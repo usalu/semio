@@ -1,0 +1,5 @@
+# Product Transport Helper 15 Finite Audit
+
+Ready for distinct clone preparation and ordinary locked metadata. Ten raw bindings, the complete3,820-endpoint failed8 floor, and the single full diagnostics source frame independently match SHA-256. The addition is strictly unguarded and never replaces a held null. Five closed declaration/existence/held-state decisions independently agree with the retained own/system/external observations. The source binds actual failed8 loader output and its positive browser transport consumer.
+
+The reviewed clone copies the complete old floor, preserves the entire workspace object via plan spread, rebases only snapshot destinations, manifest path and environment, and adds the held source with exclusive creation/readback. Old and new endpoint guards bracket preparation and fresh metadata; only separate ticket snapshot/storage is written. The literal/type import frontier and preprocessing observations remain finite captured source evidence. No original Cargo compile, owning native pass, Root source publication, or cross-plugin deletion claim.

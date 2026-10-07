@@ -211,7 +211,7 @@ import {
 } from "../🌐️World3dHost/🟦️.tsx";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../🎛️UtilityTree/🟦️.tsx";
 import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
-import { causalOrderKeyV1, type InputProvenanceV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
+import { causalOrderKeyV1, type InputDraftDispositionV1, type InputProvenanceV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import {
     type ActionPaneState,
     actionStageKey,
@@ -2506,6 +2506,11 @@ export function historyRefusalCodeV1(code: unknown): HistoryRefusalCodeV1 | null
 /** 🔎️ The history-edit refusal a dispatch fault carries, as its own code or its first cause naming one. */
 export function historyRefusalOfFaultV1(fault: { readonly code: string; readonly causes?: readonly { readonly code?: string }[] }): HistoryRefusalCodeV1 | null {
   return historyRefusalCodeV1(fault.code) ?? fault.causes?.map((cause) => historyRefusalCodeV1(cause.code)).find((code) => code !== null) ?? null;
+}
+
+/** 🧽️ A history admission refusal discards its submitted field draft; other failures keep recovery available. */
+export function historyInputDraftDispositionV1(fault: { readonly code: string; readonly causes?: readonly { readonly code?: string }[] }): InputDraftDispositionV1 {
+  return historyRefusalOfFaultV1(fault) === null ? "retain" : "discard";
 }
 
 /** 🔎️ The history-edit refusal a reserved verb answered with its silent `{rejected: <code>}` result, else `null`. */

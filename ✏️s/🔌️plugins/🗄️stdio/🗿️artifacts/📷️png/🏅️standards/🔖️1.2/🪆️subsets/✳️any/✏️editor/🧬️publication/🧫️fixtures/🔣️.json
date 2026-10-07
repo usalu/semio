@@ -1,0 +1,1 @@
+{"schema":"stdio.png.retained-publication.v1","cases":[{"id":"rgba8-with-long-text","width":4,"height":2,"base":[1,2,3,255],"paint":[17,23,31,255],"region":{"x":1,"y":0,"width":2,"height":2},"maximumItems":1,"maximumBytes":4096,"minimumTurns":100,"textLength":128}]}

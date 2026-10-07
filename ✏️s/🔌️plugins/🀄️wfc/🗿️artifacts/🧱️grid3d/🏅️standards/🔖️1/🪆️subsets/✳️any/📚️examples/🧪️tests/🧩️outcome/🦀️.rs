@@ -5,7 +5,7 @@
 //! committed assignment): the engine crate's close ladder is production, so a `WfcJob` driven through
 //! `BatchJobSession` retires cleanly instead of aborting the process on a leaked payload page.
 
-use crate::schema::inferences::solve;
+use crate::host::inferences::solve;
 use crate::schema::snapshot::Grid3dSnapshot;
 
 const OUTCOME_SCHEMA: &str = "s.wfc.grid3d.example-outcome/v1";

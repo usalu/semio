@@ -1,3 +1,4 @@
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -16,7 +17,7 @@ const ownedFixture = (value:any):any => value!==null&&typeof value==="object"&&O
 /** 🧪️ Persisted Object fields and exact child references agree with independent schema admission. */
 export function testSemioObjectDocumentContract(): void {
   testSchemaRecordOracle();
-  const ajv = semioSchemaAjvV1({ allErrors: true });
+  const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   for (const path of ["../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json","../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json","../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
   const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
   const childIdentity = (value: any): boolean => [["brep","brep"],["mesh","mesh"],["properties","value"]].every(([field,subset]) => !value[field!] || ajv.compile({const:{artifactKind:"s.stdio.semio",standard:"v1",subset}})(value[field!].target.dialect));

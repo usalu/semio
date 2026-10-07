@@ -590,6 +590,48 @@
         }
       },
       "keys": []
+    },
+    {
+      "id": "semantic-work-128-survives-live-history-wire",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 2,
+          "stage": "replaying",
+          "done": 0,
+          "total": 1,
+          "processed": 128
+        },
+        "reprojection": {
+          "done": 0,
+          "total": 1,
+          "kind": "remote",
+          "processed": 128
+        }
+      },
+      "keys": []
+    },
+    {
+      "id": "semantic-work-256-survives-live-history-wire",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 2,
+          "stage": "replaying",
+          "done": 0,
+          "total": 1,
+          "processed": 256
+        },
+        "reprojection": {
+          "done": 0,
+          "total": 1,
+          "kind": "remote",
+          "processed": 256
+        }
+      },
+      "keys": []
     }
   ],
   "invalid": [

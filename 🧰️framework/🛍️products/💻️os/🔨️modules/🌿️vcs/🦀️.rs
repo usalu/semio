@@ -15,6 +15,10 @@ use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
+#[path = "🌱️genesis/🦀️.rs"]
+mod genesis;
+pub use genesis::{ArtifactGenesis, ArtifactGenesisCodec};
+
 //#region 🆔️Ids
 /// 🔑 Content-addressed entity id: `{prefix}-{hex16(blake3(prefix || 0 || payload))}`.
 pub async fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String {
@@ -157,7 +161,7 @@ pub struct Change {
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CompositionPin {
-    pub child_ref: crate::os_io::ArtifactRef,
+    pub child_ref: semio_framework_artifact_reference::ArtifactRef,
     pub checkpoint_id: String,
 }
 
@@ -356,6 +360,23 @@ impl<T> HistoryPageStack<T> {
 
     pub fn last(&self) -> Option<&T> {
         self.len.checked_sub(1).and_then(|index| self.get(index))
+    }
+
+    /// ♻️ Releases one fixed empty page; callers retire entries before releasing resident storage.
+    pub fn release_empty_page(&mut self) -> bool {
+        if self.len != 0 || self.pages == 0 { return false; }
+        let page = self.pages as usize - 1;
+        let chunk_index = page / ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        let chunk = history_descend_chunk(self.head.as_mut().expect("resident empty catalog"), chunk_index);
+        drop(chunk.pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].take());
+        chunk.count -= 1;
+        let empty_chunk = chunk.count == 0;
+        self.pages -= 1;
+        if empty_chunk {
+            if chunk_index == 0 { drop(self.head.take()); }
+            else { drop(history_descend_chunk(self.head.as_mut().expect("resident catalog prefix"), chunk_index - 1).next.take()); }
+        }
+        true
     }
 
     pub fn contains(&self, value: &T) -> bool
@@ -686,6 +707,7 @@ pub struct ArtifactHistoryReservation {
 
 struct ArtifactHistorySlot<T> {
     generation: u32,
+    visibility: Option<std::sync::Arc<ArtifactGroupVisibility>>,
     previous: Option<u32>,
     next: Option<u32>,
     free_next: Option<u32>,
@@ -879,13 +901,14 @@ impl<T> ArtifactHistoryLedger<T> {
             self.free_head = free_next;
             let slot = self.slot_mut(index);
             slot.generation = generation;
+            slot.visibility = None;
             slot.previous = previous;
             slot.next = None;
             slot.free_next = None;
             slot.value = Some(value);
         } else if index == self.initialized && (index as usize) < self.allocated_slots() {
             let offset = index as usize;
-            self.slot_page_mut(offset / ARTIFACT_HISTORY_PAGE_SLOTS).slots[offset % ARTIFACT_HISTORY_PAGE_SLOTS].write(ArtifactHistorySlot { generation, previous, next: None, free_next: None, value: Some(value) });
+            self.slot_page_mut(offset / ARTIFACT_HISTORY_PAGE_SLOTS).slots[offset % ARTIFACT_HISTORY_PAGE_SLOTS].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, value: Some(value) });
             self.initialized += 1;
         } else {
             return Err((reservation, value));
@@ -913,6 +936,7 @@ impl<T> ArtifactHistoryLedger<T> {
         };
         let previous = group.tail.or(self.tail);
         let key = self.insert_owned_slot(reservation, value, previous)?;
+        self.slot_mut(key.index).visibility = Some(std::sync::Arc::clone(visibility));
         let group = self.group.as_mut().expect("validated group suffix remains owned");
         if group.head.is_none() {
             group.head = Some(key.index);
@@ -1097,6 +1121,20 @@ impl<T> ArtifactHistoryLedger<T> {
         self.slot(index).value.as_ref()
     }
 
+    /// 🗝️ Reads an exact live slot generation while honoring its staged group decision.
+    pub fn get_key(&self, key: ArtifactHistoryKey) -> Option<&T> {
+        if key.index >= self.initialized { return None; }
+        let slot = self.slot(key.index);
+        if slot.generation != key.generation || slot.visibility.as_ref().is_some_and(|visibility| !visibility.committed()) { return None; }
+        slot.value.as_ref()
+    }
+
+    /// 🧭️ Captures the exact generation of the visible entry at `position`.
+    pub fn key_at(&self, position: usize) -> Option<ArtifactHistoryKey> {
+        let index = self.seek_slot(position)?;
+        Some(ArtifactHistoryKey { index, generation: self.slot(index).generation })
+    }
+
     pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
         assert!(self.group.is_none(), "mutable history access requires its staged group to be adopted or aborted");
         let index = self.seek_slot(position)?;
@@ -1110,7 +1148,16 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     /// 🔎️ [`Self::find_near`] answering the entry's position in the visible order too.
-    pub fn find_near_position(&self, mut found: impl FnMut(&T) -> bool) -> Option<(usize, &T)> {
+    pub fn find_near_position(&self, found: impl FnMut(&T) -> bool) -> Option<(usize, &T)> {
+        self.find_near_entry(found).map(|(position, _, value)| (position, value))
+    }
+
+    /// 🗝️ [`Self::find_near`] with the matched generation key.
+    pub fn find_near_key(&self, found: impl FnMut(&T) -> bool) -> Option<(ArtifactHistoryKey, &T)> {
+        self.find_near_entry(found).map(|(_, key, value)| (key, value))
+    }
+
+    fn find_near_entry(&self, mut found: impl FnMut(&T) -> bool) -> Option<(usize, ArtifactHistoryKey, &T)> {
         let (front, _, remaining) = self.visible_bounds();
         let (start_position, start) = match self.remembered_seek() {
             Some((position, index)) if position < remaining => (position, Some(index)),
@@ -1122,7 +1169,7 @@ impl<T> ArtifactHistoryLedger<T> {
             let slot = self.slot(index);
             if slot.value.as_ref().is_some_and(&mut found) {
                 self.remember_seek(position, index);
-                return slot.value.as_ref().map(|value| (position, value));
+                return slot.value.as_ref().map(|value| (position, ArtifactHistoryKey { index, generation: slot.generation }, value));
             }
             cursor = match slot.next {
                 Some(next) if position + 1 < remaining => (position + 1, Some(next)),
@@ -1398,33 +1445,45 @@ impl<T: PartialEq> PartialEq for ArtifactHistoryLedger<T> {
 impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
 
 // 🎞️ `Serialize`/`Deserialize` dropped — see the docstring above `Change`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ArtifactVcs<P, Mutation> {
-    pub initial_snapshot: P,
+    pub genesis: ArtifactGenesis<P>,
     pub edits: ArtifactHistoryLedger<Edit<Mutation>>,
     pub changes: ArtifactHistoryLedger<Change>,
     pub checkpoints: ArtifactHistoryLedger<Checkpoint>,
     pub alternatives: ArtifactHistoryLedger<Alternative>,
 }
 
+impl<P: ArtifactGenesisCodec, Mutation: FromValue> FromValue for ArtifactVcs<P, Mutation> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(fields) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS requires an object")); };
+        let mut admitted = std::collections::BTreeMap::new();
+        for (key, value) in fields { if admitted.insert(key, value).is_some() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS repeats a field")); } }
+        let mut fields = admitted;
+        let mut take = |key: &str| fields.remove(key).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("VCS missing {key}")));
+        let genesis = ArtifactGenesis::from_value(take("initialPack")?)?;
+        let edits = ArtifactHistoryLedger::from_value(take("edits")?)?;
+        let changes = ArtifactHistoryLedger::from_value(take("changes")?)?;
+        let checkpoints = ArtifactHistoryLedger::from_value(take("checkpoints")?)?;
+        let alternatives = ArtifactHistoryLedger::from_value(take("alternatives")?)?;
+        if !fields.is_empty() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS has unknown fields")); }
+        Ok(Self { genesis, edits, changes, checkpoints, alternatives })
+    }
+}
+
 pub(crate) struct ArtifactVcsRead<'a, P, Mutation> {
-    initial_snapshot: &'a P,
+    genesis: &'a ArtifactGenesis<P>,
     edits: ArtifactHistoryIter<'a, Edit<Mutation>>,
     changes: ArtifactHistoryIter<'a, Change>,
     checkpoints: ArtifactHistoryIter<'a, Checkpoint>,
     alternatives: ArtifactHistoryIter<'a, Alternative>,
 }
 
-/// 🧬️ `ToValue` twin — hand-written rather than derived because `initial_snapshot: &'a P` is a
-/// reference field: `#[derive(ToValue)]` binds and calls on the field's LITERAL type (`&'a P`),
-/// and no blanket `impl<T: ToValue> ToValue for &T` exists in this codebase (see
-/// `🌱️value/🔁️codec/🦀️.rs`) — so a derive here would demand `&'a P: ToValue` instead of `P:
-/// ToValue`. Calling `P::to_value` directly on the dereferenced field sidesteps that.
-impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> {
+/// 🧬️ Serializes immutable Pack genesis and the history decision captured by this read.
+impl<P, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> {
     fn to_value(&self) -> DslValue {
         semio_framework_value::DslValue::Object(vec![
-            ("initialSnapshot".to_string(), self.initial_snapshot.to_value()),
+            ("initialPack".to_string(), self.genesis.to_value()),
             ("edits".to_string(), self.edits.to_value()),
             ("changes".to_string(), self.changes.to_value()),
             ("checkpoints".to_string(), self.checkpoints.to_value()),
@@ -1447,7 +1506,7 @@ impl<P, Mutation> ArtifactVcs<P, Mutation> {
 
     pub(crate) fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactVcsRead<'_, P, Mutation>, ()> {
         Ok(ArtifactVcsRead {
-            initial_snapshot: &self.initial_snapshot,
+            genesis: &self.genesis,
             edits: self.edits.read_group(decision)?,
             changes: self.changes.read_group(decision)?,
             checkpoints: self.checkpoints.read_group(decision)?,
@@ -1462,7 +1521,7 @@ impl<P, Mutation> ArtifactVcs<P, Mutation> {
 /// authority across the four ledgers, or losing the captured decision between the two calls) become
 /// panics here instead — both are "cannot happen" internal-consistency bugs, never a caller input
 /// error, matching this same file's existing `.expect(...)` style for slot-authority invariants.
-impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactVcs<P, Mutation> {
+impl<P, Mutation: ToValue> ToValue for ArtifactVcs<P, Mutation> {
     fn to_value(&self) -> DslValue {
         let decision = self.group_visibility().expect("a single ArtifactVcs never spans two different group visibility authorities").map(ArtifactGroupVisibility::capture);
         self.read_group(decision.as_ref()).expect("the just-captured decision remains valid for the immediately following read").to_value()
@@ -1886,6 +1945,8 @@ fn content_addressed_checkpoint_id_core(
     timestamp: &str,
     pins: &[CompositionPin],
 ) -> String {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let mut input = Vec::new();
     input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
     input.push(0);

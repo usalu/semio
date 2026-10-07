@@ -1,7 +1,8 @@
 //! 🎨️ Checked, cancellable native PNG sample painting.
 
 use super::{PngEditCommand, PngEditor, PngNativeEditCommand};
-use crate::standards::v1_2::subsets::any::io::{png_revision, validate_native_paint, PngNativePaint, PngNativePaintWorkOperation, PngNativePaintWorkStep, PngNativeProfile, PngRegion, MAXIMUM_NATIVE_PAINT_OWNED_BYTES};
+use crate::schema::operations::{validate_native_paint_target, PngNativePaintWorkOperation, PngNativePaintWorkStep, MAXIMUM_NATIVE_PAINT_OWNED_BYTES};
+use crate::schema::snapshot::{PngNativePaint,PngNativeProfile,PngRegion};
 use crate::schema::mutations::{PaintNativeSamplesMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
 use semio_framework_job::InteractiveJobCloseStep;
@@ -66,7 +67,7 @@ impl PaintNativeRegion {
     }
 
     fn validate(&self, snapshot: &PngSnapshot) -> Result<usize, Fault> {
-        validate_native_paint(snapshot, self.region, self.paint).map_err(|message| fault("stdio.png.native-region.invalid", message))
+        validate_native_paint_target(snapshot, self.region, self.paint).map_err(|message| fault("stdio.png.native-region.invalid", message))
     }
 }
 
@@ -118,7 +119,7 @@ pub fn action_id(profile: PngNativeProfile) -> &'static str {
 
 pub struct PaintNativeRegionWork {
     tool_id: &'static str,
-    operation: Option<PngNativePaintWorkOperation>,
+    operation: Option<PngNativePaintWorkOperation<'static>>,
     complete: bool,
     closing: bool,
 }
@@ -141,16 +142,17 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
         let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = input.command else { return Err(fault("stdio.png.native-region.route-mismatch", "Native PNG paint work received another command")); };
         if action_id(command.paint.profile) != self.tool_id { return Err(fault("stdio.png.native-region.route-mismatch", "Native PNG paint action and profile differ")); }
         if self.operation.is_none() {
-            let revision = png_revision(input.snapshot);
-            self.operation = Some(PngNativePaintWorkOperation::try_new(input.snapshot, &revision, command.region, command.paint, MAXIMUM_NATIVE_PAINT_OWNED_BYTES).map_err(|message| fault("stdio.png.native-region.prepare", message))?);
+            let reader=input.snapshot_owner.ok_or_else(||fault("stdio.png.native-region.reader", "Native paint requires an immutable snapshot reader"))?;
+            self.operation = Some(PngNativePaintWorkOperation::try_new_retained(std::sync::Arc::clone(reader), command.region, command.paint, MAXIMUM_NATIVE_PAINT_OWNED_BYTES).map_err(|message| fault("stdio.png.native-region.prepare", message))?);
         }
         let operation = self.operation.as_mut().expect("native operation was prepared");
-        match operation.advance(input.snapshot, cx).map_err(|message| fault("stdio.png.native-region.work", message))? {
+        let reader=input.snapshot_owner.ok_or_else(||fault("stdio.png.native-region.reader", "Native paint lost its immutable snapshot reader"))?;
+        if !operation.retained_reader_matches(reader) {return Err(fault("stdio.png.native-region.reader-drift", "Native paint source reader changed"));}
+        match operation.advance(cx).map_err(|message| fault("stdio.png.native-region.work", message))? {
             PngNativePaintWorkStep::Yield(progress) => {
                 let (stage, preview) = match progress.phase {
-                    crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Address | crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Decode => ("png-native-region-decode", &br#"{"en":"Decoding native PNG samples","de":"Native PNG-Abtastwerte werden dekodiert"}"#[..]),
-                    crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Paint => ("png-native-region-paint", &br#"{"en":"Painting native PNG samples","de":"Native PNG-Abtastwerte werden gemalt"}"#[..]),
-                    crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Filter | crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Encode | crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Assemble => ("png-native-region-encode", &br#"{"en":"Encoding native PNG samples","de":"Native PNG-Abtastwerte werden kodiert"}"#[..]),
+                    crate::schema::operations::PngNativePaintPhase::Copy => ("png-native-region-copy", &br#"{"en":"Copying owned PNG samples","de":"Eigene PNG-Abtastwerte werden kopiert"}"#[..]),
+                    crate::schema::operations::PngNativePaintPhase::Paint => ("png-native-region-paint", &br#"{"en":"Painting native PNG samples","de":"Native PNG-Abtastwerte werden gemalt"}"#[..]),
                 };
                 Ok(ArtifactCommandWorkStep::Progress { stage, preview })
             }
@@ -159,7 +161,7 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
                 let result = operation.take_result().map_err(|message| fault("stdio.png.native-region.result", message))?;
                 self.complete = true;
                 Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![PngMutation::PaintNativeSamples(PaintNativeSamplesMutation {
-                    revision: png_revision(input.snapshot),
+                    revision: operation.source_revision().to_owned(),
                     region: command.region,
                     paint: command.paint,
                     result,

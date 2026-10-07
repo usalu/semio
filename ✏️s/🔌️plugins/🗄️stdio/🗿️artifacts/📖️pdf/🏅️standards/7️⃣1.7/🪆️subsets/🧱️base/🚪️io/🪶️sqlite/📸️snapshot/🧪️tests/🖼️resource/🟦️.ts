@@ -1,3 +1,4 @@
+import { pdfImageFromNativeJson,pdfStateFromNativeJson,pdfFormFromNativeJson,pdfShadingFromNativeJson,pdfPatternFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/🖼️resource/🟦️.ts";
 /** 🖼️ Independent SQLite interpretation proves every image field and intrinsic codec relationship. */
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
@@ -11,12 +12,12 @@ import { writePdfShading,readPdfShading,writePdfPattern,readPdfPattern } from ".
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("Native JSON resource admission uses the canonical owned Binary64 domain",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../../../../🧬️schema/📸️snapshot/🪪️native-json/🖼️resource/🧫️fixtures/🔣️.json",import.meta.url)).text());
-  expect(parsePdfImage(fixture.image).decode).toEqual([{bits:0n},{bits:0x3ff0000000000000n}]);
-  expect(parsePdfExtGState(fixture.state).lineWidth).toEqual({bits:0x3ff0000000000000n});
-  expect(parsePdfFormXObject(fixture.form).bbox[2]).toEqual({bits:0x3ff0000000000000n});
-  const shading=parsePdfShading(fixture.shading);if(shading.kind.kind!=="axial")throw new Error("Fixture shading");expect(shading.kind.coords[2]).toEqual({bits:0x3ff0000000000000n});
-  const pattern=parsePdfPattern(fixture.pattern);if(pattern.kind.kind!=="tiling")throw new Error("Fixture pattern");expect(pattern.kind.xStep).toEqual({bits:0x3ff0000000000000n});
+  const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🖼️resource/🧫️fixtures/🔣️.json",import.meta.url)).text());
+  expect(parsePdfImage(pdfImageFromNativeJson(fixture.image)).decode).toEqual([{bits:0n},{bits:0x3ff0000000000000n}]);
+  expect(parsePdfExtGState(pdfStateFromNativeJson(fixture.state)).lineWidth).toEqual({bits:0x3ff0000000000000n});
+  expect(parsePdfFormXObject(pdfFormFromNativeJson(fixture.form)).bbox[2]).toEqual({bits:0x3ff0000000000000n});
+  const shading=parsePdfShading(pdfShadingFromNativeJson(fixture.shading));if(shading.kind.kind!=="axial")throw new Error("Fixture shading");expect(shading.kind.coords[2]).toEqual({bits:0x3ff0000000000000n});
+  const pattern=parsePdfPattern(pdfPatternFromNativeJson(fixture.pattern));if(pattern.kind.kind!=="tiling")throw new Error("Fixture pattern");expect(pattern.kind.xStep).toEqual({bits:0x3ff0000000000000n});
 });
 
 test("PDF image resources preserve all codecs, masks and complete semantic fields",async()=>{

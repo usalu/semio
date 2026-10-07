@@ -8,7 +8,7 @@ pub mod placement;
 pub mod extensions;
 
 use crate::{FormQuestion, FormVectorField};
-use crate::schema::value_to_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use semio_framework_pack_json::Value;
 
 /// ✏️ Validates one field edit before the command emits a document event.

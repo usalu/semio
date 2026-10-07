@@ -21,7 +21,7 @@ use crate::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 //#region 🔖️Dialect
@@ -292,13 +292,12 @@ fn diff_conformance_attribute(base: &PptxSnapshot, value: Option<&str>) -> PptxD
 
 /// 🔺️ The diff of adding a legacy VML drawing part together with its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_insert_vml_part(base: &PptxSnapshot, path: &str, markup: &str) -> PptxDiff {
+fn diff_insert_vml_part(base: &PptxSnapshot, path: &str, document: &XmlDocument) -> PptxDiff {
     if xml_part(base, path).is_some() {
         return PptxDiff::default();
     }
-    let Ok(document) = xml_document_from_text(markup) else { return PptxDiff::default() };
     let mut parts = base.xml_parts.clone();
-    parts.push(PptxXmlPart { path: path.trim_start_matches('/').to_string(), content_type: VML_CONTENT_TYPE.to_string(), document });
+    parts.push(PptxXmlPart { path: path.trim_start_matches('/').to_string(), content_type: VML_CONTENT_TYPE.to_string(), document: document.clone() });
     PptxDiff { xml_parts: Some(parts), opc: overrides_diff(base, path, Some(VML_CONTENT_TYPE)), ..Default::default() }
 }
 
@@ -366,7 +365,7 @@ pub(crate) fn agg_diff(this: &PptxStrictMutation, base: &PptxSnapshot) -> protoc
         PptxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
         PptxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
         PptxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-        PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, markup }) => diff_insert_vml_part(base, path, markup),
+        PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, document }) => diff_insert_vml_part(base, path, document),
         PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
         PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => diff_root_children(base, path, |children| {
             children.push(alternate_content_node());
@@ -407,7 +406,7 @@ pub(crate) fn agg_inverse(this: &PptxStrictMutation, base: &PptxSnapshot) -> Res
         },
         PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
         PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match xml_part(base, path) {
-            Some(part) => PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), markup: xml_document_to_text(&part.document) }),
+            Some(part) => PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: part.document.clone() }),
             None => return Vec::new(),
         },
         PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),

@@ -17,7 +17,7 @@ use protocol::OpText;
 /// keyworded record, converted at the `store::OpText` boundary only; `SourcingMutation` itself,
 /// and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-enum SourcingMutationDsl {
+pub(crate) enum SourcingMutationDsl {
     CreateCuratedItem {
         #[dsl(block)]
         item: CuratedItem,
@@ -42,17 +42,10 @@ impl OpText for SourcingMutationDsl {
     }
 }
 
-impl protocol::OpBinary for SourcingMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
+
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl {
+pub(crate) fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl {
     match mutation {
         SourcingMutation::CreateCuratedItem(payload) => SourcingMutationDsl::CreateCuratedItem { item: payload.item.clone() },
         SourcingMutation::DeleteCuratedItem(payload) => SourcingMutationDsl::DeleteCuratedItem { object_id: payload.object_id.clone() },
@@ -60,7 +53,7 @@ fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl 
     }
 }
 
-fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
+pub(crate) fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
     match mutation {
         SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(create_curated_item::CreateCuratedItem { item }),
         SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(delete_curated_item::DeleteCuratedItem { object_id }),
@@ -80,15 +73,7 @@ impl OpText for SourcingMutation {
 
 /// ⚡️ Binary mirror of the `OpText` bridge above — `SourcingMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
-impl protocol::OpBinary for SourcingMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        sourcing_mutation_to_dsl(self).encode_op()
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(sourcing_mutation_from_dsl(SourcingMutationDsl::decode_op(bytes)?))
-    }
-}
 //#endregion 🔖️OpText
 
 //#region 🧪️Tests
@@ -99,7 +84,7 @@ mod tests;
 
 
 pub const TEXT_OPCODES: &[(&str, &str)] =
-    &[("CreateCuratedItem", crate::standards::v1::subsets::any::schema::mutations::create_curated_item::TEXT_OPCODE), ("DeleteCuratedItem", crate::standards::v1::subsets::any::schema::mutations::delete_curated_item::TEXT_OPCODE), ("ChangeCuratedItemCount", crate::standards::v1::subsets::any::schema::mutations::change_curated_item_count::TEXT_OPCODE)];
+    &[("CreateCuratedItem", crate::standards::v1::subsets::any::io::text::mutations::create_curated_item::TEXT_OPCODE), ("DeleteCuratedItem", crate::standards::v1::subsets::any::io::text::mutations::delete_curated_item::TEXT_OPCODE), ("ChangeCuratedItemCount", crate::standards::v1::subsets::any::io::text::mutations::change_curated_item_count::TEXT_OPCODE)];
 
 #[path = "🗑️delete-curated-item/🦀️.rs"]
 pub mod delete_curated_item;

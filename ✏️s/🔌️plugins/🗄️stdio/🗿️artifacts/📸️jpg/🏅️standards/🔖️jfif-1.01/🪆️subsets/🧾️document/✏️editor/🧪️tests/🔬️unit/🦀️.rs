@@ -19,31 +19,31 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 }
 
 #[test]
-fn large_raster_quality_edit_uses_compact_native_event() {
+fn large_raster_density_edit_uses_compact_owned_event() {
     register_document_schema();
     let mut snapshot = JpgSnapshot::default();
     snapshot.pixels = vec![7; 2 * 1_024 * 1_024];
-    snapshot.re_encode_quality = Some(80);
-    let event = editing::SnapshotEditEvent::SetValue { path: "/reEncodeQuality".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(75)) };
+    snapshot.jfif_x_density = 80;
+    let event = editing::SnapshotEditEvent::SetValue { path: "/jfifXDensity".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(75)) };
     assert!(<JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
-    let emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("quality edit emits");
-    let [JpgMutation::ChangeReEncodeQuality(payload)] = emit.artifact_mutations.as_slice() else { panic!("quality edit must use its native leaf") };
-    assert_eq!(payload.quality, Some(75));
-    assert!(<JpgMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("quality mutation encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let next = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("quality mutation applies");
-    assert_eq!(next.re_encode_quality, Some(75));
+    let emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("density edit emits");
+    let [JpgMutation::PatchSnapshot(_payload)] = emit.artifact_mutations.as_slice() else { panic!("density edit must use its owned path patch") };
+    
+    assert!(<JpgMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("density mutation encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    let next = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("density mutation applies");
+    assert_eq!(next.jfif_x_density, 75);
     assert_eq!(next.pixels, snapshot.pixels);
     let inverse = <JpgMutation as protocol::Mutation<JpgSnapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
     assert!(inverse.iter().all(|mutation| <JpgMutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
-    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("quality inverse applies"));
+    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
     assert_eq!(restored, snapshot);
 
     let native_base = crate::schema::demo_jpg_snapshot();
-    let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native quality edit emits");
-    let native_edited = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native quality mutation applies");
-    let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base).expect("base JPEG encodes");
-    let edited_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_edited).expect("edited JPEG encodes");
-    assert_ne!(edited_bytes, base_bytes, "the quality edit must affect the native JPEG export");
+    let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native density edit emits");
+    let native_edited = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native density mutation applies");
+    let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(native_base.frame.as_ref())).expect("base JPEG encodes");
+    let edited_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_edited, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(native_edited.frame.as_ref())).expect("edited JPEG encodes");
+    assert_ne!(edited_bytes, base_bytes, "the density edit must affect the native JPEG export");
     let reopened = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&edited_bytes).expect("edited native JPEG reopens");
     assert_eq!((reopened.width, reopened.height), (native_edited.width, native_edited.height));
 }
@@ -95,7 +95,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source.to_vec(),
     };
     let initial = <JpgAnyEditor as ArtifactEditor>::initial_snapshot();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
@@ -115,7 +115,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let expected = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation(&oracle).expect("project independent JPEG output");
     assert_eq!(observed.get("width"), expected.get("width"));
     assert_eq!(observed.get("height"), expected.get("height"));
-    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }).await;
+    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
     artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.expect("fresh owner import publishes");

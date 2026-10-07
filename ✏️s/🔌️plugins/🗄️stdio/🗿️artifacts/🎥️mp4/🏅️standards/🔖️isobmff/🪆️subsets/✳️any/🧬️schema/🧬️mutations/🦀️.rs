@@ -7,7 +7,7 @@ use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Fty
 #[cfg(test)]
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Movie, Mp4TrackMetadata};
 use protocol::Mutation;
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -168,3 +168,6 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

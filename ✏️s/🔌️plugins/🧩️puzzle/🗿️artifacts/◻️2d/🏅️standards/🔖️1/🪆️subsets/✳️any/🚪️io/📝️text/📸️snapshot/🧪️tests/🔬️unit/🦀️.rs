@@ -35,7 +35,7 @@ fn puzzle2d_projection_dsl_round_trips() {
         visible: None,
         locked: None,
         anchor: Default::default(),
-        handles: vec![Puzzle2dHandle { id: "n1:v0".into(), handle_kind: Some("b-l".into()), angle: 0.0, radius: Some(3.0), color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+        handles: vec![Puzzle2dHandle { id: "n1:v0".into(), handle_kind: Some("b-l".into()), angle: 0.0, radius: Some(3.0), color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
     });
     with_content.nodes.push(Puzzle2dNode {
         id: "n2".into(),
@@ -53,12 +53,12 @@ fn puzzle2d_projection_dsl_round_trips() {
         visible: Some(false),
         locked: Some(true),
         anchor: Default::default(),
-        handles: Vec::new(),
+        handles: Default::default(),
     });
     with_content.edges.push(Puzzle2dEdge { id: "e1".into(), source: "n1:v0".into(), target: "n2".into(), edge_kind: Some("edge.link".into()), source_tip: None, target_tip: Some("arrow".into()), visible: None, locked: None, ..Default::default() });
     with_content.meta = Puzzle2dMeta {
         manifest_id: Some("concrete-forest".into()),
-        kind_compatibility: vec![Puzzle2dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Puzzle2dCompatSpecificity::Vortex }],
+        kind_compatibility: vec![Puzzle2dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Puzzle2dCompatSpecificity::Vortex }].into(),
         kind_catalogs: None,
     };
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_content);
@@ -72,14 +72,14 @@ fn puzzle2d_projection_dsl_round_trips() {
 /// `command_envelope_round_trip_holds_for_an_applied_operation`).
 #[test]
 fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::io::binary::mutations::{close_puzzle2d_store, puzzle2d_store};
+    use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
 
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
     use crate::PUZZLE_2D_SCHEMA;
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None))).expect("store");
+    let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None })).expect("apply");
     let envelope = store.envelope();
@@ -93,8 +93,8 @@ fn command_envelope_round_trip_holds_for_an_applied_operation() {
 fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
     use crate::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
     let snapshot = Puzzle2dSnapshot {
-        nodes: vec![Puzzle2dNode { id: "n1".into(), x: 0.0, y: 0.0, ..Puzzle2dNode::default() }, Puzzle2dNode { id: "n2".into(), x: 10.0, y: 0.0, ..Puzzle2dNode::default() }],
-        edges: vec![Puzzle2dEdge { id: "e1".into(), source: "n1".into(), target: "n2".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Puzzle2dEdge::default() }],
+        nodes: vec![Puzzle2dNode { id: "n1".into(), x: 0.0, y: 0.0, ..Puzzle2dNode::default() }, Puzzle2dNode { id: "n2".into(), x: 10.0, y: 0.0, ..Puzzle2dNode::default() }].into(),
+        edges: vec![Puzzle2dEdge { id: "e1".into(), source: "n1".into(), target: "n2".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Puzzle2dEdge::default() }].into(),
         ..Puzzle2dSnapshot::default()
     };
     let text = print_dsl(&snapshot);

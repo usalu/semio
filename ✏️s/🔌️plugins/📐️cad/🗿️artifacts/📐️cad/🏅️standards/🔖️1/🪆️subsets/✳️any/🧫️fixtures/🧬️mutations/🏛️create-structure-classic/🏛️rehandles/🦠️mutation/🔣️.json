@@ -1,5 +1,12 @@
 {
   "mutation": "createStructureClassicModel",
   "childId": "cad-structure-2",
-  "target": "cad-structure-2!s.stdio.semio@v1/model"
+  "target": {
+    "artifactId": "cad-structure-2",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model"
+    }
+  }
 }

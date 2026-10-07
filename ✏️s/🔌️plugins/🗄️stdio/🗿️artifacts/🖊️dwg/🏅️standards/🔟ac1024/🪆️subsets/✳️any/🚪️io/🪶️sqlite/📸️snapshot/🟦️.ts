@@ -37,7 +37,7 @@ import { dwgProjectMLeader,dwgReconstructMLeader } from "./🖌️styles/↗️m
 import { dwgProjectConstraints,dwgReconstructConstraints } from "./📏️constraints/🟦️.ts";
 import { artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 
 export const DWG_SQLITE_SCHEMA=[DWG_DOCUMENT_SQL,DWG_HEADER_SQL,DWG_DRAWING_SQL,DWG_TABLES_SQL,DWG_ENTITIES_SQL,DWG_OBJECTS_SQL,DWG_ASSOCIATIVITY_SQL,DWG_EVALUATION_SQL,DWG_BLOCKS_SQL,DWG_ACTIONS_SQL,DWG_VISUAL_STYLE_SQL,DWG_MATERIAL_SQL,DWG_TABLE_STYLE_SQL,DWG_LAYOUT_SQL,DWG_MLEADER_SQL,DWG_CONSTRAINTS_SQL].join("\n");
 

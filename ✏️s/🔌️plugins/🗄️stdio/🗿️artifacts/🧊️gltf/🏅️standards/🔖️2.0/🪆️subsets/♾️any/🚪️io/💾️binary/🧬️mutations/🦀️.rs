@@ -51,7 +51,7 @@ impl protocol::OpBinary for GltfMutation {
 
 mod node_name_protobuf {
 use crate::standards::v2_0::subsets::any::schema::mutations::change_node_name::*;
-use crate::standards::v2_0::subsets::any::io::text::mutations::{FacadeResult,facade_error};
+use crate::standards::v2_0::subsets::any::io::text::mutations::{FacadeResult, GltfChangeNodeNameFacadeError, facade_error};
 struct FacadeProtobufReader<'a> {
     bytes: &'a [u8],
     position: usize,

@@ -77,10 +77,10 @@ pub(crate) mod fixture {
                     bound.finish()
                 }
 
-                fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework::io_schema::ArtifactDialect,_database:&store::sqlite_snapshot::SqliteDatabase,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<()>{
+                fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&store::sqlite_snapshot::SqliteDatabase,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<()>{
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(semio_framework::io_schema::IoError::from_value_error)?;
                     if dialect.subset=="*"{return Ok(semio_framework::io_schema::IoOutcome::clean(()));}
-                    if dialect!=&semio_framework::io_schema::ArtifactDialect::from($dialect)||dialect.subset!="strict"{return Err(semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"fixture subset has no semantic validator")));}
+                    if dialect!=&semio_framework_artifact_reference::ArtifactDialect::from($dialect)||dialect.subset!="strict"{return Err(semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"fixture subset has no semantic validator")));}
                     let diagnostics=if self.value<0{vec![semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new(if self.value==i32::MIN{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}),severity:if self.value==i32::MIN{semio_framework_diagnostic::Severity::Fatal}else{semio_framework_diagnostic::Severity::Error},span:semio_framework_diagnostic::TextSpan::at(1,1),message:"strict fixture requires a non-negative value".into(),expected:None,scope:semio_framework_diagnostic::FaultScope::default()}]}else if self.value==0{vec![semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new("fixture.strict.zero-value"),severity:semio_framework_diagnostic::Severity::Warning,span:semio_framework_diagnostic::TextSpan::at(1,1),message:"strict fixture has no positive value".into(),expected:None,scope:semio_framework_diagnostic::FaultScope::default()}]}else{Vec::new()};
                     Ok(semio_framework::io_schema::IoOutcome{value:(),diagnostics})
                 }
@@ -497,7 +497,7 @@ pub(crate) mod fixture {
     /// every owned schema; a schema nobody owns is refused.
     #[semio_framework_async_macros::async_test]
     async fn codec_calls_construct_no_app() {
-        fn refuse_construction(_definition: &AppDefinition) -> FixtureApps {
+        fn refuse_construction(_definition: &AppDefinition, _actor: protocol::ActorId) -> FixtureApps {
             panic!("a codec call constructed an app")
         }
         let projected = project_artifact_declarations(&[build_declaration()]);
@@ -585,6 +585,8 @@ pub(crate) mod fixture {
 
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_covers_every_declared_subset() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
         use semio_framework::io::io_mechanism::{NativeSnapshotRegistration, io_entries, io_identify, io_route, io_run, io_run_with_snapshot_control, preflight_native_snapshots};
         use semio_framework::io::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database};
         use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, IoRoute, SQLITE_SNAPSHOT};

@@ -123,7 +123,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert!(<WavMutation as protocol::OpBinary>::encode_op(mutation).expect("patch encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
 
     let envelope = store::create_document_envelope(STDIO_WAV_DOCUMENT_SCHEMA, "wav-large-sample-publication", snapshot, None);
-    let mut store = store::ArtifactStore::new(envelope).await.expect("WAV store opens");
+    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("WAV store opens");
     store.install_document_store_owners_exact(store::bounded_artifact_store_owners::<WavSnapshot, WavMutation>());
     let factory = <WavEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("WAV retained factory");
     let generation = store.generation_now();
@@ -280,7 +280,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source,
     };
     let initial = <WavEditor as ArtifactEditor>::initial_snapshot();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }).await;
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
@@ -299,7 +299,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let observed = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation(&saved.data).expect("project WAV export");
     let expected = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation(&oracle).expect("project independent WAV output");
     assert_eq!(observed, expected);
-    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }).await;
+    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
     artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.expect("fresh owner import publishes");

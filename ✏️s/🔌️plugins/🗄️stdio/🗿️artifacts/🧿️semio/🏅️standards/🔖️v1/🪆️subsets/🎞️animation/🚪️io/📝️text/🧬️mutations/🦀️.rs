@@ -4,6 +4,22 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
+/// 🧾️ Each record kind's text-grammar tag, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
+pub(crate) const TEXT_KEYWORDS: [(&str, &str); 12] = [
+    ("set-snapshot", "S"),
+    ("insert-timeline", "IT"),
+    ("remove-timeline", "RT"),
+    ("set-timeline-name", "TN"),
+    ("insert-channel", "IC"),
+    ("remove-channel", "RC"),
+    ("set-channel-target", "CT"),
+    ("set-channel-interpolation", "CI"),
+    ("insert-keyframe", "IK"),
+    ("remove-keyframe", "RK"),
+    ("set-keyframe-time", "KT"),
+    ("set-keyframe-value", "KV"),
+];
+
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
@@ -36,17 +52,17 @@ pub fn decode_semio_animation_mutation_json(text: &str) -> Result<SemioAnimation
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
     use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_timeline};
-    use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-    use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+    use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_list};
+    use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_str};
     format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
     use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_timeline};
-    use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-    use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-    use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+    use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_list};
+    use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_str};
+    use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, timelines] = parts.as_slice() else { return Err(format!("snapshot-lit: expected 2 fields, got {}", parts.len())) };
     Ok(SemioAnimationSnapshot { schema: dec_str(schema)?, timelines: dec_list(timelines, dec_timeline)? })
@@ -65,7 +81,7 @@ impl OpText for SemioAnimationMutation {
         use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_interpolation};
         use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_target};
         use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_channel};
-        use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_str};
         use SemioAnimationMutation::*;
         match self {
             PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
@@ -97,8 +113,8 @@ impl OpText for SemioAnimationMutation {
         use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_interpolation};
         use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_target};
         use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_channel};
-        use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-        use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_str};
+        use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
         use SemioAnimationMutation::*;
         let fail = |e: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1));
         if line.starts_with("patch-snapshot patch=") {

@@ -1,4 +1,5 @@
 use crate::standards::riff_pcm::subsets::any::io::sqlite::snapshot::*;
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::*;
 #[path="💰️backing/🦀️.rs"]
 mod owned_requests;
 
@@ -38,7 +39,7 @@ fn sqlite_snapshot_wav_large_owned_text_cancels_inside_all_four_phases(){
 #[test]
 fn sqlite_snapshot_wav_manual_metadata_preserves_neutral_fields_and_enforces_cumulative_admission(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
- for(index,producer)in[crate::standards::riff_pcm::subsets::any::io::sqlite::snapshot::wav_data_spec_producer(),crate::standards::riff_pcm::subsets::any::io::sqlite::snapshot::wav_chunk_ref_spec_producer()].iter().enumerate(){
+ for(index,producer)in[{let semio_framework_dsl_record::Shape::Record(record)=<WavData as semio_framework_dsl_record::DslField>::shape()else{panic!("WavData record")};record},{let semio_framework_dsl_record::Shape::Record(record)=<WavChunkRef as semio_framework_dsl_record::DslField>::shape()else{panic!("WavChunkRef record")};record}].iter().enumerate(){
   let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();assert!(exact>0);
   let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
   for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);let semio_framework_dsl_record::Shape::Enum(labels)=&record.fields[0].shape else{panic!("declared enum")};assert_eq!(serde_json::json!(labels),fixture["records"][index]["tags"]);}
@@ -116,10 +117,7 @@ fn sqlite_snapshot_wav_complete_unsigned64_chunk_indices_survive_owned_relations
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_wav_actual_erased_capability_retains_all_owned_sample_states() {
-    use semio_framework_os_kernel::{
-        io::{ArtifactDialect, IoPayload},
-        sqlite_snapshot::SnapshotEncoding,
-    };
+    use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
     let patterns: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️float32.json")).unwrap();
     let floats = patterns["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value| f32::from_bits(value.as_u64().unwrap() as u32)).collect();
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio")
@@ -255,10 +253,7 @@ fn sqlite_snapshot_wav_independent_sqlite_interprets_and_edits_semantic_entities
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_wav_actual_declaration_preserves_owned_state_over_io() {
-    use semio_framework_os_kernel::io::{
-        io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot},
-        ArtifactDialect,
-    };
+    use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio")
         .label("WAV SQLite declaration")
@@ -382,4 +377,10 @@ fn sqlite_snapshot_wav_complete_cells_have_independent_pretyped_native_admission
    for short in[SqliteDatabaseLimits{max_rows:rows-1,..exact},SqliteDatabaseLimits{max_value_bytes:cells-1,..exact}]{assert!(input.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err());assert!(WavSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err());}
   }
  }
+}
+
+#[test]
+fn sqlite_snapshot_wav_borrowed_carriers_match_the_neutral_manual_records(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🏭️schema/🔣️.json")).unwrap();
+ for(index,record)in[<WavData as semio_framework_dsl_record::BorrowedDslRecord>::RECORD,<WavChunkRef as semio_framework_dsl_record::BorrowedDslRecord>::RECORD].iter().enumerate(){let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);let semio_framework_dsl_record::BorrowedShape::Enum(labels)=record.fields[0].shape else{panic!("WAV tagged record")};assert_eq!(serde_json::json!(labels),fixture["records"][index]["tags"]);}
 }

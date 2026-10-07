@@ -8,3 +8,8 @@ pub mod mutations;
 
 #[path="💡️inferences/🦀️.rs"]
 pub mod inferences;
+
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+
+

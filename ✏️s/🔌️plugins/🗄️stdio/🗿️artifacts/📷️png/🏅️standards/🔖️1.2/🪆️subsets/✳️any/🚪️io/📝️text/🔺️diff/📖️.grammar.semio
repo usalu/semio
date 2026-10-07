@@ -2,5 +2,28 @@ dialect grammar
 grammar stdio.png.diff
 start diff
 comment none
-diff = bytes-field?
-bytes-field = "bytes" "=" "[" INT* "]"
+
+diff = image?
+image = "image" "{" image-field* "}"
+image-field = integer-field | boolean-field | color-field | samples-field | palette-field | gamma-field | chromaticities-field | srgb-field | physical-field | timestamp-field | text-field | ancillary-field | transparency-block | background-block
+integer-field = ("width" | "height" | "bit-depth") "=" INT
+boolean-field = "interlace" "=" boolean
+color-field = "color-type" "=" ("grayscale" | "rgb" | "palette" | "grayscale-alpha" | "rgba")
+samples-field = "samples" "=" "[" INT* "]"
+palette-field = "palette" "=" "[" rgb-record* "]"
+rgb-record = "{" "r" "=" INT "g" "=" INT "b" "=" INT "}"
+gamma-field = "gamma" "=" INT
+chromaticities-field = "chromaticities" "=" "white-x" "=" INT "white-y" "=" INT "red-x" "=" INT "red-y" "=" INT "green-x" "=" INT "green-y" "=" INT "blue-x" "=" INT "blue-y" "=" INT
+srgb-field = "srgb" "=" ("perceptual" | "relative-colorimetric" | "saturation" | "absolute-colorimetric")
+physical-field = "physical-dims" "=" "ppu-x" "=" INT "ppu-y" "=" INT "unit-is-meter" "=" boolean
+timestamp-field = "timestamp" "=" "year" "=" INT "month" "=" INT "day" "=" INT "hour" "=" INT "minute" "=" INT "second" "=" INT
+text-field = "text-chunks" "=" "[" text-record* "]"
+text-record = "{" "keyword" "=" text "value" "=" text "compressed" "=" boolean "kind" "=" ("text" | "z-text" | "i-text") "language-tag" "=" text "translated-keyword" "=" text "}"
+ancillary-field = "ancillary-chunks" "=" "[" ancillary-record* "]"
+ancillary-record = "{" "kind" "=" INT "," INT "," INT "," INT "after-raster" "=" boolean "data" "=" "[" INT* "]" "}"
+transparency-block = "transparency" "{" transparency? "}"
+transparency = "indexed" "alpha" "=" "[" INT* "]" | "grayscale" "gray" "=" INT | "rgb" "r" "=" INT "g" "=" INT "b" "=" INT
+background-block = "background" "{" background? "}"
+background = "indexed" "index" "=" INT | "grayscale" "gray" "=" INT | "rgb" "r" "=" INT "g" "=" INT "b" "=" INT
+boolean = "true" | "false"
+text = STRING | IDENT | INT | FLOAT

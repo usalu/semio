@@ -1,4 +1,11 @@
 {
   "mutation": "bindWeatherFile",
-  "targetUri": "hannover!s.stdio.semio@v1/epw"
+  "target": {
+    "artifactId": "hannover",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "epw"
+    }
+  }
 }

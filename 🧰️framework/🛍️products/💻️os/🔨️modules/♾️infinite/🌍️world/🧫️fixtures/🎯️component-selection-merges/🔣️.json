@@ -1,0 +1,526 @@
+{
+  "mesh": {
+    "positions": [
+      -1,
+      -1,
+      0,
+      1,
+      -1,
+      0,
+      0,
+      1,
+      0
+    ],
+    "normals": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "indices": [
+      0,
+      1,
+      2,
+      0,
+      1,
+      2
+    ],
+    "faceIds": [
+      0,
+      0
+    ]
+  },
+  "source": {
+    "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "label": "9007199254740993"
+  },
+  "objects": [
+    "shape@solid#0",
+    "shape@solid#1"
+  ],
+  "targets": [
+    "shape@solid#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "shape@solid#1.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ],
+  "steps": [
+    {
+      "merge": "replace",
+      "incoming": [
+        0
+      ],
+      "selected": [
+        0
+      ],
+      "active": 0,
+      "groups": [
+        "0"
+      ]
+    },
+    {
+      "merge": "additive",
+      "incoming": [
+        1
+      ],
+      "selected": [
+        0,
+        1
+      ],
+      "active": 1,
+      "groups": [
+        "0"
+      ]
+    },
+    {
+      "merge": "subtractive",
+      "incoming": [
+        0
+      ],
+      "selected": [
+        1
+      ],
+      "active": 1,
+      "groups": [
+        "0"
+      ]
+    },
+    {
+      "merge": "invertive",
+      "incoming": [
+        1
+      ],
+      "selected": [],
+      "active": null,
+      "groups": []
+    }
+  ],
+  "overlayLifecycle": {
+    "labels": [
+      "9007199254740993",
+      "9007199254740995"
+    ],
+    "targets": [
+      "shape@solid#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "shape@solid#1.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "shape@solid#1.face.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740995~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "steps": [
+      {
+        "targets": [
+          0,
+          1
+        ],
+        "groups": [
+          0,
+          0
+        ]
+      },
+      {
+        "targets": [
+          0,
+          2
+        ],
+        "groups": [
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  "clearedHover": {
+    "id": null,
+    "object": null,
+    "mode": null
+  },
+  "gumball": {
+    "object": 0,
+    "mode": "face",
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "pointer": [
+      245,
+      200
+    ],
+    "movedPointer": [
+      352.2253460254779,
+      200
+    ],
+    "delta": [
+      1,
+      0,
+      0
+    ],
+    "ids": [
+      0
+    ],
+    "phases": [
+      "once",
+      "stream",
+      "commit",
+      "abort"
+    ],
+    "wideSelection": {
+      "count": 80,
+      "labelStart": "9007199254740993"
+    },
+    "authorityCases": [
+      {
+        "live": false,
+        "finish": "release",
+        "phases": [
+          null
+        ]
+      },
+      {
+        "live": true,
+        "finish": "release",
+        "phases": [
+          "stream",
+          "commit"
+        ]
+      },
+      {
+        "live": true,
+        "finish": "blur",
+        "phases": [
+          "stream",
+          "abort"
+        ]
+      },
+      {
+        "live": true,
+        "finish": "captureLost",
+        "phases": [
+          "stream",
+          "abort"
+        ]
+      }
+    ],
+    "pivotCases": [
+      {
+        "pivot": [
+          0,
+          0,
+          0
+        ],
+        "pointer": [
+          245,
+          200
+        ],
+        "movedPointer": [
+          352.2253460254779,
+          200
+        ]
+      },
+      {
+        "pivot": [
+          0.125,
+          -0.25,
+          0
+        ],
+        "pointer": [
+          258.40316825318473,
+          226.80633650636946
+        ],
+        "movedPointer": [
+          365.62851427866264,
+          226.80633650636946
+        ]
+      }
+    ],
+    "liveRefresh": {
+      "camera": {
+        "position": [
+          0,
+          0,
+          4
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "fov": 50,
+        "projectionFrame": "preserveCamera"
+      },
+      "viewport": [
+        400,
+        400
+      ],
+      "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "refreshAfter": 1,
+      "positions": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0.25,
+          0,
+          0
+        ],
+        [
+          0.75,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "pointers": [
+        [
+          245,
+          200
+        ],
+        [
+          271.8063365063695,
+          200
+        ],
+        [
+          325.4190095191084,
+          200
+        ],
+        [
+          352.2253460254779,
+          200
+        ]
+      ],
+      "dispatches": [
+        {
+          "phase": "stream",
+          "dx": 0.25,
+          "dy": 0,
+          "dz": 0
+        },
+        {
+          "phase": "stream",
+          "dx": 0.5,
+          "dy": 0,
+          "dz": 0
+        },
+        {
+          "phase": "commit",
+          "dx": 0.25,
+          "dy": 0,
+          "dz": 0
+        }
+      ],
+      "offset": [
+        1,
+        0,
+        0
+      ]
+    },
+    "raySegmentCases": [
+      {
+        "name": "perpendicular-hit",
+        "origin": [
+          0,
+          0,
+          4
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 0
+      },
+      {
+        "name": "oblique-hit",
+        "origin": [
+          0,
+          0,
+          4
+        ],
+        "direction": [
+          0.42,
+          0,
+          -4
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 0
+      },
+      {
+        "name": "endpoint-gap",
+        "origin": [
+          1,
+          0,
+          4
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 0.4
+      },
+      {
+        "name": "behind-origin",
+        "origin": [
+          0,
+          0,
+          1
+        ],
+        "direction": [
+          0,
+          0,
+          1
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 1
+      },
+      {
+        "name": "parallel-gap",
+        "origin": [
+          0.2,
+          0.3,
+          0
+        ],
+        "direction": [
+          1,
+          0,
+          0
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 0.3
+      },
+      {
+        "name": "parallel-away",
+        "origin": [
+          1,
+          0,
+          0
+        ],
+        "direction": [
+          1,
+          0,
+          0
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 0.4
+      },
+      {
+        "name": "opposite-hit",
+        "origin": [
+          0.3,
+          0,
+          -4
+        ],
+        "direction": [
+          0,
+          0,
+          1
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 0
+      },
+      {
+        "name": "perpendicular-gap",
+        "origin": [
+          0.3,
+          2,
+          4
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          0.6,
+          0,
+          0
+        ],
+        "distance": 2
+      }
+    ]
+  }
+}

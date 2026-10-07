@@ -22,31 +22,6 @@
   "cases": [
     {
       "id": "object-required-and-additional-properties",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/object.json",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "name",
-          "count"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 8
-          },
-          "count": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10
-          },
-          "enabled": {
-            "type": "boolean"
-          }
-        }
-      },
       "valid": [
         {
           "name": "ok",
@@ -115,41 +90,37 @@
           "instance": null,
           "errorPath": ""
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/object.json",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "count"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 8
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
     },
     {
       "id": "string-pattern-and-enum-and-const",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/string.json",
-        "type": "object",
-        "required": [
-          "scope",
-          "lane",
-          "kind"
-        ],
-        "properties": {
-          "scope": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$"
-          },
-          "lane": {
-            "enum": [
-              "artifact",
-              "config",
-              "presence",
-              "transient"
-            ]
-          },
-          "kind": {
-            "const": "scope-owned"
-          },
-          "revision": {
-            "type": "string",
-            "pattern": "^v\\d{1,3}$"
-          }
-        }
-      },
       "valid": [
         {
           "scope": "s.trinity.jack",
@@ -214,22 +185,43 @@
           },
           "errorPath": "/revision"
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/string.json",
+          "type": "object",
+          "required": [
+            "scope",
+            "lane",
+            "kind"
+          ],
+          "properties": {
+            "scope": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$"
+            },
+            "lane": {
+              "enum": [
+                "artifact",
+                "config",
+                "presence",
+                "transient"
+              ]
+            },
+            "kind": {
+              "const": "scope-owned"
+            },
+            "revision": {
+              "type": "string",
+              "pattern": "^v\\d{1,3}$"
+            }
+          }
+        }
+      }
     },
     {
       "id": "array-list-items-and-bounds",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/array.json",
-        "type": "array",
-        "minItems": 1,
-        "maxItems": 3,
-        "uniqueItems": true,
-        "items": {
-          "type": "string",
-          "pattern": "^[A-Z][A-Za-z]+$"
-        }
-      },
       "valid": [
         [
           "Artifact"
@@ -274,26 +266,24 @@
           ],
           "errorPath": "/1"
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/array.json",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z]+$"
+          }
+        }
+      }
     },
     {
       "id": "array-tuple-items-and-additional-items",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/tuple.json",
-        "type": "array",
-        "items": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "integer",
-            "minimum": 1
-          }
-        ],
-        "additionalItems": false,
-        "minItems": 2
-      },
       "valid": [
         [
           "rust",
@@ -333,40 +323,28 @@
           ],
           "errorPath": "/2"
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/tuple.json",
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer",
+              "minimum": 1
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 2
+        }
+      }
     },
     {
       "id": "combinators-one-of-any-of-all-of",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/combinators.json",
-        "allOf": [
-          {
-            "type": [
-              "string",
-              "integer"
-            ]
-          }
-        ],
-        "anyOf": [
-          {
-            "type": "string",
-            "minLength": 3
-          },
-          {
-            "type": "integer"
-          }
-        ],
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "integer",
-            "maximum": 4
-          }
-        ]
-      },
       "valid": [
         "rust",
         "typescript",
@@ -390,36 +368,42 @@
           "instance": null,
           "errorPath": ""
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/combinators.json",
+          "allOf": [
+            {
+              "type": [
+                "string",
+                "integer"
+              ]
+            }
+          ],
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 3
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer",
+              "maximum": 4
+            }
+          ]
+        }
+      }
     },
     {
       "id": "local-ref-into-definitions",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/local-ref.json",
-        "definitions": {
-          "ExportId": {
-            "type": "string",
-            "pattern": "^[A-Z][A-Za-z0-9]*$"
-          }
-        },
-        "type": "object",
-        "required": [
-          "export"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "export": {
-            "$ref": "#/definitions/ExportId"
-          },
-          "aliases": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/ExportId"
-            }
-          }
-        }
-      },
       "valid": [
         {
           "export": "ArtifactSchemaDescriptor"
@@ -453,7 +437,35 @@
           },
           "errorPath": ""
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/local-ref.json",
+          "definitions": {
+            "ExportId": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9]*$"
+            }
+          },
+          "type": "object",
+          "required": [
+            "export"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "export": {
+              "$ref": "#/definitions/ExportId"
+            },
+            "aliases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExportId"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "id": "cross-document-ref-by-id",
@@ -478,24 +490,6 @@
           }
         }
       ],
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/cross-ref.json",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "scope",
-          "format"
-        ],
-        "properties": {
-          "scope": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/shared.json#/definitions/ScopeId"
-          },
-          "format": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/shared.json#/definitions/FormatId"
-          }
-        }
-      },
       "valid": [
         {
           "scope": "framework.schema",
@@ -527,60 +521,30 @@
           },
           "errorPath": ""
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/cross-ref.json",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scope",
+            "format"
+          ],
+          "properties": {
+            "scope": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/shared.json#/definitions/ScopeId"
+            },
+            "format": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/shared.json#/definitions/FormatId"
+            }
+          }
+        }
+      }
     },
     {
       "id": "conditional-if-then-else",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/conditional.json",
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "properties": {
-          "status": {
-            "enum": [
-              "ready",
-              "blocked"
-            ]
-          },
-          "detail": {
-            "type": "string"
-          }
-        },
-        "if": {
-          "type": "object",
-          "required": [
-            "status"
-          ],
-          "properties": {
-            "status": {
-              "const": "blocked"
-            }
-          }
-        },
-        "then": {
-          "type": "object",
-          "required": [
-            "detail"
-          ],
-          "properties": {
-            "detail": {
-              "type": "string",
-              "minLength": 3
-            }
-          }
-        },
-        "else": {
-          "type": "object",
-          "not": {
-            "required": [
-              "detail"
-            ]
-          }
-        }
-      },
       "valid": [
         {
           "status": "ready"
@@ -617,42 +581,62 @@
           },
           "errorPath": "/status"
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/conditional.json",
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "ready",
+                "blocked"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            }
+          },
+          "if": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "const": "blocked"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "detail"
+            ],
+            "properties": {
+              "detail": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          },
+          "else": {
+            "type": "object",
+            "not": {
+              "required": [
+                "detail"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "object-dependencies-property-and-schema-forms",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/dependencies.json",
-        "type": "object",
-        "properties": {
-          "scope": {
-            "type": "string"
-          },
-          "export": {
-            "type": "string"
-          },
-          "format": {
-            "type": "string"
-          },
-          "catalog": {
-            "type": "boolean"
-          }
-        },
-        "dependencies": {
-          "export": [
-            "scope"
-          ],
-          "catalog": {
-            "type": "object",
-            "required": [
-              "scope",
-              "export",
-              "format"
-            ]
-          }
-        }
-      },
       "valid": [
         {},
         {
@@ -690,25 +674,44 @@
           },
           "errorPath": ""
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/dependencies.json",
+          "type": "object",
+          "properties": {
+            "scope": {
+              "type": "string"
+            },
+            "export": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            },
+            "catalog": {
+              "type": "boolean"
+            }
+          },
+          "dependencies": {
+            "export": [
+              "scope"
+            ],
+            "catalog": {
+              "type": "object",
+              "required": [
+                "scope",
+                "export",
+                "format"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "object-property-names-and-counts",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/property-names.json",
-        "type": "object",
-        "minProperties": 1,
-        "maxProperties": 3,
-        "propertyNames": {
-          "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]*$"
-        },
-        "additionalProperties": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
       "valid": [
         {
           "rust": 1
@@ -745,30 +748,27 @@
           },
           "errorPath": "/rust"
         }
-      ]
-    },
-    {
-      "id": "object-pattern-properties-and-additional",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/pattern-properties.json",
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          }
-        },
-        "patternProperties": {
-          "^x-semio-": {
-            "type": "string"
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/property-names.json",
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 3,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][a-zA-Z0-9]*$"
           },
-          "^count[A-Z]": {
+          "additionalProperties": {
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false
-      },
+        }
+      }
+    },
+    {
+      "id": "object-pattern-properties-and-additional",
       "valid": [
         {
           "id": "framework.schema"
@@ -798,39 +798,32 @@
           },
           "errorPath": ""
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/pattern-properties.json",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "patternProperties": {
+            "^x-semio-": {
+              "type": "string"
+            },
+            "^count[A-Z]": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      }
     },
     {
       "id": "array-contains-and-unique-items",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/contains.json",
-        "type": "array",
-        "minItems": 1,
-        "uniqueItems": true,
-        "items": {
-          "type": "object",
-          "required": [
-            "format"
-          ],
-          "properties": {
-            "format": {
-              "type": "string"
-            }
-          }
-        },
-        "contains": {
-          "type": "object",
-          "required": [
-            "format"
-          ],
-          "properties": {
-            "format": {
-              "const": "jsonschema"
-            }
-          }
-        }
-      },
       "valid": [
         [
           {
@@ -881,31 +874,41 @@
           ],
           "errorPath": "/1"
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/contains.json",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": [
+              "format"
+            ],
+            "properties": {
+              "format": {
+                "type": "string"
+              }
+            }
+          },
+          "contains": {
+            "type": "object",
+            "required": [
+              "format"
+            ],
+            "properties": {
+              "format": {
+                "const": "jsonschema"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "id": "numeric-exclusive-bounds-and-multiple-of",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/numeric.json",
-        "type": "object",
-        "properties": {
-          "ratio": {
-            "type": "number",
-            "exclusiveMinimum": 0,
-            "exclusiveMaximum": 1
-          },
-          "step": {
-            "type": "number",
-            "multipleOf": 0.25
-          },
-          "budget": {
-            "type": "integer",
-            "multipleOf": 8,
-            "minimum": 8
-          }
-        }
-      },
       "valid": [
         {
           "ratio": 0.5,
@@ -947,54 +950,33 @@
           },
           "errorPath": "/budget"
         }
-      ]
-    },
-    {
-      "id": "annotations-and-negation",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/annotations.json",
-        "title": "Annotated Export",
-        "description": "Annotation keywords never reject an instance.",
-        "$comment": "title, description, default, examples and every x-semio-* extension are annotations",
-        "default": {
-          "export": "SchemaExport"
-        },
-        "examples": [
-          {
-            "export": "SchemaExport"
-          }
-        ],
-        "x-semio-state": "retained",
-        "x-semio-mutation": {
-          "semanticKind": "set-export"
-        },
-        "type": "object",
-        "required": [
-          "export"
-        ],
-        "properties": {
-          "export": {
-            "type": "string",
-            "title": "Export id",
-            "description": "PascalCase key of $defs",
-            "default": "SchemaExport",
-            "examples": [
-              "SchemaExport",
-              "FacetLeaves"
-            ],
-            "x-semio-state": "retained",
-            "not": {
-              "enum": [
-                "artifact",
-                "snapshot",
-                "diff",
-                "mutations"
-              ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/numeric.json",
+          "type": "object",
+          "properties": {
+            "ratio": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            },
+            "step": {
+              "type": "number",
+              "multipleOf": 0.25
+            },
+            "budget": {
+              "type": "integer",
+              "multipleOf": 8,
+              "minimum": 8
             }
           }
         }
-      },
+      }
+    },
+    {
+      "id": "annotations-and-negation",
       "valid": [
         {
           "export": "SchemaExport"
@@ -1014,45 +996,56 @@
           "instance": {},
           "errorPath": ""
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/annotations.json",
+          "title": "Annotated Export",
+          "description": "Annotation keywords never reject an instance.",
+          "$comment": "title, description, default, examples and every x-semio-* extension are annotations",
+          "default": {
+            "export": "SchemaExport"
+          },
+          "examples": [
+            {
+              "export": "SchemaExport"
+            }
+          ],
+          "x-semio-state": "retained",
+          "x-semio-mutation": {
+            "semanticKind": "set-export"
+          },
+          "type": "object",
+          "required": [
+            "export"
+          ],
+          "properties": {
+            "export": {
+              "type": "string",
+              "title": "Export id",
+              "description": "PascalCase key of $defs",
+              "default": "SchemaExport",
+              "examples": [
+                "SchemaExport",
+                "FacetLeaves"
+              ],
+              "x-semio-state": "retained",
+              "not": {
+                "enum": [
+                  "artifact",
+                  "snapshot",
+                  "diff",
+                  "mutations"
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "id": "string-formats-pinned-assertions",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/formats.json",
-        "type": "object",
-        "properties": {
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "day": {
-            "type": "string",
-            "format": "date"
-          },
-          "at": {
-            "type": "string",
-            "format": "time"
-          },
-          "contact": {
-            "type": "string",
-            "format": "email"
-          },
-          "id": {
-            "type": "string",
-            "format": "uri"
-          },
-          "trace": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "pattern": {
-            "type": "string",
-            "format": "regex"
-          }
-        }
-      },
       "valid": [
         {
           "createdAt": "2026-09-08T17:20:00Z"
@@ -1146,45 +1139,47 @@
           },
           "errorPath": "/pattern"
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/formats.json",
+          "type": "object",
+          "properties": {
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "day": {
+              "type": "string",
+              "format": "date"
+            },
+            "at": {
+              "type": "string",
+              "format": "time"
+            },
+            "contact": {
+              "type": "string",
+              "format": "email"
+            },
+            "id": {
+              "type": "string",
+              "format": "uri"
+            },
+            "trace": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "pattern": {
+              "type": "string",
+              "format": "regex"
+            }
+          }
+        }
+      }
     },
     {
       "id": "annotation-only-formats-never-reject",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/annotation-formats.json",
-        "type": "object",
-        "properties": {
-          "ratio": {
-            "type": "number",
-            "format": "double"
-          },
-          "count": {
-            "type": "integer",
-            "format": "uint32"
-          },
-          "blob": {
-            "type": "string",
-            "format": "base64"
-          },
-          "single": {
-            "type": "number",
-            "format": "float"
-          },
-          "index": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stamp": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "size": {
-            "type": "integer",
-            "format": "uint64"
-          }
-        }
-      },
       "valid": [
         {
           "ratio": 0.5,
@@ -1212,7 +1207,44 @@
           },
           "errorPath": "/count"
         }
-      ]
+      ],
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/annotation-formats.json",
+          "type": "object",
+          "properties": {
+            "ratio": {
+              "type": "number",
+              "format": "double"
+            },
+            "count": {
+              "type": "integer",
+              "format": "uint32"
+            },
+            "blob": {
+              "type": "string",
+              "format": "base64"
+            },
+            "single": {
+              "type": "number",
+              "format": "float"
+            },
+            "index": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "stamp": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "size": {
+              "type": "integer",
+              "format": "uint64"
+            }
+          }
+        }
+      }
     }
   ]
 }

@@ -111,7 +111,8 @@ mod subject {
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::{decode_stl_ascii, encode_stl_ascii};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_stl::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, StlMutation};
+    use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation,StlMutation};
+
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.

@@ -1,6 +1,8 @@
 //! 📝️ Direct compact CSV snapshot-patch text codec.
 
-use crate::standards::v_rfc4180::subsets::any::io::text::mutations::*;
+use crate::standards::v_rfc4180::subsets::any::schema::mutations::{CsvMutation,patch_snapshot::PatchSnapshot};
+
+use semio_s_artifact_stdio_contract::editing;
 use protocol::OpText;
 
 pub const TEXT_OPCODE: &str = "patch-snapshot";

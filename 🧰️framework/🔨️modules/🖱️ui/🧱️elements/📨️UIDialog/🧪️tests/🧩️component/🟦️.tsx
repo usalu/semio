@@ -1,7 +1,5 @@
 import * as React from "react";
 import { createMemoryStoragePort, dialogChoiceArgs, isShellLocale, type DialogChoice } from "@semio-tech/framework";
-import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
 import { computeAccessibleDescription, computeAccessibleName } from "dom-accessibility-api";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -12,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover/🟦️.tsx";
 import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope/🟦️.tsx";
 import fixture from "../../🧫️fixtures/♿️modal/🔣️.json";
-import uiSchema from "../../../../🧬️schema/🔣️.json";
 import dialogChoices from "../../../../../🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json";
 
 
@@ -37,7 +34,6 @@ const renderField: UIDialogProps["renderField"] = (def, value, change, field) =>
 
 describe("UIDialog accessibility", () => {
   it("isolates and dismisses dialogs within each owning Shell without blocking a sibling Shell", async () => {
-    expect(new Ajv({ strict: true }).addSchema(uiSchema).getSchema(`${uiSchema.$id}#/$defs/UIDialogModalFixture`)!(fixture)).toBe(true);
     await uiI18n.changeLanguage("en");
     const bodySibling = document.createElement("button");
     bodySibling.textContent = "Page action";
@@ -162,7 +158,6 @@ describe("UIDialog accessibility", () => {
   });
 
   it.each(fixture.cases)("implements the neutral modal contract in $locale with an independent accessibility oracle", async row => {
-    expect(new Ajv({ strict: true }).addSchema(uiSchema).getSchema(`${uiSchema.$id}#/$defs/UIDialogModalFixture`)!(fixture)).toBe(true);
     await uiI18n.changeLanguage(uiLocaleOf(row.locale));
     const opener = document.createElement("button");
     opener.textContent = "Opener";
@@ -250,6 +245,9 @@ describe("UIDialog accessibility", () => {
       const overwrite = choiceOf("overwrite");
       const destructive = control("choice:overwrite");
       expect(computeAccessibleDescription(destructive)).toBe(read(overwrite.description));
+      const choiceGroup = destructive.closest('[data-dialog-choice-group="overwrite"]');
+      expect(choiceGroup).not.toBeNull();
+      expect(choiceGroup?.querySelector('[data-dialog-choice-description="overwrite"]')?.textContent).toBe(read(overwrite.description));
       expect(destructive.getAttribute("data-destructive")).toBe("true");
       expect(destructive.getAttribute("data-tone")).toBe("danger");
       expect(destructive.closest('[data-slot="button-group"]')?.className).toContain("text-destructive");

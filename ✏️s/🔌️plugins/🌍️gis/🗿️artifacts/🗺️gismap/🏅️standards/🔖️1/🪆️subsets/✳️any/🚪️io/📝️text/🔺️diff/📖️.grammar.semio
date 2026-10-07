@@ -3,7 +3,12 @@ grammar gismap.diff
 extension gismap
 start document
 
-document = header body
-header = "schema" SP "gis.gismap.diff" NL
-body = payload NL?
-payload = OCTET+
+document = WS object WS
+object = "{" WS members? WS "}"
+members = member (WS "," WS member)*
+member = string WS ":" WS value
+value = object | array | string | number | "true" | "false" | "null"
+array = "[" WS (value (WS "," WS value)*)? WS "]"
+string = JSON_STRING
+number = JSON_NUMBER
+WS = JSON_WHITESPACE*

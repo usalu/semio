@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 

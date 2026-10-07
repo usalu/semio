@@ -1,4 +1,6 @@
+use crate::standards::v5::subsets::any::io::text::snapshot::{parse_html_document,write_html_document};
 use crate::standards::v5::subsets::any::io::sqlite::snapshot::*;
+use crate::standards::v5::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
 
 fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
@@ -9,7 +11,7 @@ fn restore(database: &SqliteDatabase) -> Result<HtmlSnapshot, ValueError> { Html
 fn sqlite_snapshot_html_owned_dialect_guard_requires_its_declared_coordinate() {
     let source: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = fixture(); let database = project(&snapshot);
-    let dialect = |value: &serde_json::Value| semio_framework_os_kernel::io_schema::ArtifactDialect { artifact_kind: value["artifactKind"].as_str().unwrap().into(), standard: value["standard"].as_str().unwrap().into(), subset: value["subset"].as_str().unwrap().into() };
+    let dialect = |value: &serde_json::Value| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: value["artifactKind"].as_str().unwrap().into(), standard: value["standard"].as_str().unwrap().into(), subset: value["subset"].as_str().unwrap().into() };
     let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default());
     let valid = dialect(&source["sqliteDialect"]);
     assert!(snapshot.validate_sqlite_snapshot_subset(&valid, &database, &mut control).unwrap().diagnostics.is_empty());
@@ -74,7 +76,7 @@ fn sqlite_snapshot_html_independent_queries_edits_and_html_parser_oracle() {
 #[test]
 fn sqlite_snapshot_html_erased_native_preflight_admission_and_limits() {
     let snapshot = fixture();
-    let dialect = semio_framework_os_kernel::io_schema::ArtifactDialect { artifact_kind: "s.stdio.html".into(), standard: "5".into(), subset: "*".into() };
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.html".into(), standard: "5".into(), subset: "*".into() };
     let codec = <HtmlSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();

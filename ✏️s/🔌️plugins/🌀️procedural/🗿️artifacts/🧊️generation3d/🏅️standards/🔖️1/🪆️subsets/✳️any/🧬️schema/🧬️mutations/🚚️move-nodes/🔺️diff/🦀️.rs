@@ -3,7 +3,8 @@
 
 use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation3dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_partial, generation3d_targets_invariant, widget_index};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_partial,generation3d_targets_invariant,widget_index};
+
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;
 

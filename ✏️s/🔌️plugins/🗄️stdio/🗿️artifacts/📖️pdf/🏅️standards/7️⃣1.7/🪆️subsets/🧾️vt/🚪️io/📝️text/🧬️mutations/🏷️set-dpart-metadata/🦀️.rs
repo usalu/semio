@@ -1,6 +1,6 @@
 //! 🏷️ Direct text codec for `set-dpart-metadata`.
 
-use super::SetDpartMetadata;
+use crate::standards::v1_7::subsets::vt::schema::mutations::SetDpartMetadata;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-dpart-metadata";

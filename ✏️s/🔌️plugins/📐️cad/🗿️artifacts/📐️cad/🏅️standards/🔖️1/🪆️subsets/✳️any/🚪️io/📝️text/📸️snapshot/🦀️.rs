@@ -44,7 +44,7 @@ use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::CadReferenceIndex;
 
-pub(crate) fn exact_child(target: &store::os_io::ArtifactRef, subset: &str) -> Result<(), String> {
+pub(crate) fn exact_child(target: &semio_framework_artifact_reference::ArtifactRef, subset: &str) -> Result<(), String> {
     if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != subset {
         return Err(format!("cad child must target s.stdio.semio@v1/{subset}"));
     }

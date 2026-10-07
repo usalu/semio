@@ -185,7 +185,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
 /// ✍️ The undo or redo of a finalize being authored resumably: the Report replay of its inputs over the applied history,
 /// stepped per reactor turn, and how it finalizes (unscoped, or within the history edit's own line).
 pub(crate) struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>> {
-    replay: store::EditReplay<P, Mu>,
+    replay: store::ArtifactDerivedReplay<P, Mu>,
     finalization: store::HistoryFinalization,
 }
 
@@ -303,6 +303,20 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         match self.member.as_ref() {
             None => TimeTravelOwners::replaying(&self.document),
             Some(member) => member.owners.as_deref().is_some_and(TimeTravelOwners::replaying),
+        }
+    }
+
+    fn preview_progress(&self) -> Option<store::ReplayProgress> {
+        match self.member.as_ref() {
+            None => self.document.preview_progress(),
+            Some(member) => member.owners.as_deref().and_then(TimeTravelOwners::preview_progress),
+        }
+    }
+
+    fn processed(&self) -> Option<u32> {
+        match self.member.as_ref() {
+            None => self.document.processed(),
+            Some(member) => member.owners.as_deref().and_then(TimeTravelOwners::processed),
         }
     }
 
@@ -443,14 +457,16 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             TimeTravelStage::Choosing => HistoryTimeTravelStage::Choosing,
             TimeTravelStage::Finalizing => HistoryTimeTravelStage::Finalizing,
         };
+        let preview_progress = (session.stage == TimeTravelStage::Editing).then(|| self.preview_progress()).flatten();
         Some(HistoryTimeTravel {
             session_id: session.id.to_string(),
             generation: session.generation,
             stage,
             target: session.pending.as_ref().map(|pending| pending.target.mutation.0.clone()),
             target_label: self.editor.as_ref().map(|editor| editor.label.clone()),
-            done: session.progress.map(|progress| progress.done),
-            total: session.progress.map(|progress| progress.total),
+            done: preview_progress.map(|progress| progress.done).or_else(|| session.progress.map(|progress| progress.done)),
+            total: preview_progress.map(|progress| progress.total).or_else(|| session.progress.map(|progress| progress.total)),
+            processed: (session.stage == TimeTravelStage::Replaying).then(|| self.processed()).flatten(),
             worst: session.report.as_ref().and_then(|report| report.worst),
             blocking: session.report.as_ref().is_some_and(protocol::ReplayReport::blocks_finalize),
             fault: session.fault.clone(),
@@ -529,6 +545,8 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 /// terminal witness and one bounded retirement unit — callable on a composed member's erased owners without its store.
 pub(crate) trait TimeTravelOwners: Send {
     fn replaying(&self) -> bool;
+    fn preview_progress(&self) -> Option<store::ReplayProgress>;
+    fn processed(&self) -> Option<u32>;
     fn has_pending_work(&self) -> bool;
     fn terminal_is_empty(&self) -> bool;
     fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault>;
@@ -545,6 +563,8 @@ pub(crate) struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>> {
     staged: Option<Mu>,
     kind: Option<Mu>,
     preview: Option<store::ArtifactDerivedSnapshot<P>>,
+    preview_job: Option<store::ArtifactDerivedHistoryPreview<P, Mu>>,
+    preview_input: Option<protocol::InputReplacement>,
     replay: Option<store::ArtifactDerivedReplay<P, Mu>>,
     finished: Option<store::EditReplayResult<P, Mu>>,
     head: Option<store::ArtifactDerivedSnapshot<P>>,
@@ -557,6 +577,12 @@ pub(crate) enum TimeTravelReplayStep {
     Pending { done: u32, total: u32 },
     Completed(protocol::ReplayReport),
     Faulted,
+}
+
+/// 🖼️ One preview slice leaves progress or publishes a complete selected-mutation projection.
+pub(crate) enum TimeTravelPreviewStep {
+    Pending,
+    Completed(Vec<protocol::MutationMessage>),
 }
 
 /// 🌿️ How a finalize ended on its store; a finalize carries the encoded envelopes of every transition it authored (an
@@ -574,7 +600,8 @@ pub(crate) enum TimeTravelStoreCommand {
     Open { target: MutationId, current: Option<protocol::InputReplacement>, withdraw: bool },
     Adopt(bool),
     Rebuild(DslValue),
-    Preview { target: MutationId, replacement: protocol::InputReplacement, drafts: BTreeMap<MutationId, protocol::InputReplacement> },
+    Preview { target: MutationId, replacement: protocol::InputReplacement, drafts: BTreeMap<MutationId, protocol::InputReplacement>, deadline_us: u64, clock: fn() -> Option<u64> },
+    StepPreview { deadline_us: u64, clock: fn() -> Option<u64> },
     StartReplay { drafts: BTreeMap<MutationId, protocol::InputReplacement>, from: MutationId },
     CancelReplay,
     StepReplay { deadline_us: u64, clock: fn() -> Option<u64> },
@@ -586,7 +613,7 @@ pub(crate) enum TimeTravelStoreCommand {
 pub(crate) enum TimeTravelStoreOutput {
     Opened(Result<(TimeTravelEditor, protocol::InputReplacement), TimeTravelActionRefusal>),
     Rebuilt(Result<protocol::InputReplacement, String>),
-    Previewed(Vec<protocol::MutationMessage>),
+    Previewed(TimeTravelPreviewStep),
     ReplayStarted(bool),
     Stepped(TimeTravelReplayStep),
     Committed(TimeTravelCommit),
@@ -615,7 +642,7 @@ where
 {
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub(crate) fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
-        Self { label_of, staged: None, kind: None, preview: None, replay: None, finished: None, head: None, retirements: VecDeque::new(), discarded: Vec::new() }
+        Self { label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, retirements: VecDeque::new(), discarded: Vec::new() }
     }
 
     /// 🪞️ The snapshot the session shows at `stage`: the draft preview while editing; while replaying that preview — or,
@@ -637,6 +664,22 @@ where
         Ok(())
     }
 
+    fn cancel_preview(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
+        if let Some(retirement) = store.retire_derived_history_preview(&mut self.preview_job).map_err(|error| error.into_fault())? { self.retirements.push_back(retirement); }
+        self.preview_input = None;
+        Ok(())
+    }
+
+    fn cancel_replay(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
+        if let Some(retirement) = store.retire_derived_report_replay(&mut self.replay).map_err(|error| error.into_fault())? { self.retirements.push_back(retirement); }
+        Ok(())
+    }
+
+    fn cancel_finished(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
+        if let Some(retirement) = store.retire_finished_history_replay(&mut self.finished).map_err(|error| error.into_fault())? { self.retirements.push_back(retirement); }
+        Ok(())
+    }
+
     fn discard(&mut self, op: Option<Mu>) {
         self.discarded.extend(op);
     }
@@ -645,6 +688,7 @@ where
     /// the session left, the replay outside `Replaying`, every replay owner once it is inactive.
     pub(crate) fn settle(&mut self, store: &ArtifactStore<P, Mu>, stage: TimeTravelStage) -> Result<(), Fault> {
         if stage != TimeTravelStage::Editing {
+            self.cancel_preview(store)?;
             let kind = self.kind.take();
             self.discard(kind);
             let staged = self.staged.take();
@@ -655,10 +699,10 @@ where
             self.retire(store, preview)?;
         }
         if stage != TimeTravelStage::Replaying {
-            self.replay = None;
+            self.cancel_replay(store)?;
         }
         if stage == TimeTravelStage::Inactive {
-            self.finished = None;
+            self.cancel_finished(store)?;
             let head = self.head.take();
             self.retire(store, head)?;
         }
@@ -669,12 +713,7 @@ where
     pub(crate) fn query(owners: Option<&Self>, store: &ArtifactStore<P, Mu>, query: TimeTravelStoreQuery) -> TimeTravelQueryOutput {
         match query {
             TimeTravelStoreQuery::Base => TimeTravelQueryOutput::Base(TimeTravelBase { content_revision: store.content_revision() }),
-            TimeTravelStoreQuery::Positions(targets) => TimeTravelQueryOutput::Positions(
-                store
-                    .mutation_ops()
-                    .ok()
-                    .and_then(|ops| targets.into_iter().map(|target| ops.iter().find(|op| op.mutation_id == target).map(|op| TimeTravelTarget { position: u32::try_from(op.position).unwrap_or(u32::MAX), mutation: target })).collect()),
-            ),
+            TimeTravelStoreQuery::Positions(targets) => TimeTravelQueryOutput::Positions(targets.into_iter().map(|target| store.mutation_position(&target).ok().map(|(position, _)| TimeTravelTarget { position: u32::try_from(position).unwrap_or(u32::MAX), mutation: target })).collect()),
             TimeTravelStoreQuery::ShownValue(stage) => TimeTravelQueryOutput::Value(owners.and_then(|owners| owners.shown(stage)).map(|shown| semio_framework_value::ToValue::to_value(shown.snapshot()))),
         }
     }
@@ -695,10 +734,16 @@ where
                 TimeTravelStoreOutput::Done
             }
             TimeTravelStoreCommand::Rebuild(candidate) => TimeTravelStoreOutput::Rebuilt(self.rebuild(store, candidate)),
-            TimeTravelStoreCommand::Preview { target, replacement, drafts } => TimeTravelStoreOutput::Previewed(self.preview(store, &target, &replacement, &drafts)?),
+            TimeTravelStoreCommand::Preview { target, replacement, drafts, deadline_us, clock } => {
+                self.cancel_preview(store)?;
+                self.preview_job = Some(store.begin_derived_history_preview(target, drafts).map_err(|error| error.into_fault())?);
+                self.preview_input = Some(replacement);
+                TimeTravelStoreOutput::Previewed(self.step_preview(store, deadline_us, clock)?)
+            }
+            TimeTravelStoreCommand::StepPreview { deadline_us, clock } => TimeTravelStoreOutput::Previewed(self.step_preview(store, deadline_us, clock)?),
             TimeTravelStoreCommand::StartReplay { drafts, from } => {
-                self.replay = None;
-                match store.begin_derived_report_replay(&drafts, Some(&from)) {
+                self.cancel_replay(store)?;
+                match store.begin_derived_report_replay(drafts, Some(from)) {
                     Ok(replay) => {
                         self.replay = Some(replay);
                         TimeTravelStoreOutput::ReplayStarted(true)
@@ -707,15 +752,19 @@ where
                 }
             }
             TimeTravelStoreCommand::CancelReplay => {
-                self.replay = None;
+                self.cancel_replay(store)?;
                 TimeTravelStoreOutput::Done
             }
             TimeTravelStoreCommand::StepReplay { deadline_us, clock } => TimeTravelStoreOutput::Stepped(self.step_replay(store, deadline_us, clock)?),
             TimeTravelStoreCommand::Commit { drafts, finalization, actor } => {
-                let Some(finished) = self.finished.take().filter(|finished| *finished.drafts() == drafts) else { return Ok(TimeTravelStoreOutput::Committed(TimeTravelCommit::Stale)) };
-                if let Some(actor) = actor {
-                    store.set_local_actor_id(Some(actor)).map_err(|error| error.into_fault())?;
+                if self.finished.as_ref().is_none_or(|finished| *finished.drafts() != drafts) {
+                    self.cancel_finished(store)?;
+                    return Ok(TimeTravelStoreOutput::Committed(TimeTravelCommit::Stale));
                 }
+                if actor.as_ref().is_some_and(|actor| *actor != store.local_actor_id().0) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("time-travel.actor"), "history edit actor differs from its opened session"));
+                }
+                let finished = self.finished.take().expect("admitted finished history replay");
                 let known: BTreeSet<MutationId> = store.envelope().transitions.iter().map(|transition| transition.mutation_id.clone()).collect();
                 TimeTravelStoreOutput::Committed(match store.commit_finished_replay(finished, finalization).await {
                     Ok(_) => {
@@ -745,8 +794,7 @@ where
     /// store's authoring law): its Withdraw answers the store's own refusal, its inputs are not editable.
     fn open(&mut self, store: &ArtifactStore<P, Mu>, target: &MutationId, current: Option<&protocol::InputReplacement>, withdraw: bool) -> Result<(TimeTravelEditor, protocol::InputReplacement), TimeTravelActionRefusal> {
         let refusal = if withdraw { TimeTravelActionRefusal::NotWithdrawable } else { TimeTravelActionRefusal::NotEditable };
-        let ops = store.mutation_ops().map_err(|_| TimeTravelActionRefusal::UnknownMutation)?;
-        let row = ops.iter().find(|row| row.mutation_id == *target).ok_or(TimeTravelActionRefusal::UnknownMutation)?;
+        let row = store.applied_mutation(target).map_err(|_| TimeTravelActionRefusal::UnknownMutation)?;
         if row.unit.is_some() {
             return Err(if withdraw { TimeTravelActionRefusal::UnitSpansDocuments } else { TimeTravelActionRefusal::NotEditable });
         }
@@ -812,30 +860,32 @@ where
         Ok(protocol::InputReplacement::Input { schema: store.envelope().schema.clone(), payload: encoded.map_err(|error| error.to_string())? })
     }
 
-    /// 🖼️ The editing preview: the state before `target` with the accepted upstream `drafts`, then `replacement` folded
-    /// exactly as the store's replay folds it (keep-and-record: an apply refusal is one `Fatal` message and a no-op).
-    /// Answers the draft's own messages.
-    fn preview(&mut self, store: &mut ArtifactStore<P, Mu>, target: &MutationId, replacement: &protocol::InputReplacement, drafts: &BTreeMap<MutationId, protocol::InputReplacement>) -> Result<Vec<protocol::MutationMessage>, Fault> {
-        let base = store.derived_snapshot_before(target, drafts).map_err(|error| error.into_fault())?;
+    /// 🖼️ One bounded prefix slice; only a completed preview displaces the last complete projection.
+    fn step_preview(&mut self, store: &mut ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>) -> Result<TimeTravelPreviewStep, Fault> {
+        let Some(job) = self.preview_job.as_mut() else { return Ok(TimeTravelPreviewStep::Pending) };
+        let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
+        loop {
+            if matches!(store.step_derived_history_preview(job, &mut deadline).map_err(|error| error.into_fault())?, store::ReplayStep::Finished(_)) { break; }
+            if deadline() { return Ok(TimeTravelPreviewStep::Pending); }
+        }
+        let base = store.finish_derived_history_preview(&mut self.preview_job).map_err(|error| error.into_fault())?;
+        let replacement = self.preview_input.take().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-input-absent"), "history preview lost its selected input"))?;
         let (preview, outcome) = match replacement {
             protocol::InputReplacement::Withdrawn => (base, Vec::new()),
             protocol::InputReplacement::Input { payload, .. } => {
-                let op = <Mu as ::protocol::OpBinary>::decode_op(payload).map_err(|error| error.into_fault())?;
+                let op = <Mu as ::protocol::OpBinary>::decode_op(&payload).map_err(|error| error.into_fault())?;
                 let derived = store.derive_history_snapshot(&base, &op);
                 self.discard(Some(op));
                 let (next, messages) = derived.map_err(|error| error.into_fault())?;
                 match next {
-                    Some(next) => {
-                        self.retire(store, Some(base))?;
-                        (next, messages)
-                    }
+                    Some(next) => { self.retire(store, Some(base))?; (next, messages) }
                     None => (base, messages),
                 }
             }
         };
         let previous = self.preview.replace(preview);
         self.retire(store, previous)?;
-        Ok(outcome)
+        Ok(TimeTravelPreviewStep::Completed(outcome))
     }
 
     /// ⏭️ Steps the replay until `deadline_us` on `clock`; completion swaps the replayed head in and keeps the finished result.
@@ -849,6 +899,7 @@ where
                     Ok((result, head, report)) => {
                         let previous = std::mem::replace(&mut self.head, head);
                         self.retire(store, previous)?;
+                        self.cancel_finished(store)?;
                         self.finished = Some(result);
                         TimeTravelReplayStep::Completed(report)
                     }
@@ -856,7 +907,7 @@ where
                 }
             }
             Err(_) => {
-                self.replay = None;
+                self.cancel_replay(store)?;
                 TimeTravelReplayStep::Faulted
             }
         })
@@ -872,12 +923,20 @@ where
         self.replay.is_some()
     }
 
+    fn preview_progress(&self) -> Option<store::ReplayProgress> {
+        self.preview_job.as_ref().map(store::ArtifactDerivedHistoryPreview::progress)
+    }
+
+    fn processed(&self) -> Option<u32> {
+        self.replay.as_ref().map(|replay| replay.operation_preparation_progress().items).filter(|items| *items > 0).map(|items| u32::try_from(items).unwrap_or(u32::MAX))
+    }
+
     fn has_pending_work(&self) -> bool {
-        !self.retirements.is_empty() || !self.discarded.is_empty()
+        self.preview_job.is_some() || !self.retirements.is_empty() || !self.discarded.is_empty()
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.is_empty() && self.discarded.is_empty()
+        self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.preview_job.is_none() && self.preview_input.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.is_empty() && self.discarded.is_empty()
     }
 
     fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
@@ -1979,7 +2038,7 @@ pub(crate) struct HistoryStoreStamp {
 /// 🧭️ The [`HistoryStoreStamp`] of `store`: O(1) plus one lookup of the applied top from the ledger's tail.
 pub(crate) fn history_store_stamp<P, Mu>(store: &ArtifactStore<P, Mu>) -> HistoryStoreStamp
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
 {
     let envelope = store.envelope();
@@ -2251,6 +2310,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🧹️ One bounded close unit of the history-edit ledger: the session vanishes, every typed owner settles against its
     /// store, then one owner retires.
     pub(crate) fn time_travel_close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if let Some(authoring) = self.time_travel.authoring.take() {
+            let mut replay = Some(authoring.replay);
+            if let Some(retirement) = self.store.retire_derived_report_replay(&mut replay).map_err(|error| error.into_fault())? { self.time_travel.document.retirements.push_back(retirement); }
+        }
         self.time_travel.begin_close();
         self.settle_time_travel_owners()?;
         Ok(self.time_travel.retire_step(maximum_items, maximum_bytes)?.unwrap_or(PluginCloseStep::Complete))
@@ -2422,14 +2485,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// `None` while nothing waits.
     pub(crate) fn reprojection_status(&self) -> Option<HistoryReprojection> {
         if let Some(load) = self.live_document_load().and_then(|operation| self.document_archive_loads.get(operation)).map(ActiveDocumentArchiveLoad::status) {
-            return Some(HistoryReprojection { done: u32::try_from(load.completed).unwrap_or(u32::MAX), total: u32::try_from(load.total).unwrap_or(u32::MAX), kind: HistoryReprojectionKind::Load, paused: false, fault: None });
+            return Some(HistoryReprojection { done: u32::try_from(load.completed).unwrap_or(u32::MAX), total: u32::try_from(load.total).unwrap_or(u32::MAX), processed: None, kind: HistoryReprojectionKind::Load, paused: false, fault: None });
         }
         let kind = if self.store.local_step_pending() { HistoryReprojectionKind::Step } else { HistoryReprojectionKind::Remote };
         match (self.store.reprojection_progress(), self.time_travel.reprojection_fault.as_ref()) {
             (Some(progress), fault) => {
-                Some(HistoryReprojection { done: progress.done, total: progress.total, kind, paused: kind == HistoryReprojectionKind::Remote && self.time_travel.reprojection_paused, fault: fault.map(|(code, _)| code.clone()) })
+                let processed = self.store.reprojection_operation_preparation_progress().map(|work| work.items).filter(|items| *items > 0).map(|items| u32::try_from(items).unwrap_or(u32::MAX));
+                Some(HistoryReprojection { done: progress.done, total: progress.total, processed, kind, paused: kind == HistoryReprojectionKind::Remote && self.time_travel.reprojection_paused, fault: fault.map(|(code, _)| code.clone()) })
             }
-            (None, Some((code, kind))) => Some(HistoryReprojection { done: 0, total: 0, kind: *kind, paused: false, fault: Some(code.clone()) }),
+            (None, Some((code, kind))) => Some(HistoryReprojection { done: 0, total: 0, processed: None, kind: *kind, paused: false, fault: Some(code.clone()) }),
             (None, None) => None,
         }
     }
@@ -2745,13 +2809,20 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// editor.
     async fn show_time_travel_preview(&mut self, target: &MutationId, replacement: &protocol::InputReplacement) -> Result<(), Fault> {
         let drafts = self.time_travel.accepted_drafts();
-        let TimeTravelStoreOutput::Previewed(outcome) = self.time_travel_run(TimeTravelStoreCommand::Preview { target: target.clone(), replacement: replacement.clone(), drafts }).await? else {
+        let deadline_us = self.time_travel_turn_deadline();
+        let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::Preview { target: target.clone(), replacement: replacement.clone(), drafts, deadline_us, clock: self.time_travel.turn_clock }).await? else {
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-mismatch"), "a history-edit preview answered another command"));
         };
-        if let Some(editor) = self.time_travel.editor.as_mut() {
-            editor.outcome = outcome;
+        self.adopt_time_travel_preview_step(step).await
+    }
+
+    async fn adopt_time_travel_preview_step(&mut self, step: TimeTravelPreviewStep) -> Result<(), Fault> {
+        if let TimeTravelPreviewStep::Completed(outcome) = step {
+            if let Some(editor) = self.time_travel.editor.as_mut() { editor.outcome = outcome; }
+            self.time_travel.document_dirty = true;
+            self.refresh_time_travel_children().await?;
         }
-        self.time_travel.document_dirty = true;
+        self.note_time_travel_changed(false, false);
         Ok(())
     }
 
@@ -3058,6 +3129,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
         }
         let moved = self.watch_time_travel_base().await?;
+        if !moved && self.time_travel.session.stage == TimeTravelStage::Editing && self.time_travel.preview_progress().is_some() {
+            if let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock }).await? {
+                self.adopt_time_travel_preview_step(step).await?;
+            }
+        }
         if !moved && self.time_travel.session.stage == TimeTravelStage::Replaying && self.time_travel.replaying() {
             self.step_time_travel_replay(deadline_us).await?;
         }
@@ -3364,7 +3440,7 @@ impl SupersedeLedger {
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🖋️ The actor this replica authors history transitions as — the store's own rule.
     pub(crate) fn supersede_author(&self) -> &str {
-        self.store.local_actor_id().unwrap_or("local")
+        &self.store.local_actor_id().0
     }
 
     /// 📚️ Rebuilds the supersede ledger when the store's transitions changed.
@@ -3480,7 +3556,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             Some(alternative_id) => store::HistoryFinalization::Scope { alternative_id },
             None => store::HistoryFinalization::Overwrite,
         };
-        match self.store.begin_report_replay(&drafts, None) {
+        match self.store.begin_derived_report_replay(drafts, None) {
             Ok(replay) => self.time_travel.authoring = Some(SupersedeAuthoring { replay, finalization }),
             Err(vcs::VcsError::ValidationFailed(_) | vcs::VcsError::Rejected { .. }) => return Ok(SupersedeAuthored::Refused),
             Err(error) => return Err(error.into_fault()),
@@ -3496,25 +3572,31 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             let clock = time_travel.turn_clock;
             let Some(authoring) = time_travel.authoring.as_mut() else { return Ok(SupersedeAuthored::Refused) };
             let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
-            authoring.replay.step(store.replay_edits(), &mut deadline)
+            store.step_derived_report_replay(&mut authoring.replay, &mut deadline)
         };
         match stepped {
             Ok(store::ReplayStep::Pending(_)) => return Ok(SupersedeAuthored::Pending),
             Ok(store::ReplayStep::Finished(_)) => {}
             Err(_) => {
-                self.time_travel.authoring = None;
+                if let Some(authoring) = self.time_travel.authoring.take() {
+                    let mut replay = Some(authoring.replay);
+                    if let Some(retirement) = self.store.retire_derived_report_replay(&mut replay).map_err(|error| error.into_fault())? { self.time_travel.document.retirements.push_back(retirement); }
+                }
                 return Ok(SupersedeAuthored::Refused);
             }
         }
         let SupersedeAuthoring { replay, finalization } = self.time_travel.authoring.take().expect("a finished authoring replay was held");
-        let Ok(result) = replay.finish() else { return Ok(SupersedeAuthored::Refused) };
+        let Ok((result, head)) = self.store.finish_derived_report_replay(&mut Some(replay)) else { return Ok(SupersedeAuthored::Refused) };
+        if let Some(head) = head {
+            self.time_travel.document.retire(&self.store, Some(head))?;
+        }
         let drafts = result.drafts().clone();
         match self.store.commit_finished_replay(result, finalization.clone()).await {
             Ok(_) => {
                 self.cache = None;
                 Ok(SupersedeAuthored::Landed)
             }
-            Err(vcs::VcsError::Stale { .. }) => match self.store.begin_report_replay(&drafts, None) {
+            Err(vcs::VcsError::Stale { .. }) => match self.store.begin_derived_report_replay(drafts, None) {
                 Ok(replay) => {
                     self.time_travel.authoring = Some(SupersedeAuthoring { replay, finalization });
                     Ok(SupersedeAuthored::Pending)
@@ -3938,7 +4020,12 @@ pub(crate) fn time_travel_band_section(panel: &TimeTravelPanel, controller_id: &
         .map_err(|_| error("time-travel-panel.status"))?;
     rows.try_push(stage_row).map_err(|_| error("time-travel-panel.rows"))?;
     if let (Some(done), Some(total)) = (status.done, status.total) {
-        let value_text = TimeTravelLabel::ReplayProgressValueText.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).replace("{done}", &done.to_string()).replace("{total}", &total.to_string());
+        let label = if status.stage == HistoryTimeTravelStage::Editing { TimeTravelLabel::PreparationProgressValueText } else { TimeTravelLabel::ReplayProgressValueText };
+        let mut value_text = label.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).replace("{done}", &done.to_string()).replace("{total}", &total.to_string());
+        if let Some(processed) = status.processed {
+            value_text.push_str(" · ");
+            value_text.push_str(&TimeTravelLabel::Processed.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).replace("{processed}", &processed.to_string()));
+        }
         let progress_row = ui::tree_item(Label(UiText::clipped(&value_text)))
             .icon(ui_text("loader-2", "time-travel-panel.progress-icon")?)
             .try_id(format!("{scope}.progress"))
@@ -4091,7 +4178,9 @@ pub(crate) fn time_travel_editor_sections(panel: &TimeTravelPanel, editor: &Time
             .map_err(|_| error("time-travel-panel.editor-refused"))?;
         rows.try_push(node).map_err(|_| error("time-travel-panel.editor-rows"))?;
     }
-    rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.accept"), HistoryPanelText::Accept.text(locale), "check", HISTORY_EDIT_ACCEPT_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?)
+    let accept_reason = (!editor.changed).then(|| TimeTravelLabel::RefusalUnchanged.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).to_string());
+    let accept = time_travel_button(controller_id, &format!("{scope}.accept"), HistoryPanelText::Accept.text(locale), "check", HISTORY_EDIT_ACCEPT_ACTION_ID, Some(time_travel_generation_args(generation)?), editor.changed)?;
+    rows.try_push(time_travel_control_row(&format!("{scope}.accept.row"), HistoryPanelText::Accept.text(locale), "check", accept, editor.changed, None, accept_reason.as_deref())?)
         .map_err(|_| error("time-travel-panel.editor-rows"))?;
     rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.discard"), HistoryPanelText::Discard.text(locale), "x", HISTORY_EDIT_DISCARD_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?)
         .map_err(|_| error("time-travel-panel.editor-rows"))?;

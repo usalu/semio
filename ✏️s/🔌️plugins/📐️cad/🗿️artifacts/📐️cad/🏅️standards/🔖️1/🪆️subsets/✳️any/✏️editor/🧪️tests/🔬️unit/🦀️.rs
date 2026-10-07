@@ -34,7 +34,7 @@ pub(crate) mod context {
     /// Every caller must therefore settle each dispatch ([`settle`]) and [`close`] the app before it
     /// drops, exactly as the host's own close loop does.
     pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers> {
-        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests).await;
+        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(TEST_INSTANCE).await;
         app
     }
@@ -369,7 +369,7 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
     assert!(!declared.is_empty() && declared.iter().all(|classification| *classification == InteractiveJobClassification::Migrated), "setActiveExample must be a live interactive job: {declared:?}");
     const INSTANCE: u32 = 7;
     for (archive_id, example_id) in [(91_u64, CAD_EXAMPLE_FOREST_LEFT), (92, crate::examples::demo::ID), (93, "")] {
-        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests).await;
+        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
         app.bind_instance_id(INSTANCE).await;
         app.dispatch_typed(CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: INSTANCE, view_state: None }).await.expect("setActiveExample is admitted");
         let mut loaded = None;
@@ -486,7 +486,7 @@ async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_
     let host_command = definition.commands.iter().find(|command| command.id == host_route["id"].as_str().unwrap()).expect("host command declaration");
     assert_eq!(host_command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone()).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     assert_eq!(app.app_id().await, controller);
     assert_eq!(<CadPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), activation["proofRows"].as_u64().expect("proof rows") as usize);
     let mut admitted = std::collections::BTreeSet::new();
@@ -751,7 +751,7 @@ async fn world_instances_carry_their_typology_colour_not_a_selection_premix() {
     let scene = forest_working_scene();
     let objects = &scene.building_objects;
     let instances: Vec<serde_json::Value> = serde_json::from_str(&edit::world_instances_json(objects, &forest_view())).expect("instances json");
-    let visible: Vec<&crate::standards::v1::subsets::any::io::geometry_import::CadObject> = objects.iter().filter(|object| object.visible).collect();
+    let visible: Vec<&crate::standards::v1::subsets::any::schema::geometry::CadObject> = objects.iter().filter(|object| object.visible).collect();
     assert_eq!(instances.len(), visible.len());
     for (object, instance) in visible.iter().zip(&instances) {
         assert_eq!(instance["color"].as_str(), Some(resolve_typology_style(&object.typology).color.as_str()), "{}", object.typology);
@@ -1467,12 +1467,12 @@ async fn forest_transformation_uses_live_shape_pane() {
     // derive at all (this assertion used to read that sequence and passed or failed by luck).
     // The live-input property lives in WHERE the classified faces land: `solid_for_object` falls back
     // to `box_prim(extent)`, so extent — and only extent — reaches the output honestly.
-    fn derived_typologies(objects: &[crate::standards::v1::subsets::any::io::geometry_import::CadObject]) -> Vec<String> {
+    fn derived_typologies(objects: &[crate::standards::v1::subsets::any::schema::geometry::CadObject]) -> Vec<String> {
         let mut rows: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
         rows.sort();
         rows
     }
-    fn derived_faces(objects: &[crate::standards::v1::subsets::any::io::geometry_import::CadObject]) -> Vec<String> {
+    fn derived_faces(objects: &[crate::standards::v1::subsets::any::schema::geometry::CadObject]) -> Vec<String> {
         let mut rows: Vec<String> = objects.iter().map(|object| format!("{} @ [{:.3}, {:.3}, {:.3}]", object.typology, object.origin[0], object.origin[1], object.origin[2])).collect();
         rows.sort();
         rows
@@ -2154,7 +2154,7 @@ async fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_
 /// `commit.fromStates` entry, so it commits at once). Without a session the empty line stays the idle no-op.
 #[semio_framework_async_macros::async_test]
 async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
-    let models = CadPaneModels(vec![(CadPaneId::Shape, "shape-model-test".into(), crate::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(&[]))]);
+    let models = CadPaneModels(vec![(CadPaneId::Shape, "shape-model-test".into(), crate::standards::v1::subsets::any::schema::geometry::semio_model_snapshot_from_objects(&[]))]);
     let mut runtime = CadPlayRuntime::default();
     assert!(start_interaction_session(&mut runtime, CadPaneId::Shape, "primitive.box"));
     {

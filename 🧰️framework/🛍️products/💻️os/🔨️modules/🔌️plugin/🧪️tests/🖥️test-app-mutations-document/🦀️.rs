@@ -55,6 +55,8 @@ impl store::ArtifactSqliteSnapshot for TestSnapshot {
         Ok(database)
     }
     fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
         use store::sqlite_snapshot::SqliteSnapshotPhase;
         let rows = &database.table("document_state")?.rows;
         let children = &database.table("slot_children")?.rows;
@@ -73,8 +75,8 @@ impl store::ArtifactSqliteSnapshot for TestSnapshot {
             if row.rowid != row.integer(0)? || row.integer(1)? != 1 || row.integer(2)? != position as i64 {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid ordered document child relationship"));
             }
-            let target = store::os_io::ArtifactRef { artifact_id: row.text(3)?.to_string(), dialect: store::os_io::ArtifactDialect { artifact_kind: row.text(4)?.to_string(), standard: row.text(5)?.to_string(), subset: row.text(6)?.to_string() } };
-            let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))?;
+            let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: row.text(3)?.to_string(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: row.text(4)?.to_string(), standard: row.text(5)?.to_string(), subset: row.text(6)?.to_string() } };
+            let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(&target.to_uri()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))?;
             snapshot.slot.push(store::ArtifactChild::new(target.artifact_id.clone(), target));
         }
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, children.len() + 1, children.len() + 1)?;
@@ -86,6 +88,8 @@ impl TestSnapshot {
     /// 🧩️ The JSON carriage both hand-written codecs share. An undeclared slot writes no key at
     /// all, so a document with no child encodes exactly the bytes it always did.
     fn to_json(&self) -> Result<serde_json::Value, String> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
         let mut value = serde_json::to_value(self).map_err(|error| error.to_string())?;
         if !self.slot.is_empty() {
             let object = value.as_object_mut().ok_or_else(|| "test snapshot encodes as a json object".to_string())?;
@@ -109,7 +113,9 @@ impl TestSnapshot {
 
 /// 🧒️ One declared owned-child handle from its canonical `ArtifactRef` uri.
 pub(crate) fn test_child_handle(uri: &str) -> Result<store::ArtifactChild<TestSnapshot>, String> {
-    let target = store::os_io::ArtifactRef::parse_uri(uri)?;
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(uri)?;
     Ok(store::ArtifactChild::new(target.artifact_id.clone(), target))
 }
 

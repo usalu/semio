@@ -218,7 +218,7 @@
           ]
         },
         "valueType": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/type/fixture.json#/$defs/valueType"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/type/schema.json#/$defs/valueType"
         },
         "expr": {
           "type": "string"

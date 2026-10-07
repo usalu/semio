@@ -1,7 +1,5 @@
 use super::*;
-use semio_framework::{
-    ActionArgControl, ActionKind, AppDefinition, AppRole, ArtifactDialect, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds,
-};
+use {semio_framework::ActionArgControl,semio_framework::ActionKind,semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::CommandDefinition,semio_framework::CommandOwnerAddress,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::PluginManifest,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 
 pub(super) fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefinition>) -> AppDefinition {
     AppDefinition {

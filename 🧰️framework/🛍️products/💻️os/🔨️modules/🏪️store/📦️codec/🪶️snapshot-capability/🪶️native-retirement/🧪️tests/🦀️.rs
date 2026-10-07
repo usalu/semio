@@ -48,7 +48,7 @@ impl ArtifactSqliteSnapshot for RetainedSnapshot {
     fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?; Ok(value_database(self.value)) }
     fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?; Ok(Self { value: database.table("retained_value")?.single_row()?.integer(1)?, retired: false }) }
     fn preflight_sqlite_snapshot_encoding(&self, _: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { let mut bound = NativeEncodingBound::new(control)?; bound.add(32)?; bound.finish() }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &crate::io_schema::ArtifactDialect, _: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(crate::io_schema::IoError::from_value_error)?; if dialect.subset == "reject" { return Err(crate::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"declared semantic owner refusal"))); } Ok(crate::io_schema::IoOutcome::clean(())) }
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(crate::io_schema::IoError::from_value_error)?; if dialect.subset == "reject" { return Err(crate::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"declared semantic owner refusal"))); } Ok(crate::io_schema::IoOutcome::clean(())) }
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn sqlite_snapshot_native_retirement_covers_success_cancellation_and_refusal() {
         RETIREMENTS.with(|count| count.set(0));
         let value = case["value"].as_i64().unwrap();
         let operation = case["operation"].as_str().unwrap();
-        let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.retained".into(), standard: "1".into(), subset: case["subset"].as_str().unwrap().into() };
+        let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.retained".into(), standard: "1".into(), subset: case["subset"].as_str().unwrap().into() };
         let mut callback = |event: crate::sqlite_snapshot::SqliteSnapshotProgress| case["cancelPhase"].as_str().is_none_or(|phase| format!("{:?}", event.phase) != phase);
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default());

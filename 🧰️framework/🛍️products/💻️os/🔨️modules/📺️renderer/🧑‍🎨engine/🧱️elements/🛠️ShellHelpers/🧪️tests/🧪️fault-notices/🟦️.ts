@@ -10,7 +10,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import Ajv2020 from "ajv/dist/2020.js";
 import type { FaultNoticeDefinition } from "@semio-tech/framework";
-import { appFaultNoticeV1, syncShellLabelLocale } from "../../🟦️.tsx";
+import { appFaultNoticeV1, historyInputDraftDispositionV1, syncShellLabelLocale } from "../../🟦️.tsx";
 import corpus from "../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️fault-notices/🔣️.json";
 import faultSchema from "../../../../../../../../../🔨️modules/⚠️diagnostic/🧬️schema/🎛️controlled/🔣️.json";
 import valueSchema from "../../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧬️schema/🔣️.json";
@@ -51,3 +51,10 @@ describe("📣️ app fault notices reach the person in the shell's language, ne
   });
 });
 //#endregion 🧪️Laws
+
+it("discards typed history refusals including their causes and retains other drafts", () => {
+  expect(historyInputDraftDispositionV1({ code: "timeTravel.frozen" })).toBe("discard");
+  expect(historyInputDraftDispositionV1({ code: "operation.failed", causes: [{ code: "timeTravel.frozen" }] })).toBe("discard");
+  expect(historyInputDraftDispositionV1({ code: "snapshot-edit.invalid-source" })).toBe("retain");
+  expect(historyInputDraftDispositionV1({ code: "other", message: "timeTravel.frozen" } as any)).toBe("retain");
+});

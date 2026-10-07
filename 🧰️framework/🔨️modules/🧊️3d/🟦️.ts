@@ -245,6 +245,8 @@ function hasCompleteComponentGroups(groups: readonly { readonly start: number; r
   let next = 0;
   for (const group of groups) {
     if (!Number.isSafeInteger(group.start) || !Number.isSafeInteger(group.count) || group.start !== next || group.count <= 0 || group.start % stride || group.count % stride || typeof group.entityId !== "string" || !group.entityId.length) return false;
+    let labelLength = 0;
+    for (const _ of group.entityId) if (++labelLength > 128) return false;
     next += group.count;
     if (!Number.isSafeInteger(next) || next > length) return false;
   }
@@ -267,7 +269,7 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
   }
   if (hasEdges && mesh.edges.length % 6 !== 0) return false;
   if (hasPoints && mesh.points!.length % 3 !== 0) return false;
-  if (!hasCompleteComponentGroups(mesh.faceGroups, mesh.index.length, 3) || !hasCompleteComponentGroups(mesh.edgeGroups, mesh.edges.length / 6, 1)) return false;
+  if (!hasCompleteComponentGroups(mesh.faceGroups, mesh.index.length, 3) || !hasCompleteComponentGroups(mesh.edgeGroups, mesh.edges.length / 6, 1) || !hasCompleteComponentGroups(mesh.vertexGroups ?? [], (mesh.points?.length ?? 0) / 3, 1)) return false;
   return isFiniteBuffer(mesh.position) && isFiniteBuffer(mesh.normal) && isFiniteBuffer(mesh.edges) && isFiniteBuffer(mesh.points);
 }
 
@@ -467,34 +469,31 @@ export function meshTransferToGlb(mesh: MeshTransfer): Uint8Array {
   return out;
 }
 
-/** 🔗️ Merges mesh transfers into one triangle soup. */
+/** 🔗️ Merges original buffers and preserves each component range and label. */
 export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfer {
-  const positions: number[] = [];
-  const normals: number[] = [];
-  const indices: number[] = [];
-  let vertexBase = 0;
+  const positions: number[] = [], normals: number[] = [], indices: number[] = [], edges: number[] = [], points: number[] = [];
+  const faceGroups: FaceGroup[] = [], edgeGroups: EdgeGroup[] = [], vertexGroups: VertexGroup[] = [];
+  const faceInfos: FaceInfo[] = [], edgeInfos: EdgeInfo[] = [];
   for (const mesh of meshes) {
-    for (let i = 0; i < mesh.position.length; i += 1) positions.push(mesh.position[i]!);
-    for (let i = 0; i < mesh.normal.length; i += 1) normals.push(mesh.normal[i]!);
-    for (let i = 0; i < mesh.index.length; i += 1) indices.push(mesh.index[i]! + vertexBase);
-    vertexBase += mesh.position.length / 3;
+    const vertexBase = positions.length / 3, faceBase = indices.length, edgeBase = edges.length / 6, pointBase = points.length / 3;
+    for (const value of mesh.position) positions.push(value);
+    for (const value of mesh.normal) normals.push(value);
+    for (const value of mesh.index) indices.push(value + vertexBase);
+    for (const value of mesh.edges) edges.push(value);
+    for (const value of mesh.points ?? []) points.push(value);
+    for (const group of mesh.faceGroups) faceGroups.push({ ...group, start: group.start + faceBase });
+    for (const group of mesh.edgeGroups) edgeGroups.push({ ...group, start: group.start + edgeBase });
+    for (const group of mesh.vertexGroups ?? []) vertexGroups.push({ ...group, start: group.start + pointBase });
+    for (const info of mesh.faceInfos) faceInfos.push(info);
+    for (const info of mesh.edgeInfos) edgeInfos.push(info);
   }
-  return {
-    position: new Float32Array(positions),
-    normal: new Float32Array(normals),
-    index: new Uint32Array(indices),
-    edges: new Float32Array(0),
-    faceGroups: [],
-    edgeGroups: [],
-    faceInfos: [],
-    edgeInfos: [],
-  };
+  return { position: new Float32Array(positions), normal: new Float32Array(normals), index: new Uint32Array(indices), edges: new Float32Array(edges), points: new Float32Array(points), faceGroups, edgeGroups, vertexGroups, faceInfos, edgeInfos, color: meshes.length && meshes.every(mesh => mesh.color === meshes[0]!.color) ? meshes[0]!.color : undefined };
 }
 // #endregion 🔌️WasmBridge
 
 // #region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-geometry-brep-js/🟦️.ts");
-  await registerTests1(import.meta.vitest, { isRenderableMeshTransfer, meshTransferToGeometryData, meshTransferFromPreviewPayload }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { isRenderableMeshTransfer, meshTransferToGeometryData, meshTransferFromPreviewPayload, mergeMeshTransfers }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

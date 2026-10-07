@@ -209,7 +209,7 @@ export async function objSnapshotFromSqliteDatabase(database: SqliteDatabase, op
   return snapshot;
 }
 /** 🛂️ Validate the exact owned dialect and document at the semantic I/O boundary. */
-export async function objSnapshotValidateSqliteSubset(snapshot:ObjSnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
+export async function objSnapshotValidateSqliteSubset(snapshot:ObjSnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
   await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);
   if(dialect.artifactKind!=="s.stdio.obj"||dialect.standard!=="3.0"||dialect.subset!=="*")throw new Error("OBJ owned SQLite dialect differs");
   const expected=await objSnapshotToSqliteDatabase(snapshot,options),candidate=await objSnapshotFromSqliteDatabase(database,options),actual=await objSnapshotToSqliteDatabase(candidate,options);

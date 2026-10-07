@@ -106,3 +106,63 @@ pub fn semio_brep_artifact_schema_descriptor() -> semio_framework_schema_registr
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+use std::collections::HashSet;
+
+/// 🔗️ Real cross-collection referential-invariant check — dangling ids are reported as errors, not
+/// silently ignored (nothing here is decode-only anymore).
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+pub fn check_brep_referential_integrity(snapshot: &SemioBrepSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
+    let vertex_ids: HashSet<&str> = snapshot.vertices.iter().map(|v| v.id.as_str()).collect();
+    let edge_ids: HashSet<&str> = snapshot.edges.iter().map(|e| e.id.as_str()).collect();
+    let loop_ids: HashSet<&str> = snapshot.loops.iter().map(|l| l.id.as_str()).collect();
+    let face_ids: HashSet<&str> = snapshot.faces.iter().map(|f| f.id.as_str()).collect();
+    let shell_ids: HashSet<&str> = snapshot.shells.iter().map(|s| s.id.as_str()).collect();
+
+    let mut diagnostics = Vec::new();
+    let mut dangling = |code: &'static str, message: String| {
+        diagnostics.push(semio_framework_diagnostic::Diagnostic::error(code, semio_framework_diagnostic::TextSpan::at(1, 1), message));
+    };
+
+    for e in &snapshot.edges {
+        if !vertex_ids.contains(e.start_vertex.as_str()) {
+            dangling("stdio.semio_brep.dangling-edge-start-vertex", format!("edge {:?} references unknown start vertex {:?}", e.id, e.start_vertex));
+        }
+        if !vertex_ids.contains(e.end_vertex.as_str()) {
+            dangling("stdio.semio_brep.dangling-edge-end-vertex", format!("edge {:?} references unknown end vertex {:?}", e.id, e.end_vertex));
+        }
+    }
+    for l in &snapshot.loops {
+        for le in &l.edges {
+            if !edge_ids.contains(le.edge.as_str()) {
+                dangling("stdio.semio_brep.dangling-loop-edge", format!("loop {:?} references unknown edge {:?}", l.id, le.edge));
+            }
+        }
+    }
+    for f in &snapshot.faces {
+        if !loop_ids.contains(f.outer_loop.as_str()) {
+            dangling("stdio.semio_brep.dangling-face-outer-loop", format!("face {:?} references unknown outer loop {:?}", f.id, f.outer_loop));
+        }
+        for inner in &f.inner_loops {
+            if !loop_ids.contains(inner.as_str()) {
+                dangling("stdio.semio_brep.dangling-face-inner-loop", format!("face {:?} references unknown inner loop {:?}", f.id, inner));
+            }
+        }
+    }
+    for s in &snapshot.shells {
+        for sf in &s.faces {
+            if !face_ids.contains(sf.face.as_str()) {
+                dangling("stdio.semio_brep.dangling-shell-face", format!("shell {:?} references unknown face {:?}", s.id, sf.face));
+            }
+        }
+    }
+    for so in &snapshot.solids {
+        for ss in &so.shells {
+            if !shell_ids.contains(ss.shell.as_str()) {
+                dangling("stdio.semio_brep.dangling-solid-shell", format!("solid {:?} references unknown shell {:?}", so.id, ss.shell));
+            }
+        }
+    }
+    diagnostics
+}
+

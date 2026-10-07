@@ -156,7 +156,7 @@ fn the_final_payload_matches_solve_with_job() {
     if oracle.contradiction {
         assert!(finished.pixels.is_empty() || finished.decided_count() == 0);
     } else {
-        assert_eq!(finished.pixels, oracle.pixels);
+        assert_eq!(crate::standards::v1::subsets::any::io::text::snapshot::decode_base64(&finished.pixels).unwrap(), oracle.pixels);
     }
     let solve = finished.to_set_solve();
     assert_eq!(solve.contradiction, oracle.contradiction);

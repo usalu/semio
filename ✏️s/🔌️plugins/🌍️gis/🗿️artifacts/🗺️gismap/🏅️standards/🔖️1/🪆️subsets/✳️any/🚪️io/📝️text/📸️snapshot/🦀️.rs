@@ -54,7 +54,7 @@ use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDraw
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 
 
 
@@ -76,7 +76,7 @@ use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDraw
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -97,12 +97,16 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+pub(crate) fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     enc_str(&r.to_uri())
 }
 
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+pub(crate) fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    semio_framework_artifact_reference::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
 pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
@@ -183,7 +187,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_plugin::{io_dispatch,  ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
@@ -250,7 +254,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_plugin::{io_dispatch,  ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
@@ -287,3 +291,42 @@ pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot {
 }
 }
 pub use snapshot_wire3_codec::*;
+
+mod map_json_output {
+use super::{value_to_dsl,render_drawing_to_svg};
+use crate::{GisMapSnapshot,MapFeature};
+use crate::schema::gis_map_snapshot_to_drawing;
+use semio_framework_value::FromValue;
+use serde_json::Value;
+pub(crate) fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
+    Value::from(value)
+}
+
+
+
+
+
+/// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
+/// emitting each feature's opaque payload.
+pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
+    let payloads = |features: &[MapFeature]| -> Vec<Value> { features.iter().map(|feature| dsl_to_value(&feature.data)).collect() };
+    serde_json::json!({
+        "positions": payloads(&document.positions),
+        "routes": payloads(&document.routes),
+        "regions": payloads(&document.regions),
+    })
+    .to_string()
+}
+
+
+/// 🗺️ Builds a real `SemioDrawingSnapshot` from the map document (positions/routes/regions →
+/// markers/polylines, `gis_map_snapshot_to_drawing`) and renders it through stdio's real
+/// drawing↔svg bridge (`io_dispatch`) — replaces the old hand-rolled `map_points_svg` delegate.
+pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    let document = GisMapSnapshot::from_value(value_to_dsl(value)).unwrap_or_default();
+    let drawing = gis_map_snapshot_to_drawing(&document);
+    render_drawing_to_svg(&drawing)
+}
+
+}
+pub use map_json_output::*;

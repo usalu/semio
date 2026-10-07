@@ -16,7 +16,7 @@ fn database(snapshot:&VcsSnapshot)->SqliteDatabase{snapshot.to_sqlite_database(&
 fn restore(database:&SqliteDatabase)->VcsSnapshot{VcsSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(snapshot:&VcsSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
 fn native(snapshot:&VcsSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot))}}
-fn dialect()->store::io_schema::ArtifactDialect{store::io_schema::ArtifactDialect{artifact_kind:"s.vcs.vcs".into(),standard:"1".into(),subset:"*".into()}}
+fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.vcs.vcs".into(),standard:"1".into(),subset:"*".into()}}
 
 #[test]
 fn sqlite_snapshot_vcs_complete_and_empty_domains_retain_all_native_fields(){

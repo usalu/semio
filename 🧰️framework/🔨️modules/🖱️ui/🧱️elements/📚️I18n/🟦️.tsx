@@ -422,7 +422,7 @@ export type UiTranslationSchema = {
       readonly utilities: UiLabelValue;
       readonly retry: UiLabelValue;
       readonly somethingWentWrong: UiLabelValue;
-      readonly doubleClickToEdit: UiLabelValue;
+      readonly editExactValue: UiLabelValue;
       readonly importFile: UiLabelValue;
       readonly clear: UiLabelValue;
       readonly collapse: UiLabelValue;
@@ -756,6 +756,8 @@ export type UiTranslationSchema = {
       };
       readonly target: UiLabelValue;
       readonly progress: UiLabelValue;
+      readonly preparationProgress: UiLabelValue;
+      readonly processed: UiLabelValue;
       readonly worst: UiLabelValue;
       readonly review: {
         readonly noChanges: UiLabelValue;
@@ -780,6 +782,7 @@ export type UiTranslationSchema = {
       };
       readonly refusal: {
         readonly frozen: UiLabelValue;
+        readonly unchanged: UiLabelValue;
         readonly illegal: UiLabelValue;
         readonly stale: UiLabelValue;
         readonly blocked: UiLabelValue;

@@ -1,6 +1,6 @@
 use super::*;
 use crate::schema::snapshot::{DocxBlock, DocxDocument};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_document_window() {
@@ -18,10 +18,10 @@ async fn render_emits_one_page_per_top_level_block() {
 
 #[semio_framework_async_macros::async_test]
 async fn nested_table_text_remains_editable_in_the_document_window() {
-    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧱️base/🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
-    let mut snapshot = crate::engine::build_minimal_docx(crate::schema::snapshot::DocxDocument::default());
-    let part_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).unwrap();
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(crate::schema::snapshot::DocxDocument::default());
+    let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
     snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(fixture["xml"].as_str().unwrap()).unwrap()).unwrap();
     let expected: Vec<Vec<String>> = serde_json::from_value(fixture["blocks"].clone()).unwrap();
     let pages = editable_pages(&snapshot).unwrap();

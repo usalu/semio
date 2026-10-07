@@ -112,7 +112,7 @@ fn drive_paint(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, config: &T
     let mut sequence = 0;
     for _ in 0..4 {
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match work.step(&ArtifactCommandInputs { command, snapshot, config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx).expect("TIFF paint work step") {
+        match work.step(&ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx).expect("TIFF paint work step") {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).expect("localized progress").contains("de")),
             ArtifactCommandWorkStep::Complete(emit) => return emit.artifact_mutations,
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } | ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("unexpected TIFF paint work step"),
@@ -139,7 +139,7 @@ fn retained_tiled_paint_captures_revision_round_trips_and_has_exact_inverse() {
     let mutations = drive_paint(&paint_command(), &before, &TiffEditorConfig::default());
     assert_eq!(mutations.len(), 1);
     let TiffMutation::PaintRegion(payload) = &mutations[0] else { panic!("addressed TIFF paint mutation") };
-    assert_eq!(payload.revision, crate::standards::v6_0::subsets::document::io::tiff_revision(&before));
+    assert_eq!(payload.revision, crate::standards::v6_0::subsets::document::schema::mutations::paint_region::samples::tiff_revision(&before));
     assert_eq!(TiffMutation::parse_op(&mutations[0].print_op()).expect("text paint round trip"), mutations[0]);
     assert_eq!(TiffMutation::decode_op(&mutations[0].encode_op().expect("binary paint encode")).expect("binary paint decode"), mutations[0]);
     let after = mutations[0].diff(&before).diff().apply(&before).expect("apply TIFF paint");
@@ -179,7 +179,7 @@ fn cancelled_retained_tiled_paint_discards_revision_without_publication() {
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-paint-cancel".into() };
     let mut work = paint_region::PaintRegionWork::new();
-    let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+    let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut sequence = 0;
     let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-prepare", .. }));

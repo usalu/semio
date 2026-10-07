@@ -1,0 +1,6 @@
+{
+  "files": ["0001-first", "0002-second"],
+  "interruptions": 2,
+  "cancellationAfterInterruptions": 1,
+  "unrecoverableCode": "EACCES"
+}

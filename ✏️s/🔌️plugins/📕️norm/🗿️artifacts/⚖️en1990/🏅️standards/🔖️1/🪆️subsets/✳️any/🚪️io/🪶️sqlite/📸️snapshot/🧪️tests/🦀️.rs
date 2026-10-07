@@ -118,7 +118,7 @@ fn sqlite_snapshot_en1990_large_owned_text_cancels_before_projection_reconstruct
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_en1990_actual_erased_codec_and_declaration_preserve_all_owned_words() {
-    use store::io::{ArtifactDialect, IoPayload, io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot}};
+    use {semio_framework_artifact_reference::ArtifactDialect,store::io::IoPayload,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("norm").label("EN1990 owned SQLite").version("0.0.1").package_id("semio:norm").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let codec = store::document_codec(crate::EN1990_DOCUMENT_SCHEMA).await.unwrap().unwrap(); let provider = codec.snapshot_sqlite.as_ref().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.norm.en1990".into(), standard: "1".into(), subset: "*".into() };

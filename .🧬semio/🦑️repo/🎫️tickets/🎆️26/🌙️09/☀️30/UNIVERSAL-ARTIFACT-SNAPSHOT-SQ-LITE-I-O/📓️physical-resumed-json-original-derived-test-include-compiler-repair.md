@@ -1,0 +1,7 @@
+# JSON Original Derived Test Include Compiler Repair
+
+The JSON stage of original unchanged dedicated owning session 12523 ended compiler-only: the Base IO derived-analysis include named a nonexistent IO tests path. The original CSV stage continues in the same serial command. A current bounded include census found exactly three missing include! paths across Base and I-JSON IO roots. Each corresponding original test exists in the current sibling Schema tests authority.
+
+Two files and three exact include literals now reference those actual files via ../🧬️schema/🧪️tests. Test bodies, registered law filters, fixtures, schema, grants, and callbacks are unchanged. The guard retains full current images and three exact regions. This restores actual test rosters without adding aliases or compatibility files. The original JSON route must be replayed unchanged after the original CSV stage becomes terminal; no runtime credit is claimed from this compiler-only receipt.
+
+The full original serial command 12523 became terminal with exit 1. CSV likewise exposed one missing derived-analysis include. The only missing include in its current family points to an existing sibling Schema derived-analysis test. That one IO-root literal is mounted under its fresh guard. Together the original two owners had two compiler-only errors and no Nextest; the four existing test include authority corrections span three files. The unchanged original two-owner serial command follows these exact compiler prerequisites.

@@ -16,6 +16,31 @@
   ],
   "firstStep": "progress",
   "sourceReleases": 1,
+  "decoding": {
+    "sourceIdentity": "pointer-and-length",
+    "sourceCopies": 0,
+    "lexerUnit": "one-unicode-scalar",
+    "parserUnit": "one-frame-transition",
+    "firstStep": "progress",
+    "sameControl": true,
+    "publication": "after-exact-end-and-typed-conversion",
+    "restorationNative": "payload data={nested=[\"Mesh 😀 \\\\ \\\" Label\\n\" {enabled=true nothing=null}] numbers=[0 42 -7 1.5]}",
+    "restorationSemantic": {
+      "nested": [
+        "Mesh 😀 \\ \" Label\n",
+        {
+          "enabled": true,
+          "nothing": null
+        }
+      ],
+      "numbers": [
+        0,
+        42,
+        -7,
+        1.5
+      ]
+    }
+  },
   "projection": {
     "rows": 8,
     "textRepeats": 128,

@@ -482,7 +482,6 @@
         }
       ],
       "kinds": [
-        "change-byte-order",
         "insert-ifd",
         "remove-ifd",
         "replace-tag",
@@ -919,54 +918,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "IFD 0 keeps its dimensions/tags; the raster bytes are wholly different."
-    },
-    {
-      "id": "byte-order-change-byte-order",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.tiff",
-        "standard": "6.0",
-        "subset": "document"
-      },
-      "mutation": "change-byte-order",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/🧭️change-byte-order/⬅️before.tif",
-          "mediaType": "image/tiff",
-          "sha256": "sha256:f32642d903fd97700df84eeca4bbbee9fabb958151204e8661edbb795bfd046e",
-          "bytes": 186
-        },
-        {
-          "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/🧭️change-byte-order/➡️after.tif",
-          "mediaType": "image/tiff",
-          "sha256": "sha256:59cf644ffc5df1ed06be91e93b7b37e04bccd00cd973d223c61b0a417d95388e",
-          "bytes": 186
-        }
-      ],
-      "provenance": {
-        "source": "generated",
-        "license": "public-domain (synthetic, no third-party content embedded)"
-      },
-      "generator": {
-        "oracle": "tiff-6-0-byte-order-reader",
-        "packageVersion": "11.3.0",
-        "engineFamily": "pillow",
-        "engineVersion": "11.3.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts byte-order",
-        "platform": "darwin-arm64"
-      },
-      "comparisonProfile": "semantic-tiff-byte-order-v1",
-      "reproducible": true,
-      "family": "mechanical",
-      "notes": "The same 8x8 image written twice through Pillow's own IFD serialiser, once little-endian and once big-endian. Both decode to an identical pixel checksum, so the pair differs in the declared byte order and in nothing else — checked at generation time. tiff 0.11 corrects to host order during image decoding, so only Decoder::byte_order() witnesses this.",
-      "comparisonPipeline": "tiff-6-0-byte-order-compare-v1"
     },
     {
       "id": "set-snapshot-applied",

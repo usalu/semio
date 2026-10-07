@@ -1,0 +1,15 @@
+> bun ./📜️script.ts tests "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/✂️clamp/🧪️tests/🟦️.ts"
+
+[DEBUG] isolated Nx verification tests
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/✂️clamp/🧪️tests/🟦️.ts:
+[0m[32m✓[0m[0m[1m ✂️ bounded ledger fixture matches independent severity sorting and UTF-8 prefix selection[0m [0m[2m[5.77ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m 🛑️ granted message retirement preserves the document baseline at every cancellation point[0m [0m[2m[8.97ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m 🚧️ summarized fatal messages preserve every repairable mutation status[0m [0m[2m[2.46ms[0m[2m][0m
+[0m[32m✓[0m[0m[1m 📶️ unsettled diagnostic views keep replay progress below completion[0m [0m[2m[0.08ms[0m[2m][0m
+
+[0m[32m 4 pass[0m
+[0m[2m 0 fail[0m
+ 1021 expect() calls
+Ran 4 tests across 1 file. [0m[2m[[1m73.00ms[0m[2m][0m

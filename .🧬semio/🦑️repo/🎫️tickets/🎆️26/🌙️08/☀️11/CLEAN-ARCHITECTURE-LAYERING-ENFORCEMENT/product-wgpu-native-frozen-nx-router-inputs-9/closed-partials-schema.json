@@ -1,0 +1,1 @@
+{"type":"array","minItems":4,"maxItems":4,"items":{"type":"object","required":["id","current","partial","selected"],"additionalProperties":false,"properties":{"id":{"type":"string"},"current":{"type":"string"},"partial":{"type":["string","null"]},"selected":{"type":"string"}}}}

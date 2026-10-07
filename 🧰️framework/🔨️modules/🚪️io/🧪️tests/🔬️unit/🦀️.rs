@@ -4,6 +4,8 @@
 //! every real chain (e.g. stdio's png↔deflate↔binary) goes through, proving the mechanism
 //! against the real registry rather than a hand-simulated call graph.
 use super::*;
+use semio_framework_artifact_reference::{ArtifactKindId,ArtifactRef,is_canonical_artifact_kind};
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 
 const HOP1_FROM: Dialect = Dialect { artifact_kind: "test.io-compose-via.hop1.from", standard: StandardId("1"), subset: SubsetId("*") };
 const HOP1_INTO: Dialect = Dialect { artifact_kind: "test.io-compose-via.hop1.into", standard: StandardId("1"), subset: SubsetId("*") };
@@ -337,6 +339,8 @@ async fn artifact_kind_id_rejects_non_canonical_grammar() {
 /// `!` is significant).
 #[semio_framework_async_macros::async_test]
 async fn artifact_ref_uri_round_trips() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let cases = [
         ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.stl".to_string(), standard: "1".to_string(), subset: "*".to_string() } },
         ArtifactRef { artifact_id: "doc.v2-final.draft".to_string(), dialect: ArtifactDialect { artifact_kind: "s.norm.en-1994-1".to_string(), standard: "2024".to_string(), subset: "cc6".to_string() } },
@@ -351,6 +355,8 @@ async fn artifact_ref_uri_round_trips() {
 /// 🔁️ Exact expected shape of `to_uri`, pinned so the format doesn't silently drift.
 #[semio_framework_async_macros::async_test]
 async fn artifact_ref_to_uri_matches_expected_shape() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     let artifact_ref = ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.gif".to_string(), standard: "87a".to_string(), subset: "*".to_string() } };
     assert_eq!(artifact_ref.to_uri(), "abc123!s.stdio.gif@87a/*");
 }
@@ -359,6 +365,8 @@ async fn artifact_ref_to_uri_matches_expected_shape() {
 /// `parse_coordinate`'s own empty-component rejection.
 #[semio_framework_async_macros::async_test]
 async fn artifact_ref_parse_uri_rejects_malformed_input() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
     assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").is_err(), "missing '!' should fail");
     assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").is_err(), "empty artifact id should fail");
 }

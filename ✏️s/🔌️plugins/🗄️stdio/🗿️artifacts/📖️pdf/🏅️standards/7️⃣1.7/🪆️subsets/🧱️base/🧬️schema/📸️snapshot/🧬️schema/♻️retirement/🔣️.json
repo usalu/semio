@@ -133,7 +133,18 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "range": {
@@ -141,7 +152,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "type": "object",
+                    "semioPrimitive": "binary64",
+                    "properties": {
+                      "bits": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{16}$"
+                      }
+                    },
+                    "required": [
+                      "bits"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 {
@@ -152,17 +174,50 @@
             "c0": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "c1": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "object",
+                "semioPrimitive": "binary64",
+                "properties": {
+                  "bits": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  }
+                },
+                "required": [
+                  "bits"
+                ],
+                "additionalProperties": false
               }
             },
             "n": {
-              "type": "number"
+              "type": "object",
+              "semioPrimitive": "binary64",
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              },
+              "required": [
+                "bits"
+              ],
+              "additionalProperties": false
             }
           }
         },

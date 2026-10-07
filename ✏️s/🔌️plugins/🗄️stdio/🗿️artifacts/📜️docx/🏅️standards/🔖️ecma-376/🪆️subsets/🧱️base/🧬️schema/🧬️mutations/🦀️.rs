@@ -2,7 +2,7 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::schema::diff::{dec_xml_node, dec_xml_node_bin, enc_xml_node, enc_xml_node_bin};
+
 
 
 
@@ -26,10 +26,11 @@ use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPar
 #[cfg(test)]
 use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
 use crate::DocxSnapshot;
-use protocol::OpBinary;
-use protocol::{Mutation, OpText};
+
+use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path as xml_diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
@@ -215,7 +216,7 @@ fn block_insert_slot(nodes: &[XmlNode], ordinal: usize) -> Option<usize> {
 }
 
 fn edit_main_body(snapshot: &mut DocxSnapshot, edit: impl FnOnce(&mut Vec<XmlNode>) -> Option<()>) -> Option<()> {
-    let main_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).ok()?;
+    let main_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).ok()?;
     let part = snapshot.xml_part_mut(&main_path)?;
     let mut document = part.materialize_document_exact().ok()?;
     let root = document.root.as_mut()?;
@@ -237,11 +238,11 @@ fn nested_blocks_mut<'a>(blocks: &'a mut Vec<XmlNode>, segments: &[DocxPathSegme
 }
 
 fn edit_styles_root(snapshot: &mut DocxSnapshot, edit: impl FnOnce(&mut Vec<XmlNode>) -> Option<()>) -> Option<()> {
-    let main_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).ok()?;
+    let main_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).ok()?;
     let styles_path = snapshot
         .opc
-        .resolve_relationship(&main_path, crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_STYLES)
-        .or_else(|| snapshot.opc.resolve_relationship(&main_path, crate::standards::v_ecma_376::subsets::base::io::STRICT_REL_TYPE_STYLES))?;
+        .resolve_relationship(&main_path, crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_STYLES)
+        .or_else(|| snapshot.opc.resolve_relationship(&main_path, crate::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_STYLES))?;
     let part = snapshot.xml_part_mut(&styles_path)?;
     let mut document = part.materialize_document_exact().ok()?;
     let root = document.root.as_mut()?;
@@ -280,7 +281,7 @@ fn apply_to_snapshot(base: &DocxSnapshot, mutation: &DocxMutation) -> Option<Doc
             edit_main_body(&mut next, |body| {
                 let blocks = nested_blocks_mut(body, &path.segments)?;
                 let index = block_insert_slot(blocks, path.index)?;
-                blocks.insert(index, crate::standards::v_ecma_376::subsets::base::io::export::serializers::block_to_xml(block));
+                blocks.insert(index, crate::standards::v_ecma_376::subsets::base::schema::construction::block_to_xml(block));
                 Some(())
             })?;
         }
@@ -295,7 +296,7 @@ fn apply_to_snapshot(base: &DocxSnapshot, mutation: &DocxMutation) -> Option<Doc
             edit_main_body(&mut next, |body| {
                 let blocks = nested_blocks_mut(body, &path.segments)?;
                 let index = block_slot(blocks, path.index)?;
-                blocks[index] = crate::standards::v_ecma_376::subsets::base::io::export::serializers::block_to_xml(block);
+                blocks[index] = crate::standards::v_ecma_376::subsets::base::schema::construction::block_to_xml(block);
                 Some(())
             })?;
         }
@@ -312,7 +313,7 @@ fn apply_to_snapshot(base: &DocxSnapshot, mutation: &DocxMutation) -> Option<Doc
                 if style_index(styles, &style.id).is_some() {
                     return None;
                 }
-                styles.push(crate::standards::v_ecma_376::subsets::base::io::export::serializers::style_to_xml(style));
+                styles.push(crate::standards::v_ecma_376::subsets::base::schema::construction::style_to_xml(style));
                 Some(())
             })?;
         }
@@ -342,21 +343,24 @@ fn apply_to_snapshot(base: &DocxSnapshot, mutation: &DocxMutation) -> Option<Doc
                 Some(())
             })?;
         }
-        DocxMutation::SetPart(set_part::SetPart { path, content_type, bytes }) => {
+        DocxMutation::SetPart(set_part::SetPart { path, content_type, payload }) => {
             let path = path.trim_start_matches('/').to_string();
-            if docx_part_is_xml(&path, content_type) {
-                let text = std::str::from_utf8(bytes).ok()?;
-                let document = xml_document_from_text(text).ok()?;
-                next.opc.content_types.set_override(&path, content_type).ok()?;
-                if let Some(part) = next.xml_part_mut(&path) {
-                    part.content_type.clone_from(content_type);
-                    part.replace_document(document).ok()?;
-                } else {
-                    next.xml_parts.try_push(DocxXmlPart::try_from_document(path, content_type.clone(), document).ok()?).ok()?;
-                    next.xml_parts.sort_unstable_by(|left, right| left.path.cmp(&right.path));
+            match payload {
+                set_part::DocxPartContent::Xml { document } => {
+                    docx_part_is_xml(&path, content_type).then_some(())?;
+                    next.opc.content_types.set_override(&path, content_type).ok()?;
+                    if let Some(part) = next.xml_part_mut(&path) {
+                        part.content_type.clone_from(content_type);
+                        part.replace_document(document.clone()).ok()?;
+                    } else {
+                        next.xml_parts.try_push(DocxXmlPart::try_from_document(path, content_type.clone(), document.clone()).ok()?).ok()?;
+                        next.xml_parts.sort_unstable_by(|left, right| left.path.cmp(&right.path));
+                    }
                 }
-            } else {
-                next.opc.set_part(&path, content_type, bytes.clone()).ok()?;
+                set_part::DocxPartContent::Binary { bytes } => {
+                    (!docx_part_is_xml(&path, content_type)).then_some(())?;
+                    next.opc.set_part(&path, content_type, bytes.clone()).ok()?;
+                }
             }
         }
         DocxMutation::RemovePart(remove_part::RemovePart { path }) => {
@@ -541,7 +545,7 @@ pub(crate) fn agg_inverse(this: &DocxMutation, base: &DocxSnapshot) -> Result<Ve
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
-use crate::schema::diff::{dec_block_bin, dec_style_bin, enc_block_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
+
 
 
 
@@ -570,7 +574,7 @@ use crate::schema::diff::{dec_block_bin, dec_style_bin, enc_block_bin, enc_style
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fixture() -> DocxSnapshot {
-    let mut snapshot = crate::engine::build_minimal_docx(DocxDocument {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![
             DocxBlock::paragraph("first"),
             DocxBlock::Table(DocxTable {
@@ -604,7 +608,7 @@ fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> Docx
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sweep_a() -> DocxSnapshot {
-    let mut snapshot = crate::engine::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("old"), DocxBlock::paragraph("stay")], styles: vec![DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None }] });
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("old"), DocxBlock::paragraph("stay")], styles: vec![DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None }] });
     snapshot.opc.set_part("word/media/remove.bin", "application/octet-stream", vec![1, 2]);
     snapshot
 }
@@ -612,7 +616,7 @@ fn sweep_a() -> DocxSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> DocxSnapshot {
-    let mut snapshot = crate::engine::build_minimal_docx(DocxDocument {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![DocxBlock::paragraph("new"), DocxBlock::paragraph("stay"), DocxBlock::paragraph("added")],
         styles: vec![DocxStyle { id: "keep".into(), name: "Keep renamed".into(), based_on: None }],
     });
@@ -657,7 +661,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
         DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: "Normal".into() }),
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id: "Normal".into(), name: "Body".into() }),
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Heading1".into()) }),
-        DocxMutation::SetPart(set_part::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), bytes: b"<w:numbering/>".to_vec() }),
+        DocxMutation::SetPart(set_part::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), payload: set_part::DocxPartContent::Xml { document: semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument { root: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "w:numbering".into(), attrs: Vec::new(), children: Vec::new() }), ..Default::default() } } }),
         DocxMutation::RemovePart(remove_part::RemovePart { path: "word/media/original.bin".into() }),
     ]
 }

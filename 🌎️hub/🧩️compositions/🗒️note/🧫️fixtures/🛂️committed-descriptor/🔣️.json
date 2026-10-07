@@ -4,11 +4,13 @@
   "originalLaw": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧪️tests/🔬️unit/🦀️.rs",
   "law": "🧪️tests/🛂️committed-descriptor/🦀️.rs",
   "fixture": "🧫️fixtures/🛂️committed-descriptor/🔣️.json",
-  "schema": "🧬️schema/🛂️committed-descriptor/🔣️.json",
   "descriptorPath": "🌎️hub/🧩️compositions/🗒️note/🛂️.descriptor.semio",
   "componentDirectory": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist",
   "componentName": "semio_hub_note.wasm",
-  "profiles": ["component-dev", "component-release"],
+  "profiles": [
+    "component-dev",
+    "component-release"
+  ],
   "pluginId": "note",
   "load": "hot_reload_plugin",
   "manifest": "plugin_graph().manifest",

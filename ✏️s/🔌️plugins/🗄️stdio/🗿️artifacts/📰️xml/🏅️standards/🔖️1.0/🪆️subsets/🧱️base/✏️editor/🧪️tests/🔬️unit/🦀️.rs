@@ -99,7 +99,7 @@ async fn the_editor_declares_the_example_pickers_verb() {
 async fn the_example_switch_joins_its_exact_retained_factory() {
     use semio_framework_plugin::PluginApp;
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_xml_editor());
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<XmlAnyEditor>>::with_registry(EditorApp::<XmlAnyEditor>::default(), registry).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<XmlAnyEditor>>::with_registry(EditorApp::<XmlAnyEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     while !app.close_terminal_is_empty() {
         if matches!(app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture close"), semio_framework_plugin::PluginCloseStep::Complete) {
             break;
@@ -117,7 +117,7 @@ async fn the_example_switch_joins_its_exact_retained_factory() {
 fn the_natural_source_draft_applies_what_it_shows() {
     use quick_xml::events::Event;
     let snapshot = crate::schema::demo_xml_snapshot();
-    let source = crate::schema::snapshot::xml_document_to_text_checked(&snapshot.doc).expect("the curated catalog prints");
+    let source = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked(&snapshot.doc).expect("the curated catalog prints");
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
     let apply = |value: String| xml_any_emit(&XmlAnyEditorCommand::SetNode { node_id: main::XML_ROOT_NODE_ID.into(), revision: revision.clone(), value }, &snapshot, None);
     assert!(apply(source.clone()).expect("the unchanged source applies").artifact_mutations.is_empty(), "the unchanged source is a no-op");
@@ -125,7 +125,7 @@ fn the_natural_source_draft_applies_what_it_shows() {
     assert_ne!(edited, source, "the curated catalog carries the text the law edits");
     let emit = apply(edited).expect("a text change applies");
     let [XmlMutation::SetSnapshot(set)] = emit.artifact_mutations.as_slice() else { panic!("a source apply is one whole-document mutation") };
-    let printed = crate::schema::snapshot::xml_document_to_text_checked(&set.snapshot.doc).expect("the applied document prints");
+    let printed = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked(&set.snapshot.doc).expect("the applied document prints");
     let mut reader = quick_xml::reader::Reader::from_str(&printed);
     let (mut inside, mut item) = (false, String::new());
     loop {
@@ -170,7 +170,7 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<XmlAnyEdit
 /// switch's `Effect::LoadDocument`.
 async fn kit_fixture_holding(document: &XmlSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<XmlAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_xml_editor(), examples: Vec::new() } }).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<XmlAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_xml_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_XML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app

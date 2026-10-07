@@ -1,0 +1,45 @@
+{
+  "status": "original session38717 terminal1: three owning targets green; DIN18599 compiler-only8; EN1997 runtime14/15 stale fixture ENOENT",
+  "session": 38717,
+  "receipts": [
+    {
+      "owner": "@semio-tech/norm-en1990-rs",
+      "seconds": 0.545,
+      "run": 14,
+      "passed": 14,
+      "skipped": 154
+    },
+    {
+      "owner": "@semio-tech/norm-en1994-rs",
+      "seconds": 0.822,
+      "run": 14,
+      "passed": 14,
+      "skipped": 182
+    },
+    {
+      "owner": "@semio-tech/norm-en1996-rs",
+      "seconds": 1.356,
+      "run": 14,
+      "passed": 14,
+      "skipped": 150
+    }
+  ],
+  "exitCode": 1,
+  "frontiers": [
+    {
+      "owner": "DIN18599",
+      "compilerErrors": 8,
+      "noNextest": true
+    },
+    {
+      "owner": "EN1997",
+      "run": 15,
+      "passed": 14,
+      "failed": 1,
+      "skipped": 190,
+      "seconds": 1.455,
+      "nextestId": "565a47e7-26f2-4869-b5a7-1f29434872d0",
+      "failure": "original relocated independent fixture ENOENT"
+    }
+  ]
+}

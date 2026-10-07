@@ -1,2 +1,1 @@
-"Exact PNG byte-authority diff."
-type PngDiff { bytes: [Int!] }
+type PngDiff { image: PngImage }

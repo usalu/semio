@@ -254,7 +254,7 @@
     },
     {
       "id": "glue-purity-modules-ui-contract",
-      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️.rs"
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🦀️.rs"
     }
   ],
   "packageBoundaryHoistCases": [

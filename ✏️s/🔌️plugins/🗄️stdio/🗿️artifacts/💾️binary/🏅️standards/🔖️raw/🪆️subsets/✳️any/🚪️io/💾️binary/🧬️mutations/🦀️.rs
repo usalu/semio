@@ -17,10 +17,10 @@ use protocol::{OpBinary, OpText};
 /// type. Zero per-artifact logic.
 impl OpBinary for BinaryMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(crate::standards::v_raw::subsets::any::schema::mutations::COMPONENT_PROTOCOL_SEMIO, self)
+        dsl::variants_binary::encode_tagged_op(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO, self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(crate::standards::v_raw::subsets::any::schema::mutations::COMPONENT_PROTOCOL_SEMIO, bytes)
+        dsl::variants_binary::decode_tagged_op(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO, bytes)
     }
 }
 }

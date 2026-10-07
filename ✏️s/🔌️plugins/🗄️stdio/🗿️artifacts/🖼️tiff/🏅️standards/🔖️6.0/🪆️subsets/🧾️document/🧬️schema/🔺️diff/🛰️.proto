@@ -1,41 +1,12 @@
 syntax = "proto3";
 package semio.s_stdio_tiff.diff;
-
 import "s_stdio_tiff/snapshot.proto";
-
-message TiffTagModified {
-  uint32 tag = 1;
-  semio.s_stdio_tiff.snapshot.TiffFieldType kind = 2;
-  semio.s_stdio_tiff.snapshot.TiffValues values = 3;
-}
-message TiffTagAdded {
-  uint32 tag = 1;
-  semio.s_stdio_tiff.snapshot.TiffFieldType kind = 2;
-  semio.s_stdio_tiff.snapshot.TiffValues values = 3;
-}
-
-// Tag-id-keyed entries triple for one IFD.
-message TiffTagsDiff {
-  repeated uint32 removed = 1;
-  repeated TiffTagModified modified = 2;
-  repeated TiffTagAdded added = 3;
-}
-
-// One IFD's own delta: the recursive tag triple plus a whole-value slot for its raw strip payload.
-message TiffIfdDiff { TiffTagsDiff entries = 1; optional bytes pixels = 2; }
+message TiffTagModified { uint32 tag = 1; semio.s_stdio_tiff.snapshot.TiffValues values = 2; }
+message TiffTagAdded { uint32 tag = 1; semio.s_stdio_tiff.snapshot.TiffValues values = 2; }
+message TiffTagsDiff { repeated uint32 removed = 1; repeated TiffTagModified modified = 2; repeated TiffTagAdded added = 3; }
+message TiffSampleBlocks { repeated semio.s_stdio_tiff.snapshot.TiffSampleBlock values = 1; }
+message TiffIfdDiff { optional TiffTagsDiff entries = 1; optional TiffSampleBlocks blocks = 2; }
 message TiffIfdModified { uint64 index = 1; TiffIfdDiff diff = 2; }
 message TiffIfdAdded { uint64 index = 1; semio.s_stdio_tiff.snapshot.TiffIfd ifd = 2; }
-
-// Index-keyed ifds triple (TIFF's IFD chain is positional).
-message TiffIfdsDiff {
-  repeated uint64 removed = 1;
-  repeated TiffIfdModified modified = 2;
-  repeated TiffIfdAdded added = 3;
-}
-
-// 🔺️ Sparse diff for stdio.tiff. No tri-state fields at this level.
-message TiffDiff {
-  optional semio.s_stdio_tiff.snapshot.TiffByteOrder byte_order = 1;
-  optional TiffIfdsDiff ifds = 2;
-  optional bytes pixels = 3;
-}
+message TiffIfdsDiff { repeated uint64 removed = 1; repeated TiffIfdModified modified = 2; repeated TiffIfdAdded added = 3; }
+message TiffDiff { optional TiffIfdsDiff ifds = 1; }

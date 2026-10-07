@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️connect-handles/🪢️adds-second-edge/📸️snapshot/⬅️before/🔣️.json");
@@ -37,7 +38,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "connect-handles/adds-second-edge: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.edges.len(), 2, "connect-handles/adds-second-edge: edge-2 was not appended");
     let edge = snapshot.edges.iter().find(|edge| edge.id == "edge-2").expect("edge-2 exists after connecting");
-    assert_eq!((edge.source.as_str(), edge.target.as_str()), ("handle-spare", "handle-2"), "connect-handles/adds-second-edge: edge-2 joins the wrong handles");
+    assert_eq!((edge.source.to_string_owner(), edge.target.to_string_owner()), ("handle-spare".to_string(), "handle-2".to_string()), "connect-handles/adds-second-edge: edge-2 joins the wrong handles");
     assert_eq!((edge.visible, edge.locked), (None, None), "connect-handles/adds-second-edge: a freshly connected edge must carry no presentation overrides");
 }
 

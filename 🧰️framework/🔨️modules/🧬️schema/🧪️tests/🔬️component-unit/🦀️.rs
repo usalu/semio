@@ -535,7 +535,7 @@ async fn owned_validator_agrees_with_the_shared_draft07_vectors() {
         let id = case.get("id").and_then(Value::as_str).expect("case id");
         let documents: Vec<String> = case.get("documents").and_then(Value::as_array).map(|documents| documents.iter().map(json_to_string).collect()).unwrap_or_default();
         let documents: Vec<&str> = documents.iter().map(String::as_str).collect();
-        let schema = json_to_string(case.get("schema").expect("case schema"));
+        let schema = json_to_string(case.get("input").and_then(|input| input.get("schema")).expect("case schema"));
         let validator = crate::OwnedJsonSchemaValidator::compile_with_documents(&schema, &documents).unwrap_or_else(|error| panic!("{id}: compile: {error}"));
         for instance in case.get("valid").and_then(Value::as_array).expect("valid instances") {
             let instance = json_to_string(instance);
@@ -598,7 +598,7 @@ fn fragment_validation_uses_only_the_smallest_required_post_edit_frontier() {
     use crate::{OwnedJsonSchemaValidator, SchemaFragmentContextRefusal, SchemaFragmentOperation, SchemaFragmentPathSegment, SchemaFragmentValueShape};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️fragment-validation-vectors.json")).expect("fragment fixture");
-    let validator = OwnedJsonSchemaValidator::compile(&fixture["schema"].to_string()).expect("fragment schema");
+    let validator = OwnedJsonSchemaValidator::compile(&fixture["input"]["schema"].to_string()).expect("fragment schema");
     let payload_bytes = fixture["payloadRepeatBytes"].as_u64().expect("payload bytes") as usize;
     let mut base = fixture["base"].clone();
     base.as_object_mut().expect("base object").insert("payload".into(), serde_json::Value::String("x".repeat(payload_bytes)));

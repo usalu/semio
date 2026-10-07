@@ -349,7 +349,10 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         role: accessibility_role(&record.component, activatable).to_string(),
         depth,
         label: label.map(|label| label.0.as_str().to_string()),
-        description: record.accessibility.description.as_ref().map(|label| label.0.as_str().to_string()),
+        description: record.accessibility.description.as_ref().map(|label| label.0.as_str().to_string()).or_else(|| match &record.component {
+            crate::Component::TreeItem(props) => props.description.as_ref().map(|description| description.as_str().to_string()),
+            _ => None,
+        }),
         live: liveness_name(record.accessibility.live).to_string(),
         shortcut: record.accessibility.shortcut.as_ref().map(|shortcut| shortcut.as_str().to_string()),
         hidden: record.accessibility.hidden,

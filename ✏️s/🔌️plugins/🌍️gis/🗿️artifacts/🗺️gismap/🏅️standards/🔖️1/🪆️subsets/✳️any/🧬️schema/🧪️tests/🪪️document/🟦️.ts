@@ -1,4 +1,5 @@
 /** 🧪️ Map document facets preserve every durable handle and dynamic feature value. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import {test} from "bun:test";
 import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type {GisMapValue} from "../../📍️feature/🟦️.ts";
@@ -31,7 +32,7 @@ function nativeJson(value:unknown):unknown{if(value===null||typeof value!=="obje
 export function testMapDocumentContractOracle(): void {
   testSchemaRecordOracle();
   assertDocumentContractOracle({
-    name: "GIS Map", dependencies: [ioSchema, childSchema, valueSchema, featureSchema],
+    name: "GIS Map", dependencies: [ioSchema, childSchema, valueSchema, featureSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: value=>parseGisMapArtifact(foreignDocument(value)), nativeJson },
     snapshot: { schema: snapshotSchema, parse: value=>parseGisMapSnapshot(foreignDocument(value)), nativeJson },
     diff: { schema: diffSchema, parse: value=>parseGisMapDiff(foreignDiff(value)), nativeJson },

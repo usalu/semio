@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1::subsets::any::io::binary::mutations::{decode_op, encode_op};
 
 //#region 🔮️ThirdPartyOracle
 #[derive(Debug, PartialEq)]
@@ -98,7 +99,7 @@ fn semantic_digest(result: &Generation3dSemanticResult) -> u64 {
 
 #[test]
 fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
-    let source = include_bytes!("../../../../../🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
+    let source = include_bytes!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
     let oracle = SerdeJsonMoveOracle.evaluate(source).expect("third-party P3 semantic oracle");
     let mut snapshot = Generation3dSnapshot::default();
     snapshot.host_snapshot.widgets = vec![
@@ -121,7 +122,7 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
 fn initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Generation3dStoreInitializationAuthority {
     generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::host::Generation3dPublicationCredits { maximum_items: GENERATION3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_MOUNTED_CONTROL_CREDITS })
         .expect("P3 initializer law publication authority");
-    Generation3dStoreInitializationAuthority::new(store::create_document_envelope(crate::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None), operation, generation)
+    Generation3dStoreInitializationAuthority::new(store::create_document_envelope(crate::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
@@ -377,7 +378,8 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_
 #[test]
 fn semantic_wire_vectors_match_independent_json_oracle() {
     use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
-    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_number_literal, generation3d_param_number, generation3d_param_vector, generation3d_vector_literal};
+    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_number_literal,generation3d_param_number,generation3d_param_vector,generation3d_vector_literal};
+
     use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
     let record = |id: &str, kind: &str, params: Vec<(&str, semio_framework_value::DslValue)>| Widget::Neuron {
         id: id.into(),
@@ -388,7 +390,7 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
         preview: false,
     };
     every_variant_decodes_through_retained_structural_grants();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("independent serde corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("independent serde corpus");
     for case in corpus["cases"].as_array().expect("wire vectors") {
         let mutation = <Generation3dMutation as semio_framework_value::FromValue>::from_value(case["mutation"].clone().into()).expect("first-party mutation decoder");
         let text = protocol::OpText::print_op(&mutation);

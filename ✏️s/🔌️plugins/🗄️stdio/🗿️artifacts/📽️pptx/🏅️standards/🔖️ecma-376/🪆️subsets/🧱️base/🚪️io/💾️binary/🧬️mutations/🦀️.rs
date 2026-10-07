@@ -8,7 +8,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use crate::schema::diff::{diff_set_snapshot, PptxDiff};
-use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
+use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxTransform};
 use crate::PptxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};

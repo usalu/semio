@@ -168,7 +168,7 @@
       "zoom": 1,
       "projection": {
         "mode": {
-          "kind": "perspective",
+          "kind": "threePoint",
           "fov": 50
         },
         "orientation": {
@@ -196,8 +196,7 @@
       "zoom": 7.7595,
       "projection": {
         "mode": {
-          "kind": "orthographic",
-          "fov": 50
+          "kind": "orthographic"
         },
         "orientation": {
           "type": "cardinal",
@@ -316,5 +315,9 @@
     "residentGenerationWake": "owed-until-measured",
     "initialProjectionTemplate": "applied-before-fit",
     "parallelAutoFitAspect": "camera-aspect-or-one"
+  },
+  "framePolicies": {
+    "delivered": "preserveCamera",
+    "delayedContent": "content"
   }
 }

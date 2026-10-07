@@ -252,8 +252,8 @@ fn emit_committed_fixtures() {
         write_fixture(&directory, "🎯️outcome/🔣️.json", &reindent_json(&body));
     }
     for (slug, text) in [
-        ("🚪️rooms-16", crate::io::text::snapshot::print_dsl(&crate::examples::rooms_16::snapshot())),
-        ("🌸️flowers-24", crate::io::text::snapshot::print_dsl(&crate::examples::flowers_24::snapshot())),
+        ("🚪️rooms-16", crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&crate::examples::rooms_16::snapshot())),
+        ("🌸️flowers-24", crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&crate::examples::flowers_24::snapshot())),
     ] {
         let path = root.join("📚️examples").join(slug).join("🖼️assets").join(slug).join("🗣️.dsl.semio");
         std::fs::create_dir_all(path.parent().expect("asset parent")).expect("asset directory");
@@ -270,7 +270,7 @@ fn emit_committed_fixtures() {
 #[cfg(feature = "component-app-assembly")]
 mod mount_contract {
     use crate::examples::{flowers_24, rooms_16};
-    use crate::io::text::snapshot::{parse_dsl, print_dsl};
+    use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
     use crate::{BitmapSnapshot, WFC_BITMAP_DIALECT};
     use store::ArtifactPack;
 

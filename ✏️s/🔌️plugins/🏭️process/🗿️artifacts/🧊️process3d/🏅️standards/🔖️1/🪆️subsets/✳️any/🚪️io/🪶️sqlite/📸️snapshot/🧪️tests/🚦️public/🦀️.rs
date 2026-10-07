@@ -1,6 +1,6 @@
 //! 🚪️ Genuine declared Process3d public routes compile before optional SQLite capability wiring.
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
-use store::io::{ArtifactDialect,io_mechanism::{io_route,io_run_with_snapshot_control}};
+use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
 use store::io_schema::{IoPayload,IoFidelity,SQLITE_SNAPSHOT};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotPhase};
 use std::{io::Write,process::{Command,Stdio}};

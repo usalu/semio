@@ -2,7 +2,10 @@
 
 use crate::STDIO_SVG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text_checked, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+#[path="🧩️document/🦀️.rs"]
+pub mod document;
+pub use document::*;
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -13,12 +16,12 @@ pub struct SvgSnapshot {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub doc: XmlDocument,
+    pub doc: SvgDocument,
 }
 
 impl Default for SvgSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() } }
+        Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() } }
     }
 }
 //#endregion 🔖️Snapshot
@@ -35,31 +38,19 @@ impl SvgSnapshot {
         self.clone()
     }
 
-    /// 📥️ Parses SVG UTF-8 into its lossless logical XML model.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
-        let text = std::str::from_utf8(bytes).map_err(|error| format!("svg source is not UTF-8: {error}"))?;
-        Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)? })
-    }
-
     /// 🛡️ Verifies the shared natural SVG identity without materializing a second document.
     pub fn validate_natural(&self) -> Result<(), String> {
         if self.schema != STDIO_SVG_DOCUMENT_SCHEMA {
             return Err(format!("svg schema must be {STDIO_SVG_DOCUMENT_SCHEMA}"));
         }
         match &self.doc.root {
-            Some(XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(()),
-            Some(XmlNode::Element { .. }) => Err("root element must be svg".into()),
+            Some(SvgNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(()),
+            Some(SvgNode::Element { .. }) => Err("root element must be svg".into()),
             _ => Err("svg document requires root element".into()),
         }
     }
 
-    /// 📤️ Deterministically materializes SVG from the logical XML model.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        self.validate_natural()?;
-        Ok(xml_document_to_text_checked(&self.doc)?.into_bytes())
-    }
+
 }
 //#endregion 🔖️SvgCodec
 
@@ -71,9 +62,7 @@ impl SvgSnapshot {
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fmt_num(v: f64) -> String {
-    v.to_string()
-}
+
 //#endregion 🔖️NumberGrammar
 
 //#region 🔖️Geometry
@@ -90,16 +79,12 @@ pub struct ViewBox {
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn view_box_to_string(v: &ViewBox) -> String {
-    format!("{} {} {} {}", fmt_num(v.min_x), fmt_num(v.min_y), fmt_num(v.width), fmt_num(v.height))
-}
+
 
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn points_to_string(points: &[(f64, f64)]) -> String {
-    points.iter().map(|(x, y)| format!("{},{}", fmt_num(*x), fmt_num(*y))).collect::<Vec<_>>().join(" ")
-}
+
 //#endregion 🔖️Geometry
 
 //#region 🔖️Transform
@@ -206,22 +191,7 @@ pub fn transform_ops_to_matrix(ops: &[TransformOp]) -> Matrix2D {
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn transform_list_to_string(ops: &[TransformOp]) -> String {
-    ops.iter()
-        .map(|op| match op {
-            TransformOp::Matrix { a, b, c, d, e, f } => format!("matrix({},{},{},{},{},{})", fmt_num(*a), fmt_num(*b), fmt_num(*c), fmt_num(*d), fmt_num(*e), fmt_num(*f)),
-            TransformOp::Translate { x, y: None } => format!("translate({})", fmt_num(*x)),
-            TransformOp::Translate { x, y: Some(y) } => format!("translate({},{})", fmt_num(*x), fmt_num(*y)),
-            TransformOp::Scale { x, y: None } => format!("scale({})", fmt_num(*x)),
-            TransformOp::Scale { x, y: Some(y) } => format!("scale({},{})", fmt_num(*x), fmt_num(*y)),
-            TransformOp::Rotate { angle, center: None } => format!("rotate({})", fmt_num(*angle)),
-            TransformOp::Rotate { angle, center: Some((cx, cy)) } => format!("rotate({},{},{})", fmt_num(*angle), fmt_num(*cx), fmt_num(*cy)),
-            TransformOp::SkewX { angle } => format!("skewX({})", fmt_num(*angle)),
-            TransformOp::SkewY { angle } => format!("skewY({})", fmt_num(*angle)),
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
+
 //#endregion 🔖️Transform
 
 //#region 🔖️PathData
@@ -247,36 +217,7 @@ pub enum PathCommand {
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn path_data_to_string(cmds: &[PathCommand]) -> String {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn letter(base: char, relative: bool) -> char {
-        if relative {
-            base.to_ascii_lowercase()
-        } else {
-            base
-        }
-    }
-    let mut parts = Vec::with_capacity(cmds.len());
-    for cmd in cmds {
-        parts.push(match cmd {
-            PathCommand::MoveTo { x, y, relative } => format!("{} {} {}", letter('M', *relative), fmt_num(*x), fmt_num(*y)),
-            PathCommand::LineTo { x, y, relative } => format!("{} {} {}", letter('L', *relative), fmt_num(*x), fmt_num(*y)),
-            PathCommand::HorizontalLineTo { x, relative } => format!("{} {}", letter('H', *relative), fmt_num(*x)),
-            PathCommand::VerticalLineTo { y, relative } => format!("{} {}", letter('V', *relative), fmt_num(*y)),
-            PathCommand::CurveTo { x1, y1, x2, y2, x, y, relative } => {
-                format!("{} {} {} {} {} {} {}", letter('C', *relative), fmt_num(*x1), fmt_num(*y1), fmt_num(*x2), fmt_num(*y2), fmt_num(*x), fmt_num(*y))
-            }
-            PathCommand::SmoothCurveTo { x2, y2, x, y, relative } => format!("{} {} {} {} {}", letter('S', *relative), fmt_num(*x2), fmt_num(*y2), fmt_num(*x), fmt_num(*y)),
-            PathCommand::QuadraticCurveTo { x1, y1, x, y, relative } => format!("{} {} {} {} {}", letter('Q', *relative), fmt_num(*x1), fmt_num(*y1), fmt_num(*x), fmt_num(*y)),
-            PathCommand::SmoothQuadraticCurveTo { x, y, relative } => format!("{} {} {}", letter('T', *relative), fmt_num(*x), fmt_num(*y)),
-            PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative } => {
-                format!("{} {} {} {} {} {} {} {}", letter('A', *relative), fmt_num(*rx), fmt_num(*ry), fmt_num(*x_axis_rotation), *large_arc as u8, *sweep as u8, fmt_num(*x), fmt_num(*y))
-            }
-            PathCommand::ClosePath => "Z".to_string(),
-        });
-    }
-    parts.join(" ")
-}
+
 //#endregion 🔖️PathData
 
 //#region 🔖️Style
@@ -312,41 +253,10 @@ pub struct PresentationAttrs {
 
 /// ↩️ Returns `true` if `name` is a recognized presentation property (and was applied).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_presentation_attr(p: &mut PresentationAttrs, name: &str, value: &str) -> bool {
-    match name {
-        "fill" => p.fill = Some(value.to_string()),
-        "stroke" => p.stroke = Some(value.to_string()),
-        "stroke-width" => p.stroke_width = Some(value.to_string()),
-        "opacity" => p.opacity = Some(value.to_string()),
-        "fill-opacity" => p.fill_opacity = Some(value.to_string()),
-        "stroke-opacity" => p.stroke_opacity = Some(value.to_string()),
-        "font-family" => p.font_family = Some(value.to_string()),
-        "font-size" => p.font_size = Some(value.to_string()),
-        _ => return false,
-    }
-    true
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn push_presentation_attrs(attrs: &mut Vec<XmlAttr>, p: &PresentationAttrs) {
-    let mut push = |name: &str, value: &Option<String>| {
-        if let Some(v) = value {
-            attrs.push(XmlAttr { name: name.to_string(), value: v.clone() });
-        }
-    };
-    push("fill", &p.fill);
-    push("stroke", &p.stroke);
-    push("stroke-width", &p.stroke_width);
-    push("opacity", &p.opacity);
-    push("fill-opacity", &p.fill_opacity);
-    push("stroke-opacity", &p.stroke_opacity);
-    push("font-family", &p.font_family);
-    push("font-size", &p.font_size);
-    if !p.extra_style.is_empty() {
-        let decls: Vec<String> = p.extra_style.iter().map(|(k, v)| format!("{k}: {v}")).collect();
-        attrs.push(XmlAttr { name: "style".to_string(), value: decls.join("; ") });
-    }
-}
+
 //#endregion 🔖️Style
 
 //#region 🔖️CommonAttrs
@@ -414,51 +324,25 @@ impl CommonAttrs {
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn push_common_attrs(attrs: &mut Vec<XmlAttr>, common: &CommonAttrs) {
-    if let Some(id) = &common.id {
-        attrs.push(XmlAttr { name: "id".into(), value: id.clone() });
-    }
-    if let Some(class) = &common.class {
-        attrs.push(XmlAttr { name: "class".into(), value: class.clone() });
-    }
-    if let Some(t) = &common.transform {
-        attrs.push(XmlAttr { name: "transform".into(), value: transform_list_to_string(t) });
-    }
-    push_presentation_attrs(attrs, &common.presentation);
-    attrs.extend(common.extra_attrs.iter().cloned());
-}
+
 //#endregion 🔖️CommonAttrs
 
 //#region 🔖️TypedElementModel
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn attr_f64(attrs: &[XmlAttr], name: &str, default: f64) -> Result<f64, String> {
-    match attr_val(attrs, name) {
-        None => Ok(default),
-        Some(v) => v.trim().parse::<f64>().map_err(|_| format!("attribute '{name}' is not a number: '{v}'")),
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn attr_f64_opt(attrs: &[XmlAttr], name: &str) -> Result<Option<f64>, String> {
-    match attr_val(attrs, name) {
-        None => Ok(None),
-        Some(v) => v.trim().parse::<f64>().map(Some).map_err(|_| format!("attribute '{name}' is not a number: '{v}'")),
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn attr_string_opt(attrs: &[XmlAttr], name: &str) -> Option<String> {
-    attr_val(attrs, name).map(|s| s.to_string())
-}
+
 
 /// ✂️ Strips an XML namespace prefix (`xlink:href` -> `href`) for TYPED-ELEMENT DISPATCH ONLY;
 /// `Unknown` and attribute passthrough always keep the original, fully-qualified name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn local_name(name: &str) -> &str {
-    name.rsplit(':').next().unwrap_or(name)
-}
+
 
 /// 🌳 Typed SVG 1.1 element tree. Elements outside this typed set (and any element this session
 /// chose not to model in depth) fall into `Unknown` -- name/attrs/children kept byte-for-byte, so
@@ -620,327 +504,38 @@ pub enum SvgElement {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn convert_children(children: &[XmlNode]) -> Result<Vec<SvgElement>, String> {
-    children.iter().map(svg_element_from_xml_node).collect()
-}
 
-/// 🌳 Converts one generic (lossless) `XmlNode` into the typed SVG model. Dispatches on the local
+
+/// 🌳 Converts one generic (lossless) `SvgNode` into the typed SVG model. Dispatches on the local
 /// (namespace-prefix-stripped) tag name against the typed set; anything else becomes `Unknown`
 /// (with the ORIGINAL, still-prefixed name preserved) rather than being dropped.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, String> {
-    match node {
-        XmlNode::Text { text } => Ok(SvgElement::TextNode(text.clone())),
-        XmlNode::CData { text } => Ok(SvgElement::CData(text.clone())),
-        XmlNode::Comment { text } => Ok(SvgElement::Comment(text.clone())),
-        XmlNode::ProcessingInstruction { target, data } => Ok(SvgElement::ProcessingInstruction { target: target.clone(), data: data.clone() }),
-        XmlNode::Element { name, attrs, children } => match local_name(name) {
-            "svg" => {
-                let common = parse_common_attrs(attrs, &["viewBox", "width", "height", "xmlns"]);
-                let view_box = match attr_val(attrs, "viewBox") {
-                    Some(v) => Some(parse_view_box(v)?),
-                    None => None,
-                };
-                Ok(SvgElement::Svg { common, view_box, width: attr_string_opt(attrs, "width"), height: attr_string_opt(attrs, "height"), xmlns: attr_string_opt(attrs, "xmlns"), children: convert_children(children)? })
-            }
-            "rect" => {
-                let common = parse_common_attrs(attrs, &["x", "y", "width", "height", "rx", "ry"]);
-                Ok(SvgElement::Rect {
-                    common,
-                    x: attr_f64(attrs, "x", 0.0)?,
-                    y: attr_f64(attrs, "y", 0.0)?,
-                    width: attr_f64(attrs, "width", 0.0)?,
-                    height: attr_f64(attrs, "height", 0.0)?,
-                    rx: attr_f64_opt(attrs, "rx")?,
-                    ry: attr_f64_opt(attrs, "ry")?,
-                })
-            }
-            "circle" => {
-                let common = parse_common_attrs(attrs, &["cx", "cy", "r"]);
-                Ok(SvgElement::Circle { common, cx: attr_f64(attrs, "cx", 0.0)?, cy: attr_f64(attrs, "cy", 0.0)?, r: attr_f64(attrs, "r", 0.0)? })
-            }
-            "ellipse" => {
-                let common = parse_common_attrs(attrs, &["cx", "cy", "rx", "ry"]);
-                Ok(SvgElement::Ellipse { common, cx: attr_f64(attrs, "cx", 0.0)?, cy: attr_f64(attrs, "cy", 0.0)?, rx: attr_f64(attrs, "rx", 0.0)?, ry: attr_f64(attrs, "ry", 0.0)? })
-            }
-            "line" => {
-                let common = parse_common_attrs(attrs, &["x1", "y1", "x2", "y2"]);
-                Ok(SvgElement::Line { common, x1: attr_f64(attrs, "x1", 0.0)?, y1: attr_f64(attrs, "y1", 0.0)?, x2: attr_f64(attrs, "x2", 0.0)?, y2: attr_f64(attrs, "y2", 0.0)? })
-            }
-            "polyline" => {
-                let common = parse_common_attrs(attrs, &["points"]);
-                let points = match attr_val(attrs, "points") {
-                    Some(v) => parse_points(v)?,
-                    None => Vec::new(),
-                };
-                Ok(SvgElement::Polyline { common, points })
-            }
-            "polygon" => {
-                let common = parse_common_attrs(attrs, &["points"]);
-                let points = match attr_val(attrs, "points") {
-                    Some(v) => parse_points(v)?,
-                    None => Vec::new(),
-                };
-                Ok(SvgElement::Polygon { common, points })
-            }
-            "path" => {
-                let common = parse_common_attrs(attrs, &["d"]);
-                let d = match attr_val(attrs, "d") {
-                    Some(v) => parse_path_data(v)?,
-                    None => Vec::new(),
-                };
-                Ok(SvgElement::Path { common, d })
-            }
-            "g" => Ok(SvgElement::Group { common: parse_common_attrs(attrs, &[]), children: convert_children(children)? }),
-            "text" => {
-                let common = parse_common_attrs(attrs, &["x", "y"]);
-                Ok(SvgElement::Text { common, x: attr_f64_opt(attrs, "x")?, y: attr_f64_opt(attrs, "y")?, children: convert_children(children)? })
-            }
-            "tspan" => {
-                let common = parse_common_attrs(attrs, &["x", "y"]);
-                Ok(SvgElement::Tspan { common, x: attr_f64_opt(attrs, "x")?, y: attr_f64_opt(attrs, "y")?, children: convert_children(children)? })
-            }
-            "defs" => Ok(SvgElement::Defs { common: parse_common_attrs(attrs, &[]), children: convert_children(children)? }),
-            "linearGradient" => {
-                let common = parse_common_attrs(attrs, &["id", "x1", "y1", "x2", "y2"]);
-                Ok(SvgElement::LinearGradient {
-                    common,
-                    id: attr_string_opt(attrs, "id"),
-                    x1: attr_string_opt(attrs, "x1"),
-                    y1: attr_string_opt(attrs, "y1"),
-                    x2: attr_string_opt(attrs, "x2"),
-                    y2: attr_string_opt(attrs, "y2"),
-                    children: convert_children(children)?,
-                })
-            }
-            "radialGradient" => {
-                let common = parse_common_attrs(attrs, &["id", "cx", "cy", "r", "fx", "fy"]);
-                Ok(SvgElement::RadialGradient {
-                    common,
-                    id: attr_string_opt(attrs, "id"),
-                    cx: attr_string_opt(attrs, "cx"),
-                    cy: attr_string_opt(attrs, "cy"),
-                    r: attr_string_opt(attrs, "r"),
-                    fx: attr_string_opt(attrs, "fx"),
-                    fy: attr_string_opt(attrs, "fy"),
-                    children: convert_children(children)?,
-                })
-            }
-            "stop" => {
-                let common = parse_common_attrs(attrs, &["offset", "stop-color", "stop-opacity"]);
-                Ok(SvgElement::Stop { common, offset: attr_string_opt(attrs, "offset").unwrap_or_default(), stop_color: attr_string_opt(attrs, "stop-color"), stop_opacity: attr_string_opt(attrs, "stop-opacity") })
-            }
-            "use" => {
-                let common = parse_common_attrs(attrs, &["href", "xlink:href", "x", "y", "width", "height"]);
-                let href = attr_string_opt(attrs, "href").or_else(|| attr_string_opt(attrs, "xlink:href")).unwrap_or_default();
-                Ok(SvgElement::Use { common, href, x: attr_f64_opt(attrs, "x")?, y: attr_f64_opt(attrs, "y")?, width: attr_f64_opt(attrs, "width")?, height: attr_f64_opt(attrs, "height")? })
-            }
-            _ => Ok(SvgElement::Unknown { name: name.clone(), attrs: attrs.clone(), children: convert_children(children)? }),
-        },
-    }
-}
 
-/// 🌳 Lowers the typed model back into the generic (lossless) `XmlNode` tree that the xml codec's
+
+/// 🌳 Lowers the typed model back into the generic (lossless) `SvgNode` tree that the xml codec's
 /// text/binary writers already know how to serialize.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
-    match el {
-        SvgElement::TextNode(t) => XmlNode::Text { text: t.clone() },
-        SvgElement::CData(t) => XmlNode::CData { text: t.clone() },
-        SvgElement::Comment(t) => XmlNode::Comment { text: t.clone() },
-        SvgElement::ProcessingInstruction { target, data } => XmlNode::ProcessingInstruction { target: target.clone(), data: data.clone() },
-        SvgElement::Svg { common, view_box, width, height, xmlns, children } => {
-            let mut attrs = Vec::new();
-            if let Some(vb) = view_box {
-                attrs.push(XmlAttr { name: "viewBox".into(), value: view_box_to_string(vb) });
-            }
-            if let Some(w) = width {
-                attrs.push(XmlAttr { name: "width".into(), value: w.clone() });
-            }
-            if let Some(h) = height {
-                attrs.push(XmlAttr { name: "height".into(), value: h.clone() });
-            }
-            if let Some(x) = xmlns {
-                attrs.push(XmlAttr { name: "xmlns".into(), value: x.clone() });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "svg".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
-        SvgElement::Rect { common, x, y, width, height, rx, ry } => {
-            let mut attrs =
-                vec![XmlAttr { name: "x".into(), value: fmt_num(*x) }, XmlAttr { name: "y".into(), value: fmt_num(*y) }, XmlAttr { name: "width".into(), value: fmt_num(*width) }, XmlAttr { name: "height".into(), value: fmt_num(*height) }];
-            if let Some(rx) = rx {
-                attrs.push(XmlAttr { name: "rx".into(), value: fmt_num(*rx) });
-            }
-            if let Some(ry) = ry {
-                attrs.push(XmlAttr { name: "ry".into(), value: fmt_num(*ry) });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "rect".into(), attrs, children: vec![] }
-        }
-        SvgElement::Circle { common, cx, cy, r } => {
-            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx) }, XmlAttr { name: "cy".into(), value: fmt_num(*cy) }, XmlAttr { name: "r".into(), value: fmt_num(*r) }];
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "circle".into(), attrs, children: vec![] }
-        }
-        SvgElement::Ellipse { common, cx, cy, rx, ry } => {
-            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx) }, XmlAttr { name: "cy".into(), value: fmt_num(*cy) }, XmlAttr { name: "rx".into(), value: fmt_num(*rx) }, XmlAttr { name: "ry".into(), value: fmt_num(*ry) }];
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "ellipse".into(), attrs, children: vec![] }
-        }
-        SvgElement::Line { common, x1, y1, x2, y2 } => {
-            let mut attrs = vec![XmlAttr { name: "x1".into(), value: fmt_num(*x1) }, XmlAttr { name: "y1".into(), value: fmt_num(*y1) }, XmlAttr { name: "x2".into(), value: fmt_num(*x2) }, XmlAttr { name: "y2".into(), value: fmt_num(*y2) }];
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "line".into(), attrs, children: vec![] }
-        }
-        SvgElement::Polyline { common, points } => {
-            let mut attrs = vec![XmlAttr { name: "points".into(), value: points_to_string(points) }];
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "polyline".into(), attrs, children: vec![] }
-        }
-        SvgElement::Polygon { common, points } => {
-            let mut attrs = vec![XmlAttr { name: "points".into(), value: points_to_string(points) }];
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "polygon".into(), attrs, children: vec![] }
-        }
-        SvgElement::Path { common, d } => {
-            let mut attrs = vec![XmlAttr { name: "d".into(), value: path_data_to_string(d) }];
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "path".into(), attrs, children: vec![] }
-        }
-        SvgElement::Group { common, children } => {
-            let mut attrs = Vec::new();
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "g".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
-        SvgElement::Text { common, x, y, children } => {
-            let mut attrs = Vec::new();
-            if let Some(x) = x {
-                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x) });
-            }
-            if let Some(y) = y {
-                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y) });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "text".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
-        SvgElement::Tspan { common, x, y, children } => {
-            let mut attrs = Vec::new();
-            if let Some(x) = x {
-                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x) });
-            }
-            if let Some(y) = y {
-                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y) });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "tspan".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
-        SvgElement::Defs { common, children } => {
-            let mut attrs = Vec::new();
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "defs".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
-        SvgElement::LinearGradient { common, id, x1, y1, x2, y2, children } => {
-            let mut attrs = Vec::new();
-            if let Some(id) = id {
-                attrs.push(XmlAttr { name: "id".into(), value: id.clone() });
-            }
-            if let Some(v) = x1 {
-                attrs.push(XmlAttr { name: "x1".into(), value: v.clone() });
-            }
-            if let Some(v) = y1 {
-                attrs.push(XmlAttr { name: "y1".into(), value: v.clone() });
-            }
-            if let Some(v) = x2 {
-                attrs.push(XmlAttr { name: "x2".into(), value: v.clone() });
-            }
-            if let Some(v) = y2 {
-                attrs.push(XmlAttr { name: "y2".into(), value: v.clone() });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "linearGradient".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
-        SvgElement::RadialGradient { common, id, cx, cy, r, fx, fy, children } => {
-            let mut attrs = Vec::new();
-            if let Some(id) = id {
-                attrs.push(XmlAttr { name: "id".into(), value: id.clone() });
-            }
-            if let Some(v) = cx {
-                attrs.push(XmlAttr { name: "cx".into(), value: v.clone() });
-            }
-            if let Some(v) = cy {
-                attrs.push(XmlAttr { name: "cy".into(), value: v.clone() });
-            }
-            if let Some(v) = r {
-                attrs.push(XmlAttr { name: "r".into(), value: v.clone() });
-            }
-            if let Some(v) = fx {
-                attrs.push(XmlAttr { name: "fx".into(), value: v.clone() });
-            }
-            if let Some(v) = fy {
-                attrs.push(XmlAttr { name: "fy".into(), value: v.clone() });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "radialGradient".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
-        }
-        SvgElement::Stop { common, offset, stop_color, stop_opacity } => {
-            let mut attrs = vec![XmlAttr { name: "offset".into(), value: offset.clone() }];
-            if let Some(v) = stop_color {
-                attrs.push(XmlAttr { name: "stop-color".into(), value: v.clone() });
-            }
-            if let Some(v) = stop_opacity {
-                attrs.push(XmlAttr { name: "stop-opacity".into(), value: v.clone() });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "stop".into(), attrs, children: vec![] }
-        }
-        SvgElement::Use { common, href, x, y, width, height } => {
-            let mut attrs = vec![XmlAttr { name: "href".into(), value: href.clone() }];
-            if let Some(x) = x {
-                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x) });
-            }
-            if let Some(y) = y {
-                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y) });
-            }
-            if let Some(w) = width {
-                attrs.push(XmlAttr { name: "width".into(), value: fmt_num(*w) });
-            }
-            if let Some(h) = height {
-                attrs.push(XmlAttr { name: "height".into(), value: fmt_num(*h) });
-            }
-            push_common_attrs(&mut attrs, common);
-            XmlNode::Element { name: "use".into(), attrs, children: vec![] }
-        }
-        SvgElement::Unknown { name, attrs, children } => XmlNode::Element { name: name.clone(), attrs: attrs.clone(), children: children.iter().map(svg_element_to_xml_node).collect() },
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
-    match &doc.root {
-        Some(node) => svg_element_from_xml_node(node),
-        None => Err("svg document has no root element".into()),
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype>) -> XmlDocument {
-    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None, prolog: Vec::new(), epilog: Vec::new() }
-}
+
 //#endregion 🔖️TypedElementModel
 
 //#region 🔖️NodePath
 /// 🧭 A child-index chain from the document root, used by the mutation vocabulary to address a
 /// node inside `SvgSnapshot.doc` without needing the full typed model (mutations operate on the
-/// persisted, always-lossless `XmlDocument`, not the typed view).
+/// persisted, always-lossless `SvgDocument`, not the typed view).
 pub type NodePath = Vec<usize>;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn node_at<'a>(doc: &'a XmlDocument, path: &[usize]) -> Result<&'a XmlNode, String> {
+pub fn node_at<'a>(doc: &'a SvgDocument, path: &[usize]) -> Result<&'a SvgNode, String> {
     let mut node = doc.root.as_ref().ok_or("document has no root element")?;
     for &idx in path {
         match node {
-            XmlNode::Element { children, .. } => {
+            SvgNode::Element { children, .. } => {
                 node = children.get(idx).ok_or_else(|| format!("child index {idx} out of range"))?;
             }
             _ => return Err("path descends into a non-element node".into()),
@@ -950,11 +545,11 @@ pub fn node_at<'a>(doc: &'a XmlDocument, path: &[usize]) -> Result<&'a XmlNode, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn node_at_mut<'a>(doc: &'a mut XmlDocument, path: &[usize]) -> Result<&'a mut XmlNode, String> {
+pub fn node_at_mut<'a>(doc: &'a mut SvgDocument, path: &[usize]) -> Result<&'a mut SvgNode, String> {
     let mut node = doc.root.as_mut().ok_or("document has no root element")?;
     for &idx in path {
         match node {
-            XmlNode::Element { children, .. } => {
+            SvgNode::Element { children, .. } => {
                 node = children.get_mut(idx).ok_or_else(|| format!("child index {idx} out of range"))?;
             }
             _ => return Err("path descends into a non-element node".into()),
@@ -964,9 +559,9 @@ pub fn node_at_mut<'a>(doc: &'a mut XmlDocument, path: &[usize]) -> Result<&'a m
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn element_attr<'a>(node: &'a XmlNode, name: &str) -> Option<&'a str> {
+pub fn element_attr<'a>(node: &'a SvgNode, name: &str) -> Option<&'a SvgAttributeValue> {
     match node {
-        XmlNode::Element { attrs, .. } => attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str()),
+        SvgNode::Element { attrs, .. } => attrs.iter().find(|a| a.name == name).map(|a| &a.value),
         _ => None,
     }
 }
@@ -976,12 +571,12 @@ pub fn element_attr<'a>(node: &'a XmlNode, name: &str) -> Option<&'a str> {
 /// removes it. Update-in-place (rather than remove-then-append) matters for `SetAttribute`'s
 /// apply/inverse round trip to reproduce the exact original attribute order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
-    if let XmlNode::Element { attrs, .. } = node {
+pub fn set_element_attr(node: &mut SvgNode, name: &str, value: Option<SvgAttributeValue>) {
+    if let SvgNode::Element { attrs, .. } = node {
         match value {
             Some(v) => match attrs.iter_mut().find(|a| a.name == name) {
                 Some(existing) => existing.value = v,
-                None => attrs.push(XmlAttr { name: name.to_string(), value: v }),
+                None => attrs.push(SvgAttr { name: name.to_string(), value: v }),
             },
             None => attrs.retain(|a| a.name != name),
         }
@@ -999,10 +594,9 @@ pub fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
 
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
 
 
 

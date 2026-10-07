@@ -4,7 +4,7 @@
 use crate::standards::v1_0::subsets::any::schema::diff::{AviChunkDiff, AviDiff, AviStreamDiff, IndexedAdded, IndexedDiff, IndexedModified};
 use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::Mutation;
-use protocol::{OpBinary, OpText};
+
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -177,3 +177,6 @@ mod tests;
 #[path = "📸️set-snapshot/🧪️tests/🔑️promotes/🦀️.rs"]
 mod set_snapshot_promotes_the_second_movi_chunk_to_a_keyframe;
 //#endregion 🧪️FixtureCases
+
+#[cfg(test)]
+use protocol::{OpBinary,OpText};

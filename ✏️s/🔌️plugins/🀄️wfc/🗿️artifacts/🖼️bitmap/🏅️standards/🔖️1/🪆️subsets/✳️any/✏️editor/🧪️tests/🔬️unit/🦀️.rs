@@ -254,7 +254,7 @@ fn a_partial_fill_render_differs_from_empty_and_finished() {
     let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
     let finished_pixels = crate::inferences::solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("oracle");
     let finished = BitmapTransient {
-        output_pixels: if finished_pixels.contradiction { None } else { Some(finished_pixels.pixels.clone()) },
+        output_pixels: if finished_pixels.contradiction { None } else { Some(crate::standards::v1::subsets::any::io::text::snapshot::encode_base64(&finished_pixels.pixels)) },
         contradiction: finished_pixels.contradiction,
         output_width: snapshot.output.width,
         output_height: snapshot.output.height,

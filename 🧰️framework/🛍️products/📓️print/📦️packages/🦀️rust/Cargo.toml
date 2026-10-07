@@ -17,6 +17,7 @@ path = "../../🦀️.rs"
 workspace = true
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value-derive = { workspace = true }

@@ -14,7 +14,7 @@
       "description": "🆔️ The child's member identity. A content-addressed child (one whose identity follows its content) carries a `ContentId`."
     },
     "target": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef"
     }
   },
   "$defs": {

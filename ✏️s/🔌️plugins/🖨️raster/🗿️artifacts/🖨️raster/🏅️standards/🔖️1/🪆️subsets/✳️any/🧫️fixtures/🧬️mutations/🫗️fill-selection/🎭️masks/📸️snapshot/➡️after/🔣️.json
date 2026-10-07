@@ -1,9 +1,9 @@
 {
   "assets": {
-    "mask-paint-d47238b95ab70f37": {
+    "mask-paint-d7fe2bfc04821952": {
       "childId": "raster-asset-d47238b95ab70f37",
       "target": {
-        "artifactId": "mask-paint-d47238b95ab70f37-image",
+        "artifactId": "mask-paint-d7fe2bfc04821952-image",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",
@@ -24,7 +24,7 @@
       "mask": {
         "enabled": true,
         "height": null,
-        "imageKey": "mask-paint-d47238b95ab70f37",
+        "imageKey": "mask-paint-d7fe2bfc04821952",
         "invert": false,
         "linked": true,
         "transform": {

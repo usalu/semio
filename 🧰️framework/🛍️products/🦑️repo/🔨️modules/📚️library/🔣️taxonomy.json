@@ -5889,6 +5889,18 @@
         "repo-test-discovery"
       ]
     },
+    "repo-test-host": {
+      "emoji": "🖥️",
+      "slugPattern": "^host$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["members-of-modules"]
+    },
+    "repo-test-host-materialization": {
+      "emoji": "🏗️",
+      "slugPattern": "^materialization$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["repo-test-host"]
+    },
     "repo-test-execution": {
       "emoji": "🏃️",
       "slugPattern": "^execution$",
@@ -15942,7 +15954,7 @@
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
       "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json",
-      "authorityCatalogSha256": "0b43c775ed020418f913cc56ac276cc871472f3467ccb4b37573237c79bc47e7",
+      "authorityCatalogSha256": "2c3f40479689fb2348cc4d3f94a45a3e046ef0bf26b74dc5df1867979c432cee",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -27501,6 +27513,8 @@
             "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
+            "🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts",
+            "🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
@@ -27517,6 +27531,7 @@
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
@@ -27617,6 +27632,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️lazy-install/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🧩️selection/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts",
@@ -27638,7 +27654,10 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📤️SegmentedDownload/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json",
@@ -27668,6 +27687,8 @@
         "🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
         "🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts",
         "🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
+        "🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts",
+        "🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts",
         "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
@@ -27779,6 +27800,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/🧬️contract/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🧩️selection/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs",

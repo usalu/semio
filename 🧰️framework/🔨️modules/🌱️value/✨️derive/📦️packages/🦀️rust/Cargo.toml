@@ -31,6 +31,8 @@ semio-framework-value = { path = "../../../📦️packages/🦀️rust" }
 # by production code.
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+semio-framework-dsl-record-derive = { path = "../../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 
 # 🗺️ Cargo derives an integration test's crate name from its file stem, and a crate name may only
 # contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
@@ -57,3 +59,7 @@ path = "../../🧪️tests/🧭️typed-path/🦀️.rs"
 [[test]]
 name = "neutral_owner"
 path = "../../../🧪️tests/🧩️neutral-owner/🦀️.rs"
+
+[[test]]
+name = "owned_json"
+path = "../../🧪️tests/📚️owned-json/🦀️.rs"

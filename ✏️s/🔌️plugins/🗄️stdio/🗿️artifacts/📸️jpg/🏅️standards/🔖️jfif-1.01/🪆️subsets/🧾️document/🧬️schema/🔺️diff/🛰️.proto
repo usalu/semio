@@ -35,8 +35,6 @@ message JpgDiff {
   optional uint32 width = 1;
   optional uint32 height = 2;
   bytes pixels = 3;
-  optional uint32 re_encode_quality = 4;
-  bool re_encode_quality_cleared = 5;
   repeated uint32 jfif_version = 6; // present (len 2) = changed
   optional semio.s_stdio_jpg.snapshot.JfifDensityUnits jfif_density_units = 7;
   optional uint32 jfif_x_density = 8;

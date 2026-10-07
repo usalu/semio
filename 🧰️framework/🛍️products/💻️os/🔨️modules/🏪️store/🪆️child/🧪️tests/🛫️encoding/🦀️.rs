@@ -1,7 +1,7 @@
 use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_value::NativeEncodeControl;
-use crate::os_io::ArtifactRef;
+use {semio_framework_artifact_reference::ArtifactRef};
 use crate::os_store::ArtifactChild;
 use protocol::value::ToValue;
 
@@ -45,7 +45,7 @@ fn child(value: &serde_json::Value) -> ArtifactChild<()> {
         value["childId"].as_str().unwrap().into(),
         ArtifactRef {
             artifact_id: t["artifactId"].as_str().unwrap().into(),
-            dialect: crate::os_io::ArtifactDialect { artifact_kind: d["artifactKind"].as_str().unwrap().into(), standard: d["standard"].as_str().unwrap().into(), subset: d["subset"].as_str().unwrap().into() },
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: d["artifactKind"].as_str().unwrap().into(), standard: d["standard"].as_str().unwrap().into(), subset: d["subset"].as_str().unwrap().into() },
         },
     )
 }

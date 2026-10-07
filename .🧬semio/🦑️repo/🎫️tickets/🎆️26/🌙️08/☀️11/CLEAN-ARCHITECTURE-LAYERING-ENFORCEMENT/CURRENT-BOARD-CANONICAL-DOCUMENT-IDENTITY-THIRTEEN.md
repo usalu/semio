@@ -1,0 +1,8 @@
+# Board Canonical Document Identity Thirteen
+
+Actual current ProductDag JSON package schema, Rust default, DSL demo and identity fixture agree on dag.hostDocument with five nodes/four edges. The current Rust comment remains stale; its complete body is retained as an unknown relocation context, not accepted as present Root architecture. Source13 scans every exact held endpoint for the same schema identity and proposes all old default/wire/fixture/test/doc label occurrences together, with complete before/after/inverses. Current/held DagHostSnapshot field shapes must agree exactly, the original five-node/four-edge/render assertions stay intact, and the already canonical held demo body is retained unchanged. Six neutral schema/identity cases agree with Ajv, and the actual current package schema independently validates the fixture identity projection. No source write, legacy alias or physical restoration is performed. GUI118 registers the source census; source and preparation gates remain separate.
+# Actual Sealed Census
+
+Before first execution, continuation1 added explicit conservation of the two held-null endpoints. Final helper hash is `ea460ece4408754471a635cb22b1be843975b5e63af0bd4205ddabdd81ef2058`; its exact before/after/inverse is `🗑️generated/native-continuation/board-canonical-document-identity13-continuation-1.json`.
+
+The registered source command completed with exit0. The sealed source receipt contains3794 endpoint observations,2957 textual census members, six correction pairs and38 exact schema identity token occurrences. Independent source gate13 is Ready. This admits the bounded proposal only; no native or current Root acceptance follows.

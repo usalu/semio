@@ -57,7 +57,7 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
 /// 🔚 Self-closing: the store's `Drop` demands the terminal-empty witness, so the guard retires the
 /// app through the framework's exact close loop (skipped while unwinding).
 async fn new_app() -> RewritingTestApp {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_rewriting_manifest_for_tests).await;
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_rewriting_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
     load_rule_fixture(&mut app).await;
     RewritingTestApp(app)
@@ -70,7 +70,7 @@ async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPl
     let mut archive = PluginApp::document_load_archive(app, &files).expect("stamp test input");
     let reference = state.working_graph.content.target.clone();
     let owner = store::OwnerRef {
-        parent: store::os_io::ArtifactRef { artifact_id: PluginApp::document_identity(app).expect("runtime identity"), dialect: TRINITY_REWRITING_DIALECT.into() },
+        parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: PluginApp::document_identity(app).expect("runtime identity"), dialect: TRINITY_REWRITING_DIALECT.into() },
         slot: crate::content::WORKING_CHILD_SLOT.into(), child_id: state.working_graph.content.child_id.clone(),
     };
     let pack = crate::content::genesis_working_child_pack(&state, &owner.slot, &owner.child_id).unwrap().unwrap();

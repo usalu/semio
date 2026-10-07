@@ -1,4 +1,5 @@
 /** 🧪️ Procedure document facets compose the shared flow and text child identities. */
+import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
@@ -15,7 +16,7 @@ import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json
 /** 🪆️ Compares first-party parsers with Ajv and every committed Procedure mutation document. */
 export function testProcedureDocumentContractOracle(): void {
   assertDocumentContractOracle({
-    name: "Procedure", dependencies: [ioSchema, childSchema],
+    name: "Procedure", dependencies: [ioSchema, childSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: parseProcedureArtifact },
     snapshot: { schema: snapshotSchema, parse: parseProcedureSnapshot },
     diff: { schema: diffSchema, parse: parseProcedureDiff },

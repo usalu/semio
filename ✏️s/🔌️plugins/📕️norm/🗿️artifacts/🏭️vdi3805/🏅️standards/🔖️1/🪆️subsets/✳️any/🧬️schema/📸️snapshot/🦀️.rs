@@ -1,6 +1,6 @@
 //! 🧬️ Vdi3805 snapshot schema — artifact-lane fields only.
 
-use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
+use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits, SheetId, NativeRecord, SheetAttributes, RecordFamilyId, ValveHeatingAttributes, RadiatorAttributes, PumpHeatingAttributes, HeatGeneratorAttributes, GenericAttributes};
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -29,7 +29,7 @@ pub struct Vdi3805Snapshot {
     #[state(artifact)]
     pub limits: SecurityLimits,
 }
-crate::impl_norm_artifact_record!(Vdi3805Snapshot,extension="vdi3805",envelope_id="norm.vdi3805",sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+
 
 impl Default for Vdi3805Snapshot {
     fn default() -> Self {

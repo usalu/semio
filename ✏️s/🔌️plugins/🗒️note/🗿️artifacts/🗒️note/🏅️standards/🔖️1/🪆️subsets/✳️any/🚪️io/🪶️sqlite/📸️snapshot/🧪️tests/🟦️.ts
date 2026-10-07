@@ -4,12 +4,14 @@ import { Database } from "bun:sqlite";
 import { noteSnapshotToSqliteDatabase, noteSnapshotFromSqliteDatabase, NOTE_SQLITE_SCHEMA } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseNoteSnapshot, type NoteSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import { type NoteSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+
+import {parseNoteSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 
 async function fixture(): Promise<NoteSnapshot> {
   const value = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json();
   value.linkedArtifact.pin.blob.size = BigInt(value.linkedArtifact.pin.blob.size);
-  return parseNoteSnapshot(value);
+  return parseNoteSnapshotJson(value);
 }
 
 test("Note complete concrete backing contract retains owned diagnostics and full independent state", async () => {
@@ -19,7 +21,9 @@ test("Note complete concrete backing contract retains owned diagnostics and full
   
   
   expect(plan.backing["authority"]).toEqual("completeSystemAllocatorRequests");expect(plan.backing["phases"]).toEqual(["projectSnapshot","reconstructSnapshot"]);expect(plan.backing["ceilings"]).toEqual(["zero","exact","oneBelow","cumulative"]);expect(plan.backing["cancellation"]).toEqual(["start","materializedInterior"]);expect(plan.backing["diagnosticOwnership"]).toEqual("actualCapacity");expect(plan.backing["retirementRefund"]).toEqual(false);
-  for (const invalid of [{ ...plan.backing, extra: true }, { ...plan.backing, retirementRefund: true }, { ...plan.backing, authority: "estimatedSlots" }, { ...plan.backing, cancellation: ["start"] }]) 
+  const validateBacking = new Ajv({strict:false}).compile({const:{authority:"completeSystemAllocatorRequests",phases:["projectSnapshot","reconstructSnapshot"],ceilings:["zero","exact","oneBelow","cumulative"],cancellation:["start","materializedInterior"],diagnosticOwnership:"actualCapacity",retirementRefund:false}});
+  expect(validateBacking(plan.backing)).toBe(true);
+  for (const invalid of [{ ...plan.backing, extra: true }, { ...plan.backing, retirementRefund: true }, { ...plan.backing, authority: "estimatedSlots" }, { ...plan.backing, cancellation: ["start"] }]) expect(validateBacking(invalid)).toBe(false);
   const expected = await fixture();
   const bytes = await exportSqliteDatabase(await noteSnapshotToSqliteDatabase(expected));
   const sql = Database.deserialize(bytes, { safeIntegers: true });

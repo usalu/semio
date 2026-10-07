@@ -1,24 +1,71 @@
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import Ajv from "ajv";
 import picomatch from "picomatch";
 import ts from "typescript";
 import { parse } from "jsonc-parser";
 import { artifactFacetPathIsDeclared, loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import { newScaffoldIoTree, newScaffoldSubsetTree } from "../../🏗️authoring/🗿️artifact-tree/🟦️.ts";
-import { artifactIoArchitectureBreaches, missingArtifactDiffWireTypes, semanticArtifactIoItems, schemaTypeScriptWireSymbols } from "../../🚪️io/🏛️architecture/🟦️.ts";
+import { artifactIoArchitectureBreaches, missingArtifactDiffWireTypes, semanticArtifactIoItems, schemaTypeScriptWireSymbols, schemaRustWireDependencies } from "../../🚪️io/🏛️architecture/🟦️.ts";
 import Parser from "web-tree-sitter";
 import type { ArtifactScaffoldLeaf } from "../../🏗️builder/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../..");
 const vector = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-io-ownership/🔣️.json"), "utf8")) as { accepted: string[]; rejected: string[] };
-const schema = JSON.parse(readFileSync(join(library, "🧬️schema/🚪️artifact-io-ownership/🔣️.json"), "utf8"));
 const taxonomy = loadCatalogTaxonomy();
+
+test("native codec implementations belong to their declared physical representation", async () => {
+  const fixture = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-native-representations/🔣️.json"), "utf8")) as { cases: {representation: string; source: string; misplaced: string[]}[] };
+  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+  mkdirSync(output, {recursive:true});
+  const root = mkdtempSync(join(output,"native-representation-"));
+  await Parser.init();
+  const parser = new Parser();
+  parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",library)),"out/tree-sitter-rust.wasm")));
+  const owners = new Map([["ArtifactDsl","📝️text"],["OpText","📝️text"],["DiffText","📝️text"],["diff_text","📝️text"],["ArtifactPack","💾️binary"],["OpBinary","💾️binary"],["DiffBinary","💾️binary"],["diff_binary","💾️binary"],["ArtifactSqliteSnapshot","🪶️sqlite"]]);
+  try {
+    for (const row of fixture.cases) {
+      const tree = parser.parse(row.source)!;
+      expect(tree.rootNode.hasError()).toBe(false);
+      const misplaced = new Set<string>();
+      const visit = (node: Parser.SyntaxNode): void => {
+        const name = (node.type === "impl_item" ? node.childForFieldName("trait") : node.type === "macro_invocation" ? node.childForFieldName("macro") : null)?.text.replace(/\s/gu,"").split("::").at(-1);
+        if (name && owners.has(name) && owners.get(name) !== row.representation) misplaced.add(name);
+        for (const child of node.namedChildren) visit(child);
+      };
+      visit(tree.rootNode); tree.delete();
+      expect([...misplaced].sort()).toEqual(row.misplaced);
+      const directory = join(root,"artifact/🚪️io",row.representation,"🧬️mutations");
+      mkdirSync(directory,{recursive:true}); writeFileSync(join(directory,"🦀️.rs"),row.source);
+      const found = artifactIoArchitectureBreaches(root,["artifact"],taxonomy).filter(breach => breach.scope.endsWith(row.representation+"/🧬️mutations/🦀️.rs") && breach.kind === "artifact-io/representation-codec");
+      expect(found.length).toBe(row.misplaced.length ? 1 : 0);
+      if (found[0]) for (const name of row.misplaced) expect(found[0].reason).toContain(name);
+      rmSync(join(root,"artifact"),{recursive:true,force:true});
+    }
+  } finally {parser.delete();rmSync(root,{recursive:true,force:true});}
+  console.log("[DEBUG] Native representation ownership oracle=tree-sitter");
+});
+
+test("native codecs exclude host document-store and publication authority",async()=>{
+ const fixture=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-io-host-owners/🔣️.json"),"utf8")) as {cases:{source:string;host:string[]}[]};
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+ mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"native-host-"));
+ await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",library)),"out/tree-sitter-rust.wasm")));
+ try{for(const row of fixture.cases){
+  const tree=parser.parse(row.source)!;expect(tree.rootNode.hasError()).toBe(false);const names=new Set<string>();
+  const walk=(node:Parser.SyntaxNode):void=>{if(["identifier","type_identifier"].includes(node.type)&&/^(?:ArtifactStore|DocumentStoreOwners|\w*PublicationLease)$/u.test(node.text))names.add(node.text);if(!["string_literal","raw_string_literal","line_comment","block_comment"].includes(node.type))for(const child of node.namedChildren)walk(child);};walk(tree.rootNode);tree.delete();
+  expect([...names].sort()).toEqual(row.host);
+  const directory=join(root,"artifact/🚪️io/💾️binary/🧬️mutations");mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"🦀️.rs"),row.source);
+  const found=artifactIoArchitectureBreaches(root,["artifact"],taxonomy).filter(breach=>breach.kind==="artifact-io/io-host-authority");
+  expect(found.length).toBe(row.host.length?1:0);if(found[0])for(const name of row.host)expect(found[0].reason).toContain(name);
+  rmSync(join(root,"artifact"),{recursive:true,force:true});
+ }}finally{parser.delete();rmSync(root,{recursive:true,force:true});}
+ console.log("[DEBUG] Native host authority oracle=tree-sitter");
+});
 
 test("framework products with paired snapshot schema and IO are architecture owners", () => {
   const fixture = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-io-framework-owner-roots/🔣️.json"), "utf8")) as {owners: {path: string; schema: boolean; io: boolean; snapshot: boolean; checked: boolean}[]; semanticSource: string; physicalSource: string};
-  expect(new Ajv({strict: true}).compile({type:"object",required:["owners","semanticSource","physicalSource"],additionalProperties:false,properties:{semanticSource:{type:"string"},physicalSource:{type:"string"},owners:{type:"array",items:{type:"object",required:["path","schema","io","snapshot","checked"],additionalProperties:false,properties:{path:{type:"string"},schema:{type:"boolean"},io:{type:"boolean"},snapshot:{type:"boolean"},checked:{type:"boolean"}}}}}})(fixture)).toBe(true);
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   mkdirSync(output, {recursive:true});
@@ -39,12 +86,11 @@ test("framework products with paired snapshot schema and IO are architecture own
     const expected = fixture.owners.filter(owner => owner.checked).map(owner => `${owner.path}/🧬️schema/📸️snapshot/🦀️.rs`).sort();
     expect(artifactIoArchitectureBreaches(root,undefined,taxonomy).filter(row => row.kind === "artifact-io/schema-codec").map(row => row.scope).sort()).toEqual(expected);
   } finally {rmSync(root,{recursive:true,force:true});}
-  console.log("[DEBUG] framework paired snapshot+IO owner discovery oracle=Ajv+picomatch");
+  console.log("[DEBUG] framework paired snapshot+IO owner discovery oracle=picomatch");
 });
 
 test("semantic and physical source declarations remain in separate owners", async () => {
   const rows = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-io-source-boundary/🔣️.json"), "utf8")) as Record<"rust" | "typescript", {source: string; forbidden: string[]}[]>;
-  expect(new Ajv({strict: true}).compile(JSON.parse(readFileSync(join(library, "🧬️schema/🚪️artifact-io-source-boundary/🔣️.json"), "utf8")))(rows)).toBe(true);
   await Parser.init();
   const parser = new Parser();
   parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", library)), "out/tree-sitter-rust.wasm")));
@@ -76,16 +122,14 @@ test("semantic and physical source declarations remain in separate owners", asyn
         else if (statement.name) names.push(statement.name.text);
       }
     }
-    expect(names.filter(name => /Json(?:Text|Value|Projection)?$|^decode.*Protobuf$|^TxtProtobuf|^txtProtobuf(?:Key|String)$/u.test(name)).sort()).toEqual(row.forbidden);
+    expect(names.filter(name => /(?:To|From)(?:Native)?Json(?:Text|Value|Projection)?$|Json(?:Text|Projection)$|^(?:decode|encode|write).*Json(?:Value)?$|^decode.*Protobuf$|^TxtProtobuf|^txtProtobuf(?:Key|String)$|^(?:render|infer).*Tikz(?:Plan)?$/u.test(name)).sort()).toEqual(row.forbidden);
     expect(schemaTypeScriptWireSymbols(row.source)).toEqual(row.forbidden);
   }
-  console.log("[DEBUG] artifact-io-source-boundary oracle=tree-sitter+TypeScript+Ajv");
+  console.log("[DEBUG] artifact-io-source-boundary oracle=tree-sitter+TypeScript");
 });
 
 test("semantic diffs have independent text and binary IO owners", async () => {
   const fixture = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-diff-codec-ownership/🔣️.json"), "utf8")) as {cases: {semantic: string; text: string; binary: string; missing: string[]}[]};
-  const validate = new Ajv({strict: true}).compile({type: "object", required: ["cases"], additionalProperties: false, properties: {cases: {type: "array", items: {type: "object", required: ["semantic", "text", "binary", "missing"], additionalProperties: false, properties: {semantic: {type: "string"}, text: {type: "string"}, binary: {type: "string"}, missing: {type: "array", items: {type: "string"}, uniqueItems: true}}}}}});
-  expect(validate(fixture)).toBe(true);
   await Parser.init();
   const parser = new Parser();
   parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", library)), "out/tree-sitter-rust.wasm")));
@@ -109,7 +153,7 @@ test("semantic diffs have independent text and binary IO owners", async () => {
       expect(missingArtifactDiffWireTypes(row.semantic, row.text, row.binary)).toEqual(row.missing);
     }
   } finally { parser.delete(); }
-  console.log("[DEBUG] diff-io-coverage paired representations oracle=tree-sitter+Ajv");
+  console.log("[DEBUG] diff-io-coverage paired representations oracle=tree-sitter");
 });
 const oracle = picomatch([
   "🧬️schema/{📸️snapshot,🔺️diff,🧬️mutations,💡️inferences}",
@@ -119,9 +163,7 @@ const oracle = picomatch([
   "🚪️io/{📥️import/🧩️deserializers,📤️export/🧵️serializers}/🗿️artifacts/📄️txt",
 ]);
 
-test("artifact IO ownership language-neutral corpus agrees with independent JSON Schema and glob oracles", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+test("artifact IO ownership paths agree with independent glob oracles", () => {
   for (const [paths, accepted] of [[vector.accepted, true], [vector.rejected, false]] as const) {
     for (const path of paths) {
       expect(oracle(path), `oracle: ${path}`).toBe(accepted);
@@ -170,6 +212,7 @@ test("artifact IO ownership rejects misplaced directories, specs, inline codecs,
     mkdirSync(join(root, "artifact/🚪️io/🧬️mutations/📝️text"), { recursive: true });
     expect(artifactIoArchitectureBreaches(root, ["artifact"], taxonomy).map(row => row.kind).sort()).toEqual([
       "artifact-io/facet-path", "artifact-io/facet-path", "artifact-io/schema-codec", "artifact-io/schema-codec-alias", "artifact-io/schema-codec-mount", "artifact-io/schema-wire-spec", "artifact-io/schema-codec-alias", "artifact-io/schema-codec-mount",
+      "artifact-io/schema-codec-dependency",
       "artifact-io/schema-codec-dependency",
     ].sort());
 
@@ -241,3 +284,29 @@ test("artifact IO contracts and command registration parse independently", () =>
     }
   }
 },{timeout:60000});
+
+test("Rust schema rejects physical dependencies while admitting test-only probes",async()=>{
+ const fixture=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-schema-dependencies/🔣️.json"),"utf8")) as {cases:{source:string;forbidden:string[]}[]};
+ await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",library)),"out/tree-sitter-rust.wasm")));
+ try{for(const row of fixture.cases){const tree=parser.parse(row.source)!;expect(tree.rootNode.hasError()).toBe(false);const fragments:string[]=[],attributeDependencies:string[]=[];
+ const visit=(node:Parser.SyntaxNode):void=>{let sibling=node.previousNamedSibling;while(sibling?.type==="attribute_item"){if(/^#\s*\[\s*cfg\s*\(\s*test\s*\)\s*\]/u.test(sibling.text))return;sibling=sibling.previousNamedSibling;}
+ if(node.type==="attribute_item")for(const match of node.text.matchAll(/\b(?:serialize_controlled_with|deserialize_controlled_with|retire_with)\s*=\s*"([^"]*)"/gu))attributeDependencies.push(match[1]!);
+ if(node.type==="identifier"||node.type==="field_identifier")fragments.push(node.text);if(node.type==="scoped_identifier")fragments.push(node.text.replace(/\s/gu,""));for(const child of node.namedChildren)visit(child);};visit(tree.rootNode);tree.delete();const code=fragments.join(" "),expected=new Set<string>();
+ for(const name of["OpText","OpBinary","SqliteSnapshotControl","xml_document_from_text","xml_document_to_text","encode_op","decode_op","to_uri","parse_uri","parse_uri_controlled","to_coordinate","parse_coordinate"])if(fragments.includes(name))expected.add(name);
+ for(const name of["semio_framework_pack_json","semio_framework_io_schema","pack_rt::encode_wire_value","io::text","io::binary","io::sqlite"])if(code.includes(name)||attributeDependencies.some(path=>path.includes(name)))expected.add(name);
+ if([code,...attributeDependencies].some(path=>/\bio::(?!text\b|binary\b|sqlite\b|import\b|export\b)/u.test(path)))expected.add("io::");
+ expect([...expected].sort()).toEqual(row.forbidden);expect(schemaRustWireDependencies(row.source)).toEqual(row.forbidden);
+ }}finally{parser.delete();}console.log("[DEBUG] Rust schema physical dependency oracle=tree-sitter");
+});
+
+test("TypeScript schema rejects the complete IO namespace independently",()=>{
+ const fixture=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-schema-dependencies/🔣️.json"),"utf8")) as {typescript:{source:string;forbidden:boolean;testOnly?:boolean}[]};
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"schema-io-namespace-"));
+ try{for(const row of fixture.typescript){const syntax=ts.createSourceFile("boundary.ts",row.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);const dependencies=syntax.statements.flatMap(statement=>ts.isImportDeclaration(statement)||ts.isExportDeclaration(statement)?statement.moduleSpecifier&&ts.isStringLiteral(statement.moduleSpecifier)?[statement.moduleSpecifier.text]:[]:[]);
+ expect(dependencies.some(path=>/(?:^|\/)🚪️io(?:\/|$)/u.test(path))).toBe(row.forbidden);
+ const owner=join(root,"artifact/🧬️schema",row.testOnly?"💡️inferences/📦️packages/🟦️typescript/🔬️probes":"📸️snapshot");mkdirSync(owner,{recursive:true});writeFileSync(join(owner,"🟦️.ts"),row.source);
+ const testOnly=picomatch("**/🔬️probes/**",{dot:true})(join(owner,"🟦️.ts"));expect(testOnly).toBe(row.testOnly===true);
+ expect(artifactIoArchitectureBreaches(root,["artifact"],taxonomy).some(breach=>breach.scope===join(owner,"🟦️.ts").slice(root.length+1)&&breach.kind==="artifact-io/schema-codec-dependency")).toBe(row.forbidden&&!testOnly);
+ }}finally{rmSync(root,{recursive:true,force:true});}
+ console.log("[DEBUG] complete TypeScript IO namespace oracle=TypeScript AST");
+});

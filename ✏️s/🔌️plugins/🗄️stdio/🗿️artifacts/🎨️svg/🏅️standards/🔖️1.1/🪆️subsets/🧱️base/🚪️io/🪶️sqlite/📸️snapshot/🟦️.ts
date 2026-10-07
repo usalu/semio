@@ -1,3 +1,4 @@
+import {bindSvgDocument,nativeSvgDocument}from "../../📝️text/📸️snapshot/🧮️attributes/🟦️.ts";
 /** 🎨️ SVG's persisted typed XML fields projected directly into SVG's own tables. */
 import type { SvgSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { projectXmlDocument, reconstructXmlDocument, type XmlSqliteTables } from "../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
@@ -15,11 +16,12 @@ function root(snapshot: SvgSnapshot): void {
 /** 📤️ Project SVG through explicit table vocabulary while retaining all typed XML metadata. */
 export async function svgSnapshotToSqliteDatabase(snapshot: SvgSnapshot, options: ArtifactSqliteOptions = {}): Promise<SqliteDatabase> {
   root(snapshot);
-  return projectXmlDocument(snapshot.schema, snapshot.doc, SVG_SQLITE_SCHEMA, TABLES, options);
+  return projectXmlDocument(snapshot.schema, nativeSvgDocument(snapshot.doc), SVG_SQLITE_SCHEMA, TABLES, options);
 }
 /** 📥️ Reconstruct typed SVG metadata and enforce its required SVG root. */
 export async function svgSnapshotFromSqliteDatabase(database: SqliteDatabase, options: ArtifactSqliteOptions = {}): Promise<SvgSnapshot> {
-  const snapshot = await reconstructXmlDocument(database, SVG_SQLITE_SCHEMA, TABLES, options);
+  const decoded = await reconstructXmlDocument(database, SVG_SQLITE_SCHEMA, TABLES, options);
+  const snapshot={schema:decoded.schema,doc:bindSvgDocument(decoded.doc)};
   root(snapshot);
   return snapshot;
 }

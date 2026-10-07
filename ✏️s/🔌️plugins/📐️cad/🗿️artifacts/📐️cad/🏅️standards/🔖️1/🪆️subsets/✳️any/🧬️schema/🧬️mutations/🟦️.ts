@@ -1,3 +1,4 @@
+import {parseArtifactRef,type ArtifactRef} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 /** 📐️ Cad direct-mutation discriminated union. */
 import type { CadNode } from "../🟦️.ts";
 
@@ -18,7 +19,7 @@ export interface CadReference {
 /** 🧱️ `create-shape-model` payload — sets the `shape_model` child slot; overwrites if occupied. */
 export interface CreateShapeModel {
   childId: string;
-  target: string;
+  target: ArtifactRef;
 }
 
 /** 🧨️ `delete-shape-model` payload — clears the `shape_model` child slot. */
@@ -27,7 +28,7 @@ export type DeleteShapeModel = Record<string, never>;
 /** 🏢️ `create-building-model` payload — sets the `building_model` child slot; overwrites if occupied. */
 export interface CreateBuildingModel {
   childId: string;
-  target: string;
+  target: ArtifactRef;
 }
 
 /** 💥️ `delete-building-model` payload — clears the `building_model` child slot. */
@@ -36,7 +37,7 @@ export type DeleteBuildingModel = Record<string, never>;
 /** ⚡️ `create-energy-model` payload — sets the `energy_model` child slot; overwrites if occupied. */
 export interface CreateEnergyModel {
   childId: string;
-  target: string;
+  target: ArtifactRef;
 }
 
 /** 🔌️ `delete-energy-model` payload — clears the `energy_model` child slot. */
@@ -45,7 +46,7 @@ export type DeleteEnergyModel = Record<string, never>;
 /** 🏛️ `create-structure-classic-model` payload — sets the `structure_classic_model` child slot; overwrites if occupied. */
 export interface CreateStructureClassicModel {
   childId: string;
-  target: string;
+  target: ArtifactRef;
 }
 
 /** 💣️ `delete-structure-classic-model` payload — clears the `structure_classic_model` child slot. */
@@ -54,7 +55,7 @@ export type DeleteStructureClassicModel = Record<string, never>;
 /** 📐️ `create-drawing` payload — appends a new owned drawing child handle. */
 export interface CreateDrawing {
   childId: string;
-  target: string;
+  target: ArtifactRef;
 }
 
 /** 🧹️ `delete-drawing` payload — removes the entry matching `childId` from `drawings`. */
@@ -146,3 +147,6 @@ export type CadMutation =
   | ({ mutation: "moveReference" } & MoveReference)
   | ({ mutation: "replaceReferenceMedia" } & ReplaceReferenceMedia)
   | ({ mutation: "replaceReferences" } & ReplaceReferences);
+
+/** 🪪️ Admits the exact owned child identity without native URI interpretation. */
+export function parseCadChildPayload(value:unknown,subset:"model"|"drawing"):{childId:string;target:ArtifactRef}{if(value===null||typeof value!=="object"||Array.isArray(value))throw new TypeError("CAD child payload must be an object");const row=value as Record<string,unknown>;if(Object.keys(row).some(k=>k!=="childId"&&k!=="target")||typeof row.childId!=="string"||row.childId==="")throw new TypeError("CAD child identity is invalid");const target=parseArtifactRef(row.target);if(target.artifactId===""||target.dialect.artifactKind!=="s.stdio.semio"||target.dialect.standard!=="v1"||target.dialect.subset!==subset)throw new TypeError("CAD child target dialect differs");return{childId:row.childId,target};}

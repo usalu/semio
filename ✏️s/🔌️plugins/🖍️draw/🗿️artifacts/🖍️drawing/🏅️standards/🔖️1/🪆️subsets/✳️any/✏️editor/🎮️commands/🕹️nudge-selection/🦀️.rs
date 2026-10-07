@@ -82,7 +82,7 @@ pub(crate) fn plan_selection(document:&DrawingSnapshot,utility:&str,ids:&[String
     if !nodes && !matches!(utility,"selectDirect"|"selectMarquee"|"selectLasso"|"transformMove") {return Ok(None);}
     Ok(match drawing_selection_targets(document,nodes,ids,point_ids,delta)? {
         Some(DrawingSelectionTargets::Layers(targets))=>Some(drag_layers(targets,delta[0],delta[1])),
-        Some(DrawingSelectionTargets::Points(targets))=>Some(drag_path_points(targets,delta[0],delta[1])),
+        Some(DrawingSelectionTargets::Points(targets))=>Some(drag_path_points(targets.into(),delta[0],delta[1])),
         None=>None,
     })
 }

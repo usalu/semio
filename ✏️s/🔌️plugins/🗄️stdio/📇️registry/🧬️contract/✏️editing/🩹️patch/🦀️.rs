@@ -115,6 +115,8 @@ pub fn snapshot_patch_label(patch: &SnapshotPatch) -> LocalizedLabel {
     }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for SnapshotPatch{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;}
+
 impl semio_framework_dsl_record::DslField for SnapshotPatch {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Value
@@ -724,7 +726,7 @@ pub fn apply_validated_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: 
 }
 
 /// 🧬️ Validates one path operation against the exact editor schema and its bounded post-edit context.
-pub fn apply_snapshot_patch_for_dialect<S: ToValue + FromValue + Clone>(snapshot: &S, patch: &SnapshotPatch, dialect: semio_framework_plugin::Dialect, document_schema: &str) -> Result<S, SnapshotEditError> {
+pub fn apply_snapshot_patch_for_dialect<S: ToValue + FromValue + Clone>(snapshot: &S, patch: &SnapshotPatch, dialect: semio_framework_artifact_reference::Dialect, document_schema: &str) -> Result<S, SnapshotEditError> {
     let identity = snapshot.value_at_path(&["schema"]).map_err(|error| path_error("snapshot-edit.path-missing", &["schema".into()], error))?;
     super::validate_snapshot_schema_for_dialect(&DslValue::Object(vec![("schema".into(), identity.clone())]), dialect, document_schema)?;
     let id = super::snapshot_schema_descriptor_for_dialect(dialect, document_schema)?;

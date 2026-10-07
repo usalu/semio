@@ -1,5 +1,6 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot;
 //! 🔒️ Layer protection persists across text, binary and subtree duplication.
+
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot;
 use super::*;
 use crate::{diff::diff_patch_layer,RasterLayerPatch};
 use crate::standards::v1::subsets::any::schema::snapshot;

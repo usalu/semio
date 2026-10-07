@@ -17,6 +17,6 @@ mod tests {
         }
         let mutated = PdfVtBuilderConstruction::from_snapshot(snapshot);
         let err = mutated.build().expect_err("a Catalog missing /DPartRoot must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::vt::schema::CODE_DPART_ROOT));
+        assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::vt::io::CODE_DPART_ROOT));
     }
 }

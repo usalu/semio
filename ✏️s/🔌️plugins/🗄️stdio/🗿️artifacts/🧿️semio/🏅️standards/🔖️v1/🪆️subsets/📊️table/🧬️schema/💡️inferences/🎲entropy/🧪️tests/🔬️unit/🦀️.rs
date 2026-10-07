@@ -107,3 +107,16 @@ async fn changing_the_other_column_misses_only_its_own_entry() {
     assert_eq!(values.get("coin").map(|e| e.distinct), Some(2), "coin's entropy must be untouched by an edit to always_a");
 }
 //#endregion 🧪️IncrementalityLaw
+
+#[test]
+fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
+    use store::InferredField;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let symbols=fixture["symbols"].as_array().unwrap(); let snapshot=SemioTableSnapshot {columns:vec![SemioTableColumn{name:"coin".into(),kind:SemioTableCellKind::Str}],rows:symbols.iter().map(|value|SemioTableRow{cells:vec![SemioValue::Str{value:value.as_str().unwrap().into()}]}).collect(),..Default::default()};
+    let dependency=ColumnEntropy::dep_input(&snapshot,&"coin".into(),&[]);
+    let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
+    let mut counts=std::collections::BTreeMap::new(); for value in symbols { *counts.entry(value.as_str().unwrap()).or_insert(0u64)+=1; } let oracle=serde_json::to_value(counts.values().copied().collect::<Vec<_>>()).unwrap();
+    assert_eq!(actual,oracle);
+    assert_eq!(actual,fixture["expected"]);
+    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
+}

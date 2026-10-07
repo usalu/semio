@@ -11,8 +11,9 @@
 //! remain outside the owned Semio mesh material contract.
 
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
-use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_gltf::engine::{encode_data_uri, GltfAccessorType, GltfComponentType};
+use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::encode_data_uri;
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType,GltfComponentType};
 use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfNode, GltfPbrMetallicRoughness, GltfPrimitive, GltfScene, GltfSourceForm, GltfTexture, GltfTextureInfo, GltfNormalTextureInfo, GltfOcclusionTextureInfo};
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
 use semio_s_artifact_stdio_gltf::STDIO_GLTF_DOCUMENT_SCHEMA;

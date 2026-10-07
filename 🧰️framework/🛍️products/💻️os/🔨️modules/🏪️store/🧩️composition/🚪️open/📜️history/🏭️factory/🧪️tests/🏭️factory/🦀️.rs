@@ -2,7 +2,7 @@
 
 use super::super::{MemberHistoryInputStep, MemberHistoryVerification};
 use super::*;
-use crate::os_io::{ArtifactDialect, ArtifactRef};
+use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use crate::os_spr::format::retained::RetainedSprLimits;
 use crate::os_store::{MemberOpenRequest, OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, VcsError};
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
@@ -115,11 +115,11 @@ macro_rules! factory {
             fn begin_open(request: crate::os_store::MemberOpenRequest) -> Result<Self::Open, crate::os_store::MemberOpenAdmissionError> {
                 crate::os_store::UnsupportedMemberFactoryOpen::begin(request)
             }
-            async fn create(_: &str, _: &ArtifactDialect, _: &[u8]) -> Result<Self, VcsError> {
+            async fn create(_: &str, _: &ArtifactDialect, _: &[u8], _: crate::os_spr::ActorId) -> Result<Self, VcsError> {
                 FACTORY_CALLS.set(FACTORY_CALLS.get() + 1);
                 Err(VcsError::ValidationFailed("selection cannot create".into()))
             }
-            async fn open(_: &ArtifactRef, _: Option<&OwnerRef>, _: &[u8]) -> Result<Self, VcsError> {
+            async fn open(_: &ArtifactRef, _: Option<&OwnerRef>, _: &[u8], _: crate::os_spr::ActorId) -> Result<Self, VcsError> {
                 FACTORY_CALLS.set(FACTORY_CALLS.get() + 1);
                 Err(VcsError::ValidationFailed("selection cannot hydrate".into()))
             }
@@ -176,7 +176,7 @@ fn input(fixture: &Value, dialect: &[String], history: &[u8]) -> VerifiedMemberH
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap();
     }
     pages.seal().unwrap();
-    let request = MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages).admit(1).unwrap_or_else(|_| panic!("request admission"));
+    let request = MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages, crate::os_spr::ActorId(fixture["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("request admission"));
     let mut verifier = MemberHistoryVerification::new(request, RetainedSprLimits::default()).unwrap_or_else(|_| panic!("verification admission"));
     let mut sequence = 0;
     for _ in 0..10000 {

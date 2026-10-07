@@ -3,7 +3,8 @@
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::mutations::{add_layer_asset, create_layer, delete_layer, remove_layer_asset};
 use crate::op::RasterMutation;
-use crate::standards::v1::subsets::any::schema::{layer_node_id, raster_example_document};
+use crate::standards::v1::subsets::any::schema::layer_node_id;
+use crate::standards::v1::subsets::any::io::text::snapshot::raster_example_document;
 use crate::{raster_asset, RasterLayerNode, RasterOwnedMap, RasterSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -45,7 +46,7 @@ fn replace_document_operations(current: &RasterSnapshot, mut next: RasterSnapsho
     // nothing, leaving a pixel-less handle pool and a BLANK composite.
     operations.extend(example_media(example_id));
     for (asset_id, _) in next.assets.iter() {
-        if let Some(asset) = raster_asset(&next.assets, asset_id) {
+        if let Some(asset) = crate::raster_image(&next.assets, asset_id) {
             operations.push(RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: asset_id.to_owned(), asset }));
         }
     }
@@ -85,7 +86,7 @@ pub(crate) fn example_media(example_id: &str) -> Vec<RasterMutation> {
     if example_id != crate::examples::art_raster_demo::ID {
         return Vec::new();
     }
-    vec![RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset: crate::examples::art_raster_demo::emblem_image_asset() })]
+    vec![RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset: crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&crate::examples::art_raster_demo::emblem_image_asset()).expect("curated image decodes") })]
 }
 
 fn release_layer_forest(layers: Vec<RasterLayerNode>) {

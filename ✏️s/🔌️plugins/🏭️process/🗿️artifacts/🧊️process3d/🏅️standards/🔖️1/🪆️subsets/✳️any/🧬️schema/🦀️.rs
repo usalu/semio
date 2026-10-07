@@ -5,7 +5,7 @@ use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use store::ArtifactDsl;
+
 
 //#region 🔖️Artifact
 /// 🧬️ process3d document artifact state.
@@ -145,7 +145,6 @@ pub fn process3d_artifact_schema_descriptor() -> semio_framework_schema_registry
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ExampleFixtures
-pub use crate::standards::v1::subsets::any::io::text::snapshot::{PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
 
 

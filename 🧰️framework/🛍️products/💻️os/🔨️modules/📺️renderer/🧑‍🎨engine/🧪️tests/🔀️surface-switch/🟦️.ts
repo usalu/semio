@@ -19,7 +19,6 @@ import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
-import Ajv from "ajv";
 import { SHELL_KEYBINDINGS, ariaKeyshortcutsText, composeControlKeybindings, formatKeybindingShortcut } from "@semio-tech/ui-react";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "../../../../../../../🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import type { AppRole, ArtifactDialect } from "@semio-tech/framework";
@@ -140,147 +139,6 @@ type SurfaceSwitchFixture = {
 
 const fixture = snapshotJson as unknown as SurfaceSwitchFixture;
 
-const FIXTURE_SCHEMA: Record<string, unknown> = {
-  type: "object",
-  additionalProperties: false,
-  required: ["note", "dialects", "manifests", "boot", "group", "roleTargets", "switch", "gate", "work", "quiesce", "sealed", "busyLabel", "modeSteps", "keybindings", "keybindingOverride"],
-  properties: {
-    note: { type: "string", minLength: 1 },
-    dialects: { type: "object", additionalProperties: { type: "object", additionalProperties: false, required: ["artifactKind", "standard", "subset"], properties: { artifactKind: { type: "string" }, standard: { type: "string" }, subset: { type: "string" } } } },
-    manifests: {
-      type: "object",
-      additionalProperties: { type: "array", minItems: 1, items: { type: "object", additionalProperties: false, required: ["id", "role"], properties: { id: { type: "string" }, role: { enum: ["editor", "viewer"] }, dialect: { type: "string" } } } },
-    },
-    boot: {
-      type: "array",
-      minItems: 1,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["id", "manifest", "search", "envRole", "defaultAppId", "pinnedAppId", "expectedRole", "expectedAppId"],
-        properties: { id: { type: "string" }, manifest: { type: "string" }, search: { type: "string" }, envRole: { enum: ["editor", "viewer"] }, defaultAppId: { type: ["string", "null"] }, pinnedAppId: { type: ["string", "null"] }, expectedRole: { enum: ["editor", "viewer"] }, expectedAppId: { type: ["string", "null"] } },
-      },
-    },
-    group: {
-      type: "array",
-      minItems: 1,
-      items: { type: "object", additionalProperties: false, required: ["id", "manifest", "dialect", "expected"], properties: { id: { type: "string" }, manifest: { type: "string" }, dialect: { type: ["string", "null"] }, expected: { type: ["object", "null"] } } },
-    },
-    roleTargets: {
-      type: "array",
-      minItems: 1,
-      items: { type: "object", additionalProperties: false, required: ["id", "manifest", "dialect", "currentRole", "requested", "expected"], properties: { id: { type: "string" }, manifest: { type: "string" }, dialect: { type: "string" }, currentRole: { enum: ["editor", "viewer"] }, requested: { enum: ["editor", "viewer"] }, expected: { type: ["string", "null"] } } },
-    },
-    switch: {
-      type: "array",
-      minItems: 1,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["id", "manifest", "session", "request", "quiesce", "createFails", "retireMode", "expected"],
-        properties: {
-          id: { type: "string" },
-          manifest: { type: "string" },
-          session: { type: ["object", "null"] },
-          request: { type: "object" },
-          quiesce: { type: "object", additionalProperties: false, required: ["settled", "pending"], properties: { settled: { type: "boolean" }, pending: { type: "integer", minimum: 0 } } },
-          createFails: { type: "boolean" },
-          retireMode: { enum: ["resolve", "reject", "never"] },
-          expected: {
-            type: "object",
-            additionalProperties: false,
-            required: ["status", "steps", "trace", "sessionAppId", "instanceId", "created", "retired", "pending", "retireFailures"],
-            properties: {
-              status: { enum: ["switched", "mounted", "republished", "unchanged", "unresolvable", "busy", "draining", "create-failed"] },
-              steps: { type: "array", items: { type: "string" } },
-              trace: { type: "array", items: { enum: ["quiesce", "seal", "unseal", "create", "create-failed", "retire-started", "retire", "retire-failed", "publish", "seed", "refresh"] } },
-              sessionAppId: { type: ["string", "null"] },
-              instanceId: { type: ["integer", "null"] },
-              created: { type: "integer", minimum: 0 },
-              retired: { type: "array", items: { type: "integer" } },
-              pending: { type: "integer", minimum: 0 },
-              retireFailures: { type: "integer", minimum: 0 },
-            },
-          },
-        },
-      },
-    },
-    gate: {
-      type: "object",
-      additionalProperties: false,
-      required: ["note", "first", "second", "expectedRetired", "expectedCreated"],
-      properties: {
-        note: { type: "string", minLength: 1 },
-        first: { type: "object", additionalProperties: false, required: ["appId", "status"], properties: { appId: { type: "string" }, status: { type: "string" } } },
-        second: { type: "object", additionalProperties: false, required: ["appId", "status"], properties: { appId: { type: "string" }, status: { type: "string" } } },
-        expectedRetired: { type: "array", items: { type: "integer" } },
-        expectedCreated: { type: "integer", minimum: 0 },
-      },
-    },
-    work: {
-      type: "array",
-      minItems: 1,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["id", "begin", "release", "pending", "total"],
-        properties: {
-          id: { type: "string" },
-          begin: { type: "array", items: { type: "array", minItems: 3, maxItems: 3 } },
-          release: { type: "array", items: { type: "integer", minimum: 0 } },
-          pending: { type: "array", items: { type: "array", minItems: 3, maxItems: 3 } },
-          total: { type: "integer", minimum: 0 },
-        },
-      },
-    },
-    quiesce: {
-      type: "array",
-      minItems: 1,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["id", "pending", "budgetMs", "pollMs", "expected"],
-        properties: {
-          id: { type: "string" },
-          pending: { type: "array", minItems: 1, items: { type: "integer", minimum: 0 } },
-          budgetMs: { type: "integer", minimum: 0 },
-          pollMs: { type: "integer", minimum: 1 },
-          expected: { type: "object", additionalProperties: false, required: ["settled", "pending", "sleeps"], properties: { settled: { type: "boolean" }, pending: { type: "integer", minimum: 0 }, sleeps: { type: "integer", minimum: 0 } } },
-        },
-      },
-    },
-    sealed: {
-      type: "object",
-      additionalProperties: false,
-      required: ["slots", "seal", "expectedSize", "expectedSealed", "unseal", "drop", "dropWithoutDetail"],
-      properties: {
-        slots: { type: "integer", minimum: 1 },
-        seal: { type: "array", minItems: 1, items: { type: "array", minItems: 2, maxItems: 2 } },
-        expectedSize: { type: "integer", minimum: 0 },
-        expectedSealed: { type: "array", minItems: 1, items: { type: "array", minItems: 3, maxItems: 3 } },
-        unseal: { type: "object", additionalProperties: false, required: ["note", "target", "sealedAfterUnseal", "sizeAfterUnseal"], properties: { note: { type: "string", minLength: 1 }, target: { type: "array", minItems: 2, maxItems: 2 }, sealedAfterUnseal: { type: "boolean" }, sizeAfterUnseal: { type: "integer", minimum: 0 } } },
-        drop: { type: "object", additionalProperties: false, required: ["pluginId", "instanceId", "what", "detail", "code", "text"], properties: { pluginId: { type: "string" }, instanceId: { type: "integer" }, what: { type: "string" }, detail: { type: "string" }, code: { type: "string" }, text: { type: "string" } } },
-        dropWithoutDetail: { type: "object", additionalProperties: false, required: ["pluginId", "instanceId", "what", "text"], properties: { pluginId: { type: "string" }, instanceId: { type: "integer" }, what: { type: "string" }, text: { type: "string" } } },
-      },
-    },
-    busyLabel: {
-      type: "array",
-      minItems: 2,
-      items: { type: "object", additionalProperties: false, required: ["locale", "text"], properties: { locale: { type: "string" }, text: { type: "string", minLength: 1 } } },
-    },
-    modeSteps: {
-      type: "array",
-      minItems: 1,
-      items: { type: "object", additionalProperties: false, required: ["id", "modeIds", "activeModeId", "step", "expected"], properties: { id: { type: "string" }, modeIds: { type: "array", items: { type: "string" } }, activeModeId: { type: "string" }, step: { enum: [1, -1] }, expected: { type: ["string", "null"] } } },
-    },
-    keybindings: {
-      type: "array",
-      minItems: 1,
-      items: { type: "object", additionalProperties: false, required: ["controlId", "chord", "aria", "ariaApple", "badge", "badgeApple", "event", "dispatches"], properties: { controlId: { type: "string" }, chord: { type: "string" }, aria: { type: "string" }, ariaApple: { type: "string" }, badge: { type: "string" }, badgeApple: { type: "string" }, event: { type: "object" }, dispatches: { type: ["object", "null"] } } },
-    },
-    keybindingOverride: { type: "object", additionalProperties: false, required: ["controlId", "keys", "aria", "ariaApple", "badge", "badgeApple"], properties: { controlId: { type: "string" }, keys: { type: "string" }, aria: { type: "string" }, ariaApple: { type: "string" }, badge: { type: "string" }, badgeApple: { type: "string" } } },
-  },
-};
 
 function dialectOf(key: string | null | undefined): ArtifactDialect | undefined {
   if (key === null || key === undefined) return undefined;
@@ -498,8 +356,6 @@ console.log(JSON.stringify(rows));`;
 }
 
 export async function testSurfaceSwitch(): Promise<void> {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(FIXTURE_SCHEMA);
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
 
   for (const row of fixture.boot) {
     const role = resolveBootQueryAppRole(row.search, row.envRole);

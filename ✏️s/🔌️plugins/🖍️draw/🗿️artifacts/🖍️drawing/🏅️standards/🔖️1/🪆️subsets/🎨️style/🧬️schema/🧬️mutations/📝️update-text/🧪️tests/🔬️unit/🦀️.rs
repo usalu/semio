@@ -5,9 +5,9 @@ fn text_edits_preserve_content_size_and_history_payload() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let layer = crate::schema::create_drawing_text_layer("Text");
     let id = crate::schema::layer_id(&layer).to_string();
-    let before = crate::DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let before = crate::DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for edit in fixture["edits"].as_array().unwrap() {
-        let mutation = super::mutation::update_text(id.clone(), edit["content"].as_str().unwrap().into(), edit["size"].as_f64().unwrap());
+        let mutation = super::mutation::update_text(id.clone().into(), edit["content"].as_str().unwrap().into(), edit["size"].as_f64().unwrap());
         store::os_store::test_support::assert_op_line_round_trip(&mutation);
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let outcome = mutation.diff(&before);
@@ -20,7 +20,7 @@ fn text_edits_preserve_content_size_and_history_payload() {
         assert_eq!(after, before);
     }
     for size in [0.0, -1.0, f64::NAN, f64::INFINITY] {
-        let rejected = super::mutation::update_text(id.clone(), "changed".into(), size).diff(&before);
+        let rejected = super::mutation::update_text(id.clone().into(), "changed".into(), size).diff(&before);
         assert!(!rejected.messages().is_empty());
         assert_eq!(rejected.diff().apply(&before).unwrap(), before);
     }

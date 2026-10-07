@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::new_trinity_graph_store;
+use crate::standards::v1::subsets::any::io::binary::mutations::new_trinity_graph_store;
 use crate::TRINITY_GRAPH_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
@@ -13,7 +13,7 @@ async fn set_query_op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn nakagin_document_text_round_trips_store_with_applied_operation() {
     let envelope = create_document_envelope_for_test();
-    let mut doc_store = new_trinity_graph_store(envelope).await.expect("valid artifact store fixture");
+    let mut doc_store = new_trinity_graph_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![set_query("MATCH (a:Piece) RETURN a.name".into())], transaction: None }).await.expect("apply set-query");
     ::store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
@@ -27,7 +27,7 @@ use store::create_document_envelope;
 
 fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
     let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document(), None);
-    JackStoreInitializationAuthority::new(envelope, operation, generation)
+    JackStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn drive_jack_initializer(authority: &mut JackStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::StepOutcome {
@@ -67,13 +67,16 @@ fn close_jack_candidate(mut candidate: store::ArtifactStore<JackSnapshot, Trinit
 }
 
 #[test]
-fn jack_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally() {
+fn jack_history_edit_initializer_aliases_genesis_and_publishes_exact_next_generation_and_candidate_closes_incrementally() {
     let operation = semio_framework_job::OperationId(501);
     let generation = semio_framework_job::Generation(13);
     let mut authority = empty_jack_initializer(operation, generation);
+    let genesis = authority.envelope.as_ref().expect("retained Jack envelope").vcs.genesis.share_snapshot();
     assert!(matches!(drive_jack_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Jack candidate");
     assert_eq!(candidate.generation_now(), 14);
+    assert!(std::sync::Arc::ptr_eq(&genesis, &candidate.snapshot_owner()));
+    drop(genesis);
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
     close_jack_candidate(candidate);
@@ -209,7 +212,7 @@ async fn parse_op_rejects_unknown_keyword() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
-    let mut store = new_trinity_graph_store(create_document_envelope_for_test()).await.expect("valid artifact store");
+    let mut store = new_trinity_graph_store(create_document_envelope_for_test(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     crate::standards::v1::subsets::any::schema::mutations::dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())]).await.unwrap_or(());
     if let Some(edit) = store.envelope().vcs.edits.last() {
         let edit: &Edit<TrinityGraphMutation> = edit;

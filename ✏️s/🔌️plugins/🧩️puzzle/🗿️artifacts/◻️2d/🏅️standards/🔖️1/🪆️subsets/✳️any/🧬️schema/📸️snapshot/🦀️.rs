@@ -2,6 +2,8 @@
 
 
 
+use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+
 use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dTargetRegion, PUZZLE_2D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 
@@ -20,7 +22,7 @@ use ::semio_framework_schema::ArtifactSchema;
 /// 🎯️ `target_regions` is the one collection skipped when empty (unlike `nodes`/`edges`): every
 /// document written before target regions existed stays byte-identical, so the whole committed
 /// snapshot corpus remains canonical.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -28,7 +30,7 @@ use ::semio_framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
 pub struct Puzzle2dSnapshot {
     #[state(artifact)]
-    pub schema: String,
+    pub schema: PagedUtf8<{ usize::MAX }>,
     #[value(default)]
     #[cfg_attr(test, serde(default))]
     #[dsl(block)]
@@ -38,17 +40,17 @@ pub struct Puzzle2dSnapshot {
     #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
-    pub nodes: Vec<Puzzle2dNode>,
+    pub nodes: PagedList<Puzzle2dNode, { usize::MAX }>,
     #[value(default)]
     #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
-    pub edges: Vec<Puzzle2dEdge>,
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    pub edges: PagedList<Puzzle2dEdge, { usize::MAX }>,
+    #[value(default, skip_serializing_if = "PagedList::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "PagedList::is_empty"))]
     #[dsl(table)]
     #[state(artifact)]
-    pub target_regions: Vec<Puzzle2dTargetRegion>,
+    pub target_regions: PagedList<Puzzle2dTargetRegion, { usize::MAX }>,
     #[value(default)]
     #[cfg_attr(test, serde(default))]
     #[dsl(block)]
@@ -65,6 +67,10 @@ pub struct Puzzle2dSnapshot {
 
 impl Default for Puzzle2dSnapshot {
     fn default() -> Self {
-        Self { schema: PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: Vec::new(), edges: Vec::new(), target_regions: Vec::new(), meta: Default::default() }
+        Self { schema: PUZZLE_2D_SCHEMA.into(), camera: Default::default(), nodes: PagedList::new(), edges: PagedList::new(), target_regions: PagedList::new(), meta: Default::default() }
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧬️retained-clone/🦀️.rs"]
+mod retained_clone_tests;

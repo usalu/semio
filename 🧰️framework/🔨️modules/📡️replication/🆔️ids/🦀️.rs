@@ -19,6 +19,9 @@ pub struct MutationId(pub String);
 #[serde(transparent)]
 pub struct ActorId(pub String);
 
+/// 🌱️ Explicit actor for standalone genesis and named local test contexts.
+pub const LOCAL_ACTOR_ID: &str = "local";
+
 /// 📄️ A stable identifier for one document.
 /// 🌱️ Same reason as `MutationId` above — real `🎠️kernel` consumer.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]

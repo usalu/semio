@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1::subsets::base::io::text::snapshot::{enc_indexed_triple,dec_indexed_triple,enc_named_triple,dec_named_triple,enc_named_added,dec_named_added,split_top_level,strip_brackets};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn enc_u32(v: &u32) -> String {

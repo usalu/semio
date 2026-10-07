@@ -114,63 +114,13 @@ fn resolve_style(snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) ->
     snapshot.styles.iter().find(|s| &s.name == name).cloned()
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn push_number(bytes: &mut Vec<u8>, v: f64) {
-    bytes.extend_from_slice(&v.to_le_bytes());
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn push_style_dep(bytes: &mut Vec<u8>, snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) {
-    match style_ref {
-        None => bytes.push(0),
-        Some(name) => {
-            bytes.push(1);
-            bytes.extend_from_slice(name.as_bytes());
-            bytes.push(0x1f);
-            if let Some(style) = snapshot.styles.iter().find(|s| &s.name == name) {
-                bytes.push(1);
-                if let Some(fill) = style.fill {
-                    bytes.push(1);
-                    push_number(bytes, fill.r as f64);
-                    push_number(bytes, fill.g as f64);
-                    push_number(bytes, fill.b as f64);
-                    push_number(bytes, fill.a as f64);
-                } else {
-                    bytes.push(0);
-                }
-                if let Some(stroke) = style.stroke {
-                    bytes.push(1);
-                    push_number(bytes, stroke.r as f64);
-                    push_number(bytes, stroke.g as f64);
-                    push_number(bytes, stroke.b as f64);
-                    push_number(bytes, stroke.a as f64);
-                } else {
-                    bytes.push(0);
-                }
-                if let Some(w) = style.stroke_width {
-                    bytes.push(1);
-                    push_number(bytes, w);
-                } else {
-                    bytes.push(0);
-                }
-                if let Some(o) = style.opacity {
-                    bytes.push(1);
-                    push_number(bytes, o as f64);
-                } else {
-                    bytes.push(0);
-                }
-            } else {
-                bytes.push(0);
-            }
-        }
-    }
-}
 //#endregion 🔖️StyleResolution
 
 //#region 🔖️InferredField
 pub struct DrawFlattenedScene;
 
 impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = FlattenedNode;
     const FIELD_ID: &'static str = "s.stdio.semio.drawing.inference.flattenedScene";
@@ -188,26 +138,13 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
         steps
     }
 
-    fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         let np = node_path_from_key(key);
-        let mut bytes = Vec::new();
         match node_at(snapshot, &np) {
-            Some(DrawNode::Group { transform, .. }) => {
-                push_number(&mut bytes, transform.translation.x);
-                push_number(&mut bytes, transform.translation.y);
-                push_number(&mut bytes, transform.translation.z);
-                push_number(&mut bytes, transform.rotation.x);
-                push_number(&mut bytes, transform.rotation.y);
-                push_number(&mut bytes, transform.rotation.z);
-                push_number(&mut bytes, transform.rotation.w);
-                push_number(&mut bytes, transform.scale.x);
-                push_number(&mut bytes, transform.scale.y);
-                push_number(&mut bytes, transform.scale.z);
-            }
-            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => push_style_dep(&mut bytes, snapshot, style),
-            Some(DrawNode::Image { .. }) | None => {}
+            Some(DrawNode::Group { transform, .. }) => semio_framework_value::ToValue::to_value(transform),
+            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => semio_framework_value::DslValue::Array(vec![semio_framework_value::ToValue::to_value(style),semio_framework_value::ToValue::to_value(&resolve_style(snapshot,style))]),
+            Some(DrawNode::Image { .. }) | None => semio_framework_value::DslValue::Null,
         }
-        bytes
     }
 
     fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {

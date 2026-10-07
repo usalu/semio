@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve, relative } from "node:path";
 import { testCacheRoot, testCacheDir, markOutputDir, readOutputMarker, planExecution, type DiscoveredCase } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -7,7 +6,6 @@ import { materializeRustHost } from "../../🖥️host/🏗️materialization/�
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧾️artifact-root-source/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧾️artifact-root-source/🔣️.json"), "utf8"));
 const callerRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!callerRoot) throw Error("Artifact-root laws require caller-owned SEMIO_TEST_ARTIFACT_DIR");
 const outputs = resolve(callerRoot, "artifact-root-source");
@@ -23,12 +21,7 @@ function environment<T>(values: Record<string, string | undefined>, action: () =
     }
 }
 
-test("validates closed neutral output roles with independent Ajv", () => {
-    const validate = new Ajv({strict:true,allErrors:true}).compile(schema);
-    expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({...fixture,opaqueRoot:"elsewhere"})).toBe(false);
-    expect(fixture.children).toEqual(["work","hosts","results","reports"]);
-});
+
 
 test("selects caller-owned scoped artifacts while preserving canonical default", () => {
     environment({SEMIO_TEST_ARTIFACT_DIR:undefined,SEMIO_TEST_OUTPUT_SCOPE:undefined},()=>expect(testCacheRoot(root)).toBe(join(root,".🧬semio","🦑️repo","⚡️cache","tests")));

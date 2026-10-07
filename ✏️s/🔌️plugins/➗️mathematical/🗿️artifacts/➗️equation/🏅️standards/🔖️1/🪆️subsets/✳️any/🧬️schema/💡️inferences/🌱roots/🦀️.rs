@@ -129,6 +129,7 @@ fn refine_width() -> number::Rational {
 pub struct EquationRootsField;
 
 impl protocol::InferredField<EquationSnapshot> for EquationRootsField {
+    type Dependency = semio_framework_value::DslValue;
     type Key = usize;
     type Value = EquationRoot;
 
@@ -152,19 +153,11 @@ impl protocol::InferredField<EquationSnapshot> for EquationRootsField {
     /// are a global function of ALL coefficients, unlike `flat-position`'s local per-edge deps) plus
     /// this key's isolating interval (so a coefficient edit that shifts WHICH interval index `key`
     /// lands on also invalidates, even if the isolation count happens to stay the same).
-    fn dep_input(snapshot: &EquationSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        let Some(poly) = equation_integer_polynomial(&snapshot.equation) else { return Vec::new() };
-        let mut bytes = Vec::new();
-        for coeff in poly.coeffs() {
-            bytes.extend_from_slice(coeff.to_string().as_bytes());
-            bytes.push(0);
-        }
-        if let Some((lo, hi)) = crate::polynomial::roots::isolate_real_roots(&poly).get(*key) {
-            bytes.extend_from_slice(lo.to_string().as_bytes());
-            bytes.push(0);
-            bytes.extend_from_slice(hi.to_string().as_bytes());
-        }
-        bytes
+    fn dep_input(snapshot: &EquationSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
+        let Some(poly) = equation_integer_polynomial(&snapshot.equation) else { return semio_framework_value::DslValue::Null };
+        let coefficients = poly.coeffs().iter().map(|coefficient| semio_framework_value::DslValue::String(coefficient.to_string())).collect();
+        let interval = crate::polynomial::roots::isolate_real_roots(&poly).get(*key).map(|(lo, hi)| semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String(lo.to_string()), semio_framework_value::DslValue::String(hi.to_string())])).unwrap_or(semio_framework_value::DslValue::Null);
+        semio_framework_value::DslValue::object([("coefficients".into(), semio_framework_value::DslValue::Array(coefficients)), ("interval".into(), interval)])
     }
 
     /// 🧮️ Re-isolates (cheap relative to refinement — Sturm sequences over small integer

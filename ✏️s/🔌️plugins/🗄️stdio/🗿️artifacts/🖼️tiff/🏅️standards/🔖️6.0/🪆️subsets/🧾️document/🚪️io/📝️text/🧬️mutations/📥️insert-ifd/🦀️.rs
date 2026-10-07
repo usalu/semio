@@ -1,4 +1,7 @@
 //! 📝️ Direct insert-ifd text codec.
+use crate::standards::v6_0::subsets::document::schema::mutations::*;
+use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+use crate::standards::v6_0::subsets::document::io::text::diff::*;
 use crate::standards::v6_0::subsets::document::io::text::mutations::*;
 use crate::standards::v6_0::subsets::document::io::text::mutations::Entry;
 pub const TEXT_OPCODE: &str = "insert-ifd";

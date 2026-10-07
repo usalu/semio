@@ -79,7 +79,7 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration
         .formats(formats)
         .inferences([standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor()])
         .composers(standards::v_raw::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.binary", standard: semio_framework_plugin::StandardId("raw"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.binary", standard: semio_framework_artifact_reference::StandardId("raw"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
 }
 
@@ -95,7 +95,7 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration
 #[cfg(feature = "component-app-assembly")]
 pub fn artifact() -> declarations::ArtifactDeclaration<BinaryApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use store::os_io::ArtifactKindId;
+    use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![standards::v_raw::standard()] }
 }
 //#endregion 🔖️ArtifactDeclaration
@@ -121,7 +121,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_raw::subsets::any::io::io_registry as v_raw;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

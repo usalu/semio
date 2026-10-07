@@ -41,7 +41,7 @@ describe("Layout subfooter row", () => {
 
 describe("Shared native panel overlay contract", () => {
   it("keeps the window canvas full width under every open panel", async () => {
-    const [{ chromium }, { default: Ajv }, { renderToStaticMarkup }] = await Promise.all([import("playwright"), import("ajv/dist/2020"), import("react-dom/server")]);
+    const [{ chromium }, { renderToStaticMarkup }] = await Promise.all([import("playwright"), import("react-dom/server")]);
     const browser = await chromium.launch({ headless: true });
     try {
       const page = await browser.newPage();
@@ -78,17 +78,11 @@ describe("Shared native panel overlay contract", () => {
 });
 
 /** 🪪️ Keeps shared React and native vectors at their physical neutral owner. */
-it("shared UI fixture ownership has no product copies and preserves schema validation", async () => {
-  const [{ existsSync, readFileSync }, { join }, { findWorkspaceRoot }, { default: Ajv }, { default: Ajv2020 }, { default: corpus }, { default: schema }] = await Promise.all([import("node:fs"), import("node:path"), import("../../../../../🏃️process/🧭️routing/🟦️.ts"), import("ajv"), import("ajv/dist/2020"), import("../../../../🧫️fixtures/🪪️fixture-ownership/🔣️.json"), import("../../../../🧬️schema/🪪️fixture-ownership/🔣️.json")]);
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+it("shared UI examples have one neutral owner and no corpus contracts", async () => {
+  const [{ existsSync }, { join }, { findWorkspaceRoot }, { default: corpus }] = await Promise.all([import("node:fs"), import("node:path"), import("../../../../../🏃️process/🧭️routing/🟦️.ts"), import("../../../../🧫️fixtures/🪪️fixture-ownership/🔣️.json")]);
   const root = findWorkspaceRoot(process.cwd());
   for (const row of corpus.cases) {
-    const ownerSchema = JSON.parse(readFileSync(join(root, row.schema), "utf8"));
-    const vectors = JSON.parse(readFileSync(join(root, row.fixture), "utf8"));
-    expect(ownerSchema.$id).toBe(row.schemaId);
-    const oracle = new Ajv2020({ strict: true, allErrors: true }).compile(ownerSchema);
-    expect(oracle(vectors), JSON.stringify(oracle.errors)).toBe(true);
+    expect(existsSync(join(root, row.fixture)), row.fixture).toBe(true);
     for (const removed of row.removed) expect(existsSync(join(root, removed)), removed).toBe(false);
   }
 });

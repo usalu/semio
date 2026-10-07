@@ -1,5 +1,4 @@
 {
-  "$schema": "../../🧬️schema/🔣️automatic-checkin/🔣️.json",
   "note": "When an AUTOMATIC check-in is dispatched (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live finding O4): an automatic action never surfaces a refusal, so it waits while the document cannot take a checkpoint — it is loading, or it is attached and its port is not bound — and is asked for again one idle period later; nothing is lost and nothing is told. `waits` are the document states and whether an automatic check-in waits in them. `timelines` replay one editor session: `notify` reports the uncommitted-edit count, `advance` lets time pass (ms), `document` changes the document's state; `dispatched` and `deferred` are the times (ms from the start) at which the scheduler dispatched a check-in or deferred one. Every shell's automatic check-in reaches exactly these times.",
   "idleMs": 20000,
   "threshold": 200,

@@ -16,7 +16,7 @@ use crate::snapshot::{AluminiumConnection, AluminiumMaterial, AluminiumMember, A
 use protocol::OpText;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-enum En1999MutationDsl {
+pub(crate) enum En1999MutationDsl {
     ChangeAnnex { new_annex: AnnexChoice },
     ChangeMaterials { payload_json: String },
     ChangeSections { payload_json: String },
@@ -57,14 +57,7 @@ impl OpText for En1999MutationDsl {
     }
 }
 
-impl protocol::OpBinary for En1999MutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio"), bytes)
-    }
-}
+
 
 fn json_of<T: pack::value::ToValue>(value: &T) -> String {
     semio_framework_pack_json::to_json_string(value)
@@ -74,7 +67,7 @@ fn from_json<T: pack::value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation payload json")
 }
 
-fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
+pub(crate) fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
     match mutation {
         En1999Mutation::ChangeAnnex(p) => En1999MutationDsl::ChangeAnnex { new_annex: p.new_annex },
         En1999Mutation::ChangeMaterials(p) => En1999MutationDsl::ChangeMaterials { payload_json: json_of(&p.materials) },
@@ -97,7 +90,7 @@ fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
     }
 }
 
-fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
+pub(crate) fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
     match mutation {
         En1999MutationDsl::ChangeAnnex { new_annex } => En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex }),
         En1999MutationDsl::ChangeMaterials { payload_json } => En1999Mutation::ChangeMaterials(change_materials::ChangeMaterials { materials: from_json::<Vec<AluminiumMaterial>>(&payload_json) }),
@@ -129,14 +122,7 @@ impl OpText for En1999Mutation {
     }
 }
 
-impl protocol::OpBinary for En1999Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        en1999_mutation_to_dsl(self).encode_op()
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(en1999_mutation_from_dsl(En1999MutationDsl::decode_op(bytes)?))
-    }
-}
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧊replace-node-geometry/🔳️circle/📸️snapshot/⬅️before/🔣️.json");
@@ -36,7 +37,7 @@ fn applies_to_committed_after() {
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("replace-node-geometry applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "replace-node-geometry/circle-to-rectangle: applied state differs from committed after-snapshot");
     let node = snapshot.nodes.iter().find(|node| node.id == "node-a").expect("node-a survives its geometry swap");
-    assert_eq!(node.shape.as_deref(), Some("rectangle"), "replace-node-geometry/circle-to-rectangle: node-a is still a circle");
+    assert_eq!(node.shape.as_ref().map(|text| text.eq_str("rectangle")), Some(true), "replace-node-geometry/circle-to-rectangle: node-a is still a circle");
     assert_eq!(node.radius, None, "replace-node-geometry/circle-to-rectangle: the circle radius must be cleared, not retained alongside the rectangle extent");
     assert_eq!((node.width, node.height), (Some(24.0), Some(16.0)), "replace-node-geometry/circle-to-rectangle: the rectangle extent is wrong");
 }

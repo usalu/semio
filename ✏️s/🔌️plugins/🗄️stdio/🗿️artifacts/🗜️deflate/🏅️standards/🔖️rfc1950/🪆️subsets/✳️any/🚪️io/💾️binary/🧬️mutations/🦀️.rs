@@ -16,10 +16,10 @@ use protocol::{OpBinary, OpText};
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl OpBinary for DeflateMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(crate::standards::v_rfc1950::subsets::any::schema::mutations::COMPONENT_PROTOCOL_SEMIO, self)
+        dsl::variants_binary::encode_tagged_op(crate::standards::v_rfc1950::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO, self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(crate::standards::v_rfc1950::subsets::any::schema::mutations::COMPONENT_PROTOCOL_SEMIO, bytes)
+        dsl::variants_binary::decode_tagged_op(crate::standards::v_rfc1950::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO, bytes)
     }
 }
 }

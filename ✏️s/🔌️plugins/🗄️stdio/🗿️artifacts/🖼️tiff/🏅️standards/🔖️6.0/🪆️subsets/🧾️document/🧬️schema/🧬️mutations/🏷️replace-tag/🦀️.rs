@@ -58,7 +58,7 @@ pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16, values: TiffV
         TiffDiff {
             ifds: Some(TiffIfdsDiff {
                 removed: vec![],
-                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![TiffTagModified { tag, values }], added: vec![] }, storage: None } }],
+                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![TiffTagModified { tag, values }], added: vec![] }, blocks: None } }],
                 added: vec![],
             }),
             ..Default::default()
@@ -67,7 +67,7 @@ pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16, values: TiffV
         TiffDiff {
             ifds: Some(TiffIfdsDiff {
                 removed: vec![],
-                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![], added: vec![TiffTagAdded { tag, values }] }, storage: None } }],
+                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![], added: vec![TiffTagAdded { tag, values }] }, blocks: None } }],
                 added: vec![],
             }),
             ..Default::default()

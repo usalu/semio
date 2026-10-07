@@ -8,7 +8,7 @@ use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dSnapshot};
 //#region 🔖️Diff
 pub fn diff(payload: &super::RotateSelection, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if !(payload.pivot_x.is_finite() && payload.pivot_y.is_finite() && payload.angle.is_finite()) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "a rotation pivot and angle must be finite", payload.targets.clone());
+        return protocol::MutationOutcome::fatal("mutation.invariant", "a rotation pivot and angle must be finite", payload.targets.iter().map(|id| id.to_string_owner()).collect::<Vec<_>>());
     }
     let (cx, cy, radians) = (payload.pivot_x, payload.pivot_y, payload.angle);
     let (sin, cos) = radians.sin_cos();

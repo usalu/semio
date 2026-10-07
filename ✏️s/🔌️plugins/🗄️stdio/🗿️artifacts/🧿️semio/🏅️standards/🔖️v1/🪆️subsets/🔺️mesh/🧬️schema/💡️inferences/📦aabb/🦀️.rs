@@ -70,6 +70,7 @@ pub(crate) fn aabb_key(mesh_id: &str, primitive_id: &str) -> String {
 pub struct MeshAabb;
 
 impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
+    type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = SemioAabb;
     const FIELD_ID: &'static str = "s.stdio.semio.mesh.inference.aabb";
@@ -83,14 +84,14 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
         snapshot.meshes.iter().flat_map(|mesh| mesh.primitives.iter().map(move |p| store::InferenceStep { key: aabb_key(&mesh.id, &p.id), parents: Vec::new() })).collect()
     }
 
-    /// 🔑 Canonical dependency-input bytes — EXACTLY `positions` (the only field `compute` reads),
+    /// 🔑 Owned dependency-input values — EXACTLY `positions` (the only field `compute` reads),
     /// nothing else (not `normals`/`uvs`/`colors`/`indices`/`material_id`, none of which affect an
     /// AABB) — an unrelated field touch on the SAME primitive must still hit the cache, proven by
     /// the incrementality-law test below.
-    fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         match find_primitive_by_key(snapshot, key) {
-            Some((_, primitive)) => semio_framework_pack_json::to_json_string(&primitive.positions).into_bytes(),
-            None => Vec::new(),
+            Some((_, primitive)) => semio_framework_value::ToValue::to_value(&primitive.positions),
+            None => semio_framework_value::DslValue::Null,
         }
     }
 

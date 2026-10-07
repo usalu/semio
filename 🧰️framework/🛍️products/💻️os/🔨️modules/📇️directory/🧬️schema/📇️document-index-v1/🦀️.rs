@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentIndexEntryV1 {
     pub name: String,
-    pub dialect: crate::os_io::ArtifactDialect,
+    pub dialect: semio_framework_artifact_reference::ArtifactDialect,
 }
 
 impl DocumentIndexEntryV1 {

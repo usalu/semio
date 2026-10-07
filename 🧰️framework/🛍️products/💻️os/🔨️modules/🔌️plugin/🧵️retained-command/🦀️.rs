@@ -94,6 +94,7 @@ pub enum ArtifactCommandWorkStep<A: ArtifactApp> {
 pub struct ArtifactCommandInputs<'a, A: ArtifactApp> {
     pub command: &'a A::Command,
     pub snapshot: &'a A::Snapshot,
+    pub snapshot_owner: Option<&'a Arc<A::Snapshot>>,
     pub config: &'a A::Config,
     pub history: &'a HistoryView,
     pub interaction: &'a protocol::InteractionState,
@@ -206,7 +207,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
-        let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
+        let ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
         if self.consumed {
             return Err(Fault::from("retained-command-bounded-work-repeated"));
         }
@@ -549,7 +550,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 else {
                     return self.fault(cx, b"retained command reducer owner is absent");
                 };
-                match work.step(&ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: self.context.as_deref(), operation }, cx) {
+                match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), config, history, interaction, hover, context: self.context.as_deref(), operation }, cx) {
                     Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => {
                         cx.set_stage(stage);
                         self.checkpoint_pending = true;

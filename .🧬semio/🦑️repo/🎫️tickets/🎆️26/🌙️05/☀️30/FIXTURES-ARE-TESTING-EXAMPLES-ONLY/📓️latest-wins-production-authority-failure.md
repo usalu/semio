@@ -20,3 +20,8 @@ The predicate remains enforced and its hostile token-removal checks remain uncha
 ## Current Owner Semantics Behind The Literal Mismatches
 
 Actual dispatch uses `self.admit_typed_operation_slot()` in `dispatch_typed_command_inner`; `can_admit_typed_operation(operation_id.0)` occurs elsewhere in ordinary-worker admission. Publication cursor selection is in `advance_typed_operation_publication_unit`, delegated by `advance_typed_operation_publication_one`, and uses the fixed `ARTIFACT_LIVE_OUTPUT_SLOTS` ring. Result selection uses `(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map` and updates the ring cursor. The existing text helper selects the last `has_runnable_work` method, which belongs to `ActiveArtifactEnvelopeDecodeState`; it does not select the old Mounted AwaitingAck state branch. The publication method is actually async and its body contains await. These are concrete source differences; no native runtime safety conclusion follows without the exact native laws, which are currently blocked by shared compilation failures. The unchanged strict source predicate remains red rather than being relaxed to accept this implementation.
+
+
+## Current Owner Retarget Followup
+
+See `📓️latest-wins-current-owner-followup.md` for the final current-owner checks, 46 positive/hostile controls, and the still-red no-await law. The earlier statement that obligation bytes matched original applied before this explicitly requested retarget followup. Current semantic runtime risks are qualified by inspection of ready task-admission awaits, without an observed suspension claim.

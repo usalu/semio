@@ -25,3 +25,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolErro
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod native_codec {
+use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_block5d_mutation,inverse_block5d_mutation,Block5dMutation};
+
+impl protocol::OpBinary for Block5dMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+    }
+}
+}

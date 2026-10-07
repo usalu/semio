@@ -9,7 +9,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation};
+
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-node-text/✏️retitles-node-a/📸️snapshot/⬅️before/🔣️.json");
@@ -36,7 +37,7 @@ fn applies_to_committed_after() {
     apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("edit-node-text applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "edit-node-text/retitles-node-a: applied state differs from committed after-snapshot");
     let node = snapshot.nodes.iter().find(|node| node.id == "node-a").expect("node-a survives its retitle");
-    assert_eq!(node.text.as_deref(), Some("Alpha Prime"), "edit-node-text/retitles-node-a: node-a kept its old text");
+    assert_eq!(node.text.as_ref().map(|text| text.eq_str("Alpha Prime")), Some(true), "edit-node-text/retitles-node-a: node-a kept its old text");
     assert_eq!(node.icon_kind, before().nodes[0].icon_kind, "edit-node-text/retitles-node-a: text and icon are separate fields");
 }
 

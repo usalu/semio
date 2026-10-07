@@ -1,7 +1,8 @@
 use super::*;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use standards::v1::subsets::any::schema::{evaluate_document, mutations::update_climate::UpdateClimate, snapshot};
+use standards::v1::subsets::any::schema::{evaluate_document, mutations::update_climate::UpdateClimate};
+use standards::v1::subsets::any::io::{binary::snapshot::{decode_din18599_pack,encode_din18599_pack},text::snapshot::{decode_din18599_dsl,encode_din18599_dsl,decode_din18599_snapshot_json,encode_din18599_snapshot_json}};
 
 /// 🧾️ Language-neutral expectation of the derived climate table (Python `hashlib` oracle, ticket script `🧪️s4-norm-din18599-climate.py`).
 fn derivation() -> serde_json::Value {
@@ -64,9 +65,9 @@ fn a_reloaded_document_evaluates_with_its_own_climate() {
     let limits = SqliteDatabaseLimits::default();
     let sqlite = export_sqlite_database(&edited.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).expect("sqlite projection"), limits, &mut |_| true).expect("sqlite bytes");
     let reloaded = [
-        ("dsl", snapshot::decode_din18599_dsl(&snapshot::encode_din18599_dsl(&edited)).expect("dsl")),
-        ("pack", snapshot::decode_din18599_pack(&snapshot::encode_din18599_pack(&edited)).expect("pack")),
-        ("json", snapshot::decode_din18599_snapshot_json(&snapshot::encode_din18599_snapshot_json(&edited)).expect("json")),
+        ("dsl", decode_din18599_dsl(&encode_din18599_dsl(&edited)).expect("dsl")),
+        ("pack", decode_din18599_pack(&encode_din18599_pack(&edited)).expect("pack")),
+        ("json", decode_din18599_snapshot_json(&encode_din18599_snapshot_json(&edited)).expect("json")),
         ("sqlite", Din18599Snapshot::from_sqlite_database(&import_sqlite_database(&sqlite, limits, &mut |_| true).expect("sqlite import"), &mut SqliteSnapshotControl::new(&mut |_| true, limits)).expect("sqlite")),
     ];
     for (carrier, document) in reloaded {

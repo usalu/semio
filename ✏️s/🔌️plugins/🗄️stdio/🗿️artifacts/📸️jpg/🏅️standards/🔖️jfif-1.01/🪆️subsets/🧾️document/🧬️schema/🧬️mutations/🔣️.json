@@ -179,22 +179,6 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/replace-pixels/schema.json"
         }
       }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-re-encode-quality"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/change-re-encode-quality/schema.json"
-        }
-      }
     }
   ]
 }

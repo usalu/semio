@@ -1002,10 +1002,6 @@ pub fn parse_spanned(source: &str) -> SpannedNode {
 }
 // #endregion 🔖️SpannedAst
 
-#[path = "../../🚪️io/🦀️.rs"]
-pub mod io;
-
-
 /// 🧩️ Typed example graph for language service and playground consumers.
 pub fn example_graph_snapshot() -> JackSnapshot {
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "jack-example".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![

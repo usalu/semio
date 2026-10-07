@@ -3,7 +3,7 @@
 pub const TAG: u8 = 9;
 pub const BINARY_TAG: u8 = TAG;
 
-use super::RemoveFontFile;
+use crate::standards::v1_7::subsets::h::schema::mutations::RemoveFontFile;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &RemoveFontFile) -> Result<Vec<u8>, String> {

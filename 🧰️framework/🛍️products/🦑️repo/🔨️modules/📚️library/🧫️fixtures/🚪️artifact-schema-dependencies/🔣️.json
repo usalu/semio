@@ -1,0 +1,135 @@
+{
+  "cases": [
+    {
+      "source": "#[value(retire_with=\"crate::schema::snapshot::retire_owned_snapshot\")] struct Domain { value:u32 }",
+      "forbidden": []
+    },
+    {
+      "source": "use crate::schema::snapshot::XmlDocument; fn apply(value:XmlDocument)->XmlDocument{value}",
+      "forbidden": []
+    },
+    {
+      "source": "// xml_document_from_text\nfn text()->&'static str {\"semio_framework_pack_json::to_json_string\"}",
+      "forbidden": []
+    },
+    {
+      "source": "#[cfg(test)] mod tests { use semio_framework_pack_json::to_json_string; fn sample(){let _=to_json_string(&1);} }",
+      "forbidden": []
+    },
+    {
+      "source": "#[cfg(test)] use protocol::OpBinary; fn apply(){}",
+      "forbidden": []
+    },
+    {
+      "source": "use crate::standards::v1::io::text::snapshot::decode; fn apply(){decode();}",
+      "forbidden": [
+        "io::text"
+      ]
+    },
+    {
+      "source": "fn materialize(){let _=semio_framework_pack_json::to_json_string(&1);let _=store::pack_rt::encode_wire_value(&1);}",
+      "forbidden": [
+        "pack_rt::encode_wire_value",
+        "semio_framework_pack_json"
+      ]
+    },
+    {
+      "source": "use protocol::{OpText,OpBinary}; use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl;",
+      "forbidden": [
+        "OpBinary",
+        "OpText",
+        "SqliteSnapshotControl"
+      ]
+    },
+    {
+      "source": "fn apply(){xml_document_from_text(\"<a/>\");value.encode_op();}",
+      "forbidden": [
+        "encode_op",
+        "xml_document_from_text"
+      ]
+    },
+    {
+      "source": "#[derive(ToValue)] #[value(serialize_controlled_with=\"crate::io::text::snapshot::encode\",retire_with=\"crate::io::sqlite::snapshot::retire\")] struct Domain { value:u32 }",
+      "forbidden": [
+        "io::sqlite",
+        "io::text"
+      ]
+    },
+    {
+      "source": "#[value(rename=\"io::text\")] struct Domain { value:u32 }",
+      "forbidden": []
+    },
+    {
+      "source": "use crate::artifact::io::DecodedFrame; fn apply(frame:DecodedFrame){}",
+      "forbidden": [
+        "io::"
+      ]
+    },
+    {
+      "source": "#[value(retire_with=\"crate::artifact::io::retire\")] struct Domain { value:u32 }",
+      "forbidden": [
+        "io::"
+      ]
+    },
+    {
+      "source": "use crate::stdio::Domain; fn apply(frame:Domain){}",
+      "forbidden": []
+    },
+    {
+      "source": "use semio_framework_artifact_reference::ArtifactRef; fn apply(value:ArtifactRef)->ArtifactRef{value}",
+      "forbidden": []
+    },
+    {
+      "source": "fn diff(value:ArtifactRef){let _=value.to_uri();let _=ArtifactRef::parse_uri(\"x\");}",
+      "forbidden": [
+        "parse_uri",
+        "to_uri"
+      ]
+    },
+    {
+      "source": "use semio_framework_io_schema::ArtifactRef; fn apply(){}",
+      "forbidden": [
+        "semio_framework_io_schema"
+      ]
+    },
+    {
+      "source": "#[cfg(test)] mod probes { fn sample(value:ArtifactRef){let _=value.to_uri();} } fn apply(){}",
+      "forbidden": []
+    }
+  ],
+  "typescript": [
+    {
+      "source": "import{DecodedFrame}from\"../🚪️io/🟦️.ts\";",
+      "forbidden": true
+    },
+    {
+      "source": "import type{DecodedFrame}from\"../🚪️io/📤️export/🟦️.ts\";",
+      "forbidden": true
+    },
+    {
+      "source": "export type{DecodedFrame}from\"../🚪️io/🟦️.ts\";",
+      "forbidden": true
+    },
+    {
+      "source": "export{DecodedFrame}from\"../🚪️io/🟦️.ts\";",
+      "forbidden": true
+    },
+    {
+      "source": "// import{DecodedFrame}from\"../🚪️io/🟦️.ts\";\nexport const semantic=1;",
+      "forbidden": false
+    },
+    {
+      "source": "const semantic=\"🚪️io\";",
+      "forbidden": false
+    },
+    {
+      "source": "import{Domain}from\"../🧬️schema/🟦️.ts\";",
+      "forbidden": false
+    },
+    {
+      "source": "import{Codec}from\"../../../../../🚪️io/📝️text/🟦️.ts\";",
+      "forbidden": true,
+      "testOnly": true
+    }
+  ]
+}

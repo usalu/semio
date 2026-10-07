@@ -1143,3 +1143,14 @@ fn a_one_step_tool_commits_one_transaction_of_its_leaves() {
     assert_eq!(tool_once_emit("demo@1/*#editor", "place", "", vec![3]), NodeDragEmit::Plain(vec![3]));
 }
 //#endregion 🎯️OnceLaws
+
+#[test]
+fn independent_one_step_dispatches_never_share_a_transaction() {
+    let mut ids = std::collections::BTreeSet::new();
+    let fixture: Value = serde_json::from_str(NODE_DRAG_LAW).expect("fixture");
+    for _ in 0..fixture["independentReleases"]["count"].as_u64().expect("count") {
+        let NodeDragEmit::Commit(transaction, _) = tool_once_emit("demo@1/*#editor", "place", "seed", vec![1]) else { panic!("one-step dispatch commits") };
+        assert!(ids.insert(transaction.id), "each independent gesture owns its transaction");
+    }
+    assert_eq!(ids.len() as u64, fixture["independentReleases"]["uniqueTransactions"].as_u64().expect("unique transactions"));
+}

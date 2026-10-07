@@ -15,7 +15,7 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
 pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::SvgDiff;
 pub use schema::mutations::SvgMutation;
@@ -118,12 +118,12 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .schema_documents(semio_framework_schema_registry::ScopeSchemaExports { scope: "s.stdio.svg", exports: &[semio_framework_schema_registry::SchemaExport { id: "xml-document", leaves: semio_s_artifact_stdio_xml::schema::XML_DOCUMENT_SCHEMA_LEAVES }] })
         .inferences([standards::v1_1::subsets::base::schema::inferences::svg_artifact_inference_descriptor()])
-        .composers(standards::v1_1::engine::io_registry::entries())
+        .composers(standards::v1_1::subsets::base::io::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_plugin::StandardId("1.1"), subset: semio_framework_plugin::SubsetId("*") })
-        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_plugin::StandardId("1.1"), subset: semio_framework_plugin::SubsetId("tiny") })
-        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_plugin::StandardId("1.1"), subset: semio_framework_plugin::SubsetId("basic") })
+        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_artifact_reference::StandardId("1.1"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_artifact_reference::StandardId("1.1"), subset: semio_framework_artifact_reference::SubsetId("tiny") })
+        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_artifact_reference::StandardId("1.1"), subset: semio_framework_artifact_reference::SubsetId("basic") })
         .try_build()
 }
 
@@ -206,8 +206,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::subsets::base::io::io_registry as v1_1;
-    use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
+    use crate::standards::v1_1::subsets::base::io::io_registry as v1_1;
+    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -234,10 +234,6 @@ pub mod io_registry {
 pub mod standards {
     #[path = "."]
     pub mod v1_1 {
-        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-        // real code now lives in `subsets::base::io` (codecs/io_registry) and
-        // `subsets::base::schema` (document helpers); this stays an inline barrel so every
-        // existing `standards::v1_1::engine::*`/root `engine::*` path still resolves.
 
         #[path = "."]
         pub mod subsets {
@@ -377,12 +373,8 @@ pub mod standards {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
 pub mod schema {
     pub use super::standards::v1_1::subsets::base::schema::*;
-}
-pub mod engine {
-    pub use super::standards::v1_1::engine::*;
 }
 
 

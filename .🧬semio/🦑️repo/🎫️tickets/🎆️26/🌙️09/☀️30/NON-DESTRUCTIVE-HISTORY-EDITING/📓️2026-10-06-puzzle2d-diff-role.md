@@ -1,0 +1,11 @@
+# Puzzle2d Typed Diff Records
+
+The resumed current-source native camera capture had eight compiler diagnostics before assertions: two pilot diff grammar references pointed at schema instead of physical IO, and six missing typed Puzzle2dDiff methods. The sparse artifact and all eleven diff/helper owners lacked DslRecord although their actual text/binary codecs use the shared typed record vocabulary.
+
+The authored neutral corpus already contains empty and schema-delta JSON/Document pairs plus wrong scalar type, unknown field and trailing terminal-input refusals. The independent Ajv JSON oracle and native serde_json corpus reader retain those authored expectations. Current canonical source TDD invocation actually executed 2 passed / 37 failed / 19 expectations / 296ms; the new role law failed at the missing Puzzle2dDiff derive after its neutral admission checks. Thirty-six existing SQLite tests separately failed because their owner variable referred to the schema module, which no longer exports physical SQLite operations.
+
+All twelve retained artifact/diff carriers now derive DslRecord, and the two pilot grammar rows name io::text::diff. The SQLite oracle imports its physical sibling IO module while retaining schema-only type imports. No shape, optional intent, codec algorithm or fixture expectation changed. Fresh source green and native record/camera proof remain pending.
+
+The first green retry executed 37 passed / 2 failed / 93 expectations / 2.02s. The new typed-delta law passed. Two older corpus tests still named the schema module in their facade assertion and read fixture.semanticCells.control / fixture.semanticCells.semanticCells instead of the authored top-level control / semanticCells. Those exact test-owner routes now target the physical IO owner and unchanged top-level fixture fields. A fresh complete source run is pending.
+
+Current full source green through workspace Nx exec actually passed **39/39, 200 expectations, 1.88s**. Exact input pairs and three malformed terminal Documents remain. Structured Rustfmt parsed all **3 explicit current Rust owners**, exit0. These are source/neutral and syntax witnesses; native text/binary records and camera/editor runtime acceptance still await fresh execution after Core producer integration is compile-ready.

@@ -1,15 +1,16 @@
 {
-  "schemaBytes": 3886,
+  "schemaBytes": 4086,
   "tableWidths": {
     "tiff_ascii_value": 4,
+    "tiff_block": 8,
     "tiff_byte_value": 4,
-    "tiff_chunk": 4,
-    "tiff_document": 3,
-    "tiff_double_value": 6,
+    "tiff_document": 2,
+    "tiff_double_value": 5,
     "tiff_float_value": 6,
-    "tiff_ifd": 6,
+    "tiff_ifd": 3,
     "tiff_long_value": 4,
     "tiff_rational_value": 5,
+    "tiff_sample": 5,
     "tiff_short_value": 4,
     "tiff_signed_byte_value": 4,
     "tiff_signed_long_value": 4,
@@ -20,17 +21,16 @@
   },
   "cases": [
     {
-      "id": "originalSourceTwoIfd",
-      "rows": 59,
-      "valueBytes": 2222,
+      "id": "allScalarVariants",
+      "rows": 65,
+      "valueBytes": 2437,
       "input": {
         "schema": "stdio.tiff",
-        "byteOrder": "bigEndian",
         "ifds": [
           {
             "entries": [
               {
-                "tag": 65535,
+                "tag": 500,
                 "values": {
                   "kind": "byte",
                   "value": [
@@ -40,23 +40,17 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 501,
                 "values": {
                   "kind": "ascii",
                   "value": [
-                    71,
-                    114,
-                    195,
-                    188,
-                    195,
-                    159,
-                    101,
-                    0
+                    "Owned TIFF",
+                    "Precision"
                   ]
                 }
               },
               {
-                "tag": 65535,
+                "tag": 502,
                 "values": {
                   "kind": "short",
                   "value": [
@@ -66,7 +60,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 503,
                 "values": {
                   "kind": "long",
                   "value": [
@@ -76,7 +70,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 504,
                 "values": {
                   "kind": "rational",
                   "value": [
@@ -92,7 +86,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 505,
                 "values": {
                   "kind": "sByte",
                   "value": [
@@ -102,7 +96,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 506,
                 "values": {
                   "kind": "undefined",
                   "value": [
@@ -112,7 +106,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 507,
                 "values": {
                   "kind": "sShort",
                   "value": [
@@ -122,7 +116,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 508,
                 "values": {
                   "kind": "sLong",
                   "value": [
@@ -132,7 +126,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 509,
                 "values": {
                   "kind": "sRational",
                   "value": [
@@ -148,7 +142,7 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 510,
                 "values": {
                   "kind": "float",
                   "value": [
@@ -177,85 +171,134 @@
                 }
               },
               {
-                "tag": 65535,
+                "tag": 511,
                 "values": {
                   "kind": "double",
                   "value": [
                     {
-                      "bits": "0000000000000000"
+                      "lo": 0,
+                      "hi": 0
                     },
                     {
-                      "bits": "8000000000000000"
+                      "lo": 0,
+                      "hi": 2147483648
                     },
                     {
-                      "bits": "0000000000000001"
+                      "lo": 1,
+                      "hi": 0
                     },
                     {
-                      "bits": "7ff0000000000000"
+                      "lo": 0,
+                      "hi": 2146435072
                     },
                     {
-                      "bits": "fff0000000000000"
+                      "lo": 0,
+                      "hi": 4293918720
                     },
                     {
-                      "bits": "7ff8000000000011"
+                      "lo": 17,
+                      "hi": 2146959360
                     },
                     {
-                      "bits": "7ff0000000000007"
+                      "lo": 7,
+                      "hi": 2146435072
                     }
                   ]
                 }
               }
             ],
-            "storage": {
-              "kind": "strips",
-              "offsetsKind": "short",
-              "byteCountsKind": "long",
-              "chunks": [
-                [
-                  0,
-                  255
-                ],
-                [
-                  64,
-                  128
-                ]
-              ]
-            }
+            "blocks": []
           },
           {
             "entries": [
               {
-                "tag": 0,
+                "tag": 256,
                 "values": {
-                  "kind": "byte",
-                  "value": []
+                  "kind": "long",
+                  "value": [
+                    3
+                  ]
+                }
+              },
+              {
+                "tag": 257,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 258,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    64
+                  ]
+                }
+              },
+              {
+                "tag": 262,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 277,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 339,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    3
+                  ]
                 }
               }
             ],
-            "storage": {
-              "kind": "tiles",
-              "offsetsKind": "long",
-              "byteCountsKind": "short",
-              "chunks": [
-                [
-                  9,
-                  8,
-                  0,
-                  255
+            "blocks": [
+              {
+                "x": 0,
+                "y": 0,
+                "width": 3,
+                "height": 1,
+                "channels": 1,
+                "samples": [
+                  {
+                    "lo": 17,
+                    "hi": 2146959360
+                  },
+                  {
+                    "lo": 0,
+                    "hi": 2147483648
+                  },
+                  {
+                    "lo": 1,
+                    "hi": 0
+                  }
                 ]
-              ]
-            }
+              }
+            ]
           }
         ]
       }
     },
     {
-      "id": "originalNativeOneIfd",
-      "rows": 47,
-      "valueBytes": 1620,
+      "id": "metadataAndExactRaster",
+      "rows": 50,
+      "valueBytes": 1792,
       "input": {
         "schema": "stdio.tiff",
-        "byteOrder": "bigEndian",
         "ifds": [
           {
             "entries": [
@@ -274,19 +317,8 @@
                 "values": {
                   "kind": "ascii",
                   "value": [
-                    101,
-                    120,
-                    97,
-                    99,
-                    116,
-                    0,
-                    111,
-                    99,
-                    116,
-                    101,
-                    116,
-                    115,
-                    0
+                    "Owned TIFF",
+                    "Precision"
                   ]
                 }
               },
@@ -391,28 +423,91 @@
                   "kind": "double",
                   "value": [
                     {
-                      "bits": "7ff8000000000042"
+                      "lo": 66,
+                      "hi": 2146959360
                     }
                   ]
                 }
               }
             ],
-            "storage": {
-              "kind": "strips",
-              "offsetsKind": "short",
-              "byteCountsKind": "long",
-              "chunks": [
-                [
-                  1,
-                  2
-                ],
-                [
-                  3,
-                  4,
-                  5
+            "blocks": []
+          },
+          {
+            "entries": [
+              {
+                "tag": 256,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    2
+                  ]
+                }
+              },
+              {
+                "tag": 257,
+                "values": {
+                  "kind": "long",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 258,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    16
+                  ]
+                }
+              },
+              {
+                "tag": 262,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 277,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              },
+              {
+                "tag": 339,
+                "values": {
+                  "kind": "short",
+                  "value": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "x": 0,
+                "y": 0,
+                "width": 2,
+                "height": 1,
+                "channels": 1,
+                "samples": [
+                  {
+                    "lo": 32769,
+                    "hi": 0
+                  },
+                  {
+                    "lo": 65535,
+                    "hi": 0
+                  }
                 ]
-              ]
-            }
+              }
+            ]
           }
         ]
       }
@@ -420,10 +515,9 @@
     {
       "id": "emptyIfds",
       "rows": 1,
-      "valueBytes": 27,
+      "valueBytes": 18,
       "input": {
         "schema": "stdio.tiff",
-        "byteOrder": "bigEndian",
         "ifds": []
       }
     }
